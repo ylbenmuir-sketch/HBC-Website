@@ -50,10 +50,7 @@ export default function ChildrenFamiliesPage() {
       </section>
 
       <section className="sec">
-        <div
-          className="wrap"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 90 }}
-        >
+        <div className="wrap duo">
           <div className="rv">
             <div className="eyebrow">What parents are seeing</div>
             <ul
@@ -95,14 +92,7 @@ export default function ChildrenFamiliesPage() {
             <div className="eyebrow">Inside our children&rsquo;s rooms</div>
             <h2>Made for kids &mdash; without feeling childish.</h2>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.4fr 1fr 1fr",
-              gap: 26,
-            }}
-            className="rv"
-          >
+          <div className="trio-feature rv">
             <PhotoFrame
               src="/images/child-session.jpg"
               alt="A child at ease during a LENS session"

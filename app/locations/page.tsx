@@ -64,11 +64,9 @@ export default function LocationsPage() {
           </div>
 
           <div
-            className="rv"
+            className="rv half-row"
             style={{
               marginTop: 60,
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
               border: "1px solid var(--line)",
               borderRadius: 4,
               overflow: "hidden",

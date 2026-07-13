@@ -131,22 +131,9 @@ export default function HowLensWorksPage() {
             <h2>What it feels like from the chair.</h2>
             <p className="sub">Most visits are over in well under an hour.</p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4,1fr)",
-              borderTop: "1px solid var(--line)",
-            }}
-            className="rv"
-          >
-            {sessionSteps.map((s, i) => (
-              <div
-                key={s.eyebrow}
-                style={{
-                  padding: `40px ${i === 3 ? 0 : 34}px 10px ${i === 0 ? 0 : 34}px`,
-                  borderRight: i < 3 ? "1px solid var(--line)" : undefined,
-                }}
-              >
+          <div className="steps4 rv">
+            {sessionSteps.map((s) => (
+              <div key={s.eyebrow}>
                 <div className="eyebrow" style={{ fontSize: 11 }}>
                   {s.eyebrow}
                 </div>
@@ -155,15 +142,7 @@ export default function HowLensWorksPage() {
               </div>
             ))}
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 26,
-              marginTop: 70,
-            }}
-            className="rv"
-          >
+          <div className="trio-photos rv" style={{ marginTop: 70 }}>
             <figure>
               <PhotoFrame
                 src="/images/ear-clip.jpg"
@@ -205,15 +184,13 @@ export default function HowLensWorksPage() {
             <h2>What LENS is &mdash; and what it isn&rsquo;t.</h2>
           </div>
           <div
+            className="half-row rv"
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
               border: "1px solid var(--line)",
               borderRadius: 4,
               overflow: "hidden",
               background: "#fff",
             }}
-            className="rv"
           >
             <div
               style={{

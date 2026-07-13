@@ -450,6 +450,7 @@ export default function HomePage() {
               display: "flex",
               gap: 26,
               alignItems: "center",
+              flexWrap: "wrap",
             }}
             className="rv"
           >

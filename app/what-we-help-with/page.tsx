@@ -17,15 +17,7 @@ export default function WhatWeHelpWithPage() {
   return (
     <>
       <section className="page-hero">
-        <div
-          className="wrap"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.2fr .8fr",
-            gap: 70,
-            alignItems: "end",
-          }}
-        >
+        <div className="wrap wwh-hero">
           <div className="rv">
             <div className="eyebrow">What we help with</div>
             <h1>
@@ -110,13 +102,7 @@ export default function WhatWeHelpWithPage() {
             <div className="eyebrow" style={{ marginBottom: 32 }}>
               Gentle at every age
             </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
-                gap: 26,
-              }}
-            >
+            <div className="trio-photos">
               <PhotoFrame
                 src="/images/child-sensor.jpg"
                 alt="A child with a small LENS sensor gently placed"

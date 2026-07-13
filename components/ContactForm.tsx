@@ -124,7 +124,7 @@ export default function ContactForm() {
   if (status === "success") {
     return (
       <div
-        className="rv in"
+        className="rv in form-card"
         style={{
           background: "#fff",
           border: "1px solid var(--line)",
@@ -147,7 +147,7 @@ export default function ContactForm() {
 
   return (
     <form
-      className="form rv"
+      className="form rv form-card"
       style={{
         background: "#fff",
         border: "1px solid var(--line)",

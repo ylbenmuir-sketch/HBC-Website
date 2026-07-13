@@ -67,14 +67,7 @@ export default function StoriesPage() {
 
       <section className="sec">
         <div className="wrap">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 34,
-            }}
-            className="rv"
-          >
+          <div className="trio-quotes rv">
             {storyQuotes.map((q) => (
               <Quote key={q.text} {...q} />
             ))}

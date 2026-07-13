@@ -42,15 +42,7 @@ export default async function PractitionerPage({
         <Link href="/about/team">Our team</Link> &nbsp;/&nbsp; {member.name}
       </div>
       <section className="page-hero">
-        <div
-          className="wrap"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "380px 1fr",
-            gap: 80,
-            alignItems: "center",
-          }}
-        >
+        <div className="wrap prac-hero">
           <div className="rv">
             {member.image ? (
               <PhotoFrame
@@ -83,10 +75,7 @@ export default async function PractitionerPage({
       </section>
 
       <section className="sec">
-        <div
-          className="wrap"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 90 }}
-        >
+        <div className="wrap duo">
           <div className="rv">
             <div className="eyebrow">Background</div>
             <p style={{ margin: "24px 0 18px" }}>{profile.background1}</p>

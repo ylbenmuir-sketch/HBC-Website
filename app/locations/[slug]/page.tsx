@@ -105,12 +105,10 @@ export default async function LocationPage({
               </Btn>
             </div>
             <div
+              className="facts3"
               style={{
                 borderTop: "1px solid var(--line)",
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
                 paddingTop: 22,
-                gap: 28,
                 fontSize: 14.5,
                 color: "var(--slate)",
                 marginTop: 40,
@@ -178,14 +176,7 @@ export default async function LocationPage({
               {location.space.sub}
             </p>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.4fr 1fr 1fr",
-              gap: 26,
-            }}
-            className="rv"
-          >
+          <div className="trio-feature rv">
             {location.space.photos.map((p, i) =>
               p.kind === "photo" ? (
                 <PhotoFrame
@@ -236,15 +227,7 @@ export default async function LocationPage({
       </section>
 
       <section className="sec sec-navy">
-        <div
-          className="wrap"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 90,
-            alignItems: "start",
-          }}
-        >
+        <div className="wrap duo" style={{ alignItems: "start" }}>
           <div className="rv">
             <div className="eyebrow">Your first visit here</div>
             <h2 style={{ margin: "20px 0 26px" }}>Know exactly what to expect.</h2>

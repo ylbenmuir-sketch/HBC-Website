@@ -72,10 +72,7 @@ export default async function ConcernPage({
       </section>
 
       <section className="sec">
-        <div
-          className="wrap"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 90 }}
-        >
+        <div className="wrap duo">
           <div className="rv">
             <div className="eyebrow">You might recognize</div>
             <ul
@@ -106,14 +103,7 @@ export default async function ConcernPage({
             <div className="eyebrow">What clients hope to support</div>
             <h2>{concern.goalsHeading}</h2>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3,1fr)",
-              gap: 34,
-            }}
-            className="rv"
-          >
+          <div className="trio-quotes rv">
             {concern.goals.map((g) => (
               <Quote key={g} theme="Common goal" text={g} />
             ))}

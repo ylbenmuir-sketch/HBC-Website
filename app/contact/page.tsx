@@ -25,15 +25,7 @@ export default function ContactPage() {
       </section>
 
       <section className="sec">
-        <div
-          className="wrap"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.1fr .9fr",
-            gap: 90,
-            alignItems: "start",
-          }}
-        >
+        <div className="wrap duo-form">
           <ContactForm />
           <div className="rv">
             <div className="eyebrow">What happens next</div>
