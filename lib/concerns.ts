@@ -24,12 +24,16 @@ export type Concern = {
     approach: string;
   };
   /** Detail page content. */
+  goalsHeading: string;
+  faqHeading: string;
   recognize: string[];
   howHelp: { p1: string; p2: string; note: string };
   goals: string[]; // "Common goal" quote cards
   faqs: ConcernFaq[];
   image: { src: string; position: string } | null;
   plateSpec?: string;
+  /** Optional <title> override (mockup title casing). */
+  metaTitle?: string;
   metaDescription: string;
 };
 
@@ -49,6 +53,8 @@ export const concerns: Concern[] = [
       approach:
         "Sessions are calm by design — quiet room, comfortable chair, nothing asked of you. Many clients report a growing settledness they notice outside our walls first.",
     },
+    goalsHeading: "The changes people in high alert most often name.",
+    faqHeading: "Asked by almost everyone who comes in anxious.",
     recognize: [
       "Thoughts that won't quiet down — especially at night",
       "Feeling constantly on edge, braced for something",
@@ -81,6 +87,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
+    metaTitle: "Anxiety & Nervous-System Overload",
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
   },
@@ -99,6 +106,8 @@ export const concerns: Concern[] = [
       approach:
         "LENS supports the brain's own capacity to settle and organize — nothing to practice, no tasks to perform. Focus and follow-through are tracked at every check-in.",
     },
+    goalsHeading: "The changes people stuck at 90 percent most often name.",
+    faqHeading: "Asked by almost everyone who comes in scattered.",
     recognize: [
       "Struggling to stay on task — at work or at school",
       "Overwhelmed by multi-step responsibilities",
@@ -149,6 +158,8 @@ export const concerns: Concern[] = [
       approach:
         "Sleep is one of the first things we ask about at every visit, because it's often where clients notice change earliest. Your plan adjusts to what your nights are telling us.",
     },
+    goalsHeading: "The changes people running on empty most often name.",
+    faqHeading: "Asked by almost everyone who comes in exhausted.",
     recognize: [
       "A mind that won't shut off at night",
       "Waking frequently — or at 3 a.m. for no reason",
@@ -199,6 +210,8 @@ export const concerns: Concern[] = [
       approach:
         "There's nothing a child has to get right in a LENS session — which matters for kids tired of being corrected. Parents join every check-in.",
     },
+    goalsHeading: "The changes families in the meltdown years most often name.",
+    faqHeading: "Asked by almost every parent who calls us.",
     recognize: [
       "Becoming overwhelmed quickly",
       "Intense reactions that are hard to stop",
@@ -249,6 +262,8 @@ export const concerns: Concern[] = [
       approach:
         "We start with a gentle map of how your brain is currently working, then track clarity, recall, and mental energy across your sessions.",
     },
+    goalsHeading: "The changes people in the fog most often name.",
+    faqHeading: "Asked by almost everyone who comes in cloudy.",
     recognize: [
       "Thinking that feels slow or cloudy",
       "Losing words mid-sentence",
@@ -299,6 +314,8 @@ export const concerns: Concern[] = [
       approach:
         "Sessions are short enough to keep in a full life — and they ask nothing of you. For many clients, that genuine off-switch is where things begin to turn.",
     },
+    goalsHeading: "The changes people near burnout most often name.",
+    faqHeading: "Asked by almost everyone who comes in running on fumes.",
     recognize: [
       "Functioning, but close to burnout",
       "Rest that doesn't restore",
@@ -349,6 +366,8 @@ export const concerns: Concern[] = [
       approach:
         "Kids don't have to sit still, concentrate, or perform. We track what matters at home: mornings, homework, and how they talk about themselves.",
     },
+    goalsHeading: "The changes parents most often hope to see.",
+    faqHeading: "Asked by almost every parent who calls us.",
     recognize: [
       "A bright kid who can't show what they know",
       "Morning battles and homework standoffs",
@@ -399,6 +418,8 @@ export const concerns: Concern[] = [
       approach:
         "LENS doesn't require you to retell or relive anything. Sessions are quiet and predictable, and pair well with the therapy or support you already trust.",
     },
+    goalsHeading: "The changes people carrying the past most often name.",
+    faqHeading: "Asked by almost everyone who comes in braced.",
     recognize: [
       "Staying vigilant in rooms where nothing is wrong",
       "A body braced long after the danger has passed",

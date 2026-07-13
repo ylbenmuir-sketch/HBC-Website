@@ -598,6 +598,7 @@ export default function HomePage() {
             />
             <LocationCard
               location={murfreesboro}
+              plateSpecOverride="Murfreesboro interior — reception or session room, natural light"
               meta={
                 <>
                   <b>[Street address]</b>
@@ -610,6 +611,7 @@ export default function HomePage() {
             />
             <LocationCard
               location={franklin}
+              plateSpecOverride="Franklin exterior — storefront at golden hour"
               meta={
                 <>
                   <b>Opening [DATE — confirm]</b>

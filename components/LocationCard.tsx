@@ -9,11 +9,14 @@ export default function LocationCard({
   location,
   meta,
   imageHeight = 240,
+  plateSpecOverride,
 }: {
   location: Location;
   /** Card meta lines — content differs slightly between homepage and index. */
   meta: ReactNode;
   imageHeight?: number;
+  /** The mockups word the photography specs differently per page. */
+  plateSpecOverride?: string;
 }) {
   const go = location.comingSoon
     ? { href: "/contact", label: "Join the Franklin waitlist →" }
@@ -30,7 +33,10 @@ export default function LocationCard({
           sizes="(max-width: 640px) 100vw, (max-width: 1060px) 50vw, 33vw"
         />
       ) : (
-        <PlaceholderPlate spec={location.plateSpec ?? ""} height={imageHeight} />
+        <PlaceholderPlate
+          spec={plateSpecOverride ?? location.plateSpec ?? ""}
+          height={imageHeight}
+        />
       )}
       <div className="body">
         <h3>
