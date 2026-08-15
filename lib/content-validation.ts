@@ -46,8 +46,11 @@ check("Franklin opening date", FRANKLIN_OPENING.verified);
 // Blocks the assistant's callback-timing language (§5.1) and the location
 // pages' openingHoursSpecification together — see lib/schema.ts.
 check("Business hours", BUSINESS_HOURS.verified);
-// Published on three pages, tagged on one. Until it is confirmed the assistant
-// states no session length — see lib/chat/unanswerable.ts.
+// Confirmed, so this passes today. It stays on the list because the assistant
+// reads `verified` and not the value: flipping it false takes every session
+// length out of the index and puts the question back on fixed copy, which is
+// the lever to pull if the figure is ever in doubt again. See
+// lib/chat/unanswerable.ts.
 check("Typical session length", SESSION_LENGTH.verified);
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
 check(

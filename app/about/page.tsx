@@ -3,12 +3,11 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import FinalCTA from "@/components/FinalCTA";
-import ConfirmTag from "@/components/ConfirmTag";
 import { Btn } from "@/components/Buttons";
 import {
   FOUNDER_DISPLAY_NAME,
   STAT_SESSIONS,
-  TRAINING_CLAIM_TAG,
+  TRAINING_CLAIM,
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -102,11 +101,7 @@ export default function AboutPage() {
           <div className="care-grid rv">
             <div className="care">
               <h3>Practitioner training</h3>
-              <p>
-                Every practitioner completes the same Harmonized LENS training
-                before working independently.{" "}
-                <ConfirmTag>{TRAINING_CLAIM_TAG}</ConfirmTag>
-              </p>
+              <p>{TRAINING_CLAIM}</p>
             </div>
             <div className="care">
               <h3>Structured progress tracking</h3>

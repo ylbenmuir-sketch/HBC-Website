@@ -1,9 +1,14 @@
 import {
   BRAIN_MAP_PRICE,
-  INSURANCE_TAG,
-  PRICING_TAG,
+  FIRST_VISIT_DURATION,
+  INSURANCE_POLICY,
+  PACKAGE_NOTE,
+  PACKAGE_PRICE,
+  PACKAGE_SAVING,
+  PACKAGE_SESSIONS,
   RISK_REVERSAL,
-  SESSION_LENGTH_TAG,
+  SESSION_LENGTH,
+  SESSION_PRICE,
 } from "./site-config";
 
 /**
@@ -20,13 +25,14 @@ import {
  * reason it can be indexed: it is the answer a visitor sees, minus the markup
  * and minus anything draft-gated.
  *
- * `confirmTag` is the exception that proves that last clause. Three answers
- * render on /faq with a gold [CONFIRM] tag beside them, and the tag is markup
- * — so stripping the markup stripped the only sign that the answer is
- * unconfirmed, and the assistant indexed it as settled fact. The tag is
- * therefore recorded here, next to the answer it governs, the same way
- * lib/locations.ts carries `communitiesTag`: it is a property of the copy, not
- * of the accordion.
+ * `confirmTag` is the exception that proves that last clause, and is empty
+ * today only because Ben confirmed the three facts that filled it. Three
+ * answers here — session length, cost, insurance — used to render with a gold
+ * [CONFIRM] tag beside them, and a tag is markup, so stripping the markup
+ * stripped the only sign that the answer was unconfirmed and the assistant
+ * indexed all three as settled fact. Should another answer ever need a tag,
+ * record it here next to the answer it governs, the way lib/locations.ts
+ * carries `communitiesTag`: it is a property of the copy, not of the accordion.
  */
 
 export type SiteFaq = {
@@ -64,8 +70,7 @@ export const SITE_FAQS: SiteFaq[] = [
   },
   {
     q: "How long is a session?",
-    a: "Most visits are over in well under an hour — brief enough to fit a lunch break or a school pickup.",
-    confirmTag: SESSION_LENGTH_TAG,
+    a: `Regular sessions run ${SESSION_LENGTH.value} — brief enough to fit a lunch break or a school pickup. Your first visit, the Brain Map, takes ${FIRST_VISIT_DURATION}, because it includes the full conversation and the recording.`,
   },
   {
     q: "How many sessions will I need?",
@@ -89,13 +94,11 @@ export const SITE_FAQS: SiteFaq[] = [
   },
   {
     q: "What does it cost?",
-    a: `The phone call is free. The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep. Session pricing is shared before you commit to anything.`,
-    confirmTag: PRICING_TAG,
+    a: `The phone call is free. The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep. Regular sessions are ${SESSION_PRICE}, and a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE} — ${PACKAGE_SAVING} less than paying per session. ${PACKAGE_NOTE}`,
   },
   {
     q: "Does insurance cover it?",
-    a: "As a wellness service, LENS is typically not covered by insurance. Many clients use HSA/FSA funds — we can provide documentation.",
-    confirmTag: INSURANCE_TAG,
+    a: INSURANCE_POLICY,
   },
   {
     q: "What if I'm unsure whether it's right for me?",

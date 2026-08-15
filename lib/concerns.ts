@@ -5,24 +5,22 @@
  * (kept to the same no-hype standard — no medical claims, ever).
  */
 
-import { SESSION_LENGTH_TAG } from "./site-config";
-
 export type ConcernFaq = {
   q: string;
   a: string;
   /**
    * A [CONFIRM] tag governing a claim this answer repeats, when the tag itself
-   * lives on some other page.
+   * lives on some other page. Empty today; it held the typical visit length
+   * until Ben confirmed it.
    *
    * Concern pages render no [CONFIRM] tags of their own, but they do restate
-   * facts that carry one elsewhere — the typical visit length is flagged
-   * `SESSION_LENGTH_TAG` on /faq and stated plainly here. A page can afford
-   * that: a visitor reading it has the /faq tag available to them in draft, and
-   * in production neither page claims more than the practice has settled.
-   * The assistant cannot: it quotes one passage with no page around it. So the
-   * tag travels with the *claim* rather than with the page that happens to
-   * carry the markup, and keeps every restatement out of the index together.
-   * See the `confirmTag` note in lib/chat/types.ts.
+   * facts that carry one elsewhere. A page can afford that: a visitor reading
+   * it has the tagged page available to them in draft, and in production
+   * neither page claims more than the practice has settled. The assistant
+   * cannot — it quotes one passage with no page around it. So the tag travels
+   * with the *claim* rather than with the page that happens to carry the
+   * markup, and keeps every restatement out of the index together. See the
+   * `confirmTag` note in lib/chat/types.ts.
    */
   confirmTag?: string;
 };
@@ -387,7 +385,6 @@ export const concerns: Concern[] = [
       {
         q: "I barely have time for this. How long are visits?",
         a: "Most visits are over in well under an hour — brief enough to fit a lunch break. There's nothing to practice between sessions and no homework.",
-        confirmTag: SESSION_LENGTH_TAG,
       },
       {
         q: "Is this just relaxation?",

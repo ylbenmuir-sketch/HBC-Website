@@ -8,7 +8,7 @@ against it, the decisions already made, and the things still open.
 
 | | |
 | --- | --- |
-| Branch | `phase-8-assistant` — **8 commits ahead of `main`, not merged** |
+| Branch | `phase-8-assistant` — **ahead of `main`, not merged** |
 | Feature flag | `NEXT_PUBLIC_FEATURE_ASSISTANT` — **off, and set in no committed file** |
 | With the flag off | The widget does not render and `/api/chat` returns 404 |
 | Model | `claude-opus-5`, `effort: "low"`, adaptive thinking, server-side `fallbacks: "default"` |
@@ -90,7 +90,7 @@ ahead of the refusal categories, the booking flow, retrieval, and the model:
 
 ## Retrieval architecture
 
-Lexical **BM25** (`k1: 1.2`, `b: 0.75`) over ~103 passages of published site
+Lexical **BM25** (`k1: 1.2`, `b: 0.75`) over ~100 passages of published site
 copy. Not embeddings, for three reasons in this order: Ben has to be able to
 run the §7 list and see *why* a question found what it found; it is
 deterministic, so a wrong answer is reproducible; and it runs before any model
@@ -234,6 +234,19 @@ needs nothing new, since `planning.communitiesTag` was always data.
 questions" is one lookup, and `indexSummary()` counts exclusions separately from
 the total — a shrinking index should read as the gate working, not as passages
 going missing.
+
+### Since confirmed
+
+Ben has since confirmed five of the nine: pricing (including the session price
+and the 12-session package), insurance and HSA/FSA, session length, and
+practitioner training. Their tags were deleted, and every passage below except
+the two community lists is back in the index — 102 passages, up from 96, with
+`faq:6`, `faq:12`, `faq:13` and the training and insurance passages carrying
+Ben's approved wording. The `session-length` topic in `unanswerable.ts` is
+dormant on its own gate, exactly as designed; nothing was deleted to retire it.
+
+The table below is kept as the record of what the audit found, because the
+method is the reusable part, not the list.
 
 ### The audit: 103 passages in, 96 out
 
@@ -438,9 +451,8 @@ against **both** lists in the scratch suite, not just the refusal list.
 
 ## Ben's outstanding decisions
 
-These are blocking, and all six are his call rather than the code's. The first
-four are facts the practice has to settle; every one of them is currently
-costing the assistant a question visitors ask.
+These are blocking, and all five are his call rather than the code's. The
+first three are facts the practice has to settle.
 
 1. **Business hours** (`BUSINESS_HOURS` in `lib/site-config.ts`). Until
    verified, the assistant makes **no** callback-timing claim — "Someone from
@@ -449,27 +461,20 @@ costing the assistant a question visitors ask.
    unblocks `openingHoursSpecification` in the LocalBusiness JSON-LD. Also
    confirm `hoursLines` in `lib/locations.ts` at the same time — they must
    agree. `REQUIRE_VERIFIED_CONTENT=true npm run build` fails while it is open.
-2. **HSA/FSA and insurance policy** (`HSA_FSA_TAG`, `INSURANCE_TAG`). Insurance
-   questions now `no-match` — "I don't have that on the site". Confirming it
-   restores a top-five visitor answer on `/faq`, `/first-visit` and in the
-   assistant in one edit.
-3. **Typical session length** (`SESSION_LENGTH`) and **the two community lists**
-   (`communitiesTag` on Nashville and Murfreesboro). The other facts the
-   exclusions are costing — same shape, same one-edit fix. Session length is the
-   cheaper win: it is already published on three pages and only needs the
-   wording signed off.
-4. **Does `TRAINING_CLAIM_TAG` cover the weaker wordings?** `/about`'s team
-   section says practitioners are "trained to the same standard" and Franklin's
-   hero says they "complete the same Harmonized training before opening day",
-   both untagged. Neither makes the tagged process claim ("before working
-   independently"), so both were left in the index. If the tag is meant to cover
-   the whole subject, say so and they come out too.
-5. **Conversation retention.** Transcripts go to the server log and inherit the
+2. **The session count.** `TRAINING_CLAIM` (Ben's approved wording) says "more
+   than 150,000 sessions"; `STAT_SESSIONS` says "140,000+". `/about` renders
+   both — the training card and the proof band — so the page disagrees with
+   itself. One of the two is stale; picking the current figure is a one-line
+   change to `STAT_SESSIONS` and its `content-validation.ts` label.
+3. **The two community lists** (`communitiesTag` on Nashville and
+   Murfreesboro) — the last thing the `confirmTag` gate excludes. Franklin's
+   list carries no tag and answers today, so the fix is per center.
+4. **Conversation retention.** Transcripts go to the server log and inherit the
    hosting platform's retention, which is a default rather than a decision.
    `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn — timing, outcome,
    safety flags — and drops the words. §8 asks Ben to read 20 real transcripts
    in the first week, which is why the default is on.
-6. **Who reviews flagged conversations, and how often.** §4.1 requires crisis
+5. **Who reviews flagged conversations, and how often.** §4.1 requires crisis
    conversations to be logged *and flagged for human review*. They are written
    at warn level with a `[chat:FLAGGED:crisis]` marker — that is a log line, not
    a review process. Nobody is paged.

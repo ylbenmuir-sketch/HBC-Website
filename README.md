@@ -162,7 +162,7 @@ everything below exists to keep that true.
 | `lib/chat/unanswerable.ts` | Topics the site has decided not to answer yet, each gated on the `Verifiable` that blocks it |
 | `lib/chat/booking.ts` | §5 — the callback flow and the callback-timing rule |
 | `lib/chat/session.ts` | The safety ledger and booking progress, server-side |
-| `lib/chat/content-index.ts` | §2 — the whole knowledge base, ~103 passages |
+| `lib/chat/content-index.ts` | §2 — the whole knowledge base, ~100 passages |
 | `lib/chat/site-copy.ts` | Copy mirrored from the four pages that keep their words in JSX |
 | `lib/chat/retrieve.ts` | §2 — BM25, the "I don't know" thresholds, the fixed no-match reply |
 | `lib/chat/answer.ts` | §2 — the system prompt and the **only** model call |
@@ -271,14 +271,13 @@ assistant a question a visitor will actually ask.
    automatically, and unblocks `openingHoursSpecification` in the JSON-LD.
    Confirm `hoursLines` in `lib/locations.ts` at the same time — they must
    agree.
-2. **HSA/FSA and insurance policy** (`HSA_FSA_TAG`, `INSURANCE_TAG`). Both
-   passages are excluded, so insurance questions get "I don't have that on the
-   site" — a top-five visitor question, deliberately given up rather than
-   answered from copy the site itself flags. Confirming it restores the answer
-   on `/faq`, `/first-visit` and in the assistant in one edit.
-3. **Typical session length** (`SESSION_LENGTH`). Published on three pages,
-   tagged on one, which is how it reached the index as settled fact. Until it
-   is confirmed the assistant quotes no duration and answers with fixed copy.
+2. **Community lists** (`planning.communitiesTag`, Nashville and Murfreesboro).
+   The only thing `confirmTag` still excludes, so "do you serve Green Hills?"
+   gets "I don't have that on the site". Confirming a center's list rejoins it
+   to the index on its own — Franklin's is already confirmed and answers.
+3. **The session count disagreement.** `TRAINING_CLAIM` says "more than 150,000
+   sessions" and `STAT_SESSIONS` says "140,000+", and `/about` renders both.
+   Pick one figure — see CONTENT-CHECKLIST.md.
 4. **Conversation retention.** Transcripts go to the server log and inherit the
    host's retention, which is a default rather than a decision.
    `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn and drops the
@@ -307,9 +306,14 @@ npm run check:index -- --dump app/about/page.tsx
 assistant is not allowed to know* above for the three gates. Out today: the
 Google rating, the response-time and start-timing claims, the founder quote,
 the Brain Map differentiator claim, Franklin's opening date and street address,
-every `[Name]` practitioner, and — via `confirmTag` — the insurance and HSA/FSA
-answers, the session length, the practitioner-training claim, and the Nashville
-and Murfreesboro community lists.
+every `[Name]` practitioner, and — via `confirmTag` — the Nashville and
+Murfreesboro community lists.
+
+That `confirmTag` list was five entries longer until Ben confirmed pricing,
+insurance/HSA-FSA, session length and practitioner training. Each confirmation
+was one edit: delete the tag, and the passages it was holding out rejoin the
+index. That is the system working as intended rather than a set of exceptions
+being retired by hand.
 
 Also excluded on purpose: **opening hours** (still an open item in
 CONTENT-CHECKLIST.md, which is why `lib/schema.ts` omits

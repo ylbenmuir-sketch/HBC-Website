@@ -1,4 +1,11 @@
-import { BRAIN_MAP_NAME, BRAIN_MAP_PRICE } from "../site-config";
+import {
+  BRAIN_MAP_NAME,
+  BRAIN_MAP_PRICE,
+  PACKAGE_NOTE,
+  PACKAGE_PRICE,
+  PACKAGE_SESSIONS,
+  SESSION_PRICE,
+} from "../site-config";
 
 /**
  * Refusals (phase-8-chatbot.md §3).
@@ -88,10 +95,13 @@ const REPLIES: Record<RefusalKind, { decline: string; offer: string }> = {
     offer:
       "A practitioner will tell you honestly on the free call whether it’s a fit. Want me to set one up?",
   },
-  // §3: the published prices only.
+  // §3: the published prices only. All of them, now that they are published —
+  // quoting the first visit alone reads as evasion when the site states the
+  // session and package prices two lines further down, and a visitor asking
+  // for a discount is precisely the one who will notice.
   "pricing-negotiation": {
-    decline: `The published prices are the only ones I have: the phone call is free, and ${BRAIN_MAP_NAME} — your first visit — is ${BRAIN_MAP_PRICE}.`,
-    offer: "Session pricing is shared before you commit to anything.",
+    decline: `The published prices are the only ones I have: the phone call is free, your first visit — ${BRAIN_MAP_NAME} — is ${BRAIN_MAP_PRICE}, regular sessions are ${SESSION_PRICE}, and a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE}.`,
+    offer: PACKAGE_NOTE,
   },
 };
 

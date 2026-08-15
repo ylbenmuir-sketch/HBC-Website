@@ -313,45 +313,95 @@ export const BUSINESS_HOURS: Verifiable<BusinessHours> = {
 export const RISK_REVERSAL =
   "If we don’t think LENS is right for you, we’ll tell you on the phone — before you ever book or pay for anything.";
 
-/** First visit / FAQ practical details. */
-export const FIRST_VISIT_DURATION = "about [60–90] minutes";
-export const FIRST_VISIT_DURATION_TAG = "[CONFIRM duration]";
+/** First visit (Brain Map) duration — confirmed by Ben. */
+export const FIRST_VISIT_DURATION = "about 60 minutes";
 
 /**
- * Typical session length.
+ * Typical length of a regular session — confirmed by Ben.
  *
- * Promoted from a bare tag to a `Verifiable` for the same reason
- * BUSINESS_HOURS is one: the site assistant reads it, and a plain string gives
- * it nothing to read. The claim is published in three places — /faq,
- * /how-lens-works and the stress-resilience FAQ — but tagged on only one of
- * them, which is exactly how it reached the assistant's index as settled fact.
- *
- * While `verified` is false the assistant states no duration at all: every
- * passage carrying the claim is excluded (lib/chat/content-index.ts) and the
- * question is answered with fixed copy (lib/chat/unanswerable.ts). Confirming
- * it retires both in one edit. The value is the wording the pages already use,
- * so confirming it changes no copy — only whether it may be spoken.
+ * Stays a `Verifiable` rather than reverting to a plain constant, for the same
+ * reason BUSINESS_HOURS is one: the site assistant reads `verified` to decide
+ * whether it may state a duration at all (lib/chat/unanswerable.ts). Now that
+ * it is true, that check is dormant and the passages carrying the claim are
+ * back in the index. If the figure ever needs re-confirming, flipping this one
+ * flag takes the claim out of the assistant's mouth again without touching a
+ * page.
  */
 export const SESSION_LENGTH: Verifiable = {
-  value: "Most visits are over in well under an hour",
-  verified: false,
+  value: "about 30 minutes",
+  verified: true,
   note: "[Confirm typical length]",
 };
-/** Back-compat alias — the tag the pages render. */
-export const SESSION_LENGTH_TAG = SESSION_LENGTH.note!;
+
 /**
- * Brain Map (first visit) price — settled in the conversion brief, so it is a
- * known value rather than a Verifiable. One source for the CTA label and the
- * `/first-visit` cost copy. Per-session pricing is still unconfirmed and keeps
- * PRICING_TAG below.
+ * Pricing — confirmed by Ben.
+ *
+ * One source for the CTA label, the `/first-visit` cost card, FAQ 12, the
+ * assistant's pricing passage, and the §3 refusal that quotes the published
+ * prices back at a discount request. Written as display strings because that
+ * is the only form anything here uses; the arithmetic behind PACKAGE_SAVING is
+ * checked in the comment rather than computed, so a change to one figure and
+ * not the others is visible in review.
+ *
+ * 12 × $125 = $1,500, less $1,300 = $200 saved.
  */
 export const BRAIN_MAP_PRICE = "$150";
+export const SESSION_PRICE = "$125";
+export const PACKAGE_SESSIONS = 12;
+export const PACKAGE_PRICE = "$1,300";
+export const PACKAGE_SAVING = "$200";
 
 /**
  * Product name — always capitalized, always in full. One source so the CTA,
  * the homepage section, and the /first-visit cost card can't drift apart.
  */
 export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
+
+/**
+ * The package caveat, and the one rule about where it goes: Ben's instruction
+ * is to state it **wherever the package price appears**. It lives here as one
+ * string for that reason — a caveat retyped per page is a caveat that ends up
+ * on two pages out of three, and the one it is missing from is the one that
+ * reads as "$1,300 covers everything".
+ *
+ * Two facts, both his: the Brain Map is a separate first visit that does not
+ * count toward the twelve, and it is required before regular sessions begin.
+ */
+export const PACKAGE_NOTE =
+  `The Brain Map is separate from the package — it’s required before regular ` +
+  `sessions begin, and it doesn’t count toward the ${PACKAGE_SESSIONS}.`;
+
+/**
+ * Insurance and payment, in Ben's words, verbatim.
+ *
+ * Replaces the [Confirm policy] / [Confirm HSA/FSA policy] pair. Held here
+ * rather than typed into /faq and /first-visit separately because it is the
+ * answer most likely to be quoted back at the practice, and the two pages
+ * disagreeing about it — one saying "documentation", the other "superbill" —
+ * is the drift this file exists to prevent.
+ */
+export const INSURANCE_POLICY =
+  "We don’t bill insurance. Harmonized is self-pay. We accept HSA and FSA, and " +
+  "we can provide a superbill if you want to submit for out-of-network " +
+  "reimbursement.";
+
+/**
+ * Practitioner training, in Ben's words, verbatim.
+ *
+ * Replaces the [Confirm training & review process] tag. Deliberately carries
+ * no ranking or superlative — Ben's instruction, and the same discipline
+ * BRAIN_MAP_CLAIM is held to below. It names a third party (OchsLabs) and a
+ * session count, so it is a claim about the practice that has to stay exactly
+ * as approved; do not tighten it for rhythm.
+ *
+ * NOTE: the "150,000" here and STAT_SESSIONS ("140,000+") are two different
+ * numbers for what reads as the same quantity, and /about renders both — this
+ * sentence and the proof band. See CONTENT-CHECKLIST.md.
+ */
+export const TRAINING_CLAIM =
+  "Every Harmonized practitioner is certified through OchsLabs, the company " +
+  "that created LENS, then trained in-house for three months before seeing " +
+  "clients on their own. More than 150,000 sessions have shaped how we train.";
 
 /**
  * GRAPHICS CORRECTIONS — apply before either asset ships (Phase 7.5).
@@ -402,14 +452,13 @@ export const BRAIN_MAP_CLAIM: Verifiable = {
   note: "[Confirm basis for the claim]",
 };
 
-export const PRICING_TAG = "[Insert verified pricing]";
-export const HSA_FSA_TAG = "[Confirm HSA/FSA policy]";
-export const INSURANCE_TAG = "[Confirm policy]";
+// PRICING_TAG, HSA_FSA_TAG, INSURANCE_TAG, TRAINING_CLAIM_TAG and
+// FIRST_VISIT_DURATION_TAG were deleted when Ben confirmed the facts behind
+// them. Their copy is above — SESSION_PRICE and the package figures,
+// INSURANCE_POLICY, TRAINING_CLAIM, FIRST_VISIT_DURATION — and the passages
+// they were holding out of the assistant's index are back in it.
 export const CONCIERGE_TAG = "[Confirm service area & pricing]";
 export const CONTACT_RESPONSE_TAG = "[Confirm response time]";
-
-/** Practitioner training / care-model wording — operational, needs sign-off. */
-export const TRAINING_CLAIM_TAG = "[Confirm training & review process]";
 
 /* ------------------------------------------------------------------ */
 /* Locations                                                           */

@@ -45,7 +45,18 @@ import type { Passage } from "./types";
  * transcribed into a second place. Written as `{TOKEN}` in `text`; substituted
  * in content-index.ts, which owns the imports.
  */
-export const COPY_TOKENS = ["BRAIN_MAP_NAME", "BRAIN_MAP_PRICE"] as const;
+export const COPY_TOKENS = [
+  "BRAIN_MAP_NAME",
+  "BRAIN_MAP_PRICE",
+  "SESSION_PRICE",
+  "SESSION_LENGTH",
+  "PACKAGE_SESSIONS",
+  "PACKAGE_PRICE",
+  "PACKAGE_SAVING",
+  "PACKAGE_NOTE",
+  "INSURANCE_POLICY",
+  "TRAINING_CLAIM",
+] as const;
 export type CopyToken = (typeof COPY_TOKENS)[number];
 
 /**
@@ -58,14 +69,17 @@ export type CopyToken = (typeof COPY_TOKENS)[number];
  * `Record<ConfirmTagName, string>`, so a tag deleted from site-config.ts on
  * confirmation fails the build here rather than leaving a passage silently
  * excluded for good.
+ *
+ * **Empty is the correct state, not a disabled one.** It held five names —
+ * session length, pricing, insurance, HSA/FSA, practitioner training — and
+ * Ben confirmed all five, so each was deleted along with the passage exclusion
+ * it justified. `ConfirmTagName` is therefore `never` today, which means no
+ * mirrored passage can name a tag, which is exactly true of the four mirrored
+ * pages right now. The gate that still matters is CONFIRM_TAG_INVENTORY at the
+ * foot of this file: it fails the moment a page grows a tag, and adding the
+ * name back here is the first step of dealing with it.
  */
-export const CONFIRM_TAG_NAMES = [
-  "SESSION_LENGTH_TAG",
-  "PRICING_TAG",
-  "INSURANCE_TAG",
-  "HSA_FSA_TAG",
-  "TRAINING_CLAIM_TAG",
-] as const;
+export const CONFIRM_TAG_NAMES = [] as const satisfies readonly string[];
 export type ConfirmTagName = (typeof CONFIRM_TAG_NAMES)[number];
 
 export type MirroredPassage = Omit<Passage, "kind" | "href" | "confirmTag"> & {
@@ -73,6 +87,12 @@ export type MirroredPassage = Omit<Passage, "kind" | "href" | "confirmTag"> & {
    * Contiguous chunk(s) of the page's prose to verify. Defaults to `text`;
    * given explicitly when `text` joins pieces the page keeps apart — list
    * items, a heading and its paragraph, copy either side of a comment.
+   *
+   * `[]` means there is nothing to mirror because the page renders a constant
+   * rather than prose — `<p>{INSURANCE_POLICY}</p>`. Drift is impossible in
+   * that case: the page and the passage read the same export. The check script
+   * verifies that claim rather than taking it, and rejects an empty mirror on
+   * a passage whose text is anything other than copy tokens.
    */
   mirror?: string | string[];
   /**
@@ -123,21 +143,11 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         text: "What the equipment does: small sensors observe the brain’s electrical activity, and the system returns a brief, very low-energy feedback signal — far weaker than the everyday signals already around you. What you experience: a comfortable chair and a short, quiet visit. There’s nothing to watch, practice, or concentrate on, and most people — including young children — feel nothing at all. What we hope to support, honestly: many clients report feeling calmer, sleeping more easily, or thinking more clearly over a series of sessions. Every nervous system responds differently, nothing is guaranteed, and we review what you notice at every visit.",
       },
       {
-        // Split from the walkthrough below so the duration can be excluded on
-        // its own. /how-lens-works states it untagged, but it is the same
-        // claim /faq flags with SESSION_LENGTH_TAG, and an exclusion that
-        // leaves the claim reachable from a second page excludes nothing.
-        // Carries the duration keywords too: a passage filed under "how long"
-        // that no longer says how long is worse than no passage at all — it
-        // hands the model something to answer from that cannot answer.
-        id: "page:how-lens-works:length",
-        title: "How long a session takes",
-        question: "How long is a session?",
-        keywords: ["long", "hour", "time", "duration", "length", "quick", "minute"],
-        text: "Most visits are over in well under an hour.",
-        confirmTag: "SESSION_LENGTH_TAG",
-      },
-      {
+        // Briefly split into a separate `:length` passage so the duration
+        // could be excluded on its own while SESSION_LENGTH was unverified.
+        // Ben confirmed it, so the walkthrough is whole again — and FAQ 6 now
+        // gives the figure in minutes, which is the better answer to "how long
+        // is a session" and outranks this passage for it.
         id: "page:how-lens-works:session",
         title: "What a session feels like",
         question: "What happens during a session?",
@@ -147,10 +157,14 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "visit",
           "happen",
           "expect",
+          "long",
+          "hour",
+          "time",
           "chair",
         ],
-        text: "A session, start to finish — what it feels like from the chair. Arrive, a real check-in: Sleep, mood, focus, energy — how we know what's actually changing for you. Settle, sensors on, feet up: A comfortable chair and a few small sensors. No gel caps, no discomfort. Session, nothing to do: The feedback lasts moments; most people feel nothing. Kids can just be kids. Before you go, review & adjust: Your practitioner fine-tunes the plan; you leave knowing where things stand.",
+        text: "A session, start to finish — what it feels like from the chair. Most visits are over in well under an hour. Arrive, a real check-in: Sleep, mood, focus, energy — how we know what's actually changing for you. Settle, sensors on, feet up: A comfortable chair and a few small sensors. No gel caps, no discomfort. Session, nothing to do: The feedback lasts moments; most people feel nothing. Kids can just be kids. Before you go, review & adjust: Your practitioner fine-tunes the plan; you leave knowing where things stand.",
         mirror: [
+          "Most visits are over in well under an hour.",
           "A real check-in",
           "Sleep, mood, focus, energy — how we know what's actually changing for you.",
           "Sensors on, feet up",
@@ -274,9 +288,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "dollar",
           "free",
         ],
-        text: "The phone call is free. {BRAIN_MAP_NAME} — your first visit — is {BRAIN_MAP_PRICE} and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Session pricing is shared before you commit to anything.",
+        text: "The phone call is free. {BRAIN_MAP_NAME} — your first visit — is {BRAIN_MAP_PRICE} and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Regular sessions are {SESSION_PRICE} and run {SESSION_LENGTH}. A {PACKAGE_SESSIONS}-session package is {PACKAGE_PRICE} — {PACKAGE_SAVING} less than paying per session. {PACKAGE_NOTE}",
         mirror:
-          "The phone call is free. — your first visit — is and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Session pricing is shared before you commit to anything.",
+          "The phone call is free. — your first visit — is and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Regular sessions are and run . A -session package is — less than paying per session.",
       },
       {
         id: "page:first-visit:insurance",
@@ -289,16 +303,21 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "coverage",
           "hsa",
           "fsa",
+          "superbill",
           "reimburse",
+          "reimbursement",
           "claim",
-          "receipt",
-          "documentation",
+          "bill",
+          "self-pay",
+          "network",
         ],
-        text: "As a wellness service, LENS is typically not covered by insurance. Many clients use HSA/FSA funds — we’ll give you documentation.",
-        // The passage that started all of this. The sentence carries no
-        // brackets, so every gate passed it, and the assistant stated an
-        // HSA/FSA policy the page itself flags as unconfirmed two inches away.
-        confirmTag: "HSA_FSA_TAG",
+        // The passage that started all of this: the old sentence carried no
+        // brackets, so every gate passed it and the assistant stated an
+        // HSA/FSA policy the page flagged as unconfirmed two inches away. Ben
+        // confirmed it, and the answer is now one constant that the page and
+        // this passage both read — so there is no second copy left to drift.
+        text: "{INSURANCE_POLICY}",
+        mirror: [],
       },
       {
         id: "page:first-visit:child",
@@ -368,19 +387,30 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         text: "Families deserved a gentle option — and an honest one. Harmonized began with a simple conviction: people struggling with focus, sleep, anxiety, and overwhelm deserve a gentle, noninvasive option — and a team that listens before it recommends anything. Today that conviction is a care model: the same training, the same structured check-ins, the same honest policies at every center — so the experience doesn’t depend on which door you walk through.",
       },
       {
-        // One of the four care-model items, pulled out because it is the only
-        // one /about renders a [CONFIRM] tag against. Excluding the four
-        // together would have cost three confirmed answers — progress
-        // tracking, documentation, and the no-diagnoses promise — to gate one
-        // unconfirmed claim about how practitioners are trained and reviewed.
+        // Pulled out of the care-model grid when it was the only one of the
+        // four items /about tagged as unconfirmed. Kept separate now that Ben
+        // has confirmed it, because the answer he approved is a specific,
+        // two-sentence claim — a certifying body, a named training period, a
+        // session count — and "how are your practitioners trained" deserves to
+        // retrieve that rather than a paragraph in which it is one item of
+        // four. The wording is his and is not to be tightened; see
+        // TRAINING_CLAIM in lib/site-config.ts.
         id: "page:about:training",
         title: "Practitioner training",
         question: "How are your practitioners trained?",
-        keywords: ["training", "trained", "qualified", "credential", "certified", "practitioner"],
-        text: "Practitioner training: Every practitioner completes the same Harmonized LENS training before working independently.",
-        mirror:
-          "Every practitioner completes the same Harmonized LENS training before working independently.",
-        confirmTag: "TRAINING_CLAIM_TAG",
+        keywords: [
+          "training",
+          "trained",
+          "qualified",
+          "credential",
+          "certified",
+          "certification",
+          "ochslabs",
+          "experience",
+          "practitioner",
+        ],
+        text: "{TRAINING_CLAIM}",
+        mirror: [],
       },
       {
         id: "page:about:care-model",
@@ -584,14 +614,12 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   "app/how-lens-works/page.tsx": {
     "STAT_SESSIONS.note!": "Verifiable-gated — policy:scale reads confirmed(STAT_SESSIONS)",
   },
-  "app/first-visit/page.tsx": {
-    HSA_FSA_TAG: "excluded — page:first-visit:insurance",
-    FIRST_VISIT_DURATION_TAG:
-      "not indexed — the line renders only under SHOW_DRAFT_CONTENT, and FIRST_VISIT_DURATION is [bracketed] besides",
-  },
-  "app/about/page.tsx": {
-    TRAINING_CLAIM_TAG: "excluded — page:about:training, split out of page:about:care-model",
-  },
+  // Ben confirmed HSA/FSA and the first-visit duration; both tags are gone and
+  // page:first-visit:insurance is back in the index.
+  "app/first-visit/page.tsx": {},
+  // Ben confirmed the training and review process; page:about:training carries
+  // his approved wording and is back in the index.
+  "app/about/page.tsx": {},
   "app/page.tsx": {
     "SAME_DAY_CALLBACK.note!": "Verifiable-gated — policy:free-call reads confirmed(SAME_DAY_CALLBACK)",
     "START_TIMING.note!": "not indexed — no passage carries the start-timing claim",
@@ -603,11 +631,10 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
     TRISHA_APPROVAL_TAG: "not indexed — the celebrity band is in no passage",
     "Film 2–3 short testimonials": "not indexed — a production to-do, not a claim",
   },
-  "app/faq/page.tsx": {
-    SESSION_LENGTH_TAG: "excluded — faq:6, and every other passage restating the duration",
-    PRICING_TAG: "excluded — faq:12 (the same copy is published untagged on /first-visit)",
-    INSURANCE_TAG: "excluded — faq:13",
-  },
+  // Ben confirmed session length, pricing and insurance. All three tags are
+  // gone, faq:6, faq:12 and faq:13 are back in the index, and the three
+  // `rendered` overrides that existed only to hold the tags went with them.
+  "app/faq/page.tsx": {},
   "app/locations/page.tsx": {
     "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
     CONCIERGE_TAG: "not indexed — concierge sessions are in no passage",

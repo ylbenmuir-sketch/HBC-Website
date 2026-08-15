@@ -32,16 +32,27 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Primary phone number (`PHONE`) — phone UI is hidden everywhere until verified
 - [ ] Response-time claim "within one business day" (`RESPONSE_TIME`)
 - [ ] "Most new clients start within a week" (`START_TIMING`)
-- [ ] First-visit duration (`FIRST_VISIT_DURATION`)
-- [ ] Typical session length (`SESSION_LENGTH`) — published on `/faq`,
-      `/how-lens-works` and `/concerns/stress-resilience`, tagged on `/faq`
-      only. Until verified the assistant quotes no duration at all and answers
-      the question with fixed copy.
-- [ ] Pricing (`PRICING_TAG`) / HSA-FSA policy (`HSA_FSA_TAG`) / insurance wording (`INSURANCE_TAG`)
+- [x] First-visit duration (`FIRST_VISIT_DURATION`) — 60 minutes. Confirmed by Ben.
+- [x] Typical session length (`SESSION_LENGTH`) — 30 minutes. Confirmed by Ben.
+- [x] Pricing — `$125` per session, `$1,300` for 12 (`$200` less than paying
+      per session), Brain Map `$150` separate. Confirmed by Ben. `PACKAGE_NOTE`
+      carries the two caveats — the Brain Map is required before regular
+      sessions begin and does not count toward the twelve — and must appear
+      wherever the package price does.
+- [x] Insurance & HSA/FSA (`INSURANCE_POLICY`) — self-pay, HSA/FSA accepted,
+      superbill on request. Confirmed by Ben, verbatim; do not reword.
+- [x] Practitioner training (`TRAINING_CLAIM`) — OchsLabs certification plus
+      three months in-house. Confirmed by Ben, verbatim; **no superlative or
+      ranking claim** is to be added to it.
+- [ ] **Session count disagreement.** `TRAINING_CLAIM` says "more than 150,000
+      sessions"; `STAT_SESSIONS` says "140,000+". `/about` renders both — the
+      training card and the proof band — so the page contradicts itself. Pick
+      one figure. If 150,000 is current, update `STAT_SESSIONS` and the
+      "Session count (140,000+)" line in `lib/content-validation.ts`.
 - [ ] Concierge service area & pricing (`CONCIERGE_TAG`)
-- [ ] Practitioner training & progress-review process wording (`TRAINING_CLAIM_TAG`)
 - [ ] Community lists per center (`planning.communitiesTag` in `lib/locations.ts`
-      — Nashville and Murfreesboro). Also drives schema `areaServed`.
+      — Nashville and Murfreesboro). Also drives schema `areaServed`, and is
+      the only thing the assistant's `confirmTag` gate still excludes.
 - [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
       we know" wording ships only once verified. Do **not** replace it with
       "the first in the country" without a documented basis.

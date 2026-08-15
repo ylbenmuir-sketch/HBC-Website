@@ -112,6 +112,20 @@ for (const page of MIRRORED_PAGES) {
     checked += 1;
     const chunks = [passage.mirror ?? passage.text].flat();
 
+    // An empty mirror claims "the page renders a constant, not prose, so there
+    // is nothing that could drift". Verify the claim instead of trusting it:
+    // strip the copy tokens and anything left is prose that IS mirrorable, and
+    // an empty mirror would be silently skipping it.
+    if (chunks.length === 0) {
+      const prose = passage.text.replace(/\{[A-Z_]+\}/g, "").trim();
+      if (prose.length > 0) {
+        failures.push(
+          `${passage.id}\n    mirror is [] but the text is not purely copy tokens\n` +
+            `    left over: "${prose.slice(0, 80)}${prose.length > 80 ? "…" : ""}"`
+        );
+      }
+    }
+
     for (const chunk of chunks) {
       const mirror = normalizeMirror(chunk);
       if (!source.includes(mirror)) {

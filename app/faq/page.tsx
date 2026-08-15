@@ -3,16 +3,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
-import ConfirmTag from "@/components/ConfirmTag";
 import JsonLd from "@/components/JsonLd";
 import { faqPageSchema } from "@/lib/schema";
 import { SITE_FAQS } from "@/lib/faq";
-import {
-  BRAIN_MAP_PRICE,
-  SESSION_LENGTH_TAG,
-  PRICING_TAG,
-  INSURANCE_TAG,
-} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -21,19 +14,17 @@ export const metadata: Metadata = {
 };
 
 /**
- * The five answers that render richer than their plain text — an inline link
- * or a [CONFIRM] tag. Keyed by question so the copy stays in lib/faq.ts and
- * only the markup lives here; see the `a`/`rendered` note in
- * components/FAQAccordion.tsx for why the two must keep saying the same thing.
+ * The two answers that render richer than their plain text — an inline link.
+ * Keyed by question so the copy stays in lib/faq.ts and only the markup lives
+ * here; see the `a`/`rendered` note in components/FAQAccordion.tsx for why the
+ * two must keep saying the same thing.
+ *
+ * Three more used to sit here carrying nothing but a [CONFIRM] tag — session
+ * length, cost and insurance. Ben confirmed all three, so the tags went and
+ * the overrides went with them: those answers now render straight from
+ * lib/faq.ts, which is one fewer place for them to drift.
  */
 const rendered: Record<string, ReactNode> = {
-  "How long is a session?": (
-    <>
-      Most visits are over in well under an hour — brief enough to fit a lunch
-      break or a school pickup.{" "}
-      <ConfirmTag>{SESSION_LENGTH_TAG}</ConfirmTag>
-    </>
-  ),
   "What does the first visit include?": (
     <>
       A real conversation about what&rsquo;s going on, a baseline recording of
@@ -48,21 +39,6 @@ const rendered: Record<string, ReactNode> = {
       regulation, brain fog and memory, burnout, school struggles, and
       trauma-related stress. See{" "}
       <Link href="/what-we-help-with">What We Help With</Link>.
-    </>
-  ),
-  "What does it cost?": (
-    <>
-      The phone call is free. The Brain Map — your first visit — is{" "}
-      {BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording
-      of brain activity, and a written plan you keep. Session pricing is shared
-      before you commit to anything. <ConfirmTag>{PRICING_TAG}</ConfirmTag>
-    </>
-  ),
-  "Does insurance cover it?": (
-    <>
-      As a wellness service, LENS is typically not covered by insurance. Many
-      clients use HSA/FSA funds — we can provide documentation.{" "}
-      <ConfirmTag>{INSURANCE_TAG}</ConfirmTag>
     </>
   ),
 };

@@ -11,16 +11,20 @@ import {
   BRAIN_MAP_PRICE,
   DISCLAIMER,
   ESTABLISHED_YEAR,
-  HSA_FSA_TAG,
-  INSURANCE_TAG,
+  FIRST_VISIT_DURATION,
+  INSURANCE_POLICY,
+  PACKAGE_NOTE,
+  PACKAGE_PRICE,
+  PACKAGE_SAVING,
+  PACKAGE_SESSIONS,
   PHONE,
-  PRICING_TAG,
   RISK_REVERSAL,
   SAME_DAY_CALLBACK,
-  SESSION_LENGTH_TAG,
+  SESSION_LENGTH,
+  SESSION_PRICE,
   STAT_SESSIONS,
   SITE_NAME,
-  TRAINING_CLAIM_TAG,
+  TRAINING_CLAIM,
   type Verifiable,
 } from "../site-config";
 import {
@@ -94,14 +98,14 @@ function confirmed<T>(v: Verifiable<T>): T | null {
  * site-copy.ts records. Exhaustive over `ConfirmTagName`, so confirming a fact
  * and deleting its constant fails the build here — the passage cannot stay
  * excluded by accident once the reason for excluding it is gone.
+ *
+ * Empty because that is exactly what happened: it held five tags, Ben
+ * confirmed all five, and each deletion broke this record until the passage it
+ * was excluding came back. Passages excluded by a `ConfirmTag` today come from
+ * data instead — `communitiesTag` on the two centers whose community list is
+ * still unconfirmed.
  */
-const CONFIRM_TAG_VALUES: Record<ConfirmTagName, string> = {
-  SESSION_LENGTH_TAG,
-  PRICING_TAG,
-  INSURANCE_TAG,
-  HSA_FSA_TAG,
-  TRAINING_CLAIM_TAG,
-};
+const CONFIRM_TAG_VALUES: Record<ConfirmTagName, string> = {};
 
 /**
  * Words a visitor is likely to use that the site's own copy does not contain —
@@ -331,6 +335,14 @@ function pagePassages(): Passage[] {
   const values: Record<CopyToken, string> = {
     BRAIN_MAP_NAME,
     BRAIN_MAP_PRICE,
+    SESSION_PRICE,
+    SESSION_LENGTH: SESSION_LENGTH.value,
+    PACKAGE_SESSIONS: String(PACKAGE_SESSIONS),
+    PACKAGE_PRICE,
+    PACKAGE_SAVING,
+    PACKAGE_NOTE,
+    INSURANCE_POLICY,
+    TRAINING_CLAIM,
   };
   return MIRRORED_PAGES.flatMap((page) =>
     // `mirror` is dropped: it exists for the drift check, not for retrieval.
@@ -387,13 +399,27 @@ function policyPassages(): Passage[] {
       ].join(" "),
     },
     {
-      id: "policy:brain-map-price",
+      id: "policy:pricing",
       kind: "policy",
-      title: BRAIN_MAP_NAME,
+      title: "What it costs",
       href: "/first-visit",
-      question: "How much is the first visit?",
-      keywords: ["cost", "price", "much", "pay", "fee", "brain", "map", "first", "visit", "free"],
-      text: `The phone call is free. ${BRAIN_MAP_NAME} — the first visit — is ${BRAIN_MAP_PRICE}. Session pricing is shared before you commit to anything.`,
+      question: "How much does it cost?",
+      keywords: [
+        "cost", "price", "pricing", "much", "pay", "fee", "brain", "map",
+        "first", "visit", "free", "session", "package", "12", "twelve", "save",
+      ],
+      // Every published price in one passage, because "how much is it" is one
+      // question and answering it from three passages invites the model to
+      // quote the first visit and stop. PACKAGE_NOTE rides the package price
+      // here exactly as it does on the page — a conversation is the easiest
+      // place of all to leave a caveat behind.
+      text: [
+        `The phone call is free.`,
+        `${BRAIN_MAP_NAME} — the first visit — is ${BRAIN_MAP_PRICE} and takes ${FIRST_VISIT_DURATION}.`,
+        `Regular sessions are ${SESSION_PRICE} and run ${SESSION_LENGTH.value}.`,
+        `A ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE} — ${PACKAGE_SAVING} less than paying per session.`,
+        PACKAGE_NOTE,
+      ].join(" "),
     },
   ];
 
