@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
@@ -28,7 +29,6 @@ import {
   START_TIMING,
   STAT_SESSIONS,
   TESTIMONIALS,
-  TRAINING_CLAIM_TAG,
   TRISHA_APPROVAL_TAG,
   TRISHA_QUOTE,
   TRISHA_VIDEO_URL,
@@ -399,7 +399,9 @@ export default function HomePage() {
       </section>
 
       <section className="sec home-lens">
-        <div className="wrap lens-grid">
+        {/* Single column since the four-row sequence moved out; /how-lens-works
+            carries it. Constrained so the measure stays readable. */}
+        <div className="wrap" style={{ maxWidth: 940 }}>
           <div className="rv">
             <div className="eyebrow">How LENS works</div>
             <h2 style={{ margin: "22px 0 18px" }}>Feedback, not force.</h2>
@@ -442,83 +444,54 @@ export default function HomePage() {
               The full explanation
             </Btn>
           </div>
-          <div className="lens-seq rv">
-            {[
-              {
-                n: "1",
-                h: "Sit back",
-                p: "A comfortable chair, a quiet room, small sensors placed gently on the scalp.",
-              },
-              {
-                n: "2",
-                h: "Nothing to perform",
-                p: "No screens, tasks, or concentrating. Children don't have to sit perfectly still.",
-              },
-              {
-                n: "3",
-                h: "Brief by design",
-                p: "Most visits fit inside a lunch break or a school pickup.",
-              },
-              {
-                n: "4",
-                h: "Reviewed with you",
-                p: "Sleep, mood, focus, and energy are checked at every visit — and your plan adjusts.",
-              },
-            ].map((r) => (
-              <div className="row" key={r.n}>
-                <div className="n">{r.n}</div>
-                <div>
-                  <h4>{r.h}</h4>
-                  <p>{r.p}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       <section className="sec sec-navy home-journey">
         <div className="wrap">
           <div className="sec-head rv">
-            <div className="eyebrow">The client journey</div>
-            <h2>One clear path, the same at every center.</h2>
-            <p className="sub">
-              No referral needed, nothing to prepare, and you&rsquo;ll always
-              know what comes next.
-            </p>
+            <div className="eyebrow">How it works</div>
+            <h2>Three steps. No homework, no screens, nothing to perform.</h2>
           </div>
-          <div className="journey rv">
+          {/* Column count follows the steps; the tablet/mobile rules override
+              it untouched. Three is the whole plan — see the brief. */}
+          <div
+            className="journey rv"
+            style={{ "--journey-cols": 3 } as CSSProperties}
+          >
             {[
               {
                 n: "1",
-                h: "Talk with us",
-                p: "A free phone call — ask anything.",
+                h: "Talk",
+                p: "A free phone call. Tell us what's going on — we'll tell you honestly whether LENS is a fit.",
               },
               {
                 n: "2",
-                h: "Consult & baseline",
-                p: "A consultation plus a baseline recording of brain activity to guide your starting plan.",
+                h: "Map",
+                p: "Your first visit: a real conversation, a baseline recording of brain activity, and a written plan you keep.",
+                link: {
+                  href: "/first-visit",
+                  label: "See what the first visit is like",
+                },
               },
               {
                 n: "3",
-                h: "Begin sessions",
-                p: "A personalized series of short, comfortable LENS visits.",
-              },
-              {
-                n: "4",
-                h: "Track what matters",
-                p: "Sleep, focus, mood, and energy reviewed at every check-in.",
-              },
-              {
-                n: "5",
-                h: "Adjust as needed",
-                p: "Your plan follows your experience — never a template.",
+                h: "Sessions",
+                p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
               },
             ].map((s) => (
               <div className="jstep" key={s.n}>
                 <div className="n">{s.n}</div>
                 <h3>{s.h}</h3>
-                <p>{s.p}</p>
+                <p>
+                  {s.p}
+                  {s.link && (
+                    <>
+                      {" "}
+                      <Link href={s.link.href}>{s.link.label} &rarr;</Link>
+                    </>
+                  )}
+                </p>
               </div>
             ))}
           </div>
@@ -532,9 +505,7 @@ export default function HomePage() {
             }}
             className="rv"
           >
-            <Btn href="/first-visit" variant="invert">
-              See what the first visit is like
-            </Btn>
+            <TalkCta variant="invert" />
             {startTiming && (
               <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
                 {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
@@ -544,58 +515,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* The Harmonized care model list moved to /about, which already carried
+          a near-identical section. The founder note stays: the quote and the
+          route to her story exist nowhere else on the site. Class retained so
+          the mobile section order is untouched. */}
       <section className="sec home-care">
         <div className="wrap">
-          <div className="sec-head rv">
-            <div className="eyebrow">The Harmonized care model</div>
-            <h2>
-              The same standard of care, at every center, from every
-              practitioner.
-            </h2>
-          </div>
-          <div className="care-list rv">
-            {[
-              {
-                n: "01",
-                h: "Trained to one standard",
-                p: "Every practitioner completes the same Harmonized LENS training and follows the same session structure — your experience doesn't depend on which center you walk into.",
-                tag: TRAINING_CLAIM_TAG,
-              },
-              {
-                n: "02",
-                h: "Progress reviewed at every visit",
-                p: "A structured check-in on sleep, mood, focus, and energy opens each session, and your plan is adjusted from what you report.",
-              },
-              {
-                n: "03",
-                h: "A plan that travels with you",
-                p: "Your plan and progress are documented at every step, so your care stays consistent across visits — and across centers.",
-              },
-              {
-                n: "04",
-                h: "Honest by policy",
-                p: "No promised outcomes, clear recommendations, and a plain answer if we think LENS isn't the right fit for you.",
-              },
-            ].map((c) => (
-              <div className="care" key={c.h}>
-                <div className="care-n" aria-hidden="true">
-                  {c.n}
-                </div>
-                <div>
-                  <h4>{c.h}</h4>
-                  <p>
-                    {c.p}
-                    {c.tag && (
-                      <>
-                        {" "}
-                        <ConfirmTag>{c.tag}</ConfirmTag>
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
           <div className="founder-note rv">
             <PhotoFrame
               src="/images/founder.jpg"

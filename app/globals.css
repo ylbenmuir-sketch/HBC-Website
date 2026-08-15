@@ -218,7 +218,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .wave { display: block; margin: 34px 0 8px; max-width: 100%; height: auto; }
 
 /* journey steps (5) */
-.journey { display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px; margin-top: 76px; position: relative; }
+.journey { display: grid; grid-template-columns: repeat(var(--journey-cols, 5), 1fr); gap: 40px; margin-top: 76px; position: relative; }
 .journey::before { content: ""; position: absolute; top: 29px; left: 5%; right: 5%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-soft) 10%, var(--gold-soft) 90%, transparent); }
 .jstep .n { width: 58px; height: 58px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 24px; color: var(--gold); background: var(--navy); position: relative; margin-bottom: 24px; }
 .jstep h3 { color: var(--ivory); font-size: 22px; font-weight: 500; margin-bottom: 8px; }
