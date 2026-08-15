@@ -45,7 +45,8 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] 140,000+ sessions (`STAT_SESSIONS`)
 - [ ] Founding year 2016 (`ESTABLISHED_YEAR`)
 - [ ] Google rating & review count (`REVIEWS`) — block hidden until verified
-- [ ] Canonical domain (`SITE_URL`)
+- [x] Canonical domain (`SITE_URL`) — `https://harmonizedbraincenterstn.com`,
+      apex canonical (`www` 301s to it). Confirmed by Ben.
 
 ## Locations
 

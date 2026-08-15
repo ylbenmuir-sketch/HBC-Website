@@ -43,8 +43,15 @@ export function draftText(s: string): string | null {
 }
 
 export const SITE_NAME = "Harmonized Brain Centers";
+/**
+ * Canonical site URL — confirmed by Ben. The apex is canonical: `www` 301s to
+ * it at the host, so every absolute URL the site emits (canonical tags,
+ * og:url, sitemap, robots, JSON-LD) uses the apex form and nothing has to be
+ * redirected after the fact. Override per-environment with NEXT_PUBLIC_SITE_URL
+ * (no trailing slash) — see README → Environment variables.
+ */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.harmonizedbraincenters.com"; // [CONFIRM domain]
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://harmonizedbraincenterstn.com";
 
 /* ------------------------------------------------------------------ */
 /* Contact                                                             */

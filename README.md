@@ -59,7 +59,7 @@ submission requires Supabase credentials.
 | --- | --- |
 | `SUPABASE_URL` | Supabase project URL (Settings → API). Server-side only. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key used by `app/api/consultation/route.ts` to insert form submissions. **Never expose to the browser; never commit.** |
-| `NEXT_PUBLIC_SITE_URL` | Canonical site URL for metadata, `sitemap.xml`, `robots.txt`, and JSON-LD. |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site URL for canonical tags, `og:url`, `sitemap.xml`, `robots.txt`, and JSON-LD. Apex form, no trailing slash — `https://harmonizedbraincenterstn.com`. Defaults to that value; set it explicitly in the deploy environment. |
 | `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new consultation request. Server-side only. Unset = leads save but nobody is notified. |
 | `LEADS_NOTIFY_EMAIL` | Inbox that receives new consultation requests. Required alongside `RESEND_API_KEY`. |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
@@ -150,7 +150,7 @@ or work through the files below:
 
 | File | Placeholders to replace |
 | --- | --- |
-| `lib/site-config.ts` | Phone number (display + tel:), site domain, Trisha Yearwood name/likeness approval, founder last name, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, concierge service area & pricing |
+| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder last name, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, concierge service area & pricing |
 | `lib/locations.ts` | Street addresses + ZIPs (all three centers — these also feed the LocalBusiness JSON-LD), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
 | `lib/team.ts` | Practitioner names, bios, certifications, focus areas, schedules; coordinator name; Franklin opening date |
 | `lib/resources.ts` | Article bylines (`[Practitioner name]`, `[Month Year]`) and the `[Draft…]`/`[Body copy…]` article bodies (homework-battles included) |
@@ -209,8 +209,11 @@ Also replace when assets exist:
    Add `NEXT_PUBLIC_FEATURE_CELEBRITY=true` here as well for the Trisha
    band — it is compiled into the bundle, so setting it without redeploying
    changes nothing.
-4. Deploy. Set the production domain, then update `NEXT_PUBLIC_SITE_URL`
-   to match and redeploy so sitemap/OG/JSON-LD URLs are correct.
+4. Deploy. The production domain is `harmonizedbraincenterstn.com`; the apex
+   is canonical, so add both apex and `www` in Project → Settings → Domains
+   and point the `www` record at the apex with a **301** (Vercel's "Redirect
+   to" on the `www` domain). HTTPS redirection is automatic. Every absolute
+   URL the site emits already uses the apex, so nothing else has to change.
 
 ## Route map
 
