@@ -39,15 +39,21 @@ import {
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  // Tracks the hero H1. og:title and twitter:title are derived from this by
-  // Next, so they follow automatically — don't restate them here.
+  // Category + geography first. The old title stacked "anxiety, focus, sleep"
+  // — the exact three keywords its own concern spokes target — while carrying
+  // neither "neurofeedback" nor a place name, so no page on the site targeted
+  // "neurofeedback nashville". The homepage takes the geo+category query; the
+  // concern pages keep the symptom queries.
   //
-  // The H1's internal em dash is dropped rather than reproduced: the title
-  // template already joins the brand with " — ", and two em dashes in one
-  // title reads as a mistake.
+  // `absolute` because the brand is not appended: the title is already long,
+  // and og:site_name carries the brand in link previews. The H1 is unchanged
+  // — it's a conversion asset, and it isn't the title's job to match it.
+  //
+  // og:title and twitter:title are derived from this by Next, so they follow
+  // automatically — don't restate them here.
   title: {
     absolute:
-      "Help for anxiety, focus, and sleep without medication — Harmonized Brain Centers",
+      "Neurofeedback in Nashville & Murfreesboro — Help for Anxiety, Focus & Sleep",
   },
 };
 
