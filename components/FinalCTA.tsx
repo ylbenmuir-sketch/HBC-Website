@@ -2,6 +2,7 @@ import Link from "next/link";
 import ConfirmTag from "./ConfirmTag";
 import {
   PHONE_DISPLAY,
+  RISK_REVERSAL,
   SAME_DAY_CALLBACK,
   SHOW_PHONE,
   verifiedOr,
@@ -39,7 +40,8 @@ export default function FinalCTA({
             </div>
           )}
         </div>
-        <p className="after">
+        <p className="after">{RISK_REVERSAL}</p>
+        <p className="after" style={{ marginTop: 10 }}>
           The call is free &middot; No referral needed
           {sameDayCallback && (
             <>

@@ -5,6 +5,7 @@ import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import {
   BRAIN_MAP_PRICE,
+  RISK_REVERSAL,
   SESSION_LENGTH_TAG,
   PRICING_TAG,
   INSURANCE_TAG,
@@ -105,7 +106,7 @@ const faqs: FaqItem[] = [
   },
   {
     q: "What if I'm unsure whether it's right for me?",
-    a: "That's exactly what the free call is for. Bring the skeptical questions. If we don't think LENS is right for you, we'll tell you on the phone — before you ever book or pay for anything.",
+    a: `That’s exactly what the free call is for. Bring the skeptical questions. ${RISK_REVERSAL}`,
   },
 ];
 

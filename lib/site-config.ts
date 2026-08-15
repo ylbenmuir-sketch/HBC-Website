@@ -212,6 +212,15 @@ export const SAME_DAY_CALLBACK: Verifiable = {
   note: "[Confirm same-day callback]",
 };
 
+/**
+ * Risk reversal — the objection-killer that replaces "free". Used verbatim in
+ * both places it appears (the end-of-page CTA band and FAQ Q14), which is why
+ * it lives here rather than being retyped. It is a promise about how the call
+ * is conducted, not an unverified fact, so it is a plain constant.
+ */
+export const RISK_REVERSAL =
+  "If we don’t think LENS is right for you, we’ll tell you on the phone — before you ever book or pay for anything.";
+
 /** First visit / FAQ practical details. */
 export const FIRST_VISIT_DURATION = "about [60–90] minutes";
 export const FIRST_VISIT_DURATION_TAG = "[CONFIRM duration]";
