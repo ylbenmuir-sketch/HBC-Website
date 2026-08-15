@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
+import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
 import ConcernRail from "@/components/ConcernRail";
@@ -16,6 +17,7 @@ import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locations } from "@/lib/locations";
 import {
+  BRAIN_MAP_CLAIM,
   ESTABLISHED_YEAR,
   EXPERIENCES_DISCLAIMER,
   FEATURE_CELEBRITY,
@@ -133,6 +135,7 @@ const homeFaqs = [
 export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
   const startTiming = verifiedOr(START_TIMING);
+  const brainMapClaim = verifiedOr(BRAIN_MAP_CLAIM);
   const founderQuote = verifiedOr(FOUNDER_QUOTE);
   const sessionCount = verifiedOr(STAT_SESSIONS);
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
@@ -533,6 +536,45 @@ export default function HomePage() {
                 {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
               </span>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* The Harmonized Brain Map — the site's largest differentiator, and what
+          makes the $150 tangible. Sits directly after the three-step module,
+          where step 2 ("Map") names it but doesn't show it. The claim sentence
+          is gated like every other unverified fact: production drops it and the
+          paragraph still reads complete. */}
+      <section className="sec home-brain-map">
+        <div className="wrap split">
+          <div className="rv">
+            <div className="eyebrow">What you walk away with</div>
+            <h2>Most people have never seen their own brain. You will.</h2>
+            <p>
+              On your first visit we record activity at 21 points across your
+              brain and turn it into a map you can actually read &mdash; where
+              things are running hot, where they&rsquo;re running quiet, and how
+              that lines up with what you came in describing. We built this.
+              {brainMapClaim && (
+                <>
+                  {" "}
+                  {brainMapClaim}
+                  <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
+                </>
+              )}
+            </p>
+            <div className="hero-ctas" style={{ marginTop: 30 }}>
+              <TalkCta />
+              <BrainMapCta />
+            </div>
+          </div>
+          <div className="rv">
+            <PlaceholderPlate spec="Harmonized Brain Map — heat map render" />
+            {/* Not gated: the framing has to travel with the image, whether the
+                image is the real render or the plate standing in for it. */}
+            <p className="micro">
+              A picture of electrical activity &mdash; not a diagnosis.
+            </p>
           </div>
         </div>
       </section>

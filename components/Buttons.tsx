@@ -64,9 +64,10 @@ export function TalkCta({
 
 /**
  * Secondary CTA — the priced first visit, for visitors who arrive already sold.
- * Appears in exactly three places: the homepage hero, /first-visit, and
- * /how-lens-works. It never appears without TalkCta beside it, and never
- * replaces it: the free call stays the primary ask everywhere.
+ * Appears in exactly four places: the homepage hero, the homepage Harmonized
+ * Brain Map section, /first-visit, and /how-lens-works. It never appears
+ * without TalkCta beside it, and never replaces it: the free call stays the
+ * primary ask everywhere.
  *
  * Destination is /contact, same as the primary — there is no booking system
  * yet, so this names the priced step rather than competing for a different

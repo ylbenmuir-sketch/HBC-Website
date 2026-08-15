@@ -80,6 +80,8 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] Murfreesboro: exterior · waiting room · session room
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
+- [ ] **Harmonized Brain Map — heat-map render** (homepage Brain Map section).
+      Ship the corrected legend from Phase 7.5, not the current one.
 
 ## Articles
 

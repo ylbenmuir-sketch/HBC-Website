@@ -551,13 +551,14 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .home > .home-goals { order: 6; }
   .home > .home-lens { order: 7; }
   .home > .home-journey { order: 8; }
-  .home > .home-care { order: 9; }
-  .home > .home-stories { order: 10; }
-  .home > .home-locations { order: 11; }
-  .home > .home-faq { order: 12; }
-  .home > .final { order: 13; }
-  .home > .home-guide { order: 14; }
-  .home > .cta-bar { order: 15; }
+  .home > .home-brain-map { order: 9; } /* stays with the "Map" step it explains */
+  .home > .home-care { order: 10; }
+  .home > .home-stories { order: 11; }
+  .home > .home-locations { order: 12; }
+  .home > .home-faq { order: 13; }
+  .home > .final { order: 14; }
+  .home > .home-guide { order: 15; }
+  .home > .cta-bar { order: 16; }
 
   /* ---- cinematic hero: layered image, scrim, editorial type ---- */
   .hero, .home .hero { padding: 0; }
