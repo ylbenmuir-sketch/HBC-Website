@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
+import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
+import ConfirmTag from "@/components/ConfirmTag";
 import { BrainMapCta, TalkCta } from "@/components/Buttons";
+import { STAT_SESSIONS, verifiedOr } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "How LENS Works",
@@ -41,6 +44,7 @@ const lensIsNot = [
 ];
 
 export default function HowLensWorksPage() {
+  const sessionCount = verifiedOr(STAT_SESSIONS);
   return (
     <>
       <section className="page-hero center">
@@ -184,6 +188,50 @@ export default function HowLensWorksPage() {
               />
               <figcaption>Reviewed with you, every visit</figcaption>
             </figure>
+          </div>
+        </div>
+      </section>
+
+      {/* What the map tells us. The sentence structure here is load-bearing:
+          "what we've seen with clients whose…" is pattern language from
+          clinical observation, not diagnosis, and it is what keeps a number on
+          a chart from reading as a verdict. Do not tighten it into
+          "Pz below 10 means…". The closing paragraph says plainly that none of
+          it is a diagnosis. */}
+      <section className="sec">
+        <div className="wrap split">
+          <div className="rv">
+            <h2>What the map actually tells us.</h2>
+            <p>
+              Pz is where analytical thinking and processing happen. What
+              we&rsquo;ve seen with clients whose Pz sits below 10 is difficulty
+              switching that part on &mdash; logistical tasks that should be
+              simple become a slog.
+            </p>
+            <p>
+              F7 handles verbal expression. When we see F7 above 35, that region
+              is often overprocessing &mdash; and clients describe struggling to
+              get out what they&rsquo;re trying to say.
+            </p>
+            <p>
+              None of that is a diagnosis. It&rsquo;s a pattern we&rsquo;ve seen{" "}
+              {sessionCount ? (
+                <>
+                  across {sessionCount} sessions
+                  {!STAT_SESSIONS.verified && (
+                    <ConfirmTag>{STAT_SESSIONS.note!}</ConfirmTag>
+                  )}
+                </>
+              ) : (
+                <>again and again</>
+              )}
+              , held up against what you told us in the room &mdash; and
+              it&rsquo;s why your plan starts where it starts instead of
+              somewhere generic.
+            </p>
+          </div>
+          <div className="rv">
+            <PlaceholderPlate spec="Brain lobe function diagram" />
           </div>
         </div>
       </section>
