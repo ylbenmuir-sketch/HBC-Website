@@ -208,36 +208,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <ProofBand
-        stats={[
-          {
-            stat: STAT_SESSIONS.value,
-            label: "LENS sessions provided across our centers",
-            todo: STAT_SESSIONS.note,
-            verified: Boolean(sessionCount),
-          },
-          {
-            stat: "Two centers",
-            label: "Nashville & Murfreesboro — Franklin coming soon",
-          },
-          {
-            stat: "All ages",
-            label: "Adults, teens, and children welcome",
-          },
-          {
-            stat: `Since ${ESTABLISHED_YEAR.value}`,
-            label: "Serving Middle Tennessee families",
-            todo: ESTABLISHED_YEAR.note,
-            verified: Boolean(establishedYear),
-          },
-        ]}
-      />
-
       {/* Trisha Yearwood band — CONDITIONAL FEATURE. Renders only while
           FEATURE_CELEBRITY is true (draft mode, or the env flag once every
           permission is confirmed — see lib/site-config.ts). Embedding is
           disabled for this video: always a thumbnail linking out, never an
-          iframe. The page is designed to feel complete without this band. */}
+          iframe. The page is designed to feel complete without this band.
+
+          Sits directly under the hero in the DOM. It used to sit below the
+          proof band and get lifted here by a mobile-only `order` override;
+          the DOM now says what the page means, so that override is gone and
+          phone and desktop read the same sequence. */}
       {FEATURE_CELEBRITY && (
         <section className="sec-navy celeb-band">
           <div className="wrap celeb-grid">
@@ -317,6 +297,31 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <ProofBand
+        stats={[
+          {
+            stat: STAT_SESSIONS.value,
+            label: "LENS sessions provided across our centers",
+            todo: STAT_SESSIONS.note,
+            verified: Boolean(sessionCount),
+          },
+          {
+            stat: "Two centers",
+            label: "Nashville & Murfreesboro — Franklin coming soon",
+          },
+          {
+            stat: "All ages",
+            label: "Adults, teens, and children welcome",
+          },
+          {
+            stat: `Since ${ESTABLISHED_YEAR.value}`,
+            label: "Serving Middle Tennessee families",
+            todo: ESTABLISHED_YEAR.note,
+            verified: Boolean(establishedYear),
+          },
+        ]}
+      />
 
       <section className="sec home-concerns">
         <div className="wrap">

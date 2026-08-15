@@ -541,24 +541,12 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   /* mobile art-direction crops (PhotoFrame positionMobile) */
   .ph { --ph-pos-active: var(--ph-pos-m); }
 
-  /* mobile section flow — desktop DOM order untouched */
+  /* mobile section flow — every `order` override is gone. The whole set
+     existed to lift the Trisha band above the proof band on phones; the band
+     now sits there in the DOM, so phone and desktop read the same sequence
+     and section order is changed by moving the section. Still a flex column:
+     flex margins don't collapse, and the section spacing was tuned that way. */
   .home { display: flex; flex-direction: column; }
-  .home > .hero { order: 1; }
-  .home > .celeb-band { order: 2; } /* instant credibility right under the hero */
-  .home > .proof { order: 3; }
-  .home > .home-concerns { order: 4; }
-  .home > .home-stakes { order: 5; }
-  .home > .home-goals { order: 6; }
-  .home > .home-lens { order: 7; }
-  .home > .home-journey { order: 8; }
-  .home > .home-brain-map { order: 9; } /* stays with the "Map" step it explains */
-  .home > .home-care { order: 10; }
-  .home > .home-stories { order: 11; }
-  .home > .home-locations { order: 12; }
-  .home > .home-faq { order: 13; }
-  .home > .final { order: 14; }
-  .home > .home-guide { order: 15; }
-  .home > .cta-bar { order: 16; }
 
   /* ---- cinematic hero: layered image, scrim, editorial type ---- */
   .hero, .home .hero { padding: 0; }

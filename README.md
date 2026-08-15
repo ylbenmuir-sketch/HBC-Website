@@ -17,8 +17,11 @@ every rule is inside a `max-width` media query (≤1060px header, ≤760px phone
 compositions), so desktop rendering is untouched. Key pieces:
 
 - **Homepage flow** — `app/page.tsx` wraps sections in `.home`; at ≤760px it
-  becomes a flex column and CSS `order` re-sequences sections (Trisha moves
-  after the trust sections). Desktop DOM order is unchanged.
+  becomes a flex column. It no longer re-sequences anything: the `order`
+  overrides existed only to lift the Trisha band above the proof band, and
+  once the band moved to that position in the DOM they were deleted. Phone and
+  desktop now read in the same order, so section sequence is changed by moving
+  the section, not by adding a rule.
 - **Hero** — copy and photo share one grid cell on phones (image layered
   behind a scrim, copy pinned to the base). `.m-only`/`.d-only` spans swap
   the short mobile eyebrow/sub for the desktop copy.
@@ -60,6 +63,7 @@ submission requires Supabase credentials.
 | `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new consultation request. Server-side only. Unset = leads save but nobody is notified. |
 | `LEADS_NOTIFY_EMAIL` | Inbox that receives new consultation requests. Required alongside `RESEND_API_KEY`. |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
+| `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 
 ## Supabase setup
 
@@ -96,7 +100,9 @@ Every unverified fact is centralized and **cannot ship to production**:
 - Production builds hide unverified blocks entirely (phone UI, review ratings,
   sample testimonials, draft team profiles/articles, placeholder addresses).
 - The Trisha Yearwood band renders only with `NEXT_PUBLIC_FEATURE_CELEBRITY=true`
-  — set it only once every permission is confirmed in writing.
+  (set in `.env.example`; production needs it in the deploy environment plus a
+  rebuild). The gate itself stays — every permission must still be confirmed in
+  writing, and the flag being on is not evidence that they are.
 - `REQUIRE_VERIFIED_CONTENT=true npm run build` fails the build while required
   facts are unverified (`lib/content-validation.ts`).
 
@@ -200,6 +206,9 @@ Also replace when assets exist:
    `RESEND_API_KEY` and `LEADS_NOTIFY_EMAIL` (and optionally
    `LEADS_NOTIFY_FROM`) so submitted leads reach a human. The build warns
    loudly while the last two are unset — see "Build-time checks" below.
+   Add `NEXT_PUBLIC_FEATURE_CELEBRITY=true` here as well for the Trisha
+   band — it is compiled into the bundle, so setting it without redeploying
+   changes nothing.
 4. Deploy. Set the production domain, then update `NEXT_PUBLIC_SITE_URL`
    to match and redeploy so sitemap/OG/JSON-LD URLs are correct.
 
