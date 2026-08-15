@@ -2,7 +2,9 @@ import {
   FOUNDER_DISPLAY_NAME,
   PHONE_DISPLAY,
   SHOW_DRAFT_CONTENT,
+  type Verifiable,
   isDraftText,
+  verifiedOr,
 } from "./site-config";
 
 /**
@@ -18,6 +20,32 @@ export type TeamCard = {
   bio: string;
   image?: { src: string; position: string };
   plateSpec?: string;
+};
+
+/**
+ * One day's hours. `null` means closed — recorded, never omitted, because a
+ * missing day and a closed day read identically to a visitor and only one of
+ * them is true. `opens`/`closes` are 24-hour "HH:MM" in the week's `timeZone`.
+ */
+export type DayHours = { opens: string; closes: string } | null;
+
+/**
+ * A center's week, as data rather than display strings.
+ *
+ * One shape, two readers: `openingHoursSpecification` in the LocalBusiness
+ * JSON-LD (lib/schema.ts) and the hours a visitor reads on the page
+ * (`formattedHours` below). This replaced a `hoursLines: string[]` of
+ * prewritten copy, which could serve only the second — "Mon–Fri 9a–6p" is not
+ * parseable into a schema node, so the markup had to either restate the hours
+ * somewhere else or omit them, and a restated fact is a fact that drifts.
+ *
+ * Seven entries, Sunday first, so the index matches JS `Date#getDay()`. The
+ * tuple length is part of the type: a week with six days in it does not
+ * compile.
+ */
+export type WeeklyHours = {
+  timeZone: string;
+  week: [DayHours, DayHours, DayHours, DayHours, DayHours, DayHours, DayHours];
 };
 
 export type Location = {
@@ -42,7 +70,17 @@ export type Location = {
    * resolve the expected county. Re-geocode if an address ever changes.
    */
   geo?: { latitude: number; longitude: number };
-  hoursLines: string[];
+  /**
+   * Opening hours, or null for a center with none to publish.
+   *
+   * A `Verifiable` per center rather than one sitewide value, for the reason
+   * the practitioner list is a list: the two open centers keep different
+   * weeks, and a single shared object would have had to be wrong about one of
+   * them. Each center's hours then carry their own gate — an unconfirmed week
+   * stays off the page and out of the schema without silencing the other
+   * center's confirmed one.
+   */
+  hours: Verifiable<WeeklyHours> | null;
   phone: string;
   /** Card meta extras (locations index). */
   cardExtra: string;
@@ -110,7 +148,23 @@ export const locations: Location[] = [
       postalCode: "37211",
     },
     geo: { latitude: 36.110486, longitude: -86.740577 },
-    hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
+    /** Confirmed by Ben. Closed Sunday and Monday. */
+    hours: {
+      value: {
+        timeZone: "America/Chicago",
+        week: [
+          null, // Sunday — closed
+          null, // Monday — closed
+          { opens: "09:00", closes: "18:00" }, // Tuesday
+          { opens: "09:00", closes: "18:00" }, // Wednesday
+          { opens: "09:00", closes: "18:00" }, // Thursday
+          { opens: "09:00", closes: "18:00" }, // Friday
+          { opens: "08:00", closes: "15:00" }, // Saturday
+        ],
+      },
+      verified: true,
+      note: "[Confirm hours]",
+    },
     phone: PHONE_DISPLAY,
     cardExtra: "Free on-site parking",
     practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
@@ -182,7 +236,23 @@ export const locations: Location[] = [
       postalCode: "37130",
     },
     geo: { latitude: 35.851758, longitude: -86.391947 },
-    hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
+    /** Confirmed by Ben. Open Tuesday through Thursday only. */
+    hours: {
+      value: {
+        timeZone: "America/Chicago",
+        week: [
+          null, // Sunday — closed
+          null, // Monday — closed
+          { opens: "09:00", closes: "18:00" }, // Tuesday
+          { opens: "09:00", closes: "18:00" }, // Wednesday
+          { opens: "09:00", closes: "18:00" }, // Thursday
+          null, // Friday — closed
+          null, // Saturday — closed
+        ],
+      },
+      verified: true,
+      note: "[Confirm hours]",
+    },
     phone: PHONE_DISPLAY,
     cardExtra: "[Parking note]",
     practitioners: ["[Name]", "[Name]"],
@@ -252,7 +322,13 @@ export const locations: Location[] = [
       addressRegion: "TN",
       postalCode: "[ZIP]",
     },
-    hoursLines: ["Coming soon — opening date to be announced"],
+    /**
+     * No hours. Franklin has no opening date and no confirmed address, and
+     * hours for a center nobody can visit yet would describe a business that
+     * isn't trading — the same reason the page ships no LocalBusiness. The
+     * hero's "Status: Coming soon" fact says what a visitor actually needs.
+     */
+    hours: null,
     phone: PHONE_DISPLAY,
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitioners: [],
@@ -348,6 +424,103 @@ export function mapsUrl(location: Location): string | null {
   const address = formattedAddress(location);
   if (!address) return null;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+
+/**
+ * This center's confirmed week, or null — no hours recorded, or hours still
+ * unverified in a production build. Every reader goes through here: the page,
+ * the cards, and the JSON-LD all see the same week or all see nothing, so the
+ * markup can never publish hours the page is hiding.
+ */
+export function locationHours(location: Location): WeeklyHours | null {
+  return location.hours ? verifiedOr(location.hours) : null;
+}
+
+/** Sunday-first, matching the `week` tuple and JS `Date#getDay()`. */
+const DAY_ABBREV = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+/** True when two days keep the same hours — including both being closed. */
+function sameHours(a: DayHours, b: DayHours): boolean {
+  if (a === null || b === null) return a === b;
+  return a.opens === b.opens && a.closes === b.closes;
+}
+
+/** "09:00" → "9a", "18:00" → "6p", "09:30" → "9:30a". Site house style. */
+function clockLabel(hhmm: string): string {
+  const [hour, minute] = hhmm.split(":").map(Number);
+  const suffix = hour < 12 ? "a" : "p";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return minute === 0
+    ? `${hour12}${suffix}`
+    : `${hour12}:${String(minute).padStart(2, "0")}${suffix}`;
+}
+
+/** "Tue" for one day, "Tue–Fri" for a run. Handles a run that wraps Saturday. */
+function dayRangeLabel(start: number, end: number): string {
+  return start === end
+    ? DAY_ABBREV[start]
+    : `${DAY_ABBREV[start]}–${DAY_ABBREV[end]}`;
+}
+
+/**
+ * The week as lines a person reads: ["Tue–Fri 9a–6p", "Sat 8a–3p",
+ * "Closed Sun–Mon"]. Empty when the center has no publishable hours.
+ *
+ * Consecutive days that keep the same hours collapse into one run, and a run
+ * that spans the Saturday/Sunday boundary is joined rather than split — which
+ * is what turns Murfreesboro's four separate closed days into the single
+ * "Closed Fri–Mon" a visitor can actually parse. The list is then rotated to
+ * start at the first open run, so the lines lead with when the center is open
+ * and close with when it isn't.
+ *
+ * **Closed days are stated, not dropped.** Someone free only on Friday has to
+ * be able to see that Murfreesboro can't take her and Nashville can; hours
+ * that list open days alone leave her to infer that from an absence.
+ */
+export function formattedHours(location: Location): string[] {
+  const hours = locationHours(location);
+  if (!hours) return [];
+
+  // Runs of consecutive days sharing the same hours.
+  const runs: Array<{ start: number; end: number; hours: DayHours }> = [];
+  hours.week.forEach((day, i) => {
+    const last = runs[runs.length - 1];
+    if (last && sameHours(last.hours, day)) last.end = i;
+    else runs.push({ start: i, end: i, hours: day });
+  });
+
+  // Saturday and Sunday are adjacent in a week, not in an array. Join the
+  // ends when they match, so a closed weekend spanning the wrap reads as one
+  // range instead of two.
+  if (runs.length > 1 && sameHours(runs[0].hours, runs[runs.length - 1].hours)) {
+    const tail = runs.pop()!;
+    runs[0].start = tail.start;
+  }
+
+  // Lead with the open days. Rotation, not a sort: the cyclic order of the
+  // week is what makes "Fri–Mon" mean four days and not a typo.
+  const firstOpen = runs.findIndex((r) => r.hours !== null);
+  const ordered =
+    firstOpen > 0 ? [...runs.slice(firstOpen), ...runs.slice(0, firstOpen)] : runs;
+
+  return ordered.map((run) => {
+    const days = dayRangeLabel(run.start, run.end);
+    return run.hours
+      ? `${days} ${clockLabel(run.hours.opens)}–${clockLabel(run.hours.closes)}`
+      : `Closed ${days}`;
+  });
+}
+
+/**
+ * The same week on one line, for the location cards: "Tue–Fri 9a–6p · Sat
+ * 8a–3p · Closed Sun–Mon". Null when there are no hours to show, so a card
+ * can drop the line rather than print an empty one. The separator lives here
+ * and not in each card, which is the whole point — two cards joining the same
+ * lines two ways is how one of them ends up wrong.
+ */
+export function hoursSummary(location: Location): string | null {
+  const lines = formattedHours(location);
+  return lines.length > 0 ? lines.join(" · ") : null;
 }
 
 /**

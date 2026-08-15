@@ -1,3 +1,4 @@
+import { locations } from "./locations";
 import {
   BRAIN_MAP_CLAIM,
   ESTABLISHED_YEAR,
@@ -41,6 +42,12 @@ check("Response-time claim", RESPONSE_TIME.verified);
 check("Same-day callback promise", SAME_DAY_CALLBACK.verified);
 check("Start-timing claim", START_TIMING.verified);
 check("Franklin opening date", FRANKLIN_OPENING.verified);
+// Per center, and named per center: "hours unverified" on a three-center site
+// doesn't say which one is publishing a week nobody confirmed. A center with
+// no hours recorded at all (Franklin) has nothing to verify and is skipped.
+for (const location of locations) {
+  if (location.hours) check(`${location.name} hours`, location.hours.verified);
+}
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
 check(
   "At least one verified testimonial",
