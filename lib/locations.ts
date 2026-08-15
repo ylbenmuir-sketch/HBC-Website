@@ -59,6 +59,15 @@ export type Location = {
     alsoNearby: string;
   };
   finalHeading: string;
+  /**
+   * <title> override. Open centers lead with the category + city + state —
+   * "neurofeedback nashville" is the highest-intent local query the site has,
+   * and a bare city name ("Nashville — Harmonized Brain Centers") targeted
+   * none of it. Omitted for coming-soon centers, which fall back to the
+   * "{name} — Coming Soon" form: a page for an unopened center should not
+   * compete for queries it can't serve yet.
+   */
+  metaTitle?: string;
   metaDescription: string;
 };
 
@@ -130,8 +139,9 @@ export const locations: Location[] = [
         "Murfreesboro center · Franklin coming soon — transfer anytime; your plan travels with you.",
     },
     finalHeading: "Come see the space, meet the team, and ask us anything.",
+    metaTitle: "LENS Neurofeedback in Nashville, TN",
     metaDescription:
-      "Harmonized Brain Centers Nashville — gentle LENS neurofeedback for adults, children, and families across Davidson County.",
+      "LENS neurofeedback in Nashville, TN — gentle sessions for adults, children, and families across Davidson County. The first call is free.",
   },
   {
     slug: "murfreesboro",
@@ -199,8 +209,9 @@ export const locations: Location[] = [
         "Nashville center · Franklin coming soon — transfer anytime; your plan travels with you.",
     },
     finalHeading: "Come see the space, meet the team, and ask us anything.",
+    metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
-      "Harmonized Brain Centers Murfreesboro — gentle LENS neurofeedback for adults, children, and families across Rutherford County.",
+      "LENS neurofeedback in Murfreesboro, TN — gentle sessions for adults, children, and families across Rutherford County. The first call is free.",
   },
   {
     slug: "franklin",
@@ -256,7 +267,7 @@ export const locations: Location[] = [
     },
     finalHeading: "Join the Franklin waitlist — founding-client openings are limited.",
     metaDescription:
-      "Harmonized Brain Centers Franklin — coming soon to Williamson County. Join the waitlist for founding-client openings.",
+      "LENS neurofeedback is coming soon to Franklin, TN — join the waitlist for founding-client openings in Williamson County.",
   },
 ];
 

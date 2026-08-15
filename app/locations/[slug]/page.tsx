@@ -29,9 +29,9 @@ export async function generateMetadata({
   const location = getLocation((await params).slug);
   if (!location) return {};
   return {
-    title: location.comingSoon
-      ? `${location.name} — Coming Soon`
-      : location.name,
+    title:
+      location.metaTitle ??
+      (location.comingSoon ? `${location.name} — Coming Soon` : location.name),
     description: location.metaDescription,
   };
 }
