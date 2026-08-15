@@ -33,10 +33,15 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Response-time claim "within one business day" (`RESPONSE_TIME`)
 - [ ] "Most new clients start within a week" (`START_TIMING`)
 - [ ] First-visit duration (`FIRST_VISIT_DURATION`)
-- [ ] Typical session length (`SESSION_LENGTH_TAG`)
+- [ ] Typical session length (`SESSION_LENGTH`) — published on `/faq`,
+      `/how-lens-works` and `/concerns/stress-resilience`, tagged on `/faq`
+      only. Until verified the assistant quotes no duration at all and answers
+      the question with fixed copy.
 - [ ] Pricing (`PRICING_TAG`) / HSA-FSA policy (`HSA_FSA_TAG`) / insurance wording (`INSURANCE_TAG`)
 - [ ] Concierge service area & pricing (`CONCIERGE_TAG`)
 - [ ] Practitioner training & progress-review process wording (`TRAINING_CLAIM_TAG`)
+- [ ] Community lists per center (`planning.communitiesTag` in `lib/locations.ts`
+      — Nashville and Murfreesboro). Also drives schema `areaServed`.
 - [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
       we know" wording ships only once verified. Do **not** replace it with
       "the first in the country" without a documented basis.

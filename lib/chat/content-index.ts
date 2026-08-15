@@ -11,14 +11,23 @@ import {
   BRAIN_MAP_PRICE,
   DISCLAIMER,
   ESTABLISHED_YEAR,
+  HSA_FSA_TAG,
+  INSURANCE_TAG,
   PHONE,
+  PRICING_TAG,
   RISK_REVERSAL,
   SAME_DAY_CALLBACK,
+  SESSION_LENGTH_TAG,
   STAT_SESSIONS,
   SITE_NAME,
+  TRAINING_CLAIM_TAG,
   type Verifiable,
 } from "../site-config";
-import { MIRRORED_PAGES, type CopyToken } from "./site-copy";
+import {
+  MIRRORED_PAGES,
+  type ConfirmTagName,
+  type CopyToken,
+} from "./site-copy";
 import type { Passage } from "./types";
 
 /**
@@ -37,17 +46,32 @@ import type { Passage } from "./types";
  *
  * ## What is deliberately excluded
  *
- * - **Unverified facts.** `confirmed()` below ignores SHOW_DRAFT_CONTENT, so
- *   the index is identical in dev and production. A page can render an
- *   unverified value behind a gold [CONFIRM] tag and a conversation cannot,
- *   which means the only safe behaviour is not knowing it. Excluded today:
- *   the Google rating, the response-time and start-timing claims, the founder
- *   quote, the Brain Map differentiator claim, Franklin's opening date and
- *   street address, every [Name] practitioner.
+ * Three gates, in the order they were needed. All three ignore
+ * SHOW_DRAFT_CONTENT, so the index is identical in dev and production: a page
+ * can render an unverified value behind a gold [CONFIRM] tag and a
+ * conversation cannot, which means the only safe behaviour is not knowing it.
+ *
+ * - **Unverified facts** — `confirmed()`, for anything held in a `Verifiable`.
+ *   Excluded today: the Google rating, the response-time and start-timing
+ *   claims, the founder quote, the Brain Map differentiator claim, Franklin's
+ *   opening date and street address, every [Name] practitioner.
+ * - **Draft copy** — `draftFree()`, for data-driven strings still carrying a
+ *   [bracketed] note.
+ * - **Copy the site tags with a `ConfirmTag` sibling** — the `confirmTag`
+ *   field, applied where CONTENT_INDEX is filtered out of ALL_PASSAGES at the
+ *   foot of this file. The two gates above both read the *string*; this one
+ *   covers the case neither can see, where the copy is plain text and the
+ *   [CONFIRM] tag is the element next to it. `page:first-visit:insurance`
+ *   passed both gates and had the assistant stating an HSA/FSA policy the page
+ *   flags as unconfirmed on the same screen. See `confirmTag` in ./types.ts,
+ *   and `CONFIRM_TAG_INVENTORY` in ./site-copy.ts for every tag on every page
+ *   the index draws from.
  * - **Opening hours.** Published on the location pages, but still an open item
  *   in CONTENT-CHECKLIST.md, which is why lib/schema.ts omits
  *   `openingHoursSpecification` too. §5.1 adds a BUSINESS_HOURS entry to the
  *   Verifiable system; hours join the index when that lands and verifies.
+ *   Until then ./unanswerable.ts answers hours questions with fixed copy
+ *   rather than leaving them to find whatever shares a word.
  * - **Testimonials and the location quotes.** Verified quotes are real and
  *   permissioned, but a retrieved testimonial invites the assistant to imply
  *   an outcome, and §1 forbids predicting outcomes. Proof is the page's job,
@@ -64,6 +88,20 @@ import type { Passage } from "./types";
 function confirmed<T>(v: Verifiable<T>): T | null {
   return v.verified ? v.value : null;
 }
+
+/**
+ * The [CONFIRM] tags that gate indexed copy, resolved from the names
+ * site-copy.ts records. Exhaustive over `ConfirmTagName`, so confirming a fact
+ * and deleting its constant fails the build here — the passage cannot stay
+ * excluded by accident once the reason for excluding it is gone.
+ */
+const CONFIRM_TAG_VALUES: Record<ConfirmTagName, string> = {
+  SESSION_LENGTH_TAG,
+  PRICING_TAG,
+  INSURANCE_TAG,
+  HSA_FSA_TAG,
+  TRAINING_CLAIM_TAG,
+};
 
 /**
  * Words a visitor is likely to use that the site's own copy does not contain —
@@ -179,6 +217,7 @@ function concernPassages(c: Concern): Passage[] {
       question: faq.q,
       keywords,
       text: faq.a,
+      confirmTag: faq.confirmTag,
     })),
   ];
 }
@@ -237,6 +276,12 @@ function locationPassages(loc: Location): Passage[] {
       href,
       keywords: [...keywords, ...communities.map((c) => c.toLowerCase()), "serve", "area", "travel", "transfer"],
       text: `${loc.name} serves ${communities.join(", ")}. ${draftFree(loc.planning.alsoNearby) ?? ""}`.trim(),
+      // The location page prints this list with `communitiesTag` beside it —
+      // "[Confirm list]" on Nashville and Murfreesboro today. Read from the
+      // data rather than named in site-copy.ts, so a center that confirms its
+      // list rejoins the index the moment the tag is dropped, one center at a
+      // time. Franklin carries no tag and is unaffected.
+      confirmTag: loc.planning.communitiesTag,
     });
   }
 
@@ -301,6 +346,9 @@ function pagePassages(): Passage[] {
           /\{([A-Z_]+)\}/g,
           (whole, token: string) => values[token as CopyToken] ?? whole
         ),
+        confirmTag: passage.confirmTag
+          ? CONFIRM_TAG_VALUES[passage.confirmTag]
+          : undefined,
       })
     )
   );
@@ -387,7 +435,13 @@ function policyPassages(): Passage[] {
   return passages;
 }
 
-export const CONTENT_INDEX: Passage[] = [
+/**
+ * Everything the index would hold if nothing were gated. Kept separate from
+ * CONTENT_INDEX below so the exclusions are one visible step rather than a
+ * condition threaded through six builders — and so a passage that disappears
+ * can be traced to the tag that removed it.
+ */
+const ALL_PASSAGES: Passage[] = [
   ...concerns.flatMap(concernPassages),
   ...SITE_FAQS.map(
     (faq, i): Passage => ({
@@ -398,6 +452,7 @@ export const CONTENT_INDEX: Passage[] = [
       question: faq.q,
       keywords: FAQ_KEYWORDS[faq.q],
       text: faq.a,
+      confirmTag: faq.confirmTag,
     })
   ),
   allCentersPassage(),
@@ -405,6 +460,20 @@ export const CONTENT_INDEX: Passage[] = [
   ...pagePassages(),
   ...policyPassages(),
 ];
+
+/**
+ * Passages the site renders with a [CONFIRM] tag beside them, and the tag that
+ * did it — the audit trail for everything CONTENT_INDEX drops. Feeds
+ * `indexSummary()`, and exported to be read directly: "why won't it answer
+ * insurance questions" should be one lookup, not an afternoon.
+ */
+export const EXCLUDED_BY_CONFIRM_TAG: Array<{ id: string; confirmTag: string }> =
+  ALL_PASSAGES.filter((p) => p.confirmTag).map((p) => ({
+    id: p.id,
+    confirmTag: p.confirmTag!,
+  }));
+
+export const CONTENT_INDEX: Passage[] = ALL_PASSAGES.filter((p) => !p.confirmTag);
 
 // A FAQ_KEYWORDS key that matches no question is a question that was reworded
 // and quietly lost its routing hints — retrieval still works, just worse, which
@@ -423,5 +492,9 @@ export function indexSummary(): Record<string, number> {
   for (const passage of CONTENT_INDEX) {
     counts[passage.kind] = (counts[passage.kind] ?? 0) + 1;
   }
+  // Counted separately rather than folded into `total`: a shrinking index is
+  // the intended result of a [CONFIRM] tag, and it should be legible as that
+  // and not as passages having gone missing.
+  counts.excludedByConfirmTag = EXCLUDED_BY_CONFIRM_TAG.length;
   return counts;
 }

@@ -6,16 +6,37 @@
  *                                 print a page's normalized prose, which is
  *                                 what mirrored copy must be authored from
  *
+ * Two checks, against two different ways the index can quietly stop matching
+ * the site.
+ *
+ * ## 1. The mirror
+ *
  * Most of the index is DERIVED — lib/concerns.ts, lib/faq.ts, lib/locations.ts
  * and lib/site-config.ts are imported directly, so they cannot drift. The four
  * pages in §2's list that carry their copy inline as JSX (`/`, `/about`,
  * `/first-visit`, `/how-lens-works`) cannot be imported, so lib/chat/site-copy.ts
- * mirrors those passages by hand. This script is what keeps the mirror honest:
- * every `mirror` string must still appear, verbatim, in the page it claims to
- * come from. Edit the page, forget the mirror, and the check fails.
+ * mirrors those passages by hand. Every `mirror` string must still appear,
+ * verbatim, in the page it claims to come from. Edit the page, forget the
+ * mirror, and the check fails.
  *
- * Runs on plain Node — site-copy.ts is type-only at runtime, so Node's built-in
- * TypeScript stripping can import it without a build step.
+ * ## 2. The [CONFIRM] tags
+ *
+ * The mirror check compares *prose*, and a `<ConfirmTag>` is not prose — it is
+ * a sibling element holding an unverified-fact marker. So a page could grow one
+ * beside copy the assistant was already quoting and every check here passed.
+ * That is not hypothetical: it is how the assistant came to state an HSA/FSA
+ * policy that /first-visit flags as unconfirmed on the same screen.
+ *
+ * The second check therefore reads the tags themselves. Every ConfirmTag
+ * payload in every page the index draws copy from must appear in
+ * `CONFIRM_TAG_INVENTORY`, and every inventory entry must still be on its page.
+ * Add a tag, remove one, or rename one, and the check fails until somebody says
+ * in that table whether the copy beside it is now excluded or still safe.
+ *
+ * Runs on plain Node — site-copy.ts holds no runtime imports, so Node's
+ * built-in TypeScript stripping can read it without a build step. Keep it that
+ * way: that is why the inventory names tags as strings instead of importing
+ * them, and why content-index.ts resolves the names to constants instead.
  */
 
 import { readFileSync } from "node:fs";
@@ -77,7 +98,8 @@ if (dumpIndex !== -1) {
   process.exit(0);
 }
 
-const { MIRRORED_PAGES, COPY_TOKENS } = await import("../lib/chat/site-copy.ts");
+const { MIRRORED_PAGES, COPY_TOKENS, CONFIRM_TAG_NAMES, CONFIRM_TAG_INVENTORY } =
+  await import("../lib/chat/site-copy.ts");
 
 const failures = [];
 let checked = 0;
@@ -111,13 +133,66 @@ for (const page of MIRRORED_PAGES) {
         );
       }
     }
+    if (passage.confirmTag && !CONFIRM_TAG_NAMES.includes(passage.confirmTag)) {
+      failures.push(
+        `${passage.id}\n    unknown confirmTag ${passage.confirmTag} — add it to CONFIRM_TAG_NAMES and resolve it in content-index.ts`
+      );
+    }
   }
 }
 
+/**
+ * The ConfirmTag payloads a page renders, as written.
+ *
+ * `<ConfirmTag>{HSA_FSA_TAG}</ConfirmTag>` yields `HSA_FSA_TAG`;
+ * `<ConfirmTag style={{ fontSize: 11 }}>{X.note!}</ConfirmTag>` yields
+ * `X.note!`; a literal child yields itself. Identifiers rather than values,
+ * because that is what the page actually says and what a reader comparing the
+ * two files can see.
+ */
+function confirmTagsIn(source) {
+  const found = new Set();
+  for (const [, inner] of source.matchAll(
+    /<ConfirmTag\b[^>]*>([\s\S]*?)<\/ConfirmTag>/g
+  )) {
+    const payload = inner.replace(/\s+/g, " ").trim().replace(/^\{|\}$/g, "").trim();
+    if (payload) found.add(payload);
+  }
+  return found;
+}
+
+for (const [sourceFile, declared] of Object.entries(CONFIRM_TAG_INVENTORY)) {
+  const found = confirmTagsIn(readFileSync(join(ROOT, sourceFile), "utf8"));
+  const expected = Object.keys(declared);
+
+  for (const tag of found) {
+    if (!expected.includes(tag)) {
+      failures.push(
+        `${sourceFile}\n    renders <ConfirmTag>${tag}</ConfirmTag>, which is not in CONFIRM_TAG_INVENTORY\n` +
+          `    Decide what the index does with the copy beside it — exclude the passage\n` +
+          `    with a confirmTag, or record why it is not indexed — then add it there.`
+      );
+    }
+  }
+  for (const tag of expected) {
+    if (!found.has(tag)) {
+      failures.push(
+        `${sourceFile}\n    CONFIRM_TAG_INVENTORY lists ${tag}, which the page no longer renders\n` +
+          `    If the fact was confirmed, drop any confirmTag holding its passage out\n` +
+          `    of the index (lib/chat/) and remove the entry.`
+      );
+    }
+  }
+}
+
+const taggedPages = Object.keys(CONFIRM_TAG_INVENTORY).length;
+const taggedCount = Object.values(CONFIRM_TAG_INVENTORY).reduce(
+  (n, tags) => n + Object.keys(tags).length,
+  0
+);
+
 if (failures.length > 0) {
-  console.error(
-    `\n❌  content index out of date — ${failures.length} of ${checked} mirrored passage(s) no longer match their page:\n`
-  );
+  console.error(`\n❌  content index out of date — ${failures.length} problem(s):\n`);
   for (const failure of failures) console.error(`  • ${failure}\n`);
   console.error(
     "  Re-read the page and update lib/chat/site-copy.ts. To see the page's\n" +
@@ -128,5 +203,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `✓ content index: ${checked} mirrored passage(s) match their source pages`
+  `✓ content index: ${checked} mirrored passage(s) match their source pages\n` +
+    `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)`
 );

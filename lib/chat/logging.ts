@@ -32,6 +32,8 @@ export type TurnOutcome =
   | "crisis"
   | "minor"
   | "refusal"
+  /** A topic the site has decided not to answer yet — see ./unanswerable.ts. */
+  | "unanswerable"
   | "booking"
   | "booking-submitted"
   | "booking-failed"

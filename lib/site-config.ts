@@ -316,7 +316,29 @@ export const RISK_REVERSAL =
 /** First visit / FAQ practical details. */
 export const FIRST_VISIT_DURATION = "about [60–90] minutes";
 export const FIRST_VISIT_DURATION_TAG = "[CONFIRM duration]";
-export const SESSION_LENGTH_TAG = "[Confirm typical length]";
+
+/**
+ * Typical session length.
+ *
+ * Promoted from a bare tag to a `Verifiable` for the same reason
+ * BUSINESS_HOURS is one: the site assistant reads it, and a plain string gives
+ * it nothing to read. The claim is published in three places — /faq,
+ * /how-lens-works and the stress-resilience FAQ — but tagged on only one of
+ * them, which is exactly how it reached the assistant's index as settled fact.
+ *
+ * While `verified` is false the assistant states no duration at all: every
+ * passage carrying the claim is excluded (lib/chat/content-index.ts) and the
+ * question is answered with fixed copy (lib/chat/unanswerable.ts). Confirming
+ * it retires both in one edit. The value is the wording the pages already use,
+ * so confirming it changes no copy — only whether it may be spoken.
+ */
+export const SESSION_LENGTH: Verifiable = {
+  value: "Most visits are over in well under an hour",
+  verified: false,
+  note: "[Confirm typical length]",
+};
+/** Back-compat alias — the tag the pages render. */
+export const SESSION_LENGTH_TAG = SESSION_LENGTH.note!;
 /**
  * Brain Map (first visit) price — settled in the conversion brief, so it is a
  * known value rather than a Verifiable. One source for the CTA label and the

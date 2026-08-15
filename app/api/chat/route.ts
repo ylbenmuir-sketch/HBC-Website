@@ -14,6 +14,7 @@ import { checkRefusal } from "@/lib/chat/refusals";
 import { checkRateLimit, clientKey } from "@/lib/chat/rate-limit";
 import { checkSafety, detectInjection } from "@/lib/chat/safety";
 import { applySafetyStop, newSessionId, sessionStore } from "@/lib/chat/session";
+import { checkUnanswerable } from "@/lib/chat/unanswerable";
 import { FEATURE_ASSISTANT } from "@/lib/site-config";
 
 export const runtime = "nodejs";
@@ -35,9 +36,17 @@ export const runtime = "nodejs";
  *   3. SESSION           open or resume; injection noted for the log only
  *   4. SAFETY            §4.1 crisis, §4.2 minors  ← the subject of this note
  *   5. REFUSALS          §3 out-of-scope categories
- *   6. BOOKING           §5 state machine, one question per turn
- *   7. RETRIEVAL         §2 BM25 over the content index
- *   8. MODEL             §2 answering — the ONLY stage that calls a model
+ *   6. UNANSWERABLE      topics the site has decided not to answer yet
+ *   7. BOOKING           §5 state machine, one question per turn
+ *   8. RETRIEVAL         §2 BM25 over the content index
+ *   9. MODEL             §2 answering — the ONLY stage that calls a model
+ *
+ * Stages 4, 5 and 6 are the same machine: a deterministic check on the raw
+ * message, fixed copy, no model. They differ only in what they mean. Safety is
+ * "this must stop"; a refusal is "I must not"; unanswerable is "the practice
+ * hasn't settled this yet, and I won't guess on its behalf." Ordering them that
+ * way keeps each answer the honest one — a crisis is never a refusal, and a
+ * gated fact is never dressed up as an out-of-scope question.
  *
  * ## Where the crisis check sits, and what it stops
  *
@@ -180,7 +189,37 @@ export async function POST(request: Request) {
   }
 
   // ------------------------------------------------------------------
-  // 6. BOOKING (§5)
+  // 6. UNANSWERABLE TOPICS
+  // ------------------------------------------------------------------
+  // Hours, and session length now that the [CONFIRM]-tagged passages are
+  // excluded. Both are absent from the index by decision rather than by
+  // oversight, so without this they fall through to whatever shares a word:
+  // "what are your hours" found the session-length FAQ, "how long is a
+  // session" found "How many sessions will I need?". Retrieval cannot tell a
+  // gated fact from an unknown one — it can only see what is in the index —
+  // so the distinction is drawn here, before scoring.
+  //
+  // Skipped at the note step for the same §4.3 reason refusals are: "my
+  // daughter can't get through a Saturday" is a parent answering "what's going
+  // on?", not a question about opening hours.
+  if (session.step !== "note") {
+    const unanswerable = checkUnanswerable(message);
+    if (unanswerable) {
+      if (bookingActive(session)) {
+        // Mid-booking: answer the topic, then re-ask what is still owed. One
+        // question in the turn, per §5.
+        const question = pendingQuestion(session);
+        const text = question
+          ? `${unanswerable.declineOnly} ${question}`
+          : unanswerable.reply;
+        return finish(text, "unanswerable", unanswerable.topic);
+      }
+      return finish(unanswerable.reply, "unanswerable", unanswerable.topic);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // 7. BOOKING (§5)
   // ------------------------------------------------------------------
   if (bookingActive(session)) {
     const turn = advanceBooking(session, message, page);

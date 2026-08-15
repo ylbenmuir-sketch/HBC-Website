@@ -20,7 +20,7 @@ import type { Passage } from "./types";
  *
  *   npm run check:index -- --dump app/about/page.tsx
  *
- * Two rules for what goes in here:
+ * Three rules for what goes in here:
  *
  * 1. **Unconditional copy only.** Anything whose rendering depends on a
  *    `Verifiable` is composed in content-index.ts from that Verifiable, so the
@@ -28,6 +28,12 @@ import type { Passage } from "./types";
  *    sentence has no way to know whether the fact inside it was confirmed.
  * 2. **No paraphrase.** `text` may add a colon or a full stop where a heading
  *    ran into a list, and nothing else. The mirror array is what proves it.
+ * 3. **A passage is one unit of verification.** Where a page renders a
+ *    [CONFIRM] tag against one item in a list, the passage is split so the
+ *    tagged claim can be excluded on its own — see `confirmTag` below and
+ *    `CONFIRM_TAG_INVENTORY` at the foot of this file. Bundling a tagged
+ *    sentence with untagged ones forces a choice between asserting an
+ *    unconfirmed fact and losing three confirmed ones.
  *
  * `href` is the page an answer should offer, which for homepage copy is the
  * deeper page the homepage itself points at — handing someone the homepage
@@ -42,13 +48,38 @@ import type { Passage } from "./types";
 export const COPY_TOKENS = ["BRAIN_MAP_NAME", "BRAIN_MAP_PRICE"] as const;
 export type CopyToken = (typeof COPY_TOKENS)[number];
 
-export type MirroredPassage = Omit<Passage, "kind" | "href"> & {
+/**
+ * The lib/site-config.ts [CONFIRM] tags that gate mirrored copy, named rather
+ * than imported — for the same reason `COPY_TOKENS` are. This file has to stay
+ * importable by plain Node so `npm run check:index` can read it without a build
+ * step, and Node's type stripping does not resolve extensionless imports.
+ *
+ * content-index.ts resolves each name to its constant through an exhaustive
+ * `Record<ConfirmTagName, string>`, so a tag deleted from site-config.ts on
+ * confirmation fails the build here rather than leaving a passage silently
+ * excluded for good.
+ */
+export const CONFIRM_TAG_NAMES = [
+  "SESSION_LENGTH_TAG",
+  "PRICING_TAG",
+  "INSURANCE_TAG",
+  "HSA_FSA_TAG",
+  "TRAINING_CLAIM_TAG",
+] as const;
+export type ConfirmTagName = (typeof CONFIRM_TAG_NAMES)[number];
+
+export type MirroredPassage = Omit<Passage, "kind" | "href" | "confirmTag"> & {
   /**
    * Contiguous chunk(s) of the page's prose to verify. Defaults to `text`;
    * given explicitly when `text` joins pieces the page keeps apart — list
    * items, a heading and its paragraph, copy either side of a comment.
    */
   mirror?: string | string[];
+  /**
+   * The [CONFIRM] tag the page renders beside this copy. Set it and the
+   * passage is kept out of the index entirely — see lib/chat/types.ts.
+   */
+  confirmTag?: ConfirmTagName;
 };
 
 export type MirroredPage = {
@@ -92,6 +123,21 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         text: "What the equipment does: small sensors observe the brain’s electrical activity, and the system returns a brief, very low-energy feedback signal — far weaker than the everyday signals already around you. What you experience: a comfortable chair and a short, quiet visit. There’s nothing to watch, practice, or concentrate on, and most people — including young children — feel nothing at all. What we hope to support, honestly: many clients report feeling calmer, sleeping more easily, or thinking more clearly over a series of sessions. Every nervous system responds differently, nothing is guaranteed, and we review what you notice at every visit.",
       },
       {
+        // Split from the walkthrough below so the duration can be excluded on
+        // its own. /how-lens-works states it untagged, but it is the same
+        // claim /faq flags with SESSION_LENGTH_TAG, and an exclusion that
+        // leaves the claim reachable from a second page excludes nothing.
+        // Carries the duration keywords too: a passage filed under "how long"
+        // that no longer says how long is worse than no passage at all — it
+        // hands the model something to answer from that cannot answer.
+        id: "page:how-lens-works:length",
+        title: "How long a session takes",
+        question: "How long is a session?",
+        keywords: ["long", "hour", "time", "duration", "length", "quick", "minute"],
+        text: "Most visits are over in well under an hour.",
+        confirmTag: "SESSION_LENGTH_TAG",
+      },
+      {
         id: "page:how-lens-works:session",
         title: "What a session feels like",
         question: "What happens during a session?",
@@ -101,14 +147,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "visit",
           "happen",
           "expect",
-          "long",
-          "hour",
-          "time",
           "chair",
         ],
-        text: "A session, start to finish — what it feels like from the chair. Most visits are over in well under an hour. Arrive, a real check-in: Sleep, mood, focus, energy — how we know what's actually changing for you. Settle, sensors on, feet up: A comfortable chair and a few small sensors. No gel caps, no discomfort. Session, nothing to do: The feedback lasts moments; most people feel nothing. Kids can just be kids. Before you go, review & adjust: Your practitioner fine-tunes the plan; you leave knowing where things stand.",
+        text: "A session, start to finish — what it feels like from the chair. Arrive, a real check-in: Sleep, mood, focus, energy — how we know what's actually changing for you. Settle, sensors on, feet up: A comfortable chair and a few small sensors. No gel caps, no discomfort. Session, nothing to do: The feedback lasts moments; most people feel nothing. Kids can just be kids. Before you go, review & adjust: Your practitioner fine-tunes the plan; you leave knowing where things stand.",
         mirror: [
-          "Most visits are over in well under an hour.",
           "A real check-in",
           "Sleep, mood, focus, energy — how we know what's actually changing for you.",
           "Sensors on, feet up",
@@ -253,6 +295,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "documentation",
         ],
         text: "As a wellness service, LENS is typically not covered by insurance. Many clients use HSA/FSA funds — we’ll give you documentation.",
+        // The passage that started all of this. The sentence carries no
+        // brackets, so every gate passed it, and the assistant stated an
+        // HSA/FSA policy the page itself flags as unconfirmed two inches away.
+        confirmTag: "HSA_FSA_TAG",
       },
       {
         id: "page:first-visit:child",
@@ -322,13 +368,25 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         text: "Families deserved a gentle option — and an honest one. Harmonized began with a simple conviction: people struggling with focus, sleep, anxiety, and overwhelm deserve a gentle, noninvasive option — and a team that listens before it recommends anything. Today that conviction is a care model: the same training, the same structured check-ins, the same honest policies at every center — so the experience doesn’t depend on which door you walk through.",
       },
       {
+        // One of the four care-model items, pulled out because it is the only
+        // one /about renders a [CONFIRM] tag against. Excluding the four
+        // together would have cost three confirmed answers — progress
+        // tracking, documentation, and the no-diagnoses promise — to gate one
+        // unconfirmed claim about how practitioners are trained and reviewed.
+        id: "page:about:training",
+        title: "Practitioner training",
+        question: "How are your practitioners trained?",
+        keywords: ["training", "trained", "qualified", "credential", "certified", "practitioner"],
+        text: "Practitioner training: Every practitioner completes the same Harmonized LENS training before working independently.",
+        mirror:
+          "Every practitioner completes the same Harmonized LENS training before working independently.",
+        confirmTag: "TRAINING_CLAIM_TAG",
+      },
+      {
         id: "page:about:care-model",
         title: "The Harmonized care model",
         question: "What is the same at every center?",
         keywords: [
-          "training",
-          "trained",
-          "qualified",
           "standard",
           "consistent",
           "progress",
@@ -337,9 +395,8 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "record",
           "note",
         ],
-        text: "What’s identical at every center. Practitioner training: Every practitioner completes the same Harmonized LENS training before working independently. Structured progress tracking: A consistent check-in on sleep, mood, focus, and energy opens every session — your plan follows what you report. Care that doesn’t rely on memory: Your plan and progress are documented at every step, so your care stays consistent across visits and centers. Responsible communication: No diagnoses, no promised outcomes, no pressure. If LENS isn’t the right fit, we say so — and help you find what is.",
+        text: "What’s identical at every center. Structured progress tracking: A consistent check-in on sleep, mood, focus, and energy opens every session — your plan follows what you report. Care that doesn’t rely on memory: Your plan and progress are documented at every step, so your care stays consistent across visits and centers. Responsible communication: No diagnoses, no promised outcomes, no pressure. If LENS isn’t the right fit, we say so — and help you find what is.",
         mirror: [
-          "Every practitioner completes the same Harmonized LENS training before working independently.",
           "A consistent check-in on sleep, mood, focus, and energy opens every session — your plan follows what you report.",
           "Your plan and progress are documented at every step, so your care stays consistent across visits and centers.",
           "No diagnoses, no promised outcomes, no pressure. If LENS isn’t the right fit, we say so — and help you find what is.",
@@ -494,3 +551,72 @@ export const MIRRORED_PAGES: MirroredPage[] = [
     ],
   },
 ];
+
+/**
+ * Every `<ConfirmTag>` rendered by a page the assistant draws copy from, and
+ * what the index does about it.
+ *
+ * This exists because of how the HSA/FSA passage got in. `draftFree()` reads
+ * the string; the tag is a *sibling element*; the string is clean; the passage
+ * indexes as settled fact. Nothing in the pipeline could see the difference,
+ * and nothing would have caught the next one either — the pages carry sixteen
+ * of these tags and the index draws copy from eight of the files holding them.
+ *
+ * So the tags are inventoried instead. `npm run check:index` extracts every
+ * ConfirmTag payload from each file below and fails if the set differs from
+ * what is declared here — a tag added, removed, or renamed forces someone to
+ * come back to this table and say which it is:
+ *
+ * - **excluded** — indexed copy sits beside the tag, and the passage carries a
+ *   `confirmTag` that keeps it out. Name the passage id.
+ * - **not indexed** — the copy never reaches the index. Say why, because "it
+ *   isn't in there" is exactly the belief that was wrong about HSA/FSA.
+ * - **Verifiable-gated** — the tag renders `X.note`, and content-index.ts
+ *   reads the same `X` through `confirmed()`. These need nothing: the gate is
+ *   already on the value, which is what makes the plain-string tags below the
+ *   dangerous ones. They are the whole reason this class of bug exists.
+ *
+ * Files with no tags are listed deliberately. `app/concerns/[slug]/page.tsx`
+ * renders 24 indexed FAQs and no tag today; the empty entry is what fails the
+ * check on the day one appears.
+ */
+export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
+  "app/how-lens-works/page.tsx": {
+    "STAT_SESSIONS.note!": "Verifiable-gated — policy:scale reads confirmed(STAT_SESSIONS)",
+  },
+  "app/first-visit/page.tsx": {
+    HSA_FSA_TAG: "excluded — page:first-visit:insurance",
+    FIRST_VISIT_DURATION_TAG:
+      "not indexed — the line renders only under SHOW_DRAFT_CONTENT, and FIRST_VISIT_DURATION is [bracketed] besides",
+  },
+  "app/about/page.tsx": {
+    TRAINING_CLAIM_TAG: "excluded — page:about:training, split out of page:about:care-model",
+  },
+  "app/page.tsx": {
+    "SAME_DAY_CALLBACK.note!": "Verifiable-gated — policy:free-call reads confirmed(SAME_DAY_CALLBACK)",
+    "START_TIMING.note!": "not indexed — no passage carries the start-timing claim",
+    "BRAIN_MAP_CLAIM.note!": "not indexed — the differentiator claim is in no passage",
+    "FOUNDER_QUOTE.note!": "not indexed — the founder quote is in no passage",
+    "FOUNDER_LAST_NAME.note!": "Verifiable-gated — and verified; FOUNDER_DISPLAY_NAME is not indexed regardless",
+    "FRANKLIN_OPENING.note!": "Verifiable-gated — location:franklin:coming-soon omits the date by construction",
+    "REVIEWS.note!": "not indexed — ratings and review counts are in no passage",
+    TRISHA_APPROVAL_TAG: "not indexed — the celebrity band is in no passage",
+    "Film 2–3 short testimonials": "not indexed — a production to-do, not a claim",
+  },
+  "app/faq/page.tsx": {
+    SESSION_LENGTH_TAG: "excluded — faq:6, and every other passage restating the duration",
+    PRICING_TAG: "excluded — faq:12 (the same copy is published untagged on /first-visit)",
+    INSURANCE_TAG: "excluded — faq:13",
+  },
+  "app/locations/page.tsx": {
+    "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
+    CONCIERGE_TAG: "not indexed — concierge sessions are in no passage",
+  },
+  "app/locations/[slug]/page.tsx": {
+    "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
+    "location.planning.communitiesTag":
+      "excluded — location:<slug>:area, gated per center on the data rather than here",
+  },
+  "app/concerns/[slug]/page.tsx": {},
+  "app/what-we-help-with/page.tsx": {},
+};
