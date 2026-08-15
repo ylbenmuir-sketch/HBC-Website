@@ -63,7 +63,7 @@ export const concerns: Concern[] = [
       "Feeling mentally or physically stuck in high alert",
     ],
     howHelp: {
-      p1: "An anxious nervous system often feels like a system working harder than it needs to. LENS sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform — and many clients tell us they gradually feel more settled over a series of visits. Experiences vary.",
+      p1: "An anxious nervous system often feels like a system working harder than it needs to. LENS sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform — and many clients tell us they gradually feel more settled over a series of visits.",
       p2: "There's nothing to perform and nothing invasive. We check how settled you actually feel — sleep, tension, reactivity — at every visit, and let your experience guide the plan.",
       note: "LENS is a wellness service, not a treatment for anxiety disorders. It works alongside — never in place of — care from your doctor or therapist. Individual experiences vary.",
     },
@@ -116,7 +116,7 @@ export const concerns: Concern[] = [
       "Losing track mid-task, mid-sentence, mid-plan",
     ],
     howHelp: {
-      p1: "Struggling to focus often feels like working against your own noise. LENS asks nothing of you — nothing to practice, no screens to watch, no tasks to perform — and many clients report feeling clearer and steadier over a series of sessions. Experiences vary.",
+      p1: "Struggling to focus often feels like working against your own noise. LENS asks nothing of you — nothing to practice, no screens to watch, no tasks to perform — and many clients report feeling clearer and steadier over a series of sessions.",
       p2: "Focus and follow-through are tracked at every check-in — homework, deadlines, the everyday specifics — and your plan adjusts to what's actually changing.",
       note: "LENS is a wellness service, not a treatment for ADHD or any diagnosis. It works alongside — never in place of — your doctor, therapist, or school supports. Individual experiences vary.",
     },
@@ -168,7 +168,7 @@ export const concerns: Concern[] = [
       "Waking exhausted no matter how long you slept",
     ],
     howHelp: {
-      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS sessions are quiet and passive — and sleep is often the first thing clients tell us has shifted, which is why we ask about it at every visit. Experiences vary.",
+      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS sessions are quiet and passive — and sleep is often the first thing clients tell us has shifted, which is why we ask about it at every visit.",
       p2: "Sleep is one of the first things we ask about at every visit. Your plan adjusts to what your nights are telling us — falling asleep, staying asleep, and how mornings actually feel.",
       note: "LENS is a wellness service, not a treatment for sleep disorders. It works alongside — never in place of — care from your doctor. Individual experiences vary.",
     },
@@ -220,7 +220,7 @@ export const concerns: Concern[] = [
       "A short fuse — and a long recovery",
     ],
     howHelp: {
-      p1: "Big reactions often come from tipping into overwhelm faster than it's possible to recover. LENS sessions are gentle and passive — nothing to get right, nothing to perform — and many families tell us the hard moments gradually get shorter and end in recovery. Experiences vary.",
+      p1: "Big reactions often come from tipping into overwhelm faster than it's possible to recover. LENS sessions are gentle and passive — nothing to get right, nothing to perform — and many families tell us the hard moments gradually get shorter and end in recovery.",
       p2: "There's nothing a child has to get right in a LENS session — which matters for kids tired of being corrected. Parents join every check-in, and we track what matters at home: transitions, recoveries, and how the hard moments actually go.",
       note: "LENS is a wellness service and doesn't diagnose or treat any condition. It works alongside — never in place of — therapists, pediatricians, and school supports. Individual experiences vary.",
     },
@@ -272,7 +272,7 @@ export const concerns: Concern[] = [
       "Cognitively exhausted by normal responsibilities",
     ],
     howHelp: {
-      p1: "A foggy brain often feels like a tired one — energy going to noise instead of the task in front of you. LENS sessions are brief and passive, and many clients report thinking feeling clearer and less effortful over a series of visits. Experiences vary.",
+      p1: "A foggy brain often feels like a tired one — energy going to noise instead of the task in front of you. LENS sessions are brief and passive, and many clients report thinking feeling clearer and less effortful over a series of visits.",
       p2: "We start with a consultation and a baseline recording of brain activity, then track clarity, recall, and mental energy across your sessions — in everyday specifics, not vague impressions.",
       note: "LENS is a wellness service and doesn't diagnose or treat any medical condition. If you're concerned about cognitive change, talk with your doctor — LENS works alongside, never in place of, that care. Individual experiences vary.",
     },
@@ -324,7 +324,7 @@ export const concerns: Concern[] = [
       "Wanting to handle normal stress normally",
     ],
     howHelp: {
-      p1: "A system that never stands down eventually wears down. LENS sessions ask nothing of you — a comfortable chair, a very low-energy feedback signal, a genuine pause — and many clients report recovering from hard days more easily over time. Experiences vary.",
+      p1: "A system that never stands down eventually wears down. LENS sessions ask nothing of you — a comfortable chair, a very low-energy feedback signal, a genuine pause — and many clients report recovering from hard days more easily over time.",
       p2: "Sessions are short enough to keep in a full life, and they ask nothing of you — no practicing, no performing. For many clients, that genuine off-switch is where things begin to turn.",
       note: "LENS is a wellness service, not a medical treatment for burnout or any condition. It works alongside — never in place of — care from your doctor or therapist. Individual experiences vary.",
     },
@@ -428,7 +428,7 @@ export const concerns: Concern[] = [
       "The past keeping the present from feeling safe",
     ],
     howHelp: {
-      p1: "LENS doesn't require you to retell or relive anything. Sessions are quiet and predictable — small sensors, a comfortable chair, nothing asked of you — while the system delivers its very low-energy feedback signal. Many clients describe sessions themselves as calming. Experiences vary.",
+      p1: "LENS doesn't require you to retell or relive anything. Sessions are quiet and predictable — small sensors, a comfortable chair, nothing asked of you — while the system delivers its very low-energy feedback signal. Many clients describe sessions themselves as calming.",
       p2: "Sessions pair well with the therapy or support you already trust, and we're glad to coordinate with providers you're working with. We track how settled you actually feel at every visit.",
       note: "LENS is a wellness service, not a treatment for PTSD or any condition. It works alongside — never in place of — care from your therapist or doctor. Individual experiences vary.",
     },
