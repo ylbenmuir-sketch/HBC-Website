@@ -26,11 +26,13 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `Feel like yourself again — ${SITE_NAME}`,
+    default: `You’ve tried everything. Your brain hasn’t — ${SITE_NAME}`,
     template: `%s — ${SITE_NAME}`,
   },
+  // Mirrors the hero sub. The session-count sentence is deliberately left out:
+  // it is gated on unverified facts, and metadata has no draft mode to hide it.
   description:
-    "Gentle, noninvasive LENS neurofeedback support for anxiety, focus and ADHD, sleep, emotional regulation, brain fog, and stress — delivered by trained practitioners at centers across Middle Tennessee.",
+    "Gentle, drug-free neurofeedback for anxiety, focus, sleep, and overwhelm — for adults and kids across Middle Tennessee.",
   openGraph: {
     siteName: SITE_NAME,
     type: "website",

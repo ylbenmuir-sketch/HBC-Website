@@ -37,7 +37,9 @@ import {
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: { absolute: "Feel like yourself again — Harmonized Brain Centers" },
+  title: {
+    absolute: "You’ve tried everything. Your brain hasn’t — Harmonized Brain Centers",
+  },
 };
 
 const homeConcerns = [
@@ -131,6 +133,8 @@ export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
   const startTiming = verifiedOr(START_TIMING);
   const founderQuote = verifiedOr(FOUNDER_QUOTE);
+  const sessionCount = verifiedOr(STAT_SESSIONS);
+  const establishedYear = verifiedOr(ESTABLISHED_YEAR);
   const homeQuotes = SHOW_DRAFT_CONTENT ? TESTIMONIALS : VERIFIED_TESTIMONIALS;
   const showStories = homeQuotes.length > 0;
   const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
@@ -141,32 +145,29 @@ export default function HomePage() {
         <div className="hero-grid">
           <div className="rv hero-copy">
             <div className="eyebrow">
-              <span className="d-only">
-                LENS Neurofeedback &middot; Adults &amp; Children &middot;
-                Middle Tennessee
-              </span>
-              <span className="m-only">LENS Neurofeedback</span>
+              LENS Neurofeedback &middot; Nashville &amp; Murfreesboro
             </div>
             <h1>
-              Feel like
-              <br className="m-only" /> <em className="sage">yourself</em>
-              <br className="m-only" /> again.
+              You&rsquo;ve tried everything.
+              <br className="m-only" /> Your brain{" "}
+              <em className="sage">hasn&rsquo;t.</em>
             </h1>
             <p className="sub">
-              <span className="d-only">
-                Gentle, noninvasive neurofeedback support for{" "}
-                <b className="kw">anxiety</b>, <b className="kw">focus and ADHD</b>,{" "}
-                <b className="kw">sleep</b>, <b className="kw">emotional regulation</b>,{" "}
-                <b className="kw">brain fog</b>, and <b className="kw">stress</b>{" "}
-                &mdash; delivered by trained practitioners at centers across
-                Middle Tennessee.
-              </span>
-              <span className="m-only">
-                Gentle, noninvasive neurofeedback for{" "}
-                <b className="kw">anxiety</b>, <b className="kw">focus &amp; ADHD</b>,{" "}
-                <b className="kw">sleep</b>, and <b className="kw">stress</b>{" "}
-                &mdash; for adults and children across Middle Tennessee.
-              </span>
+              Gentle, drug-free neurofeedback for <b className="kw">anxiety</b>,{" "}
+              <b className="kw">focus</b>, <b className="kw">sleep</b>, and{" "}
+              <b className="kw">overwhelm</b> &mdash; for adults and kids across
+              Middle Tennessee.
+              {/* Both numbers are unverified facts, so the whole sentence is
+                  gated rather than asserted; it returns once they are signed
+                  off in site-config. */}
+              {sessionCount && establishedYear && (
+                <>
+                  {" "}
+                  {sessionCount} sessions since {establishedYear}.
+                  <ConfirmTag>{STAT_SESSIONS.note!}</ConfirmTag>
+                  <ConfirmTag>{ESTABLISHED_YEAR.note!}</ConfirmTag>
+                </>
+              )}
             </p>
             <div className="hero-ctas">
               <TalkCta />
@@ -184,7 +185,8 @@ export default function HomePage() {
               ) : (
                 <>A real person calls you back.</>
               )}{" "}
-              Ask anything &mdash; including the skeptical questions.
+              Ask anything &mdash; including the skeptical questions.{" "}
+              <Link href="/how-lens-works">See how LENS works &rarr;</Link>
             </p>
           </div>
           <div className="rv hero-media">
@@ -209,6 +211,7 @@ export default function HomePage() {
             stat: STAT_SESSIONS.value,
             label: "LENS sessions provided across our centers",
             todo: STAT_SESSIONS.note,
+            verified: Boolean(sessionCount),
           },
           {
             stat: "Two centers",
@@ -222,6 +225,7 @@ export default function HomePage() {
             stat: `Since ${ESTABLISHED_YEAR.value}`,
             label: "Serving Middle Tennessee families",
             todo: ESTABLISHED_YEAR.note,
+            verified: Boolean(establishedYear),
           },
         ]}
       />
