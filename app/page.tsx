@@ -41,9 +41,13 @@ import {
 export const metadata: Metadata = {
   // Tracks the hero H1. og:title and twitter:title are derived from this by
   // Next, so they follow automatically — don't restate them here.
+  //
+  // The H1's internal em dash is dropped rather than reproduced: the title
+  // template already joins the brand with " — ", and two em dashes in one
+  // title reads as a mistake.
   title: {
     absolute:
-      "Gentle neurofeedback for anxiety, focus, and sleep — Harmonized Brain Centers",
+      "Help for anxiety, focus, and sleep without medication — Harmonized Brain Centers",
   },
 };
 
@@ -147,18 +151,20 @@ export default function HomePage() {
             <div className="eyebrow">
               LENS Neurofeedback &middot; Nashville &amp; Murfreesboro
             </div>
-            {/* No sage italic here: the accent worked on "hasn't" because that
-                word was the turn in a two-part line. This headline is a plain
-                statement with no pivot, so an italic would be decoration on an
-                arbitrary word. The mobile <br> went with it — it existed to
-                split the old two-sentence H1. */}
-            <h1>Gentle neurofeedback for anxiety, focus, and sleep.</h1>
-            {/* Location and session count are one screen down in the proof
-                band; repeating them here only lengthened the sub. */}
+            {/* The sage italic is back: this headline turns on the em dash,
+                and "without medication" is the differentiator it turns on —
+                the same shape as "nothing to perform." on /how-lens-works. The
+                previous plain headline had no pivot, which is why it carried
+                no accent. */}
+            <h1>
+              Help for anxiety, focus, and sleep &mdash;{" "}
+              <em className="sage">without medication.</em>
+            </h1>
+            {/* No .kw spans: the concern keywords they marked are in the H1
+                now, and the sub carries category and location instead. */}
             <p className="sub">
-              Gentle, drug-free neurofeedback for <b className="kw">anxiety</b>,{" "}
-              <b className="kw">focus</b>, <b className="kw">sleep</b>, and{" "}
-              <b className="kw">overwhelm</b> &mdash; adults and kids.
+              Gentle LENS neurofeedback for adults and kids across Middle
+              Tennessee.
             </p>
             <div className="hero-ctas">
               <TalkCta />
