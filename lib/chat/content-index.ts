@@ -1,0 +1,427 @@
+import { concerns, type Concern } from "../concerns";
+import { SITE_FAQS } from "../faq";
+import {
+  communitiesServed,
+  formattedAddress,
+  locations,
+  type Location,
+} from "../locations";
+import {
+  BRAIN_MAP_NAME,
+  BRAIN_MAP_PRICE,
+  DISCLAIMER,
+  ESTABLISHED_YEAR,
+  PHONE,
+  RISK_REVERSAL,
+  SAME_DAY_CALLBACK,
+  STAT_SESSIONS,
+  SITE_NAME,
+  type Verifiable,
+} from "../site-config";
+import { MIRRORED_PAGES, type CopyToken } from "./site-copy";
+import type { Passage } from "./types";
+
+/**
+ * The site assistant's knowledge base (phase-8-chatbot.md §2).
+ *
+ * Server-side only. This is the entire set of things the assistant knows: all
+ * 8 concerns and their 24 FAQs, the 14 questions on /faq, the centers, the
+ * four pages whose copy is mirrored in site-copy.ts, and the sitewide
+ * policies. If a fact is not in here, the assistant does not have it — §2 is
+ * explicit that a confident wrong answer about a wellness service is worse
+ * than "I don't know."
+ *
+ * Everything except site-copy.ts is imported from the module that owns it, so
+ * confirming a fact or rewriting an answer updates the page and the assistant
+ * in the same edit.
+ *
+ * ## What is deliberately excluded
+ *
+ * - **Unverified facts.** `confirmed()` below ignores SHOW_DRAFT_CONTENT, so
+ *   the index is identical in dev and production. A page can render an
+ *   unverified value behind a gold [CONFIRM] tag and a conversation cannot,
+ *   which means the only safe behaviour is not knowing it. Excluded today:
+ *   the Google rating, the response-time and start-timing claims, the founder
+ *   quote, the Brain Map differentiator claim, Franklin's opening date and
+ *   street address, every [Name] practitioner.
+ * - **Opening hours.** Published on the location pages, but still an open item
+ *   in CONTENT-CHECKLIST.md, which is why lib/schema.ts omits
+ *   `openingHoursSpecification` too. §5.1 adds a BUSINESS_HOURS entry to the
+ *   Verifiable system; hours join the index when that lands and verifies.
+ * - **Testimonials and the location quotes.** Verified quotes are real and
+ *   permissioned, but a retrieved testimonial invites the assistant to imply
+ *   an outcome, and §1 forbids predicting outcomes. Proof is the page's job,
+ *   not the assistant's.
+ * - **The homepage's three-question FAQ block.** A shortened restatement of
+ *   /faq answers already indexed; two near-identical passages would compete
+ *   with each other and cite the weaker page.
+ */
+
+/**
+ * Verified values only, in every environment — unlike `verifiedOr()`, which
+ * hands back drafts whenever SHOW_DRAFT_CONTENT is on. See the note above.
+ */
+function confirmed<T>(v: Verifiable<T>): T | null {
+  return v.verified ? v.value : null;
+}
+
+/**
+ * Words a visitor is likely to use that the site's own copy does not contain —
+ * the site says "cost", people type "price"; it says "Anxiety &
+ * nervous-system overload", people type "panic". These route a question to the
+ * right passage and are never shown or quoted: they are search keys, not
+ * content, and nothing here asserts that LENS addresses a named condition.
+ */
+const CONCERN_ALIASES: Record<string, string[]> = {
+  anxiety: ["anxious", "worry", "worried", "panic", "nervous", "edge", "tense", "racing", "calm"],
+  "focus-adhd": ["adhd", "add", "attention", "concentrate", "distracted", "procrastinate", "task", "scattered"],
+  sleep: ["insomnia", "asleep", "awake", "night", "bed", "bedtime", "tired", "rest", "3am"],
+  "emotional-regulation": ["meltdown", "tantrum", "anger", "angry", "outburst", "upset", "transition", "regulate"],
+  "brain-fog": ["fog", "foggy", "memory", "forget", "forgetful", "cloudy", "word", "recall", "fatigue"],
+  "stress-resilience": ["burnout", "burned", "overwhelm", "exhausted", "empty", "recover", "pressure"],
+  "children-school": ["school", "homework", "teacher", "class", "grade", "student", "morning", "kid", "child"],
+  // Not "safe": on this page the word belongs to "the past keeps the present
+  // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
+  // question with a plain answer on /faq — into trauma copy.
+  trauma: ["trauma", "ptsd", "past", "vigilant", "startle", "flashback"],
+};
+
+/**
+ * Routing hints for /faq, keyed by the question as written in lib/faq.ts.
+ *
+ * These are the site's most-asked questions and the ones visitors phrase least
+ * like the page does — "how much", "medicare", "side effects", "is my kid too
+ * young". Kept here rather than in lib/faq.ts because they are retrieval keys,
+ * not page content; an edit to a question drops its keys and warns below.
+ */
+const FAQ_KEYWORDS: Record<string, string[]> = {
+  "What is LENS neurofeedback?": ["lens", "neurofeedback", "low", "energy", "system", "signal", "sensor"],
+  "Is it safe?": ["safe", "safety", "risk", "risky", "danger", "dangerous", "side", "effect", "harm"],
+  "Does it hurt?": ["hurt", "pain", "painful", "uncomfortable", "needle", "shock", "feel"],
+  "Is it appropriate for children?": ["child", "kid", "age", "old", "young", "toddler", "teen", "teenager", "son", "daughter", "year", "appropriate"],
+  "Do I have to do anything during the session?": ["anything", "screen", "task", "practice", "homework", "effort", "participate", "passive"],
+  "How long is a session?": ["long", "time", "minute", "hour", "duration", "length", "quick"],
+  "How many sessions will I need?": ["many", "number", "often", "frequency", "week", "course", "program", "commit"],
+  "What does the first visit include?": ["first", "visit", "include", "baseline", "recording", "plan", "conversation"],
+  "What kinds of concerns do clients come in with?": ["concern", "kind", "issue", "problem", "reason", "symptom", "struggle"],
+  "Is this therapy or medical treatment?": ["therapy", "medical", "treatment", "diagnose", "psychiatric", "substitute", "clinic", "counseling"],
+  "Can I continue seeing my doctor or therapist?": ["doctor", "therapist", "psychiatrist", "counselor", "medication", "prescriber", "alongside", "coordinate", "continue", "keep", "stop"],
+  "What does it cost?": ["cost", "price", "pricing", "much", "expensive", "afford", "pay", "fee", "payment", "dollar", "free"],
+  "Does insurance cover it?": ["insurance", "cover", "coverage", "hsa", "fsa", "medicare", "medicaid", "reimburse", "claim", "bill"],
+  "What if I'm unsure whether it's right for me?": ["unsure", "sure", "right", "fit", "skeptical", "doubt", "hesitant", "worth", "sceptical"],
+};
+
+/** Retrieval keys shared by every passage about a given center. */
+const LOCATION_KEYWORDS = [
+  "location",
+  "located",
+  "where",
+  "address",
+  "directions",
+  "near",
+  "nearby",
+  "drive",
+  "visit",
+  "center",
+  "office",
+  "clinic",
+];
+
+function concernPassages(c: Concern): Passage[] {
+  const href = `/concerns/${c.slug}`;
+  const keywords = [
+    ...c.slug.split("-"),
+    ...(CONCERN_ALIASES[c.slug] ?? []),
+  ];
+
+  return [
+    {
+      id: `concern:${c.slug}:signs`,
+      kind: "concern",
+      title: c.title,
+      href,
+      question: `Do you help with ${c.shortTitle.toLowerCase()}?`,
+      keywords,
+      text: `${c.title} — ${c.who}. ${c.heroSub} ${c.overview.recognize} People describe: ${c.recognize.join("; ")}.`,
+    },
+    {
+      id: `concern:${c.slug}:approach`,
+      kind: "concern",
+      title: c.title,
+      href,
+      keywords,
+      text: `${c.overview.approach} ${c.howHelp.p1} ${c.howHelp.p2}`,
+    },
+    {
+      // The wellness-service boundary, in the words this concern's own page
+      // uses. Retrievable on its own so a question that edges toward treatment
+      // finds the site's actual language rather than an approach paragraph.
+      id: `concern:${c.slug}:limits`,
+      kind: "concern",
+      title: `${c.title} — what LENS is and isn't`,
+      href,
+      keywords: [...keywords, "treat", "treatment", "cure", "diagnose", "medication", "instead", "replace"],
+      text: c.howHelp.note,
+    },
+    {
+      id: `concern:${c.slug}:goals`,
+      kind: "concern",
+      title: `${c.title} — common goals`,
+      href,
+      keywords: [...keywords, "goal", "hope", "change", "better", "improve"],
+      text: `${c.goalsHeading} ${c.goals.join(" ")}`,
+    },
+    ...c.faqs.map((faq, i): Passage => ({
+      id: `concern:${c.slug}:faq:${i + 1}`,
+      kind: "concern-faq",
+      title: c.title,
+      href,
+      question: faq.q,
+      keywords,
+      text: faq.a,
+    })),
+  ];
+}
+
+function locationPassages(loc: Location): Passage[] {
+  const href = `/locations/${loc.slug}`;
+  const keywords = [...LOCATION_KEYWORDS, loc.name.toLowerCase(), ...loc.county.toLowerCase().split(" ")];
+  const passages: Passage[] = [];
+
+  // formattedAddress() returns null while the street address or ZIP is still a
+  // [placeholder], which is what keeps Franklin's address out of the index —
+  // the same gate the page and the JSON-LD use.
+  const address = formattedAddress(loc);
+  const parking = loc.comingSoon ? null : draftFree(loc.cardExtra);
+
+  if (loc.comingSoon) {
+    passages.push({
+      id: `location:${loc.slug}:coming-soon`,
+      kind: "location",
+      title: `${loc.name} — coming soon`,
+      href,
+      question: `Do you have a center in ${loc.name}?`,
+      keywords: [...keywords, "open", "opening", "soon", "waitlist", "new"],
+      // No opening date: FRANKLIN_OPENING is unverified, so "opening soon" —
+      // which is where the page's own hero copy starts — is the whole of what
+      // the site claims.
+      text: `${loc.name}, ${loc.address.addressRegion}. ${loc.hero.sub}`,
+    });
+  } else {
+    passages.push({
+      id: `location:${loc.slug}:visiting`,
+      kind: "location",
+      title: `${SITE_NAME} — ${loc.name}`,
+      href,
+      question: `Where is your ${loc.name} center?`,
+      keywords: [...keywords, "parking", "park", "street", "suite"],
+      // Kept short and about the address. Length normalization means a
+      // passage padded with the hero paragraph loses "where are you?" to a
+      // shorter one that says less.
+      text: [
+        `Our ${loc.name} center serves ${loc.county}.`,
+        address ? `The address is ${address}.` : null,
+        parking ? `${parking}.` : null,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    });
+  }
+
+  const communities = communitiesServed(loc);
+  if (communities.length > 0) {
+    passages.push({
+      id: `location:${loc.slug}:area`,
+      kind: "location",
+      title: `${loc.name} — communities served`,
+      href,
+      keywords: [...keywords, ...communities.map((c) => c.toLowerCase()), "serve", "area", "travel", "transfer"],
+      text: `${loc.name} serves ${communities.join(", ")}. ${draftFree(loc.planning.alsoNearby) ?? ""}`.trim(),
+    });
+  }
+
+  return passages;
+}
+
+/** Copy that still carries a [bracketed] note is unresolved; drop it. */
+function draftFree(s: string): string | null {
+  return s.includes("[") ? null : s;
+}
+
+/**
+ * Every center in one passage.
+ *
+ * "Where are you located?" is on §7's accuracy list and wants *both*
+ * addresses; asked of per-center passages it returns whichever one scored
+ * best, which is half an answer. Addresses ride formattedAddress(), so a
+ * center whose address is still a [placeholder] is named without one rather
+ * than invented.
+ */
+function allCentersPassage(): Passage {
+  const open = locations.filter((l) => !l.comingSoon);
+  const soon = locations.filter((l) => l.comingSoon);
+  const lines = open.map((l) => {
+    const address = formattedAddress(l);
+    return address ? `${l.name} — ${address}` : `${l.name}, ${l.address.addressRegion}`;
+  });
+
+  return {
+    id: "location:all",
+    kind: "location",
+    title: "Our centers",
+    href: "/locations",
+    question: "Where are you located?",
+    keywords: [...LOCATION_KEYWORDS, ...locations.map((l) => l.name.toLowerCase()), "both", "all", "closest", "nearest"],
+    text: [
+      `${SITE_NAME} has ${open.length === 1 ? "one center" : `${open.length} centers`} open: ${lines.join("; ")}.`,
+      soon.length > 0 ? `${soon.map((l) => l.name).join(" and ")} is coming soon.` : null,
+      "You can transfer between centers at any time; your plan travels with you.",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+function pagePassages(): Passage[] {
+  const values: Record<CopyToken, string> = {
+    BRAIN_MAP_NAME,
+    BRAIN_MAP_PRICE,
+  };
+  return MIRRORED_PAGES.flatMap((page) =>
+    // `mirror` is dropped: it exists for the drift check, not for retrieval.
+    page.passages.map(
+      (passage): Passage => ({
+        id: passage.id,
+        kind: "page",
+        title: passage.title,
+        href: page.href,
+        question: passage.question,
+        keywords: passage.keywords,
+        text: passage.text.replace(
+          /\{([A-Z_]+)\}/g,
+          (whole, token: string) => values[token as CopyToken] ?? whole
+        ),
+      })
+    )
+  );
+}
+
+function policyPassages(): Passage[] {
+  const passages: Passage[] = [
+    {
+      // Never paraphrased, never softened — the footer disclaimer is the one
+      // piece of copy the site puts on every page, so it belongs to no single
+      // page and carries no link.
+      id: "policy:disclaimer",
+      kind: "policy",
+      title: "What Harmonized is",
+      href: null,
+      question: "Is this a medical clinic?",
+      keywords: ["medical", "clinic", "doctor", "diagnose", "treat", "cure", "prevent", "wellness", "legal", "disclaimer", "condition"],
+      text: DISCLAIMER,
+    },
+    {
+      id: "policy:free-call",
+      kind: "policy",
+      title: "The free call",
+      href: "/contact",
+      question: "What happens on the free call?",
+      keywords: ["call", "free", "phone", "talk", "consultation", "book", "appointment", "pressure", "sales", "unsure", "skeptical", "fit"],
+      text: [
+        "The phone call is free.",
+        // "today" is an operational promise and rides SAME_DAY_CALLBACK, the
+        // same way the homepage hero does.
+        confirmed(SAME_DAY_CALLBACK)
+          ? "A real person calls you back today."
+          : "A real person calls you back.",
+        "Ask anything — including the skeptical questions.",
+        RISK_REVERSAL,
+      ].join(" "),
+    },
+    {
+      id: "policy:brain-map-price",
+      kind: "policy",
+      title: BRAIN_MAP_NAME,
+      href: "/first-visit",
+      question: "How much is the first visit?",
+      keywords: ["cost", "price", "much", "pay", "fee", "brain", "map", "first", "visit", "free"],
+      text: `The phone call is free. ${BRAIN_MAP_NAME} — the first visit — is ${BRAIN_MAP_PRICE}. Session pricing is shared before you commit to anything.`,
+    },
+  ];
+
+  const phone = confirmed(PHONE);
+  if (phone) {
+    passages.push({
+      id: "policy:phone",
+      kind: "policy",
+      title: "Phone",
+      href: "/contact",
+      question: "What is your phone number?",
+      keywords: ["phone", "number", "call", "text", "reach", "contact", "speak"],
+      text: `You can reach ${SITE_NAME} at ${phone.display}.`,
+    });
+  }
+
+  const sessions = confirmed(STAT_SESSIONS);
+  const established = confirmed(ESTABLISHED_YEAR);
+  const open = locations.filter((l) => !l.comingSoon).map((l) => l.name);
+  const soon = locations.filter((l) => l.comingSoon).map((l) => l.name);
+  passages.push({
+    // Assembled from the same Verifiables the homepage proof band reads, since
+    // the band's labels live in JSX props and cannot be mirrored.
+    id: "policy:scale",
+    kind: "policy",
+    title: "Harmonized by the numbers",
+    href: "/about",
+    keywords: ["experience", "established", "year", "session", "center", "since"],
+    text: [
+      sessions ? `${SITE_NAME} has provided ${sessions} LENS sessions across its centers.` : null,
+      `${open.join(" and ")} ${open.length === 1 ? "is" : "are"} open${soon.length > 0 ? `, with ${soon.join(" and ")} coming soon` : ""}.`,
+      "Adults, teens, and children are all seen.",
+      established ? `Serving Middle Tennessee since ${established}.` : null,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  });
+
+  return passages;
+}
+
+export const CONTENT_INDEX: Passage[] = [
+  ...concerns.flatMap(concernPassages),
+  ...SITE_FAQS.map(
+    (faq, i): Passage => ({
+      id: `faq:${i + 1}`,
+      kind: "faq",
+      title: "Frequently asked questions",
+      href: "/faq",
+      question: faq.q,
+      keywords: FAQ_KEYWORDS[faq.q],
+      text: faq.a,
+    })
+  ),
+  allCentersPassage(),
+  ...locations.flatMap(locationPassages),
+  ...pagePassages(),
+  ...policyPassages(),
+];
+
+// A FAQ_KEYWORDS key that matches no question is a question that was reworded
+// and quietly lost its routing hints — retrieval still works, just worse, which
+// is the kind of failure that never gets noticed without a line in the log.
+const faqQuestions = new Set(SITE_FAQS.map((faq) => faq.q));
+const orphanedKeys = Object.keys(FAQ_KEYWORDS).filter((q) => !faqQuestions.has(q));
+if (orphanedKeys.length > 0) {
+  console.warn(
+    `[chat] FAQ_KEYWORDS has ${orphanedKeys.length} key(s) matching no question in lib/faq.ts: ${orphanedKeys.join("; ")}`
+  );
+}
+
+/** Passage counts by kind — for the build log and for eyeballing coverage. */
+export function indexSummary(): Record<string, number> {
+  const counts: Record<string, number> = { total: CONTENT_INDEX.length };
+  for (const passage of CONTENT_INDEX) {
+    counts[passage.kind] = (counts[passage.kind] ?? 0) + 1;
+  }
+  return counts;
+}

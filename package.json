@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:index": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-content-index.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.3",

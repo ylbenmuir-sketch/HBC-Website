@@ -48,6 +48,7 @@ cp .env.example .env.local   # fill in values (see below)
 npm run dev                  # http://localhost:3000
 npm run build                # production build
 npm run lint
+npm run check:index          # site assistant's content index vs. the pages
 ```
 
 The site runs without `.env.local` — every page renders; only the contact-form
@@ -132,9 +133,53 @@ All page copy that varies by entity is data-driven:
 | --- | --- |
 | `lib/site-config.ts` | Phone number, disclaimer, review stats, **every [CONFIRM]/[Insert] placeholder value** |
 | `lib/concerns.ts` | All 8 concern pages (`/concerns/[slug]`) + the What We Help With entries |
+| `lib/faq.ts` | The 14 questions on `/faq` — the accordion, the FAQPage JSON-LD, and the assistant's index all read this one array |
 | `lib/locations.ts` | `/locations/[slug]` (Nashville seeded; Murfreesboro/Franklin data-driven) + location cards + JSON-LD addresses |
 | `lib/team.ts` | `/about/team` grid + `/about/team/[slug]` profiles |
 | `lib/resources.ts` | `/resources` cards + `/resources/[slug]` articles (homework-battles seeded) |
+
+## Site assistant — retrieval layer
+
+`lib/chat/` is the assistant's knowledge base and the search over it
+(**phase-8-chatbot.md §2 only** — no chat UI, no booking flow, no API route
+yet). The assistant answers from published site copy or it says it doesn't
+know; there is no third option, and everything here exists to keep that true.
+
+| File | Holds |
+| --- | --- |
+| `lib/chat/content-index.ts` | The whole knowledge base — assembles ~100 passages from the modules above |
+| `lib/chat/site-copy.ts` | Copy mirrored by hand from the four pages that keep their words in JSX (`/`, `/about`, `/first-visit`, `/how-lens-works`) |
+| `lib/chat/retrieve.ts` | BM25 search, the thresholds that decide "I don't know", and the fixed no-match reply |
+
+Everything except `site-copy.ts` is imported from the module that owns it, so
+confirming a fact or rewriting an answer updates the page and the assistant in
+one edit. The four JSX pages can't be imported, so `npm run check:index`
+verifies that every mirrored sentence still appears verbatim in the page it
+claims to come from, and fails if it doesn't. To author a new mirrored passage,
+read the page's prose as the check sees it:
+
+```bash
+npm run check:index -- --dump app/about/page.tsx
+```
+
+**The index applies the draft gate harder than the pages do.** A page can
+render an unverified value behind a gold `[CONFIRM]` tag; a conversation has
+nowhere to put one, so unverified facts are excluded from the index in *every*
+environment — dev included. Out today: the Google rating, the response-time and
+start-timing claims, the founder quote, the Brain Map differentiator claim,
+Franklin's opening date and street address, and every `[Name]` practitioner.
+Also excluded on purpose: **opening hours** (still an open item in
+CONTENT-CHECKLIST.md, which is why `lib/schema.ts` omits
+`openingHoursSpecification` too — they join the index when §5.1's
+`BUSINESS_HOURS` entry lands and verifies) and **testimonials** (a retrieved
+quote invites the assistant to imply an outcome, which §1 forbids).
+
+Retrieval is lexical, not embeddings: the corpus is ~100 short passages, every
+input to a score is a word in a file, and the same question retrieves the same
+passages after a redeploy — so a wrong answer is reproducible and a right one
+can be explained. When the best passage doesn't clear the thresholds in
+`RETRIEVAL`, retrieval returns `no-match` with a reason, and the assistant is
+expected to say so and offer the call rather than improvise.
 
 ## Replacing the [CONFIRM] / [Insert …] placeholders
 
