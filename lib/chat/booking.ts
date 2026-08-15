@@ -246,6 +246,45 @@ const CONTACT_PAGE_EXIT =
 /* The flow                                                            */
 /* ------------------------------------------------------------------ */
 
+/** True while the flow is mid-collection and owed an answer. */
+export function bookingActive(session: ChatSession): boolean {
+  return (
+    session.step !== "idle" &&
+    session.step !== "submitted" &&
+    session.step !== "declined"
+  );
+}
+
+/**
+ * The question the visitor still owes an answer to.
+ *
+ * Used when a §3 refusal interrupts the flow: the decline is stated, then this
+ * is re-asked, so the turn still ends on exactly one question and the visitor
+ * isn't left guessing what the assistant is waiting for.
+ */
+export function pendingQuestion(session: ChatSession): string | null {
+  switch (session.step) {
+    case "helpingWho":
+      return ASK.helpingWho;
+    case "firstName":
+      return ASK.firstName;
+    case "phone":
+      return ASK.phone(session.draft.firstName ?? "");
+    case "note":
+      return ASK.note;
+    case "bestTime":
+      return ASK.bestTime;
+    case "preferredCenter":
+      return ASK.preferredCenter;
+    case "confirmPhone":
+      return "What’s the right number?";
+    case "confirm":
+      return readBack(session.draft);
+    default:
+      return null;
+  }
+}
+
 /** Opens the flow. Returns null when §4.2 forbids collecting contact details. */
 export function startBooking(session: ChatSession): BookingTurn | null {
   if (!contactCollectionAllowed(session)) return null;

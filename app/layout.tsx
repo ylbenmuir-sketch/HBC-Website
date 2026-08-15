@@ -4,11 +4,19 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import JsonLd from "@/components/JsonLd";
+import dynamic from "next/dynamic";
 import { organizationSchema } from "@/lib/schema";
-import { SITE_NAME, SITE_URL } from "@/lib/site-config";
+import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
 import "./globals.css";
+
+/**
+ * Split into its own chunk so the widget is not in the bundle every page
+ * downloads. §6: it "must not block or degrade LCP". While
+ * FEATURE_ASSISTANT is false the chunk is never requested at all.
+ */
+const SiteAssistant = dynamic(() => import("@/components/SiteAssistant"));
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -84,6 +92,13 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
+        {/* Site assistant — OFF. Renders only with
+            NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
+            .env.example, not in draft mode, not in dev. Wired in so Ben can
+            audit it by flipping one variable in one environment, and so the
+            flag is the only thing between it and a visitor. See
+            phase-8-chatbot.md §6 and README → Site assistant. */}
+        {FEATURE_ASSISTANT && <SiteAssistant />}
       </body>
     </html>
   );

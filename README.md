@@ -65,6 +65,9 @@ submission requires Supabase credentials.
 | `LEADS_NOTIFY_EMAIL` | Inbox that receives new consultation requests. Required alongside `RESEND_API_KEY`. |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
+| `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
+| `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
+| `CHAT_LOG_TRANSCRIPTS` | `false` drops message text from the conversation log, keeping timing, outcome, and safety flags. Defaults to on — §8 asks Ben to read real transcripts in week one. |
 
 ## Supabase setup
 
@@ -138,18 +141,73 @@ All page copy that varies by entity is data-driven:
 | `lib/team.ts` | `/about/team` grid + `/about/team/[slug]` profiles |
 | `lib/resources.ts` | `/resources` cards + `/resources/[slug]` articles (homework-battles seeded) |
 
-## Site assistant — retrieval layer
+## Site assistant
 
-`lib/chat/` is the assistant's knowledge base and the search over it
-(**phase-8-chatbot.md §2 only** — no chat UI, no booking flow, no API route
-yet). The assistant answers from published site copy or it says it doesn't
-know; there is no third option, and everything here exists to keep that true.
+**Shipping disabled.** The widget renders and `/api/chat` answers anything
+other than 404 only when `NEXT_PUBLIC_FEATURE_ASSISTANT=true`, which is set
+nowhere — not in `.env.example`, not in draft mode, not in `next dev`. Unlike
+`NEXT_PUBLIC_FEATURE_CELEBRITY` this flag does **not** fall open locally: a
+gate that opens whenever someone runs the site is not a gate. Turn it on in one
+environment at a time and audit it before production.
+
+Built to [phase-8-chatbot.md](phase-8-chatbot.md). The assistant answers from
+published site copy or says it doesn't know; there is no third option, and
+everything below exists to keep that true.
 
 | File | Holds |
 | --- | --- |
-| `lib/chat/content-index.ts` | The whole knowledge base — assembles ~100 passages from the modules above |
-| `lib/chat/site-copy.ts` | Copy mirrored by hand from the four pages that keep their words in JSX (`/`, `/about`, `/first-visit`, `/how-lens-works`) |
-| `lib/chat/retrieve.ts` | BM25 search, the thresholds that decide "I don't know", and the fixed no-match reply |
+| `app/api/chat/route.ts` | The whole request path, in order. Read this first. |
+| `lib/chat/safety.ts` | §4 — crisis and under-18 checks, ahead of everything |
+| `lib/chat/refusals.ts` | §3 — the out-of-scope categories and their fixed replies |
+| `lib/chat/booking.ts` | §5 — the callback flow and the callback-timing rule |
+| `lib/chat/session.ts` | The safety ledger and booking progress, server-side |
+| `lib/chat/content-index.ts` | §2 — the whole knowledge base, ~103 passages |
+| `lib/chat/site-copy.ts` | Copy mirrored from the four pages that keep their words in JSX |
+| `lib/chat/retrieve.ts` | §2 — BM25, the "I don't know" thresholds, the fixed no-match reply |
+| `lib/chat/answer.ts` | §2 — the system prompt and the **only** model call |
+| `lib/chat/rate-limit.ts`, `logging.ts` | §6 |
+| `components/SiteAssistant.tsx` | §6 — the widget |
+
+### The request path
+
+Every stage can end the turn, and nothing below a stage runs once it has:
+
+```
+flag → rate limit → parse → SAFETY (§4) → refusals (§3) → booking (§5)
+                            └─ crisis      → retrieval (§2) → model
+```
+
+The position of the safety check is the point. §4.1 requires it to run "on
+every inbound message *before* the model decides what to do", so it sits ahead
+of the refusal categories, ahead of the booking flow, and ahead of retrieval and
+the model. A crisis disclosure typed into "what's going on?" is never captured
+as a lead note; one that arrives after a phone number has been given deletes the
+draft rather than pausing it; and the reply is a constant, so there is no
+failure mode in which a model paraphrases the 988 number.
+
+The model is called in exactly one place, with only the retrieved passages in
+context. When retrieval finds nothing it is not called at all.
+
+### What Ben has to decide before this ships
+
+Three open items, all flagged rather than decided (§6 and §8):
+
+1. **Business hours.** `BUSINESS_HOURS` is unverified, so the assistant makes
+   **no** callback-timing claim — "Someone from the team will call you back."
+   The open/closed branches are written and tested but unreachable until it is
+   confirmed. It is deliberately not derived from `SAME_DAY_CALLBACK`.
+2. **Conversation retention.** Transcripts go to the server log and inherit the
+   host's retention, which is a default rather than a decision.
+   `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn and drops the
+   words.
+3. **Who reads flagged conversations.** Crisis turns are logged at warn level
+   with a `[chat:FLAGGED:crisis]` marker. That is a log line, not a review
+   process — nobody is paged.
+
+One engineering item belongs with them: the session store and the rate-limit
+counters are both in-process, so on serverless they are per-instance. A booking
+in progress can lose its answers between turns, and the rate limit is weaker
+than it looks under load. Both want the same shared store.
 
 Everything except `site-copy.ts` is imported from the module that owns it, so
 confirming a fact or rewriting an answer updates the page and the assistant in

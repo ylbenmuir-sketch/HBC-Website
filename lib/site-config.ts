@@ -84,6 +84,24 @@ export const SHOW_PHONE = PHONE.verified || SHOW_DRAFT_CONTENT;
 export const FEATURE_CELEBRITY =
   process.env.NEXT_PUBLIC_FEATURE_CELEBRITY === "true" || SHOW_DRAFT_CONTENT;
 
+/**
+ * Site assistant (phase-8-chatbot.md). **Off, and shipping off.**
+ *
+ * Unlike FEATURE_CELEBRITY, this does NOT fall open in draft mode: `next dev`
+ * renders nothing either. The assistant talks to visitors about a wellness
+ * service, and the gate is worth nothing if it opens the moment someone runs
+ * the site locally. Set NEXT_PUBLIC_FEATURE_ASSISTANT=true deliberately, in
+ * one environment at a time, to audit it.
+ *
+ * While it is false the widget does not render and /api/chat answers 404, so
+ * there is no endpoint to probe and no model spend to incur.
+ *
+ * NEXT_PUBLIC_* is inlined at build time, so production needs the variable set
+ * *and* a rebuild — see README → Deploying to Vercel.
+ */
+export const FEATURE_ASSISTANT =
+  process.env.NEXT_PUBLIC_FEATURE_ASSISTANT === "true";
+
 /** Embedding is disabled for this video — always link out, never iframe. */
 export const TRISHA_VIDEO_URL = "https://www.youtube.com/shorts/fhmoa68_uHY";
 export const TRISHA_QUOTE = "I feel like I am in my thirties again.";

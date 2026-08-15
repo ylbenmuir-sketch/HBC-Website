@@ -41,6 +41,16 @@ export type Refusal = {
   kind: RefusalKind;
   /** Fixed copy. Never model-generated — see §3. */
   reply: string;
+  /**
+   * The decline without the trailing offer of a call.
+   *
+   * Used when a refusal lands *during* the booking flow, where "Want me to set
+   * one up?" is nonsense — one is already being set up — and where the reply
+   * has to end with the booking question the visitor still owes an answer to.
+   * §5's "one question at a time" survives either way: the decline is a
+   * statement, and exactly one question follows it.
+   */
+  declineOnly: string;
   /** The phrase that matched, for the conversation log. Never shown. */
   matched: string;
 };
@@ -49,23 +59,40 @@ export type Refusal = {
  * The one-turn decline. §3's own wording, used for the categories that have no
  * more specific line of their own.
  */
-const PRACTITIONER_REDIRECT =
-  "That’s a question for a practitioner rather than me — it depends on specifics I shouldn’t guess at. The free call is exactly for this. Want me to set one up?";
+const CALL_OFFER = "The free call is exactly for this. Want me to set one up?";
 
-const REPLIES: Record<RefusalKind, string> = {
-  // The site's existing language, verbatim. §3: never elaborate — the second
-  // sentence redirects, it does not discuss the medication.
-  medication:
-    "That stays between you and your prescriber. If you’d like to talk through how LENS fits alongside the care you already have, the free call is the place for it.",
-  "clinical-interpretation":
-    "I can’t read symptoms or interpret anything clinical — that’s a practitioner’s job rather than mine. The free call is exactly for this. Want me to set one up?",
-  diagnosis: PRACTITIONER_REDIRECT,
+/** Each refusal is a decline plus an offer, so the offer can be dropped. */
+const REPLIES: Record<RefusalKind, { decline: string; offer: string }> = {
+  // The site's existing language, verbatim. §3: never elaborate — the offer
+  // redirects, it does not discuss the medication.
+  medication: {
+    decline: "That stays between you and your prescriber.",
+    offer:
+      "If you’d like to talk through how LENS fits alongside the care you already have, the free call is the place for it.",
+  },
+  "clinical-interpretation": {
+    decline:
+      "I can’t read symptoms or interpret anything clinical — that’s a practitioner’s job rather than mine.",
+    offer: CALL_OFFER,
+  },
+  diagnosis: {
+    decline:
+      "That’s a question for a practitioner rather than me — it depends on specifics I shouldn’t guess at.",
+    offer: CALL_OFFER,
+  },
   // §3: refuse the prediction, note that LENS is a wellness service and
   // doesn't treat conditions, offer the call.
-  prediction:
-    "I can’t predict how it would go for someone — LENS is a wellness service and doesn’t treat conditions, so that isn’t something I’d guess at. A practitioner will tell you honestly on the free call whether it’s a fit. Want me to set one up?",
+  prediction: {
+    decline:
+      "I can’t predict how it would go for someone — LENS is a wellness service and doesn’t treat conditions, so that isn’t something I’d guess at.",
+    offer:
+      "A practitioner will tell you honestly on the free call whether it’s a fit. Want me to set one up?",
+  },
   // §3: the published prices only.
-  "pricing-negotiation": `The published prices are the only ones I have: the phone call is free, and ${BRAIN_MAP_NAME} — your first visit — is ${BRAIN_MAP_PRICE}. Session pricing is shared before you commit to anything.`,
+  "pricing-negotiation": {
+    decline: `The published prices are the only ones I have: the phone call is free, and ${BRAIN_MAP_NAME} — your first visit — is ${BRAIN_MAP_PRICE}.`,
+    offer: "Session pricing is shared before you commit to anything.",
+  },
 };
 
 /** Lowercased, straight apostrophes, single spaces. Patterns assume this. */
@@ -211,7 +238,13 @@ export function checkRefusal(message: string): Refusal | null {
   for (const { kind, pattern } of PATTERNS) {
     const match = pattern.exec(text);
     if (match) {
-      return { kind, reply: REPLIES[kind], matched: match[0] };
+      const { decline, offer } = REPLIES[kind];
+      return {
+        kind,
+        reply: `${decline} ${offer}`,
+        declineOnly: decline,
+        matched: match[0],
+      };
     }
   }
   return null;
