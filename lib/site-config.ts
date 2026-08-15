@@ -265,31 +265,34 @@ export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
  * These live in the artwork, not in code, which is exactly why they are
  * written down here: nothing else in the repo would catch them. The renders
  * are otherwise accurate — both carry the full 21 electrodes, and the bar
- * chart's own values match the copy on /how-lens-works (Pz at 7.0, below 10;
- * F7 at 47.0, above 35).
+ * chart's own values match the copy on /how-lens-works (Pz at 7.0, below
+ * 10 µV; F7 at 47.0, above 35 µV).
  *
- * 1. "Ideal range" → "typical range", on both the bar chart and the heat map.
- *    "Ideal" is evaluative: it invites a client to read their own number as a
- *    verdict on themselves, which is the one thing a wellness practice cannot
- *    let a chart do.
+ * 1. DONE — "Ideal range" → "typical range". The shipped heat map reads
+ *    "Typical range"; the shipped bar graph labels its bands by value
+ *    (10 µV / 35 µV) and carries no evaluative wording. "Ideal" invited a
+ *    client to read their own number as a verdict on themselves, which is the
+ *    one thing a wellness practice cannot let a chart do.
  *
- * 2. Heat-map legend: "Under-engaged / Ideal / Over-engaged" becomes
- *    "Lower amplitude / Typical range / Higher amplitude." The current legend
- *    already carries the descriptive wording in parentheses — promote it and
- *    drop the evaluative term, rather than writing anything new.
+ * 2. DONE — heat-map legend now reads "Lower amplitude / Typical range /
+ *    Higher amplitude" in place of "Under-engaged / Ideal / Over-engaged."
  *
- * 3. Lobe graphic carries a labeling error: F3 is mislabeled as F8, producing
- *    two F8s and no F3. It also has an empty trailing bullet in the Frontal
- *    Lobe list. (The heat map is clean on both counts — one F3, one F8.)
+ * 3. OPEN — the lobe graphic carries a labeling error: F3 is mislabeled as F8,
+ *    producing two F8s and no F3. It also has an empty trailing bullet in the
+ *    Frontal Lobe list. (The heat map is clean on both counts — one F3, one
+ *    F8, all 21 electrodes present.)
  *
- * 4. Lobe graphic uses diagnostic terms as electrode labels — "anxiety,"
- *    "depression," "addiction." Soften to function words: "impulse control,"
- *    "mood regulation," "attention and focus." Naming a condition next to an
- *    electrode implies the map detects it, which is a medical claim and
- *    contradicts DISCLAIMER at the bottom of this file.
+ * 4. OPEN — the lobe graphic uses diagnostic terms as electrode labels:
+ *    "anxiety," "depression," "addiction." Soften to function words: "impulse
+ *    control," "mood regulation," "attention and focus." Naming a condition
+ *    next to an electrode implies the map detects it, which is a medical claim
+ *    and contradicts DISCLAIMER at the bottom of this file.
  *
- * Until both assets land corrected, the homepage and /how-lens-works render
- * PlaceholderPlate — see CONTENT-CHECKLIST.md → Photography.
+ * The corrected heat map ships on the homepage (/images/brain-map-heat.png).
+ * /how-lens-works still renders PlaceholderPlate: items 3 and 4 above are
+ * unfixed because that asset has not been supplied. The bar graph
+ * (/images/brain-map-bars.png) is in the repo but not placed on any page.
+ * See CONTENT-CHECKLIST.md → Photography.
  */
 
 /**

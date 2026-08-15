@@ -80,11 +80,12 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] Murfreesboro: exterior · waiting room · session room
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
-- [ ] **Harmonized Brain Map — heat-map render** (homepage Brain Map section).
-      Ship the corrected legend from Phase 7.5, not the current one.
-- [ ] **Brain lobe function diagram** (`/how-lens-works`). Fix the F3/F8
-      mislabel, the empty Frontal Lobe bullet, and the diagnostic electrode
-      labels first — see Phase 7.5.
+- [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section)
+      — `/images/brain-map-heat.png`, shipped with the corrected Phase 7.5
+      legend ("Lower amplitude / Typical range / Higher amplitude")
+- [ ] **Brain lobe function diagram** (`/how-lens-works`) — still a
+      `PlaceholderPlate`. Fix the F3/F8 mislabel, the empty Frontal Lobe
+      bullet, and the diagnostic electrode labels first — see Phase 7.5.
 
 ## Articles
 

@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
-import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
 import ConcernRail from "@/components/ConcernRail";
@@ -569,7 +568,15 @@ export default function HomePage() {
             </div>
           </div>
           <div className="rv">
-            <PlaceholderPlate spec="Harmonized Brain Map — heat map render" />
+            {/* Pinned to the render's own 1184×860 ratio (height auto overrides
+                the .split 500px) so `cover` fills the frame without cropping —
+                a cropped diagram loses electrode labels and the legend. */}
+            <PhotoFrame
+              src="/images/brain-map-heat.png"
+              alt="A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at 21 points across the brain"
+              aspect="1184 / 860"
+              style={{ height: "auto" }}
+            />
             {/* Not gated: the framing has to travel with the image, whether the
                 image is the real render or the plate standing in for it. */}
             <p className="micro">

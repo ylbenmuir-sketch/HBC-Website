@@ -204,14 +204,14 @@ export default function HowLensWorksPage() {
             <h2>What the map actually tells us.</h2>
             <p>
               Pz is where analytical thinking and processing happen. What
-              we&rsquo;ve seen with clients whose Pz sits below 10 is difficulty
-              switching that part on &mdash; logistical tasks that should be
-              simple become a slog.
+              we&rsquo;ve seen with clients whose Pz sits below 10&nbsp;µV is
+              difficulty switching that part on &mdash; logistical tasks that
+              should be simple become a slog.
             </p>
             <p>
-              F7 handles verbal expression. When we see F7 above 35, that region
-              is often overprocessing &mdash; and clients describe struggling to
-              get out what they&rsquo;re trying to say.
+              F7 handles verbal expression. When we see F7 above 35&nbsp;µV,
+              that region is often overprocessing &mdash; and clients describe
+              struggling to get out what they&rsquo;re trying to say.
             </p>
             <p>
               None of that is a diagnosis. It&rsquo;s a pattern we&rsquo;ve seen{" "}
