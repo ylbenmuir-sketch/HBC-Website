@@ -29,10 +29,11 @@ export const metadata: Metadata = {
     default: `You’ve tried everything. Your brain hasn’t — ${SITE_NAME}`,
     template: `%s — ${SITE_NAME}`,
   },
-  // Mirrors the hero sub. The session-count sentence is deliberately left out:
-  // it is gated on unverified facts, and metadata has no draft mode to hide it.
+  // Mirrors the hero sub, including the session count now that STAT_SESSIONS
+  // and ESTABLISHED_YEAR are verified — metadata has no draft mode, so only
+  // confirmed facts belong here.
   description:
-    "Gentle, drug-free neurofeedback for anxiety, focus, sleep, and overwhelm — for adults and kids across Middle Tennessee.",
+    "Gentle, drug-free neurofeedback for anxiety, focus, sleep, and overwhelm — for adults and kids across Middle Tennessee. Over 140,000 sessions since 2016.",
   openGraph: {
     siteName: SITE_NAME,
     type: "website",

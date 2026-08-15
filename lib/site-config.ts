@@ -110,17 +110,17 @@ export const FOUNDER_QUOTE: Verifiable = {
 /* Proof / statistics                                                  */
 /* ------------------------------------------------------------------ */
 
-/** Session count — keep prominent, pending verification. */
+/** Session count — confirmed by Ben. */
 export const STAT_SESSIONS: Verifiable = {
   value: "140,000+",
-  verified: false,
+  verified: true,
   note: "[Verify session count]",
 };
 
-/** Established year ("Since 2016"). */
+/** Established year ("Since 2016") — confirmed by Ben. */
 export const ESTABLISHED_YEAR: Verifiable<number> = {
   value: 2016,
-  verified: false,
+  verified: true,
   note: "[Confirm founding year]",
 };
 
