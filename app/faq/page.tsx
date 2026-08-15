@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
+import JsonLd from "@/components/JsonLd";
+import { faqPageSchema } from "@/lib/schema";
 import {
   BRAIN_MAP_PRICE,
   RISK_REVERSAL,
@@ -40,7 +42,8 @@ const faqs: FaqItem[] = [
   },
   {
     q: "How long is a session?",
-    a: (
+    a: "Most visits are over in well under an hour — brief enough to fit a lunch break or a school pickup.",
+    rendered: (
       <>
         Most visits are over in well under an hour — brief enough to fit a
         lunch break or a school pickup.{" "}
@@ -54,7 +57,8 @@ const faqs: FaqItem[] = [
   },
   {
     q: "What does the first visit include?",
-    a: (
+    a: "A real conversation about what’s going on, a baseline recording of brain activity, and a personalized plan explained in plain language — with every question answered before you decide anything.",
+    rendered: (
       <>
         A real conversation about what&rsquo;s going on, a baseline recording
         of brain activity, and a personalized plan explained in plain language
@@ -65,7 +69,8 @@ const faqs: FaqItem[] = [
   },
   {
     q: "What kinds of concerns do clients come in with?",
-    a: (
+    a: "Most commonly: anxiety and stress, focus and ADHD, sleep, emotional regulation, brain fog and memory, burnout, school struggles, and trauma-related stress.",
+    rendered: (
       <>
         Most commonly: anxiety and stress, focus and ADHD, sleep, emotional
         regulation, brain fog and memory, burnout, school struggles, and
@@ -84,7 +89,8 @@ const faqs: FaqItem[] = [
   },
   {
     q: "What does it cost?",
-    a: (
+    a: `The phone call is free. The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep. Session pricing is shared before you commit to anything.`,
+    rendered: (
       <>
         The phone call is free. The Brain Map — your first visit — is{" "}
         {BRAIN_MAP_PRICE} and includes the full conversation, a baseline
@@ -96,7 +102,8 @@ const faqs: FaqItem[] = [
   },
   {
     q: "Does insurance cover it?",
-    a: (
+    a: "As a wellness service, LENS is typically not covered by insurance. Many clients use HSA/FSA funds — we can provide documentation.",
+    rendered: (
       <>
         As a wellness service, LENS is typically not covered by insurance.
         Many clients use HSA/FSA funds — we can provide documentation.{" "}
@@ -113,6 +120,7 @@ const faqs: FaqItem[] = [
 export default function FaqPage() {
   return (
     <>
+      <JsonLd data={faqPageSchema(faqs)} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Frequently asked questions</div>

@@ -8,7 +8,9 @@ import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import { Btn, TalkCta } from "@/components/Buttons";
+import JsonLd from "@/components/JsonLd";
 import { concerns, getConcern } from "@/lib/concerns";
+import { faqPageSchema } from "@/lib/schema";
 
 export function generateStaticParams() {
   return concerns.map((c) => ({ slug: c.slug }));
@@ -37,6 +39,7 @@ export default async function ConcernPage({
 
   return (
     <>
+      <JsonLd data={faqPageSchema(concern.faqs)} />
       <div className="wrap crumb">
         <Link href="/what-we-help-with">What We Help With</Link> &nbsp;/&nbsp;{" "}
         {concern.title}
