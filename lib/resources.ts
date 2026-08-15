@@ -34,7 +34,18 @@ const ADULT_NOTE =
   "This article is educational and isn't medical advice. LENS is a wellness service and doesn't diagnose or treat any condition. If you have health concerns, talk with your doctor.";
 
 const DRAFT_FINAL_SUB =
-  "Tell us what’s going on. We’ll listen, answer honestly, and help you decide whether LENS is a fit — free, and with no obligation.";
+  "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
+
+import { isDraftText } from "./site-config";
+
+/** A resource is publishable once its lede and body carry no [draft] notes. */
+export function isPublishable(r: Resource): boolean {
+  return (
+    !isDraftText(r.lede) &&
+    !isDraftText(r.byline) &&
+    r.body.every((b) => !isDraftText(b.text))
+  );
+}
 
 export const resources: Resource[] = [
   {
@@ -46,7 +57,7 @@ export const resources: Resource[] = [
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
     readTime: "6 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      "By the Harmonized team · Reviewed by Sheri, Clinical Director", // [Confirm byline & review date]
     lede: "Your child is bright. You know it, their teacher knows it — and yet a worksheet that should take twenty minutes just consumed the whole evening and everyone's patience. Here's what's often happening underneath, and why “try harder” tends to make it worse.",
     body: [
       { type: "h2", text: "It usually isn't a motivation problem" },
@@ -67,7 +78,7 @@ export const resources: Resource[] = [
     ],
     finalHeading: "Wondering whether this describes your child? Ask us.",
     finalSub:
-      "A free conversation with a practitioner — honest answers, no pressure, and a plain “not a fit” if that’s the truth.",
+      "A free phone call with a practitioner — honest answers, no pressure, and a plain “not a fit” if that’s the truth.",
     metaDescription:
       "Why “try harder” backfires for bright kids stuck in homework battles — and what helps instead. A plain-language guide for parents.",
   },
@@ -138,7 +149,7 @@ export const resources: Resource[] = [
     ],
     finalHeading: "Wondering whether this describes your child? Ask us.",
     finalSub:
-      "A free conversation with a practitioner — honest answers, no pressure, and a plain “not a fit” if that’s the truth.",
+      "A free phone call with a practitioner — honest answers, no pressure, and a plain “not a fit” if that’s the truth.",
     metaDescription:
       "The self-story problem — what to do when a bright kid starts saying “I'm just bad at school,” and how to interrupt it early.",
   },

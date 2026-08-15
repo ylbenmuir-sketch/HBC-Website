@@ -1,13 +1,15 @@
 import Link from "next/link";
+import ConfirmTag from "./ConfirmTag";
 import {
   PHONE_DISPLAY,
-  RESPONSE_TIME_NOTE,
-  RESPONSE_TIME_TAG,
+  SAME_DAY_CALLBACK,
+  SHOW_PHONE,
+  verifiedOr,
 } from "@/lib/site-config";
 
 const DEFAULT_HEADING = "The next step is a conversation, not a commitment.";
 const DEFAULT_SUB =
-  "Tell us what’s going on. We’ll listen, answer honestly, and help you decide whether LENS is a fit — free, and with no obligation.";
+  "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
 /** The navy end-of-page band. Heading/sub vary per mockup; everything else is fixed. */
 export default function FinalCTA({
@@ -17,6 +19,10 @@ export default function FinalCTA({
   heading?: string;
   sub?: string;
 }) {
+  // The same-day promise replaces the older response-time wording here; both
+  // describe the callback, and the two would contradict each other side by
+  // side. Still gated, so production drops it until it is confirmed.
+  const sameDayCallback = verifiedOr(SAME_DAY_CALLBACK);
   return (
     <section className="final">
       <div className="wrap rv">
@@ -25,16 +31,23 @@ export default function FinalCTA({
         <p className="sub">{sub}</p>
         <div className="row">
           <Link className="btn btn-invert" href="/contact">
-            Talk With Our Team
+            Get a Free Call Today
           </Link>
-          <div className="tel">
-            or call <b>{PHONE_DISPLAY}</b>
-          </div>
+          {SHOW_PHONE && (
+            <div className="tel">
+              or call <b>{PHONE_DISPLAY}</b>
+            </div>
+          )}
         </div>
         <p className="after">
-          {RESPONSE_TIME_NOTE}{" "}
-          <span style={{ letterSpacing: ".1em" }}>{RESPONSE_TIME_TAG}</span>{" "}
-          &middot; Consultations are free &middot; No referral needed
+          The call is free &middot; No referral needed
+          {sameDayCallback && (
+            <>
+              {" "}
+              &middot; {sameDayCallback}{" "}
+              <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
+            </>
+          )}
         </p>
       </div>
     </section>

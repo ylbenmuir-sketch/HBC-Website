@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoMark, LogoName } from "./Logo";
-import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
+import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
 
 const megaAdults = [
   { label: "Anxiety & stress", href: "/concerns/anxiety" },
@@ -41,26 +41,56 @@ function isHelpActive(pathname: string) {
 export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  // Hide-on-scroll (phones/tablets via CSS): slides away while reading down,
+  // returns on the first scroll up. Never hides while the drawer is open or
+  // focus is inside the header.
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    // Signals the sticky mobile CTA (globals.css) to retire while the menu is up.
+    if (open) document.body.setAttribute("data-menu-open", "");
+    else document.body.removeAttribute("data-menu-open");
     return () => {
       document.body.style.overflow = "";
+      document.body.removeAttribute("data-menu-open");
     };
   }, [open]);
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      const goingDown = y > lastY.current;
+      const focusInHeader = headerRef.current?.contains(document.activeElement);
+      if (y < 160 || !goingDown || focusInHeader) setHidden(false);
+      else if (goingDown && y - lastY.current > 2) setHidden(true);
+      lastY.current = y;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="site">
+    <header
+      ref={headerRef}
+      className={`site${scrolled ? " scrolled" : ""}${
+        hidden && !open ? " tucked" : ""
+      }`}
+    >
       <div className="nav">
         <Link className="logo" href="/">
           <LogoMark />
           <LogoName />
         </Link>
-        <nav className="nav-links">
+        <nav className="nav-links" aria-label="Primary">
           <div>
             <Link
               className={`top${isHelpActive(pathname) ? " active" : ""}`}
@@ -100,14 +130,16 @@ export default function Header() {
             </div>
           ))}
         </nav>
-        <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
-          {PHONE_DISPLAY}
-        </a>
+        {SHOW_PHONE && (
+          <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
+            {PHONE_DISPLAY}
+          </a>
+        )}
         <Link className="nav-cta" href="/contact">
-          Talk With Our Team
+          Get a Free Call Today
         </Link>
         <button
-          className="nav-burger"
+          className={`nav-burger${open ? " is-open" : ""}`}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-drawer"
@@ -119,37 +151,46 @@ export default function Header() {
         </button>
       </div>
       <div id="mobile-drawer" className={`drawer${open ? " open" : ""}`}>
-        <Link className="d-top" href="/what-we-help-with">
-          What We Help With
-        </Link>
-        <div className="d-group">
-          <h5>Adults</h5>
-          {megaAdults.map((l) => (
-            <Link key={l.label} href={l.href}>
-              {l.label}
+        <div className="d-inner">
+          <nav className="d-nav" aria-label="Mobile">
+            <Link className="d-top" href="/what-we-help-with">
+              What We Help With
             </Link>
-          ))}
-          <Link href="/adults">All adult concerns →</Link>
-          <h5>Children &amp; families</h5>
-          {megaChildren.map((l) => (
-            <Link key={l.label} href={l.href}>
-              {l.label}
+            <div className="d-group">
+              <h5>Adults</h5>
+              {megaAdults.map((l) => (
+                <Link key={l.label} href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+              <Link href="/adults">All adult concerns →</Link>
+              <h5>Children &amp; families</h5>
+              {megaChildren.map((l) => (
+                <Link key={l.label} href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+              <Link href="/children-families">All children&apos;s concerns →</Link>
+            </div>
+            {topLinks.map((l) => (
+              <Link key={l.href} className="d-top" href={l.href}>
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="d-cta">
+            <Link className="nav-cta" href="/contact">
+              Get a Free Call Today
             </Link>
-          ))}
-          <Link href="/children-families">All children&apos;s concerns →</Link>
-        </div>
-        {topLinks.map((l) => (
-          <Link key={l.href} className="d-top" href={l.href}>
-            {l.label}
-          </Link>
-        ))}
-        <div className="d-cta">
-          <Link className="nav-cta" href="/contact">
-            Talk With Our Team
-          </Link>
-          <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
-            or call <b>{PHONE_DISPLAY}</b>
-          </a>
+            {SHOW_PHONE && (
+              <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
+                or call <b>{PHONE_DISPLAY}</b>
+              </a>
+            )}
+            <span className="d-note">
+              Nashville &middot; Murfreesboro &middot; Franklin (coming soon)
+            </span>
+          </div>
         </div>
       </div>
     </header>

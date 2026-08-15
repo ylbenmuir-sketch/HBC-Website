@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
+import { BrainMapCta, TalkCta } from "@/components/Buttons";
 
 export const metadata: Metadata = {
   title: "How LENS Works",
@@ -46,14 +47,21 @@ export default function HowLensWorksPage() {
         <div className="wrap rv">
           <div className="eyebrow">How LENS works</div>
           <h1>
-            Your brain already knows how to settle. LENS gives it a{" "}
-            <em className="sage">clearer mirror.</em>
+            A gentle signal, a comfortable chair, and{" "}
+            <em className="sage">nothing to perform.</em>
           </h1>
           <p className="sub" style={{ maxWidth: "64ch" }}>
             LENS stands for Low Energy Neurofeedback System. Here&rsquo;s the
             whole idea without the jargon &mdash; and exactly what a session
             feels like from the chair.
           </p>
+          <div
+            className="hero-ctas"
+            style={{ marginTop: 34, justifyContent: "center" }}
+          >
+            <TalkCta />
+            <BrainMapCta />
+          </div>
           <div style={{ maxWidth: 880, margin: "52px auto 0" }}>
             <svg viewBox="0 0 900 90" fill="none" width="100%" aria-hidden="true">
               <path
@@ -82,9 +90,9 @@ export default function HowLensWorksPage() {
                 marginTop: 12,
               }}
             >
-              <span>A brain working harder than it needs to</span>
+              <span>Brain activity is electrical &mdash; and observable</span>
               <span style={{ color: "var(--sage-deep)" }}>
-                The same brain, running more efficiently
+                The feedback signal is far weaker than everyday signals
               </span>
             </div>
           </div>
@@ -97,20 +105,23 @@ export default function HowLensWorksPage() {
             <div className="eyebrow">The idea, plainly</div>
             <h2>Feedback, not force.</h2>
             <p>
-              Through stress, strain, or simply life, the brain can settle into
-              patterns that work against you &mdash; staying on alert when
-              nothing&rsquo;s wrong, or fogging over when you need to think.
+              <b>What the equipment does:</b> small sensors observe the
+              brain&rsquo;s electrical activity, and the system returns a
+              brief, very low-energy feedback signal &mdash; far weaker than
+              the everyday signals already around you.
             </p>
             <p>
-              During a session, small sensors read your brain&rsquo;s activity
-              in real time, and the system reflects a faint, imperceptible
-              signal back &mdash; a mirror the brain can use to notice its own
-              stuck patterns.
+              <b>What you experience:</b> a comfortable chair and a short,
+              quiet visit. There&rsquo;s nothing to watch, practice, or
+              concentrate on, and most people &mdash; including young children
+              &mdash; feel nothing at all.
             </p>
             <p>
-              What happens next is up to your brain, not the machine. Given
-              clearer information, brains tend to do what they were built to
-              do: reorganize, settle, and run more efficiently.
+              <b>What we hope to support, honestly:</b> many clients report
+              feeling calmer, sleeping more easily, or thinking more clearly
+              over a series of sessions. Every nervous system responds
+              differently, nothing is guaranteed, and we review what you
+              notice at every visit.
             </p>
           </div>
           <div className="rv">

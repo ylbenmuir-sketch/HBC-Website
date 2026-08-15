@@ -10,8 +10,11 @@ import { locations, getLocation } from "@/lib/locations";
 import {
   PHONE_DISPLAY,
   PHONE_TEL,
+  SHOW_DRAFT_CONTENT,
+  SHOW_PHONE,
   SITE_NAME,
   SITE_URL,
+  isDraftText,
 } from "@/lib/site-config";
 
 export function generateStaticParams() {
@@ -60,20 +63,38 @@ export default async function LocationPage({
   const location = getLocation((await params).slug);
   if (!location) notFound();
 
-  /* LocalBusiness JSON-LD — address values stay as config placeholders
-     until confirmed (see lib/locations.ts + README). */
+  const addressConfirmed =
+    !isDraftText(location.address.streetAddress) &&
+    !isDraftText(location.address.postalCode);
+  // Draft team members / hours / arrival notes never ship (see site-config).
+  const team = location.team.filter(
+    (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
+  );
+  const hoursLines = location.hoursLines.filter(
+    (l) => SHOW_DRAFT_CONTENT || !isDraftText(l)
+  );
+  const arrivalLines = location.hero.arrivalLines
+    .filter(Boolean)
+    .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
+
+  /* LocalBusiness JSON-LD — street address and ZIP are omitted until the
+     values in lib/locations.ts are confirmed. */
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: `${SITE_NAME} — ${location.name}`,
     url: `${SITE_URL}/locations/${location.slug}`,
-    telephone: PHONE_TEL,
+    ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
     address: {
       "@type": "PostalAddress",
-      streetAddress: location.address.streetAddress,
+      ...(addressConfirmed
+        ? {
+            streetAddress: location.address.streetAddress,
+            postalCode: location.address.postalCode,
+          }
+        : {}),
       addressLocality: location.address.addressLocality,
       addressRegion: location.address.addressRegion,
-      postalCode: location.address.postalCode,
       addressCountry: "US",
     },
     description: location.metaDescription,
@@ -100,9 +121,11 @@ export default async function LocationPage({
             <p className="sub">{location.hero.sub}</p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
-              <Btn href={`tel:${PHONE_TEL}`} variant="ghost">
-                Call {PHONE_DISPLAY}
-              </Btn>
+              {SHOW_PHONE && (
+                <Btn href={`tel:${PHONE_TEL}`} variant="ghost">
+                  Call {PHONE_DISPLAY}
+                </Btn>
+              )}
             </div>
             <div
               className="facts3"
@@ -116,33 +139,44 @@ export default async function LocationPage({
             >
               <HeroFact label={location.comingSoon ? "Status" : "Address"}>
                 {location.comingSoon ? (
-                  <>Opening [DATE — confirm]</>
+                  <>
+                    Coming soon{" "}
+                    <ConfirmTag style={{ fontSize: 11 }}>
+                      [Opening date — confirm]
+                    </ConfirmTag>
+                  </>
                 ) : (
                   <>
-                    {location.address.streetAddress}
-                    <br />
+                    {SHOW_DRAFT_CONTENT && (
+                      <>
+                        {location.address.streetAddress}
+                        <br />
+                      </>
+                    )}
                     {location.address.addressLocality},{" "}
                     {location.address.addressRegion}{" "}
-                    {location.address.postalCode}
+                    {addressConfirmed && location.address.postalCode}
                   </>
                 )}
               </HeroFact>
               <HeroFact label="Hours">
-                {location.hoursLines.map((l, i) => (
+                {hoursLines.map((l, i) => (
                   <span key={l}>
                     {i > 0 && <br />}
                     {l}
                   </span>
                 ))}
               </HeroFact>
-              <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
-                {location.hero.arrivalLines.filter(Boolean).map((l, i) => (
-                  <span key={l}>
-                    {i > 0 && <br />}
-                    {l}
-                  </span>
-                ))}
-              </HeroFact>
+              {arrivalLines.length > 0 && (
+                <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
+                  {arrivalLines.map((l, i) => (
+                    <span key={l}>
+                      {i > 0 && <br />}
+                      {l}
+                    </span>
+                  ))}
+                </HeroFact>
+              )}
             </div>
           </div>
           <div className="rv">
@@ -204,7 +238,7 @@ export default async function LocationPage({
             </h2>
           </div>
           <div className="team-grid rv">
-            {location.team.map((m) => (
+            {team.map((m) => (
               <div className="member" key={m.name}>
                 {m.image ? (
                   <PhotoFrame
@@ -251,6 +285,8 @@ export default async function LocationPage({
             </div>
           </div>
           <div className="rv">
+            {SHOW_DRAFT_CONTENT ? (
+              <>
             <div className="eyebrow">
               From a {location.comingSoon ? "Harmonized" : location.name}{" "}
               family
@@ -277,6 +313,26 @@ export default async function LocationPage({
             <p className="sample-note" style={{ color: "rgba(251,248,241,.4)" }}>
               Sample copy — replace with a verified client quote.
             </p>
+              </>
+            ) : (
+              <>
+                <div className="eyebrow">Good to know</div>
+                <div
+                  className="quote"
+                  style={{
+                    background: "transparent",
+                    borderColor: "rgba(251,248,241,.18)",
+                    boxShadow: "none",
+                    marginTop: 20,
+                  }}
+                >
+                  <p style={{ color: "var(--ivory)" }}>
+                    The call is free, no referral is needed, and you&rsquo;ll
+                    never be asked to commit to a long program up front.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -306,20 +362,22 @@ export default async function LocationPage({
                 boxShadow: "0 0 0 8px rgba(169,133,63,.18)",
               }}
             />
-            <div
-              style={{
-                position: "absolute",
-                left: 22,
-                bottom: 18,
-                fontSize: 10.5,
-                letterSpacing: ".2em",
-                textTransform: "uppercase",
-                color: "var(--sage-deep)",
-                fontWeight: 600,
-              }}
-            >
-              Embedded map — muted sage style
-            </div>
+            {SHOW_DRAFT_CONTENT && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 22,
+                  bottom: 18,
+                  fontSize: 10.5,
+                  letterSpacing: ".2em",
+                  textTransform: "uppercase",
+                  color: "var(--sage-deep)",
+                  fontWeight: 600,
+                }}
+              >
+                Embedded map — muted sage style
+              </div>
+            )}
           </div>
           <div className="rv">
             <div className="eyebrow">Planning your visit</div>
@@ -329,7 +387,11 @@ export default async function LocationPage({
                 <div className="n">—</div>
                 <div>
                   <h4>Getting here</h4>
-                  <p>{location.planning.gettingHere}</p>
+                  <p>
+                    {SHOW_DRAFT_CONTENT
+                      ? location.planning.gettingHere
+                      : "We'll send simple directions and arrival details when you book."}
+                  </p>
                 </div>
               </div>
               <div className="row">

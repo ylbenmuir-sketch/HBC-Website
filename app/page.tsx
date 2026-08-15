@@ -4,21 +4,36 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
+import ConcernRail from "@/components/ConcernRail";
 import Quote from "@/components/Quote";
 import LocationCard from "@/components/LocationCard";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
-import { Btn, TalkCta } from "@/components/Buttons";
+import MobileCtaBar from "@/components/MobileCtaBar";
+import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locations } from "@/lib/locations";
 import {
-  PHONE_DISPLAY,
+  ESTABLISHED_YEAR,
+  EXPERIENCES_DISCLAIMER,
+  FEATURE_CELEBRITY,
+  FOUNDER_DISPLAY_NAME,
+  FOUNDER_LAST_NAME,
+  FOUNDER_QUOTE,
+  FRANKLIN_OPENING,
   REVIEWS,
+  SAME_DAY_CALLBACK,
   SAMPLE_QUOTES_NOTE,
+  SHOW_DRAFT_CONTENT,
+  START_TIMING,
+  STAT_SESSIONS,
+  TESTIMONIALS,
+  TRAINING_CLAIM_TAG,
   TRISHA_APPROVAL_TAG,
   TRISHA_QUOTE,
   TRISHA_VIDEO_URL,
-  FOUNDER_DISPLAY_NAME,
+  VERIFIED_TESTIMONIALS,
+  verifiedOr,
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -32,7 +47,6 @@ const homeConcerns = [
     points: [
       "Thoughts that won't quiet down",
       "Feeling constantly on edge",
-      "Overreacting to small stressors",
       "Unable to relax even when life is calm",
     ],
     href: "/concerns/anxiety",
@@ -43,7 +57,6 @@ const homeConcerns = [
     points: [
       "Struggling to stay on task",
       "Overwhelmed by multi-step responsibilities",
-      "Procrastinating on things you care about",
       "Work or schoolwork that stalls at 90%",
     ],
     href: "/concerns/focus-adhd",
@@ -55,7 +68,6 @@ const homeConcerns = [
       "A mind that won't shut off at night",
       "Waking frequently",
       "Eight hours that feel like four",
-      "Inconsistent, unpredictable sleep",
     ],
     href: "/concerns/sleep",
   },
@@ -64,7 +76,6 @@ const homeConcerns = [
     audience: "Often children — and their parents",
     points: [
       "Becoming overwhelmed quickly",
-      "Intense reactions that are hard to stop",
       "Struggling with transitions",
       "Staying upset long after the moment",
     ],
@@ -76,7 +87,6 @@ const homeConcerns = [
     points: [
       "Thinking that feels slow or cloudy",
       "Losing words mid-sentence",
-      "Forgetting why you entered the room",
       "Exhausted by normal responsibilities",
     ],
     href: "/concerns/brain-fog",
@@ -88,10 +98,18 @@ const homeConcerns = [
       "Functioning, but close to burnout",
       "Unable to recover after hard days",
       "Carrying stress physically",
-      "Wanting to handle normal stress normally",
     ],
     href: "/concerns/stress-resilience",
   },
+];
+
+const homeGoals = [
+  "Calmer mornings, fewer standoffs",
+  "Falling asleep more easily",
+  "Greater focus at school or work",
+  "Recovering from frustration faster",
+  "More patience with the people you love",
+  "Feeling more like yourself again",
 ];
 
 const homeFaqs = [
@@ -105,148 +123,199 @@ const homeFaqs = [
   },
   {
     q: "How many sessions will I need?",
-    a: "It genuinely varies. We track how you feel at every visit, review progress together, and never ask you to commit to a long program up front.",
+    a: "It genuinely varies. We check in on how you're doing at every visit, review progress together, and never ask you to commit to a long program up front.",
   },
 ];
 
 export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
+  const startTiming = verifiedOr(START_TIMING);
+  const founderQuote = verifiedOr(FOUNDER_QUOTE);
+  const homeQuotes = SHOW_DRAFT_CONTENT ? TESTIMONIALS : VERIFIED_TESTIMONIALS;
+  const showStories = homeQuotes.length > 0;
+  const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
 
   return (
-    <>
+    <div className="home">
       <section className="hero wrap">
         <div className="hero-grid">
-          <div className="rv">
+          <div className="rv hero-copy">
             <div className="eyebrow">
-              LENS Neurofeedback &middot; Adults &amp; Children &middot; Middle
-              Tennessee
+              <span className="d-only">
+                LENS Neurofeedback &middot; Adults &amp; Children &middot;
+                Middle Tennessee
+              </span>
+              <span className="m-only">LENS Neurofeedback</span>
             </div>
             <h1>
-              Feel like <em className="sage">yourself</em> again.
+              Feel like
+              <br className="m-only" /> <em className="sage">yourself</em>
+              <br className="m-only" /> again.
             </h1>
             <p className="sub">
-              Gentle, noninvasive neurofeedback support for anxiety, focus and
-              ADHD, sleep, emotional regulation, brain fog, and stress &mdash;
-              delivered by trained practitioners at centers across Middle
-              Tennessee.
+              <span className="d-only">
+                Gentle, noninvasive neurofeedback support for{" "}
+                <b className="kw">anxiety</b>, <b className="kw">focus and ADHD</b>,{" "}
+                <b className="kw">sleep</b>, <b className="kw">emotional regulation</b>,{" "}
+                <b className="kw">brain fog</b>, and <b className="kw">stress</b>{" "}
+                &mdash; delivered by trained practitioners at centers across
+                Middle Tennessee.
+              </span>
+              <span className="m-only">
+                Gentle, noninvasive neurofeedback for{" "}
+                <b className="kw">anxiety</b>, <b className="kw">focus &amp; ADHD</b>,{" "}
+                <b className="kw">sleep</b>, and <b className="kw">stress</b>{" "}
+                &mdash; for adults and children across Middle Tennessee.
+              </span>
             </p>
             <div className="hero-ctas">
               <TalkCta />
-              <Btn href="/how-lens-works" variant="ghost" arrow>
-                See how LENS works
-              </Btn>
+              <BrainMapCta />
             </div>
             <p className="micro">
-              A free, no-pressure conversation. Ask anything &mdash; including
-              the skeptical questions.
+              {/* "today" is an operational promise, so it ships only once
+                  SAME_DAY_CALLBACK is verified; production falls back to the
+                  same sentence without the timeframe. */}
+              {verifiedOr(SAME_DAY_CALLBACK) ? (
+                <>
+                  A real person calls you back today.
+                  <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
+                </>
+              ) : (
+                <>A real person calls you back.</>
+              )}{" "}
+              Ask anything &mdash; including the skeptical questions.
             </p>
           </div>
-          <div className="rv">
+          <div className="rv hero-media">
             <PhotoFrame
               src="/images/hero.jpg"
               alt="A calm LENS neurofeedback session at Harmonized Brain Centers"
               position="46% 24%"
+              positionMobile="48% 18%"
               height={620}
               className="hero-ph"
               sizes="(max-width: 1060px) 100vw, 47vw"
               priority
             />
+            <span className="hero-scrim" aria-hidden="true" />
           </div>
         </div>
       </section>
 
       <ProofBand
         stats={[
-          { stat: "140,000+", label: "LENS sessions provided across our centers" },
           {
-            stat: "3 centers",
-            label: "Nashville · Murfreesboro · Franklin (coming soon)",
+            stat: STAT_SESSIONS.value,
+            label: "LENS sessions provided across our centers",
+            todo: STAT_SESSIONS.note,
+          },
+          {
+            stat: "Two centers",
+            label: "Nashville & Murfreesboro — Franklin coming soon",
           },
           {
             stat: "All ages",
-            label: "Adults, teens, and children welcomed at every center",
+            label: "Adults, teens, and children welcome",
           },
           {
-            stat: "Since 2016",
-            label: "Serving Middle Tennessee families for nearly a decade",
+            stat: `Since ${ESTABLISHED_YEAR.value}`,
+            label: "Serving Middle Tennessee families",
+            todo: ESTABLISHED_YEAR.note,
           },
         ]}
       />
 
-      {/* Trisha Yearwood band — embedding is disabled for this video, so this
-          is a thumbnail linking out to YouTube. Never replace with an iframe. */}
-      <section className="sec-navy celeb-band">
-        <div className="wrap celeb-grid">
-          <div className="rv">
-            <div className="eyebrow" style={{ color: "var(--sage)" }}>
-              In her own words
-            </div>
-            <div className="celeb-name">Trisha Yearwood</div>
-            <div className="celeb-role">
-              Grammy&reg;-winning artist &middot; on her experience at
-              Harmonized
-            </div>
-            <div className="celeb-quote">&ldquo;{TRISHA_QUOTE}&rdquo;</div>
-            <div
-              style={{
-                marginTop: 24,
-                display: "flex",
-                gap: 22,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <a
-                className="btn btn-invert"
-                style={{ padding: "13px 24px", fontSize: 14.5 }}
-                href={TRISHA_VIDEO_URL}
-                target="_blank"
-                rel="noopener"
+      {/* Trisha Yearwood band — CONDITIONAL FEATURE. Renders only while
+          FEATURE_CELEBRITY is true (draft mode, or the env flag once every
+          permission is confirmed — see lib/site-config.ts). Embedding is
+          disabled for this video: always a thumbnail linking out, never an
+          iframe. The page is designed to feel complete without this band. */}
+      {FEATURE_CELEBRITY && (
+        <section className="sec-navy celeb-band">
+          <div className="wrap celeb-grid">
+            <div className="rv celeb-copy">
+              <div
+                className="eyebrow celeb-eyebrow"
+                style={{ color: "var(--sage)" }}
               >
-                Watch her story <span className="arrow">→</span>
-              </a>
-              <span
+                In her own words
+              </div>
+              <div className="celeb-name">Trisha Yearwood</div>
+              <div className="celeb-role">
+                Grammy&reg;-winning artist &middot; on her experience at
+                Harmonized
+              </div>
+              <div className="celeb-quote">&ldquo;{TRISHA_QUOTE}&rdquo;</div>
+              <div
+                className="celeb-cta"
                 style={{
-                  color: "rgba(251,248,241,.5)",
-                  fontSize: 13,
-                  letterSpacing: ".06em",
+                  marginTop: 24,
+                  display: "flex",
+                  gap: 22,
+                  alignItems: "center",
+                  flexWrap: "wrap",
                 }}
               >
-                Individual experiences vary &middot;{" "}
-                <ConfirmTag style={{ fontSize: 11 }}>
-                  {TRISHA_APPROVAL_TAG}
-                </ConfirmTag>
-              </span>
+                <a
+                  className="btn btn-invert"
+                  style={{ padding: "13px 24px", fontSize: 14.5 }}
+                  href={TRISHA_VIDEO_URL}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Watch her story <span className="arrow">→</span>
+                </a>
+                <span
+                  style={{
+                    color: "rgba(251,248,241,.5)",
+                    fontSize: 13,
+                    letterSpacing: ".06em",
+                  }}
+                >
+                  Individual experiences vary &middot;{" "}
+                  <ConfirmTag style={{ fontSize: 11 }}>
+                    {TRISHA_APPROVAL_TAG}
+                  </ConfirmTag>
+                </span>
+              </div>
             </div>
+            <a
+              className="celeb-video rv"
+              href={TRISHA_VIDEO_URL}
+              target="_blank"
+              rel="noopener"
+              aria-label="Watch Trisha Yearwood's story on YouTube"
+            >
+              <Image
+                src="/images/trisha.jpg"
+                alt=""
+                fill
+                sizes="220px"
+                style={{ objectFit: "cover", objectPosition: "center 30%" }}
+              />
+              <span className="play">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 5.5v13l11-6.5-11-6.5z" fill="#1C2B3A" />
+                </svg>
+              </span>
+              <span className="celeb-id m-only">
+                <span className="celeb-id-name">Trisha Yearwood</span>
+                <span className="celeb-id-role">
+                  Grammy&reg;-winning artist &middot; her experience at
+                  Harmonized
+                </span>
+              </span>
+            </a>
           </div>
-          <a
-            className="celeb-video rv"
-            href={TRISHA_VIDEO_URL}
-            target="_blank"
-            rel="noopener"
-            aria-label="Watch Trisha Yearwood's story on YouTube"
-          >
-            <Image
-              src="/images/trisha.jpg"
-              alt=""
-              fill
-              sizes="220px"
-              style={{ objectFit: "cover", objectPosition: "center 30%" }}
-            />
-            <span className="play">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M8 5.5v13l11-6.5-11-6.5z" fill="#1C2B3A" />
-              </svg>
-            </span>
-          </a>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="sec">
+      <section className="sec home-concerns">
         <div className="wrap">
           <div className="sec-head split rv">
             <div>
-              <div className="eyebrow">What we help with</div>
+              <div className="eyebrow">What brings people to us</div>
               <h2>
                 If any of this describes your daily life, you&rsquo;re in the
                 right place.
@@ -256,11 +325,11 @@ export default function HomePage() {
               Explore every concern
             </Btn>
           </div>
-          <div className="concern-grid rv">
+          <ConcernRail count={homeConcerns.length}>
             {homeConcerns.map((c) => (
               <ConcernCard key={c.href} {...c} />
             ))}
-          </div>
+          </ConcernRail>
           <div className="family-row rv">
             <div className="fr-copy">
               <div className="eyebrow" style={{ color: "var(--sage)" }}>
@@ -271,9 +340,9 @@ export default function HomePage() {
               </h3>
               <p>
                 Homework battles. Meltdowns over transitions. Teacher emails.
-                Sensory overwhelm. A child starting to say &ldquo;I&rsquo;m
-                just bad at school.&rdquo; There&rsquo;s nothing your child has
-                to get right in a LENS session, and a parent joins every
+                Sensory overwhelm. A child starting to believe they&rsquo;re
+                bad at school. There&rsquo;s nothing your child has to get
+                right in a LENS session &mdash; and you&rsquo;re part of every
                 check-in.
               </p>
               <Btn href="/children-families" variant="invert">
@@ -284,6 +353,7 @@ export default function HomePage() {
               src="/images/child-session.jpg"
               alt="A child relaxing during a LENS session"
               position="60% 30%"
+              positionMobile="68% 24%"
               style={{ minHeight: 340 }}
               sizes="(max-width: 1060px) 100vw, 50vw"
             />
@@ -291,7 +361,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="sec sec-ivory2">
+      <section className="sec sec-ivory2 home-goals">
         <div className="wrap goals-grid">
           <div className="rv">
             <div className="eyebrow">What could change</div>
@@ -300,43 +370,47 @@ export default function HomePage() {
               worth everything.
             </h2>
             <div className="note-sage">
-              These are the areas clients most often hope to support &mdash;
-              framed honestly. LENS is not a guaranteed outcome, and every
-              nervous system responds differently. We track your experience at
-              every visit so progress is never a guessing game.
+              These are goals, not guarantees &mdash; every nervous system
+              responds differently. Changes are reviewed at every visit, so
+              progress is tracked consistently instead of relying on memory
+              alone.
             </div>
           </div>
-          <ul className="goals-list rv">
-            <li>Calmer mornings, fewer standoffs</li>
-            <li>Falling asleep more easily</li>
-            <li>Greater focus at school or work</li>
-            <li>Recovering from frustration faster</li>
-            <li>Feeling less mentally exhausted</li>
-            <li>Remembering conversations and tasks</li>
-            <li>More patience with the people you love</li>
-            <li>Handling normal stress without overwhelm</li>
-            <li>Following through on what you start</li>
-            <li>Feeling more like yourself again</li>
-          </ul>
+          <div className="rv">
+            <ul className="goals-list">
+              {homeGoals.map((g) => (
+                <li key={g}>{g}</li>
+              ))}
+            </ul>
+            <Btn
+              href="/what-we-help-with"
+              variant="ghost"
+              arrow
+              style={{ marginTop: 26 }}
+            >
+              See what clients work toward, by concern
+            </Btn>
+          </div>
         </div>
       </section>
 
-      <section className="sec">
+      <section className="sec home-lens">
         <div className="wrap lens-grid">
           <div className="rv">
             <div className="eyebrow">How LENS works</div>
             <h2 style={{ margin: "22px 0 18px" }}>Feedback, not force.</h2>
             <p style={{ marginBottom: 16 }}>
-              LENS &mdash; the Low Energy Neurofeedback System &mdash; reads
-              your brain&rsquo;s activity through small sensors and reflects a
-              faint, imperceptible signal back to it: a clearer mirror the
-              brain can use to notice its own stuck patterns and support its
-              natural ability to settle and regulate.
+              LENS &mdash; the Low Energy Neurofeedback System &mdash; uses
+              small sensors to observe the brain&rsquo;s electrical activity,
+              then returns a very low-energy feedback signal, far weaker than
+              the everyday signals already around you. You simply sit
+              comfortably &mdash; there&rsquo;s nothing to watch, practice, or
+              perform.
             </p>
             <p className="sub" style={{ fontSize: 16 }}>
-              Nothing is forced and nothing is added. It&rsquo;s a wellness
-              service &mdash; not a medical treatment &mdash; and experiences
-              vary.
+              LENS is a wellness service, not a medical treatment. Nothing is
+              promised: your experience is reviewed over time, and your plan
+              follows it.
             </p>
             <svg
               className="wave"
@@ -384,7 +458,7 @@ export default function HomePage() {
               {
                 n: "4",
                 h: "Reviewed with you",
-                p: "Sleep, mood, focus, and energy are tracked at every visit — and your plan adjusts.",
+                p: "Sleep, mood, focus, and energy are checked at every visit — and your plan adjusts.",
               },
             ].map((r) => (
               <div className="row" key={r.n}>
@@ -399,7 +473,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="sec sec-navy">
+      <section className="sec sec-navy home-journey">
         <div className="wrap">
           <div className="sec-head rv">
             <div className="eyebrow">The client journey</div>
@@ -414,12 +488,12 @@ export default function HomePage() {
               {
                 n: "1",
                 h: "Talk with us",
-                p: "A free conversation — phone or in person. Ask anything.",
+                p: "A free phone call — ask anything.",
               },
               {
                 n: "2",
-                h: "Consult & map",
-                p: "A gentle assessment of how your brain is currently working.",
+                h: "Consult & baseline",
+                p: "A consultation plus a baseline recording of brain activity to guide your starting plan.",
               },
               {
                 n: "3",
@@ -446,7 +520,7 @@ export default function HomePage() {
           </div>
           <div
             style={{
-              marginTop: 70,
+              marginTop: 52,
               display: "flex",
               gap: 26,
               alignItems: "center",
@@ -457,14 +531,16 @@ export default function HomePage() {
             <Btn href="/first-visit" variant="invert">
               See what the first visit is like
             </Btn>
-            <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
-              Most new clients start within a week of their first call.
-            </span>
+            {startTiming && (
+              <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
+                {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
+              </span>
+            )}
           </div>
         </div>
       </section>
 
-      <section className="sec">
+      <section className="sec home-care">
         <div className="wrap">
           <div className="sec-head rv">
             <div className="eyebrow">The Harmonized care model</div>
@@ -473,105 +549,145 @@ export default function HomePage() {
               practitioner.
             </h2>
           </div>
-          <div className="care-grid rv">
+          <div className="care-list rv">
             {[
               {
+                n: "01",
                 h: "Trained to one standard",
-                p: "Every practitioner completes the same founder-led LENS training and works from the same clinical playbook — so your experience doesn't depend on which center you walk into.",
+                p: "Every practitioner completes the same Harmonized LENS training and follows the same session structure — your experience doesn't depend on which center you walk into.",
+                tag: TRAINING_CLAIM_TAG,
               },
               {
-                h: "Progress tracked at every visit",
-                p: "A structured check-in on sleep, mood, focus, and energy opens every session. Your plan is adjusted from your data, not from habit.",
+                n: "02",
+                h: "Progress reviewed at every visit",
+                p: "A structured check-in on sleep, mood, focus, and energy opens each session, and your plan is adjusted from what you report.",
               },
               {
-                h: "Team-based care",
-                p: "Your practitioner stays with you, and the wider team reviews progress together — you're never dependent on a single person's availability.",
+                n: "03",
+                h: "A plan that travels with you",
+                p: "Your plan and progress are documented at every step, so your care stays consistent across visits — and across centers.",
               },
               {
+                n: "04",
                 h: "Honest by policy",
-                p: "No large packages sold up front, no promised outcomes, and a plain answer if we think LENS isn't the right fit for you.",
+                p: "No promised outcomes, clear recommendations, and a plain answer if we think LENS isn't the right fit for you.",
               },
             ].map((c) => (
               <div className="care" key={c.h}>
-                <h4>{c.h}</h4>
-                <p>{c.p}</p>
+                <div className="care-n" aria-hidden="true">
+                  {c.n}
+                </div>
+                <div>
+                  <h4>{c.h}</h4>
+                  <p>
+                    {c.p}
+                    {c.tag && (
+                      <>
+                        {" "}
+                        <ConfirmTag>{c.tag}</ConfirmTag>
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
           <div className="founder-note rv">
             <PhotoFrame
               src="/images/founder.jpg"
-              alt="Sheri, Founder & Clinical Director of Harmonized Brain Centers"
+              alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
               position="center 22%"
               height={230}
               sizes="200px"
             />
             <div>
-              <blockquote>
-                &ldquo;We built Harmonized so that every family gets the same
-                thing my first clients got: someone who listens longer than any
-                appointment they&rsquo;ve ever had &mdash; and a gentle option
-                that works with the brain, not against it.&rdquo;
-              </blockquote>
+              {founderQuote ? (
+                <blockquote>
+                  &ldquo;{founderQuote}&rdquo;{" "}
+                  <ConfirmTag>{FOUNDER_QUOTE.note!}</ConfirmTag>
+                </blockquote>
+              ) : (
+                <blockquote>
+                  Harmonized began with one practitioner and a simple promise:
+                  honest guidance, and a gentle option for every family.
+                </blockquote>
+              )}
               <cite>
-                {FOUNDER_DISPLAY_NAME} &middot; Founder &amp; Clinical Director
-                &middot; <Link href="/about/founder">Her story →</Link>
+                {FOUNDER_DISPLAY_NAME}{" "}
+                {!FOUNDER_LAST_NAME.verified && (
+                  <ConfirmTag>{FOUNDER_LAST_NAME.note!}</ConfirmTag>
+                )}{" "}
+                &middot; Founder &amp; Clinical Director &middot;{" "}
+                <Link href="/about/founder">Her story →</Link>
               </cite>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="sec sec-ivory2">
-        <div className="wrap">
-          <div className="sec-head split rv">
-            <div>
-              <div className="eyebrow">Client stories</div>
-              <h2>
-                The changes people mention first are small &mdash; and
-                unmistakable.
-              </h2>
+      {showStories && (
+        <section className="sec sec-ivory2 home-stories">
+          <div className="wrap">
+            <div className="sec-head split rv">
+              <div>
+                <div className="eyebrow">Client stories</div>
+                <h2>
+                  The changes people mention first are small &mdash; and
+                  unmistakable.
+                </h2>
+              </div>
+              <Btn href="/stories" variant="ghost" arrow>
+                More client stories
+              </Btn>
             </div>
-            <Btn href="/stories" variant="ghost" arrow>
-              More client stories
-            </Btn>
+            <div className="quote-grid rv">
+              {homeQuotes.slice(0, 2).map((t) => (
+                <Quote
+                  key={t.text}
+                  theme={t.theme}
+                  text={t.text}
+                  attribution={
+                    t.firstName
+                      ? `${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`
+                      : t.relationship
+                  }
+                  place={t.city}
+                  sample={!t.verified}
+                />
+              ))}
+            </div>
+            {showReviewBand && (
+              <div className="review-band rv">
+                <div>
+                  <strong>{REVIEWS.value.rating} ★</strong>
+                  <span>Google rating across locations</span>
+                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                    {REVIEWS.note!}
+                  </ConfirmTag>
+                </div>
+                <div>
+                  <strong>{REVIEWS.value.count}</strong>
+                  <span>From Nashville &amp; Murfreesboro clients</span>
+                </div>
+                <div>
+                  <strong>Video stories</strong>
+                  <span>Client interviews, in their own words</span>
+                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                    Film 2–3 short testimonials
+                  </ConfirmTag>
+                </div>
+              </div>
+            )}
+            <p className="sample-note">
+              {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0
+                ? SAMPLE_QUOTES_NOTE
+                : EXPERIENCES_DISCLAIMER}
+            </p>
           </div>
-          <div className="quote-grid rv">
-            <Quote
-              theme="Focus · Children"
-              text="For the first time in two years, homework isn't a fight. He sits down, does it, and moves on. I didn't realize how much tension had left the house until it was gone."
-              attribution="Parent of a 9-year-old"
-              place="Nashville"
-            />
-            <Quote
-              theme="Sleep · Adults"
-              text="I came in exhausted and skeptical. What sold me was that nobody oversold anything — they just kept asking how I was sleeping. By week four: better than I had in years."
-              attribution="Adult client"
-              place="Murfreesboro"
-            />
-          </div>
-          <div className="review-band rv">
-            <div>
-              <strong>{REVIEWS.rating} ★</strong>
-              <span>Google rating across locations</span>
-              <span className="todo">{REVIEWS.ratingTodo}</span>
-            </div>
-            <div>
-              <strong>{REVIEWS.count}</strong>
-              <span>From Nashville &amp; Murfreesboro clients</span>
-              <span className="todo">{REVIEWS.countTodoHome}</span>
-            </div>
-            <div>
-              <strong>Video stories</strong>
-              <span>Client interviews, in their own words</span>
-              <span className="todo">{REVIEWS.videoTodoHome}</span>
-            </div>
-          </div>
-          <p className="sample-note">{SAMPLE_QUOTES_NOTE}</p>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section className="sec">
+      <section className="sec home-locations">
         <div className="wrap">
           <div className="sec-head split rv">
             <div>
@@ -589,11 +705,9 @@ export default function HomePage() {
               location={nashville}
               meta={
                 <>
-                  <b>[Street address]</b>
+                  <b>Open &mdash; welcoming new clients</b>
                   <br />
-                  Mon&ndash;Fri 9a&ndash;6p &middot; Sat by appt
-                  <br />
-                  {PHONE_DISPLAY}
+                  A calm, comfortable center serving Davidson County.
                 </>
               }
             />
@@ -602,11 +716,10 @@ export default function HomePage() {
               plateSpecOverride="Murfreesboro interior — reception or session room, natural light"
               meta={
                 <>
-                  <b>[Street address]</b>
+                  <b>Open &mdash; welcoming new clients</b>
                   <br />
-                  Mon&ndash;Fri 9a&ndash;6p &middot; Sat by appt
-                  <br />
-                  {PHONE_DISPLAY}
+                  The same standard of care, closer to home in Rutherford
+                  County.
                 </>
               }
             />
@@ -615,11 +728,12 @@ export default function HomePage() {
               plateSpecOverride="Franklin exterior — storefront at golden hour"
               meta={
                 <>
-                  <b>Opening [DATE — confirm]</b>
+                  <b>
+                    Coming soon{" "}
+                    <ConfirmTag>{FRANKLIN_OPENING.note!}</ConfirmTag>
+                  </b>
                   <br />
-                  Join the waitlist for founding-client openings
-                  <br />
-                  {PHONE_DISPLAY}
+                  Join the waitlist for founding-client openings.
                 </>
               }
             />
@@ -627,13 +741,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="sec sec-tight">
+      <section className="sec sec-tight home-faq">
         <div className="wrap" style={{ maxWidth: 900 }}>
           <div className="sec-head rv">
             <div className="eyebrow">Before you call</div>
             <h2>The three questions everyone asks first.</h2>
           </div>
-          <FAQAccordion items={homeFaqs} />
+          <FAQAccordion items={homeFaqs} openFirst />
           <Btn href="/faq" variant="ghost" arrow style={{ marginTop: 30 }}>
             All questions, answered plainly
           </Btn>
@@ -641,6 +755,7 @@ export default function HomePage() {
       </section>
 
       <FinalCTA />
-    </>
+      <MobileCtaBar />
+    </div>
   );
 }

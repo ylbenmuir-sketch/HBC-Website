@@ -31,8 +31,7 @@ function WhatHappensNext() {
         <div>
           <h4>We call you</h4>
           <p>
-            A real person from your nearest center, at the time you chose —
-            usually within one business day.
+            A real person from your nearest center, at the time you chose.
           </p>
         </div>
       </div>
@@ -51,8 +50,8 @@ function WhatHappensNext() {
         <div>
           <h4>You decide</h4>
           <p>
-            Book a first visit, think it over, or decide it&rsquo;s not for
-            you. The conversation is free either way.
+            Book your Brain Map, think it over, or decide it&rsquo;s not for
+            you. The call is free either way.
           </p>
         </div>
       </div>

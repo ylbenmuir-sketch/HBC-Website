@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import { SITE_NAME, SITE_URL } from "@/lib/site-config";
+import "@/lib/content-validation";
+import "@/lib/config-validation";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -37,6 +39,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#fbf8f1",
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -45,7 +52,7 @@ export default function RootLayout({
       <body>
         <RevealOnScroll />
         <Header />
-        {children}
+        <main>{children}</main>
         <Footer />
       </body>
     </html>

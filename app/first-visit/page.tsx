@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
-import { TalkCta } from "@/components/Buttons";
+import { BrainMapCta, TalkCta } from "@/components/Buttons";
 import {
+  BRAIN_MAP_PRICE,
   FIRST_VISIT_DURATION,
   FIRST_VISIT_DURATION_TAG,
-  PRICING_TAG,
   HSA_FSA_TAG,
+  SHOW_DRAFT_CONTENT,
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -29,8 +30,8 @@ const fiveParts = [
   },
   {
     n: "3",
-    h: "A gentle brain map",
-    p: "Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. It maps how your brain is currently working.",
+    h: "A gentle baseline recording",
+    p: "Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan.",
   },
   {
     n: "4",
@@ -59,10 +60,15 @@ export default function FirstVisitPage() {
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
+              <BrainMapCta />
             </div>
             <p className="micro">
-              Plan for {FIRST_VISIT_DURATION}{" "}
-              <ConfirmTag>{FIRST_VISIT_DURATION_TAG}</ConfirmTag> &middot;
+              {SHOW_DRAFT_CONTENT && (
+                <>
+                  Plan for {FIRST_VISIT_DURATION}{" "}
+                  <ConfirmTag>{FIRST_VISIT_DURATION_TAG}</ConfirmTag> &middot;{" "}
+                </>
+              )}
               Nothing to prepare or bring
             </p>
           </div>
@@ -110,9 +116,12 @@ export default function FirstVisitPage() {
             <div className="care">
               <h4>What it costs</h4>
               <p>
-                The consultation conversation is free. Session and mapping
-                pricing is straightforward and shared before you commit to
-                anything. <ConfirmTag>{PRICING_TAG}</ConfirmTag>
+                The phone call is free. The Brain Map &mdash; your first visit
+                &mdash; is {BRAIN_MAP_PRICE} and includes the full
+                conversation, a baseline recording of brain activity, and a
+                written plan you keep. Session pricing is shared before you
+                commit to anything, and there are no packages or countdown
+                offers.
               </p>
             </div>
             <div className="care">
@@ -144,7 +153,7 @@ export default function FirstVisitPage() {
 
       <FinalCTA
         heading="Still have a question about the first visit? Just ask."
-        sub="Call or send a note — a real person will answer it plainly, usually within one business day."
+        sub="Call or send a note — a real person will answer it plainly."
       />
     </>
   );

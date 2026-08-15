@@ -4,6 +4,7 @@ import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import {
+  BRAIN_MAP_PRICE,
   SESSION_LENGTH_TAG,
   PRICING_TAG,
   INSURANCE_TAG,
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 const faqs: FaqItem[] = [
   {
     q: "What is LENS neurofeedback?",
-    a: "LENS — the Low Energy Neurofeedback System — reads your brain's activity through small sensors and reflects a faint, imperceptible signal back to it, supporting the brain's natural ability to settle and regulate. Nothing is forced, and there's nothing to perform.",
+    a: "LENS — the Low Energy Neurofeedback System — uses small sensors to observe the brain's electrical activity and returns a brief, very low-energy feedback signal, far weaker than the everyday signals already around you. There's nothing to perform, and it's offered as a wellness service — not a medical treatment.",
   },
   {
     q: "Is it safe?",
@@ -30,7 +31,7 @@ const faqs: FaqItem[] = [
   },
   {
     q: "Is it appropriate for children?",
-    a: "Yes. There's nothing a child has to get right: no sitting perfectly still, no concentrating, no being corrected. A parent joins every visit and every check-in.",
+    a: "Yes. There's nothing a child has to get right: no sitting perfectly still, no concentrating, no being corrected. Parents are welcome at every visit and every check-in.",
   },
   {
     q: "Do I have to do anything during the session?",
@@ -54,9 +55,9 @@ const faqs: FaqItem[] = [
     q: "What does the first visit include?",
     a: (
       <>
-        A real conversation about what&rsquo;s going on, a gentle brain map,
-        and a personalized plan explained in plain language — with every
-        question answered before you decide anything. See{" "}
+        A real conversation about what&rsquo;s going on, a baseline recording
+        of brain activity, and a personalized plan explained in plain language
+        — with every question answered before you decide anything. See{" "}
         <Link href="/first-visit">Your First Visit</Link>.
       </>
     ),
@@ -84,8 +85,10 @@ const faqs: FaqItem[] = [
     q: "What does it cost?",
     a: (
       <>
-        The consultation conversation is free. Session and mapping pricing is
-        straightforward and shared before you commit to anything.{" "}
+        The phone call is free. The Brain Map — your first visit — is{" "}
+        {BRAIN_MAP_PRICE} and includes the full conversation, a baseline
+        recording of brain activity, and a written plan you keep. Session
+        pricing is shared before you commit to anything.{" "}
         <ConfirmTag>{PRICING_TAG}</ConfirmTag>
       </>
     ),
@@ -102,7 +105,7 @@ const faqs: FaqItem[] = [
   },
   {
     q: "What if I'm unsure whether it's right for me?",
-    a: "That's exactly what the free conversation is for. Bring the skeptical questions — and if we think LENS isn't a good fit, we'll say so and point you toward what might serve you better.",
+    a: "That's exactly what the free call is for. Bring the skeptical questions. If we don't think LENS is right for you, we'll tell you on the phone — before you ever book or pay for anything.",
   },
 ];
 
@@ -121,7 +124,7 @@ export default function FaqPage() {
       </section>
       <section className="sec">
         <div className="wrap" style={{ maxWidth: 900 }}>
-          <FAQAccordion items={faqs} />
+          <FAQAccordion items={faqs} openFirst />
         </div>
       </section>
       <FinalCTA />
