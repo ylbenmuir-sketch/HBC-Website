@@ -260,6 +260,39 @@ export const BRAIN_MAP_PRICE = "$150";
 export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
 
 /**
+ * GRAPHICS CORRECTIONS — apply before either asset ships (Phase 7.5).
+ *
+ * These live in the artwork, not in code, which is exactly why they are
+ * written down here: nothing else in the repo would catch them. The renders
+ * are otherwise accurate — both carry the full 21 electrodes, and the bar
+ * chart's own values match the copy on /how-lens-works (Pz at 7.0, below 10;
+ * F7 at 47.0, above 35).
+ *
+ * 1. "Ideal range" → "typical range", on both the bar chart and the heat map.
+ *    "Ideal" is evaluative: it invites a client to read their own number as a
+ *    verdict on themselves, which is the one thing a wellness practice cannot
+ *    let a chart do.
+ *
+ * 2. Heat-map legend: "Under-engaged / Ideal / Over-engaged" becomes
+ *    "Lower amplitude / Typical range / Higher amplitude." The current legend
+ *    already carries the descriptive wording in parentheses — promote it and
+ *    drop the evaluative term, rather than writing anything new.
+ *
+ * 3. Lobe graphic carries a labeling error: F3 is mislabeled as F8, producing
+ *    two F8s and no F3. It also has an empty trailing bullet in the Frontal
+ *    Lobe list. (The heat map is clean on both counts — one F3, one F8.)
+ *
+ * 4. Lobe graphic uses diagnostic terms as electrode labels — "anxiety,"
+ *    "depression," "addiction." Soften to function words: "impulse control,"
+ *    "mood regulation," "attention and focus." Naming a condition next to an
+ *    electrode implies the map detects it, which is a medical claim and
+ *    contradicts DISCLAIMER at the bottom of this file.
+ *
+ * Until both assets land corrected, the homepage and /how-lens-works render
+ * PlaceholderPlate — see CONTENT-CHECKLIST.md → Photography.
+ */
+
+/**
  * The differentiator claim. Deliberately hedged: "as far as we know" is
  * defensible today, a bare "the first in the country" is not — do not write
  * that anywhere until the basis for it is verified. Gated like every other
