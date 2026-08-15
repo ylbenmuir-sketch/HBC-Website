@@ -45,6 +45,22 @@ export const RETRIEVAL = {
   keywordWeight: 2,
   /** Below this BM25 score the best passage is not about the question. */
   minScore: 3.2,
+  /**
+   * The floor for a question that reduces to a single known term.
+   *
+   * `minScore` is an absolute BM25 score, and BM25 sums over query terms — so
+   * the floor carries a length bias that has nothing to do with relevance. The
+   * shortest, most-asked questions on this site are exactly the ones it
+   * rejected: "how does it work" scored 2.75 and "what is LENS" 1.64, both
+   * with coverage 1.0 against the right /how-lens-works passage. The passage
+   * answered the whole question; there was simply only one term to score.
+   *
+   * This is not a loosening of `minScore`, which is unchanged for every
+   * multi-term question. It applies only when the query has one known term,
+   * and the coverage and subject gates below still have to pass — so the
+   * passage must account for the whole question AND be filed under it.
+   */
+  minScoreSingleTerm: 1.4,
   /** Share of the question's meaning the best passage has to account for. */
   minCoverage: 0.5,
   /** A supporting passage scoring less than this much of the best one is padding. */
@@ -67,7 +83,15 @@ const STOPWORDS = new Set(
     "know like ll me might much must my need no not now of on once one only or other " +
     "our out over own re please put said same say see she should so some such take tell " +
     "than that the their them then there these they thing think this those through to " +
-    "too us use very want was way we well were what when where which while who whom why " +
+    // "where" and "who" are deliberately NOT here. On this corpus they are
+    // discriminative rather than noise: they appear almost only in the curated
+    // routing keywords (LOCATION_KEYWORDS, the team passages), so keeping them
+    // lets "where are you" and "who will I see" — which otherwise tokenize to
+    // nothing at all — reach the right passage. "when" stays a stopword: it
+    // routes hours questions, and hours are deliberately absent from the index
+    // (§5.1), so scoring it would only produce confident answers from
+    // unrelated copy.
+    "too us use very want was way we well were what when which while whom why " +
     "will with would you your yours").split(" ")
 );
 
@@ -264,7 +288,14 @@ export function retrieve(message: string): Retrieval {
     ? { id: best.doc.passage.id, score: round(best.score), coverage: round(bestCoverage) }
     : null;
 
-  if (!best || best.score < RETRIEVAL.minScore) {
+  // The floor drops for a one-term question, because BM25 sums over terms and
+  // an absolute floor otherwise penalises brevity rather than irrelevance.
+  // The coverage and subject gates below are unchanged and still apply.
+  const knownTerms = terms.filter((term) => search.idf(term) !== null).length;
+  const floor =
+    knownTerms <= 1 ? RETRIEVAL.minScoreSingleTerm : RETRIEVAL.minScore;
+
+  if (!best || best.score < floor) {
     return { status: "no-match", reason: "weak-match", terms, nearest };
   }
   if (bestCoverage < RETRIEVAL.minCoverage) {

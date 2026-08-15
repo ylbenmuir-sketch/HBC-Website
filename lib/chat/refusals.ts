@@ -142,7 +142,10 @@ const PATTERNS: Array<{ kind: RefusalKind; pattern: RegExp }> = [
   // --- diagnosis --------------------------------------------------------
   {
     kind: "diagnosis",
-    pattern: /\b(do|does|did)\s+(i|he|she|they|we|my\s+\w+)\s+have\b/,
+    // "…have to" is a modal, not a question about having a condition. Without
+    // the exclusion this refused "do I have to do anything during the
+    // session?" — which is FAQ 5, published on the site with a plain answer.
+    pattern: /\b(do|does|did)\s+(i|he|she|they|we|my\s+\w+)\s+have\b(?!\s+to\b)/,
   },
   { kind: "diagnosis", pattern: /\bwhat'?s wrong with\b/ },
   {
