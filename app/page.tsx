@@ -509,6 +509,10 @@ export default function HomePage() {
                 n: "3",
                 h: "Sessions",
                 p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
+                link: {
+                  href: "/how-lens-works",
+                  label: "See how LENS works",
+                },
               },
             ].map((s) => (
               <div className="jstep" key={s.n}>
