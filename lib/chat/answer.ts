@@ -81,11 +81,35 @@ function renderPassages(retrieval: Extract<Retrieval, { status: "grounded" }>): 
     .join("\n\n");
 }
 
+/**
+ * "We don't have that" and "I couldn't reach the model" are different facts
+ * and must not share a sentence.
+ *
+ * They did, and it cost a morning: an invalid API key produced the no-match
+ * copy, so the assistant told a tester the site had nothing on "how does LENS
+ * work" while retrieval had in fact found the right /how-lens-works passages
+ * and handed them over. The log said `no-match` for both cases too, so the
+ * transcript agreed with the wrong diagnosis.
+ *
+ * A visitor should never be told the practice has no answer because a key
+ * expired, and §8's "read 20 real transcripts" is worthless if an outage reads
+ * as a content gap.
+ */
+export type AnswerStatus = "grounded" | "no-match" | "unavailable";
+
 export type AnswerResult = {
   reply: string;
-  grounded: boolean;
+  status: AnswerStatus;
   passageIds: string[];
 };
+
+/**
+ * Shown when the model cannot be reached. Honest about whose fault it is,
+ * makes no claim about what the site does or doesn't cover, and points at the
+ * contact page — the same destination as the primary CTA, not a new one.
+ */
+export const UNAVAILABLE_REPLY =
+  "Something’s wrong on my end and I can’t look that up right now — that’s me, not you. The contact page will always reach the team: /contact";
 
 let client: Anthropic | null = null;
 function anthropic(): Anthropic {
@@ -107,14 +131,14 @@ export async function answerFromSite(message: string): Promise<AnswerResult> {
   // consult it with, and a model asked to answer from an empty set is a model
   // being invited to improvise.
   if (retrieval.status === "no-match") {
-    return { reply: NO_MATCH_REPLY, grounded: false, passageIds: [] };
+    return { reply: NO_MATCH_REPLY, status: "no-match", passageIds: [] };
   }
 
   const passageIds = retrieval.passages.map((p) => p.passage.id);
 
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error("[chat] ANTHROPIC_API_KEY is not set — cannot answer.");
-    return { reply: NO_MATCH_REPLY, grounded: false, passageIds };
+    return { reply: UNAVAILABLE_REPLY, status: "unavailable", passageIds };
   }
 
   try {
@@ -150,8 +174,10 @@ export async function answerFromSite(message: string): Promise<AnswerResult> {
     });
 
     if (response.stop_reason === "refusal") {
+      // The classifier declined even after the server-side fallback chain.
+      // Not a content gap either — do not tell the visitor the site lacks it.
       console.warn("[chat] model declined the turn; returning the fixed reply.");
-      return { reply: NO_MATCH_REPLY, grounded: false, passageIds };
+      return { reply: UNAVAILABLE_REPLY, status: "unavailable", passageIds };
     }
 
     const text = response.content
@@ -161,14 +187,14 @@ export async function answerFromSite(message: string): Promise<AnswerResult> {
       .trim();
 
     if (!text) {
-      return { reply: NO_MATCH_REPLY, grounded: false, passageIds };
+      return { reply: UNAVAILABLE_REPLY, status: "unavailable", passageIds };
     }
-    return { reply: text, grounded: true, passageIds };
+    return { reply: text, status: "grounded", passageIds };
   } catch (error) {
     console.error(
       "[chat] answer failed:",
       error instanceof Error ? error.message : error
     );
-    return { reply: NO_MATCH_REPLY, grounded: false, passageIds };
+    return { reply: UNAVAILABLE_REPLY, status: "unavailable", passageIds };
   }
 }

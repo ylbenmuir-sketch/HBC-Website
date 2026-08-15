@@ -227,10 +227,14 @@ export async function POST(request: Request) {
   // 7 + 8. RETRIEVAL (§2) and the model
   // ------------------------------------------------------------------
   const answer = await answerFromSite(message);
-  return finish(
-    answer.reply,
-    answer.grounded ? "answered" : "no-match",
-    undefined,
-    answer.passageIds
-  );
+  // "unavailable" logs as an error, not as a content gap: an outage that reads
+  // as "the site doesn't cover that" is how a key expiry gets diagnosed as a
+  // retrieval bug, and how §8's transcript review draws the wrong conclusion.
+  const outcome =
+    answer.status === "grounded"
+      ? "answered"
+      : answer.status === "no-match"
+        ? "no-match"
+        : "error";
+  return finish(answer.reply, outcome, undefined, answer.passageIds);
 }

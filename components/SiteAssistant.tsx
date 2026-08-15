@@ -179,13 +179,17 @@ export default function SiteAssistant() {
           </div>
 
           <div className="assistant-log" ref={logRef} aria-live="polite">
+            {/* `from-` prefix, not the bare author name: `assistant` is the
+                widget root's own class, so `assistant-msg assistant` made every
+                reply match `.assistant` — position: fixed, bottom right — and
+                render pinned across the viewport instead of inside the panel. */}
             {messages.map((m, i) => (
-              <p key={i} className={`assistant-msg ${m.from}`}>
+              <p key={i} className={`assistant-msg from-${m.from}`}>
                 {m.from === "assistant" ? withLinks(m.text) : m.text}
               </p>
             ))}
             {sending && (
-              <p className="assistant-msg assistant typing" aria-label="Typing">
+              <p className="assistant-msg from-assistant typing" aria-label="Typing">
                 <span />
                 <span />
                 <span />
