@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -383,7 +384,15 @@ export default async function LocationPage({
                       <ConfirmTag style={{ fontSize: 11 }}>
                         {location.planning.communitiesTag}
                       </ConfirmTag>
-                    )}
+                    )}{" "}
+                    {/* Location → concern links. Nothing pointed from a
+                        location page to a concern page before this, and the
+                        three named here are the ones /faq already says
+                        clients most commonly come in for. */}
+                    Clients here most often come in for{" "}
+                    <Link href="/concerns/anxiety">anxiety and stress</Link>,{" "}
+                    <Link href="/concerns/focus-adhd">focus and ADHD</Link>,
+                    and <Link href="/concerns/sleep">sleep</Link>.
                   </p>
                 </div>
               </div>

@@ -33,6 +33,17 @@ export type Concern = {
   image: { src: string; position: string } | null;
   plateSpec?: string;
   /**
+   * Slugs of 3 concerns to cross-link at the foot of this page.
+   *
+   * Concern pages linked to nothing but the hub before this, which left
+   * /concerns/trauma with exactly one referring page sitewide and
+   * /concerns/stress-resilience with three. The pairings are the ones people
+   * actually arrive carrying together (anxiety and sleep, focus and school),
+   * not a round-robin — a link block that points everywhere says nothing
+   * about which pages belong together.
+   */
+  related: string[];
+  /**
    * <title> for the page, always "Neurofeedback for X". Required, not
    * optional: the display `title` above is the on-page headline and reads as
    * a symptom ("Sleep difficulties"), which targets nothing — "neurofeedback"
@@ -97,6 +108,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
+    related: ["sleep", "stress-resilience", "trauma"],
     metaTitle: "Neurofeedback for Anxiety & Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
@@ -150,6 +162,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
+    related: ["children-school", "brain-fog", "emotional-regulation"],
     metaTitle: "Neurofeedback for ADHD & Focus",
     metaDescription:
       "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
@@ -203,6 +216,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/recline.jpg", position: "center 55%" },
+    related: ["anxiety", "brain-fog", "stress-resilience"],
     metaTitle: "Neurofeedback for Sleep",
     metaDescription:
       "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
@@ -256,6 +270,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/child-sensor.jpg", position: "center 42%" },
+    related: ["children-school", "anxiety", "trauma"],
     metaTitle: "Neurofeedback for Emotional Regulation",
     metaDescription:
       "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
@@ -309,6 +324,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
+    related: ["sleep", "stress-resilience", "focus-adhd"],
     metaTitle: "Neurofeedback for Brain Fog & Memory",
     metaDescription:
       "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
@@ -362,6 +378,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/sensors-adult.jpg", position: "62% 30%" },
+    related: ["anxiety", "sleep", "brain-fog"],
     metaTitle: "Neurofeedback for Stress & Burnout",
     metaDescription:
       "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
@@ -415,6 +432,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/art-wall.jpg", position: "center 45%" },
+    related: ["focus-adhd", "emotional-regulation", "anxiety"],
     metaTitle: "Neurofeedback for School Struggles",
     metaDescription:
       "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
@@ -468,6 +486,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
+    related: ["anxiety", "sleep", "emotional-regulation"],
     metaTitle: "Neurofeedback for Trauma-Related Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",

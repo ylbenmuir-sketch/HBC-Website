@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -36,6 +37,10 @@ export default async function ConcernPage({
 }) {
   const concern = getConcern((await params).slug);
   if (!concern) notFound();
+
+  const related = concern.related
+    .map(getConcern)
+    .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
   return (
     <>
@@ -124,6 +129,23 @@ export default async function ConcernPage({
             <h2>{concern.faqHeading}</h2>
           </div>
           <FAQAccordion items={concern.faqs} />
+        </div>
+      </section>
+
+      {/* Quiet cross-links, not a CTA — plain text links in the site's
+          existing link language, deliberately subordinate to TalkCta below.
+          These are what give trauma and stress-resilience inbound links from
+          somewhere other than the hub. */}
+      <section className="sec sec-ivory2">
+        <div className="wrap" style={{ maxWidth: 900 }}>
+          <div className="eyebrow">Related concerns</div>
+          <div className="related">
+            {related.map((c) => (
+              <Link key={c.slug} href={`/concerns/${c.slug}`}>
+                {c.shortTitle} <span className="arrow">&rarr;</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

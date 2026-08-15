@@ -11,6 +11,11 @@ const groups = [
       { label: "Focus & ADHD", href: "/concerns/focus-adhd" },
       { label: "Sleep", href: "/concerns/sleep" },
       { label: "Children & school", href: "/concerns/children-school" },
+      // Added so these two aren't reachable from one page each — trauma had
+      // exactly one referring page sitewide before this. Labels are the
+      // shortTitle values from lib/concerns.ts, like the four above.
+      { label: "Stress & resilience", href: "/concerns/stress-resilience" },
+      { label: "Trauma-related stress", href: "/concerns/trauma" },
       { label: "All concerns", href: "/what-we-help-with" },
     ],
   },

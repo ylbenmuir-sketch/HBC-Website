@@ -309,6 +309,13 @@ details.faq .a a { color: var(--sage-deep); }
 .entry .colA p { color: var(--ink); }
 .entry a { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--navy); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); padding-bottom: 3px; }
 
+/* related concerns — cross-links at the foot of a concern page. Borrows the
+   .entry a treatment above so it reads as navigation, not as a CTA. */
+.related { display: flex; flex-wrap: wrap; gap: 12px 40px; margin-top: 20px; }
+.related a { display: inline-flex; align-items: center; gap: 8px; color: var(--navy); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); padding-bottom: 3px; }
+/* inline links inside a lens-seq row (location "Communities served") */
+.lens-seq p a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+
 /* team */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
 .member .ph, .member .plate { height: 360px; margin-bottom: 20px; }
