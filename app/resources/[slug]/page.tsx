@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
@@ -39,10 +39,12 @@ export default async function ArticlePage({
 
   return (
     <>
-      <div className="wrap crumb">
-        <Link href="/resources">Resources</Link> &nbsp;/&nbsp;{" "}
-        {article.crumbLabel}
-      </div>
+      <Breadcrumbs
+        trail={[
+          { label: "Resources", href: "/resources" },
+          { label: article.crumbLabel },
+        ]}
+      />
       <section className="sec-tight">
         <div className="wrap article">
           <div className="rv">

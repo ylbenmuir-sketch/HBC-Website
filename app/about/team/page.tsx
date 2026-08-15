@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
@@ -19,9 +20,9 @@ export default function TeamPage() {
   );
   return (
     <>
-      <div className="wrap crumb">
-        <Link href="/about">About</Link> &nbsp;/&nbsp; Our team
-      </div>
+      <Breadcrumbs
+        trail={[{ label: "About", href: "/about" }, { label: "Our team" }]}
+      />
       <section className="page-hero">
         <div className="wrap rv">
           <div className="eyebrow">Our team</div>

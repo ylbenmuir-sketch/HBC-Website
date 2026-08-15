@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 export default function FounderPage() {
   return (
     <>
-      <div className="wrap crumb">
-        <Link href="/about">About</Link> &nbsp;/&nbsp; Our founder
-      </div>
+      <Breadcrumbs
+        trail={[{ label: "About", href: "/about" }, { label: "Our founder" }]}
+      />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
@@ -82,9 +82,12 @@ export default async function LocationPage({
           guidance, and Franklin has no opening date yet. It comes back with
           the launch package (SEO-AUDIT.md §6.3 item 32). */}
       {!location.comingSoon && <JsonLd data={localBusinessSchema(location)} />}
-      <div className="wrap crumb">
-        <Link href="/locations">Locations</Link> &nbsp;/&nbsp; {location.name}
-      </div>
+      <Breadcrumbs
+        trail={[
+          { label: "Locations", href: "/locations" },
+          { label: location.name },
+        ]}
+      />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

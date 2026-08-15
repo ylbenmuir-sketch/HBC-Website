@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import Quote from "@/components/Quote";
@@ -40,10 +40,12 @@ export default async function ConcernPage({
   return (
     <>
       <JsonLd data={faqPageSchema(concern.faqs)} />
-      <div className="wrap crumb">
-        <Link href="/what-we-help-with">What We Help With</Link> &nbsp;/&nbsp;{" "}
-        {concern.title}
-      </div>
+      <Breadcrumbs
+        trail={[
+          { label: "What We Help With", href: "/what-we-help-with" },
+          { label: concern.title },
+        ]}
+      />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

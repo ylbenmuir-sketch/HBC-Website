@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import ConcernCard from "@/components/ConcernCard";
 import FinalCTA from "@/components/FinalCTA";
@@ -47,10 +47,12 @@ const adultConcerns = [
 export default function AdultsPage() {
   return (
     <>
-      <div className="wrap crumb">
-        <Link href="/what-we-help-with">What We Help With</Link> &nbsp;/&nbsp;
-        For adults
-      </div>
+      <Breadcrumbs
+        trail={[
+          { label: "What We Help With", href: "/what-we-help-with" },
+          { label: "For adults" },
+        ]}
+      />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

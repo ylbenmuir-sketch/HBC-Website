@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
@@ -41,10 +41,13 @@ export default async function PractitionerPage({
 
   return (
     <>
-      <div className="wrap crumb">
-        <Link href="/about">About</Link> &nbsp;/&nbsp;{" "}
-        <Link href="/about/team">Our team</Link> &nbsp;/&nbsp; {member.name}
-      </div>
+      <Breadcrumbs
+        trail={[
+          { label: "About", href: "/about" },
+          { label: "Our team", href: "/about/team" },
+          { label: member.name },
+        ]}
+      />
       <section className="page-hero">
         <div className="wrap prac-hero">
           <div className="rv">
