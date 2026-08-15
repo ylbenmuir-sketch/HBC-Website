@@ -25,7 +25,7 @@ whenever someone runs the site locally is not a gate.
 
 ```bash
 PORT=3001 npm run dev          # port 3000 is usually occupied on Ben's machine
-# open http://localhost:3001 — launcher is bottom-right, "Ask a question"
+# open http://localhost:3001 — launcher is bottom-right, "Questions?"
 
 CHAT_BASE=http://localhost:3001 npm run check:chat   # the §7 checklist
 npm run check:index                                   # mirrored-copy drift guard
@@ -491,8 +491,9 @@ From the README and repeated on every task in this phase:
 
 - Footer `DISCLAIMER` is never altered or softened.
 - **Single primary CTA sitewide**: "Get a Free Call Today" → `/contact`. The
-  assistant introduces none — the launcher says "Ask a question" precisely so it
-  is not a second button making the primary ask.
+  assistant introduces none — the launcher says "Questions?" precisely so it
+  is not a second button making the primary ask, and phase 11 gave it a sage
+  pill rather than the navy fill TalkCta owns.
 - The `Verifiable` / draft-gating system is preserved and, for the assistant,
   applied *harder*: unverified facts are excluded in every environment, dev
   included, because a conversation has nowhere to put a `[CONFIRM]` tag.

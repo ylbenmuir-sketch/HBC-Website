@@ -759,60 +759,208 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
 }
 
 /* ============================================================
-   SITE ASSISTANT — phase-8-chatbot.md §6
-   Additive and fully scoped: every rule below is under .assistant*,
-   so nothing here can reach the site's existing type, palette, or
-   layout. Colours are the existing tokens only — no new values.
-   Renders solely behind NEXT_PUBLIC_FEATURE_ASSISTANT.
-   ============================================================ */
-.assistant { position: fixed; right: 18px; bottom: 18px; z-index: 45; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-.assistant-launcher { font-family: var(--sans); font-size: 14.5px; font-weight: 600; color: var(--ivory); background: var(--navy); border: 1px solid rgba(251, 248, 241, 0.28); border-radius: 3px; padding: 12px 20px; cursor: pointer; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.6); transition: background 0.2s ease; }
-.assistant-launcher:hover { background: var(--navy-deep); }
+   SITE ASSISTANT — phase-8-chatbot.md §6, dressed in the design
+   system (phase 11).
 
-.assistant-panel { width: min(370px, calc(100vw - 36px)); max-height: min(540px, calc(100vh - 140px)); background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(21, 34, 48, 0.45); display: flex; flex-direction: column; overflow: hidden; }
-.assistant-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); background: var(--ivory); }
-.assistant-title { font-family: var(--sans); font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; }
-.assistant-sub { font-size: 12.5px; color: var(--slate); margin-top: 4px; }
-.assistant-close { background: none; border: 0; color: var(--slate); cursor: pointer; padding: 2px; line-height: 0; }
-.assistant-close:hover { color: var(--navy); }
+   Additive and fully scoped: every rule below is under .assistant*
+   (the two exceptions are commented and both concern the widget's
+   relationship with the mobile CTA bar), so nothing here can reach
+   the site's existing type, palette, or layout. Colours are the
+   existing tokens only — no new values, no second palette.
+   Renders solely behind NEXT_PUBLIC_FEATURE_ASSISTANT.
+
+   The look, in one line: a warm cream note-card, not a chat widget.
+   Cormorant for the header, DM Sans for the conversation, sage for
+   the assistant's voice, navy for the visitor's, and soft shadows
+   doing the work that hairline borders were doing before.
+   ============================================================ */
+.assistant {
+  /* The site's soft easing, declared once on the widget root and inherited by
+     everything under it. Slow out, no overshoot — motion that settles. */
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed; right: 22px; bottom: 22px; z-index: 45;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+  /* The one entrance. Same opacity+rise vocabulary as the site's .rv reveal,
+     a little slower. A class transition rather than a keyframe animation on
+     purpose: the launcher also fades when it yields to the CTA bar, and an
+     animation with a fill mode would take precedence over that transition. */
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.6s var(--ease-soft), transform 0.6s var(--ease-soft);
+}
+.assistant.entered { opacity: 1; transform: none; }
+/* Above the sticky header (50) and the menu drawer (49) once the phone sheet
+   is up; the closed launcher stays below both. */
+.assistant.is-open { z-index: 60; }
+
+/* -- the launcher: a labelled pill, and deliberately the quieter object --
+   Sage-soft, not navy and not ivory: navy would restate TalkCta's fill and
+   ivory would restate the .btn-invert that TalkCta becomes on the navy bands.
+   This is the only element on the page in that tint, so it reads as its own
+   small thing rather than as a second CTA. */
+.assistant-launcher {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: 0.005em;
+  color: var(--navy); background: var(--sage-soft);
+  border: 0; border-radius: 999px; padding: 0 22px 0 18px; min-height: 50px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(28, 43, 58, 0.07), 0 12px 26px -14px rgba(21, 34, 48, 0.42), 0 28px 54px -34px rgba(21, 34, 48, 0.35);
+  transition: box-shadow 0.25s var(--ease-soft), transform 0.25s var(--ease-soft), opacity 0.35s var(--ease-soft), visibility 0.35s;
+}
+/* Hover lifts the shadow rather than changing the fill — there is no lighter
+   sage in the palette, and inventing one to hover to is how a palette rots. */
+.assistant-launcher:hover { transform: translateY(-1px); box-shadow: 0 1px 2px rgba(28, 43, 58, 0.07), 0 16px 32px -14px rgba(21, 34, 48, 0.5), 0 34px 62px -34px rgba(21, 34, 48, 0.4); }
+.assistant-launcher:active { transform: translateY(0); }
+.assistant-wave { flex: none; }
+/* Parked: the footer is on screen. A fixed pill in the bottom-right corner
+   sits on the last line of the footer disclaimer at phone widths, and that
+   text does not get covered by anything. SiteAssistant only sets this while
+   the panel is closed, so an open conversation is never yanked away. */
+.assistant.is-parked .assistant-launcher { opacity: 0; visibility: hidden; transform: translateY(8px); pointer-events: none; }
+
+/* -- the panel -- */
+.assistant-panel {
+  width: min(384px, calc(100vw - 36px));
+  max-height: min(560px, calc(100vh - 150px));
+  background: var(--ivory);
+  border-radius: 20px;
+  /* Three stacked shadows instead of a border: a contact shadow, a lift, and
+     a wide soft ambient. This is what separates the panel from an ivory page
+     now that there is no hairline doing it. */
+  box-shadow: 0 2px 6px -2px rgba(28, 43, 58, 0.1), 0 24px 48px -24px rgba(21, 34, 48, 0.38), 0 48px 90px -50px rgba(21, 34, 48, 0.45);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: assistant-panel-in 0.42s var(--ease-soft) both;
+}
+@keyframes assistant-panel-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Header and composer sit on ivory-2 with the log on ivory between them: a
+   tonal step in the same cream family, which separates the three zones
+   without drawing a line across the panel. */
+.assistant-head { display: flex; align-items: center; gap: 13px; padding: 17px 16px 16px 20px; background: var(--ivory-2); }
+.assistant-avatar { flex: none; line-height: 0; }
+.assistant-ident { flex: 1; min-width: 0; }
+.assistant-title { font-family: var(--serif); font-size: 23px; font-weight: 600; line-height: 1.15; color: var(--navy); }
+.assistant-sub { font-size: 12.5px; line-height: 1.5; color: var(--slate); margin-top: 1px; }
+.assistant-close { flex: none; width: 40px; height: 40px; margin: -6px -8px -6px 0; display: flex; align-items: center; justify-content: center; background: none; border: 0; border-radius: 999px; color: var(--slate); cursor: pointer; transition: color 0.2s var(--ease-soft), background 0.2s var(--ease-soft); }
+.assistant-close:hover { color: var(--navy); background: rgba(28, 43, 58, 0.055); }
 
 /* min-height:0 is load-bearing: a column flex child will not shrink below its
    content without it, so the log would grow past the panel's max-height and
    push the composer out from under `overflow: hidden`. This is what bounds the
-   scroll area between the header and the composer. */
-.assistant-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+   scroll area between the header and the composer. overscroll-behavior stops
+   a flick at the end of the log from scrolling the page behind it. */
+.assistant-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; background: var(--ivory); padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+/* A short conversation settles at the bottom of the sheet, next to the
+   composer, rather than stranding the greeting at the top of 800px of empty
+   cream. `margin-top: auto` on the first message rather than
+   `justify-content: flex-end` on the container: auto margins resolve to zero
+   once the content overflows, so a long thread still scrolls to its top. */
+.assistant-log > :first-child { margin-top: auto; }
+
 /* Author modifiers are `from-assistant` / `from-visitor`, never the bare
    author name: `.assistant` is the widget root (position: fixed, bottom
    right), so a message carrying it matched that rule too and rendered pinned
    across the viewport instead of inside the panel. Do not shorten these. */
-.assistant-msg { font-size: 15px; line-height: 1.55; margin: 0; max-width: 92%; padding: 10px 13px; border-radius: 3px; }
-.assistant-msg.from-assistant { background: var(--sage-soft); color: var(--navy); align-self: flex-start; }
-.assistant-msg.from-visitor { background: var(--ivory-2); color: var(--navy); align-self: flex-end; }
-.assistant-msg a { color: var(--sage-deep); }
-.assistant-msg.typing { display: flex; gap: 5px; align-items: center; }
-.assistant-msg.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--sage-deep); opacity: 0.5; animation: assistant-blink 1.2s infinite; }
-.assistant-msg.typing span:nth-child(2) { animation-delay: 0.2s; }
-.assistant-msg.typing span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes assistant-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 0.9; } }
+.assistant-msg { max-width: 88%; padding: 13px 16px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.62; }
+.assistant-msg p + p { margin-top: 10px; }
+/* The tucked corner on the speaker's side is the hero's asymmetric radius
+   (4px 4px 4px 96px) at conversation scale — the system already turns one
+   corner in, so the bubbles do too rather than inventing a tail. */
+.assistant-msg.from-assistant { background: var(--sage-soft); color: var(--ink); align-self: flex-start; border-bottom-left-radius: 6px; box-shadow: 0 1px 2px rgba(28, 43, 58, 0.05), 0 10px 20px -16px rgba(28, 43, 58, 0.5); }
+.assistant-msg.from-visitor { background: var(--navy); color: var(--ivory); align-self: flex-end; border-bottom-right-radius: 6px; box-shadow: 0 10px 22px -16px rgba(21, 34, 48, 0.75); }
+/* Navy with a gold underline — the site's link idiom (.ccard a, .entry a),
+   and the only pairing that clears AA here: sage-deep on sage-soft is 4.24:1,
+   which is why the previous rule had to go. Navy on sage-soft is 11.9:1. */
+.assistant-msg.from-assistant a { color: var(--navy); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.assistant-msg.from-assistant a:hover { border-color: var(--gold); }
 
-.assistant-compose { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
-.assistant-compose input { flex: 1; min-width: 0; font-family: var(--sans); font-size: 15px; color: var(--navy); background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 11px 12px; }
-.assistant-compose input:focus { outline: 2px solid var(--sage-deep); outline-offset: 1px; }
-.assistant-compose button { flex: none; font-family: var(--sans); font-size: 14.5px; font-weight: 600; color: var(--ivory); background: var(--navy); border: 0; border-radius: 3px; padding: 0 18px; cursor: pointer; }
-.assistant-compose button:disabled { opacity: 0.45; cursor: default; }
-.assistant-ended { font-size: 13.5px; color: var(--slate); margin: 0; padding: 14px 18px; border-top: 1px solid var(--line); }
-.assistant-ended a { color: var(--sage-deep); }
-
-/* Phones: sit clear of the sticky CTA bar (52px + its 10px offset), which
-   stays the primary conversion path and must never be covered — §6. Hidden
-   with the bar while the menu drawer is open, matching .cta-bar. */
-@media (max-width: 760px) {
-  .assistant { right: 12px; bottom: calc(74px + env(safe-area-inset-bottom)); }
-  .assistant-panel { max-height: min(460px, calc(100dvh - 210px)); }
-  body[data-menu-open] .assistant { opacity: 0; pointer-events: none; }
+/* Three soft dots, breathing rather than blinking: nearly two seconds a
+   cycle, on the site's easing, rising 2.5px at the top of the breath. */
+.assistant-typing { display: flex; gap: 6px; align-items: center; padding: 17px 16px; }
+.assistant-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--sage-deep); opacity: 0.22; animation: assistant-breathe 1.9s var(--ease-soft) infinite; }
+.assistant-typing span:nth-child(2) { animation-delay: 0.22s; }
+.assistant-typing span:nth-child(3) { animation-delay: 0.44s; }
+@keyframes assistant-breathe {
+  0%, 72%, 100% { opacity: 0.22; transform: translateY(0); }
+  34% { opacity: 0.72; transform: translateY(-2.5px); }
 }
 
+.assistant-compose { display: flex; gap: 10px; align-items: center; padding: 14px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--ivory-2); box-shadow: 0 -18px 26px -26px rgba(28, 43, 58, 0.55); }
+/* 16px is not a taste call: iOS zooms the viewport on focus for anything
+   smaller, which would break the sheet's height math mid-conversation. */
+.assistant-compose input { flex: 1; min-width: 0; font-family: var(--sans); font-size: 16px; color: var(--ink); background: #fff; border: 0; border-radius: 14px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(28, 43, 58, 0.07), 0 6px 14px -10px rgba(28, 43, 58, 0.4); }
+.assistant-compose input::placeholder { color: #a6adb4; }
+.assistant-compose button { flex: none; font-family: var(--sans); font-size: 14.5px; font-weight: 600; color: var(--ivory); background: var(--navy); border: 0; border-radius: 14px; padding: 0 20px; min-height: 46px; cursor: pointer; transition: background 0.2s var(--ease-soft), opacity 0.2s var(--ease-soft); }
+.assistant-compose button:hover:not(:disabled) { background: var(--navy-deep); }
+.assistant-compose button:disabled { opacity: 0.38; cursor: default; }
+.assistant-ended { font-size: 14px; line-height: 1.6; color: var(--slate); margin: 0; padding: 16px 20px calc(18px + env(safe-area-inset-bottom)); background: var(--ivory-2); }
+.assistant-ended a { color: var(--navy); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+
+/* The sitewide focus ring sets `border-radius: 2px` alongside the outline,
+   which would square off the pill and the rounded fields at the exact moment
+   a keyboard user is looking at them. Restate the real radius. */
+.assistant-launcher:focus-visible { border-radius: 999px; }
+.assistant-close:focus-visible { border-radius: 999px; }
+.assistant-compose input:focus-visible, .assistant-compose button:focus-visible { border-radius: 14px; }
+
+/* -- phones -------------------------------------------------------------
+   Two bottom-anchored things cannot share a phone screen, so they don't:
+   MobileCtaBar marks body[data-cta-bar] while it is up and the launcher
+   stands down; opening the panel marks body[data-assistant-open] and the bar
+   stands down instead. Exactly one floating affordance at any moment, and
+   when they disagree the CTA bar wins — it is the primary conversion path.
+   The launcher is therefore free to sit at a natural 14px offset rather than
+   permanently hovering 74px up to reserve room for a bar that is only on
+   screen for part of one page. */
+@media (max-width: 760px) {
+  .assistant { right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); gap: 0; }
+  /* :not([data-assistant-open]) so the launcher is never hidden while the
+     panel is open — it is behind the sheet anyway, and closing the panel
+     returns focus to it. */
+  body[data-cta-bar]:not([data-assistant-open]) .assistant-launcher { opacity: 0; visibility: hidden; transform: translateY(8px); pointer-events: none; }
+  /* Outside .assistant* by necessity: this is the other half of the same
+     bargain. Mirrors the existing body[data-menu-open] rule on .cta-bar. */
+  body[data-assistant-open] .cta-bar { opacity: 0; transform: translateY(14px); pointer-events: none; }
+
+  /* Full-height sheet. Height comes from the *visual* viewport (SiteAssistant
+     keeps --assistant-vh in step with window.visualViewport) so the composer
+     stays above the on-screen keyboard; 100dvh is the fallback, and dvh alone
+     does not track the keyboard. Anchored to the top for the same reason — a
+     bottom-anchored fixed element sits underneath the keyboard on iOS. */
+  .assistant-panel { position: fixed; top: 0; left: 0; right: 0; width: auto; max-height: none; height: var(--assistant-vh, 100dvh); border-radius: 0; box-shadow: none; animation-name: assistant-sheet-in; }
+  .assistant-head { padding-top: calc(15px + env(safe-area-inset-top)); }
+  .assistant-close { width: 44px; height: 44px; }
+  .assistant-log { padding: 18px 18px 22px; gap: 13px; }
+  .assistant-msg { max-width: 90%; }
+  /* Behind the sheet, so it cannot be reached or seen. */
+  .assistant.is-open .assistant-launcher { display: none; }
+}
+@keyframes assistant-sheet-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Very narrow phones: the pill loses its side padding before it loses its
+   label — the label is the point of it. The composer tightens for the same
+   reason, to keep as much of the placeholder on screen as 320px allows. */
+@media (max-width: 360px) {
+  .assistant-launcher { font-size: 14.5px; padding: 0 18px 0 15px; gap: 8px; }
+  .assistant-compose { gap: 8px; padding: 12px 12px calc(14px + env(safe-area-inset-bottom)); }
+  .assistant-compose input { padding: 13px 14px; }
+  .assistant-compose button { padding: 0 15px; }
+  .assistant-log { padding: 16px 16px 20px; }
+  .assistant-head { padding-left: 16px; }
+}
+
+/* Hidden with the CTA bar while the menu drawer is open, matching .cta-bar. */
+body[data-menu-open] .assistant { opacity: 0; visibility: hidden; pointer-events: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  .assistant-launcher { transition: none; }
-  .assistant-msg.typing span { animation: none; opacity: 0.55; }
+  .assistant { transition: none; opacity: 1; transform: none; }
+  .assistant-panel { animation: none; }
+  .assistant-launcher, .assistant-close, .assistant-compose button { transition: none; }
+  .assistant-launcher:hover, .assistant-launcher:active { transform: none; }
+  .assistant-typing span { animation: none; opacity: 0.5; }
 }
