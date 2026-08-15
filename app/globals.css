@@ -580,6 +580,36 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .drawer .d-nav > *, .drawer .d-cta { opacity: 1; transform: none; }
 }
 
+/* -- 44px minimum touch targets (tablet + phone) --
+   Hit area, not appearance. Nothing here changes a font size, a color or a
+   position: where a link's underline has to stay welded to its text, the hit
+   box is grown with an invisible ::after overlay instead of with padding, and
+   for inline links vertical padding is used because it grows the hit box
+   without touching the line box. The two paddings that do grow a box (.nav-cta,
+   .foot-grid a) grow it inside a container with room to spare. */
+@media (max-width: 1060px) {
+  /* 33px tall. The nav is 68px (58 scrolled) and centers its items, so a
+     44px logo box is invisible at both heights. */
+  .logo { min-height: 44px; }
+  /* 42.3px — 1.7px short. Only the button grows, inside a nav 24px taller. */
+  .nav > .nav-cta { padding: 11px 16px; }
+  /* Breadcrumb rungs are inline, so this is hit area only — the line box,
+     and therefore the crumb's height, is unchanged. */
+  .crumb a { padding: 13.5px 0; }
+  /* Links carrying a gold underline: padding would push the rule off the
+     text, so the hit box is an overlay centred on the link instead. */
+  .loc-card a.go, .related a, .entry a { position: relative; }
+  .loc-card a.go::after, .related a::after, .entry a::after {
+    content: ""; position: absolute; left: 0; right: 0;
+    top: 50%; transform: translateY(-50%); height: 44px;
+  }
+  /* …which needs the wrapped rows of related links kept 44px apart, or the
+     two rows' hit boxes would overlap and the upper row would win. */
+  .related { gap: 18px 40px; }
+  /* 33.1px inside the open disclosure lists. */
+  .foot-grid a { padding: 10.5px 0; }
+}
+
 /* -- the phone composition layer -- */
 @media (max-width: 760px) {
   /* utilities + shared rhythm */
@@ -721,6 +751,16 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .loc-grid { gap: 24px; }
   details.faq summary { font-size: 20px; padding: 22px 2px; }
 
+  /* ---- forms ----
+     The side-by-side pairs (first name / phone, center / best time) were never
+     given a phone size: at 390 they land at 161px each and at 320 at 105px,
+     which double-wraps the labels and truncates the phone placeholder and the
+     select's options. Wrapping on a 200px basis rather than a breakpoint lets
+     the pair split itself — one column on phones, still two across the tablet
+     widths where there is room for it. */
+  .form .two { flex-wrap: wrap; }
+  .form .two > div { flex: 1 1 200px; }
+
   /* ---- final CTA + footer ---- */
   .final, .home .final { padding: 100px 0 calc(96px + env(safe-area-inset-bottom)); }
   .final .row { flex-direction: column; gap: 18px; }
@@ -736,7 +776,8 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .fgroup.open .fg-mark { transform: rotate(45deg); }
   .fg-list { display: none; padding: 2px 0 18px; }
   .fgroup.open .fg-list { display: block; }
-  .foot-grid a { padding: 8px 0; font-size: 15px; }
+  /* 10px, not 8px: at this font size that is what puts the row at 44px. */
+  .foot-grid a { padding: 10px 0; font-size: 15px; }
   .disclaimer { padding-top: 24px; }
 
   /* ---- sticky bottom CTA (52px + safe area; hides under the open menu) ---- */

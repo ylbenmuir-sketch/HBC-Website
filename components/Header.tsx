@@ -51,12 +51,22 @@ export default function Header() {
 
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    // The scroll lock goes on <html>, never on <body>. An overflow that isn't
+    // `visible` makes an element a scroll container, and this header is a
+    // `position: sticky` child of <body> — locking <body> re-anchored it to a
+    // box that never scrolls, so it dropped out of the viewport and rendered
+    // inline at its static position at the top of the document. The drawer is
+    // `position: fixed` against the header (the header's backdrop-filter makes
+    // it the containing block), so the open menu went with it: below the fold,
+    // tapping the burger froze the page and showed nothing. <html>'s overflow
+    // propagates to the viewport instead, which stops the scroll without
+    // making anything in the document a scroll container.
+    document.documentElement.style.overflow = open ? "hidden" : "";
     // Signals the sticky mobile CTA (globals.css) to retire while the menu is up.
     if (open) document.body.setAttribute("data-menu-open", "");
     else document.body.removeAttribute("data-menu-open");
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
       document.body.removeAttribute("data-menu-open");
     };
   }, [open]);
