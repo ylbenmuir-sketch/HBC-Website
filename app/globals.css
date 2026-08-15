@@ -547,15 +547,16 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .home > .celeb-band { order: 2; } /* instant credibility right under the hero */
   .home > .proof { order: 3; }
   .home > .home-concerns { order: 4; }
-  .home > .home-goals { order: 5; }
-  .home > .home-lens { order: 6; }
-  .home > .home-journey { order: 7; }
-  .home > .home-care { order: 8; }
-  .home > .home-stories { order: 9; }
-  .home > .home-locations { order: 10; }
-  .home > .home-faq { order: 11; }
-  .home > .final { order: 12; }
-  .home > .cta-bar { order: 13; }
+  .home > .home-stakes { order: 5; }
+  .home > .home-goals { order: 6; }
+  .home > .home-lens { order: 7; }
+  .home > .home-journey { order: 8; }
+  .home > .home-care { order: 9; }
+  .home > .home-stories { order: 10; }
+  .home > .home-locations { order: 11; }
+  .home > .home-faq { order: 12; }
+  .home > .final { order: 13; }
+  .home > .cta-bar { order: 14; }
 
   /* ---- cinematic hero: layered image, scrim, editorial type ---- */
   .hero, .home .hero { padding: 0; }

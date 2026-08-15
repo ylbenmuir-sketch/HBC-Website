@@ -365,6 +365,27 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Cost of inaction — the one place the site names it. One paragraph by
+          design: specific pain with dignity, not stacked pain. */}
+      <section className="sec home-stakes">
+        <div className="wrap">
+          <div className="sec-head rv">
+            <div className="eyebrow">Why now</div>
+            <h2>Waiting has a cost nobody adds up.</h2>
+            <p className="sub">
+              Another school year of teacher emails. Another year of 3 a.m.
+              ceilings and afternoons that disappear into fog. Most people who
+              call us have been managing this for years &mdash; and the thing
+              they say most often afterward is that they wish they&rsquo;d
+              called sooner.
+            </p>
+          </div>
+          <div className="rv">
+            <TalkCta />
+          </div>
+        </div>
+      </section>
+
       <section className="sec sec-ivory2 home-goals">
         <div className="wrap goals-grid">
           <div className="rv">
