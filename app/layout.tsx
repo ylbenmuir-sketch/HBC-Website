@@ -26,14 +26,17 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `You’ve tried everything. Your brain hasn’t — ${SITE_NAME}`,
+    default: `Gentle neurofeedback for anxiety, focus, and sleep — ${SITE_NAME}`,
     template: `%s — ${SITE_NAME}`,
   },
-  // Mirrors the hero sub, including the session count now that STAT_SESSIONS
-  // and ESTABLISHED_YEAR are verified — metadata has no draft mode, so only
-  // confirmed facts belong here.
+  // Tracks the hero sub, and deliberately keeps two things the sub shed when
+  // it was shortened: the service area and the session count. Those moved into
+  // the proof band rather than off the site, and a meta description is the one
+  // place local search can read them. Both facts are verified (STAT_SESSIONS,
+  // ESTABLISHED_YEAR) — metadata has no draft mode, so only confirmed facts
+  // belong here.
   description:
-    "Gentle, drug-free neurofeedback for anxiety, focus, sleep, and overwhelm — for adults and kids across Middle Tennessee. Over 140,000 sessions since 2016.",
+    "Gentle, drug-free neurofeedback for anxiety, focus, sleep, and overwhelm — adults and kids across Middle Tennessee. Over 140,000 sessions since 2016.",
   openGraph: {
     siteName: SITE_NAME,
     type: "website",

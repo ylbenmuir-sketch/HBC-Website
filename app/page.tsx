@@ -39,8 +39,11 @@ import {
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
+  // Tracks the hero H1. og:title and twitter:title are derived from this by
+  // Next, so they follow automatically — don't restate them here.
   title: {
-    absolute: "You’ve tried everything. Your brain hasn’t — Harmonized Brain Centers",
+    absolute:
+      "Gentle neurofeedback for anxiety, focus, and sleep — Harmonized Brain Centers",
   },
 };
 
@@ -144,11 +147,12 @@ export default function HomePage() {
             <div className="eyebrow">
               LENS Neurofeedback &middot; Nashville &amp; Murfreesboro
             </div>
-            <h1>
-              You&rsquo;ve tried everything.
-              <br className="m-only" /> Your brain{" "}
-              <em className="sage">hasn&rsquo;t.</em>
-            </h1>
+            {/* No sage italic here: the accent worked on "hasn't" because that
+                word was the turn in a two-part line. This headline is a plain
+                statement with no pivot, so an italic would be decoration on an
+                arbitrary word. The mobile <br> went with it — it existed to
+                split the old two-sentence H1. */}
+            <h1>Gentle neurofeedback for anxiety, focus, and sleep.</h1>
             {/* Location and session count are one screen down in the proof
                 band; repeating them here only lengthened the sub. */}
             <p className="sub">
@@ -312,10 +316,7 @@ export default function HomePage() {
           <div className="sec-head split rv">
             <div>
               <div className="eyebrow">What brings people to us</div>
-              <h2>
-                If any of this describes your daily life, you&rsquo;re in the
-                right place.
-              </h2>
+              <h2>The concerns we see most.</h2>
             </div>
             <Btn href="/what-we-help-with" variant="ghost" arrow>
               Explore every concern
@@ -331,9 +332,7 @@ export default function HomePage() {
               <div className="eyebrow" style={{ color: "var(--sage)" }}>
                 Children &amp; families
               </div>
-              <h3>
-                Bright kids who are trying hard &mdash; and still struggling.
-              </h3>
+              <h3>Help for kids who are struggling at school.</h3>
               <p>
                 Homework battles. Meltdowns over transitions. Teacher emails.
                 Sensory overwhelm. A child starting to believe they&rsquo;re
@@ -366,10 +365,7 @@ export default function HomePage() {
             <div className="sec-head split rv">
               <div>
                 <div className="eyebrow">Client stories</div>
-                <h2>
-                  The changes people mention first are small &mdash; and
-                  unmistakable.
-                </h2>
+                <h2>What clients say.</h2>
               </div>
               <Btn href="/stories" variant="ghost" arrow>
                 More client stories
@@ -428,7 +424,7 @@ export default function HomePage() {
         <div className="wrap">
           <div className="sec-head rv">
             <div className="eyebrow">Why now</div>
-            <h2>Waiting has a cost nobody adds up.</h2>
+            <h2>Why people wish they&rsquo;d called sooner.</h2>
             <p className="sub">
               Another school year of teacher emails. Another year of 3 a.m.
               ceilings and afternoons that disappear into fog. Most people who
@@ -448,8 +444,7 @@ export default function HomePage() {
           <div className="rv">
             <div className="eyebrow">What could change</div>
             <h2 style={{ margin: "22px 0 18px" }}>
-              The goals our clients name most often are small, concrete, and
-              worth everything.
+              What clients hope to change.
             </h2>
           </div>
           <div className="rv">
@@ -559,7 +554,7 @@ export default function HomePage() {
         <div className="wrap split">
           <div className="rv">
             <div className="eyebrow">What you walk away with</div>
-            <h2>Most people have never seen their own brain. You will.</h2>
+            <h2>You&rsquo;ll see your own brain map.</h2>
             <p>
               On your first visit we record activity at 21 points across your
               brain and turn it into a map you can actually read &mdash; where

@@ -8,7 +8,7 @@ import {
   verifiedOr,
 } from "@/lib/site-config";
 
-const DEFAULT_HEADING = "The next step is a conversation, not a commitment.";
+const DEFAULT_HEADING = "Talk to us first. No commitment.";
 const DEFAULT_SUB =
   "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
