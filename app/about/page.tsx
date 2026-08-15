@@ -5,7 +5,11 @@ import ProofBand from "@/components/ProofBand";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { Btn } from "@/components/Buttons";
-import { STAT_SESSIONS, TRAINING_CLAIM_TAG } from "@/lib/site-config";
+import {
+  FOUNDER_DISPLAY_NAME,
+  STAT_SESSIONS,
+  TRAINING_CLAIM_TAG,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "About",
@@ -154,7 +158,7 @@ export default function AboutPage() {
           >
             <PhotoFrame
               src="/images/founder.jpg"
-              alt="Sheri, Founder & Clinical Director"
+              alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director`}
               position="center 22%"
               height={300}
               sizes="(max-width: 1060px) 50vw, 25vw"

@@ -3,7 +3,11 @@ import PhotoFrame from "@/components/PhotoFrame";
 import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
-import { locations, hasConfirmedAddress } from "@/lib/locations";
+import {
+  locations,
+  hasConfirmedAddress,
+  practitionerNames,
+} from "@/lib/locations";
 import {
   CONCIERGE_TAG,
   SHOW_DRAFT_CONTENT,
@@ -52,8 +56,12 @@ export default function LocationsPage() {
                       <br />
                       {(SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)) &&
                         loc.cardExtra}
-                      <br />
-                      {loc.practitionersLine}
+                      {loc.waitlistLine && (
+                        <>
+                          <br />
+                          {loc.waitlistLine}
+                        </>
+                      )}
                     </>
                   ) : (
                     <>
@@ -74,14 +82,22 @@ export default function LocationsPage() {
                       <br />
                       Mon–Fri 9a–6p &middot; Sat by appointment
                       <br />
-                      {SHOW_PHONE && <>{loc.phone} &middot; </>}
-                      {(SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)) &&
-                        loc.cardExtra}
-                      {(SHOW_DRAFT_CONTENT ||
-                        !isDraftText(loc.practitionersLine)) && (
+                      {/* Joined rather than concatenated with a trailing
+                          separator: Murfreesboro's cardExtra is still a
+                          [placeholder], which used to leave a dangling "·"
+                          after the phone number. */}
+                      {[
+                        SHOW_PHONE ? loc.phone : null,
+                        SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)
+                          ? loc.cardExtra
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                      {practitionerNames(loc).length > 0 && (
                         <>
                           <br />
-                          {loc.practitionersLine}
+                          Practitioners: {practitionerNames(loc).join(", ")}
                         </>
                       )}
                     </>

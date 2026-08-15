@@ -18,7 +18,9 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Identity & people
 
-- [Rowney ] Founder last name (`FOUNDER_LAST_NAME`) — until then the site shows "Sheri"
+- [x] Founder last name (`FOUNDER_LAST_NAME`) — "Rowney". Confirmed by Ben.
+      `FOUNDER_DISPLAY_NAME` now resolves to "Sheri Rowney" everywhere, and
+      the `Person` node in the Organization schema carries the full name.
 - [ ] Founder quote wording personally approved (`FOUNDER_QUOTE`)
 - [ ] Founder story page copy (drafted with Sheri) — `app/about/founder/page.tsx`
 - [ ] Real founder photograph approved (no AI likeness) — `/images/founder.jpg`

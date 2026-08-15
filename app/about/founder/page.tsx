@@ -8,8 +8,9 @@ import { FOUNDER_DISPLAY_NAME, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Our Founder",
-  description:
-    "Sheri, Founder & Clinical Director — the clinical standard behind every Harmonized practitioner, and the reason the check-in question is always “how are you actually feeling?”",
+  // Derived so the description carries the surname the moment it verifies —
+  // this is the page a search for the founder by name should land on.
+  description: `${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director — the clinical standard behind every Harmonized practitioner, and the reason the check-in question is always “how are you actually feeling?”`,
 };
 
 export default function FounderPage() {
@@ -32,7 +33,7 @@ export default function FounderPage() {
           <div className="rv">
             <PhotoFrame
               src="/images/founder.jpg"
-              alt="Sheri, Founder & Clinical Director of Harmonized Brain Centers"
+              alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
               position="center 20%"
               height={480}
             />

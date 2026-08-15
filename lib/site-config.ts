@@ -95,9 +95,10 @@ export const TRISHA_APPROVAL_TAG =
 /* ------------------------------------------------------------------ */
 
 export const FOUNDER_FIRST_NAME = "Sheri";
+/** Founder surname — confirmed by Ben. */
 export const FOUNDER_LAST_NAME: Verifiable = {
-  value: "",
-  verified: false,
+  value: "Rowney",
+  verified: true,
   note: "[Last name — confirm]",
 };
 /** Production-safe display name: first name only until the surname is verified. */

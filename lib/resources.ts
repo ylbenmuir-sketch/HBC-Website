@@ -4,6 +4,8 @@
  * bodies until written — every card keeps its exact mockup copy.
  */
 
+import { FOUNDER_DISPLAY_NAME } from "./site-config";
+
 export type ArticleBlock =
   | { type: "p"; text: string }
   | { type: "h2"; text: string }
@@ -57,7 +59,7 @@ export const resources: Resource[] = [
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
     readTime: "6 min read",
     byline:
-      "By the Harmonized team · Reviewed by Sheri, Clinical Director", // [Confirm byline & review date]
+      `By the Harmonized team · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director`, // [Confirm byline & review date]
     lede: "Your child is bright. You know it, their teacher knows it — and yet a worksheet that should take twenty minutes just consumed the whole evening and everyone's patience. Here's what's often happening underneath, and why “try harder” tends to make it worse.",
     body: [
       { type: "h2", text: "It usually isn't a motivation problem" },
@@ -92,7 +94,7 @@ export const resources: Resource[] = [
     image: { src: "/images/relax.jpg", position: "center 40%" },
     readTime: "5 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
     lede: "[Draft lede — sleep quantity isn't sleep quality; what a wired-but-tired nervous system looks like from the inside.]",
     body: [
       {
@@ -115,7 +117,7 @@ export const resources: Resource[] = [
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
     readTime: "6 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
     lede: "[Draft lede — active training vs. passive feedback, explained without jargon or salesmanship.]",
     body: [
       {
@@ -138,7 +140,7 @@ export const resources: Resource[] = [
     plateSpec: "Parent and teen talking at kitchen table — candid",
     readTime: "5 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
     lede: "[Draft lede — the self-story problem: what happens when effort stops paying off and a child starts narrating themselves as the problem.]",
     body: [
       {
@@ -163,7 +165,7 @@ export const resources: Resource[] = [
     image: { src: "/images/ear-clip-senior.jpg", position: "center 45%" },
     readTime: "7 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
     lede: "[Draft lede — a calm, non-alarmist guide to cognitive change after 55, and when it's worth a conversation with your doctor.]",
     body: [
       {
@@ -186,7 +188,7 @@ export const resources: Resource[] = [
     image: { src: "/images/lens-device.jpg", position: "center" },
     readTime: "5 min read",
     byline:
-      "By [Practitioner name] · Reviewed by Sheri [Last name], Clinical Director · [Month Year]",
+      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
     lede: "[Draft lede — a plain tour of the LENS system: what the sensors read, what the feedback signal is, and what the equipment never does.]",
     body: [
       {

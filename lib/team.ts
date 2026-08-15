@@ -4,6 +4,8 @@
  * are [placeholders] until the real roster is confirmed.
  */
 
+import { FOUNDER_DISPLAY_NAME } from "./site-config";
+
 export type TeamMember = {
   /** Profile slug under /about/team/, or null for members without a profile page. */
   slug: string | null;
@@ -30,7 +32,7 @@ export const team: TeamMember[] = [
   {
     slug: null,
     founder: true,
-    name: "Sheri",
+    name: FOUNDER_DISPLAY_NAME,
     role: "Founder & Clinical Director",
     bio: "Sets the clinical standard, trains every practitioner, and still keeps a client schedule.",
     image: { src: "/images/founder.jpg", position: "center 22%" },

@@ -1,4 +1,9 @@
-import { PHONE_DISPLAY, isDraftText } from "./site-config";
+import {
+  FOUNDER_DISPLAY_NAME,
+  PHONE_DISPLAY,
+  SHOW_DRAFT_CONTENT,
+  isDraftText,
+} from "./site-config";
 
 /**
  * Location data. Nashville is seeded from location-nashville.html;
@@ -41,7 +46,18 @@ export type Location = {
   phone: string;
   /** Card meta extras (locations index). */
   cardExtra: string;
-  practitionersLine: string;
+  /**
+   * Practitioner names for the locations-index card.
+   *
+   * A list rather than one prewritten sentence so each name carries its own
+   * gate: a confirmed name renders even while the others are still
+   * [placeholders]. As a single string, one unconfirmed colleague suppressed
+   * the whole line — which is what kept the founder's name off the card
+   * after her surname was confirmed.
+   */
+  practitioners: string[];
+  /** Coming-soon centers show this instead of a practitioner list. */
+  waitlistLine?: string;
   hero: {
     eyebrow: string;
     titleLead: string;
@@ -97,7 +113,7 @@ export const locations: Location[] = [
     hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
     phone: PHONE_DISPLAY,
     cardExtra: "Free on-site parking",
-    practitionersLine: "Practitioners: Sheri [L.], [Name], [Name]",
+    practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
     hero: {
       eyebrow: "Nashville, Tennessee",
       titleLead: "A quiet place to get your ",
@@ -118,7 +134,7 @@ export const locations: Location[] = [
     },
     team: [
       {
-        name: "Sheri",
+        name: FOUNDER_DISPLAY_NAME,
         role: "Founder & Clinical Director",
         bio: "Sets the standard every practitioner trains to — and still keeps a Nashville client schedule.",
         image: { src: "/images/founder.jpg", position: "center 22%" },
@@ -169,7 +185,7 @@ export const locations: Location[] = [
     hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
     phone: PHONE_DISPLAY,
     cardExtra: "[Parking note]",
-    practitionersLine: "Practitioners: [Name], [Name]",
+    practitioners: ["[Name]", "[Name]"],
     hero: {
       eyebrow: "Murfreesboro, Tennessee",
       titleLead: "The same standard of care, ",
@@ -239,7 +255,8 @@ export const locations: Location[] = [
     hoursLines: ["Coming soon — opening date to be announced"],
     phone: PHONE_DISPLAY,
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
-    practitionersLine: "Founding-client openings are limited",
+    practitioners: [],
+    waitlistLine: "Founding-client openings are limited",
     hero: {
       eyebrow: "Franklin, Tennessee — coming soon",
       titleLead: "The same gentle care is coming to ",
@@ -268,7 +285,7 @@ export const locations: Location[] = [
     ],
     quote: {
       text: "We built Harmonized so that every family gets what my first clients got: someone who truly listens, honest guidance, and a gentle option that never asks them to push through.",
-      attribution: "Sheri, Founder & Clinical Director",
+      attribution: `${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director`,
       place: "Harmonized Brain Centers",
     },
     planning: {
@@ -296,6 +313,17 @@ export function hasConfirmedAddress(location: Location): boolean {
   return (
     !isDraftText(location.address.streetAddress) &&
     !isDraftText(location.address.postalCode)
+  );
+}
+
+/**
+ * Practitioner names that may render, each gated on its own: a confirmed name
+ * ships while unconfirmed colleagues stay hidden, and draft mode shows every
+ * [placeholder] so the roster gaps remain visible to whoever has to fill them.
+ */
+export function practitionerNames(location: Location): string[] {
+  return location.practitioners.filter(
+    (n) => SHOW_DRAFT_CONTENT || !isDraftText(n)
   );
 }
 
