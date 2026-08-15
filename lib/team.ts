@@ -30,7 +30,7 @@ export const team: TeamMember[] = [
   {
     slug: null,
     founder: true,
-    name: "Sheri [Last name]",
+    name: "Sheri",
     role: "Founder & Clinical Director",
     bio: "Sets the clinical standard, trains every practitioner, and still keeps a client schedule.",
     image: { src: "/images/founder.jpg", position: "center 22%" },
@@ -53,7 +53,7 @@ export const team: TeamMember[] = [
         "[Paragraph: approach with clients — especially anxious first-timers and children.]",
       glance: {
         training:
-          "Harmonized founder-led LENS curriculum · [certifications — confirm]",
+          "Harmonized LENS training curriculum · [certifications — confirm]",
         worksWith: "Children & teens · focus & school · emotional regulation",
         location: "Nashville · Tue–Sat",
       },
@@ -76,7 +76,7 @@ export const team: TeamMember[] = [
       background2: "[Paragraph: approach with clients.]",
       glance: {
         training:
-          "Harmonized founder-led LENS curriculum · [certifications — confirm]",
+          "Harmonized LENS training curriculum · [certifications — confirm]",
         worksWith: "[Focus areas — confirm]",
         location: "Murfreesboro · [Days — confirm]",
       },
@@ -99,7 +99,7 @@ export const team: TeamMember[] = [
       background2: "[Paragraph: approach with clients.]",
       glance: {
         training:
-          "Harmonized founder-led LENS curriculum · [certifications — confirm]",
+          "Harmonized LENS training curriculum · [certifications — confirm]",
         worksWith: "[Focus areas — confirm]",
         location: "Nashville · [Days — confirm]",
       },
@@ -115,8 +115,8 @@ export const team: TeamMember[] = [
   {
     slug: null,
     name: "Franklin team",
-    role: "Now hiring · Opening [DATE]",
-    bio: "Practitioners for our Franklin center train under Sheri before opening day.",
+    role: "Now hiring · Coming soon",
+    bio: "Practitioners for our Franklin center complete the same Harmonized training before opening day.",
     plateSpec: "Franklin team portrait — hiring",
   },
 ];

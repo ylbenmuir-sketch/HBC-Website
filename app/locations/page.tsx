@@ -4,7 +4,12 @@ import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locations } from "@/lib/locations";
-import { CONCIERGE_TAG } from "@/lib/site-config";
+import {
+  CONCIERGE_TAG,
+  SHOW_DRAFT_CONTENT,
+  SHOW_PHONE,
+  isDraftText,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Locations",
@@ -38,24 +43,39 @@ export default function LocationsPage() {
                 meta={
                   loc.comingSoon ? (
                     <>
-                      <b>Opening [DATE — confirm]</b>
+                      <b>
+                        Coming soon{" "}
+                        <ConfirmTag style={{ fontSize: 11 }}>
+                          [Opening date — confirm]
+                        </ConfirmTag>
+                      </b>
                       <br />
-                      {loc.cardExtra}
+                      {(SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)) &&
+                        loc.cardExtra}
                       <br />
                       {loc.practitionersLine}
                     </>
                   ) : (
                     <>
                       <b>
-                        [Street address], {loc.address.addressLocality},{" "}
-                        {loc.address.addressRegion} [ZIP]
+                        {SHOW_DRAFT_CONTENT && <>[Street address], </>}
+                        {loc.address.addressLocality},{" "}
+                        {loc.address.addressRegion}
+                        {SHOW_DRAFT_CONTENT && <> [ZIP]</>}
                       </b>
                       <br />
                       Mon–Fri 9a–6p &middot; Sat by appointment
                       <br />
-                      {loc.phone} &middot; {loc.cardExtra}
-                      <br />
-                      {loc.practitionersLine}
+                      {SHOW_PHONE && <>{loc.phone} &middot; </>}
+                      {(SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)) &&
+                        loc.cardExtra}
+                      {(SHOW_DRAFT_CONTENT ||
+                        !isDraftText(loc.practitionersLine)) && (
+                        <>
+                          <br />
+                          {loc.practitionersLine}
+                        </>
+                      )}
                     </>
                   )
                 }

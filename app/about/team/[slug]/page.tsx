@@ -6,10 +6,13 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import { team, getTeamMember } from "@/lib/team";
+import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
 
 export function generateStaticParams() {
+  // Placeholder profiles build in draft mode only.
   return team
     .filter((m) => m.slug)
+    .filter((m) => SHOW_DRAFT_CONTENT || !isDraftText(m.name))
     .map((m) => ({ slug: m.slug as string }));
 }
 
@@ -33,6 +36,7 @@ export default async function PractitionerPage({
 }) {
   const member = getTeamMember((await params).slug);
   if (!member || !member.profile) notFound();
+  if (!SHOW_DRAFT_CONTENT && isDraftText(member.name)) notFound();
   const { profile } = member;
 
   return (

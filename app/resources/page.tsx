@@ -3,7 +3,8 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
-import { resources } from "@/lib/resources";
+import { resources, isPublishable } from "@/lib/resources";
+import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Resources",
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function ResourcesPage() {
+  // Draft articles render in draft mode only; production lists finished ones.
+  const list = resources.filter((r) => SHOW_DRAFT_CONTENT || isPublishable(r));
   return (
     <>
       <section className="page-hero center">
@@ -27,8 +30,15 @@ export default function ResourcesPage() {
 
       <section className="sec">
         <div className="wrap">
+          {list.length === 0 && (
+            <p className="sub rv" style={{ maxWidth: 620 }}>
+              Our plain-language guides are being finished now &mdash; check
+              back soon, or ask us your question directly and we&rsquo;ll
+              answer it plainly.
+            </p>
+          )}
           <div className="res-grid rv">
-            {resources.map((r) => (
+            {list.map((r) => (
               <Link className="res-card" href={`/resources/${r.slug}`} key={r.slug}>
                 {r.image ? (
                   <div className="ph" style={{ height: 210 }}>

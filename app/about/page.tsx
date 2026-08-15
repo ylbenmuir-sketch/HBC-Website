@@ -3,7 +3,9 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import FinalCTA from "@/components/FinalCTA";
+import ConfirmTag from "@/components/ConfirmTag";
 import { Btn } from "@/components/Buttons";
+import { STAT_SESSIONS, TRAINING_CLAIM_TAG } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "About",
@@ -24,8 +26,8 @@ export default function AboutPage() {
           <p className="sub" style={{ maxWidth: "66ch" }}>
             Harmonized Brain Centers is a team of trained LENS practitioners
             serving adults, children, and families across Middle Tennessee
-            &mdash; one care model, multiple centers, and 140,000+ sessions of
-            experience.
+            &mdash; one care model, multiple centers, and well over a hundred
+            thousand sessions of experience.
           </p>
         </div>
       </section>
@@ -33,15 +35,22 @@ export default function AboutPage() {
       <ProofBand
         style={{ marginTop: 0, borderTop: 0 }}
         stats={[
-          { stat: "140,000+", label: "sessions provided" },
-          { stat: "3 centers", label: "and growing across the region" },
+          {
+            stat: STAT_SESSIONS.value,
+            label: "sessions provided",
+            todo: STAT_SESSIONS.note,
+          },
+          {
+            stat: "Two centers",
+            label: "open today — Franklin coming soon",
+          },
           {
             stat: "One standard",
-            label: "founder-led training for every practitioner",
+            label: "the same training for every practitioner",
           },
           {
             stat: "Every visit",
-            label: "progress tracked with a structured check-in",
+            label: "progress reviewed with a structured check-in",
           },
         ]}
       />
@@ -61,9 +70,9 @@ export default function AboutPage() {
             <h2>Families deserved a gentle option &mdash; and an honest one.</h2>
             <p>
               Harmonized began with a simple conviction: people struggling with
-              focus, sleep, anxiety, and overwhelm deserve an approach that
-              works with the brain&rsquo;s own capacity to regulate &mdash; and
-              a team that listens before it recommends anything.
+              focus, sleep, anxiety, and overwhelm deserve a gentle,
+              noninvasive option &mdash; and a team that listens before it
+              recommends anything.
             </p>
             <p>
               Today that conviction is a care model: the same training, the
@@ -88,22 +97,23 @@ export default function AboutPage() {
             <div className="care">
               <h4>Practitioner training</h4>
               <p>
-                Every practitioner completes the same founder-led LENS
-                curriculum and apprenticeship before working independently.
+                Every practitioner completes the same Harmonized LENS training
+                before working independently.{" "}
+                <ConfirmTag>{TRAINING_CLAIM_TAG}</ConfirmTag>
               </p>
             </div>
             <div className="care">
               <h4>Structured progress tracking</h4>
               <p>
-                A consistent seven-item check-in for adults and children opens
-                every session &mdash; your plan follows your data.
+                A consistent check-in on sleep, mood, focus, and energy opens
+                every session &mdash; your plan follows what you report.
               </p>
             </div>
             <div className="care">
-              <h4>Team-based care</h4>
+              <h4>Care that doesn&rsquo;t rely on memory</h4>
               <p>
-                Practitioners review progress together. You&rsquo;re never
-                dependent on one person&rsquo;s memory or availability.
+                Your plan and progress are documented at every step, so your
+                care stays consistent across visits and centers.
               </p>
             </div>
             <div className="care">

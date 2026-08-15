@@ -4,10 +4,14 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
-import { resources, getResource } from "@/lib/resources";
+import { resources, getResource, isPublishable } from "@/lib/resources";
+import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export function generateStaticParams() {
-  return resources.map((r) => ({ slug: r.slug }));
+  // Draft articles build in draft mode only.
+  return resources
+    .filter((r) => SHOW_DRAFT_CONTENT || isPublishable(r))
+    .map((r) => ({ slug: r.slug }));
 }
 
 export async function generateMetadata({
@@ -31,6 +35,7 @@ export default async function ArticlePage({
 }) {
   const article = getResource((await params).slug);
   if (!article) notFound();
+  if (!SHOW_DRAFT_CONTENT && !isPublishable(article)) notFound();
 
   return (
     <>

@@ -1,6 +1,48 @@
 import Link from "next/link";
 import { LogoName } from "./Logo";
+import FooterGroup from "./FooterGroup";
 import { DISCLAIMER } from "@/lib/site-config";
+
+const groups = [
+  {
+    heading: "Help with",
+    links: [
+      { label: "Anxiety & stress", href: "/concerns/anxiety" },
+      { label: "Focus & ADHD", href: "/concerns/focus-adhd" },
+      { label: "Sleep", href: "/concerns/sleep" },
+      { label: "Children & school", href: "/concerns/children-school" },
+      { label: "All concerns", href: "/what-we-help-with" },
+    ],
+  },
+  {
+    heading: "Learn",
+    links: [
+      { label: "How LENS works", href: "/how-lens-works" },
+      { label: "Your first visit", href: "/first-visit" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Resources", href: "/resources" },
+      { label: "Client stories", href: "/stories" },
+    ],
+  },
+  {
+    heading: "Visit",
+    links: [
+      { label: "Nashville", href: "/locations/nashville" },
+      { label: "Murfreesboro", href: "/locations/murfreesboro" },
+      { label: "Franklin — coming soon", href: "/locations/franklin" },
+      { label: "All locations", href: "/locations" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Our founder", href: "/about/founder" },
+      { label: "Our team", href: "/about/team" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
@@ -14,36 +56,15 @@ export default function Footer() {
               across Middle Tennessee.
             </p>
           </div>
-          <div>
-            <h5>Help with</h5>
-            <Link href="/concerns/anxiety">Anxiety &amp; stress</Link>
-            <Link href="/concerns/focus-adhd">Focus &amp; ADHD</Link>
-            <Link href="/concerns/sleep">Sleep</Link>
-            <Link href="/concerns/children-school">Children &amp; school</Link>
-            <Link href="/what-we-help-with">All concerns</Link>
-          </div>
-          <div>
-            <h5>Learn</h5>
-            <Link href="/how-lens-works">How LENS works</Link>
-            <Link href="/first-visit">Your first visit</Link>
-            <Link href="/faq">FAQ</Link>
-            <Link href="/resources">Resources</Link>
-            <Link href="/stories">Client stories</Link>
-          </div>
-          <div>
-            <h5>Visit</h5>
-            <Link href="/locations/nashville">Nashville</Link>
-            <Link href="/locations/murfreesboro">Murfreesboro</Link>
-            <Link href="/locations/franklin">Franklin — coming soon</Link>
-            <Link href="/locations">All locations</Link>
-          </div>
-          <div>
-            <h5>Company</h5>
-            <Link href="/about">About</Link>
-            <Link href="/about/founder">Our founder</Link>
-            <Link href="/about/team">Our team</Link>
-            <Link href="/contact">Contact</Link>
-          </div>
+          {groups.map((g) => (
+            <FooterGroup key={g.heading} heading={g.heading}>
+              {g.links.map((l) => (
+                <Link key={l.href + l.label} href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+            </FooterGroup>
+          ))}
         </div>
         <p className="disclaimer">
           {DISCLAIMER} &copy; {new Date().getFullYear()} Harmonized Brain

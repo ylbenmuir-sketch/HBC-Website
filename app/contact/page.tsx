@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
 import ConfirmTag from "@/components/ConfirmTag";
-import { CONTACT_RESPONSE_TAG, PHONE_DISPLAY } from "@/lib/site-config";
+import {
+  CONTACT_RESPONSE_TAG,
+  PHONE_DISPLAY,
+  SHOW_DRAFT_CONTENT,
+  SHOW_PHONE,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Talk With Our Team",
   description:
-    "Tell us what's going on. A free, no-pressure conversation with a real person from your nearest center — usually within one business day.",
+    "Tell us what's going on. A free, no-pressure conversation with a real person from your nearest center.",
 };
 
 export default function ContactPage() {
@@ -18,7 +23,9 @@ export default function ContactPage() {
           <h1>Tell us what&rsquo;s going on. We&rsquo;ll take it from there.</h1>
           <p className="sub" style={{ maxWidth: "56ch" }}>
             A free, no-pressure conversation with a real person from your
-            nearest center &mdash; usually within one business day.{" "}
+            nearest center
+            {SHOW_DRAFT_CONTENT && <> &mdash; usually within one business day</>}
+            .{" "}
             <ConfirmTag>{CONTACT_RESPONSE_TAG}</ConfirmTag>
           </p>
         </div>
@@ -30,10 +37,12 @@ export default function ContactPage() {
           <div className="rv">
             <div className="eyebrow">What happens next</div>
             <WhatHappensNext />
-            <div className="note-sage" style={{ marginTop: 34 }}>
-              Prefer to talk now? Call <b>{PHONE_DISPLAY}</b> &mdash; a real
-              person answers during business hours.
-            </div>
+            {SHOW_PHONE && (
+              <div className="note-sage" style={{ marginTop: 34 }}>
+                Prefer to talk now? Call <b>{PHONE_DISPLAY}</b> &mdash; a real
+                person answers during business hours.
+              </div>
+            )}
             <div
               style={{
                 marginTop: 26,

@@ -3,7 +3,12 @@ import PhotoFrame from "@/components/PhotoFrame";
 import Quote from "@/components/Quote";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
-import { REVIEWS, SAMPLE_QUOTES_NOTE_STORIES } from "@/lib/site-config";
+import ConfirmTag from "@/components/ConfirmTag";
+import {
+  REVIEWS,
+  SAMPLE_QUOTES_NOTE_STORIES,
+  SHOW_DRAFT_CONTENT,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Client Stories",
@@ -51,6 +56,7 @@ const storyQuotes = [
 ];
 
 export default function StoriesPage() {
+  const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
   return (
     <>
       <section className="page-hero center">
@@ -67,29 +73,46 @@ export default function StoriesPage() {
 
       <section className="sec">
         <div className="wrap">
-          <div className="trio-quotes rv">
-            {storyQuotes.map((q) => (
-              <Quote key={q.text} {...q} />
-            ))}
-          </div>
-          <p className="sample-note rv">{SAMPLE_QUOTES_NOTE_STORIES}</p>
-          <div className="review-band rv">
-            <div>
-              <strong>{REVIEWS.rating} ★</strong>
-              <span>Google rating across locations</span>
-              <span className="todo">{REVIEWS.ratingTodo}</span>
+          {SHOW_DRAFT_CONTENT ? (
+            <>
+              <div className="trio-quotes rv">
+                {storyQuotes.map((q) => (
+                  <Quote key={q.text} sample {...q} />
+                ))}
+              </div>
+              <p className="sample-note rv">{SAMPLE_QUOTES_NOTE_STORIES}</p>
+            </>
+          ) : (
+            <div className="rv" style={{ maxWidth: 680 }}>
+              <p className="sub">
+                We&rsquo;re collecting stories from clients who have agreed to
+                share them &mdash; in their own words, with their permission.
+                Check back soon, or ask us anything directly.
+              </p>
             </div>
-            <div>
-              <strong>{REVIEWS.count}</strong>
-              <span>Read them unfiltered on Google</span>
-              <span className="todo">{REVIEWS.countTodoStories}</span>
+          )}
+          {showReviewBand && (
+            <div className="review-band rv">
+              <div>
+                <strong>{REVIEWS.value.rating} ★</strong>
+                <span>Google rating across locations</span>
+                <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                  {REVIEWS.note!}
+                </ConfirmTag>
+              </div>
+              <div>
+                <strong>{REVIEWS.value.count}</strong>
+                <span>Read them unfiltered on Google</span>
+              </div>
+              <div>
+                <strong>Video stories</strong>
+                <span>Client interviews in their own words</span>
+                <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                  Film 2–3 short testimonials
+                </ConfirmTag>
+              </div>
             </div>
-            <div>
-              <strong>Video stories</strong>
-              <span>Client interviews in their own words</span>
-              <span className="todo">{REVIEWS.videoTodoStories}</span>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 

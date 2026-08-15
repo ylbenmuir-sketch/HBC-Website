@@ -4,14 +4,19 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { team } from "@/lib/team";
+import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Our Team",
   description:
-    "Every Harmonized practitioner completes the same founder-led LENS training and works from the same care model. Here's who you'll meet.",
+    "Every Harmonized practitioner completes the same LENS training and works from the same care model. Here's who you'll meet.",
 };
 
 export default function TeamPage() {
+  // Placeholder roster entries render in draft mode only.
+  const members = team.filter(
+    (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
+  );
   return (
     <>
       <div className="wrap crumb">
@@ -24,9 +29,9 @@ export default function TeamPage() {
             Practitioners who will know your name &mdash; and your story.
           </h1>
           <p className="sub">
-            Every Harmonized practitioner completes the same founder-led LENS
-            training and works from the same care model. Here&rsquo;s who
-            you&rsquo;ll meet.
+            Every Harmonized practitioner completes the same LENS training
+            and works from the same care model. Here&rsquo;s who you&rsquo;ll
+            meet.
           </p>
         </div>
       </section>
@@ -34,7 +39,7 @@ export default function TeamPage() {
       <section className="sec">
         <div className="wrap">
           <div className="team-grid rv">
-            {team.map((m) => (
+            {members.map((m) => (
               <div className="member" key={m.name + m.role}>
                 {m.image ? (
                   <PhotoFrame

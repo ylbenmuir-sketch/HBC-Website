@@ -98,7 +98,7 @@ export const locations: Location[] = [
     },
     team: [
       {
-        name: "Sheri [Last name]",
+        name: "Sheri",
         role: "Founder & Clinical Director",
         bio: "Sets the standard every practitioner trains to — and still keeps a Nashville client schedule.",
         image: { src: "/images/founder.jpg", position: "center 22%" },
@@ -213,7 +213,7 @@ export const locations: Location[] = [
       addressRegion: "TN",
       postalCode: "[ZIP]",
     },
-    hoursLines: ["Opening [DATE — confirm]"],
+    hoursLines: ["Coming soon — opening date to be announced"],
     phone: PHONE_DISPLAY,
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitionersLine: "Founding-client openings are limited",
@@ -222,7 +222,7 @@ export const locations: Location[] = [
       titleLead: "The same gentle care is coming to ",
       titleAccent: "Williamson County",
       titleTail: ".",
-      sub: "Opening [DATE — confirm]. Practitioners for our Franklin center train under Sheri before opening day — and founding-client openings are limited.",
+      sub: "Opening soon. Practitioners for our Franklin center complete the same Harmonized training before opening day — and founding-client openings are limited.",
       arrivalLines: ["Join the waitlist for", "founding-client openings"],
     },
     plateSpec: "Franklin — exterior storefront, golden hour",
@@ -238,14 +238,14 @@ export const locations: Location[] = [
     team: [
       {
         name: "Franklin team",
-        role: "Now hiring · Opening [DATE]",
-        bio: "Practitioners for our Franklin center train under Sheri before opening day.",
+        role: "Now hiring · Coming soon",
+        bio: "Practitioners for our Franklin center complete the same Harmonized training before opening day.",
         plateSpec: "Franklin team portrait — hiring",
       },
     ],
     quote: {
-      text: "We built Harmonized so that every family gets the same thing my first clients got: someone who listens longer than any appointment they've ever had — and a gentle option that works with the brain, not against it.",
-      attribution: "Sheri [Last name — confirm], Founder & Clinical Director",
+      text: "We built Harmonized so that every family gets what my first clients got: someone who truly listens, honest guidance, and a gentle option that never asks them to push through.",
+      attribution: "Sheri, Founder & Clinical Director",
       place: "Harmonized Brain Centers",
     },
     planning: {
