@@ -57,60 +57,115 @@ export const metadata: Metadata = {
   },
 };
 
-const homeConcerns = [
-  {
+// What a concern *is* — title and destination — lives here once. Anxiety and
+// Sleep appear in both audience groups below, and this is what keeps the two
+// copies from drifting: neither group restates a title or an href, so a rename
+// or a route change lands on both cards at the same time.
+//
+// Bullets are the deliberately variable part, supplied per group. The same
+// concern sounds different depending on who's describing it, and a card whose
+// symptoms are written for the reader in front of it is the whole reason the
+// section is split by audience.
+const concern = {
+  anxiety: {
     title: "Anxiety & nervous-system overload",
+    href: "/concerns/anxiety",
+  },
+  focusAdhd: {
+    title: "Focus, ADHD & follow-through",
+    href: "/concerns/focus-adhd",
+  },
+  sleep: {
+    title: "Sleep difficulties",
+    href: "/concerns/sleep",
+  },
+  emotionalRegulation: {
+    title: "Emotional regulation",
+    href: "/concerns/emotional-regulation",
+  },
+  brainFog: {
+    title: "Brain fog, memory & mental fatigue",
+    href: "/concerns/brain-fog",
+  },
+  stressResilience: {
+    title: "Stress & resilience",
+    href: "/concerns/stress-resilience",
+  },
+};
+
+// Kids first — most visitors arrive as a parent, and the family row that
+// follows this group is the page's children-and-families route.
+const childConcerns = [
+  {
+    ...concern.anxiety,
     points: [
       "Thoughts that won't quiet down",
       "Feeling constantly on edge",
       "Unable to relax even when life is calm",
     ],
-    href: "/concerns/anxiety",
   },
   {
-    title: "Focus, ADHD & follow-through",
+    ...concern.focusAdhd,
     points: [
       "Struggling to stay on task",
       "Overwhelmed by multi-step responsibilities",
       "Work or schoolwork that stalls at 90%",
     ],
-    href: "/concerns/focus-adhd",
   },
   {
-    title: "Sleep difficulties",
+    ...concern.sleep,
     points: [
       "A mind that won't shut off at night",
       "Waking frequently",
       "Eight hours that feel like four",
     ],
-    href: "/concerns/sleep",
   },
   {
-    title: "Emotional regulation",
+    ...concern.emotionalRegulation,
     points: [
       "Becoming overwhelmed quickly",
       "Struggling with transitions",
       "Staying upset long after the moment",
     ],
-    href: "/concerns/emotional-regulation",
   },
+];
+
+// Anxiety and Sleep repeat here on purpose — they're genuinely both audiences,
+// and both cards point at the same concern page. The bullets are written the
+// way an adult describes it, so the repeat reads as a cross-listing rather
+// than a copy/paste of the card three screens up.
+const adultConcerns = [
   {
-    title: "Brain fog, memory & mental fatigue",
+    ...concern.brainFog,
     points: [
       "Thinking that feels slow or cloudy",
       "Losing words mid-sentence",
       "Exhausted by normal responsibilities",
     ],
-    href: "/concerns/brain-fog",
   },
   {
-    title: "Stress & resilience",
+    ...concern.stressResilience,
     points: [
       "Functioning, but close to burnout",
       "Unable to recover after hard days",
       "Carrying stress physically",
     ],
-    href: "/concerns/stress-resilience",
+  },
+  {
+    ...concern.anxiety,
+    points: [
+      "Wired at midnight, flat by morning",
+      "Bracing for the day before it starts",
+      "Tension you notice in your body first",
+    ],
+  },
+  {
+    ...concern.sleep,
+    points: [
+      "Falling asleep fine, awake at 3 a.m.",
+      "Coffee doing the work sleep should",
+      "Eight hours that feel like four",
+    ],
   },
 ];
 
@@ -329,41 +384,75 @@ export default function HomePage() {
             <div>
               <div className="eyebrow">What brings people to us</div>
               <h2>The concerns we see most.</h2>
+              {/* Plain in-page anchors — no JS, no toggle, nothing hidden.
+                  Both groups are always in the HTML; these only move the
+                  viewport, so they work with JS off and are crawlable. */}
+              <div className="concern-jump">
+                <Btn href="#for-your-child" variant="ghost">
+                  For your child <span className="arrow">↓</span>
+                </Btn>
+                <Btn href="#for-you" variant="ghost">
+                  For you <span className="arrow">↓</span>
+                </Btn>
+              </div>
             </div>
             <Btn href="/what-we-help-with" variant="ghost" arrow>
               Explore every concern
             </Btn>
           </div>
-          <ConcernRail count={homeConcerns.length}>
-            {homeConcerns.map((c) => (
-              <ConcernCard key={c.href} {...c} />
-            ))}
-          </ConcernRail>
-          <div className="family-row rv">
-            <div className="fr-copy">
-              <div className="eyebrow" style={{ color: "var(--sage)" }}>
-                Children &amp; families
+
+          <div className="concern-group" id="for-your-child">
+            <h3 className="concern-group-head rv">For your child</h3>
+            <ConcernRail
+              count={childConcerns.length}
+              cols={4}
+              label="Concerns we see in children"
+            >
+              {childConcerns.map((c) => (
+                <ConcernCard key={c.href} headingLevel={4} {...c} />
+              ))}
+            </ConcernRail>
+            {/* Stays welded to this group's grid: it's the children route, and
+                the border-top: 0 seam is what welds it. */}
+            <div className="family-row rv">
+              <div className="fr-copy">
+                <div className="eyebrow" style={{ color: "var(--sage)" }}>
+                  Children &amp; families
+                </div>
+                <h4>Help for kids who are struggling at school.</h4>
+                <p>
+                  Homework battles. Meltdowns over transitions. Teacher emails.
+                  Sensory overwhelm. A child starting to believe they&rsquo;re
+                  bad at school. There&rsquo;s nothing your child has to get
+                  right in a LENS session &mdash; and you&rsquo;re part of
+                  every check-in.
+                </p>
+                <Btn href="/children-families" variant="invert">
+                  How we work with children
+                </Btn>
               </div>
-              <h3>Help for kids who are struggling at school.</h3>
-              <p>
-                Homework battles. Meltdowns over transitions. Teacher emails.
-                Sensory overwhelm. A child starting to believe they&rsquo;re
-                bad at school. There&rsquo;s nothing your child has to get
-                right in a LENS session &mdash; and you&rsquo;re part of every
-                check-in.
-              </p>
-              <Btn href="/children-families" variant="invert">
-                How we work with children
-              </Btn>
+              <PhotoFrame
+                src="/images/child-session.jpg"
+                alt="A child relaxing during a LENS session"
+                position="60% 30%"
+                positionMobile="68% 24%"
+                style={{ minHeight: 340 }}
+                sizes="(max-width: 1060px) 100vw, 50vw"
+              />
             </div>
-            <PhotoFrame
-              src="/images/child-session.jpg"
-              alt="A child relaxing during a LENS session"
-              position="60% 30%"
-              positionMobile="68% 24%"
-              style={{ minHeight: 340 }}
-              sizes="(max-width: 1060px) 100vw, 50vw"
-            />
+          </div>
+
+          <div className="concern-group" id="for-you">
+            <h3 className="concern-group-head rv">For you</h3>
+            <ConcernRail
+              count={adultConcerns.length}
+              cols={4}
+              label="Concerns we see in adults"
+            >
+              {adultConcerns.map((c) => (
+                <ConcernCard key={c.href} headingLevel={4} {...c} />
+              ))}
+            </ConcernRail>
           </div>
         </div>
       </section>

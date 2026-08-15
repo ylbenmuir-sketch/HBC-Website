@@ -189,21 +189,44 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 /* grid-auto-rows: 1fr — cards already stretch within a row, but each implicit
    row sized to its own content, so row 2 sat shorter than row 1 whenever the
    titles wrapped differently. Equal rows keep the bordered grid rectangular. */
-.concern-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; }
+/* Column count follows the grid (the --proof-cols / --journey-cols pattern):
+   3-up on /adults, 4-up per group on the homepage. */
+.concern-grid { display: grid; grid-template-columns: repeat(var(--concern-cols, 3), 1fr); grid-auto-rows: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; }
 /* The card is itself the link (see components/ConcernCard.tsx), so it resets
    anchor text styling; children already set their own colors. */
 .ccard { padding: 44px 40px 38px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; background: #fff; transition: background 0.2s; text-decoration: none; color: inherit; }
 .ccard:hover { background: var(--sage-soft); }
 .ccard:nth-child(3n) { border-right: 0; }
 .ccard:nth-last-child(-n + 3) { border-bottom: 0; }
-.ccard h3 { margin-bottom: 18px; }
+/* h4 when the card sits under an audience group heading (ConcernCard's
+   headingLevel) — same type as the h3 so the two render identically. */
+.ccard h3, .ccard h4 { font-family: var(--serif); font-weight: 600; color: var(--navy); line-height: 1.2; font-size: 26px; margin-bottom: 18px; }
 .ccard ul { list-style: none; }
 .ccard li { padding: 7px 0 7px 24px; position: relative; font-size: 15px; color: var(--slate); line-height: 1.5; }
 .ccard li::before { content: ""; position: absolute; left: 0; top: 17px; width: 12px; height: 1.5px; background: var(--gold); }
+
+/* homepage concern groups — two audience-labeled sets in one section.
+   Layout and seam plumbing only: the headings reuse the family-row H3 size
+   below, and the jump links are the standard ghost buttons. */
+.concern-jump { display: flex; flex-wrap: wrap; align-items: center; gap: 26px; margin-top: 2px; }
+/* Anchor targets sit under the sticky header, so clear its height. */
+.concern-group { scroll-margin-top: 112px; }
+.concern-group + .concern-group { margin-top: 76px; }
+/* An H3 under the section H2, sized like the family-row H3 already in this
+   section — the existing prominent-subhead treatment, not a new one. */
+.concern-group-head { font-size: 32px; margin-bottom: 26px; }
+/* Groups run 4-up in one row. :nth-child can't read --concern-cols, so the
+   4-up seams are scoped to this section rather than the 3-up rules above. */
+.home-concerns .ccard { border-bottom: 0; }
+.home-concerns .ccard:nth-child(3n) { border-right: 1px solid var(--line); }
+.home-concerns .ccard:nth-child(4n) { border-right: 0; }
+
 /* families feature row */
 .family-row { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 4px 4px; overflow: hidden; background: var(--navy); }
 .family-row .fr-copy { padding: 56px 60px; color: var(--ivory); }
-.family-row .fr-copy h3 { color: var(--ivory); font-size: 32px; margin: 14px 0 14px; }
+/* h4: the row is nested inside the "For your child" group, so its heading
+   sits a level below that group's h3. Type is unchanged. */
+.family-row .fr-copy h4 { font-family: var(--serif); font-weight: 600; line-height: 1.2; color: var(--ivory); font-size: 32px; margin: 14px 0 14px; }
 .family-row .fr-copy p { color: rgba(251, 248, 241, 0.72); font-size: 16px; margin-bottom: 26px; max-width: 48ch; }
 .family-row .ph { border-radius: 0; min-height: 340px; }
 
@@ -423,6 +446,15 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .concern-grid { grid-template-columns: 1fr 1fr; }
   .ccard:nth-child(3n) { border-right: 1px solid var(--line); }
   .ccard:nth-child(2n) { border-right: 0; }
+  /* Two columns here, so the base "last row" rule is off by one — it drops the
+     bottom seam from the last *three* cards, leaving /adults' second row with
+     half a line. The last row is the last two. (Both grids using this hold an
+     even number of cards; an odd count would need the row math generalized.) */
+  .ccard:nth-last-child(-n + 3) { border-bottom: 1px solid var(--line); }
+  .ccard:nth-last-child(-n + 2) { border-bottom: 0; }
+  /* homepage groups become 2×2 here, so the row-1 bottom seam comes back
+     (the 4-up rules above zero it for the single desktop row) */
+  .home-concerns .ccard:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
   .care-list { grid-template-columns: 1fr; gap: 0; }
   .journey { grid-template-columns: 1fr 1fr; gap: 44px; }
   .journey::before { display: none; }
@@ -459,6 +491,10 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
      rows go back to sizing on content instead of matching the tallest card. */
   .concern-grid { grid-auto-rows: auto; }
   .ccard { border-right: 0 !important; }
+  /* One column now, so only the last card closes the stack — the same off-by-N
+     as the 1060 rule, one step further down. */
+  .ccard:nth-last-child(-n + 3) { border-bottom: 1px solid var(--line); }
+  .ccard:last-child { border-bottom: 0; }
   .journey { grid-template-columns: 1fr; }
   .goals-list { column-count: 1; }
   .split .ph, .split .plate { height: 320px !important; }
@@ -606,12 +642,18 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .home .concern-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; border: 0; border-radius: 0; background: transparent; margin: 0 -24px; padding: 4px 24px 18px; scroll-padding: 0 24px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .home .concern-grid::-webkit-scrollbar { display: none; }
   .home .ccard { flex: 0 0 80%; max-width: 320px; scroll-snap-align: start; border: 1px solid var(--line) !important; border-radius: 6px; padding: 26px 26px 24px; box-shadow: 0 18px 36px -30px rgba(28, 43, 58, 0.35); }
-  .home .ccard h3 { font-size: 22px; }
+  .home .ccard h3, .home .ccard h4 { font-size: 22px; }
   .home .ccard li { font-size: 14.5px; padding: 6px 0 6px 24px; }
   .home .ccard li::before { top: 16px; }
   .home .ccard ul { margin-bottom: 18px; }
   .home-concerns .sec-head { margin-bottom: 30px; }
   .home-concerns .sec-head .btn-ghost { padding: 10px 4px; }
+  /* one rail per audience group, each with its own dots — 4 cards is a
+     shorter, more legible swipe than the six it replaced */
+  .concern-jump { gap: 20px; margin-top: 0; }
+  .concern-group { scroll-margin-top: 82px; }
+  .concern-group + .concern-group { margin-top: 56px; }
+  .concern-group-head { font-size: 26px; margin-bottom: 18px; }
   /* swipe cue: progress dots + hint under the rail (ConcernRail.tsx) */
   .rail-cue { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 10px; }
   .rail-dots { display: flex; gap: 7px; }
@@ -623,7 +665,7 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .family-row { display: flex; flex-direction: column; background: transparent; border: 0; border-radius: 0; overflow: visible; margin: 52px -24px 0; }
   .family-row .ph { order: 0; aspect-ratio: 4 / 3; min-height: 0 !important; height: auto; }
   .family-row .fr-copy { order: 1; margin: -60px 20px 0; background: var(--navy); border-top: 2px solid var(--gold); padding: 34px 28px 38px; box-shadow: 0 26px 50px -34px rgba(21, 34, 48, 0.55); }
-  .family-row .fr-copy h3 { font-size: 26px; }
+  .family-row .fr-copy h4 { font-size: 26px; }
 
   /* ---- goals ---- */
   .goals-grid { gap: 40px; }

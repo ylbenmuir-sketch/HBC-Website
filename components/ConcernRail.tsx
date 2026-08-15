@@ -1,19 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 /**
  * Wrapper for the homepage concern cards. Desktop: the bordered editorial
  * grid, untouched. Phones (≤760px, globals.css): a horizontal snap rail with
  * a peeking next card — this adds the progress dots + swipe hint so the
  * horizontal interaction is obvious.
+ *
+ * The homepage renders one of these per audience group, so `label` names which
+ * set this rail holds — two rails both announcing "Concerns we help with"
+ * would be indistinguishable.
  */
 export default function ConcernRail({
   children,
   count,
+  label,
+  cols = 3,
 }: {
   children: ReactNode;
   count: number;
+  label: string;
+  cols?: number;
 }) {
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -39,7 +53,8 @@ export default function ConcernRail({
         className="concern-grid rv"
         ref={railRef}
         role="group"
-        aria-label="Concerns we help with — swipe or scroll to browse"
+        aria-label={`${label} — swipe or scroll to browse`}
+        style={{ "--concern-cols": cols } as CSSProperties}
       >
         {children}
       </div>
