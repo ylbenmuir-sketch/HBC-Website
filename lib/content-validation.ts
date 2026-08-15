@@ -36,7 +36,9 @@ function check(label: string, verified: boolean) {
 check("Primary phone number", PHONE.verified);
 check("Founder last name", FOUNDER_LAST_NAME.verified);
 check("Founder quote sign-off", FOUNDER_QUOTE.verified);
-check("Session count (140,000+)", STAT_SESSIONS.verified);
+// Figure interpolated rather than typed into the label, so the build log
+// cannot end up naming a count the site no longer claims.
+check(`Session count (${STAT_SESSIONS.value})`, STAT_SESSIONS.verified);
 check("Founding year (2016)", ESTABLISHED_YEAR.verified);
 check("Google rating & review count", REVIEWS.verified);
 check("Response-time claim", RESPONSE_TIME.verified);

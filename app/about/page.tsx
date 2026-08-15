@@ -8,14 +8,22 @@ import {
   FOUNDER_DISPLAY_NAME,
   STAT_SESSIONS,
   TRAINING_CLAIM,
+  verifiedOr,
 } from "@/lib/site-config";
+
+// Interpolated, not typed. This was a second hardcoded "140,000+" on the one
+// page that also renders the proof band — the same duplication that let the
+// practitioner-training card claim a different figure from the band two
+// sections below it. The count has one home now: STAT_SESSIONS.
+const sessionCount = verifiedOr(STAT_SESSIONS);
 
 export const metadata: Metadata = {
   title: "About",
   // 154 chars. The old one ran to 200 and truncated mid-clause; the brand
   // name led it redundantly, since the title template already carries it.
   description:
-    "A team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers, 140,000+ sessions.",
+    "A team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers" +
+    (sessionCount ? `, ${sessionCount} sessions.` : "."),
 };
 
 export default function AboutPage() {

@@ -386,22 +386,26 @@ export const INSURANCE_POLICY =
   "reimbursement.";
 
 /**
- * Practitioner training, in Ben's words, verbatim.
+ * Practitioner training, in Ben's words. It names a third party (OchsLabs) and
+ * a training period, so it is a claim about the practice that has to stay
+ * exactly as approved; do not tighten it for rhythm. Deliberately carries no
+ * ranking or superlative — Ben's instruction, and the same discipline
+ * BRAIN_MAP_CLAIM is held to below.
  *
- * Replaces the [Confirm training & review process] tag. Deliberately carries
- * no ranking or superlative — Ben's instruction, and the same discipline
- * BRAIN_MAP_CLAIM is held to below. It names a third party (OchsLabs) and a
- * session count, so it is a claim about the practice that has to stay exactly
- * as approved; do not tighten it for rhythm.
- *
- * NOTE: the "150,000" here and STAT_SESSIONS ("140,000+") are two different
- * numbers for what reads as the same quantity, and /about renders both — this
- * sentence and the proof band. See CONTENT-CHECKLIST.md.
+ * **The last sentence names no number, on purpose.** It first read "More than
+ * 150,000 sessions have shaped how we train", which contradicted
+ * STAT_SESSIONS ("140,000+") — and /about renders both, this card and the
+ * proof band, so the page disagreed with itself in two places a reader sees
+ * at once. The fix is not to correct the figure to match: two copies of a
+ * number drift the moment one is updated, and this file exists to stop that.
+ * The count has exactly one home, STAT_SESSIONS, which the proof band on this
+ * same page already renders. So the sentence says what the count is *for*
+ * without restating it, and nothing here can ever disagree with it again.
  */
 export const TRAINING_CLAIM =
   "Every Harmonized practitioner is certified through OchsLabs, the company " +
   "that created LENS, then trained in-house for three months before seeing " +
-  "clients on their own. More than 150,000 sessions have shaped how we train.";
+  "clients on their own. Every session we’ve delivered has shaped how we train.";
 
 /**
  * GRAPHICS CORRECTIONS — apply before either asset ships (Phase 7.5).

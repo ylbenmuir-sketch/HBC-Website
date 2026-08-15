@@ -245,6 +245,17 @@ the two community lists is back in the index — 102 passages, up from 96, with
 Ben's approved wording. The `session-length` topic in `unanswerable.ts` is
 dormant on its own gate, exactly as designed; nothing was deleted to retire it.
 
+`TRAINING_CLAIM` arrived ending "More than 150,000 sessions have shaped how we
+train", which contradicted `STAT_SESSIONS` ("140,000+") on a page that renders
+both. Corrected by **deleting the figure, not reconciling it** — the sentence
+now reads "Every session we've delivered has shaped how we train", and the
+count is stated once, in the proof band. Two copies of a number disagree
+eventually; that is what the whole `Verifiable` system is arranged to prevent,
+and a second correct copy would only have reset the clock. `STAT_SESSIONS` is
+unchanged. `/about`'s meta description and the `content-validation.ts` label
+were interpolating nothing and holding their own hardcoded "140,000+"; both now
+read the constant.
+
 The table below is kept as the record of what the audit found, because the
 method is the reusable part, not the list.
 
@@ -451,8 +462,8 @@ against **both** lists in the scratch suite, not just the refusal list.
 
 ## Ben's outstanding decisions
 
-These are blocking, and all five are his call rather than the code's. The
-first three are facts the practice has to settle.
+These are blocking, and all four are his call rather than the code's. The
+first two are facts the practice has to settle.
 
 1. **Business hours** (`BUSINESS_HOURS` in `lib/site-config.ts`). Until
    verified, the assistant makes **no** callback-timing claim — "Someone from
@@ -461,20 +472,15 @@ first three are facts the practice has to settle.
    unblocks `openingHoursSpecification` in the LocalBusiness JSON-LD. Also
    confirm `hoursLines` in `lib/locations.ts` at the same time — they must
    agree. `REQUIRE_VERIFIED_CONTENT=true npm run build` fails while it is open.
-2. **The session count.** `TRAINING_CLAIM` (Ben's approved wording) says "more
-   than 150,000 sessions"; `STAT_SESSIONS` says "140,000+". `/about` renders
-   both — the training card and the proof band — so the page disagrees with
-   itself. One of the two is stale; picking the current figure is a one-line
-   change to `STAT_SESSIONS` and its `content-validation.ts` label.
-3. **The two community lists** (`communitiesTag` on Nashville and
+2. **The two community lists** (`communitiesTag` on Nashville and
    Murfreesboro) — the last thing the `confirmTag` gate excludes. Franklin's
    list carries no tag and answers today, so the fix is per center.
-4. **Conversation retention.** Transcripts go to the server log and inherit the
+3. **Conversation retention.** Transcripts go to the server log and inherit the
    hosting platform's retention, which is a default rather than a decision.
    `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn — timing, outcome,
    safety flags — and drops the words. §8 asks Ben to read 20 real transcripts
    in the first week, which is why the default is on.
-5. **Who reviews flagged conversations, and how often.** §4.1 requires crisis
+4. **Who reviews flagged conversations, and how often.** §4.1 requires crisis
    conversations to be logged *and flagged for human review*. They are written
    at warn level with a `[chat:FLAGGED:crisis]` marker — that is a log line, not
    a review process. Nobody is paged.

@@ -44,11 +44,14 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [x] Practitioner training (`TRAINING_CLAIM`) — OchsLabs certification plus
       three months in-house. Confirmed by Ben, verbatim; **no superlative or
       ranking claim** is to be added to it.
-- [ ] **Session count disagreement.** `TRAINING_CLAIM` says "more than 150,000
-      sessions"; `STAT_SESSIONS` says "140,000+". `/about` renders both — the
-      training card and the proof band — so the page contradicts itself. Pick
-      one figure. If 150,000 is current, update `STAT_SESSIONS` and the
-      "Session count (140,000+)" line in `lib/content-validation.ts`.
+- [x] **Session count disagreement — resolved.** `TRAINING_CLAIM` briefly said
+      "more than 150,000 sessions" (written in error) against `STAT_SESSIONS`'s
+      "140,000+", with `/about` rendering both. Fixed by removing the figure
+      rather than correcting it: the sentence now reads "Every session we've
+      delivered has shaped how we train" and the count is stated once, in the
+      proof band. `STAT_SESSIONS` is unchanged at 140,000+ and is the single
+      source — `/about`'s meta description and the build-log label now
+      interpolate it instead of repeating it.
 - [ ] Concierge service area & pricing (`CONCIERGE_TAG`)
 - [ ] Community lists per center (`planning.communitiesTag` in `lib/locations.ts`
       — Nashville and Murfreesboro). Also drives schema `areaServed`, and is
@@ -64,7 +67,8 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Statistics
 
-- [ ] 140,000+ sessions (`STAT_SESSIONS`)
+- [ ] 140,000+ sessions (`STAT_SESSIONS`) — the **only** source for this
+      figure. Anything that needs it reads it from here; nothing restates it.
 - [ ] Founding year 2016 (`ESTABLISHED_YEAR`)
 - [ ] Google rating & review count (`REVIEWS`) — block hidden until verified
 - [x] Canonical domain (`SITE_URL`) — `https://harmonizedbraincenterstn.com`,

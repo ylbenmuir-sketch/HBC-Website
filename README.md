@@ -259,8 +259,8 @@ known injection phrases before retrieval and leave the model's copy untouched.
 
 ### What Ben has to decide before this ships
 
-Five open items, all flagged rather than decided (§6 and §8). The first three
-are facts the practice has to settle; each one is currently costing the
+Four open items, all flagged rather than decided (§6 and §8). The first two
+are facts the practice has to settle, and both are currently costing the
 assistant a question a visitor will actually ask.
 
 1. **Business hours.** `BUSINESS_HOURS` is unverified, so the assistant makes
@@ -275,14 +275,11 @@ assistant a question a visitor will actually ask.
    The only thing `confirmTag` still excludes, so "do you serve Green Hills?"
    gets "I don't have that on the site". Confirming a center's list rejoins it
    to the index on its own — Franklin's is already confirmed and answers.
-3. **The session count disagreement.** `TRAINING_CLAIM` says "more than 150,000
-   sessions" and `STAT_SESSIONS` says "140,000+", and `/about` renders both.
-   Pick one figure — see CONTENT-CHECKLIST.md.
-4. **Conversation retention.** Transcripts go to the server log and inherit the
+3. **Conversation retention.** Transcripts go to the server log and inherit the
    host's retention, which is a default rather than a decision.
    `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn and drops the
    words.
-5. **Who reads flagged conversations.** Crisis turns are logged at warn level
+4. **Who reads flagged conversations.** Crisis turns are logged at warn level
    with a `[chat:FLAGGED:crisis]` marker. That is a log line, not a review
    process — nobody is paged.
 
