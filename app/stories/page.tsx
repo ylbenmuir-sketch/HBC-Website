@@ -5,9 +5,10 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import {
+  EXPERIENCES_DISCLAIMER,
   REVIEWS,
-  SAMPLE_QUOTES_NOTE_STORIES,
   SHOW_DRAFT_CONTENT,
+  VERIFIED_TESTIMONIALS,
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -16,47 +17,12 @@ export const metadata: Metadata = {
     "No miracle stories — just the specific, daily-life changes clients report at check-in. Individual experiences vary, and we'd rather understate than oversell.",
 };
 
-const storyQuotes = [
-  {
-    theme: "Focus · Children",
-    text: "For the first time in two years, homework isn't a fight. He sits down, does it, and moves on.",
-    attribution: "Parent of a 9-year-old",
-    place: "Nashville",
-  },
-  {
-    theme: "Sleep · Adults",
-    text: "Nobody oversold anything — they just kept asking how I was sleeping. By week four: better than in years.",
-    attribution: "Adult client",
-    place: "Murfreesboro",
-  },
-  {
-    theme: "Emotional regulation",
-    text: "The meltdowns didn't vanish. They got shorter — and she recovers now. That's the part that changed our house.",
-    attribution: "Parent of a 7-year-old",
-    place: "Nashville",
-  },
-  {
-    theme: "Stress & resilience",
-    text: "Hard days still happen. I just stopped losing the whole next day to them.",
-    attribution: "Adult client",
-    place: "Nashville",
-  },
-  {
-    theme: "Brain fog",
-    text: "I read a full report without restarting the same paragraph. I texted my husband about it. That's where I was.",
-    attribution: "Adult client",
-    place: "Murfreesboro",
-  },
-  {
-    theme: "School",
-    text: "His teacher emailed to ask what changed. First email from school I've ever been happy to open.",
-    attribution: "Parent of a 10-year-old",
-    place: "Murfreesboro",
-  },
-];
-
 export default function StoriesPage() {
   const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
+  // Real, permissioned quotes only. The page used to carry six sample quotes
+  // for design review; those are gone now that verified ones exist, and the
+  // grid simply renders however many there are rather than being padded.
+  const stories = VERIFIED_TESTIMONIALS;
   return (
     <>
       <section className="page-hero center">
@@ -73,14 +39,24 @@ export default function StoriesPage() {
 
       <section className="sec">
         <div className="wrap">
-          {SHOW_DRAFT_CONTENT ? (
+          {stories.length > 0 ? (
             <>
               <div className="trio-quotes rv">
-                {storyQuotes.map((q) => (
-                  <Quote key={q.text} sample {...q} />
+                {stories.map((t) => (
+                  <Quote
+                    key={t.text}
+                    theme={t.theme}
+                    text={t.text}
+                    attribution={
+                      t.firstName
+                        ? `${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`
+                        : t.relationship
+                    }
+                    place={t.city}
+                  />
                 ))}
               </div>
-              <p className="sample-note rv">{SAMPLE_QUOTES_NOTE_STORIES}</p>
+              <p className="sample-note rv">{EXPERIENCES_DISCLAIMER}</p>
             </>
           ) : (
             <div className="rv" style={{ maxWidth: 680 }}>

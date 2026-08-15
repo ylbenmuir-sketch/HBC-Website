@@ -50,10 +50,10 @@ export const SITE_URL =
 /* Contact                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Primary phone. Unverified: hidden in production (contact form remains). */
+/** Primary phone — confirmed by Ben. */
 export const PHONE: Verifiable<{ display: string; tel: string }> = {
-  value: { display: "(615) 000-0000", tel: "+16150000000" },
-  verified: false,
+  value: { display: "(615) 331-8762", tel: "+16153318762" },
+  verified: true,
   note: "[Confirm phone number]",
 };
 export const PHONE_DISPLAY = PHONE.value.display;
@@ -150,23 +150,43 @@ export type Testimonial = {
   verified: boolean;
 };
 
-/** Homepage testimonials. ALL sample copy until real quotes are collected. */
+/**
+ * Client testimonials — real quotes, written permission confirmed by Ben.
+ *
+ * Quoted verbatim; do not tighten or paraphrase permissioned copy. No `city`
+ * is recorded because none was given with the permission — an invented one
+ * would be a fabricated detail on an endorsement.
+ *
+ * The homepage shows the first two (its grid is two columns); /stories shows
+ * all three (its grid is three). Nothing is padded to fill either.
+ */
 export const TESTIMONIALS: Testimonial[] = [
   {
-    theme: "Focus · Children",
-    text: "For the first time in two years, homework isn't a fight. He sits down, does it, and moves on. I didn't realize how much tension had left the house until it was gone.",
-    relationship: "Parent of a 9-year-old",
-    city: "Nashville",
+    theme: "Focus & regulation · Children",
+    text: "Our seven-year-old struggled for years to self-regulate. We came in VERY skeptical. Four weeks in we saw nothing and were ready to give up — the very next week, everything lifted. The rage episodes were gone. He was communicating better, relating to his siblings better. Our family was at peace.",
+    relationship: "Parent of a 7-year-old",
+    firstName: "Andreanna",
+    lastInitial: "R.",
     concernCategory: "focus-adhd",
-    verified: false,
+    verified: true,
   },
   {
-    theme: "Sleep · Adults",
-    text: "I came in exhausted and skeptical. What sold me was that nobody oversold anything — they just kept asking how I was sleeping. By week four: better than I had in years.",
+    theme: "Brain fog & overwhelm · Adults",
+    text: "Today was my 12th session and my brain is back. The biggest thing is that I'm no longer overstimulated by everything. My ability to multitask is back and I don't have to write everything down. My brain fog is gone.",
     relationship: "Adult client",
-    city: "Murfreesboro",
-    concernCategory: "sleep",
-    verified: false,
+    firstName: "Rachel",
+    lastInitial: "S.",
+    concernCategory: "brain-fog",
+    verified: true,
+  },
+  {
+    theme: "Brain fog & fatigue · Adults",
+    text: "I had so many issues with brain fog, focus, and fatigue — working with Laura helped me feel like myself again. If you have any hesitations, let my story encourage you. Take the leap.",
+    relationship: "Adult client",
+    firstName: "Sarah Ruth",
+    lastInitial: "H.",
+    concernCategory: "brain-fog",
+    verified: true,
   },
 ];
 
@@ -208,7 +228,7 @@ export const START_TIMING: Verifiable = {
  */
 export const SAME_DAY_CALLBACK: Verifiable = {
   value: "Same-day callback",
-  verified: false,
+  verified: true,
   note: "[Confirm same-day callback]",
 };
 
