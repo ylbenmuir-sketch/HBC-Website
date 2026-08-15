@@ -35,10 +35,19 @@ export const metadata: Metadata = {
   // this is a one-sentence description by design, not a place to stack proof.
   description:
     "Help for anxiety, focus, and sleep without medication — gentle LENS neurofeedback for adults and kids across Middle Tennessee.",
+  // Self-referencing canonical on every page. "./" is relative, so Next
+  // resolves it per-route against metadataBase above — one declaration here
+  // covers all 25 routes, including the dynamic concern/location/team/article
+  // ones, and no generateMetadata has to restate it. This is what stops
+  // ?utm_… / ?gclid= variants and any apex-vs-www drift from indexing as
+  // separate URLs.
+  alternates: { canonical: "./" },
   openGraph: {
     siteName: SITE_NAME,
     type: "website",
     locale: "en_US",
+    // Same relative trick as the canonical above, for the same reason.
+    url: "./",
     images: [{ url: "/images/hero.jpg", width: 1600, height: 1067 }],
   },
 };
