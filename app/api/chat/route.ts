@@ -13,7 +13,12 @@ import { logTurn, type TurnOutcome } from "@/lib/chat/logging";
 import { checkRefusal } from "@/lib/chat/refusals";
 import { checkRateLimit, clientKey } from "@/lib/chat/rate-limit";
 import { checkSafety, detectInjection } from "@/lib/chat/safety";
-import { applySafetyStop, newSessionId, sessionStore } from "@/lib/chat/session";
+import {
+  applySafetyStop,
+  contactCollectionAllowed,
+  newSessionId,
+  sessionStore,
+} from "@/lib/chat/session";
 import { checkUnanswerable } from "@/lib/chat/unanswerable";
 import { FEATURE_ASSISTANT } from "@/lib/site-config";
 
@@ -265,7 +270,19 @@ export async function POST(request: Request) {
   // ------------------------------------------------------------------
   // 7 + 8. RETRIEVAL (§2) and the model
   // ------------------------------------------------------------------
-  const answer = await answerFromSite(message);
+  // Every answer closes by asking for the call — except in the three states
+  // where the site has already decided otherwise. §4.2 is the sharpest of
+  // them: a visitor who told us they are fourteen must not be asked to set up
+  // a call the flow would then refuse to collect a number for. "declined" is
+  // §5's let-them-leave, where the assistant has said *I won't ask again* in
+  // those words. "submitted" is the turn after a booking landed, where
+  // offering to set one up is offering to book a call that exists.
+  const answer = await answerFromSite(message, {
+    askForCall:
+      contactCollectionAllowed(session) &&
+      session.step !== "declined" &&
+      session.step !== "submitted",
+  });
   // "unavailable" logs as an error, not as a content gap: an outage that reads
   // as "the site doesn't cover that" is how a key expiry gets diagnosed as a
   // retrieval bug, and how §8's transcript review draws the wrong conclusion.

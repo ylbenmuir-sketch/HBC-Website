@@ -349,11 +349,31 @@ function round(n: number): number {
  * model-generated, for the same reason the crisis response in §4.1 is fixed:
  * the one moment it must not improvise is the moment it has nothing to go on.
  *
- * The ask is the site's single primary CTA — the free call at /contact — in
- * the site's voice: plain, brief, no exclamation marks. §5 replaces the last
- * sentence with the booking flow once that exists; it does not add a second
- * offer beside it.
+ * The ask is the site's single primary CTA — the free call — in the site's
+ * voice: plain, brief, no exclamation marks. §5 replaces the last sentence
+ * with the booking flow once that exists; it does not add a second offer
+ * beside it.
+ *
+ * It ends on the question rather than on the offer. "The free call is the
+ * right place for it" describes a call; "Want me to set one up?" asks for one,
+ * and it is also what app/api/chat/route.ts `offersCall()` looks for — so the
+ * bare "yes" a visitor actually types opens the booking flow instead of
+ * landing on nothing. Same two facts as before, one sentence more.
  */
 export const NO_MATCH_REPLY =
   "That isn’t something I have on the site, and I don’t want to guess at it. " +
-  "The free call is the right place for it — someone on the team can answer it properly.";
+  "The free call is the right place for it — someone on the team can answer it properly. " +
+  "Want me to set one up?";
+
+/**
+ * The same, for a visitor who has already booked or has already said they'd
+ * rather not give a number.
+ *
+ * §5's "let them leave" is a promise the assistant makes in so many words —
+ * "I won't ask again" — and a mandatory closing ask would break it on the next
+ * message. The facts are identical; only the door held open is different.
+ */
+export const NO_MATCH_REPLY_NO_ASK =
+  "That isn’t something I have on the site, and I don’t want to guess at it. " +
+  "The contact page has the form and the number if you’d like to ask the team " +
+  "directly: /contact";

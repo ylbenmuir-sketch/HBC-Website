@@ -433,6 +433,87 @@ over-refusing on purpose, and that bias makes false positives easy to miss —
 they look like the system working. Any change to `refusals.ts` should be run
 against **both** lists in the scratch suite, not just the refusal list.
 
+## Phase 11b — answer framing
+
+The rules in `answer.ts` were all prohibitions, and a model given nothing but
+prohibitions answers with them. "Homework takes three hours and ends in tears"
+came back as *LENS is not a treatment · we can't say what it would do ·
+individual experiences vary* — every clause true, every clause disclosed, and
+the whole thing reading as **this doesn't work**. The thing she came for, that
+we have seen exactly this many times, was in the passages and never reached the
+first sentence.
+
+Nothing was removed. Four beats now order every answer — **recognition → the
+answer → the proof → the ask** — and the limit rides the offer at the end,
+where it is a reason to call rather than a warning label on the way in.
+
+- **Standing facts.** `STAT_SESSIONS` and `ESTABLISHED_YEAR` (through
+  `confirmed()`, now exported from `content-index.ts`) plus `RISK_REVERSAL`,
+  interpolated into the system prompt. Both figures are already indexed in
+  `policy:scale`, but a passage is only present when the question happened to
+  retrieve it — and a parent describing homework retrieves concern passages and
+  nothing else. Un-verify either constant and the proof sentence disappears on
+  its own.
+- **The ask is mandatory, and so is not making it.** Every answer closes on
+  "Want me to set one up?", which is what `offersCall()` looks for, so the bare
+  "yes" a visitor actually types opens the booking flow. `askForCall: false`
+  turns it off in the three states where the site already decided otherwise —
+  §4.2 blocked contact collection, §5's "I won't ask again", and the turn after
+  a booking landed. Without that, making the ask mandatory would have broken
+  the let-them-leave promise on the very next message.
+- **Two rules collided with content, and the content won.** A question *about*
+  the boundary ("is this therapy or medical treatment?") is answered by the
+  boundary, at whatever length the site states it — the limit-stacking rule is
+  about caveats bolted onto an answer, not an answer that is a limit. And a
+  factual "no" is still an answer: insurance now leads with self-pay, HSA/FSA
+  and the superbill and states "we don't bill insurance directly" in the same
+  sentence. Every fact of `INSURANCE_POLICY`, reordered.
+- **Layer 2 got stricter, not looser.** "What do these brain map results mean?"
+  slips past `refusals.ts` — the pattern wants the noun straight after the
+  determiner and "brain map" sits in between — and the model used to answer it
+  in general terms, quoting what the page says about a low Pz reading. A
+  general explanation of a reading is an interpretation to the person asking
+  about their own, so the prompt now declines the whole of it. **The layer-1
+  gap is still open**; it is a `refusals.ts` change and phase 11b was scoped
+  out of that file.
+
+### `npm run check:answers`
+
+`CHAT_BASE=http://localhost:3010 npm run check:answers` — 25 visitor questions
+and 8 concern lines through the live route, plus the guardrails in-process.
+Asserts, unlike `check:chat`: opening, banned constructions, stacked limits,
+the ask, link-before-ask, and grounding (every figure and path in a reply has
+to appear in a passage retrieval actually handed over, or in the standing
+facts). Retrieval runs in the same process via Node's TypeScript stripping, so
+the passages a reply is checked against are the ones the route gave the model.
+
+Current: **33/33 framing, guardrails hold** — 21 refusals caught, 29 answerable
+questions not over-refused, 16 off-topic probes still no-match, 4 hours
+phrasings gated and 4 near-misses not.
+
+### The finding phase 11b could not fix: 6 of 33 never reach the model
+
+Framing cannot help a question that retrieves nothing, and the reference case
+from the brief is one of them. These get `NO_MATCH_REPLY`:
+
+| Question | reason | nearest |
+| --- | --- | --- |
+| "Homework takes three hours and ends in tears most nights" | incidental | `concern:focus-adhd:signs` (17.78, coverage 0.81) |
+| "My son can't sit still long enough to finish anything" | off-topic | `concern:children-school:faq:1` (9.17, 0.26) |
+| "I feel on edge all day and can't settle" | off-topic | `page:how-lens-works:session` (5.86, 0.49) |
+| "My daughter melts down over the smallest change of plan" | off-topic | `concern:emotional-regulation:faq:1` (11.18, 0.4) |
+| "Something happened years ago and I'm still jumpy all the time" | off-topic | `page:how-lens-works:session` (7.48, 0.2) |
+| "Do you work with adults?" | incidental | `concern:focus-adhd:signs` (4.31, coverage 1) |
+
+The homework one is the instructive case: it scores 17.78 with coverage 0.81
+against the right passage and fails the **subject gate**, because "homework"
+is in `children-school`'s aliases and not `focus-adhd`'s. This is the data fix
+the gate section above prescribes — routing `keywords`, measured against the
+off-topic set — **not** a threshold change. It was left alone because phase 11b
+was scoped to framing with no passage changes; it is the first thing to pick up
+after it, because a parent describing her own child in her own words and being
+told "I don't have that" is the most expensive miss on the list.
+
 ## Known open items (engineering)
 
 1. **In-process session store — will not work correctly on serverless.**
@@ -457,8 +538,15 @@ against **both** lists in the scratch suite, not just the refusal list.
 4. **No provider abstraction.** `answer.ts` calls the Anthropic SDK directly.
    Fine today; noted so nobody assumes an interface exists.
 5. **Accuracy answers are not asserted anywhere.** `npm run check:chat` prints
-   transcripts and asserts nothing, by design (§7 wants them read). There is no
-   regression test that would catch the prose drifting.
+   transcripts and asserts nothing, by design (§7 wants them read).
+   `npm run check:answers` (phase 11b) closes half of this: it asserts the
+   *shape* of every answer and the grounding of every figure and path in one.
+   It does not assert that the prose is *true* — that a passage was read
+   correctly is still a human's job.
+6. **`refusals.ts` misses "what do these brain map results mean".** The
+   clinical-interpretation pattern expects the noun immediately after the
+   determiner. Layer 2 declines it (checked by hand, see phase 11b above), but
+   layer 1 should not depend on the model for a §3 category.
 
 ## Ben's outstanding decisions
 

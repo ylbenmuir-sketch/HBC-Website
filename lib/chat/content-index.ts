@@ -88,8 +88,13 @@ import type { Passage } from "./types";
 /**
  * Verified values only, in every environment — unlike `verifiedOr()`, which
  * hands back drafts whenever SHOW_DRAFT_CONTENT is on. See the note above.
+ *
+ * Exported because ./answer.ts states two of these facts — the session count
+ * and the founding year — as standing facts the model may use on any turn, and
+ * a second copy of this two-line rule is how one of them would eventually
+ * outlive its `verified: false`.
  */
-function confirmed<T>(v: Verifiable<T>): T | null {
+export function confirmed<T>(v: Verifiable<T>): T | null {
   return v.verified ? v.value : null;
 }
 

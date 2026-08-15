@@ -49,6 +49,7 @@ npm run dev                  # http://localhost:3000
 npm run build                # production build
 npm run lint
 npm run check:index          # site assistant's content index vs. the pages
+npm run check:answers        # assistant answers: shape, guardrails, grounding
 ```
 
 The site runs without `.env.local` — every page renders; only the contact-form
@@ -237,6 +238,25 @@ decides which.
 NEXT_PUBLIC_FEATURE_ASSISTANT=true npm run dev
 CHAT_BASE=http://localhost:3000 npm run check:chat
 ```
+
+### Running the answer audit
+
+```bash
+NEXT_PUBLIC_FEATURE_ASSISTANT=true npm run dev
+CHAT_BASE=http://localhost:3000 npm run check:answers
+```
+
+The one that asserts. 25 visitor questions and 8 concern lines through the live
+route, checked for the shape phase 11b fixed — recognition first rather than a
+negation, no announced honesty, one limit rather than three, the call as the
+closing ask with the page link before it — plus grounding: every figure and
+every path in a reply has to appear in a passage retrieval actually handed
+over. The §3 refusal list, the off-topic gate probes and the unanswerable
+topics run in the same command, because framing changes are exactly the kind
+that quietly move a boundary. Needs `ANTHROPIC_API_KEY`; exits non-zero on any
+failure.
+
+### Reading the §7 checklist
 
 It prints the full transcript of every §7 case and asserts nothing — read the
 replies, which is what §7 asks for. Two cases can't be settled without
