@@ -252,6 +252,26 @@ export const SESSION_LENGTH_TAG = "[Confirm typical length]";
  * PRICING_TAG below.
  */
 export const BRAIN_MAP_PRICE = "$150";
+
+/**
+ * Product name — always capitalized, always in full. One source so the CTA,
+ * the homepage section, and the /first-visit cost card can't drift apart.
+ */
+export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
+
+/**
+ * The differentiator claim. Deliberately hedged: "as far as we know" is
+ * defensible today, a bare "the first in the country" is not — do not write
+ * that anywhere until the basis for it is verified. Gated like every other
+ * unverified fact, so production simply drops the sentence.
+ */
+export const BRAIN_MAP_CLAIM: Verifiable = {
+  value:
+    "As far as we know, no other LENS practice in the country puts it in your hands.",
+  verified: false,
+  note: "[Confirm basis for the claim]",
+};
+
 export const PRICING_TAG = "[Insert verified pricing]";
 export const HSA_FSA_TAG = "[Confirm HSA/FSA policy]";
 export const INSURANCE_TAG = "[Confirm policy]";

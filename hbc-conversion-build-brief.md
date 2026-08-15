@@ -251,6 +251,127 @@ If any removal feels legally significant, flag it rather than removing it.
 
 ---
 
+## PHASE 7 — The Harmonized Brain Map
+
+This is the site's single largest differentiator and it currently appears
+nowhere. It makes the $150 tangible, and it is the one claim no competitor can
+copy. Treat it with the same discipline as every other phase: nothing
+un-gated, no new typography, palette, or layout structure.
+
+**Naming:** the product is **The Harmonized Brain Map**, capitalized, used
+consistently. Add `BRAIN_MAP_NAME` to `lib/site-config.ts` as a known constant
+alongside `BRAIN_MAP_PRICE`.
+
+### 7.1 The claim — gate it
+
+The line "no other LENS practice in the country does this" is the strongest
+sentence available and the most likely to be scrutinized. Add
+`BRAIN_MAP_CLAIM` as a `Verifiable` in `lib/site-config.ts`, wired into
+`content-validation.ts` like the others, `verified: false` for now.
+
+Use this hedged wording, which is defensible today:
+
+> As far as we know, no other LENS practice in the country puts it in your hands.
+
+Do not write "the first in the country" anywhere until Ben verifies the basis
+for it.
+
+### 7.2 Homepage — new section
+
+Place directly after step 2 ("Map") of the three-step module from Phase 3.
+Default `.sec` background. Add a mobile `order` entry and renumber everything
+below it, as in Phases 4 and 5.
+
+**Eyebrow:** `What you walk away with`
+
+**H2:**
+
+> Most people have never seen their own brain. You will.
+
+**Body:**
+
+> On your first visit we record activity at 21 points across your brain and
+> turn it into a map you can actually read — where things are running hot,
+> where they're running quiet, and how that lines up with what you came in
+> describing. We built this. `{BRAIN_MAP_CLAIM}`
+
+**Micro-line beneath the image**, always visible, not gated:
+
+> A picture of electrical activity — not a diagnosis.
+
+**Image:** the heat-map render. Ben will supply the asset; use a
+`PlaceholderPlate` with the spec `Harmonized Brain Map — heat map render` until
+it lands.
+
+**Button:** `BrainMapCta` — this is a sanctioned fourth placement for the
+secondary CTA. Update the README guardrail note accordingly.
+
+### 7.3 `/how-lens-works` — new section
+
+Place after the existing "What it feels like from the chair" section.
+
+**H2:**
+
+> What the map actually tells us.
+
+**Body — preserve this sentence structure exactly.** It is pattern language
+from clinical observation, not diagnosis, and the "what we've seen with
+clients whose…" construction is what keeps it honest:
+
+> Pz is where analytical thinking and processing happen. What we've seen with
+> clients whose Pz sits below 10 is difficulty switching that part on —
+> logistical tasks that should be simple become a slog.
+>
+> F7 handles verbal expression. When we see F7 above 35, that region is often
+> overprocessing — and clients describe struggling to get out what they're
+> trying to say.
+
+**Closing paragraph:**
+
+> None of that is a diagnosis. It's a pattern we've seen across
+> `{sessionCount}` sessions, held up against what you told us in the room —
+> and it's why your plan starts where it starts instead of somewhere generic.
+
+**Image:** the lobe-function graphic (image 2 in Ben's uploads). Ben will
+supply; `PlaceholderPlate` spec `Brain lobe function diagram` until then.
+
+### 7.4 `/first-visit` — rewrite the cost card
+
+Replace the Phase 1 version with:
+
+> **What it costs**
+> The phone call is free. The Harmonized Brain Map — your first visit — is
+> $150 and includes the full conversation, a 21-point recording, your map
+> explained point by point, and a written plan you keep. Session pricing is
+> shared before you commit to anything.
+
+### 7.5 Legend and label corrections
+
+These apply to the graphics themselves, which Ben produces — but flag them in
+the repo (a comment in `lib/site-config.ts` near `BRAIN_MAP_NAME` is fine) so
+they aren't lost:
+
+- **"Ideal range" → "typical range"** on both the bar chart and the heat map.
+  "Ideal" is evaluative and invites a client to read a number as a verdict.
+- **Heat-map legend:** "Under-engaged / Ideal / Over-engaged" → "Lower
+  amplitude / Typical range / Higher amplitude." Descriptive, not evaluative.
+- **Lobe graphic has a labeling error:** F3 is mislabeled as F8, producing two
+  F8s and no F3. Also carries an empty trailing bullet in the Frontal Lobe
+  list.
+- **Diagnostic terms as electrode labels** — "anxiety," "depression,"
+  "addiction" — should soften to function words: "impulse control," "mood
+  regulation," "attention and focus."
+
+### 7.6 Future — do not build yet
+
+- A dedicated `/brain-map` page. Big enough differentiator to rank on its own,
+  but it needs the assets and the verified claim first.
+- Before/after maps. Highly persuasive and the closest thing to a testimonial
+  you can produce in-house — but two maps side by side is an implied outcome
+  claim. Requires written consent, honest framing, and legal review.
+
+---
+
 ## Blocked on Ben — do not attempt
 
 - Verified testimonials (currently zero render in production — this is the
@@ -260,6 +381,9 @@ If any removal feels legally significant, flag it rather than removing it.
 - Confirming the same-day callback promise is operationally true before the
   copy in Phase 1 ships
 - Google rating and review count
+- The two Brain Map graphics (heat-map render, lobe-function diagram) and the
+  basis for `BRAIN_MAP_CLAIM` — Phase 7 ships with placeholder plates and the
+  claim gated until both land
 
 ---
 
@@ -267,3 +391,6 @@ If any removal feels legally significant, flag it rather than removing it.
 
 Phase 0 → 1 → 2 → 3 → 4 → 5 → 6. Commit after each phase with a message
 naming the phase. Run `npm run build` after Phase 3 and Phase 5.
+
+Phase 7 runs 7.1 → 7.2 → 7.3 → 7.4 → 7.5, each sub-step its own commit, with
+`npm run build` after 7.2 and 7.3.

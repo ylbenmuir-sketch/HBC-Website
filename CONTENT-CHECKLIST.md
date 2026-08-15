@@ -35,6 +35,9 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Pricing (`PRICING_TAG`) / HSA-FSA policy (`HSA_FSA_TAG`) / insurance wording (`INSURANCE_TAG`)
 - [ ] Concierge service area & pricing (`CONCIERGE_TAG`)
 - [ ] Practitioner training & progress-review process wording (`TRAINING_CLAIM_TAG`)
+- [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
+      we know" wording ships only once verified. Do **not** replace it with
+      "the first in the country" without a documented basis.
 - [ ] Hours for Nashville & Murfreesboro (`lib/locations.ts`)
 
 ## Statistics

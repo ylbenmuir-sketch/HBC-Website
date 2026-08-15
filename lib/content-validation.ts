@@ -1,4 +1,5 @@
 import {
+  BRAIN_MAP_CLAIM,
   ESTABLISHED_YEAR,
   FOUNDER_LAST_NAME,
   FOUNDER_QUOTE,
@@ -40,6 +41,7 @@ check("Response-time claim", RESPONSE_TIME.verified);
 check("Same-day callback promise", SAME_DAY_CALLBACK.verified);
 check("Start-timing claim", START_TIMING.verified);
 check("Franklin opening date", FRANKLIN_OPENING.verified);
+check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
 check(
   "At least one verified testimonial",
   TESTIMONIALS.some((t) => t.verified)
