@@ -3,7 +3,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
-import { locations } from "@/lib/locations";
+import { locations, hasConfirmedAddress } from "@/lib/locations";
 import {
   CONCIERGE_TAG,
   SHOW_DRAFT_CONTENT,
@@ -57,11 +57,19 @@ export default function LocationsPage() {
                     </>
                   ) : (
                     <>
+                      {/* Reads the address from lib/locations.ts rather than
+                          restating it — these lines were hard-coded copies of
+                          the placeholders and would not have picked up a
+                          confirmed address on their own. */}
                       <b>
-                        {SHOW_DRAFT_CONTENT && <>[Street address], </>}
+                        {(hasConfirmedAddress(loc) || SHOW_DRAFT_CONTENT) && (
+                          <>{loc.address.streetAddress}, </>
+                        )}
                         {loc.address.addressLocality},{" "}
                         {loc.address.addressRegion}
-                        {SHOW_DRAFT_CONTENT && <> [ZIP]</>}
+                        {(hasConfirmedAddress(loc) || SHOW_DRAFT_CONTENT) && (
+                          <> {loc.address.postalCode}</>
+                        )}
                       </b>
                       <br />
                       Mon–Fri 9a–6p &middot; Sat by appointment

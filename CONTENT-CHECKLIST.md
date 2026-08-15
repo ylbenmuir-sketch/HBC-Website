@@ -50,8 +50,13 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Locations
 
-- [ ] Nashville street address & ZIP (`lib/locations.ts`) — hidden until confirmed
-- [ ] Murfreesboro street address & ZIP — hidden until confirmed
+- [x] Nashville street address & ZIP (`lib/locations.ts`) — 197 Thompson Ln,
+      Suite S, Nashville, TN 37211. Confirmed by Ben. Renders on-page and in
+      the `PostalAddress` schema, with `geo` + `hasMap` alongside it.
+- [x] Murfreesboro street address & ZIP — 206 W Chestnut St, Murfreesboro, TN
+      37130. Confirmed by Ben. Same rendering and schema as Nashville.
+- [ ] Franklin street address & ZIP — still `[placeholders]`; the page stays a
+      coming-soon waitlist and ships no LocalBusiness until it opens
 - [ ] Murfreesboro parking note
 - [ ] Franklin opening date (`FRANKLIN_OPENING`) — shows "Coming soon" until verified
 - [ ] Communities-served lists per location
@@ -87,6 +92,16 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] **Brain lobe function diagram** (`/how-lens-works`) — still a
       `PlaceholderPlate`. Fix the F3/F8 mislabel, the empty Frontal Lobe
       bullet, and the diagnostic electrode labels first — see Phase 7.5.
+- [ ] **Open Graph image** — `/images/og-default.jpg` needs a properly
+      designed 1200×630 version. What ships today is a stopgap composited in
+      code: `hero.jpg` under a navy scrim with the logo lockup and service
+      area, set in Georgia/Helvetica because the brand faces (Cormorant
+      Garamond, DM Sans) were not available to the compositor. It is the one
+      image most people see before they ever reach the site — every link
+      shared to Facebook, LinkedIn, iMessage, or Slack renders it. Replace the
+      file at the same path and no code changes are needed; the dimensions and
+      `alt` in `app/layout.tsx` already match. Per-location and per-article
+      images are a later step (SEO-AUDIT.md §6.3 item 33).
 
 ## Articles
 

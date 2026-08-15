@@ -65,6 +65,7 @@ export default async function LocationPage({
   if (!location) notFound();
 
   const addressConfirmed = hasConfirmedAddress(location);
+  const showAddressLine = addressConfirmed || SHOW_DRAFT_CONTENT;
   // Draft team members / hours / arrival notes never ship (see site-config).
   const team = location.team.filter(
     (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
@@ -127,7 +128,10 @@ export default async function LocationPage({
                   </>
                 ) : (
                   <>
-                    {SHOW_DRAFT_CONTENT && (
+                    {/* Confirmed addresses render for everyone; an
+                        unconfirmed one still shows its [placeholder] in draft
+                        mode so it stays visible to whoever has to chase it. */}
+                    {showAddressLine && (
                       <>
                         {location.address.streetAddress}
                         <br />
@@ -135,7 +139,7 @@ export default async function LocationPage({
                     )}
                     {location.address.addressLocality},{" "}
                     {location.address.addressRegion}{" "}
-                    {addressConfirmed && location.address.postalCode}
+                    {showAddressLine && location.address.postalCode}
                   </>
                 )}
               </HeroFact>

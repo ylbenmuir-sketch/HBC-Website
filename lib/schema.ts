@@ -18,9 +18,9 @@ import {
   communitiesServed,
   hasConfirmedAddress,
   locationPhotos,
+  mapsUrl,
 } from "./locations";
 import {
-  BRAIN_MAP_PRICE,
   ESTABLISHED_YEAR,
   FOUNDER_DISPLAY_NAME,
   PHONE_TEL,
@@ -87,9 +87,13 @@ export function organizationSchema() {
  *  - `image` — real photographs only; a center with none omits the field.
  *  - `areaServed` — the same communities sentence shown under "Planning your
  *    visit".
- *  - `priceRange` — the Brain Map first visit, the one settled, rendered
- *    price. Per-session pricing is still unverified (PRICING_TAG), so it
- *    isn't represented here; when it lands, widen this to a real range.
+ *  - `priceRange` — a band, not a figure. The literal "$150" read as though
+ *    every service costs $150 when it is the first visit only, and
+ *    per-session pricing is still unverified (PRICING_TAG). Revisit once it
+ *    lands and a real range can be stated.
+ *  - `geo` / `hasMap` — both ride the address gate below, because a pin or a
+ *    map link without a verified street address would point at a building
+ *    the site doesn't claim to occupy.
  *  - `parentOrganization` — an @id reference to the sitewide Organization,
  *    not a copy of it.
  *
@@ -101,6 +105,8 @@ export function localBusinessSchema(location: Location) {
   const photos = locationPhotos(location).map(abs);
   const areaServed = communitiesServed(location);
   const url = abs(`/locations/${location.slug}`);
+  const addressConfirmed = hasConfirmedAddress(location);
+  const map = mapsUrl(location);
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -110,7 +116,7 @@ export function localBusinessSchema(location: Location) {
     ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
     address: {
       "@type": "PostalAddress",
-      ...(hasConfirmedAddress(location)
+      ...(addressConfirmed
         ? {
             streetAddress: location.address.streetAddress,
             postalCode: location.address.postalCode,
@@ -120,8 +126,18 @@ export function localBusinessSchema(location: Location) {
       addressRegion: location.address.addressRegion,
       addressCountry: "US",
     },
+    ...(addressConfirmed && location.geo
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: location.geo.latitude,
+            longitude: location.geo.longitude,
+          },
+        }
+      : {}),
+    ...(map ? { hasMap: map } : {}),
     description: location.metaDescription,
-    priceRange: BRAIN_MAP_PRICE,
+    priceRange: "$$",
     ...(photos.length > 0 ? { image: photos } : {}),
     ...(areaServed.length > 0
       ? {

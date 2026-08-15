@@ -151,7 +151,7 @@ or work through the files below:
 | File | Placeholders to replace |
 | --- | --- |
 | `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder last name, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, concierge service area & pricing |
-| `lib/locations.ts` | Street addresses + ZIPs (all three centers — these also feed the LocalBusiness JSON-LD), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
+| `lib/locations.ts` | Franklin street address + ZIP (Nashville and Murfreesboro are confirmed; a confirmed address also unlocks `geo` and `hasMap` in the LocalBusiness JSON-LD, so add `geo` coordinates when Franklin's lands), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
 | `lib/team.ts` | Practitioner names, bios, certifications, focus areas, schedules; coordinator name; Franklin opening date |
 | `lib/resources.ts` | Article bylines (`[Practitioner name]`, `[Month Year]`) and the `[Draft…]`/`[Body copy…]` article bodies (homework-battles included) |
 | `app/page.tsx` | Location-card address/date lines (mirror `lib/locations.ts` when confirming) |

@@ -27,6 +27,16 @@ export type Location = {
     addressRegion: string;
     postalCode: string;
   };
+  /**
+   * Coordinates for the schema `geo` node, present only for a center whose
+   * address is confirmed — a pin without a verified street address would
+   * point at a building the site doesn't claim to occupy.
+   *
+   * Geocoded from the confirmed address with the US Census geocoder and
+   * cross-checked against Nominatim; the two agree to within ~10 m, and both
+   * resolve the expected county. Re-geocode if an address ever changes.
+   */
+  geo?: { latitude: number; longitude: number };
   hoursLines: string[];
   phone: string;
   /** Card meta extras (locations index). */
@@ -78,11 +88,12 @@ export const locations: Location[] = [
     county: "Davidson County",
     comingSoon: false,
     address: {
-      streetAddress: "[Street address]",
+      streetAddress: "197 Thompson Ln, Suite S",
       addressLocality: "Nashville",
       addressRegion: "TN",
-      postalCode: "[ZIP]",
+      postalCode: "37211",
     },
+    geo: { latitude: 36.110486, longitude: -86.740577 },
     hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
     phone: PHONE_DISPLAY,
     cardExtra: "Free on-site parking",
@@ -149,11 +160,12 @@ export const locations: Location[] = [
     county: "Rutherford County",
     comingSoon: false,
     address: {
-      streetAddress: "[Street address]",
+      streetAddress: "206 W Chestnut St",
       addressLocality: "Murfreesboro",
       addressRegion: "TN",
-      postalCode: "[ZIP]",
+      postalCode: "37130",
     },
+    geo: { latitude: 35.851758, longitude: -86.391947 },
     hoursLines: ["Mon–Fri 9a–6p", "Sat by appointment"],
     phone: PHONE_DISPLAY,
     cardExtra: "[Parking note]",
@@ -285,6 +297,29 @@ export function hasConfirmedAddress(location: Location): boolean {
     !isDraftText(location.address.streetAddress) &&
     !isDraftText(location.address.postalCode)
   );
+}
+
+/**
+ * The center's full address on one line, as a person would write it.
+ * Returns null while the street address or ZIP is still a [placeholder].
+ */
+export function formattedAddress(location: Location): string | null {
+  if (!hasConfirmedAddress(location)) return null;
+  const { streetAddress, addressLocality, addressRegion, postalCode } =
+    location.address;
+  return `${streetAddress}, ${addressLocality}, ${addressRegion} ${postalCode}`;
+}
+
+/**
+ * Google Maps link for the schema `hasMap`, built from the confirmed address
+ * with Google's documented URL scheme — no API key, and nothing to maintain
+ * separately, so it can't drift from the PostalAddress the way a pasted link
+ * would. Null until the address is confirmed.
+ */
+export function mapsUrl(location: Location): string | null {
+  const address = formattedAddress(location);
+  if (!address) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
 /**
