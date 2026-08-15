@@ -237,7 +237,10 @@ export default function HomePage() {
                   same sentence without the timeframe. */}
               {verifiedOr(SAME_DAY_CALLBACK) ? (
                 <>
-                  A real person calls you back today.
+                  {/* Explicit {" "}: JSX drops whitespace that spans a line
+                      break, so without it the tag rendered hard against the
+                      full stop — "back today.[CONFIRM …]". */}
+                  A real person calls you back today.{" "}
                   <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
                 </>
               ) : (

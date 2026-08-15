@@ -816,6 +816,9 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
    text does not get covered by anything. SiteAssistant only sets this while
    the panel is closed, so an open conversation is never yanked away. */
 .assistant.is-parked .assistant-launcher { opacity: 0; visibility: hidden; transform: translateY(8px); pointer-events: none; }
+/* Gone while the panel is open, at every width. The header X is the single
+   close control; the launcher does not become a second one. */
+.assistant.is-open .assistant-launcher { display: none; }
 
 /* -- the panel -- */
 .assistant-panel {
@@ -852,12 +855,20 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
    scroll area between the header and the composer. overscroll-behavior stops
    a flick at the end of the log from scrolling the page behind it. */
 .assistant-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; background: var(--ivory); padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
-/* A short conversation settles at the bottom of the sheet, next to the
-   composer, rather than stranding the greeting at the top of 800px of empty
-   cream. `margin-top: auto` on the first message rather than
-   `justify-content: flex-end` on the container: auto margins resolve to zero
-   once the content overflows, so a long thread still scrolls to its top. */
-.assistant-log > :first-child { margin-top: auto; }
+/* The log top-aligns. A single greeting pinned to the bottom of an 800px
+   sheet read as an error state — the panel looked empty and the one thing in
+   it looked stranded. A thread that outgrows the box bottom-anchors on its
+   own: the log is scrolled to its end on every new message (SiteAssistant),
+   which is the only "anchoring" a scrolling list needs. */
+
+/* Starter questions under the greeting. Outline pills — the system's own
+   .chip, in the panel's type sizes — so they read as suggestions rather than
+   as a row of buttons, and stay under the composer in the hierarchy: no
+   fill, hairline edge, against the composer's white field and navy Send. */
+.assistant-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.assistant-chip { font-family: var(--sans); font-size: 14px; line-height: 1.4; text-align: left; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 100px; padding: 11px 16px; cursor: pointer; transition: border-color 0.2s var(--ease-soft), background 0.2s var(--ease-soft); }
+.assistant-chip:hover { border-color: var(--sage-deep); background: var(--sage-soft); }
+.assistant-chip:focus-visible { border-radius: 100px; }
 
 /* Author modifiers are `from-assistant` / `from-visitor`, never the bare
    author name: `.assistant` is the widget root (position: fixed, bottom
@@ -934,8 +945,7 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .assistant-close { width: 44px; height: 44px; }
   .assistant-log { padding: 18px 18px 22px; gap: 13px; }
   .assistant-msg { max-width: 90%; }
-  /* Behind the sheet, so it cannot be reached or seen. */
-  .assistant.is-open .assistant-launcher { display: none; }
+  .assistant-chip { min-height: 44px; }
 }
 @keyframes assistant-sheet-in {
   from { opacity: 0; transform: translateY(16px); }

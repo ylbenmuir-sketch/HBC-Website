@@ -59,8 +59,36 @@ const ARRIVAL_DELAY_MS = 1400;
  */
 const GREETING = [
   "Hi — I’m the assistant here at Harmonized Brain Centers. Ask me about LENS, our centers, or what a first visit is like.",
+  // Variant A of the two Ben offered: the assistant books the call itself.
+  // lib/chat/booking.ts is a state machine that collects the name and number
+  // and hands app/api/chat/route.ts a payload for /api/consultation, so "I can
+  // set up a free call" is a promise this code actually keeps. Variant B
+  // ("there's a free call you can book in about a minute") would describe a
+  // link to /contact, which is the fallback path here, not the main one.
   "I’m not a person and I can’t give medical advice — but if you’d rather talk to someone, I can set up a free call.",
 ].join("\n\n");
+
+/**
+ * The empty state's starter questions. Three, because the panel opens on a
+ * greeting and a blank field and "ask me anything" is the hardest prompt to
+ * answer cold — these show the shape of what is in scope without the visitor
+ * having to guess it.
+ *
+ * Each one is checked against live retrieval before shipping (scripts run in
+ * the phase 11a report): they exist to demonstrate that the assistant knows
+ * things, so a starter that grounds to nothing would be worse than no starter
+ * at all.
+ */
+const STARTERS = [
+  "What happens at a first visit?",
+  "What does it cost?",
+  "Is this safe for kids?",
+];
+
+/** Below this the full placeholder does not fit the field. */
+const NARROW_QUERY = "(max-width: 360px)";
+const PLACEHOLDER = "Ask about LENS or a first visit…";
+const PLACEHOLDER_NARROW = "Ask a question…";
 
 type Message = { from: "assistant" | "visitor"; text: string };
 
@@ -141,11 +169,14 @@ export default function SiteAssistant() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [ended, setEnded] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const sessionId = useRef<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  /** Set by close() so the focus-restore effect knows the close was ours. */
+  const restoreFocus = useRef(false);
   const panelId = useId();
   const titleId = useId();
 
@@ -200,17 +231,40 @@ export default function SiteAssistant() {
   }, [mounted]);
 
   const close = useCallback(() => {
+    restoreFocus.current = true;
     setOpen(false);
-    // Focus returns to the launcher, unless it is hidden — stood down for the
-    // CTA bar on a phone (already hidden, so the computed style says so), or
-    // parked at the footer (hidden by the very render this call triggers, so
-    // only the state says so). Focusing a hidden element drops focus to the
-    // body without reporting it, which is worse than not moving focus at all.
+  }, []);
+
+  /**
+   * Focus returns to the launcher after the close has rendered, not during
+   * it. The launcher is `display: none` while the panel is open — there is
+   * one close control, the header X, and the launcher no longer doubles as a
+   * second one — so focusing it inside close() would be focusing a hidden
+   * element, which silently drops focus to the body.
+   *
+   * The same reading covers the launcher being unavailable for other reasons
+   * once the panel is gone: parked at the footer, or stood down for the CTA
+   * bar on a phone. If it is not visible, focus stays where it is.
+   */
+  useEffect(() => {
+    if (open || !restoreFocus.current) return;
+    restoreFocus.current = false;
     const launcher = launcherRef.current;
-    if (!launcher || parked) return;
+    if (!launcher) return;
     const cs = getComputedStyle(launcher);
     if (cs.visibility !== "hidden" && cs.display !== "none") launcher.focus();
-  }, [parked]);
+  }, [open]);
+
+  // The full placeholder does not fit the field on the narrowest phones, and
+  // the field cannot take smaller type — anything under 16px makes iOS zoom
+  // the viewport on focus, which would break the sheet's height mid-sentence.
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY);
+    const apply = () => setNarrow(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -317,9 +371,15 @@ export default function SiteAssistant() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, close]);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
-    const text = draft.trim();
+  /**
+   * One path in for both the composer and the starter chips — a chip is a
+   * visitor message that the visitor did not have to type, and it must reach
+   * the API as exactly that. Deliberately a plain function rather than a
+   * useCallback: it reads `sending` and `ended` on every call, and a memoised
+   * version would let a second submit through on a stale guard.
+   */
+  async function submit(raw: string) {
+    const text = raw.trim();
     if (!text || sending || ended) return;
 
     setMessages((prev) => [...prev, { from: "visitor", text }]);
@@ -427,6 +487,24 @@ export default function SiteAssistant() {
                 <span />
               </div>
             )}
+            {/* Starter questions, greeting only. `messages.length === 1` is
+                the whole condition and it is one-way: the array only ever
+                grows, so once the visitor has said anything — typed or
+                tapped — these are gone and cannot come back. */}
+            {messages.length === 1 && !sending && !ended && (
+              <div className="assistant-chips">
+                {STARTERS.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    className="assistant-chip"
+                    onClick={() => submit(question)}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {ended ? (
@@ -435,16 +513,18 @@ export default function SiteAssistant() {
               reach the team.
             </p>
           ) : (
-            <form className="assistant-compose" onSubmit={send}>
-              {/* The placeholder was "Ask about LENS, visits, or our centers…",
-                  which measures 283px against the 235px of field a 384px panel
-                  leaves — it rendered ellipsed at every width. This one fits
-                  from 384px up; below 360px it still clips a little. */}
+            <form
+              className="assistant-compose"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit(draft);
+              }}
+            >
               <input
                 ref={inputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask about LENS or a first visit…"
+                placeholder={narrow ? PLACEHOLDER_NARROW : PLACEHOLDER}
                 aria-label="Your question"
                 maxLength={2000}
                 disabled={sending}
@@ -457,16 +537,21 @@ export default function SiteAssistant() {
         </div>
       )}
 
+      {/* Opens, and only opens. The header X is the one way out — a launcher
+          that relabels itself "Close" puts two close controls on screen and
+          makes the pill a mode switch instead of an invitation. It is
+          `display: none` while the panel is open (globals.css), so there is
+          nothing to press and no expanded state to announce; aria-haspopup
+          says what it does instead of aria-expanded saying what it is. */}
       <button
         type="button"
         className="assistant-launcher"
         ref={launcherRef}
-        onClick={() => (open ? close() : setOpen(true))}
-        aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
       >
         <AssistantWave />
-        {open ? "Close" : "Questions?"}
+        Have a question?
       </button>
     </div>
   );
