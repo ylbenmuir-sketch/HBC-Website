@@ -35,7 +35,10 @@ export default function ContactPage() {
         <div className="wrap duo-form">
           <ContactForm />
           <div className="rv">
-            <div className="eyebrow">What happens next</div>
+            {/* A real H2: /contact went H1 -> H4 with nothing in between.
+                The .eyebrow class carries the styling, so this renders
+                exactly as the div it replaces. */}
+            <h2 className="eyebrow">What happens next</h2>
             <WhatHappensNext />
             {SHOW_PHONE && (
               <div className="note-sage" style={{ marginTop: 34 }}>

@@ -22,14 +22,25 @@ const CENTER_OPTIONS = [
 ];
 const TIME_OPTIONS = ["Mornings", "Afternoons", "Evenings"];
 
-/** The "what happens next" steps (contact.html) — also the confirmation state. */
-function WhatHappensNext() {
+/**
+ * The "what happens next" steps (contact.html) — also the confirmation state.
+ *
+ * The step heading level is a prop because the block appears at two different
+ * depths: on /contact it sits under the page's "What happens next" H2, and in
+ * the confirmation card it sits under that card's H3. Hard-coding either one
+ * produces a heading skip in the other place.
+ */
+function WhatHappensNext({
+  headingLevel: H = "h3",
+}: {
+  headingLevel?: "h3" | "h4";
+}) {
   return (
     <div className="lens-seq" style={{ marginTop: 22 }}>
       <div className="row">
         <div className="n">1</div>
         <div>
-          <h4>We call you</h4>
+          <H>We call you</H>
           <p>
             A real person from your nearest center, at the time you chose.
           </p>
@@ -38,7 +49,7 @@ function WhatHappensNext() {
       <div className="row">
         <div className="n">2</div>
         <div>
-          <h4>We listen, then answer</h4>
+          <H>We listen, then answer</H>
           <p>
             What&rsquo;s going on, what you&rsquo;ve tried, and every question
             you have — including the skeptical ones.
@@ -48,7 +59,7 @@ function WhatHappensNext() {
       <div className="row">
         <div className="n">3</div>
         <div>
-          <h4>You decide</h4>
+          <H>You decide</H>
           <p>
             Book your Brain Map, think it over, or decide it&rsquo;s not for
             you. The call is free either way.
@@ -137,7 +148,7 @@ export default function ContactForm() {
         <h3 style={{ margin: "18px 0 10px" }}>
           Thank you, {firstName.trim()}. Here&rsquo;s what happens next.
         </h3>
-        <WhatHappensNext />
+        <WhatHappensNext headingLevel="h4" />
         <div className="note-sage" style={{ marginTop: 34 }}>
           Prefer to talk sooner? Call <b>{PHONE_DISPLAY}</b> — a real person
           answers during business hours.

@@ -84,33 +84,33 @@ export default async function PractitionerPage({
       <section className="sec">
         <div className="wrap duo">
           <div className="rv">
-            <div className="eyebrow">Background</div>
+            <h2 className="eyebrow">Background</h2>
             <p style={{ margin: "24px 0 18px" }}>{profile.background1}</p>
             <p className="sub" style={{ fontSize: 16 }}>
               {profile.background2}
             </p>
           </div>
           <div className="rv">
-            <div className="eyebrow">At a glance</div>
+            <h2 className="eyebrow">At a glance</h2>
             <div className="lens-seq" style={{ marginTop: 20 }}>
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Training</h4>
+                  <h3>Training</h3>
                   <p>{profile.glance.training}</p>
                 </div>
               </div>
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Works most with</h4>
+                  <h3>Works most with</h3>
                   <p>{profile.glance.worksWith}</p>
                 </div>
               </div>
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Location</h4>
+                  <h3>Location</h3>
                   <p>{profile.glance.location}</p>
                 </div>
               </div>

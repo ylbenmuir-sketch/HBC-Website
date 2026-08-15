@@ -97,7 +97,7 @@ export default function AboutPage() {
           </div>
           <div className="care-grid rv">
             <div className="care">
-              <h4>Practitioner training</h4>
+              <h3>Practitioner training</h3>
               <p>
                 Every practitioner completes the same Harmonized LENS training
                 before working independently.{" "}
@@ -105,21 +105,21 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="care">
-              <h4>Structured progress tracking</h4>
+              <h3>Structured progress tracking</h3>
               <p>
                 A consistent check-in on sleep, mood, focus, and energy opens
                 every session &mdash; your plan follows what you report.
               </p>
             </div>
             <div className="care">
-              <h4>Care that doesn&rsquo;t rely on memory</h4>
+              <h3>Care that doesn&rsquo;t rely on memory</h3>
               <p>
                 Your plan and progress are documented at every step, so your
                 care stays consistent across visits and centers.
               </p>
             </div>
             <div className="care">
-              <h4>Responsible communication</h4>
+              <h3>Responsible communication</h3>
               <p>
                 No diagnoses, no promised outcomes, no pressure. If LENS
                 isn&rsquo;t the right fit, we say so &mdash; and help you find

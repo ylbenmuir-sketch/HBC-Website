@@ -201,11 +201,11 @@ function ConcernEntry({
         <div className="who">{who}</div>
       </div>
       <div className="colB">
-        <h4>You might recognize</h4>
+        <h3>You might recognize</h3>
         <p>{recognize}</p>
       </div>
       <div className="colA">
-        <h4>How we approach it</h4>
+        <h3>How we approach it</h3>
         <p>{approach}</p>
         <Link href={`/concerns/${slug}`}>
           In depth <span className="arrow">→</span>

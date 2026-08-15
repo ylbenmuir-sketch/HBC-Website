@@ -98,7 +98,7 @@ export default function FirstVisitPage() {
               <div className="row" key={s.n}>
                 <div className="n">{s.n}</div>
                 <div>
-                  <h4>{s.h}</h4>
+                  <h3>{s.h}</h3>
                   <p>{s.p}</p>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function FirstVisitPage() {
           </div>
           <div className="care-grid rv">
             <div className="care">
-              <h4>What it costs</h4>
+              <h3>What it costs</h3>
               {/* Names what the $150 actually buys, item by item. The "no
                   packages or countdown offers" line from Phase 1 is gone on
                   purpose: part 5 of the five-part list above already says it,
@@ -129,7 +129,7 @@ export default function FirstVisitPage() {
               </p>
             </div>
             <div className="care">
-              <h4>Insurance</h4>
+              <h3>Insurance</h3>
               <p>
                 As a wellness service, LENS is typically not covered by
                 insurance. Many clients use HSA/FSA funds &mdash; we&rsquo;ll
@@ -137,14 +137,14 @@ export default function FirstVisitPage() {
               </p>
             </div>
             <div className="care">
-              <h4>Bringing a child</h4>
+              <h3>Bringing a child</h3>
               <p>
                 A parent joins everything. Kids can bring a book, a tablet, or
                 a stuffed animal &mdash; comfort beats stillness here.
               </p>
             </div>
             <div className="care">
-              <h4>After you leave</h4>
+              <h3>After you leave</h3>
               <p>
                 Most people simply go back to their day. We&rsquo;ll check how
                 you slept and felt at the next visit &mdash; that&rsquo;s the

@@ -257,7 +257,7 @@ export default async function LocationPage({
                 >
                   <div className="n">{s.n}</div>
                   <div>
-                    <h4 style={{ color: "var(--ivory)" }}>{s.h}</h4>
+                    <h3 style={{ color: "var(--ivory)" }}>{s.h}</h3>
                     <p>{s.p}</p>
                   </div>
                 </div>
@@ -366,7 +366,7 @@ export default async function LocationPage({
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Getting here</h4>
+                  <h3>Getting here</h3>
                   <p>
                     {SHOW_DRAFT_CONTENT
                       ? location.planning.gettingHere
@@ -377,7 +377,7 @@ export default async function LocationPage({
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Communities served</h4>
+                  <h3>Communities served</h3>
                   <p>
                     {location.planning.communities}{" "}
                     {location.planning.communitiesTag && (
@@ -399,7 +399,7 @@ export default async function LocationPage({
               <div className="row">
                 <div className="n">—</div>
                 <div>
-                  <h4>Also nearby</h4>
+                  <h3>Also nearby</h3>
                   <p>{location.planning.alsoNearby}</p>
                 </div>
               </div>

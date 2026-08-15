@@ -57,7 +57,11 @@ h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
 /* quiet keyword emphasis inside subheads: slightly darker, medium weight */
 .sub .kw { color: var(--ink); font-weight: 500; }
 .on-dark .sub .kw { color: var(--ivory); font-weight: 500; }
-.eyebrow { font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; display: flex; align-items: center; gap: 14px; }
+/* font-family and line-height are stated so an <h2 class="eyebrow"> (used
+   where a section label is also the section's heading) renders identically
+   to the <div> form — the base h1,h2,h3 rule above would otherwise hand it
+   the serif face and a 1.1 line-height. No-op for the div usages. */
+.eyebrow { font-family: var(--sans); line-height: 1.65; font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; display: flex; align-items: center; gap: 14px; }
 .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--gold); }
 .eyebrow.center { justify-content: center; } .eyebrow.center::before { display: none; }
 .on-dark { color: var(--ivory); } .on-dark .sub { color: rgba(251, 248, 241, 0.68); }
@@ -215,7 +219,11 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .lens-seq { border-top: 1px solid var(--line); }
 .lens-seq .row { display: flex; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
 .lens-seq .n { font-family: var(--serif); font-size: 22px; color: var(--gold); min-width: 34px; }
-.lens-seq h4 { font-size: 16.5px; font-weight: 600; color: var(--navy); margin-bottom: 3px; }
+/* Row headings are h3 under a section h2, and h4 where the block nests one
+   level deeper (the contact confirmation card). Both are styled here, and
+   font-family/line-height are stated so the h3 doesn't inherit the serif face
+   and tight leading from the base h1,h2,h3 rule. */
+.lens-seq h3, .lens-seq h4 { font-family: var(--sans); font-size: 16.5px; font-weight: 600; line-height: 1.65; color: var(--navy); margin-bottom: 3px; }
 .lens-seq p { font-size: 15px; color: var(--slate); }
 .wave { display: block; margin: 34px 0 8px; max-width: 100%; height: auto; }
 
@@ -231,13 +239,15 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .care-grid .care { padding: 42px 44px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .care-grid .care:nth-child(2n) { border-right: 0; }
 .care-grid .care:nth-last-child(-n + 2) { border-bottom: 0; }
-.care h4 { font-family: var(--serif); font-size: 23px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+/* line-height stated for the same reason as .lens-seq above: as an h4 this
+   inherited the body's 1.65, and the base h1,h2,h3 rule would tighten it. */
+.care h3 { font-family: var(--serif); font-size: 23px; font-weight: 600; line-height: 1.65; color: var(--navy); margin-bottom: 8px; }
 .care p { font-size: 15.5px; color: var(--slate); }
 /* homepage care model — numbered editorial rows, no box */
 .care-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 80px; border-top: 1px solid var(--line); }
 .care-list .care { display: flex; gap: 28px; padding: 40px 0 36px; border-bottom: 1px solid var(--line); }
 .care-list .care-n { font-family: var(--serif); font-size: 32px; line-height: 1; color: var(--gold); min-width: 50px; padding-top: 5px; }
-.care-list h4 { font-size: 22px; }
+.care-list h3 { font-size: 22px; }
 .founder-note { display: grid; grid-template-columns: 200px 1fr; gap: 44px; align-items: center; margin-top: 64px; padding-top: 56px; border-top: 1px solid var(--line); }
 .founder-note .ph { height: 230px; border-radius: 4px; }
 .founder-note blockquote { font-family: var(--serif); font-style: italic; font-size: 24px; line-height: 1.5; color: var(--navy); }
@@ -304,7 +314,9 @@ details.faq .a a { color: var(--sage-deep); }
 .entry:last-child { border: 0; }
 .entry h2 { font-size: 34px; line-height: 1.15; }
 .entry .who { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-top: 12px; }
-.entry h4 { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; margin-bottom: 12px; }
+/* Column labels sit under the entry's h2, so they're h3. font-family and
+   line-height are stated for the same reason as .lens-seq / .care above. */
+.entry h3 { font-family: var(--sans); font-size: 12px; line-height: 1.65; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; margin-bottom: 12px; }
 .entry p { color: var(--slate); font-size: 16px; }
 .entry .colA p { color: var(--ink); }
 .entry a { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--navy); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); padding-bottom: 3px; }
@@ -636,7 +648,7 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .care-list { grid-template-columns: 1fr; gap: 0; }
   .care-list .care, .home .care-list .care { padding: 26px 0 24px; gap: 18px; }
   .care-list .care-n { font-size: 24px; min-width: 38px; padding-top: 3px; }
-  .care h4 { font-size: 21px; }
+  .care h3 { font-size: 21px; }
   .founder-note { display: block; margin-top: 52px; padding-top: 46px; }
   .founder-note .ph { float: left; width: 106px; height: 132px !important; margin: 5px 20px 10px 0; }
   .founder-note blockquote { font-size: 19.5px; }
