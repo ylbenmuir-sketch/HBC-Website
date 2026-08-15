@@ -6,6 +6,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import Quote from "@/components/Quote";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
+import GuideCta from "@/components/GuideCta";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { concerns, getConcern } from "@/lib/concerns";
 
@@ -122,6 +123,7 @@ export default async function ConcernPage({
       </section>
 
       <FinalCTA />
+      <GuideCta />
     </>
   );
 }

@@ -66,6 +66,7 @@ export default function ContactForm() {
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
   const [note, setNote] = useState("");
@@ -99,6 +100,7 @@ export default function ContactForm() {
           concerns: selectedConcerns,
           first_name: firstName.trim(),
           phone: phone.trim(),
+          email: email.trim(),
           preferred_center: preferredCenter,
           best_time: bestTime,
           note: note.trim(),
@@ -228,6 +230,29 @@ export default function ContactForm() {
           />
         </div>
       </div>
+
+      <label htmlFor="email">
+        Email{" "}
+        <span
+          style={{
+            color: "var(--slate)",
+            textTransform: "none",
+            letterSpacing: 0,
+            fontWeight: 400,
+          }}
+        >
+          (optional)
+        </span>
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="sarah@example.com"
+        autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
 
       <div className="two">
         <div>

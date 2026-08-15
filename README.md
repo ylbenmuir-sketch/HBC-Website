@@ -69,10 +69,23 @@ submission requires Supabase credentials.
 3. Copy the project URL and service-role key into `.env.local`.
 
 Submissions land in `public.consultation_requests`
-(`id, created_at, helping_who, concerns text[], first_name, phone,
-preferred_center, best_time, note, source_page`). RLS is enabled with no
+(`id, created_at, type, helping_who, concerns text[], first_name, phone,
+email, preferred_center, best_time, note, source_page`). RLS is enabled with no
 public policies — only the service-role key (server) can read/write.
 **The form collects no payment details, ever.**
+
+One table holds two row shapes, told apart by `type`:
+
+| `type` | Written by | Required |
+| --- | --- | --- |
+| `consultation` | `components/ContactForm.tsx` | `helping_who`, `first_name`, `phone` (`email` optional) |
+| `guide` | `components/GuideCta.tsx` | `email` only |
+
+A check constraint enforces each shape, so the nullable columns can't be
+abused. Both kinds notify `LEADS_NOTIFY_EMAIL`, with a message shaped to what
+was collected (`lib/lead-notification.ts`): a consultation reads as a callback
+request, a guide signup as a download — address, source page, and time only,
+so nobody phones someone who only wanted a PDF.
 
 ## Content verification & draft mode
 
@@ -165,6 +178,12 @@ Also replace when assets exist:
   exactly three places — the homepage hero, `/first-visit`, and
   `/how-lens-works` — always beside `TalkCta`, never instead of it, and it
   points at the same `/contact` destination. Don't add a fourth.
+- One transitional CTA exists: `components/GuideCta.tsx` ("Not ready to
+  call?"), an email capture for visitors who aren't calling today. It sits
+  below the `FinalCTA` band on `/`, `/resources`, and `/concerns/[slug]`,
+  asks for one field, and uses an outline button so it stays visually
+  subordinate to the primary ask. It posts to the same API route — never
+  build it a second system.
 - The Trisha Yearwood video (`https://www.youtube.com/shorts/fhmoa68_uHY`)
   has embedding disabled — it must stay a thumbnail linking out, never an
   iframe.

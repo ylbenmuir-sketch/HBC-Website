@@ -1,16 +1,28 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendLeadNotification } from "@/lib/lead-notification";
+import {
+  sendGuideNotification,
+  sendLeadNotification,
+} from "@/lib/lead-notification";
 
 export const runtime = "nodejs";
 
 const HELPING_OPTIONS = new Set(["My child", "Myself", "Someone else"]);
 
+/**
+ * Two row shapes, one table (see the migration):
+ *   consultation — the contact form; someone is expecting a call.
+ *   guide        — the "Not ready to call?" capture; an email address only.
+ */
+const SUBMISSION_TYPES = new Set(["consultation", "guide"]);
+
 type Payload = {
+  type?: unknown;
   helping_who?: unknown;
   concerns?: unknown;
   first_name?: unknown;
   phone?: unknown;
+  email?: unknown;
   preferred_center?: unknown;
   best_time?: unknown;
   note?: unknown;
@@ -23,6 +35,12 @@ function str(value: unknown, maxLen: number): string | null {
   return trimmed.length > 0 && trimmed.length <= maxLen ? trimmed : null;
 }
 
+/** Deliberately loose — a sanity check, not RFC 5322. The address is proven by
+ *  delivery, not by a regex, and over-strict patterns reject valid addresses. */
+function looksLikeEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export async function POST(request: Request) {
   let body: Payload;
   try {
@@ -31,10 +49,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
+  const type = str(body.type, 20) ?? "consultation";
+  if (!SUBMISSION_TYPES.has(type)) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+  const isGuide = type === "guide";
+
   const firstName = str(body.first_name, 100);
   const phone = str(body.phone, 40);
   const helpingWho = str(body.helping_who, 40);
-  if (!firstName || !phone || !helpingWho || !HELPING_OPTIONS.has(helpingWho)) {
+  const email = str(body.email, 200);
+
+  if (email && !looksLikeEmail(email)) {
+    return NextResponse.json(
+      { error: "That email address doesn't look right." },
+      { status: 400 }
+    );
+  }
+
+  if (isGuide) {
+    // A guide signup is only ever an address — nothing else is collected.
+    if (!email) {
+      return NextResponse.json(
+        { error: "Please add an email address so we know where to send it." },
+        { status: 400 }
+      );
+    }
+  } else if (
+    !firstName ||
+    !phone ||
+    !helpingWho ||
+    !HELPING_OPTIONS.has(helpingWho)
+  ) {
     return NextResponse.json(
       { error: "Please include who we're helping, your first name, and a phone number." },
       { status: 400 }
@@ -70,14 +116,18 @@ export async function POST(request: Request) {
   const note = str(body.note, 2000);
   const sourcePage = str(body.source_page, 200);
 
+  // Guide signups carry nothing but an address; the rest stays null rather
+  // than being filled with empty strings.
   const { error } = await supabase.from("consultation_requests").insert({
-    helping_who: helpingWho,
-    concerns,
-    first_name: firstName,
-    phone,
-    preferred_center: preferredCenter,
-    best_time: bestTime,
-    note,
+    type,
+    helping_who: isGuide ? null : helpingWho,
+    concerns: isGuide ? [] : concerns,
+    first_name: isGuide ? null : firstName,
+    phone: isGuide ? null : phone,
+    email,
+    preferred_center: isGuide ? null : preferredCenter,
+    best_time: isGuide ? null : bestTime,
+    note: isGuide ? null : note,
     source_page: sourcePage,
   });
 
@@ -90,20 +140,35 @@ export async function POST(request: Request) {
   }
 
   // The row is saved — from here the request has succeeded no matter what.
-  // Page a human so the lead is actually seen. sendLeadNotification never
-  // throws; it logs its own failures and returns false, so this is awaited
-  // (rather than fired and forgotten, which a serverless runtime may kill
-  // before the request finishes) without any risk to the response.
-  await sendLeadNotification({
-    firstName,
-    phone,
-    helpingWho,
-    concerns,
-    preferredCenter,
-    bestTime,
-    note,
-    sourcePage,
-  });
+  //
+  // Both kinds of lead page a human, with a message shaped to what was
+  // actually collected: a guide signup is an address, not a callback.
+  //
+  // TODO: attach guide PDF — once the guide exists, email it to the visitor
+  // here, over the same Resend path lib/lead-notification.ts already uses.
+  // The notification below tells the team; it does not send the guide.
+  if (isGuide && email) {
+    await sendGuideNotification({
+      email,
+      sourcePage,
+      submittedAt: new Date(),
+    });
+  } else if (!isGuide && firstName && phone && helpingWho) {
+    // sendLeadNotification never throws; it logs its own failures and returns
+    // false, so this is awaited (rather than fired and forgotten, which a
+    // serverless runtime may kill before the request finishes) without any
+    // risk to the response.
+    await sendLeadNotification({
+      firstName,
+      phone,
+      helpingWho,
+      concerns,
+      preferredCenter,
+      bestTime,
+      note,
+      sourcePage,
+    });
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
+import GuideCta from "@/components/GuideCta";
 import { resources, isPublishable } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
@@ -69,6 +70,7 @@ export default function ResourcesPage() {
       </section>
 
       <FinalCTA />
+      <GuideCta />
     </>
   );
 }

@@ -10,6 +10,7 @@ import Quote from "@/components/Quote";
 import LocationCard from "@/components/LocationCard";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
+import GuideCta from "@/components/GuideCta";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
@@ -705,6 +706,7 @@ export default function HomePage() {
       </section>
 
       <FinalCTA />
+      <GuideCta />
       <MobileCtaBar />
     </div>
   );

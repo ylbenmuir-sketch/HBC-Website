@@ -40,17 +40,32 @@ function line(label: string, value: string | null): string {
   return `${label}: ${value && value.length > 0 ? value : "—"}`;
 }
 
+/** Centre-local time, since whoever reads this works in Middle Tennessee.
+ *  Falls back to ISO if the runtime lacks full ICU data. */
+function stamp(date: Date): string {
+  try {
+    // Explicit components, not dateStyle/timeStyle — those cannot be combined
+    // with timeZoneName, and the combination throws.
+    return date.toLocaleString("en-US", {
+      timeZone: "America/Chicago",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    });
+  } catch {
+    return date.toISOString();
+  }
+}
+
 /**
- * Emails a new consultation request to LEADS_NOTIFY_EMAIL.
- *
- * Never throws and never rejects. The Supabase row is already committed by the
- * time this runs, so every failure path here is logged and swallowed — the
- * visitor's submission has succeeded regardless. Returns true only when the
- * provider accepted the message.
+ * Shared delivery. Never throws and never rejects: the Supabase row is already
+ * committed by the time any caller runs, so every failure path is logged and
+ * swallowed. Returns true only when the provider accepted the message.
  */
-export async function sendLeadNotification(
-  lead: LeadNotification
-): Promise<boolean> {
+async function deliver(subject: string, text: string): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.LEADS_NOTIFY_EMAIL;
   const from = process.env.LEADS_NOTIFY_FROM || DEFAULT_FROM;
@@ -64,26 +79,7 @@ export async function sendLeadNotification(
   }
 
   // Collapse whitespace: a newline in a subject is a header-injection vector.
-  const subject = `New consultation request — ${lead.firstName} (${lead.helpingWho})`
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // Plain text, not HTML — nothing here needs escaping, and it reads fine on a
-  // phone, which is where this will actually be opened.
-  const text = [
-    "A new consultation request just came in.",
-    "",
-    line("Name", lead.firstName),
-    line("Phone", lead.phone),
-    line("Helping who", lead.helpingWho),
-    line("Concerns", lead.concerns.join(", ")),
-    line("Preferred center", lead.preferredCenter),
-    line("Best time to call", lead.bestTime),
-    line("Submitted from", lead.sourcePage),
-    "",
-    "Note:",
-    lead.note && lead.note.length > 0 ? lead.note : "—",
-  ].join("\n");
+  const safeSubject = subject.replace(/\s+/g, " ").trim();
 
   try {
     const response = await fetch(RESEND_ENDPOINT, {
@@ -92,7 +88,7 @@ export async function sendLeadNotification(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, text }),
+      body: JSON.stringify({ from, to, subject: safeSubject, text }),
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });
 
@@ -113,4 +109,66 @@ export async function sendLeadNotification(
     );
     return false;
   }
+}
+
+/** A guide signup — an address and nothing else. */
+export type GuideNotification = {
+  email: string;
+  sourcePage: string | null;
+  submittedAt: Date;
+};
+
+/**
+ * Emails a guide signup to LEADS_NOTIFY_EMAIL.
+ *
+ * Deliberately not shaped like a callback: there is no name, phone, or best
+ * time to call, and presenting it as one would invite a call nobody asked for.
+ * The subject says plainly which kind of lead this is.
+ */
+export async function sendGuideNotification(
+  signup: GuideNotification
+): Promise<boolean> {
+  const text = [
+    "Someone asked for the guide. This is a download request, not a callback —",
+    "no name or phone was collected, and nobody is expecting to hear from us.",
+    "",
+    line("Email", signup.email),
+    line("Submitted from", signup.sourcePage),
+    line("Received", stamp(signup.submittedAt)),
+  ].join("\n");
+
+  return deliver(
+    "New guide signup — The Parent's Guide to Homework Battles",
+    text
+  );
+}
+
+/**
+ * Emails a new consultation request to LEADS_NOTIFY_EMAIL. Someone is waiting
+ * for a phone call at the other end of this one.
+ */
+export async function sendLeadNotification(
+  lead: LeadNotification
+): Promise<boolean> {
+  // Plain text, not HTML — nothing here needs escaping, and it reads fine on a
+  // phone, which is where this will actually be opened.
+  const text = [
+    "A new consultation request just came in.",
+    "",
+    line("Name", lead.firstName),
+    line("Phone", lead.phone),
+    line("Helping who", lead.helpingWho),
+    line("Concerns", lead.concerns.join(", ")),
+    line("Preferred center", lead.preferredCenter),
+    line("Best time to call", lead.bestTime),
+    line("Submitted from", lead.sourcePage),
+    "",
+    "Note:",
+    lead.note && lead.note.length > 0 ? lead.note : "—",
+  ].join("\n");
+
+  return deliver(
+    `New consultation request — ${lead.firstName} (${lead.helpingWho})`,
+    text
+  );
 }
