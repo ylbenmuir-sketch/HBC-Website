@@ -6,7 +6,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 
 export const metadata: Metadata = {
-  title: "Children & Families",
+  title: "Neurofeedback for Children & Teens",
   description:
     "Gentle LENS neurofeedback for children and families — homework battles, meltdowns, hard transitions, and sensory overwhelm. Nothing a child has to get right, and a parent joins every check-in.",
 };

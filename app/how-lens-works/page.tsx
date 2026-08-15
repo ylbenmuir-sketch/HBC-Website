@@ -7,7 +7,7 @@ import { BrainMapCta, TalkCta } from "@/components/Buttons";
 import { STAT_SESSIONS, verifiedOr } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "How LENS Works",
+  title: "How LENS Neurofeedback Works",
   description:
     "LENS stands for Low Energy Neurofeedback System. The whole idea without the jargon — and exactly what a session feels like from the chair.",
 };

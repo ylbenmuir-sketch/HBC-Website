@@ -32,8 +32,18 @@ export type Concern = {
   faqs: ConcernFaq[];
   image: { src: string; position: string } | null;
   plateSpec?: string;
-  /** Optional <title> override (mockup title casing). */
-  metaTitle?: string;
+  /**
+   * <title> for the page, always "Neurofeedback for X". Required, not
+   * optional: the display `title` above is the on-page headline and reads as
+   * a symptom ("Sleep difficulties"), which targets nothing — "neurofeedback"
+   * is the qualifying word people actually search with. Required so a new
+   * concern can't ship without one.
+   *
+   * Keep the "support" framing in metaDescription rather than here; a title
+   * has no room to hedge, and the description is where the wellness
+   * disclaimer stays consistent.
+   */
+  metaTitle: string;
   metaDescription: string;
 };
 
@@ -87,7 +97,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
-    metaTitle: "Anxiety & Nervous-System Overload",
+    metaTitle: "Neurofeedback for Anxiety & Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
   },
@@ -140,6 +150,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
+    metaTitle: "Neurofeedback for ADHD & Focus",
     metaDescription:
       "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
   },
@@ -192,6 +203,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/recline.jpg", position: "center 55%" },
+    metaTitle: "Neurofeedback for Sleep",
     metaDescription:
       "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
   },
@@ -244,6 +256,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/child-sensor.jpg", position: "center 42%" },
+    metaTitle: "Neurofeedback for Emotional Regulation",
     metaDescription:
       "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
   },
@@ -296,6 +309,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
+    metaTitle: "Neurofeedback for Brain Fog & Memory",
     metaDescription:
       "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
   },
@@ -348,6 +362,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/sensors-adult.jpg", position: "62% 30%" },
+    metaTitle: "Neurofeedback for Stress & Burnout",
     metaDescription:
       "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
   },
@@ -400,6 +415,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/art-wall.jpg", position: "center 45%" },
+    metaTitle: "Neurofeedback for School Struggles",
     metaDescription:
       "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
   },
@@ -452,6 +468,7 @@ export const concerns: Concern[] = [
       },
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
+    metaTitle: "Neurofeedback for Trauma-Related Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
   },

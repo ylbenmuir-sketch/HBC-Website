@@ -22,7 +22,7 @@ export async function generateMetadata({
   const concern = getConcern((await params).slug);
   if (!concern) return {};
   return {
-    title: concern.metaTitle ?? concern.title,
+    title: concern.metaTitle,
     description: concern.metaDescription,
   };
 }

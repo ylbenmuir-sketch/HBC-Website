@@ -6,7 +6,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 
 export const metadata: Metadata = {
-  title: "For Adults",
+  title: "Neurofeedback for Adults",
   description:
     "Gentle LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, emotional regulation, and resilience. Short sessions, nothing to practice, no homework.",
 };
