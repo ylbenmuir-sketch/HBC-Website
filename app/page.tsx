@@ -47,7 +47,6 @@ export const metadata: Metadata = {
 const homeConcerns = [
   {
     title: "Anxiety & nervous-system overload",
-    audience: "Adults & children",
     points: [
       "Thoughts that won't quiet down",
       "Feeling constantly on edge",
@@ -57,7 +56,6 @@ const homeConcerns = [
   },
   {
     title: "Focus, ADHD & follow-through",
-    audience: "Adults & children",
     points: [
       "Struggling to stay on task",
       "Overwhelmed by multi-step responsibilities",
@@ -67,7 +65,6 @@ const homeConcerns = [
   },
   {
     title: "Sleep difficulties",
-    audience: "Adults & children",
     points: [
       "A mind that won't shut off at night",
       "Waking frequently",
@@ -77,7 +74,6 @@ const homeConcerns = [
   },
   {
     title: "Emotional regulation",
-    audience: "Often children — and their parents",
     points: [
       "Becoming overwhelmed quickly",
       "Struggling with transitions",
@@ -87,7 +83,6 @@ const homeConcerns = [
   },
   {
     title: "Brain fog, memory & mental fatigue",
-    audience: "Most often adults",
     points: [
       "Thinking that feels slow or cloudy",
       "Losing words mid-sentence",
@@ -97,7 +92,6 @@ const homeConcerns = [
   },
   {
     title: "Stress & resilience",
-    audience: "Most often adults",
     points: [
       "Functioning, but close to burnout",
       "Unable to recover after hard days",
@@ -155,22 +149,12 @@ export default function HomePage() {
               <br className="m-only" /> Your brain{" "}
               <em className="sage">hasn&rsquo;t.</em>
             </h1>
+            {/* Location and session count are one screen down in the proof
+                band; repeating them here only lengthened the sub. */}
             <p className="sub">
               Gentle, drug-free neurofeedback for <b className="kw">anxiety</b>,{" "}
               <b className="kw">focus</b>, <b className="kw">sleep</b>, and{" "}
-              <b className="kw">overwhelm</b> &mdash; for adults and kids across
-              Middle Tennessee.
-              {/* Both numbers are unverified facts, so the whole sentence is
-                  gated rather than asserted; it returns once they are signed
-                  off in site-config. */}
-              {sessionCount && establishedYear && (
-                <>
-                  {" "}
-                  {sessionCount} sessions since {establishedYear}.
-                  <ConfirmTag>{STAT_SESSIONS.note!}</ConfirmTag>
-                  <ConfirmTag>{ESTABLISHED_YEAR.note!}</ConfirmTag>
-                </>
-              )}
+              <b className="kw">overwhelm</b> &mdash; adults and kids.
             </p>
             <div className="hero-ctas">
               <TalkCta />
@@ -373,6 +357,71 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Proof follows the problem: the concern cards name what's wrong, so
+          the quotes from people who had the same thing land here rather than
+          five sections later. */}
+      {showStories && (
+        <section className="sec sec-ivory2 home-stories">
+          <div className="wrap">
+            <div className="sec-head split rv">
+              <div>
+                <div className="eyebrow">Client stories</div>
+                <h2>
+                  The changes people mention first are small &mdash; and
+                  unmistakable.
+                </h2>
+              </div>
+              <Btn href="/stories" variant="ghost" arrow>
+                More client stories
+              </Btn>
+            </div>
+            <div className="quote-grid rv">
+              {homeQuotes.slice(0, 2).map((t) => (
+                <Quote
+                  key={t.text}
+                  theme={t.theme}
+                  text={t.text}
+                  attribution={
+                    t.firstName
+                      ? `${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`
+                      : t.relationship
+                  }
+                  place={t.city}
+                  sample={!t.verified}
+                />
+              ))}
+            </div>
+            {showReviewBand && (
+              <div className="review-band rv">
+                <div>
+                  <strong>{REVIEWS.value.rating} ★</strong>
+                  <span>Google rating across locations</span>
+                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                    {REVIEWS.note!}
+                  </ConfirmTag>
+                </div>
+                <div>
+                  <strong>{REVIEWS.value.count}</strong>
+                  <span>From Nashville &amp; Murfreesboro clients</span>
+                </div>
+                <div>
+                  <strong>Video stories</strong>
+                  <span>Client interviews, in their own words</span>
+                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
+                    Film 2–3 short testimonials
+                  </ConfirmTag>
+                </div>
+              </div>
+            )}
+            <p className="sample-note">
+              {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0
+                ? SAMPLE_QUOTES_NOTE
+                : EXPERIENCES_DISCLAIMER}
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Cost of inaction — the one place the site names it. One paragraph by
           design: specific pain with dignity, not stacked pain. */}
       <section className="sec home-stakes">
@@ -402,12 +451,6 @@ export default function HomePage() {
               The goals our clients name most often are small, concrete, and
               worth everything.
             </h2>
-            <div className="note-sage">
-              These are goals, not guarantees &mdash; every nervous system
-              responds differently. Changes are reviewed at every visit, so
-              progress is tracked consistently instead of relying on memory
-              alone.
-            </div>
           </div>
           <div className="rv">
             <ul className="goals-list">
@@ -415,6 +458,14 @@ export default function HomePage() {
                 <li key={g}>{g}</li>
               ))}
             </ul>
+            {/* The caveat reads as a footnote to the list it qualifies, rather
+                than a sage panel competing with the heading for attention. */}
+            <p className="micro">
+              These are goals, not guarantees &mdash; every nervous system
+              responds differently. Changes are reviewed at every visit, so
+              progress is tracked consistently instead of relying on memory
+              alone.
+            </p>
             <Btn
               href="/what-we-help-with"
               variant="ghost"
@@ -422,55 +473,6 @@ export default function HomePage() {
               style={{ marginTop: 26 }}
             >
               See what clients work toward, by concern
-            </Btn>
-          </div>
-        </div>
-      </section>
-
-      <section className="sec home-lens">
-        {/* Single column since the four-row sequence moved out; /how-lens-works
-            carries it. Constrained so the measure stays readable. */}
-        <div className="wrap" style={{ maxWidth: 940 }}>
-          <div className="rv">
-            <div className="eyebrow">How LENS works</div>
-            <h2 style={{ margin: "22px 0 18px" }}>Feedback, not force.</h2>
-            <p style={{ marginBottom: 16 }}>
-              LENS &mdash; the Low Energy Neurofeedback System &mdash; uses
-              small sensors to observe the brain&rsquo;s electrical activity,
-              then returns a very low-energy feedback signal, far weaker than
-              the everyday signals already around you. You simply sit
-              comfortably &mdash; there&rsquo;s nothing to watch, practice, or
-              perform.
-            </p>
-            <p className="sub" style={{ fontSize: 16 }}>
-              LENS is a wellness service, not a medical treatment. Nothing is
-              promised: your experience is reviewed over time, and your plan
-              follows it.
-            </p>
-            <svg
-              className="wave"
-              width="360"
-              height="44"
-              viewBox="0 0 360 44"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M0 24 C10 4, 20 42, 32 21 S 52 2, 66 28 S 92 40, 112 20 S 148 12, 182 24 S 250 28, 300 23 S 340 22.5, 360 23"
-                stroke="#5E7360"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-              <path
-                d="M0 24 C10 4, 20 42, 32 21 S 52 2, 66 28"
-                stroke="#A9853F"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                opacity=".8"
-              />
-            </svg>
-            <Btn href="/how-lens-works" variant="ghost" arrow>
-              The full explanation
             </Btn>
           </div>
         </div>
@@ -629,68 +631,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {showStories && (
-        <section className="sec sec-ivory2 home-stories">
-          <div className="wrap">
-            <div className="sec-head split rv">
-              <div>
-                <div className="eyebrow">Client stories</div>
-                <h2>
-                  The changes people mention first are small &mdash; and
-                  unmistakable.
-                </h2>
-              </div>
-              <Btn href="/stories" variant="ghost" arrow>
-                More client stories
-              </Btn>
-            </div>
-            <div className="quote-grid rv">
-              {homeQuotes.slice(0, 2).map((t) => (
-                <Quote
-                  key={t.text}
-                  theme={t.theme}
-                  text={t.text}
-                  attribution={
-                    t.firstName
-                      ? `${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`
-                      : t.relationship
-                  }
-                  place={t.city}
-                  sample={!t.verified}
-                />
-              ))}
-            </div>
-            {showReviewBand && (
-              <div className="review-band rv">
-                <div>
-                  <strong>{REVIEWS.value.rating} ★</strong>
-                  <span>Google rating across locations</span>
-                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                    {REVIEWS.note!}
-                  </ConfirmTag>
-                </div>
-                <div>
-                  <strong>{REVIEWS.value.count}</strong>
-                  <span>From Nashville &amp; Murfreesboro clients</span>
-                </div>
-                <div>
-                  <strong>Video stories</strong>
-                  <span>Client interviews, in their own words</span>
-                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                    Film 2–3 short testimonials
-                  </ConfirmTag>
-                </div>
-              </div>
-            )}
-            <p className="sample-note">
-              {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0
-                ? SAMPLE_QUOTES_NOTE
-                : EXPERIENCES_DISCLAIMER}
-            </p>
-          </div>
-        </section>
-      )}
 
       <section className="sec home-locations">
         <div className="wrap">

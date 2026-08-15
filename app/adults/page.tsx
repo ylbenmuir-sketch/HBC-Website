@@ -14,37 +14,31 @@ export const metadata: Metadata = {
 const adultConcerns = [
   {
     title: "Anxiety & stress",
-    audience: "Most common",
     points: ["On edge with no off-switch", "Racing thoughts at night"],
     href: "/concerns/anxiety",
   },
   {
     title: "Focus & ADHD",
-    audience: "Adults too — not just kids",
     points: ["Stalling at 90% done", "Overwhelmed by multi-step work"],
     href: "/concerns/focus-adhd",
   },
   {
     title: "Sleep",
-    audience: "Often the first change",
     points: ["Can't fall or stay asleep", "Rested is a memory"],
     href: "/concerns/sleep",
   },
   {
     title: "Brain fog & memory",
-    audience: "Cloudy, slow, word-hunting",
     points: ["Rereading the same paragraph", "Cognitively spent by 2 p.m."],
     href: "/concerns/brain-fog",
   },
   {
     title: "Emotional regulation",
-    audience: "Short fuse, long recovery",
     points: ["Snapping at people you love", "Staying upset past the moment"],
     href: "/concerns/emotional-regulation",
   },
   {
     title: "Performance & resilience",
-    audience: "Functioning near burnout",
     points: ["Rest that doesn't restore", "Wanting more margin, not more hacks"],
     href: "/concerns/stress-resilience",
   },

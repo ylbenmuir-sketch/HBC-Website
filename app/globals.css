@@ -183,17 +183,16 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 
 /* concern cards */
 .concern-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; }
-.ccard { padding: 44px 40px 38px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; background: #fff; transition: background 0.2s; }
+/* The card is itself the link (see components/ConcernCard.tsx), so it resets
+   anchor text styling; children already set their own colors. */
+.ccard { padding: 44px 40px 38px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; background: #fff; transition: background 0.2s; text-decoration: none; color: inherit; }
 .ccard:hover { background: var(--sage-soft); }
 .ccard:nth-child(3n) { border-right: 0; }
 .ccard:nth-last-child(-n + 3) { border-bottom: 0; }
-.ccard h3 { margin-bottom: 6px; }
-.ccard .aud { font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 18px; }
-.ccard ul { list-style: none; margin-bottom: 24px; }
+.ccard h3 { margin-bottom: 18px; }
+.ccard ul { list-style: none; }
 .ccard li { padding: 7px 0 7px 24px; position: relative; font-size: 15px; color: var(--slate); line-height: 1.5; }
 .ccard li::before { content: ""; position: absolute; left: 0; top: 17px; width: 12px; height: 1.5px; background: var(--gold); }
-.ccard a { margin-top: auto; color: var(--navy); font-weight: 600; font-size: 14.5px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); align-self: flex-start; padding-bottom: 2px; }
-.ccard a:hover { border-color: var(--gold); }
 /* families feature row */
 .family-row { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 4px 4px; overflow: hidden; background: var(--navy); }
 .family-row .fr-copy { padding: 56px 60px; color: var(--ivory); }
