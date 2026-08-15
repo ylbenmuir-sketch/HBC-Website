@@ -4,6 +4,7 @@ import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { BrainMapCta, TalkCta } from "@/components/Buttons";
 import {
+  BRAIN_MAP_NAME,
   BRAIN_MAP_PRICE,
   FIRST_VISIT_DURATION,
   FIRST_VISIT_DURATION_TAG,
@@ -115,13 +116,16 @@ export default function FirstVisitPage() {
           <div className="care-grid rv">
             <div className="care">
               <h4>What it costs</h4>
+              {/* Names what the $150 actually buys, item by item. The "no
+                  packages or countdown offers" line from Phase 1 is gone on
+                  purpose: part 5 of the five-part list above already says it,
+                  and Phase 6 is the rule about saying a thing once. */}
               <p>
-                The phone call is free. The Brain Map &mdash; your first visit
-                &mdash; is {BRAIN_MAP_PRICE} and includes the full
-                conversation, a baseline recording of brain activity, and a
-                written plan you keep. Session pricing is shared before you
-                commit to anything, and there are no packages or countdown
-                offers.
+                The phone call is free. {BRAIN_MAP_NAME} &mdash; your first
+                visit &mdash; is {BRAIN_MAP_PRICE} and includes the full
+                conversation, a 21-point recording, your map explained point by
+                point, and a written plan you keep. Session pricing is shared
+                before you commit to anything.
               </p>
             </div>
             <div className="care">
