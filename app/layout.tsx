@@ -3,6 +3,8 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
+import JsonLd from "@/components/JsonLd";
+import { organizationSchema } from "@/lib/schema";
 import { SITE_NAME, SITE_URL } from "@/lib/site-config";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
@@ -63,6 +65,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
       <body>
+        {/* The one Organization node, sitewide. Location pages reference it by
+            @id rather than restating it — see lib/schema.ts. */}
+        <JsonLd data={organizationSchema()} />
         <RevealOnScroll />
         <Header />
         <main>{children}</main>
