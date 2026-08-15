@@ -50,7 +50,19 @@ export const metadata: Metadata = {
     locale: "en_US",
     // Same relative trick as the canonical above, for the same reason.
     url: "./",
-    images: [{ url: "/images/hero.jpg", width: 1600, height: 1067 }],
+    // A purpose-built 1200x630 — the size every platform crops to. The old
+    // value pointed at /images/hero.jpg and declared it 1600x1067 when the
+    // file is actually 1500x843, so previews cropped against the wrong
+    // aspect ratio. Per-location and per-article images come later
+    // (SEO-AUDIT.md §6.3 item 33).
+    images: [
+      {
+        url: "/images/og-default.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Harmonized Brain Centers — gentle LENS neurofeedback for adults, children, and families in Nashville and Murfreesboro",
+      },
+    ],
   },
 };
 
