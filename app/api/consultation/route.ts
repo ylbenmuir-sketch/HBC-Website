@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendLeadNotification } from "@/lib/lead-notification";
 
 export const runtime = "nodejs";
 
@@ -64,15 +65,20 @@ export async function POST(request: Request) {
     auth: { persistSession: false },
   });
 
+  const preferredCenter = str(body.preferred_center, 60);
+  const bestTime = str(body.best_time, 40);
+  const note = str(body.note, 2000);
+  const sourcePage = str(body.source_page, 200);
+
   const { error } = await supabase.from("consultation_requests").insert({
     helping_who: helpingWho,
     concerns,
     first_name: firstName,
     phone,
-    preferred_center: str(body.preferred_center, 60),
-    best_time: str(body.best_time, 40),
-    note: str(body.note, 2000),
-    source_page: str(body.source_page, 200),
+    preferred_center: preferredCenter,
+    best_time: bestTime,
+    note,
+    source_page: sourcePage,
   });
 
   if (error) {
@@ -82,6 +88,22 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // The row is saved — from here the request has succeeded no matter what.
+  // Page a human so the lead is actually seen. sendLeadNotification never
+  // throws; it logs its own failures and returns false, so this is awaited
+  // (rather than fired and forgotten, which a serverless runtime may kill
+  // before the request finishes) without any risk to the response.
+  await sendLeadNotification({
+    firstName,
+    phone,
+    helpingWho,
+    concerns,
+    preferredCenter,
+    bestTime,
+    note,
+    sourcePage,
+  });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
