@@ -5,6 +5,18 @@ import { locations } from "@/lib/locations";
 import { resources, isPublishable } from "@/lib/resources";
 import { team } from "@/lib/team";
 
+/**
+ * Content revision date, emitted as <lastmod> on every entry.
+ *
+ * Deliberately a hand-maintained constant, not `new Date()`: stamping build
+ * time would tell Google every page changed on every deploy, and an
+ * inaccurate lastmod is worse than none — it's the one field here Google
+ * actually uses (changeFrequency and priority are ignored).
+ *
+ * **Bump this when site content changes**, not when code does.
+ */
+const CONTENT_REVISION = new Date("2026-08-15");
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPaths = [
     "",
@@ -39,6 +51,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [...staticPaths, ...dynamicPaths].map((path) => ({
     url: `${SITE_URL}${path}`,
+    lastModified: CONTENT_REVISION,
     changeFrequency: "monthly" as const,
     priority: path === "" ? 1 : path === "/contact" ? 0.9 : 0.7,
   }));

@@ -9,8 +9,10 @@ import { STAT_SESSIONS, TRAINING_CLAIM_TAG } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "About",
+  // 154 chars. The old one ran to 200 and truncated mid-clause; the brand
+  // name led it redundantly, since the title template already carries it.
   description:
-    "Harmonized Brain Centers is a team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers, and 140,000+ sessions of experience.",
+    "A team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers, 140,000+ sessions.",
 };
 
 export default function AboutPage() {

@@ -7,8 +7,10 @@ import { Btn, TalkCta } from "@/components/Buttons";
 
 export const metadata: Metadata = {
   title: "Neurofeedback for Children & Teens",
+  // 150 chars, down from 192. "children and teens" also matches the retitled
+  // page (item 6) and keeps it distinct from /concerns/children-school.
   description:
-    "Gentle LENS neurofeedback for children and families — homework battles, meltdowns, hard transitions, and sensory overwhelm. Nothing a child has to get right, and a parent joins every check-in.",
+    "Gentle LENS neurofeedback for children and teens — homework battles, meltdowns, hard transitions, sensory overwhelm. Nothing a child has to get right.",
 };
 
 export default function ChildrenFamiliesPage() {
