@@ -182,7 +182,10 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .proof-grid .todo { color: var(--gold); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; display: block; margin-top: 6px; }
 
 /* concern cards */
-.concern-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; }
+/* grid-auto-rows: 1fr — cards already stretch within a row, but each implicit
+   row sized to its own content, so row 2 sat shorter than row 1 whenever the
+   titles wrapped differently. Equal rows keep the bordered grid rectangular. */
+.concern-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #fff; }
 /* The card is itself the link (see components/ConcernCard.tsx), so it resets
    anchor text styling; children already set their own colors. */
 .ccard { padding: 44px 40px 38px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; background: #fff; transition: background 0.2s; text-decoration: none; color: inherit; }
@@ -433,6 +436,9 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .proof-grid strong { font-size: 29px; }
   .review-band > div { padding: 26px 24px; }
   .concern-grid, .loc-grid, .team-grid, .res-grid, .care-grid { grid-template-columns: 1fr; }
+  /* Stacked in one column (/adults — the homepage is a flex rail here), so
+     rows go back to sizing on content instead of matching the tallest card. */
+  .concern-grid { grid-auto-rows: auto; }
   .ccard { border-right: 0 !important; }
   .journey { grid-template-columns: 1fr; }
   .goals-list { column-count: 1; }

@@ -371,8 +371,8 @@ export default function HomePage() {
                 More client stories
               </Btn>
             </div>
-            <div className="quote-grid rv">
-              {homeQuotes.slice(0, 2).map((t) => (
+            <div className="trio-quotes rv">
+              {homeQuotes.map((t) => (
                 <Quote
                   key={t.text}
                   theme={t.theme}

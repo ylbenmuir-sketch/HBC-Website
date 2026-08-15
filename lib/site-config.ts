@@ -157,8 +157,10 @@ export type Testimonial = {
  * is recorded because none was given with the permission — an invented one
  * would be a fabricated detail on an endorsement.
  *
- * The homepage shows the first two (its grid is two columns); /stories shows
- * all three (its grid is three). Nothing is padded to fill either.
+ * The homepage and /stories both show all three, in the same three-column
+ * `trio-quotes` grid. Nothing is padded to fill it: the grid follows the
+ * verified quotes, so a fourth would appear on both pages and an unverified
+ * one appears on neither in production.
  */
 export const TESTIMONIALS: Testimonial[] = [
   {
