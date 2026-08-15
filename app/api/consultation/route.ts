@@ -16,8 +16,17 @@ const HELPING_OPTIONS = new Set(["My child", "Myself", "Someone else"]);
  */
 const SUBMISSION_TYPES = new Set(["consultation", "guide"]);
 
+/**
+ * Which channel the request arrived through (phase-8-chatbot.md §5). The site
+ * assistant reuses this route rather than getting one of its own, so `source`
+ * is the whole of what distinguishes the two. Absent means the form, which is
+ * what every caller before the assistant existed was.
+ */
+const SUBMISSION_SOURCES = new Set(["form", "chat"]);
+
 type Payload = {
   type?: unknown;
+  source?: unknown;
   helping_who?: unknown;
   concerns?: unknown;
   first_name?: unknown;
@@ -54,6 +63,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
   const isGuide = type === "guide";
+
+  const source = str(body.source, 20) ?? "form";
+  if (!SUBMISSION_SOURCES.has(source)) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
 
   const firstName = str(body.first_name, 100);
   const phone = str(body.phone, 40);
@@ -120,6 +134,7 @@ export async function POST(request: Request) {
   // than being filled with empty strings.
   const { error } = await supabase.from("consultation_requests").insert({
     type,
+    source,
     helping_who: isGuide ? null : helpingWho,
     concerns: isGuide ? [] : concerns,
     first_name: isGuide ? null : firstName,
@@ -167,6 +182,7 @@ export async function POST(request: Request) {
       bestTime,
       note,
       sourcePage,
+      source,
     });
   }
 

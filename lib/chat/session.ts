@@ -47,6 +47,8 @@ export type BookingStep =
   | "bestTime"
   | "preferredCenter"
   | "confirm"
+  /** Re-asking the number after a failed read-back — never re-asks the note. */
+  | "confirmPhone"
   | "submitted"
   | "declined";
 
@@ -76,6 +78,13 @@ export type ChatSession = {
   /** §5 — booking progress. */
   step: BookingStep;
   draft: BookingDraft;
+  /**
+   * §5 — whether the previous reply ended with the offer of a call. A bare
+   * "yes" starts the booking flow only when something was actually offered,
+   * so an agreeable "yes, that makes sense" mid-answer doesn't start
+   * collecting a phone number.
+   */
+  bookingOffered: boolean;
 };
 
 export interface SessionStore {
@@ -101,6 +110,7 @@ function freshSession(id: string, now: number): ChatSession {
     injectionAttempts: 0,
     step: "idle",
     draft: {},
+    bookingOffered: false,
   };
 }
 

@@ -24,6 +24,8 @@ export type LeadNotification = {
   bestTime: string | null;
   note: string | null;
   sourcePage: string | null;
+  /** "form" or "chat" — the channel, not the page. See §5 of phase-8-chatbot.md. */
+  source?: string;
 };
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -152,8 +154,16 @@ export async function sendLeadNotification(
 ): Promise<boolean> {
   // Plain text, not HTML — nothing here needs escaping, and it reads fine on a
   // phone, which is where this will actually be opened.
+  // The assistant's leads go down this same path — §5 forbids a second
+  // notification route — so the channel is a line in the message rather than a
+  // different message. Whoever picks up the phone should know the person typed
+  // this to a chat widget and not into the form.
+  const viaChat = lead.source === "chat";
+
   const text = [
-    "A new consultation request just came in.",
+    viaChat
+      ? "A new consultation request just came in — collected by the site assistant."
+      : "A new consultation request just came in.",
     "",
     line("Name", lead.firstName),
     line("Phone", lead.phone),
@@ -161,6 +171,7 @@ export async function sendLeadNotification(
     line("Concerns", lead.concerns.join(", ")),
     line("Preferred center", lead.preferredCenter),
     line("Best time to call", lead.bestTime),
+    line("Channel", viaChat ? "Site assistant (chat)" : "Contact form"),
     line("Submitted from", lead.sourcePage),
     "",
     "Note:",

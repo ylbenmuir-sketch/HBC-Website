@@ -40,7 +40,11 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
       we know" wording ships only once verified. Do **not** replace it with
       "the first in the country" without a documented basis.
-- [ ] Hours for Nashville & Murfreesboro (`lib/locations.ts`)
+- [ ] Hours for Nashville & Murfreesboro (`lib/locations.ts` `hoursLines` for
+      the printed lines, `BUSINESS_HOURS` for the machine-readable week).
+      Confirm both together — they must agree. Until `BUSINESS_HOURS.verified`
+      is true the site assistant makes **no** callback-timing claim, and
+      `openingHoursSpecification` stays out of the LocalBusiness JSON-LD.
 
 ## Statistics
 

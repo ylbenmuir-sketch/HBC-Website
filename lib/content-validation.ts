@@ -1,5 +1,6 @@
 import {
   BRAIN_MAP_CLAIM,
+  BUSINESS_HOURS,
   ESTABLISHED_YEAR,
   FOUNDER_LAST_NAME,
   FOUNDER_QUOTE,
@@ -41,6 +42,9 @@ check("Response-time claim", RESPONSE_TIME.verified);
 check("Same-day callback promise", SAME_DAY_CALLBACK.verified);
 check("Start-timing claim", START_TIMING.verified);
 check("Franklin opening date", FRANKLIN_OPENING.verified);
+// Blocks the assistant's callback-timing language (§5.1) and the location
+// pages' openingHoursSpecification together — see lib/schema.ts.
+check("Business hours", BUSINESS_HOURS.verified);
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
 check(
   "At least one verified testimonial",

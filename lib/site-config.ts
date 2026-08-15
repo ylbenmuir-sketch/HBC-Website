@@ -243,6 +243,50 @@ export const SAME_DAY_CALLBACK: Verifiable = {
 };
 
 /**
+ * Business hours, per phase-8-chatbot.md §5.1.
+ *
+ * Gated like every other unverified fact, and for a sharper reason than most:
+ * the site assistant uses this — and only this — to decide what it may say
+ * about when someone will be called back. While `verified` is false it makes
+ * no timing claim at all. See `callbackExpectation()` in lib/chat/booking.ts,
+ * which is the only reader.
+ *
+ * Deliberately NOT derived from SAME_DAY_CALLBACK. That value is the
+ * homepage's marketing promise and is being re-examined; §5.1 says "never
+ * promise a callback time the practice hasn't committed to", and one claim
+ * with two gates is a claim that will eventually disagree with itself.
+ *
+ * The draft value mirrors the hours printed on the location pages
+ * (lib/locations.ts `hoursLines`), which are themselves an open item in
+ * CONTENT-CHECKLIST.md — confirm both together. Saturday is null rather than
+ * "by appointment": an appointment slot is not a callback window, and the
+ * assistant must not treat it as one.
+ *
+ * `opens`/`closes` are 24-hour "HH:MM" in `timeZone`, indexed 0 = Sunday.
+ */
+export type BusinessHours = {
+  timeZone: string;
+  week: Array<{ opens: string; closes: string } | null>;
+};
+
+export const BUSINESS_HOURS: Verifiable<BusinessHours> = {
+  value: {
+    timeZone: "America/Chicago",
+    week: [
+      null, // Sunday
+      { opens: "09:00", closes: "18:00" },
+      { opens: "09:00", closes: "18:00" },
+      { opens: "09:00", closes: "18:00" },
+      { opens: "09:00", closes: "18:00" },
+      { opens: "09:00", closes: "18:00" },
+      null, // Saturday — "by appointment" is not a callback window
+    ],
+  },
+  verified: false,
+  note: "[Confirm business hours per location]",
+};
+
+/**
  * Risk reversal — the objection-killer that replaces "free". Used verbatim in
  * both places it appears (the end-of-page CTA band and FAQ Q14), which is why
  * it lives here rather than being retyped. It is a promise about how the call
