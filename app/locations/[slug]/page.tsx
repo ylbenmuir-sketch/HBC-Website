@@ -6,14 +6,14 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { Btn, TalkCta } from "@/components/Buttons";
-import { locations, getLocation } from "@/lib/locations";
+import JsonLd from "@/components/JsonLd";
+import { locations, getLocation, hasConfirmedAddress } from "@/lib/locations";
+import { localBusinessSchema } from "@/lib/schema";
 import {
   PHONE_DISPLAY,
   PHONE_TEL,
   SHOW_DRAFT_CONTENT,
   SHOW_PHONE,
-  SITE_NAME,
-  SITE_URL,
   isDraftText,
 } from "@/lib/site-config";
 
@@ -63,9 +63,7 @@ export default async function LocationPage({
   const location = getLocation((await params).slug);
   if (!location) notFound();
 
-  const addressConfirmed =
-    !isDraftText(location.address.streetAddress) &&
-    !isDraftText(location.address.postalCode);
+  const addressConfirmed = hasConfirmedAddress(location);
   // Draft team members / hours / arrival notes never ship (see site-config).
   const team = location.team.filter(
     (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
@@ -77,35 +75,13 @@ export default async function LocationPage({
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
 
-  /* LocalBusiness JSON-LD — street address and ZIP are omitted until the
-     values in lib/locations.ts are confirmed. */
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: `${SITE_NAME} — ${location.name}`,
-    url: `${SITE_URL}/locations/${location.slug}`,
-    ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
-    address: {
-      "@type": "PostalAddress",
-      ...(addressConfirmed
-        ? {
-            streetAddress: location.address.streetAddress,
-            postalCode: location.address.postalCode,
-          }
-        : {}),
-      addressLocality: location.address.addressLocality,
-      addressRegion: location.address.addressRegion,
-      addressCountry: "US",
-    },
-    description: location.metaDescription,
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {/* Open centers only. A coming-soon page ships no LocalBusiness —
+          representing an unopened business as operating is against Google's
+          guidance, and Franklin has no opening date yet. It comes back with
+          the launch package (SEO-AUDIT.md §6.3 item 32). */}
+      {!location.comingSoon && <JsonLd data={localBusinessSchema(location)} />}
       <div className="wrap crumb">
         <Link href="/locations">Locations</Link> &nbsp;/&nbsp; {location.name}
       </div>

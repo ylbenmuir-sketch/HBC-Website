@@ -1,4 +1,4 @@
-import { PHONE_DISPLAY } from "./site-config";
+import { PHONE_DISPLAY, isDraftText } from "./site-config";
 
 /**
  * Location data. Nashville is seeded from location-nashville.html;
@@ -273,4 +273,50 @@ export const locations: Location[] = [
 
 export function getLocation(slug: string): Location | undefined {
   return locations.find((l) => l.slug === slug);
+}
+
+/**
+ * True once BOTH the street address and the ZIP are real values. Drives the
+ * on-page address line and the schema PostalAddress together, so the two can
+ * never disagree about what has been confirmed.
+ */
+export function hasConfirmedAddress(location: Location): boolean {
+  return (
+    !isDraftText(location.address.streetAddress) &&
+    !isDraftText(location.address.postalCode)
+  );
+}
+
+/**
+ * Real photographs for this center, site-root-relative — hero first, then the
+ * space grid. Placeholder plates are not photos and are skipped, so a center
+ * that has none (Murfreesboro, Franklin) returns an empty array and the
+ * caller omits the field rather than shipping a stand-in.
+ */
+export function locationPhotos(location: Location): string[] {
+  return [
+    ...(location.image ? [location.image.src] : []),
+    ...location.space.photos
+      .filter((p) => p.kind === "photo")
+      .map((p) => p.src),
+  ];
+}
+
+/**
+ * Community names for schema `areaServed`, derived from the same
+ * `planning.communities` sentence the page renders — one source, so
+ * confirming the list updates both.
+ *
+ * The sentence is written as "A, B, C & nearby." The trailing "nearby" is
+ * copy, not a place, and is dropped. Returns [] while the list is still a
+ * [placeholder], which keeps the schema silent whenever the page would be.
+ */
+export function communitiesServed(location: Location): string[] {
+  const line = location.planning.communities;
+  if (isDraftText(line)) return [];
+  return line
+    .replace(/\.$/, "")
+    .split(/,|\s&\s/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && s.toLowerCase() !== "nearby");
 }

@@ -14,6 +14,13 @@
  */
 
 import {
+  type Location,
+  communitiesServed,
+  hasConfirmedAddress,
+  locationPhotos,
+} from "./locations";
+import {
+  BRAIN_MAP_PRICE,
   ESTABLISHED_YEAR,
   FOUNDER_DISPLAY_NAME,
   PHONE_TEL,
@@ -65,6 +72,63 @@ export function organizationSchema() {
       name: FOUNDER_DISPLAY_NAME,
       jobTitle: "Founder & Clinical Director",
     },
+  };
+}
+
+/**
+ * LocalBusiness for one open center.
+ *
+ * Only call this for centers that are actually open — Franklin ships no
+ * LocalBusiness at all (SEO-AUDIT.md §2.4). Google's guidance is not to
+ * represent an unopened business as operating, and a coming-soon page that
+ * claims a trading entity is exactly that.
+ *
+ * Every field here mirrors something the page renders:
+ *  - `image` — real photographs only; a center with none omits the field.
+ *  - `areaServed` — the same communities sentence shown under "Planning your
+ *    visit".
+ *  - `priceRange` — the Brain Map first visit, the one settled, rendered
+ *    price. Per-session pricing is still unverified (PRICING_TAG), so it
+ *    isn't represented here; when it lands, widen this to a real range.
+ *  - `parentOrganization` — an @id reference to the sitewide Organization,
+ *    not a copy of it.
+ *
+ * `openingHoursSpecification` is deliberately absent: hours are still an open
+ * item in CONTENT-CHECKLIST.md and land in a follow-up. Street address and
+ * ZIP stay behind hasConfirmedAddress() exactly as the UI does.
+ */
+export function localBusinessSchema(location: Location) {
+  const photos = locationPhotos(location).map(abs);
+  const areaServed = communitiesServed(location);
+  const url = abs(`/locations/${location.slug}`);
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${url}#localbusiness`,
+    name: `${SITE_NAME} — ${location.name}`,
+    url,
+    ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
+    address: {
+      "@type": "PostalAddress",
+      ...(hasConfirmedAddress(location)
+        ? {
+            streetAddress: location.address.streetAddress,
+            postalCode: location.address.postalCode,
+          }
+        : {}),
+      addressLocality: location.address.addressLocality,
+      addressRegion: location.address.addressRegion,
+      addressCountry: "US",
+    },
+    description: location.metaDescription,
+    priceRange: BRAIN_MAP_PRICE,
+    ...(photos.length > 0 ? { image: photos } : {}),
+    ...(areaServed.length > 0
+      ? {
+          areaServed: areaServed.map((name) => ({ "@type": "City", name })),
+        }
+      : {}),
+    parentOrganization: { "@id": ORGANIZATION_ID },
   };
 }
 
