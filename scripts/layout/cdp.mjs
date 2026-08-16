@@ -93,13 +93,30 @@ function connect(url) {
       resolve({
         ws,
         onEvent: (fn) => (listeners.add(fn), () => listeners.delete(fn)),
-        send(method, params, sessionId) {
+        // Every call is bounded. A page laid out in a 15,000px window is
+        // enough to take the renderer down, and a dead renderer answers
+        // nothing — without this the run stops on an unsettled await with
+        // no output at all, several minutes of work lost and no clue why.
+        send(method, params, sessionId, timeoutMs = 180000) {
           const msgId = ++id;
           return new Promise((res, rej) => {
-            pending.set(msgId, { resolve: res, reject: rej });
-            ws.send(
-              JSON.stringify({ id: msgId, method, params: params ?? {}, sessionId })
-            );
+            const timer = setTimeout(() => {
+              pending.delete(msgId);
+              rej(new Error(`${method} timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+            pending.set(msgId, {
+              resolve: (v) => (clearTimeout(timer), res(v)),
+              reject: (e) => (clearTimeout(timer), rej(e)),
+            });
+            try {
+              ws.send(
+                JSON.stringify({ id: msgId, method, params: params ?? {}, sessionId })
+              );
+            } catch (error) {
+              clearTimeout(timer);
+              pending.delete(msgId);
+              rej(error);
+            }
           });
         },
       })
@@ -156,10 +173,20 @@ function makePage(browser, sessionId, targetId) {
       await this.eval("document.fonts ? document.fonts.ready.then(()=>1) : 1", {
         awaitPromise: true,
       });
-      // Force every reveal element visible: the audits below measure text, and
-      // an un-revealed element is translated and transparent.
+      // Freeze motion, then reveal. getBoundingClientRect() includes the
+      // transform, so an element caught mid-reveal measures somewhere it will
+      // never actually be — which showed up as pages that appeared to lay out
+      // differently in two windows when all that differed was how far the
+      // transition had got. Kill transitions and animations first, then add
+      // `in` so the reveal lands instantly rather than over 600ms.
       await this.eval(
-        "document.querySelectorAll('.rv').forEach(e=>e.classList.add('in')), 1"
+        `(() => {
+           const s = document.createElement("style");
+           s.textContent = "*, *::before, *::after { transition: none !important; animation: none !important; }";
+           document.head.appendChild(s);
+           document.querySelectorAll(".rv").forEach((e) => e.classList.add("in"));
+           return 1;
+         })()`
       );
       await sleep(settle);
     },

@@ -39,7 +39,20 @@
     return parts.join(" > ");
   }
 
-  const style = (el) => window.getComputedStyle(el);
+  // Cached. Every check below asks for computed styles, several of them walk
+  // ancestors doing it, and getComputedStyle is the single most expensive call
+  // here — uncached, the homepage at 320px took the probe past a minute and
+  // the run timed out. Safe to cache because the page is frozen before this
+  // runs: transitions off, reveals already applied, nothing else mutating.
+  const csCache = new WeakMap();
+  function style(el) {
+    let cs = csCache.get(el);
+    if (!cs) {
+      cs = window.getComputedStyle(el);
+      csCache.set(el, cs);
+    }
+    return cs;
+  }
 
   // A closed <details> still lays its answer out — Chrome renders the slotted
   // content with content-visibility: hidden — so every collapsed FAQ answer
@@ -250,6 +263,84 @@
   }
 
   // --------------------------------------------------------------
+  // 2c. Text with something painted on top of it.
+  //
+  // Neither of the checks above can see this, and neither could the one
+  // before them: the text is inside its box, the box is inside everything
+  // that clips it, the document does not scroll sideways, and the words are
+  // simply not on the screen because a photograph is drawn over them. The
+  // homepage's "Children & families" eyebrow was in this state on every
+  // phone — the panel is pulled 60px up onto the photo, and a static element
+  // paints in an earlier layer than a positioned sibling however the flex
+  // `order` reads.
+  //
+  // hitTest walks from the top of the paint order down, so if the first
+  // thing it finds at a glyph is neither the text's own element nor
+  // something inside it, something else is in front.
+  // --------------------------------------------------------------
+  // elementFromPoint only answers for the visible viewport, which is why the
+  // runner makes the window as tall as the document before injecting this —
+  // scrolling is not an option under a device-metrics override, and the whole
+  // page in one viewport is the same layout (asserted in check-layout.mjs).
+  //
+  // A fixed overlay covering text is not a finding: that is what a sticky
+  // header does to everything it passes.
+  const fixedCache = new WeakMap();
+  function underFixed(el) {
+    let v = fixedCache.get(el);
+    if (v !== undefined) return v;
+    v = style(el).position === "fixed"
+      ? true
+      : el.parentElement
+        ? underFixed(el.parentElement)
+        : false;
+    fixedCache.set(el, v);
+    return v;
+  }
+
+  const walker2 = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const range2 = document.createRange();
+  for (let n = walker2.nextNode(); n; n = walker2.nextNode()) {
+    const content = n.nodeValue.trim();
+    if (!content) continue;
+    const host = n.parentElement;
+    if (!host) continue;
+    const hcs = style(host);
+    if (!visible(host, hcs) || parked(host)) continue;
+    range2.selectNodeContents(n);
+    const rects = [...range2.getClientRects()].filter(
+      (r) =>
+        r.width > 2 && r.height > 2 && r.top >= 0 && r.bottom <= window.innerHeight
+    );
+    if (!rects.length) continue;
+
+    let covered = 0, sampled = 0, by = null;
+    for (const r of rects) {
+      for (let i = 1; i <= 5; i++) {
+        const x = r.left + (r.width * i) / 6;
+        const y = r.top + r.height / 2;
+        const hit = document.elementFromPoint(x, y);
+        if (!hit) continue;
+        if (underFixed(hit) && !underFixed(host)) continue;
+        sampled += 1;
+        if (hit === host || host.contains(hit) || hit.contains(host)) continue;
+        covered += 1;
+        by = hit;
+      }
+    }
+    // Every sample covered, not a corner: a rounded card edge or a rule
+    // crossing a descender is not text being hidden.
+    if (sampled >= 3 && covered === sampled && by) {
+      push({
+        kind: "text-obscured",
+        selector: selectorFor(host),
+        detail: `every sampled point is painted over by ${selectorFor(by)}`,
+        text: content.slice(0, 70),
+      });
+    }
+  }
+
+  // --------------------------------------------------------------
   // 3. Two pieces of text sitting on top of each other.
   //    Only leaf text in normal flow — a scrim over a photo, a label
   //    inside its own button, and anything positioned on purpose are
@@ -260,6 +351,10 @@
     if (!visible(el, cs) || parked(el)) return false;
     if (!textOf(el)) return false;
     if (cs.position !== "static" && cs.position !== "relative") return false;
+    // A fixed overlay is *supposed* to sit on top of the page — the sticky
+    // CTA bar and the assistant launcher both do, and in a window as tall as
+    // the document they come to rest over the footer. Not an overlap.
+    if (underFixed(el)) return false;
     return true;
   });
 

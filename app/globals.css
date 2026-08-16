@@ -668,7 +668,13 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .hero-grid { grid-template-columns: 1fr; gap: 0; }
   .hero-copy, .hero-media { grid-area: 1 / 1; }
   .hero-media { position: relative; z-index: 0; min-height: calc(100vh - 68px); min-height: min(calc(100svh - 68px), 700px); }
-  .hero-ph { position: absolute; inset: 0; height: 100% !important; border-radius: 0; }
+  /* Scoped to .hero-media, and it has to be. `.hero-ph` is a size-and-shape
+     class, and /locations/[slug] uses it on the photo beside its page hero —
+     which has no positioned ancestor, so an unscoped `position: absolute;
+     inset: 0` laid that photo over the initial containing block and covered
+     the breadcrumbs, the eyebrow, the H1 and half the sub on every phone.
+     Only the homepage hero layers its photo behind its copy. */
+  .hero-media .hero-ph { position: absolute; inset: 0; height: 100% !important; border-radius: 0; }
   /* The scrim is shaped to the copy block, not to the frame. The copy is
      bottom-anchored and runs 494–544px tall inside a 700px hero, so its top
      edge — the eyebrow — lands at 70–78% of the frame height at every phone
@@ -729,7 +735,14 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   /* ---- children & families: full-bleed photo, overlapping panel ---- */
   .family-row { display: flex; flex-direction: column; background: transparent; border: 0; border-radius: 0; overflow: visible; margin: 52px -24px 0; }
   .family-row .ph { order: 0; aspect-ratio: 4 / 3; min-height: 0 !important; height: auto; }
-  .family-row .fr-copy { order: 1; margin: -60px 20px 0; background: var(--navy); border-top: 2px solid var(--gold); padding: 34px 28px 38px; box-shadow: 0 26px 50px -34px rgba(21, 34, 48, 0.55); }
+  /* position: relative is what makes the overlap work, not decoration. The
+     panel is pulled up 60px onto the photo; the photo is position: relative
+     (PhotoFrame, for the fill image) and the panel was static, and a static
+     element paints in an earlier layer than a positioned sibling whatever
+     `order` says. So the photo covered the panel's top 60px — its gold
+     border, its shadow, and the whole "Children & families" eyebrow, which
+     was in the DOM, coloured, and invisible on every phone. */
+  .family-row .fr-copy { order: 1; position: relative; margin: -60px 20px 0; background: var(--navy); border-top: 2px solid var(--gold); padding: 34px 28px 38px; box-shadow: 0 26px 50px -34px rgba(21, 34, 48, 0.55); }
   .family-row .fr-copy h4 { font-size: 26px; }
 
   /* ---- goals ---- */

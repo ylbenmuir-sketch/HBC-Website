@@ -76,7 +76,7 @@ console.log(
 );
 
 const chrome = await launch();
-const page = await chrome.newPage();
+let page = await chrome.newPage();
 await page.init();
 
 const findings = [];
@@ -92,7 +92,68 @@ for (const width of WIDTHS) {
       findings.push({ route, width, kind: "not-audited", detail: `HTTP ${status}` });
       continue;
     }
+    // One route must not be able to end the run. A page laid out in a window
+    // as tall as itself can take the renderer down, and a crash on route 30
+    // used to lose the twenty-nine clean results before it.
+    try {
+    await page.setViewport(width, 900);
     await page.goto(BASE + route, { settle: 500 });
+
+    // Two things have to be settled before anything is measured.
+    //
+    // The images: making the window as tall as the document pulls every
+    // lazily-loaded image into it at once, and they arrive over the next
+    // second or so, each reflowing what is below it. Measuring before they
+    // land reads rects off one layout and paint off another.
+    //
+    // The height: the probe's obscured-text check uses elementFromPoint,
+    // which only answers for the visible viewport, and scrolling is ignored
+    // under a device-metrics override. A window as tall as the document puts
+    // the whole page in view at once. Asserted below rather than assumed —
+    // if any box moves between the two window heights, the run says so.
+    const waitImages = () =>
+      page.eval(
+        `new Promise((resolve) => {
+           const done = () => [...document.images].every((i) => i.complete);
+           if (done()) return resolve(1);
+           const t = setInterval(() => { if (done()) { clearInterval(t); resolve(1); } }, 100);
+           setTimeout(() => { clearInterval(t); resolve(0); }, 15000);
+         })`,
+        { awaitPromise: true }
+      );
+    // Fixed elements are excluded on purpose: the sticky CTA bar and the
+    // assistant launcher are anchored to the window, so of course they move
+    // when the window changes height. Everything else must not.
+    const geometry = () =>
+      page.eval(
+        `JSON.stringify([...document.body.querySelectorAll('*')]
+           .filter(e => { for (let n = e; n; n = n.parentElement) if (getComputedStyle(n).position === 'fixed') return false; return true; })
+           .map(e => { const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top + scrollY), Math.round(r.width), Math.round(r.height)]; }))`
+      );
+
+    await waitImages();
+    const before = JSON.parse(await geometry());
+    const docHeight = await page.eval("document.documentElement.scrollHeight");
+    await page.setViewport(width, Math.min(docHeight, 30000));
+    await page.eval("window.scrollTo(0,0), 1");
+    await waitImages();
+    const after = JSON.parse(await geometry());
+    // A box that exists in one state and not the other is not a layout shift:
+    // `content-visibility` skips laying out what is off-screen, so every
+    // collapsed FAQ answer is 0×0 in a short window and a real box in a tall
+    // one. Only boxes that exist in both states and disagree count.
+    const moved = before.filter((b, i) => {
+      const a = after[i];
+      if (!a) return false;
+      if ((b[2] === 0 && b[3] === 0) || (a[2] === 0 && a[3] === 0)) return false;
+      return b.join() !== a.join();
+    });
+    if (before.length !== after.length || moved.length > 0) {
+      console.log(
+        `  ${String(width).padStart(4)}  ${route.padEnd(46)} ${moved.length} box(es) move with viewport height — obscured-text results are not trustworthy here`
+      );
+    }
+
     const out = JSON.parse(await page.eval(probe));
     audited += 1;
     for (const f of out.findings) findings.push({ route, width, ...f });
@@ -102,6 +163,19 @@ for (const width of WIDTHS) {
           out.findings.length ? `${out.findings.length} finding(s)` : "clean"
         }`
       );
+    }
+    } catch (error) {
+      console.log(
+        `  ${String(width).padStart(4)}  ${route.padEnd(46)} ERROR — NOT AUDITED: ${error.message.split("\n")[0].slice(0, 90)}`
+      );
+      findings.push({ route, width, kind: "not-audited", detail: error.message.split("\n")[0] });
+      // The renderer may be gone; a fresh target costs a second and is the
+      // difference between finishing the sweep and reporting a stub.
+      try {
+        await page.close();
+      } catch { /* already gone */ }
+      page = await chrome.newPage();
+      await page.init();
     }
   }
 }
