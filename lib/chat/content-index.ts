@@ -118,19 +118,116 @@ const CONFIRM_TAG_VALUES: Record<ConfirmTagName, string> = {};
  * nervous-system overload", people type "panic". These route a question to the
  * right passage and are never shown or quoted: they are search keys, not
  * content, and nothing here asserts that LENS addresses a named condition.
+ *
+ * ## What these are for (phase 11c)
+ *
+ * A visitor describes a symptom, not a category. Nobody types "emotional
+ * regulation"; they type "she melts down over nothing". Six of the 33 questions
+ * in `npm run check:answers` used to reach no model at all, and every one of
+ * them failed **here** rather than at a threshold — the passage scored well and
+ * simply was not *filed* under the words she used. The subject gate is what
+ * rejected them, which is the gate working exactly as designed: a passage has
+ * to be about something that was asked.
+ *
+ * So two kinds of entry live in these lists, and both are routing keys:
+ *
+ * 1. **The visitor's word for the site's word** — "tantrum" for "meltdown",
+ *    "jumpy" for "startling easily", "wired" for "on alert".
+ * 2. **The site's own word, made findable** — "homework", "stall", "standoff",
+ *    "fuse" all appear in this concern's published copy and were reachable
+ *    only through its prose. Filing them here is what lets a question about
+ *    them land on the passage that already answers it.
+ *
+ * ## Two rules learned the hard way
+ *
+ * **A word can belong to more than one concern.** "Homework takes three hours"
+ * is the focus page's own hero line *and* the children-school page's nightly
+ * battle. Filing "homework" under one of them is what sent that question to
+ * no-match. Where a word genuinely belongs to two concerns it is listed in
+ * both, and BM25 decides which passage answers — both answers are right.
+ *
+ * **Stems, not words.** ./retrieve.ts stems the query and these lists with the
+ * same crude function, so "meltdown" and "melts down" are *different tokens*:
+ * one stems to `meltdown`, the other to `melt` + `down`. The alias list held
+ * "meltdown" for months while every parent who wrote "she melts down" got
+ * no-match. Where a phrase splits, both forms are listed.
  */
 const CONCERN_ALIASES: Record<string, string[]> = {
-  anxiety: ["anxious", "worry", "worried", "panic", "nervous", "edge", "tense", "racing", "calm"],
-  "focus-adhd": ["adhd", "add", "attention", "concentrate", "distracted", "procrastinate", "task", "scattered"],
-  sleep: ["insomnia", "asleep", "awake", "night", "bed", "bedtime", "tired", "rest", "3am"],
-  "emotional-regulation": ["meltdown", "tantrum", "anger", "angry", "outburst", "upset", "transition", "regulate"],
-  "brain-fog": ["fog", "foggy", "memory", "forget", "forgetful", "cloudy", "word", "recall", "fatigue"],
-  "stress-resilience": ["burnout", "burned", "overwhelm", "exhausted", "empty", "recover", "pressure"],
-  "children-school": ["school", "homework", "teacher", "class", "grade", "student", "morning", "kid", "child"],
+  anxiety: [
+    "anxious", "worry", "worried", "panic", "nervous", "edge", "tense", "racing", "calm",
+    // "settle" and "relax" are how the page's own promise is worded back at
+    // us ("tired of being told to just relax"); "alert" and "braced" are its
+    // recognize lines. All four were reachable only through prose.
+    "settle", "settled", "relax", "alert", "braced", "brace", "overreact", "unwind",
+    // "Thoughts that won't quiet down — especially at night" is the first
+    // recognize line on the page. "My thoughts won't quiet down at night"
+    // scored coverage 1.0 against it and was rejected for not being filed
+    // under a single word of itself.
+    "thought", "quiet",
+  ],
+  "focus-adhd": [
+    "adhd", "add", "attention", "concentrate", "distracted", "procrastinate", "task", "scattered",
+    // "homework" is deliberately here AND on children-school — see the note
+    // above. "sit" and "still" are this concern's own FAQ ("Does my child have
+    // to sit still during a session?"), and the words a parent reaches for
+    // first.
+    "homework", "sit", "still", "restless", "fidget", "finish", "stall", "focused",
+    "forgetful", "son", "daughter",
+    // "Losing track mid-task" is the page's own line. "loses"/"losing" stem
+    // apart, so both are listed.
+    "start", "track", "lose", "losing",
+  ],
+  sleep: [
+    "insomnia", "asleep", "awake", "night", "bed", "bedtime", "tired", "rest", "3am",
+    // "wired" and "shut" are the page's own words ("a wired, on-alert
+    // evening", "a mind that won't shut off"). "wake"/"waking" are listed
+    // together because the stemmer takes them to different tokens.
+    "wired", "shut", "wake", "waking", "restless", "exhausted", "nap", "sleepless",
+    // NOT "son"/"daughter", though "my son wakes up several times a night" is
+    // a real question that still misses (coverage 0.49). Adding them here put
+    // the word on nine more passages, which lowered its IDF everywhere — and
+    // that alone dropped "my son can't sit still long enough to finish
+    // anything" from 0.51 back under the floor. An alias is not free to the
+    // concern next door: a word spread across more passages is worth less to
+    // every question that depends on it. Widen from the concern that owns the
+    // word, not from all of them.
+  ],
+  "emotional-regulation": [
+    "meltdown", "tantrum", "anger", "angry", "outburst", "upset", "transition", "regulate",
+    // "melt" is the one that mattered: "she melts down" never matched
+    // "meltdown". "fuse", "standoff" and "recovery" are the page's own words.
+    "melt", "fuse", "standoff", "recovery", "patience", "snap", "snapping", "explode",
+    "overwhelmed", "daughter", "son", "change", "calm",
+  ],
+  "brain-fog": [
+    "fog", "foggy", "memory", "forget", "forgetful", "cloudy", "word", "recall", "fatigue",
+    // "forgetting" stems to `forgett`, which neither "forget" nor
+    // "forgetful" reaches — the same stem trap as meltdown/melt.
+    "slow", "reread", "paragraph", "remember", "forgetting", "blank", "sharp",
+  ],
+  "stress-resilience": [
+    "burnout", "burned", "overwhelm", "exhausted", "empty", "recover", "pressure",
+    // The physical line — "carrying stress physically: jaw, shoulders, gut" —
+    // and "restore", from the goal card.
+    "restore", "jaw", "shoulder", "gut", "drained", "cope", "burn",
+  ],
+  "children-school": [
+    "school", "homework", "teacher", "class", "grade", "student", "morning", "kid", "child",
+    // Shared with emotional-regulation on purpose: "meltdowns over
+    // transitions" is this page's own recognize line as well as that one's
+    // subject.
+    "battle", "standoff", "meltdown", "melt", "transition", "sensory", "frustration",
+    "bright", "son", "daughter", "teen", "homeschool",
+  ],
   // Not "safe": on this page the word belongs to "the past keeps the present
   // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
   // question with a plain answer on /faq — into trauma copy.
-  trauma: ["trauma", "ptsd", "past", "vigilant", "startle", "flashback"],
+  trauma: [
+    "trauma", "ptsd", "past", "vigilant", "startle", "flashback",
+    // "jumpy" is what people type; the page says "startling easily". "guard"
+    // is its own goal card ("sleep that isn't standing guard").
+    "jumpy", "startling", "guard", "braced", "brace", "hypervigilant", "trigger",
+  ],
 };
 
 /**
@@ -452,7 +549,26 @@ function policyPassages(): Passage[] {
     kind: "policy",
     title: "Harmonized by the numbers",
     href: "/about",
-    keywords: ["experience", "established", "year", "session", "center", "since"],
+    /*
+     * The only passage here that had no `question`, which is why an audience
+     * question had nowhere to land: "Adults, teens, and children are all seen"
+     * is the sentence that answers one, and it was reachable only through
+     * prose. Every concern page opens "Adults & children" (from `who`), so
+     * those outscored it on the word and the subject gate then rejected the
+     * lot — "Do you work with adults?" reached no model at all.
+     *
+     * Filed under the ages as well as the numbers. Deliberately NOT "who" or
+     * "see": both belong to "who will I see?", which is the team's question
+     * and keeps routing to /about's team passage. Nor "everyone" — it was
+     * here for one draft, and its rarity put the numbers passage at the top of
+     * "my son is snapping at everyone", ahead of the concern that answers it.
+     * A word this vague matches the mood of a question rather than its subject.
+     */
+    question: "Do you work with adults, teens, and children?",
+    keywords: [
+      "experience", "established", "year", "session", "center", "since",
+      "adult", "teen", "teenager", "children", "age",
+    ],
     text: [
       sessions ? `${SITE_NAME} has provided ${sessions} LENS sessions across its centers.` : null,
       `${open.join(" and ")} ${open.length === 1 ? "is" : "are"} open${soon.length > 0 ? `, with ${soon.join(" and ")} coming soon` : ""}.`,

@@ -377,6 +377,15 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "experience",
           "middle",
           "tennessee",
+          // Who we see, not just who we are. "Do you work with adults?" is an
+          // audience question, and this sentence answers it — but the words
+          // were only in its prose, so every concern page's "Adults &
+          // children" line outscored it and the subject gate then rejected
+          // the lot. Not "work": the note on page:home:what applies here too.
+          "adult",
+          "child",
+          "family",
+          "serve",
         ],
         text: "Harmonized Brain Centers is a team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers, and well over a hundred thousand sessions of experience.",
       },

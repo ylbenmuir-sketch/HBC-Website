@@ -413,6 +413,69 @@ const MUST_NOT_MATCH = [
   "asdfgh",
 ];
 
+/**
+ * The concern-routing sweep (phase 11c).
+ *
+ * A visitor describes a symptom, not a category — so this is one line per
+ * concern in the words a parent or an adult actually types, asserted against
+ * the concern it has to reach. Retrieval only: no model, no key, no cost, so
+ * it runs on every invocation next to the guardrails.
+ *
+ * It is the guard for the thing that makes alias widening dangerous. Adding a
+ * word to one concern lowers its IDF for every other passage that carries it,
+ * and that is not hypothetical: adding "son" to `sleep` for "my son wakes up
+ * several times a night" dropped "my son can't sit still long enough to finish
+ * anything" from coverage 0.51 to just under the floor — a question in a
+ * different concern, fixed the day before, broken by an edit that never
+ * touched it. Nothing but a sweep catches that.
+ */
+const CONCERN_ROUTING = [
+  ["I feel on edge all day and can't settle", "anxiety"],
+  ["My thoughts won't quiet down at night", "anxiety"],
+  ["I overreact to small things and then replay it", "anxiety"],
+  ["My body is braced all the time", "anxiety"],
+  ["Homework takes three hours and ends in tears most nights", "focus-adhd"],
+  ["My son can't sit still long enough to finish anything", "focus-adhd"],
+  ["My projects stall at 90 percent", "focus-adhd"],
+  ["I start things and never finish them", "focus-adhd"],
+  ["She loses track halfway through a task", "focus-adhd"],
+  ["My mind won't shut off at night and I'm awake at 3am", "sleep"],
+  ["My daughter melts down over the smallest change of plan", "emotional-regulation"],
+  ["He gets overwhelmed in seconds", "emotional-regulation"],
+  ["My son is snapping at everyone", "emotional-regulation"],
+  ["I keep losing words and forgetting why I walked into a room", "brain-fog"],
+  ["I reread the same paragraph over and over", "brain-fog"],
+  ["I'm burned out and running on empty", "stress-resilience"],
+  ["Rest doesn't seem to restore me", "stress-resilience"],
+  ["Mornings are a battle to get out the door", "children-school"],
+  ["Homework standoffs every night", "children-school"],
+  ["My son says he's just bad at school", "children-school"],
+  ["I'm jumpy and startle at everything", "trauma"],
+  ["I stay on guard even when nothing is wrong", "trauma"],
+];
+
+/**
+ * Lines that still reach no model, and the reason each one is left alone.
+ *
+ * Listed rather than deleted so the misses stay visible, and asserted to still
+ * miss so that a future widening which fixes one shows up as a failure telling
+ * somebody to move it up rather than passing in silence.
+ */
+const KNOWN_MISSES = [
+  // Five of seven terms are noise (something/happened/years/ago/still/time)
+  // and "jumpy" alone cannot carry coverage past the floor. Only a threshold
+  // or stopword change reaches this, and both are out of phase 11c's scope.
+  ["Something happened years ago and I'm still jumpy all the time", "trauma"],
+  // "chest" and "tight" are not in the corpus in any sense, and inventing
+  // physical-symptom vocabulary for a wellness practice is not a routing fix.
+  ["My chest is tight and I can't relax", "anxiety"],
+  // "noise" is in the corpus only as focus's "your own noise"; "crowds" not at
+  // all. The site's word is "sensory overwhelm".
+  ["She's overwhelmed by noise and crowds", "children-school"],
+  // Two unknown words ("apply", "himself") against one known subject word.
+  ["His teacher says he's not applying himself", "children-school"],
+];
+
 /** Hours are absent from the index by decision — ./unanswerable.ts owns them. */
 const MUST_BE_UNANSWERABLE = [
   ["When are you open?", "hours"],
@@ -471,6 +534,28 @@ function guardrails() {
   }
   console.log(
     `  unanswerable    ${MUST_BE_UNANSWERABLE.length} gated, ${MUST_NOT_BE_UNANSWERABLE.length} must not be`
+  );
+
+  for (const [line, slug] of CONCERN_ROUTING) {
+    const result = retrieve(line);
+    if (result.status !== "grounded") {
+      failures.push(`no-match (${result.reason}), expected ${slug}: ${line}`);
+      continue;
+    }
+    const top = result.passages[0].passage.id;
+    if (!top.startsWith(`concern:${slug}:`)) {
+      failures.push(`routed to ${top}, expected concern:${slug}: ${line}`);
+    }
+  }
+  for (const [line, slug] of KNOWN_MISSES) {
+    if (retrieve(line).status === "grounded") {
+      failures.push(
+        `KNOWN_MISS now grounds — move it into CONCERN_ROUTING (${slug}): ${line}`
+      );
+    }
+  }
+  console.log(
+    `  concern routing ${CONCERN_ROUTING.length} lines, ${KNOWN_MISSES.length} known misses`
   );
 
   if (failures.length === 0) console.log("\n  all guardrails hold.");

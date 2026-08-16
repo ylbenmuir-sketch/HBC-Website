@@ -514,6 +514,96 @@ was scoped to framing with no passage changes; it is the first thing to pick up
 after it, because a parent describing her own child in her own words and being
 told "I don't have that" is the most expensive miss on the list.
 
+## Phase 11c — concern routing
+
+The six questions phase 11b could not fix were all the same bug, and none of
+them was a threshold: the passage scored well and simply was not *filed* under
+the words the visitor used, so the subject gate rejected it. Five are fixed by
+`CONCERN_ALIASES` and one by an audience `question` on `policy:scale`. No
+threshold, no weight, no coverage floor, and no passage text was touched.
+
+| Was | Now routes to |
+| --- | --- |
+| "Homework takes three hours and ends in tears most nights" | `concern:focus-adhd:signs` |
+| "My son can't sit still long enough to finish anything" | `concern:focus-adhd:faq:1` |
+| "I feel on edge all day and can't settle" | `concern:anxiety:approach` |
+| "My daughter melts down over the smallest change of plan" | `concern:emotional-regulation:faq:1` |
+| "Do you work with adults?" | `policy:scale` |
+| "Something happened years ago and I'm still jumpy all the time" | **still no-match** — see below |
+
+### The two bugs worth remembering
+
+**Stems, not words.** "meltdown" and "melts down" are different tokens: one
+stems to `meltdown`, the other to `melt` + `down`. The alias list held
+"meltdown" while every parent who typed "she melts down" got no-match. Same
+trap for "forgetting" (`forgett`, which neither "forget" nor "forgetful"
+reaches) and "loses"/"losing". Where a phrase splits or a form stems apart,
+both are listed now.
+
+**An alias is not free to the concern next door.** Adding a word to one
+concern lowers its IDF everywhere it appears, and a *matched* term losing IDF
+lowers coverage. Adding "son" to `sleep` — for "my son wakes up several times a
+night" — dropped "my son can't sit still long enough to finish anything" from
+coverage 0.51 to just under the floor. A question in a different concern, fixed
+the day before, broken by an edit that never touched it. The sleep addition was
+reverted and the miss left standing; widen from the concern that owns the word,
+not from all of them.
+
+### Measured both directions
+
+Snapshot of 105 questions — the 25 visitor questions, the 8 concern lines, 47
+plain-language parent/adult lines, and 20 off-topic probes — diffed on *top
+passage*, before and after:
+
+**20 started matching · 0 stopped matching · 7 moved passage.**
+
+All seven moves are improvements or neutral, and each was read: "Can I keep
+seeing my therapist?" now tops `faq:11` (the FAQ that asks exactly that) rather
+than a trauma FAQ; "My son says he's just bad at school" now tops
+`concern:children-school:goals`, whose goal card is "a kid who stops saying
+they're bad at school". Every original off-topic probe still no-matches. One
+bad landing was caught and reverted: "everyone" on `policy:scale` put the
+numbers passage at the top of "my son is snapping at everyone".
+
+**A word can belong to two concerns and BM25 sorts it out.** "homework" is now
+on both focus-adhd and children-school, and the two questions separate
+correctly on their own: "Homework takes three hours" → focus-adhd (its hero
+line), "Homework standoffs every night" → children-school (its recognize line).
+
+### The routing sweep is now part of `check:answers`
+
+22 plain-language lines asserted against the concern each must reach, plus 4
+`KNOWN_MISSES` asserted to still miss so a future widening that fixes one fails
+the check rather than passing in silence. Retrieval only — no model, no key, no
+cost — which is what makes it safe to run on every invocation. Mutation-tested:
+removing "homework" from focus-adhd fails the sweep.
+
+### Still missing, and why each is left alone
+
+- **"Something happened years ago and I'm still jumpy all the time"** —
+  coverage 0.23 against `concern:trauma:faq:1`, whose subject already holds
+  `happen` and `jumpy`. Five of seven terms are noise (something/happened/
+  years/ago/still/time) and "jumpy" alone cannot carry the floor. The only
+  fixes are a coverage change or moving those words to the stopword list, and
+  **both are out of phase 11c's scope** — the short phrasings of the same
+  concern ("I'm jumpy and startle at everything", "I stay on guard even when
+  nothing is wrong") both ground now.
+- **"My son wakes up several times a night"** — coverage 0.49. Fixable only by
+  the `sleep` "son" alias that broke a different question; see above.
+- **"My chest is tight and I can't relax"**, **"She's overwhelmed by noise and
+  crowds"**, **"His teacher says he's not applying himself"** — each turns on
+  words the corpus does not contain in that sense. Inventing physical-symptom
+  vocabulary for a wellness practice is not a routing fix.
+
+### Open question for Ben
+
+**"I can't switch off" — which concern owns it?** Coverage is 1.0 and it fails
+the subject gate only, so whichever list gets "switch"/"off" wins the question
+outright. Three have a real claim: **sleep** ("a mind that won't shut off at
+night" — the literal phrase), **anxiety** ("struggling to relax even when life
+is objectively calm"), **stress-resilience** ("a system that never stands
+down", and the passage that currently scores highest). Not guessed.
+
 ## Known open items (engineering)
 
 1. **In-process session store — will not work correctly on serverless.**
