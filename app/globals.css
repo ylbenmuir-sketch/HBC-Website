@@ -34,7 +34,15 @@
   --line: rgba(28, 43, 58, 0.14);
   --sage: #8fa08d;
   --sage-soft: #e6ebe2;
-  --sage-deep: #5e7360;
+  /* Was #5e7360. Darkened 3.8% along its own ray — the smallest move that
+     leaves the hue where it is — for contrast: every section eyebrow, the
+     inline links in FAQ answers, breadcrumbs, and the sage note panels are
+     this colour. See CONTRAST-OPTIONS.md for the measurements.
+     Ivory 5.13:1 · ivory-2 4.70:1 · white 5.44:1 · sage-soft 4.49:1.
+     The note panels on --sage-soft are the one pairing this does not lift
+     over 4.5 — they land 0.01 short. #596e5b clears them at 4.56 and is
+     Ben's call, not a rounding error to fix quietly. */
+  --sage-deep: #5a6f5c;
   --gold: #a9853f;
   --gold-soft: rgba(169, 133, 63, 0.35);
   --serif: var(--font-cormorant), Georgia, serif;

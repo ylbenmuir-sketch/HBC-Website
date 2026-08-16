@@ -1,7 +1,15 @@
-# Two colour decisions — options, not changes
+# Two colour decisions
 
-Nothing in this file has been applied. Both tokens are unchanged in
-`app/globals.css`.
+**Status.** Ben chose `#5a6f5c` for sage and it is applied. Gold is unchanged
+and stays unchanged — neither option below was taken, and this file is the
+record of what was offered.
+
+**One correction to what this file originally said.** It described `#5a6f5c` as
+reaching "4.49 for sage-soft, which rounds to 4.5". That was loose, and it is
+the number the decision was made on: measured in the browser it is **4.4903**,
+which does not clear 4.5. The eyebrows on ivory-2 do clear, at 4.7019. The note
+panels and the contact phone number inside one sit at 4.4903 — short by 0.0097.
+`#596e5b`, one unit darker per channel, clears them at 4.5573 and is unapplied.
 
 Every number below is measured the same way the hero was: hide every glyph,
 photograph the page, read the composited pixel under the text, compute the WCAG
@@ -10,7 +18,7 @@ them.
 
 ---
 
-## 1. Gold on ivory — 3.24:1 today
+## 1. Gold on ivory — 3.24:1 (unchanged, left alone)
 
 `--gold: #a9853f` on `--ivory: #fbf8f1`.
 
@@ -63,13 +71,13 @@ either way.
 
 | | |
 | --- | --- |
-| today, 3.24:1 | ![](contrast-opt-gold-wordmark-current.png) |
+| today, 3.24:1 — what ships | ![](contrast-opt-gold-wordmark-current.png) |
 | `#8c6e34`, 4.50:1 | ![](contrast-opt-gold-wordmark-8c6e34.png) |
 | `#856831`, 4.92:1 | ![](contrast-opt-gold-wordmark-856831.png) |
 
 ---
 
-## 2. Sage on ivory-2 — 4.43:1 today
+## 2. Sage on ivory-2 — was 4.43:1, now 4.70:1 (applied)
 
 `--sage-deep: #5e7360` on `--ivory-2: #f4eee1`.
 
@@ -80,16 +88,18 @@ in FAQ answers, breadcrumbs, the founder citation link and the sage note panels.
 
 | | Hex | rgb | vs ivory | vs ivory-2 | vs sage-soft | vs white |
 | --- | --- | --- | --- | --- | --- | --- |
-| today | `#5e7360` | 94, 115, 96 | 4.83 | **4.43** | **4.23** | 5.13 |
-| minimum for ivory-2 | `#5d725f` | 93, 114, 95 | 4.90 | **4.50** | 4.30 | 5.20 |
-| **minimum for ivory-2 and sage-soft** | `#5a6f5c` | 90, 111, 92 | 5.13 | **4.70** | **4.49** | 5.44 |
+| was | `#5e7360` | 94, 115, 96 | 4.8324 | **4.4333** | **4.2337** | 5.1255 |
+| minimum for ivory-2 | `#5d725f` | 93, 114, 95 | 4.9018 | **4.5015** | 4.2977 | 5.1990 |
+| **applied** | `#5a6f5c` | 90, 111, 92 | 5.1252 | **4.7019** | **4.4903** | 5.4361 |
+| clears sage-soft too | `#596e5b` | 89, 110, 91 | 5.2018 | 4.7721 | **4.5573** | 5.5173 |
 
 Two things worth knowing:
 
 - The darkest backdrop sage sits on is not ivory-2, it is `--sage-soft`
-  (`#e6ebe2`), the fill of the `.note-sage` panels on 11 routes — 4.23:1. Fixing
-  ivory-2 alone at `#5d725f` leaves those at 4.30. `#5a6f5c` clears both, at
-  4.49 for sage-soft, which rounds to 4.5 and is the honest floor.
+  (`#e6ebe2`), the fill of the `.note-sage` panels on 11 routes — 4.2337:1
+  before, 4.4903:1 now. **It is the one pairing `#5a6f5c` does not lift over
+  4.5**, and the phone number in the `/contact` note panel is inside it.
+  `#596e5b` is the value that clears it, at 4.5573.
 - The change is 96.2% of today's value — one to four units per channel. It is
   not visible side by side.
 - `--sage-deep` is used as a *background* in exactly one place (`.loc-card .soon`
@@ -101,17 +111,19 @@ Two things worth knowing:
 
 | | |
 | --- | --- |
-| today, 4.43:1 | ![](contrast-opt-sage-eyebrow-current.png) |
-| `#5d725f`, 4.50:1 | ![](contrast-opt-sage-eyebrow-5d725f.png) |
-| `#5a6f5c`, 4.70:1 | ![](contrast-opt-sage-eyebrow-5a6f5c.png) |
+| before, 4.4333:1 | ![](contrast-opt-sage-eyebrow-current.png) |
+| `#5d725f`, 4.5015:1 | ![](contrast-opt-sage-eyebrow-5d725f.png) |
+| **`#5a6f5c`, 4.7019:1 — applied** | ![](contrast-opt-sage-eyebrow-5a6f5c.png) |
 
 ---
 
-## What I'd need from you
+## Where this landed
 
-1. **Gold** — A (one token, gold-on-dark gets worse) or B (split the token)? Or
-   leave it.
-2. **Sage** — `#5d725f`, `#5a6f5c`, or leave it.
+- **Gold — left alone.** Neither option applied. Every gold pairing in the
+  sweep still measures what it did: 3.24 on ivory, 3.43 on white, 4.20 on navy.
+- **Sage — `#5a6f5c` applied.** Eyebrows on ivory-2 clear at 4.7019. The
+  `.note-sage` panels do not, at 4.4903.
 
-Neither is applied. Say which and it's a one-line change for sage and a
-one-or-twelve-line change for gold.
+One decision still open: whether the note panels matter enough to take sage the
+last unit to `#596e5b` (4.5573 on sage-soft, 4.7721 on ivory-2). It is a
+one-line change and nothing else in the palette moves with it.
