@@ -63,7 +63,6 @@ check(
   TESTIMONIALS.some((t) => t.verified)
 );
 
-export const UNRESOLVED_CONTENT = unresolved;
 
 if (unresolved.length > 0) {
   const summary = `[content] ${unresolved.length} unverified fact(s): ${unresolved.join(

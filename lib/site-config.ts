@@ -33,15 +33,6 @@ export function isDraftText(s: string | undefined | null): boolean {
   return !!s && s.includes("[");
 }
 
-/**
- * Production-safe text: returns the string, or null when it's unresolved
- * draft copy and draft content is disabled. Use for data-driven strings
- * (locations, team, resources) that may still contain [bracketed] notes.
- */
-export function draftText(s: string): string | null {
-  return isDraftText(s) && !SHOW_DRAFT_CONTENT ? null : s;
-}
-
 export const SITE_NAME = "Harmonized Brain Centers";
 /**
  * Canonical site URL — confirmed by Ben. The apex is canonical: `www` 301s to
@@ -65,7 +56,6 @@ export const PHONE: Verifiable<{ display: string; tel: string }> = {
 };
 export const PHONE_DISPLAY = PHONE.value.display;
 export const PHONE_TEL = PHONE.value.tel;
-export const PHONE_VERIFIED = PHONE.verified;
 /** True when any phone UI (header tel, call buttons) may render. */
 export const SHOW_PHONE = PHONE.verified || SHOW_DRAFT_CONTENT;
 
@@ -222,7 +212,6 @@ export const VERIFIED_TESTIMONIALS = TESTIMONIALS.filter((t) => t.verified);
 
 export const SAMPLE_QUOTES_NOTE =
   "Sample copy for design review — will not render in production. Replace with verified client quotes.";
-export const SAMPLE_QUOTES_NOTE_STORIES = SAMPLE_QUOTES_NOTE;
 
 /** Individual-experiences disclaimer shown with any testimonial content. */
 export const EXPERIENCES_DISCLAIMER = "Individual experiences vary.";
@@ -236,9 +225,6 @@ export const RESPONSE_TIME: Verifiable = {
   verified: false,
   note: "[Confirm response time]",
 };
-// Back-compat aliases (interior pages)
-export const RESPONSE_TIME_NOTE = RESPONSE_TIME.value;
-export const RESPONSE_TIME_TAG = RESPONSE_TIME.note!;
 
 export const START_TIMING: Verifiable = {
   value: "Most new clients start within a week of their first call.",

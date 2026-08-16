@@ -619,9 +619,9 @@ const ALL_PASSAGES: Passage[] = [
 
 /**
  * Passages the site renders with a [CONFIRM] tag beside them, and the tag that
- * did it — the audit trail for everything CONTENT_INDEX drops. Feeds
- * `indexSummary()`, and exported to be read directly: "why won't it answer
- * insurance questions" should be one lookup, not an afternoon.
+ * did it — the audit trail for everything CONTENT_INDEX drops. Exported to be
+ * read directly: "why won't it answer insurance questions" should be one
+ * lookup, not an afternoon.
  */
 export const EXCLUDED_BY_CONFIRM_TAG: Array<{ id: string; confirmTag: string }> =
   ALL_PASSAGES.filter((p) => p.confirmTag).map((p) => ({
@@ -642,15 +642,3 @@ if (orphanedKeys.length > 0) {
   );
 }
 
-/** Passage counts by kind — for the build log and for eyeballing coverage. */
-export function indexSummary(): Record<string, number> {
-  const counts: Record<string, number> = { total: CONTENT_INDEX.length };
-  for (const passage of CONTENT_INDEX) {
-    counts[passage.kind] = (counts[passage.kind] ?? 0) + 1;
-  }
-  // Counted separately rather than folded into `total`: a shrinking index is
-  // the intended result of a [CONFIRM] tag, and it should be legible as that
-  // and not as passages having gone missing.
-  counts.excludedByConfirmTag = EXCLUDED_BY_CONFIRM_TAG.length;
-  return counts;
-}

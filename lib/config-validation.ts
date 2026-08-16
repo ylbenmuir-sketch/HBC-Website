@@ -36,7 +36,6 @@ require_(
   Boolean(process.env.LEADS_NOTIFY_EMAIL)
 );
 
-export const MISCONFIGURED = misconfigured;
 
 if (misconfigured.length > 0) {
   const summary = `[config] ${misconfigured.length} missing setting(s): ${misconfigured.join(
