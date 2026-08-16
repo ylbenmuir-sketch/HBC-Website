@@ -15,8 +15,10 @@
 
 import {
   type Location,
+  type WeeklyHours,
   communitiesServed,
   hasConfirmedAddress,
+  locationHours,
   locationPhotos,
   mapsUrl,
 } from "./locations";
@@ -75,6 +77,48 @@ export function organizationSchema() {
   };
 }
 
+/** Schema.org day names, Sunday first — the order of `WeeklyHours.week`. */
+const SCHEMA_DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+/**
+ * `openingHoursSpecification` from the same week the page prints.
+ *
+ * Days with identical hours share one entry, which is the form Google's
+ * examples use and the one a human can check against the page at a glance.
+ *
+ * **Closed days are absent here, though the page states them.** That is not
+ * the schema saying less than the page for its own sake: the only way to mark
+ * a day closed in this vocabulary is `opens` and `closes` both "00:00", and
+ * that is the same pair a 24-hour business is read as by some consumers.
+ * Publishing an ambiguous claim about Friday is worse than publishing none —
+ * days a business does not list are not days it claims to be open. See rule 1
+ * at the top of this file.
+ */
+function openingHoursSpecification(hours: WeeklyHours) {
+  const byWindow = new Map<string, { opens: string; closes: string; days: string[] }>();
+  hours.week.forEach((day, i) => {
+    if (!day) return;
+    const key = `${day.opens}-${day.closes}`;
+    const entry = byWindow.get(key) ?? { opens: day.opens, closes: day.closes, days: [] };
+    entry.days.push(SCHEMA_DAYS[i]);
+    byWindow.set(key, entry);
+  });
+  return [...byWindow.values()].map((entry) => ({
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: entry.days,
+    opens: entry.opens,
+    closes: entry.closes,
+  }));
+}
+
 /**
  * LocalBusiness for one open center.
  *
@@ -94,12 +138,14 @@ export function organizationSchema() {
  *  - `geo` / `hasMap` — both ride the address gate below, because a pin or a
  *    map link without a verified street address would point at a building
  *    the site doesn't claim to occupy.
+ *  - `openingHoursSpecification` — built from `hours` in lib/locations.ts, the
+ *    same week `formattedHours()` prints on the page and the cards. A center
+ *    with no confirmed hours (Franklin) omits the field rather than guessing.
  *  - `parentOrganization` — an @id reference to the sitewide Organization,
  *    not a copy of it.
  *
- * `openingHoursSpecification` is deliberately absent: hours are still an open
- * item in CONTENT-CHECKLIST.md and land in a follow-up. Street address and
- * ZIP stay behind hasConfirmedAddress() exactly as the UI does.
+ * Street address and ZIP stay behind hasConfirmedAddress() exactly as the UI
+ * does.
  */
 export function localBusinessSchema(location: Location) {
   const photos = locationPhotos(location).map(abs);
@@ -107,6 +153,7 @@ export function localBusinessSchema(location: Location) {
   const url = abs(`/locations/${location.slug}`);
   const addressConfirmed = hasConfirmedAddress(location);
   const map = mapsUrl(location);
+  const hours = locationHours(location);
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -136,6 +183,7 @@ export function localBusinessSchema(location: Location) {
         }
       : {}),
     ...(map ? { hasMap: map } : {}),
+    ...(hours ? { openingHoursSpecification: openingHoursSpecification(hours) } : {}),
     description: location.metaDescription,
     priceRange: "$$",
     ...(photos.length > 0 ? { image: photos } : {}),

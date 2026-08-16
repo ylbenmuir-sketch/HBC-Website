@@ -6,6 +6,7 @@ import ConfirmTag from "@/components/ConfirmTag";
 import {
   locations,
   hasConfirmedAddress,
+  hoursSummary,
   practitionerNames,
 } from "@/lib/locations";
 import {
@@ -80,8 +81,20 @@ export default function LocationsPage() {
                         )}
                       </b>
                       <br />
-                      Mon–Fri 9a–6p &middot; Sat by appointment
-                      <br />
+                      {/* From lib/locations.ts, like the address above it.
+                          This line used to be typed here — "Mon–Fri 9a–6p ·
+                          Sat by appointment" on both cards, which was the
+                          wrong week for both centers and could not have been
+                          corrected by confirming the hours.
+
+                          It carries its own <br /> so an unconfirmed week
+                          leaves no blank line behind it. */}
+                      {hoursSummary(loc) && (
+                        <>
+                          {hoursSummary(loc)}
+                          <br />
+                        </>
+                      )}
                       {/* Joined rather than concatenated with a trailing
                           separator: Murfreesboro's cardExtra is still a
                           [placeholder], which used to leave a dangling "·"

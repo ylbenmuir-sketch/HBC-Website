@@ -14,7 +14,7 @@ import GuideCta from "@/components/GuideCta";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
-import { locations } from "@/lib/locations";
+import { locations, hoursSummary } from "@/lib/locations";
 import {
   BRAIN_MAP_CLAIM,
   ESTABLISHED_YEAR,
@@ -195,6 +195,12 @@ const homeFaqs = [
 
 export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
+  // The centers keep different weeks, and the locations row is where the two
+  // sit side by side — so the hours belong on the card, read from
+  // lib/locations.ts like every other card fact. Null while a week is
+  // unconfirmed, which drops the line rather than leaving a blank one.
+  const nashvilleHours = hoursSummary(nashville);
+  const murfreesboroHours = hoursSummary(murfreesboro);
   const startTiming = verifiedOr(START_TIMING);
   const brainMapClaim = verifiedOr(BRAIN_MAP_CLAIM);
   const founderQuote = verifiedOr(FOUNDER_QUOTE);
@@ -753,6 +759,12 @@ export default function HomePage() {
                   <b>Open &mdash; welcoming new clients</b>
                   <br />
                   A calm, comfortable center serving Davidson County.
+                  {nashvilleHours && (
+                    <>
+                      <br />
+                      {nashvilleHours}
+                    </>
+                  )}
                 </>
               }
             />
@@ -765,6 +777,12 @@ export default function HomePage() {
                   <br />
                   The same standard of care, closer to home in Rutherford
                   County.
+                  {murfreesboroHours && (
+                    <>
+                      <br />
+                      {murfreesboroHours}
+                    </>
+                  )}
                 </>
               }
             />

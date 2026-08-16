@@ -40,7 +40,12 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
       we know" wording ships only once verified. Do **not** replace it with
       "the first in the country" without a documented basis.
-- [ ] Hours for Nashville & Murfreesboro (`lib/locations.ts`)
+- [x] Hours for Nashville & Murfreesboro (`hours` in `lib/locations.ts`) —
+      Confirmed by Ben. Nashville: Tue–Fri 9:00–18:00, Sat 8:00–15:00, closed
+      Sun & Mon. Murfreesboro: Tue–Thu 9:00–18:00, closed Fri–Mon. Held as
+      structured data per center, not display strings, so the location page,
+      the cards, and the `openingHoursSpecification` in each LocalBusiness all
+      read one source. Franklin records no hours until it has an opening date.
 
 ## Statistics
 

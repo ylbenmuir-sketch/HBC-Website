@@ -8,7 +8,12 @@ import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { Btn, TalkCta } from "@/components/Buttons";
 import JsonLd from "@/components/JsonLd";
-import { locations, getLocation, hasConfirmedAddress } from "@/lib/locations";
+import {
+  locations,
+  formattedHours,
+  getLocation,
+  hasConfirmedAddress,
+} from "@/lib/locations";
 import { localBusinessSchema } from "@/lib/schema";
 import {
   PHONE_DISPLAY,
@@ -66,13 +71,13 @@ export default async function LocationPage({
 
   const addressConfirmed = hasConfirmedAddress(location);
   const showAddressLine = addressConfirmed || SHOW_DRAFT_CONTENT;
-  // Draft team members / hours / arrival notes never ship (see site-config).
+  // Draft team members / arrival notes never ship (see site-config).
   const team = location.team.filter(
     (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
   );
-  const hoursLines = location.hoursLines.filter(
-    (l) => SHOW_DRAFT_CONTENT || !isDraftText(l)
-  );
+  // Written from the `hours` data in lib/locations.ts, not from copy stored
+  // per page — the same call the LocalBusiness schema and the cards make.
+  const hoursLines = formattedHours(location);
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
@@ -143,14 +148,19 @@ export default async function LocationPage({
                   </>
                 )}
               </HeroFact>
-              <HeroFact label="Hours">
-                {hoursLines.map((l, i) => (
-                  <span key={l}>
-                    {i > 0 && <br />}
-                    {l}
-                  </span>
-                ))}
-              </HeroFact>
+              {/* Omitted entirely for a center with no hours: Franklin's
+                  "Status — coming soon" fact above already says what a
+                  visitor needs, and an empty Hours label says less. */}
+              {hoursLines.length > 0 && (
+                <HeroFact label="Hours">
+                  {hoursLines.map((l, i) => (
+                    <span key={l}>
+                      {i > 0 && <br />}
+                      {l}
+                    </span>
+                  ))}
+                </HeroFact>
+              )}
               {arrivalLines.length > 0 && (
                 <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
                   {arrivalLines.map((l, i) => (
