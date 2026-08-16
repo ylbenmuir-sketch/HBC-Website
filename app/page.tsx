@@ -93,6 +93,21 @@ const concern = {
   },
 };
 
+// The audience split, defined once. Each group is a label and an anchor id,
+// and both are used twice — the jump link renders the label and points at the
+// id, the group renders the id and repeats the label as its heading. Written
+// out longhand that is four literals to keep in step for two facts, and the
+// two copies of the label are the pair most likely to drift, because a
+// heading gets renamed where a jump link three lines up does not.
+const concernGroups = {
+  child: { id: "for-your-child", label: "For your child" },
+  // "For adults", not "For you": the two headings are read as a pair, and
+  // "For your child / For you" made the second one mean "not the child" only
+  // by contrast with the first. The id follows the label so a shared anchor
+  // link still describes where it lands.
+  adult: { id: "for-adults", label: "For adults" },
+} as const;
+
 // Kids first — most visitors arrive as a parent, and the family row that
 // follows this group is the page's children-and-families route.
 const childConcerns = [
@@ -412,12 +427,11 @@ export default function HomePage() {
                   Both groups are always in the HTML; these only move the
                   viewport, so they work with JS off and are crawlable. */}
               <div className="concern-jump">
-                <Btn href="#for-your-child" variant="ghost">
-                  For your child <span className="arrow">↓</span>
-                </Btn>
-                <Btn href="#for-you" variant="ghost">
-                  For you <span className="arrow">↓</span>
-                </Btn>
+                {[concernGroups.child, concernGroups.adult].map((g) => (
+                  <Btn key={g.id} href={`#${g.id}`} variant="ghost">
+                    {g.label} <span className="arrow">↓</span>
+                  </Btn>
+                ))}
               </div>
             </div>
             <Btn href="/what-we-help-with" variant="ghost" arrow>
@@ -425,8 +439,8 @@ export default function HomePage() {
             </Btn>
           </div>
 
-          <div className="concern-group" id="for-your-child">
-            <h3 className="concern-group-head rv">For your child</h3>
+          <div className="concern-group" id={concernGroups.child.id}>
+            <h3 className="concern-group-head rv">{concernGroups.child.label}</h3>
             <ConcernRail
               count={childConcerns.length}
               cols={4}
@@ -466,8 +480,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="concern-group" id="for-you">
-            <h3 className="concern-group-head rv">For you</h3>
+          <div className="concern-group" id={concernGroups.adult.id}>
+            <h3 className="concern-group-head rv">{concernGroups.adult.label}</h3>
             <ConcernRail
               count={adultConcerns.length}
               cols={4}

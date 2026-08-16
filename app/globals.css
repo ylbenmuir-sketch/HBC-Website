@@ -436,6 +436,18 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .hero { padding-left: 44px; padding-right: 44px; }
   .hero-grid, .split, .lens-grid, .goals-grid { grid-template-columns: 1fr; gap: 48px; }
   .duo, .duo-form, .wwh-hero, .prac-hero { grid-template-columns: 1fr; gap: 48px; }
+  /* A `1fr` track is `minmax(auto, 1fr)`, and a grid item's default
+     `min-width: auto` makes that floor the item's min-content width. Once
+     these collapse to one column every child shares one track, so a single
+     child that reports a large min-content width (an image with a definite
+     ratio, a long unbroken string, a nested fixed-width box) sets the width
+     of the *copy* next to it, and the text is laid out wider than the page
+     and sliced by the `overflow-x: clip` on html/body — off-screen, and
+     invisible to any scrollWidth-based check.
+     Declared for every grid that collapses here, not just the ones that have
+     needed it: the guard is free, and the failure is silent. */
+  .hero-grid > *, .split > *, .lens-grid > *, .goals-grid > *,
+  .duo > *, .duo-form > *, .wwh-hero > *, .prac-hero > * { min-width: 0; }
   .trio-quotes { grid-template-columns: 1fr; }
   .half-row { grid-template-columns: 1fr; }
   .steps4 { grid-template-columns: 1fr 1fr; }
@@ -472,8 +484,14 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .sec { padding: 76px 0; }
   .hero { padding: 56px 24px 0; }
   /* !important: PhotoFrame sets height inline (like the mockups' style=""),
-     so the design system's intended mobile heights need to win here */
-  .hero-ph { height: 340px !important; border-radius: 4px 4px 4px 56px; }
+     so the design system's intended mobile heights need to win here.
+     :not(.ph-aspect) because that is the only inline height these are meant
+     to beat — a ratio-pinned frame writes `height: auto` inline, and forcing
+     a height back onto it makes its *width* definite (height × ratio), at
+     which point the frame sizes its grid column instead of fitting it. See
+     components/PhotoFrame.tsx. */
+  .hero-ph { border-radius: 4px 4px 4px 56px; }
+  .hero-ph:not(.ph-aspect) { height: 340px !important; }
   .nav { padding: 0 24px; gap: 16px; }
   .nav > .nav-cta { display: none; }
   .sec-head.split { flex-direction: column; align-items: flex-start; gap: 24px; }
@@ -497,7 +515,7 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .ccard:last-child { border-bottom: 0; }
   .journey { grid-template-columns: 1fr; }
   .goals-list { column-count: 1; }
-  .split .ph, .split .plate { height: 320px !important; }
+  .split .ph:not(.ph-aspect), .split .plate { height: 320px !important; }
   .founder-note { grid-template-columns: 1fr; }
   .review-band { flex-direction: column; }
   .review-band > div { border-right: 0; border-bottom: 1px solid var(--line); }
@@ -644,7 +662,17 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .hero-copy, .hero-media { grid-area: 1 / 1; }
   .hero-media { position: relative; z-index: 0; min-height: calc(100vh - 68px); min-height: min(calc(100svh - 68px), 700px); }
   .hero-ph { position: absolute; inset: 0; height: 100% !important; border-radius: 0; }
-  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.94) 0%, rgba(21, 34, 48, 0.82) 24%, rgba(21, 34, 48, 0.55) 46%, rgba(21, 34, 48, 0.18) 68%, rgba(21, 34, 48, 0.3) 100%); }
+  /* The scrim is shaped to the copy block, not to the frame. The copy is
+     bottom-anchored and runs 494–544px tall inside a 700px hero, so its top
+     edge — the eyebrow — lands at 70–78% of the frame height at every phone
+     width. That is the constraint: the eyebrow is #b9c5b7 light sage over
+     hair and skin, the highest-luminance backdrop in the photo, and it needs
+     the *most* scrim while sitting *highest*. So the ramp holds through 79%
+     rather than falling away from 46% as it used to (0.18 by 68%, which is
+     what put the eyebrow at 1.35:1 and the H1 at 2.1:1), then drops fast
+     across 79→93% so the two faces above the copy keep the photo's light.
+     Same navy, same stops-in-one-gradient technique; only the shape moved. */
+  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.92) 40%, rgba(21, 34, 48, 0.86) 62%, rgba(21, 34, 48, 0.8) 79%, rgba(21, 34, 48, 0.48) 86%, rgba(21, 34, 48, 0.24) 93%, rgba(21, 34, 48, 0.34) 100%); }
   .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 0 24px calc(30px + env(safe-area-inset-bottom)); }
   .hero-copy .eyebrow { color: #b9c5b7; }
   .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 18px; text-wrap: initial; }
@@ -703,7 +731,10 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
 
   /* ---- LENS explainer ---- */
   .lens-grid { gap: 44px; }
-  .hero-grid > *, .lens-grid > *, .goals-grid > * { min-width: 0; }
+  /* min-width: 0 for these used to live here, covering three of the grids and
+     starting at 760. It now sits with the collapse rules at 1060 — the width
+     where the single-column track that needs it actually appears — and covers
+     all eight. */
   .wave { margin: 28px 0 4px; width: 100%; max-width: 360px; }
 
   /* ---- journey: vertical timeline on a gold rail ---- */
@@ -722,7 +753,8 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .care-list .care-n { font-size: 24px; min-width: 38px; padding-top: 3px; }
   .care h3 { font-size: 21px; }
   .founder-note { display: block; margin-top: 52px; padding-top: 46px; }
-  .founder-note .ph { float: left; width: 106px; height: 132px !important; margin: 5px 20px 10px 0; }
+  .founder-note .ph { float: left; width: 106px; margin: 5px 20px 10px 0; }
+  .founder-note .ph:not(.ph-aspect) { height: 132px !important; }
   .founder-note blockquote { font-size: 19.5px; }
   .founder-note cite { clear: both; padding-top: 6px; }
 
@@ -743,8 +775,30 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .celeb-cta .btn-invert { width: 100%; justify-content: center; min-height: 52px; }
 
   /* ---- stories / reviews ---- */
-  .quote { padding: 34px 28px; }
-  .quote p { font-size: 21px; }
+  .quote { padding: 30px 28px 34px; }
+  /* The category line is what tells a reader whether this story is about
+     them, and on a phone the cards are a single column you thumb past — so
+     it has to be the thing the eye lands on first, not a tag tucked above the
+     quote. 14px is the system's small-label size (.chip, .foot-grid a,
+     .proof-grid span); the tracking eases 0.2em → 0.13em because spacing that
+     reads as fine detail at 11px reads as gappy at 14, and the gold hairline
+     is .btn-ghost's own border — it closes the label as a header and opens
+     the quote under it. Colour, weight and case are the existing ones.
+     Phones only: above 1060 the quotes are a 3-up grid scanned as a block,
+     which is a different reading problem and not this one. */
+  .quote .theme {
+    font-size: 14px;
+    letter-spacing: 0.13em;
+    line-height: 1.4;
+    /* Two lines now, and the default break put "·" alone at the end of the
+       first — balance splits nearer the middle, which keeps the separator
+       with the audience word it belongs to. */
+    text-wrap: balance;
+    margin-bottom: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--gold-soft);
+  }
+  .quote p { font-size: 21px; margin-top: 20px; }
   .review-band > div { padding: 24px; }
 
   /* ---- locations / FAQ ---- */
