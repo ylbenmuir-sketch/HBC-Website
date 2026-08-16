@@ -84,6 +84,7 @@ const { checkRefusal } = await import(`${ROOT}/lib/chat/refusals.ts`);
 const { checkPreRetrieval } = await import(`${ROOT}/lib/chat/unanswerable.ts`);
 const { STANDING_FACT_TEXT } = await import(`${ROOT}/lib/chat/answer.ts`);
 const { confirmed, CONTENT_INDEX } = await import(`${ROOT}/lib/chat/content-index.ts`);
+const { advanceBooking, startBooking } = await import(`${ROOT}/lib/chat/booking.ts`);
 const { STAT_SESSIONS, ESTABLISHED_YEAR } = await import(`${ROOT}/lib/site-config.ts`);
 
 const BASE = `${process.env.CHAT_BASE ?? "http://localhost:3000"}/api/chat`;
@@ -658,6 +659,93 @@ const KNOWN_MISSES = [
 ];
 
 /**
+ * The booking flow's two free-text fields (phase 11e).
+ *
+ * A real booking arrived with `preferred_center` and `best_time` empty from a
+ * visitor who had typed "murf" and "anytime". The old code matched both
+ * against the contact form's <select> options by containment — "murf" does not
+ * contain "murfreesboro" — assigned only on a match, and advanced the step
+ * either way. She answered, the assistant moved on as though it had heard her,
+ * and the column stayed null.
+ *
+ * Each row is [what she types, the expected stored value], driven through the
+ * real state machine. `null` means the field is genuinely skipped, and it is
+ * asserted as null in exactly one case: when she says "skip".
+ *
+ * These are the rows that would have caught the bug, and the last one is the
+ * rule that matters most — an answer nobody anticipated is kept verbatim
+ * rather than thrown away.
+ */
+const BOOKING_CENTER = [
+  ["murf", "Murfreesboro"],
+  ["Murf.", "Murfreesboro"],
+  ["murfreesboro please", "Murfreesboro"],
+  ["the boro", "Murfreesboro"],
+  ["we're in Rutherford county", "Murfreesboro"],
+  ["nashville", "Nashville"],
+  ["Nash", "Nashville"],
+  ["franklin", "Franklin waitlist"],
+  // Unrecognizable, and round-tripped as raw text rather than dropped.
+  ["whichever one is off Old Hickory Blvd", "whichever one is off Old Hickory Blvd"],
+  ["closest to Smyrna", "closest to Smyrna"],
+  ["skip", null],
+];
+
+const BOOKING_BEST_TIME = [
+  ["anytime", "anytime"],
+  ["after school", "after school"],
+  ["after 3", "after 3"],
+  ["weekday mornings", "weekday mornings"],
+  ["mornings", "mornings"],
+  ["doesn't matter", "doesn't matter"],
+  ["skip", null],
+  // Capped where app/api/consultation/route.ts caps it: `str(value, 40)`
+  // returns null past 40 characters, so a longer answer stored whole would be
+  // dropped at the route instead of here.
+  [
+    "any weekday once the kids are at school and I am off the clock",
+    "any weekday once the kids are at school",
+  ],
+];
+
+/** A note that reads like a skip word but plainly is not one. */
+const BOOKING_NOTE = [
+  ["he gets overwhelmed by any transition", "he gets overwhelmed by any transition"],
+  ["not sure what's going on, that's why I'm asking", "not sure what's going on, that's why I'm asking"],
+  ["skip", null],
+];
+
+/**
+ * Drive one booking to the submission and hand back the payload.
+ *
+ * The state machine is pure — app/api/chat/route.ts does the POST — so a full
+ * booking runs here with no server, no key and no Supabase project.
+ */
+function runBooking({ note = "skip", bestTime = "skip", center = "skip" } = {}) {
+  const session = {
+    id: "audit",
+    createdAt: 0,
+    lastSeenAt: 0,
+    turns: 0,
+    crisisFlagged: false,
+    blockedFromContact: false,
+    injectionAttempts: 0,
+    step: "idle",
+    draft: {},
+    bookingOffered: true,
+  };
+  startBooking(session);
+  const say = (message) => advanceBooking(session, message, "/contact");
+  say("my child");
+  say("Sarah");
+  say("615-555-0142");
+  say(note);
+  say(bestTime);
+  say(center);
+  return say("yes").submit ?? null;
+}
+
+/**
  * Hours are answered before retrieval, from the two centers' confirmed weeks —
  * see ./lib/chat/unanswerable.ts. The two weeks differ, so there is no single
  * week to retrieve and the answer is assembled from data instead.
@@ -802,6 +890,54 @@ function guardrails() {
     `  pre-retrieval   ${MUST_BE_PRE_ANSWERED.length} answered here, ${MUST_NOT_BE_PRE_ANSWERED.length} must not be`
   );
   console.log(`  hours by day    ${HOURS_BY_DAY.length} days + the no-day answer`);
+
+  for (const [answer, expected] of BOOKING_CENTER) {
+    const row = runBooking({ center: answer });
+    if (!row) {
+      failures.push(`booking did not submit for center "${answer}"`);
+      continue;
+    }
+    if (row.preferred_center !== expected) {
+      failures.push(
+        `center "${answer}" stored as ${JSON.stringify(row.preferred_center)}, expected ${JSON.stringify(expected)}`
+      );
+    }
+  }
+  for (const [answer, expected] of BOOKING_BEST_TIME) {
+    const row = runBooking({ bestTime: answer });
+    if (!row) {
+      failures.push(`booking did not submit for best time "${answer}"`);
+      continue;
+    }
+    if (row.best_time !== expected) {
+      failures.push(
+        `best time "${answer}" stored as ${JSON.stringify(row.best_time)}, expected ${JSON.stringify(expected)}`
+      );
+    }
+  }
+  for (const [answer, expected] of BOOKING_NOTE) {
+    const row = runBooking({ note: answer });
+    if (row?.note !== expected) {
+      failures.push(
+        `note "${answer}" stored as ${JSON.stringify(row?.note)}, expected ${JSON.stringify(expected)}`
+      );
+    }
+  }
+  // The whole point, asserted once directly: a field she answered is never
+  // null, whatever she typed.
+  const answered = runBooking({
+    note: "homework takes three hours",
+    bestTime: "anytime",
+    center: "murf",
+  });
+  for (const field of ["note", "best_time", "preferred_center"]) {
+    if (answered?.[field] == null) {
+      failures.push(`answered field ${field} submitted as null`);
+    }
+  }
+  console.log(
+    `  booking fields  ${BOOKING_CENTER.length} centers, ${BOOKING_BEST_TIME.length} times, ${BOOKING_NOTE.length} notes`
+  );
 
   for (const [line, slug] of CONCERN_ROUTING) {
     const result = retrieve(line);

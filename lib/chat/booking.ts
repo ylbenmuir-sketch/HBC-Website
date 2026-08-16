@@ -24,14 +24,20 @@ import { normalize } from "./refusals";
  * the flow can be run end-to-end in a test without a Supabase project.
  */
 
-/** Exactly the fields components/ContactForm.tsx collects — §5's table. */
+/**
+ * The one question with a fixed answer set, and the only one still matched
+ * against a list — because a mismatch here re-asks rather than moving on, so
+ * nothing can be lost to it.
+ *
+ * The form's other two <select>s — Mornings/Afternoons/Evenings and the three
+ * centers — used to be mirrored here as `TIME_OPTIONS` and `CENTER_OPTIONS`
+ * and matched the same way. A typed conversation is not a dropdown, and those
+ * lists are what dropped "murf" and "anytime" on the floor. Both are gone;
+ * see `resolveCenter()` and `resolveBestTime()` below. The canonical center
+ * strings live in `CENTER_ALIASES`, next to the words visitors actually type
+ * for them.
+ */
 const HELPING_OPTIONS = ["My child", "Myself", "Someone else"] as const;
-const TIME_OPTIONS = ["Mornings", "Afternoons", "Evenings"] as const;
-const CENTER_OPTIONS = [
-  "Nashville",
-  "Murfreesboro",
-  "Franklin waitlist",
-] as const;
 
 export type BookingSubmission = {
   type: "consultation";
@@ -196,7 +202,21 @@ const NO = /\b(no|nope|nah|wrong|incorrect|that'?s wrong|not right)\b/;
 const DECLINE =
   /\b(rather not|prefer not|don'?t want to|do not want to|not comfortable|no thanks|no thank you|not right now|maybe later|i'?ll pass|skip it|stop asking|leave me alone)\b/;
 
-const SKIP = /\b(skip|whatever|any|either|doesn'?t matter|dont matter|no preference|not sure|none|n\/a|pass)\b/;
+/**
+ * An answer that declines to answer — and *only* that.
+ *
+ * The previous version of this also held `whatever`, `any`, `either`,
+ * `doesn't matter`, `no preference`, `not sure` and read all of them as "no
+ * answer given", which is how "call me any time" became an empty column and
+ * how a note reading "he gets overwhelmed by any transition" became no note at
+ * all: `\bany\b` matched inside a sentence that was plainly an answer.
+ *
+ * A person is going to read these fields before picking up the phone, and
+ * "doesn't matter" tells them something an empty field does not. So the test
+ * is now narrow on purpose: skip, pass, n/a, none. Everything else the visitor
+ * types is an answer and is stored as she typed it.
+ */
+const EXPLICIT_SKIP = /\b(skip|pass|n\/a|none)\b/;
 
 /**
  * Pull the phone-shaped run out of the message, not the message itself.
@@ -241,6 +261,96 @@ function matchOption<T extends string>(
     if (text.includes(normalize(option))) return option;
   }
   return null;
+}
+
+/* ------------------------------------------------------------------ */
+/* The two optional fields, and why they are not matched against a list */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A booking arrived with `preferred_center`, `best_time` and `concerns` all
+ * empty from a visitor who had answered "murf" and "anytime".
+ *
+ * `matchOption()` is a containment test: it asks whether the normalized
+ * message *contains* a whole canonical option. "murf" does not contain
+ * "murfreesboro", so it returned null — and both call sites assigned
+ * conditionally (`if (center) draft.preferredCenter = center`) and then
+ * advanced the step anyway. Three things had to line up, and they did: an
+ * exact-match test, an assignment that only fires on a match, and a flow that
+ * moves on regardless. The visitor is asked, answers, watches the assistant
+ * accept it and ask the next question, and nothing is stored. She believes she
+ * told us; the person calling her back has an empty field.
+ *
+ * It was never only the obvious variants either — "franklin" alone missed
+ * "Franklin waitlist" by the same rule.
+ *
+ * So: normalize what can be normalized, and keep the rest verbatim. A null in
+ * either column now means one thing only — she was asked and declined to say.
+ */
+
+/**
+ * The centers, and the words people actually type for them. Word-boundary
+ * anchored, which is also what makes it punctuation-insensitive: "Murf." and
+ * "murf," both match, and "boro" inside "murfreesboro" does not match on its
+ * own.
+ */
+const CENTER_ALIASES: Array<{ canonical: string; pattern: RegExp }> = [
+  {
+    canonical: "Murfreesboro",
+    pattern: /\b(murfreesboro|murfreesburo|murfreesbro|murfeesboro|murf|boro|rutherford)\b/,
+  },
+  { canonical: "Nashville", pattern: /\b(nashville|nash|davidson|metro)\b/ },
+  // Not one of the visitor's words but one of ours: the third option is a
+  // waitlist, and "franklin" on its own used to miss it entirely.
+  { canonical: "Franklin waitlist", pattern: /\b(franklin|williamson|waitlist)\b/ },
+];
+
+/**
+ * Collapse whitespace; keep her capitalization and her punctuation. Trimmed
+ * again after the cap, so a value clipped at a space doesn't arrive with a
+ * trailing one.
+ */
+function verbatim(message: string, maxLength: number): string | null {
+  const raw = message.trim().replace(/\s+/g, " ").slice(0, maxLength).trim();
+  return raw.length > 0 ? raw : null;
+}
+
+/**
+ * Canonical center where the answer is recognizable, her own words where it
+ * isn't, null only where she declined.
+ *
+ * Capped at 60 to match `str(body.preferred_center, 60)` in
+ * app/api/consultation/route.ts — that helper returns **null** for anything
+ * longer, so a cap wider than the route's would reintroduce the same silent
+ * drop one layer further along.
+ */
+function resolveCenter(message: string): string | null {
+  const text = normalize(message);
+  if (EXPLICIT_SKIP.test(text) || DECLINE.test(text)) return null;
+  for (const { canonical, pattern } of CENTER_ALIASES) {
+    if (pattern.test(text)) return canonical;
+  }
+  return verbatim(message, 60);
+}
+
+/**
+ * Her words, always.
+ *
+ * "anytime", "after 3", "weekday mornings", "once the kids are at school" —
+ * every one of those tells the person dialling more than an empty field does,
+ * and none of them fits a three-option list. So there is no list here: the
+ * answer is stored as typed, capped at 40 to match
+ * `str(body.best_time, 40)` in the consultation route.
+ *
+ * The trade, stated plainly: a chat row now reads "mornings" where a form row
+ * reads "Mornings", because the form's fixed <select> and this free text share
+ * one column. Nothing queries that column — a human reads it — and losing the
+ * answers that don't fit the list costs far more than the inconsistent casing.
+ */
+function resolveBestTime(message: string): string | null {
+  const text = normalize(message);
+  if (EXPLICIT_SKIP.test(text) || DECLINE.test(text)) return null;
+  return verbatim(message, 40);
 }
 
 function matchHelpingWho(message: string): string | null {
@@ -408,22 +518,23 @@ export function advanceBooking(
     case "note": {
       // §4.3: whatever they wrote is the note. No follow-up, no clarifying
       // question, nothing asked about symptoms, severity, or history.
-      if (!SKIP.test(text) && !DECLINE.test(text)) {
-        draft.note = message.trim().slice(0, 2000);
-      }
+      const note = EXPLICIT_SKIP.test(text) || DECLINE.test(text)
+        ? null
+        : verbatim(message, 2000);
+      if (note) draft.note = note;
       session.step = "bestTime";
       return { reply: ASK.bestTime };
     }
 
     case "bestTime": {
-      const time = matchOption(message, TIME_OPTIONS);
+      const time = resolveBestTime(message);
       if (time) draft.bestTime = time;
       session.step = "preferredCenter";
       return { reply: ASK.preferredCenter };
     }
 
     case "preferredCenter": {
-      const center = matchOption(message, CENTER_OPTIONS);
+      const center = resolveCenter(message);
       if (center) draft.preferredCenter = center;
       session.step = "confirm";
       return { reply: readBack(draft) };
