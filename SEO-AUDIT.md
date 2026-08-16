@@ -150,7 +150,7 @@ That's the entire structured-data footprint. Nothing on the other 23 pages.
 | Schema | Status | Where it should live |
 |---|---|---|
 | `Organization` | **Missing** | Root layout, sitewide — name, url, logo, telephone, founder, `sameAs` (GBP/social, once they exist). Ties the location entities together via `parentOrganization`. |
-| `LocalBusiness` (full) | Thin | Location pages — add `openingHoursSpecification`, `image`, `priceRange`, `areaServed`, `geo`, `parentOrganization`, `hasMap`. See below. |
+| `LocalBusiness` (full) | **Done** | Location pages carry `openingHoursSpecification`, `image`, `priceRange`, `areaServed`, `geo`, `parentOrganization` and `hasMap`, each gated on the data that backs it. See below. |
 | `FAQPage` | **Missing** | `/faq` (14 Q&As) and each concern page (3 each = 24 more). ~41 Q&A pairs sitewide, all already rendered as crawlable `<details>` HTML — the markup is the only missing piece. |
 | `BreadcrumbList` | **Missing** | Concern, location, team, and resource pages — visible breadcrumbs already exist. |
 | `Person` | **Missing** | `/about/founder` (Sheri) — blocked on the verified surname, but a first-name Person with `jobTitle` and `worksFor` is valid today. Practitioner pages when they publish. |
@@ -166,7 +166,7 @@ That's the entire structured-data footprint. Nothing on the other 23 pages.
 
 Several fields are blocked on unverified facts, but these are not:
 
-- `openingHoursSpecification` — "Mon–Fri 9a–6p, Sat by appointment" already renders on Nashville and Murfreesboro pages; encode it (`Mo-Fr 09:00-18:00`, `Sa` by appointment).
+- `openingHoursSpecification` — **done, and the hours in this line were wrong.** The two centers do not keep one week: Nashville is Tue–Fri 9:00–18:00 plus Sat 8:00–15:00, Murfreesboro Tue–Thu 9:00–18:00. Both are confirmed and encoded per center from `hours` in `lib/locations.ts`; Franklin records none until it opens.
 - `priceRange` — the $150 Brain Map is a settled, rendered price.
 - `image` — Nashville has real interior photos in the repo.
 - `areaServed` — the communities lists render in production ("Nashville, Belle Meade, Green Hills, Brentwood, Bellevue, Madison"; "Murfreesboro, Smyrna, La Vergne").
@@ -310,7 +310,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 | 5 | **Populate `metaTitle` for all 8 concerns** in [lib/concerns.ts](lib/concerns.ts) with the "Neurofeedback for X" pattern: Anxiety & Stress / ADHD & Focus / Sleep / Emotional Regulation / Brain Fog & Memory / Stress & Burnout / School Struggles / Trauma-Related Stress. Keep the "support" framing in descriptions to stay consistent with the wellness disclaimer. | High | S |
 | 6 | **Retitle `/adults` → "Neurofeedback for Adults"** and **`/children-families` → "Neurofeedback for Children & Teens"**; `/how-lens-works` → "How LENS Neurofeedback Works". | High | S |
 | 7 | **Add Organization JSON-LD** to `app/layout.tsx`: name, url, logo, telephone, `foundingDate: 2016` (verified), founder (Person, first name), description. Add `sameAs` later when profiles exist. | High | S |
-| 8 | **Enrich LocalBusiness JSON-LD** (location template): `openingHoursSpecification` from `hoursLines`, `priceRange`, `image` (Nashville photos), `areaServed` from `planning.communities`, `parentOrganization`. Keep the street/ZIP gate exactly as designed. **Remove the JSON-LD from Franklin's coming-soon page.** | High | S–M |
+| 8 | ~~**Enrich LocalBusiness JSON-LD** (location template)~~ **Done.** `lib/schema.ts` emits `openingHoursSpecification`, `priceRange`, `image`, `areaServed`, `geo`, `hasMap` and `parentOrganization`, and Franklin ships no LocalBusiness at all while it is `comingSoon`. The hours come from each center's `hours: Verifiable<WeeklyHours>` in `lib/locations.ts`, **not** from `hoursLines` — that array no longer exists; the week is structured data now, rendered for people through `formattedHours()`. `areaServed` derives from `planning.communities` through `communitiesServed()`, which returns nothing while the list is a `[placeholder]`, so Nashville and Murfreesboro stay silent until their lists are confirmed. | High | S–M |
 | 9 | **Add FAQPage JSON-LD** on `/faq` and concern pages. Refactor: store FAQ answers as plain strings (with optional rendered JSX variant) so the same data feeds `<details>` and schema. | Med | M |
 | 10 | **Add BreadcrumbList JSON-LD** wherever the visual crumb renders (concerns, locations, team, resources). One small shared component. | Med | S |
 | 11 | **Dedicated 1200×630 OG image**; fix the wrong declared dimensions (currently 1600×1067 vs actual 1500×843) in `app/layout.tsx`. | Med | S |

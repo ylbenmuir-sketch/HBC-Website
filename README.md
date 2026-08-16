@@ -338,27 +338,29 @@ known injection phrases before retrieval and leave the model's copy untouched.
 
 ### What Ben has to decide before this ships
 
-Four open items, all flagged rather than decided (§6 and §8). The first two
-are facts the practice has to settle, and both are currently costing the
-assistant a question a visitor will actually ask.
+Three open items, all flagged rather than decided (§6 and §8). The first is a
+fact the practice has to settle, and it is currently costing the assistant a
+question a visitor will actually ask.
 
-1. **Business hours.** `BUSINESS_HOURS` is unverified, so the assistant makes
-   **no** callback-timing claim — "Someone from the team will call you back."
-   The open/closed branches are written and tested but unreachable until it is
-   confirmed. It is deliberately not derived from `SAME_DAY_CALLBACK`.
-   Confirming it also retires the `hours` entry in `lib/chat/unanswerable.ts`
-   automatically, and unblocks `openingHoursSpecification` in the JSON-LD.
-   Confirm `hoursLines` in `lib/locations.ts` at the same time — they must
-   agree.
-2. **Community lists** (`planning.communitiesTag`, Nashville and Murfreesboro).
+> **Business hours are settled and no longer on this list.** `BUSINESS_HOURS`
+> does not exist — it was deleted when Ben confirmed the two centers' weeks,
+> which are not one week and could not be averaged into one constant. Each
+> center now carries `hours: Verifiable<WeeklyHours>` in `lib/locations.ts`,
+> both are verified, and everything downstream is live: the assistant answers
+> hours questions per day and per center, `callbackExpectation()` names the
+> next open day, and `lib/schema.ts` emits `openingHoursSpecification` on each
+> LocalBusiness. `hoursLines` is gone too — the week is structured data now,
+> rendered through `formattedHours()`.
+
+1. **Community lists** (`planning.communitiesTag`, Nashville and Murfreesboro).
    The only thing `confirmTag` still excludes, so "do you serve Green Hills?"
    gets "I don't have that on the site". Confirming a center's list rejoins it
    to the index on its own — Franklin's is already confirmed and answers.
-3. **Conversation retention.** Transcripts go to the server log and inherit the
+2. **Conversation retention.** Transcripts go to the server log and inherit the
    host's retention, which is a default rather than a decision.
    `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn and drops the
    words.
-4. **Who reads flagged conversations.** Crisis turns are logged at warn level
+3. **Who reads flagged conversations.** Crisis turns are logged at warn level
    with a `[chat:FLAGGED:crisis]` marker. That is a log line, not a review
    process — nobody is paged.
 
@@ -391,11 +393,15 @@ was one edit: delete the tag, and the passages it was holding out rejoin the
 index. That is the system working as intended rather than a set of exceptions
 being retired by hand.
 
-Also excluded on purpose: **opening hours** (still an open item in
-CONTENT-CHECKLIST.md, which is why `lib/schema.ts` omits
-`openingHoursSpecification` too — they join the index when `BUSINESS_HOURS`
-verifies) and **testimonials** (a retrieved quote invites the assistant to
-imply an outcome, which §1 forbids).
+**Opening hours are no longer excluded.** They were, while a single unverified
+`BUSINESS_HOURS` existed; both centers' weeks are confirmed now, so
+`lib/schema.ts` emits `openingHoursSpecification` on each LocalBusiness and the
+assistant answers hours questions — before retrieval rather than from a
+passage, because the two weeks differ and a merged week would be true of
+neither (`lib/chat/unanswerable.ts`).
+
+Still excluded on purpose: **testimonials** — a retrieved quote invites the
+assistant to imply an outcome, which §1 forbids.
 
 Where an exclusion leaves a question with nothing to land on,
 `lib/chat/unanswerable.ts` answers it with fixed copy instead of letting it

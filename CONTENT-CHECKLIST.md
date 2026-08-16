@@ -29,8 +29,17 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Contact & operations
 
-- [ ] Primary phone number (`PHONE`) — phone UI is hidden everywhere until verified
+- [x] Primary phone number (`PHONE`) — (615) 331-8762. Confirmed by Ben. The
+      phone UI (header tel link, call buttons, the sticky bar's dial button)
+      renders everywhere as a result.
 - [ ] Response-time claim "within one business day" (`RESPONSE_TIME`)
+- [x] Same-day callback (`SAME_DAY_CALLBACK`) — Confirmed by Ben. This is what
+      puts "A real person calls you back **today**" in the hero and in the
+      end-of-page CTA band, and it is an operational promise rather than a
+      tagline: it can only stay while the centers can actually keep it.
+      Narrower than `RESPONSE_TIME` above, which is the wording interior pages
+      use and is still open. Unverifying it drops the timeframe and the copy
+      falls back to "A real person calls you back."
 - [ ] "Most new clients start within a week" (`START_TIMING`)
 - [x] First-visit duration (`FIRST_VISIT_DURATION`) — 60 minutes. Confirmed by Ben.
 - [x] Typical session length (`SESSION_LENGTH`) — 30 minutes. Confirmed by Ben.
@@ -68,9 +77,10 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Statistics
 
-- [ ] 140,000+ sessions (`STAT_SESSIONS`) — the **only** source for this
-      figure. Anything that needs it reads it from here; nothing restates it.
-- [ ] Founding year 2016 (`ESTABLISHED_YEAR`)
+- [x] 140,000+ sessions (`STAT_SESSIONS`) — Confirmed by Ben. The **only**
+      source for this figure. Anything that needs it reads it from here;
+      nothing restates it.
+- [x] Founding year 2016 (`ESTABLISHED_YEAR`) — Confirmed by Ben.
 - [ ] Google rating & review count (`REVIEWS`) — block hidden until verified
 - [x] Canonical domain (`SITE_URL`) — `https://harmonizedbraincenterstn.com`,
       apex canonical (`www` 301s to it). Confirmed by Ben.
@@ -92,9 +102,15 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Testimonials & celebrity
 
-- [ ] Replace all sample quotes with verified client quotes
-      (`TESTIMONIALS` in `lib/site-config.ts`, set `verified: true`;
-      location-page quotes in `lib/locations.ts`) — samples never ship
+- [x] Homepage and `/stories` quotes (`TESTIMONIALS` in `lib/site-config.ts`)
+      — all three are real, permissioned, and `verified: true`. Quoted
+      verbatim; do not tighten or paraphrase permissioned copy.
+- [ ] **Location-page quotes** (`quote` on each entry in `lib/locations.ts`) —
+      still sample copy. They are gated behind draft mode and do **not** ship,
+      so production shows the "Good to know" block instead. Franklin's is the
+      `FOUNDER_QUOTE` wording typed in as a plain string, which means it is
+      not gated by that `Verifiable` — replace it rather than confirming it
+      here.
 - [ ] Film/collect video testimonials (optional)
 - [ ] **Trisha Yearwood — launch blocker.** Enable only with written permission
       for: name · likeness · image/video · quote · "Grammy-winning artist"

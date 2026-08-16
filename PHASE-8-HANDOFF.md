@@ -67,7 +67,7 @@ npm run check:index                                   # mirrored-copy drift guar
 | Unanswerable topics | **Built** | `lib/chat/unanswerable.ts` |
 | §4 Safety | **Built** | `lib/chat/safety.ts`, `session.ts` |
 | §5 Booking | **Built** | `lib/chat/booking.ts`, migration `0002_consultation_source.sql` |
-| §5.1 Callback expectations | **Built, dormant** | `BUSINESS_HOURS` unverified → no timing claim ships |
+| §5.1 Callback expectations | **Built + live** | per-center `hours` in `lib/locations.ts`, both verified → `callbackExpectation()` names the next open day |
 | §6 Implementation | **Built** | `app/api/chat/route.ts`, `rate-limit.ts`, `logging.ts`, `components/SiteAssistant.tsx` |
 | §7 Test checklist | **Built + run** | `scripts/chat-checklist.mjs` (`npm run check:chat`) |
 | §8 Ben's decisions | **Open** — see the last section | — |
@@ -79,7 +79,7 @@ npm run check:index                                   # mirrored-copy drift guar
    is no interface to swap models or providers. Nothing needs it yet; noted so
    nobody assumes one exists.
 
-`UNANSWERABLE_TOPICS` and the `confirmTag` exclusion were the two items in this
+`PRE_RETRIEVAL_TOPICS` and the `confirmTag` exclusion were the two items in this
 slot and are now both built — see the two sections below, which record what
 shipped rather than what was proposed.
 
@@ -344,13 +344,23 @@ passage for eight commits. Pages with no tags (`app/concerns/[slug]/page.tsx`,
 `app/what-we-help-with/page.tsx`) are listed with empty entries on purpose: the
 empty entry is what fails on the day one appears next to 24 indexed FAQs.
 
-## `UNANSWERABLE_TOPICS` — built
+## `PRE_RETRIEVAL_TOPICS` — built
 
-**The problem.** Hours are deliberately absent from the index (§5.1,
-`BUSINESS_HOURS` unverified). So hours questions fall through to whatever shares
-a word: "when are you open" retrieves Franklin's *coming-soon* passage, "what
-are your hours" retrieves the session-length FAQ. The model is then handed
-passages that do not answer the question and is left to decline — the prompt
+> **Read this section as history for the mechanism, not for the hours.** It was
+> written while a single unverified `BUSINESS_HOURS` gated the topic. That
+> constant no longer exists: each center carries its own verified
+> `hours: Verifiable<WeeklyHours>` in `lib/locations.ts`, and the hours entry
+> did **not** retire itself when they were confirmed — it was rewritten to
+> *answer*, because the two centers keep different weeks and a merged week
+> would be true of neither. See "Phase 12" below for what it answers now. The
+> export is `PRE_RETRIEVAL_TOPICS`; `UNANSWERABLE_TOPICS` was its working name
+> and is not in the code.
+
+**The problem.** Hours were deliberately absent from the index (§5.1,
+`BUSINESS_HOURS` unverified). So hours questions fell through to whatever shared
+a word: "when are you open" retrieved Franklin's *coming-soon* passage, "what
+are your hours" retrieved the session-length FAQ. The model was then handed
+passages that did not answer the question and left to decline — the prompt
 catching a structural gap.
 
 **The design.** A pre-retrieval check in `lib/chat/unanswerable.ts`, sitting
@@ -370,12 +380,15 @@ patterns and a `Verifiable` gate:
 }
 ```
 
-**How it self-retires.** The gate is read at request time, not at module load.
-The moment Ben sets `BUSINESS_HOURS.verified = true`, the check stops firing and
-hours questions flow to retrieval and the model as normal — the same edit that
-unlocks `callbackExpectation()`'s open/closed branches and
-`openingHoursSpecification` in the JSON-LD. No second cleanup task, nothing to
-remember to delete.
+**How it self-retires.** The gate is read at request time, not at module load,
+so confirming the `Verifiable` stops the check firing with no second cleanup
+task. `session-length` works exactly this way today and is dormant.
+
+Hours took the other road. Confirming them did unlock `callbackExpectation()`'s
+open/closed branches and `openingHoursSpecification` in the JSON-LD, but the
+topic was kept and taught to answer rather than allowed to retire, because the
+answer is assembled from two centers' differing weeks and there is no single
+passage retrieval could return.
 
 The same mechanism generalises to any other topic the site deliberately does not
 answer yet.
@@ -399,8 +412,8 @@ exclusion should be re-run against the visitor set to see what the question
 lands on instead.
 
 `SESSION_LENGTH` in `lib/site-config.ts` is its gate, promoted from a bare tag
-to a `Verifiable` for exactly the reason `BUSINESS_HOURS` is one: the assistant
-reads it, and a plain string gives it nothing to read. Its value is the wording
+to a `Verifiable` for exactly the reason each center's `hours` is one: the
+assistant reads it, and a plain string gives it nothing to read. Its value is the wording
 the pages already use, so confirming it changes no copy — only whether it may be
 spoken. It is on the `content-validation.ts` list too, so
 `REQUIRE_VERIFIED_CONTENT=true npm run build` names it.
@@ -816,14 +829,14 @@ sessions, visits or what to expect.
 These are blocking, and all four are his call rather than the code's. The
 first two are facts the practice has to settle.
 
-1. **Business hours** (`BUSINESS_HOURS` in `lib/site-config.ts`). Until
-   verified, the assistant makes **no** callback-timing claim — "Someone from
-   the team will call you back." Confirming it unlocks `callbackExpectation()`'s
-   open/closed branches, retires the `UNANSWERABLE_TOPICS` hours check, and
-   unblocks `openingHoursSpecification` in the LocalBusiness JSON-LD. Also
-   confirm `hoursLines` in `lib/locations.ts` at the same time — they must
-   agree. `REQUIRE_VERIFIED_CONTENT=true npm run build` fails while it is open.
-2. **The two community lists** (`communitiesTag` on Nashville and
+> **Business hours are settled and off this list.** `BUSINESS_HOURS` was
+> deleted; each center carries a verified `hours: Verifiable<WeeklyHours>` in
+> `lib/locations.ts`. `callbackExpectation()` names the next open day, the
+> assistant answers hours per day and per center, and `lib/schema.ts` emits
+> `openingHoursSpecification`. `hoursLines` is gone with it — the week is
+> structured data rendered through `formattedHours()`.
+
+1. **The two community lists** (`communitiesTag` on Nashville and
    Murfreesboro) — the last thing the `confirmTag` gate excludes. Franklin's
    list carries no tag and answers today, so the fix is per center.
 3. **Conversation retention.** Transcripts go to the server log and inherit the
