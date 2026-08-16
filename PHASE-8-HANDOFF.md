@@ -494,6 +494,15 @@ benign ones not, 16 off-topic probes still no-match, 6 hours phrasings answered
 pre-retrieval and 6 near-misses not. The demand set and the count that goes
 with it are phase 11d, below.
 
+The booking payload is asserted field by field in the same run, `source_page`
+included since phase 14: three bookings from three different pages (one of them
+`null`), each checked against the page it was driven from, plus a check that the
+three did not all come back the same. That last one is the assertion that
+matters — the harness itself used to hardcode `"/contact"` as the page for every
+booking it ran, so a route that dropped the field and substituted a constant
+would have passed. The production path was already correct; nothing was
+asserting that it stayed correct.
+
 ### The finding phase 11b could not fix: 6 of 33 never reach the model
 
 Framing cannot help a question that retrieves nothing, and the reference case

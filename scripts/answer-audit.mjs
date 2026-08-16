@@ -716,12 +716,42 @@ const BOOKING_NOTE = [
 ];
 
 /**
+ * Where the conversation happened, asserted rather than assumed.
+ *
+ * `source_page` is the only record of where a chat lead came from — the row
+ * itself says `source: chat` and nothing else about the visit — so it decides
+ * whether a concern page is earning calls or the homepage is doing all the
+ * work. It is also the field most easily lost: it is threaded from the widget
+ * through /api/chat into the state machine, and any link in that chain can
+ * quietly substitute a constant without a single reply changing.
+ *
+ * Three rows rather than one, because a single row passes just as well against
+ * a hardcoded value: two distinct pages have to come back distinct. Null is
+ * the third, since a caller that sends no page must store no page rather than
+ * have one invented for it.
+ */
+const BOOKING_SOURCE_PAGE = [
+  "/concerns/anxiety",
+  "/",
+  null,
+];
+
+/**
  * Drive one booking to the submission and hand back the payload.
  *
  * The state machine is pure — app/api/chat/route.ts does the POST — so a full
  * booking runs here with no server, no key and no Supabase project.
+ *
+ * `page` is what the widget sends as the page the visitor is on. It used to be
+ * the literal "/contact" here, which made every audited booking agree with
+ * every other one and left the field untested in both directions.
  */
-function runBooking({ note = "skip", bestTime = "skip", center = "skip" } = {}) {
+function runBooking({
+  note = "skip",
+  bestTime = "skip",
+  center = "skip",
+  page = "/concerns/anxiety",
+} = {}) {
   const session = {
     id: "audit",
     createdAt: 0,
@@ -735,7 +765,7 @@ function runBooking({ note = "skip", bestTime = "skip", center = "skip" } = {}) 
     bookingOffered: true,
   };
   startBooking(session);
-  const say = (message) => advanceBooking(session, message, "/contact");
+  const say = (message) => advanceBooking(session, message, page);
   say("my child");
   say("Sarah");
   say("615-555-0142");
@@ -935,8 +965,28 @@ function guardrails() {
       failures.push(`answered field ${field} submitted as null`);
     }
   }
+  // Where she was, not where the call ends up. See BOOKING_SOURCE_PAGE.
+  const storedPages = [];
+  for (const page of BOOKING_SOURCE_PAGE) {
+    const row = runBooking({ page });
+    if (!row) {
+      failures.push(`booking did not submit for page ${JSON.stringify(page)}`);
+      continue;
+    }
+    storedPages.push(row.source_page);
+    if (row.source_page !== page) {
+      failures.push(
+        `source_page for ${JSON.stringify(page)} stored as ${JSON.stringify(row.source_page)}`
+      );
+    }
+  }
+  if (storedPages.length > 1 && new Set(storedPages).size === 1) {
+    failures.push(
+      `source_page is the same value (${JSON.stringify(storedPages[0])}) for every page — it is not being passed through`
+    );
+  }
   console.log(
-    `  booking fields  ${BOOKING_CENTER.length} centers, ${BOOKING_BEST_TIME.length} times, ${BOOKING_NOTE.length} notes`
+    `  booking fields  ${BOOKING_CENTER.length} centers, ${BOOKING_BEST_TIME.length} times, ${BOOKING_NOTE.length} notes, ${BOOKING_SOURCE_PAGE.length} source pages`
   );
 
   for (const [line, slug] of CONCERN_ROUTING) {
