@@ -32,11 +32,30 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Primary phone number (`PHONE`) — phone UI is hidden everywhere until verified
 - [ ] Response-time claim "within one business day" (`RESPONSE_TIME`)
 - [ ] "Most new clients start within a week" (`START_TIMING`)
-- [ ] First-visit duration (`FIRST_VISIT_DURATION`)
-- [ ] Typical session length (`SESSION_LENGTH_TAG`)
-- [ ] Pricing (`PRICING_TAG`) / HSA-FSA policy (`HSA_FSA_TAG`) / insurance wording (`INSURANCE_TAG`)
+- [x] First-visit duration (`FIRST_VISIT_DURATION`) — 60 minutes. Confirmed by Ben.
+- [x] Typical session length (`SESSION_LENGTH`) — 30 minutes. Confirmed by Ben.
+- [x] Pricing — `$125` per session, `$1,300` for 12 (`$200` less than paying
+      per session), Brain Map `$150` separate. Confirmed by Ben. `PACKAGE_NOTE`
+      carries the two caveats — the Brain Map is required before regular
+      sessions begin and does not count toward the twelve — and must appear
+      wherever the package price does.
+- [x] Insurance & HSA/FSA (`INSURANCE_POLICY`) — self-pay, HSA/FSA accepted,
+      superbill on request. Confirmed by Ben, verbatim; do not reword.
+- [x] Practitioner training (`TRAINING_CLAIM`) — OchsLabs certification plus
+      three months in-house. Confirmed by Ben, verbatim; **no superlative or
+      ranking claim** is to be added to it.
+- [x] **Session count disagreement — resolved.** `TRAINING_CLAIM` briefly said
+      "more than 150,000 sessions" (written in error) against `STAT_SESSIONS`'s
+      "140,000+", with `/about` rendering both. Fixed by removing the figure
+      rather than correcting it: the sentence now reads "Every session we've
+      delivered has shaped how we train" and the count is stated once, in the
+      proof band. `STAT_SESSIONS` is unchanged at 140,000+ and is the single
+      source — `/about`'s meta description and the build-log label now
+      interpolate it instead of repeating it.
 - [ ] Concierge service area & pricing (`CONCIERGE_TAG`)
-- [ ] Practitioner training & progress-review process wording (`TRAINING_CLAIM_TAG`)
+- [ ] Community lists per center (`planning.communitiesTag` in `lib/locations.ts`
+      — Nashville and Murfreesboro). Also drives schema `areaServed`, and is
+      the only thing the assistant's `confirmTag` gate still excludes.
 - [ ] Brain Map differentiator claim (`BRAIN_MAP_CLAIM`) — the hedged "as far as
       we know" wording ships only once verified. Do **not** replace it with
       "the first in the country" without a documented basis.
@@ -49,7 +68,8 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 
 ## Statistics
 
-- [ ] 140,000+ sessions (`STAT_SESSIONS`)
+- [ ] 140,000+ sessions (`STAT_SESSIONS`) — the **only** source for this
+      figure. Anything that needs it reads it from here; nothing restates it.
 - [ ] Founding year 2016 (`ESTABLISHED_YEAR`)
 - [ ] Google rating & review count (`REVIEWS`) — block hidden until verified
 - [x] Canonical domain (`SITE_URL`) — `https://harmonizedbraincenterstn.com`,

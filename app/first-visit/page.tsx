@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
-import ConfirmTag from "@/components/ConfirmTag";
 import { BrainMapCta, TalkCta } from "@/components/Buttons";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_PRICE,
   FIRST_VISIT_DURATION,
-  FIRST_VISIT_DURATION_TAG,
-  HSA_FSA_TAG,
-  SHOW_DRAFT_CONTENT,
+  INSURANCE_POLICY,
+  PACKAGE_NOTE,
+  PACKAGE_PRICE,
+  PACKAGE_SAVING,
+  PACKAGE_SESSIONS,
+  SESSION_LENGTH,
+  SESSION_PRICE,
 } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -64,13 +67,8 @@ export default function FirstVisitPage() {
               <BrainMapCta />
             </div>
             <p className="micro">
-              {SHOW_DRAFT_CONTENT && (
-                <>
-                  Plan for {FIRST_VISIT_DURATION}{" "}
-                  <ConfirmTag>{FIRST_VISIT_DURATION_TAG}</ConfirmTag> &middot;{" "}
-                </>
-              )}
-              Nothing to prepare or bring
+              Plan for {FIRST_VISIT_DURATION} &middot; Nothing to prepare or
+              bring
             </p>
           </div>
           <div className="rv">
@@ -119,22 +117,24 @@ export default function FirstVisitPage() {
               {/* Names what the $150 actually buys, item by item. The "no
                   packages or countdown offers" line from Phase 1 is gone on
                   purpose: part 5 of the five-part list above already says it,
-                  and Phase 6 is the rule about saying a thing once. */}
+                  and Phase 6 is the rule about saying a thing once.
+
+                  PACKAGE_NOTE rides the package price everywhere it appears,
+                  per Ben — without it, "$1,300 for 12" reads as covering the
+                  first visit, which it does not. */}
               <p>
                 The phone call is free. {BRAIN_MAP_NAME} &mdash; your first
                 visit &mdash; is {BRAIN_MAP_PRICE} and includes the full
                 conversation, a 21-point recording, your map explained point by
-                point, and a written plan you keep. Session pricing is shared
-                before you commit to anything.
+                point, and a written plan you keep. Regular sessions are{" "}
+                {SESSION_PRICE} and run {SESSION_LENGTH.value}. A{" "}
+                {PACKAGE_SESSIONS}-session package is {PACKAGE_PRICE} &mdash;{" "}
+                {PACKAGE_SAVING} less than paying per session. {PACKAGE_NOTE}
               </p>
             </div>
             <div className="care">
               <h3>Insurance</h3>
-              <p>
-                As a wellness service, LENS is typically not covered by
-                insurance. Many clients use HSA/FSA funds &mdash; we&rsquo;ll
-                give you documentation. <ConfirmTag>{HSA_FSA_TAG}</ConfirmTag>
-              </p>
+              <p>{INSURANCE_POLICY}</p>
             </div>
             <div className="care">
               <h3>Bringing a child</h3>

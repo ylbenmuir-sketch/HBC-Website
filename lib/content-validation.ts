@@ -9,6 +9,7 @@ import {
   RESPONSE_TIME,
   REVIEWS,
   SAME_DAY_CALLBACK,
+  SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   START_TIMING,
   STAT_SESSIONS,
@@ -35,7 +36,9 @@ function check(label: string, verified: boolean) {
 check("Primary phone number", PHONE.verified);
 check("Founder last name", FOUNDER_LAST_NAME.verified);
 check("Founder quote sign-off", FOUNDER_QUOTE.verified);
-check("Session count (140,000+)", STAT_SESSIONS.verified);
+// Figure interpolated rather than typed into the label, so the build log
+// cannot end up naming a count the site no longer claims.
+check(`Session count (${STAT_SESSIONS.value})`, STAT_SESSIONS.verified);
 check("Founding year (2016)", ESTABLISHED_YEAR.verified);
 check("Google rating & review count", REVIEWS.verified);
 check("Response-time claim", RESPONSE_TIME.verified);
@@ -48,6 +51,12 @@ check("Franklin opening date", FRANKLIN_OPENING.verified);
 for (const location of locations) {
   if (location.hours) check(`${location.name} hours`, location.hours.verified);
 }
+// Confirmed, so this passes today. It stays on the list because the assistant
+// reads `verified` and not the value: flipping it false takes every session
+// length out of the index and puts the question back on fixed copy, which is
+// the lever to pull if the figure is ever in doubt again. See
+// lib/chat/unanswerable.ts.
+check("Typical session length", SESSION_LENGTH.verified);
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
 check(
   "At least one verified testimonial",

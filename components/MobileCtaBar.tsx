@@ -11,6 +11,11 @@ import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
  * doubles the same ask; globals.css also hides it while the menu drawer is
  * open (body[data-menu-open]). Entrance is a small fade/rise that the global
  * reduced-motion gate disables.
+ *
+ * While it is up it marks `body[data-cta-bar]`, which is how the site
+ * assistant's launcher knows to stand down — the two are bottom-anchored on
+ * the same phone screen, and the rule is that only one of them is ever there.
+ * This bar is the primary conversion path, so it is the one that stays.
  */
 export default function MobileCtaBar() {
   const [show, setShow] = useState(false);
@@ -37,6 +42,14 @@ export default function MobileCtaBar() {
       window.removeEventListener("resize", update);
     };
   }, []);
+
+  useEffect(() => {
+    if (show) document.body.dataset.ctaBar = "on";
+    else delete document.body.dataset.ctaBar;
+    return () => {
+      delete document.body.dataset.ctaBar;
+    };
+  }, [show]);
 
   return (
     <div className={`cta-bar${show ? " show" : ""}`} aria-hidden={!show}>

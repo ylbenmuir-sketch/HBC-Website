@@ -25,6 +25,20 @@
 .DS_Store
 *.pem
 
+# camera-roll originals dropped into public/images. Everything the site
+# serves has a lowercase-hyphenated, keyword-descriptive filename — the name
+# is an SEO surface — so a space or a camera prefix means the raw file got
+# committed alongside the renamed one.
+#
+# Matching on a space and on the known prefixes, deliberately not on
+# "contains an uppercase letter": core.ignorecase is true on macOS, which
+# makes a [A-Z] class match lowercase too and would ignore the whole folder.
+/public/images/* *
+/public/images/IMG_*
+/public/images/DSC*
+/public/images/PXL_*
+/public/images/Screenshot*
+
 # debug
 npm-debug.log*
 yarn-debug.log*

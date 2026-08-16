@@ -243,7 +243,10 @@ export default function HomePage() {
                   same sentence without the timeframe. */}
               {verifiedOr(SAME_DAY_CALLBACK) ? (
                 <>
-                  A real person calls you back today.
+                  {/* Explicit {" "}: JSX drops whitespace that spans a line
+                      break, so without it the tag rendered hard against the
+                      full stop — "back today.[CONFIRM …]". */}
+                  A real person calls you back today.{" "}
                   <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
                 </>
               ) : (
@@ -254,11 +257,26 @@ export default function HomePage() {
             </p>
           </div>
           <div className="rv hero-media">
+            {/* Portrait source (1122x1402) where the old hero was landscape,
+                so the crop values are re-derived rather than carried over: 28%
+                puts both faces in the upper third of the 620px desktop frame
+                and is the highest the crop can sit before the tablet width —
+                where the same 620px frame goes full-bleed and crops hardest —
+                starts cutting the top of her head. On phones the frame is
+                taller than the image is wide, so the image is
+                height-constrained and only the horizontal half of
+                positionMobile does anything — centered keeps both faces in.
+
+                Filename and alt are the SEO surface for this image: a
+                keyword-descriptive file name (not "Mom and daughter.png") and
+                alt text that describes what's actually pictured while naming
+                the service and the metro. Alt does not claim this is a
+                session or a result — it isn't one. */}
             <PhotoFrame
-              src="/images/hero.jpg"
-              alt="A calm LENS neurofeedback session at Harmonized Brain Centers"
-              position="46% 24%"
-              positionMobile="48% 18%"
+              src="/images/mother-daughter-lens-neurofeedback-nashville.jpg"
+              alt="Mother and teenage daughter talking calmly together at home — the everyday calm families seek from LENS neurofeedback in Nashville, TN"
+              position="50% 28%"
+              positionMobile="50% 28%"
               height={620}
               className="hero-ph"
               sizes="(max-width: 1060px) 100vw, 47vw"

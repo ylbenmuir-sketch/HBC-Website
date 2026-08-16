@@ -131,10 +131,13 @@ function openingHoursSpecification(hours: WeeklyHours) {
  *  - `image` — real photographs only; a center with none omits the field.
  *  - `areaServed` — the same communities sentence shown under "Planning your
  *    visit".
- *  - `priceRange` — a band, not a figure. The literal "$150" read as though
- *    every service costs $150 when it is the first visit only, and
- *    per-session pricing is still unverified (PRICING_TAG). Revisit once it
- *    lands and a real range can be stated.
+ *  - `priceRange` — a band, not a figure, and it stays one now that Ben has
+ *    confirmed per-session pricing. The literal "$150" read as though every
+ *    service costs $150 when it is the first visit only; "$125–$150" would be
+ *    just as wrong, because the published $1,300 package sits outside it.
+ *    Google's own guidance for this field is a relative band, so "$$" says
+ *    what it is for and the exact figures stay where a visitor reads them in
+ *    context — /first-visit and /faq.
  *  - `geo` / `hasMap` — both ride the address gate below, because a pin or a
  *    map link without a verified street address would point at a building
  *    the site doesn't claim to occupy.
