@@ -255,6 +255,16 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    and tight leading from the base h1,h2,h3 rule. */
 .lens-seq h3, .lens-seq h4 { font-family: var(--sans); font-size: 16.5px; font-weight: 600; line-height: 1.65; color: var(--navy); margin-bottom: 3px; }
 .lens-seq p { font-size: 15px; color: var(--slate); }
+/* On a navy band, `.sec-navy p` should win — and it loses. Both selectors are
+   one class plus one element, so specificity is a tie and source order decides
+   it; `.sec-navy p` is 95 lines above, so `--slate` on navy is what shipped,
+   at 2.54:1. The heading beside it was patched with an inline
+   `color: var(--ivory)` on /locations/[slug] rather than here, which is the
+   same collision found once and worked around instead of fixed. This restates
+   the on-dark value at a specificity nothing in the component can tie. Any
+   future component that sets its own `p` colour below line 162 has the same
+   bug waiting for it. */
+.sec-navy .lens-seq p { color: rgba(251, 248, 241, 0.7); }
 .wave { display: block; margin: 34px 0 8px; max-width: 100%; height: auto; }
 
 /* journey steps (5) */
@@ -786,7 +796,24 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .celeb-name, .celeb-role { display: none; }
   .celeb-quote { order: 2; border-left: 0; padding-left: 0; margin: 20px 0 30px; font-size: clamp(27px, 7.6vw, 34px); line-height: 1.28; color: var(--ivory); max-width: 18ch; }
   .celeb-video { order: 3; width: auto; align-self: stretch; justify-self: stretch; margin: 0 -24px; aspect-ratio: 4 / 5; max-height: min(76svh, 600px); border-radius: 0; border: 0; }
-  .celeb-video::after, .celeb-video:hover::after { background: linear-gradient(to top, rgba(21, 34, 48, 0.88) 0%, rgba(21, 34, 48, 0.22) 42%, rgba(21, 34, 48, 0.05) 70%); }
+  /* Shaped to the copy block, not to the frame — the same constraint the hero
+     scrim is built around, and the same technique.
+
+     The identity block sits from 4–23% of the frame height (measured at 320,
+     390 and 414; 320 is the tallest because the name wraps). Under the old
+     ramp — 0.88 at the bottom falling to 0.22 by 42% — the gold role line read
+     1.69:1 at 320 and the name 3.99:1, because the thumbnail is bright exactly
+     there.
+
+     Opaque through 25% rather than merely darker, because gold #a9853f on the
+     deepest navy in the palette is 4.69:1 and that is the ceiling: a scrim at
+     0.96 gets the role line to 4.24 and nothing short of opaque reaches 4.5.
+     The alternative was recolouring the line, which is a palette decision
+     rather than a contrast fix. Above 25% the ramp falls away faster than it
+     used to, so the photograph keeps its light where nothing is written on it.
+
+     Now 4.69:1 for the role and 15.19:1 for the name, at all three widths. */
+  .celeb-video::after, .celeb-video:hover::after { background: linear-gradient(to top, rgba(21, 34, 48, 1) 0%, rgba(21, 34, 48, 1) 25%, rgba(21, 34, 48, 0.38) 44%, rgba(21, 34, 48, 0.12) 62%, rgba(21, 34, 48, 0.02) 78%); }
   .celeb-video .play { width: 64px; height: 64px; }
   .celeb-id { display: flex; position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 2; flex-direction: column; gap: 3px; }
   .celeb-id-name { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 31px; color: var(--ivory); line-height: 1.1; }
