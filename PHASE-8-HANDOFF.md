@@ -47,9 +47,19 @@ npm run check:index                                   # mirrored-copy drift guar
 > down" case. Anything else refuses and exits 1, including any error asking the
 > question. Fail closed.
 >
-> **As of phase 14 the project in `.env.local` holds 5 rows** and is refused on
-> both counts. Whether those five are earlier checklist runs or real leads is a
-> question for Ben — see the phase 14 report.
+> **Settled.** The five rows that were in there were Ben's own test
+> submissions — four from the form, one from the chat booking walkthrough, all
+> inside one twelve-minute window, all with `source_page: /contact`. He
+> confirmed the table was empty before them and that no real traffic points at
+> this URL. They are deleted; the table is empty and the guard now passes when
+> the project is named:
+>
+> ```bash
+> CHECK_CHAT_ALLOW_PROJECT=<project-ref> npm run check:chat
+> ```
+>
+> Naming the ref is still required — an empty table on a hosted project does
+> not unlock the run on its own, which is checked and holds.
 
 > **Key format:** Anthropic keys begin `sk-ant-`. Two separate pastes into
 > `.env.local` arrived as `k-ant-…`, one character short — something eats the
@@ -533,8 +543,14 @@ included since phase 14: three bookings from three different pages (one of them
 three did not all come back the same. That last one is the assertion that
 matters — the harness itself used to hardcode `"/contact"` as the page for every
 booking it ran, so a route that dropped the field and substituted a constant
-would have passed. The production path was already correct; nothing was
-asserting that it stayed correct.
+would have passed.
+
+**The production path was never broken.** The `/contact` values that prompted
+this were correct: the rows were created by booking from the `/contact` page,
+which is what `source_page` is for. Reading the table without filtering on
+`source` makes form submissions and chat bookings look alike, and every one of
+those test rows came from that page. The assertion stands anyway — nothing was
+checking that the field kept working.
 
 ### The finding phase 11b could not fix: 6 of 33 never reach the model
 
@@ -863,5 +879,19 @@ From the README and repeated on every task in this phase:
   included, because a conversation has nowhere to put a `[CONFIRM]` tag.
 - No changes to typography, palette, or layout structure. Widget CSS is appended
   to `globals.css` fully scoped under `.assistant*`, using existing tokens only.
+- **`--sage-soft` is the binding backdrop for `--sage-deep`, not `--ivory-2`.**
+  Anything sage-coloured is checked against `--sage-soft` (`#e6ebe2`) before it
+  is called accessible: it is the darkest ground sage sits on — the fill of the
+  `.note-sage` panels on 11 routes, with the `/contact` phone number inside one
+  — and it is roughly 0.07 tighter than ivory-2 on the same text. Phase 14 hit
+  this: `#5a6f5c` was chosen because it cleared the eyebrows on ivory-2 at
+  4.70, and it left those panels at 4.4903, under 4.5. `#596e5b` ships and
+  clears sage-soft at 4.5573. The same rule applies to any new sage placement,
+  and to any future move of the token: measure the note panels, not the
+  eyebrows. Full table in CONTRAST-OPTIONS.md.
+- Gold (`--gold`) is deliberately **not** at 4.5:1 on ivory — it measures 3.24
+  and that is Ben's decision, recorded with both remedies in
+  CONTRAST-OPTIONS.md. Do not "fix" it in passing. It is also text on navy, so
+  darkening the token alone makes five dark pairings worse.
 - Never say LENS treats, cures, or helps a named condition — describe what
   people come in *for*.

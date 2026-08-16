@@ -533,20 +533,37 @@ its own permissions gate is unchanged and still unsatisfied.
 
 ---
 
-## Questions I need answered
+## Questions — both answered, both closed
 
-1. **Item 2** — where did you see chat bookings recording `/contact`? Supabase,
-   or audit output? The production path is clean end to end and the only
-   `/contact` literal was in the test harness.
-2. **Item 3** — the live `consultation_requests` table holds **5 rows**. Test
-   leftovers, or real leads? I counted them and touched nothing.
-3. **Item 1** — the Brain Map section is no longer next to the step that names
-   it. Leave it, or move it up behind the steps?
-4. **Item 5** — gold-on-ivory (3.24:1) and sage-on-ivory-2 (4.43:1) are two
-   token-level decisions covering almost the whole list. Do you want options, or
-   is the list enough for now?
-5. **Item 4** — I added `npm run check:layout` to the repo, which was not asked
-   for. Keep or drop?
-6. **Item 7** — `CONTENT-CHECKLIST.md` has four boxes unticked that the code has
-   verified, and the README/handoff describe `BUSINESS_HOURS` as the live
-   blocker when it no longer exists. Both are yours to correct; I left them.
+1. **Item 2 — `source_page` was never broken.** Ben was looking at rows he had
+   created by booking from the `/contact` page, which is what the field is for.
+   Confirmed by the rows themselves before they were deleted: all five carried
+   `source_page: /contact`, and four of them were `source: form`. Reading the
+   table without filtering on `source` makes form submissions and chat bookings
+   look alike. The harness fix stands on its own — nothing was asserting the
+   field kept working.
+2. **Item 3 — the 5 rows were test leftovers, and are deleted.** Ben's own
+   submissions from Resend email testing and the booking walkthrough: four from
+   the form, one from chat, all inside one twelve-minute window on 16 Aug, all
+   from `/contact`. He confirmed the table was empty before them and that no
+   real traffic points at this URL. Backed up outside the repo before deletion
+   (they contain names, phone numbers and an email, so they are not committed).
+   The table is empty and `check:chat` now passes with
+   `CHECK_CHAT_ALLOW_PROJECT=<ref>`; naming the ref is still required, since an
+   empty table on a hosted project does not unlock the run on its own.
+
+### Still open
+
+- **Item 1** — the Brain Map section is no longer next to the step that names
+  it. Leave it, or move it up behind the steps?
+
+### Settled since
+
+- **Item 5** — sage moved to `#596e5b`; every sage pairing that ships clears
+  4.5:1. Gold left alone at 3.24:1 by decision, with both remedies recorded in
+  CONTRAST-OPTIONS.md.
+- **Item 4** — `npm run check:layout` kept.
+- **Item 7** — the four checklist boxes ticked, `SAME_DAY_CALLBACK` added, and
+  the `BUSINESS_HOURS` drift corrected across README, this handoff,
+  CONTENT-CHECKLIST and SEO-AUDIT. The nine dead exports and
+  `components/Eyebrow.tsx` are deleted.
