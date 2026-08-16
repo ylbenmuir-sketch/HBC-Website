@@ -1,5 +1,5 @@
 /**
- * The answer-framing audit (phase 11b).
+ * The answer-framing audit (phase 11b, recounted in 11d).
  *
  *   NEXT_PUBLIC_FEATURE_ASSISTANT=true PORT=3010 npm run dev
  *   CHAT_BASE=http://localhost:3010 npm run check:answers
@@ -35,8 +35,15 @@
  *    site's own copy says things like "a mind that won't shut off at night"
  *    and that is a recognition, not a denial.
  * 2. **No announced honesty.** "I'll be straight with you" and its variants.
- * 3. **One limit, not three.** Two limitation sentences in a row is the shape
- *    that reads as a warning label.
+ * 3. **One limit, counted over the whole answer.** Phase 11b checked for two
+ *    limitation sentences *in a row*, and the answers routed around it: the
+ *    recognition opened, and then two or three limits came one after another
+ *    with a sentence of something else wedged between them. "Does it help with
+ *    ADHD?" came back with three — not a treatment for ADHD or any diagnosis;
+ *    works alongside, never in place of, your doctor, therapist, or school;
+ *    nobody can say in advance how it would go. Adjacency was never what made
+ *    that read as a warning label; the count did. So the count is what is
+ *    checked, at every position, and one is the limit.
  * 4. **The call is the ask.** The turn ends on "Want me to set one up?" —
  *    which is also what app/api/chat/route.ts `offersCall()` looks for, so a
  *    bare "yes" starts the booking flow. A page link may appear, but before
@@ -76,6 +83,8 @@ const { retrieve } = await import(`${ROOT}/lib/chat/retrieve.ts`);
 const { checkRefusal } = await import(`${ROOT}/lib/chat/refusals.ts`);
 const { checkPreRetrieval } = await import(`${ROOT}/lib/chat/unanswerable.ts`);
 const { STANDING_FACT_TEXT } = await import(`${ROOT}/lib/chat/answer.ts`);
+const { confirmed } = await import(`${ROOT}/lib/chat/content-index.ts`);
+const { STAT_SESSIONS, ESTABLISHED_YEAR } = await import(`${ROOT}/lib/site-config.ts`);
 
 const BASE = `${process.env.CHAT_BASE ?? "http://localhost:3000"}/api/chat`;
 
@@ -135,6 +144,30 @@ const CONCERNS = [
   "Something happened years ago and I'm still jumpy all the time",
 ];
 
+/**
+ * The demand set (phase 11d): "does this help with X", asked flat.
+ *
+ * Neither a concern line nor a §7 accuracy question. A visitor asks it in four
+ * words, and it is the one shape where the passages retrieval hands over are
+ * mostly boundary copy — "Does it help with ADHD?" pulls
+ * `concern:focus-adhd:limits` *and* `concern:focus-adhd:faq:2`, so two of four
+ * passages say what LENS is not. A model handed that and told to stay honest
+ * writes three limitation sentences and thinks it has done its job. It is the
+ * hardest place on the site for one limit to stay one limit, which is exactly
+ * why it belongs in the audit rather than in a hand-run.
+ *
+ * Also the sharpest place the standing prohibition can break: none of these
+ * may be answered yes. What LENS does is what people come in *for*, and the
+ * answer to "does it help with ADHD" is what the focus page recognises, never
+ * a claim about a diagnosis.
+ */
+const DEMAND = [
+  "Does it help with ADHD?",
+  "Can it help with sleep?",
+  "Can I help my child without medication?",
+  "Does LENS help with anxiety?",
+];
+
 /* ------------------------------------------------------------------ */
 /* The checks                                                          */
 /* ------------------------------------------------------------------ */
@@ -172,11 +205,47 @@ const NEGATION_LEAD =
 const NEGATION_WORD = /\b(?:not|n[’']t|never|cannot|no)\b/i;
 
 /**
- * A sentence whose job is a limit. Two in a row is the shape that reads as a
- * warning label, whatever the sentences say.
+ * A sentence whose job is a limit. More than one in an answer is the shape
+ * that reads as a warning label, whatever the sentences say and wherever they
+ * sit.
+ *
+ * The three phrasings phase 11d was opened for are all here, and two of them
+ * were invisible to the 11b version of this pattern: "individual experiences
+ * vary" and "no one can say in advance how it would go" both passed as
+ * ordinary prose while doing a limit's whole job. A limit that the audit
+ * cannot see is a limit the answers will keep stacking.
+ *
+ * `varies` is matched only where something is being said to vary — "how much
+ * it helps varies from child to child", "experiences vary". The site's own
+ * "your plan adjusts to what's actually changing" is not a limit and must not
+ * count as one.
+ *
+ * "*rather than* a treatment" is in here because a third run caught it and the
+ * first two did not: the boundary can be drawn without a negation word in it
+ * at all, and a pattern that only knows "not a treatment" reads that answer as
+ * having no limit in it. It cost a false failure on the demand floor, which is
+ * the cheap direction to find it in — the expensive direction is an answer
+ * carrying two of these and passing.
  */
 const LIMITATION =
-  /\b(?:not a (?:treatment|medical|substitute|cure|therapy)|wellness service,? (?:not|and)|doesn'?t (?:treat|diagnose|cure|replace)|don'?t (?:treat|diagnose|cure)|isn'?t (?:a )?(?:treatment|therapy|medical)|never in place of|not intended to|can'?t (?:say|tell|predict|promise|guarantee)|i can'?t|we can'?t|i'?m not able)\b/i;
+  /\b(?:not a (?:treatment|medical|substitute|cure|therapy)|rather than a (?:treatment|medical|substitute|cure|therapy)|wellness service,? (?:not|and|rather)|doesn'?t (?:treat|diagnose|cure|replace)|don'?t (?:treat|diagnose|cure)|isn'?t (?:a )?(?:treatment|therapy|medical)|never in place of|never replaces?|not intended to|can'?t (?:say|tell|predict|promise|guarantee)|i can'?t|we can'?t|i'?m not able|(?:no one|nobody|no-one) can (?:say|tell|know|predict|promise)|(?:experiences?|results?|it|that|this|how much [^.?!]{0,40}) (?:varies|vary)\b|var(?:ies|y) (?:from|by|widely|a lot|person to person|child to child))\b/i;
+
+/**
+ * The clinical roster, which is true, published, and wrong to volunteer.
+ *
+ * It stays in the corpus and it stays in the answer to anyone who asks
+ * directly whether this replaces their treatment — that is a boundary
+ * question and exempt below. Offered unasked to a parent describing homework,
+ * it reads as a list of the professionals she should be talking to instead of
+ * us. "It doesn't replace anything your child is already doing" draws the same
+ * boundary without naming a single specialist.
+ */
+const CLINICAL_ROSTER =
+  /\b(?:never in place of|in place of|never replaces?|doesn'?t replace|not a substitute for)\b[^.?!]{0,60}\b(?:doctor|therapist|psychiatrist|prescriber|school support|medical care)\b/i;
+
+/** The proof beat: the count and the year, read from the same Verifiables. */
+const SESSION_COUNT = confirmed(STAT_SESSIONS);
+const ESTABLISHED = confirmed(ESTABLISHED_YEAR);
 
 /**
  * A question *about* the boundary, where the boundary is the answer.
@@ -265,7 +334,7 @@ function wrap(text, indent = 6) {
   return out.map((l) => pad + l).join("\n");
 }
 
-async function audit(label, questions) {
+async function audit(label, questions, { proof = false, limitFloor = 0 } = {}) {
   console.log(`\n${"=".repeat(78)}\n${label}\n${"=".repeat(78)}`);
   const rows = [];
 
@@ -305,13 +374,37 @@ async function audit(label, questions) {
       if (re.test(reply)) failures.push(`banned: ${name}`);
     }
 
-    if (!BOUNDARY_QUESTION.test(question)) {
-      for (let s = 1; s < parts.length; s += 1) {
-        if (LIMITATION.test(parts[s]) && LIMITATION.test(parts[s - 1])) {
-          failures.push("two limitation sentences in a row");
-          break;
-        }
+    // The count, over every sentence — not the adjacent pair 11b looked for.
+    // Reported on every row whether or not it fails, because "how many limits
+    // is this answer carrying" is the number this phase is about and it should
+    // be readable at a glance for the ones that pass too.
+    const limits = parts.filter((s) => LIMITATION.test(s)).length;
+    const boundary = BOUNDARY_QUESTION.test(question);
+    if (!boundary) {
+      if (limits > 1) failures.push(`${limits} limitation sentences (max 1)`);
+      // And on the demand set, not none. "Does it help with ADHD?" is a yes/no
+      // question the answer does not say no to; strip the boundary out of it
+      // entirely and what is left reads as a yes. One is the number, from both
+      // directions — this is the check that keeps 11d from being a way to
+      // delete the limit rather than fold it.
+      if (limits < limitFloor && grounded) {
+        failures.push("no limitation sentence — a 'does it help with X' answer needs one");
       }
+      // Two boundary facts folded into one sentence is the approved shape —
+      // "how much it helps varies, and it doesn't replace anything your child
+      // is already doing" — so the roster check is about *naming specialists*,
+      // not about the second clause existing.
+      if (CLINICAL_ROSTER.test(reply)) failures.push("volunteers the clinical roster");
+    }
+
+    // The proof beat, on the sets that earn it: someone describing what they
+    // or their child is going through is asking, underneath it, whether we
+    // have seen this before. Both figures or neither — 11b's rule that the
+    // count and the year travel together as one sentence.
+    if (proof && grounded && SESSION_COUNT && ESTABLISHED) {
+      const hasProof =
+        reply.includes(SESSION_COUNT) && reply.includes(String(ESTABLISHED));
+      if (!hasProof) failures.push("drops the proof beat");
     }
 
     // The ask closes the turn, and the page link — if there is one — comes
@@ -329,11 +422,12 @@ async function audit(label, questions) {
 
     failures.push(...groundingFailures(reply, passageText));
 
-    rows.push({ question, first, failures, flags, grounded, retrieval });
+    rows.push({ question, first, failures, flags, grounded, retrieval, limits });
 
     const mark = failures.length === 0 ? "ok  " : "FAIL";
     console.log(`\n${mark} ${i + 1}. ${question}`);
     console.log(wrap(reply));
+    console.log(`      · limitation sentences: ${limits}${boundary ? " (boundary question — exempt)" : ""}`);
     console.log(`      · first sentence: ${first}`);
     if (flags.length) console.log(`      · read: ${flags.join("; ")}`);
     if (failures.length) console.log(`      · FAILURES: ${failures.join("; ")}`);
@@ -394,10 +488,12 @@ const MUST_REFUSE = [
 /** Published answers that a refusal pattern must not swallow. */
 const MUST_ANSWER = [
   ...VISITOR,
+  // The demand set is here as well as in the answer half: "does it help with
+  // X" sits one word away from "will it help my son focus?", which *is* a
+  // prediction and *is* refused. The line between them is worth a guard.
+  ...DEMAND,
   "Does my child have to sit still?",
   "Do we have to commit to a package?",
-  "Can it help with sleep?",
-  "Can I help my child without medication?",
 ];
 
 /**
@@ -648,15 +744,24 @@ if (process.argv.includes("--retrieval")) {
 }
 
 const visitor = await audit("25 VISITOR QUESTIONS", VISITOR);
-const concerns = await audit("THE CONCERN SET", CONCERNS);
-const all = [...visitor, ...concerns];
+const demand = await audit("THE DEMAND SET", DEMAND, { proof: true, limitFloor: 1 });
+const concerns = await audit("THE CONCERN SET", CONCERNS, { proof: true });
+const all = [...visitor, ...demand, ...concerns];
 const failed = all.filter((r) => r.failures.length > 0);
 
+// The limitation count leads the summary line, because it is the number this
+// audit is now for: an answer can pass every other check and still be three
+// caveats long.
 console.log(`\n${"=".repeat(78)}\nSUMMARY\n${"=".repeat(78)}`);
 for (const row of all) {
   const state = row.failures.length ? "FAIL" : row.flags.length ? "read" : "ok  ";
-  console.log(`${state}  ${row.question}`);
+  console.log(`${state}  limits ${row.limits}  ${row.question}`);
 }
+const stacked = all.filter((r) => r.limits > 1);
+console.log(
+  `\nlimitation sentences: ${all.reduce((n, r) => n + r.limits, 0)} across ${all.length} answers` +
+    `, ${stacked.length} answer(s) carrying more than one`
+);
 console.log(`\n${all.length - failed.length}/${all.length} framing`);
 console.log(
   guardrailFailures.length === 0

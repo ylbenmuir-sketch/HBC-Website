@@ -479,17 +479,19 @@ where it is a reason to call rather than a warning label on the way in.
 
 ### `npm run check:answers`
 
-`CHAT_BASE=http://localhost:3010 npm run check:answers` — 25 visitor questions
-and 8 concern lines through the live route, plus the guardrails in-process.
-Asserts, unlike `check:chat`: opening, banned constructions, stacked limits,
-the ask, link-before-ask, and grounding (every figure and path in a reply has
-to appear in a passage retrieval actually handed over, or in the standing
-facts). Retrieval runs in the same process via Node's TypeScript stripping, so
-the passages a reply is checked against are the ones the route gave the model.
+`CHAT_BASE=http://localhost:3010 npm run check:answers` — 25 visitor questions,
+4 demand lines and 8 concern lines through the live route, plus the guardrails
+in-process. Asserts, unlike `check:chat`: opening, banned constructions,
+limitation-sentence count, the ask, link-before-ask, and grounding (every
+figure and path in a reply has to appear in a passage retrieval actually handed
+over, or in the standing facts). Retrieval runs in the same process via Node's
+TypeScript stripping, so the passages a reply is checked against are the ones
+the route gave the model.
 
-Current: **33/33 framing, guardrails hold** — 21 refusals caught, 29 answerable
-questions not over-refused, 16 off-topic probes still no-match, 4 hours
-phrasings gated and 4 near-misses not.
+Current: **37/37 framing, guardrails hold** — 21 refusals caught, 31 answerable
+questions not over-refused, 16 off-topic probes still no-match, 6 hours
+phrasings answered pre-retrieval and 6 near-misses not. The demand set and the count that goes
+with it are phase 11d, below.
 
 ### The finding phase 11b could not fix: 6 of 33 never reach the model
 
@@ -604,6 +606,92 @@ the literal phrase), anxiety ("struggling to relax even when life is objectively
 calm"), and stress-resilience, whose own copy says "that genuine off-switch"
 twice and which therefore scored highest. Anxiety needed both "switch" and "off"
 to take it. Re-swept afterwards: 1 started matching, 0 stopped, 0 moved.
+
+## Phase 11d — the limit is a count, not a position
+
+Phase 11b's two rules about the limit were both about *position*: never open on
+a negation, never write two limitation sentences in a row. The answers obeyed
+both and stacked anyway. "Does it help with ADHD?" opened on recognition
+exactly as asked, and then ran *not a treatment for ADHD or any diagnosis* ·
+*works alongside, never in place of, your doctor, therapist, or school* ·
+*individual experiences vary, so no one can say in advance how it would go* —
+spaced far enough apart to pass a rule about adjacency, and reading, again, as
+**this doesn't work**.
+
+Nothing was removed from the corpus, no refusal was loosened, and no efficacy
+claim was added. Three changes, all framing:
+
+- **One limitation sentence per answer, counted at every position.** Where the
+  passages hand over three, the load-bearing one is kept and folded into the
+  offer of the call. `concern:*:limits` and the boundary FAQs are untouched and
+  still retrieve.
+- **Scope, not absence.** "How much LENS helps varies from child to child" says
+  the same true thing as "no one can say in advance how it would go", and only
+  one of them implies the service does very little.
+- **The clinical roster is not volunteered.** "It works alongside — never in
+  place of — your doctor, therapist, or school supports" stays in the corpus
+  and stays the answer to anyone who asks the boundary question outright.
+  Offered unasked to a parent describing homework it reads as a list of the
+  professionals she should be calling instead of us, so the concern answer says
+  "it doesn't replace anything your child is already doing" — same boundary, no
+  specialists named.
+
+And one precedence: `# Never` is now marked as outranking every framing rule
+above it. A warmth instruction and a no-claims instruction meet on exactly this
+question, and the order between them should not be left for a model to infer.
+
+### What the audit counts now
+
+`LIMITATION` is applied to **every** sentence and the count is asserted against
+one, rather than tested on adjacent pairs. The pattern also grew the two
+phrasings that were doing a limit's whole job while reading as ordinary prose —
+"individual experiences vary" and "no one can say" — because a limit the audit
+cannot see is a limit the answers keep stacking. Every row prints its count
+whether it passes or not.
+
+Boundary questions are exempt from the count, as they were from the pair rule:
+"Is this therapy or medical treatment?" answers with three and should.
+
+Two checks were added with it:
+
+- **`volunteers the clinical roster`** — the roster phrasing in a non-boundary
+  answer.
+- **`drops the proof beat`** — `STAT_SESSIONS` and `ESTABLISHED_YEAR` both
+  present, on the concern and demand sets. 11b made the proof a beat and the
+  answers were quietly dropping it: 5 of the 12 at the start of this phase.
+  Read through `confirmed()` here as in `answer.ts`, so un-verifying either
+  constant retires the check rather than failing the audit.
+
+### The demand set
+
+Four "does it help with X" lines, new in this phase and the reason for it.
+Neither concern lines nor §7 accuracy questions, and the one shape where most
+of what retrieval hands over is boundary copy — "Does it help with ADHD?"
+pulls `concern:focus-adhd:limits` *and* `concern:focus-adhd:faq:2`, so two of
+four passages say what LENS is not. It is the hardest place on the site for one
+limit to stay one limit.
+
+It is the only set with a limit **floor** as well as a ceiling: exactly one, not
+zero. She asked a yes/no question and the answer does not say no, so an answer
+with the boundary left out is one she reads as a yes — and without the floor,
+"collapse the stacked limits" has an obvious wrong solution. The four lines are
+also in `MUST_ANSWER`, because "does it help with X" sits one word away from
+"will it help my son focus?", which *is* a prediction and *is* refused.
+
+**37/37 framing, guardrails hold.** Before: 10 limitation sentences across the
+37, two answers stacking, 5 dropping the proof beat, 2 volunteering the roster.
+After: 16 across the 37, none above one outside the boundary answer.
+
+### Still open after this phase
+
+"Can I help my child without medication?" is answered from `page:home:what`,
+whose published text is "Help for anxiety, focus, and sleep — without
+medication." The assistant repeats the site's own headline and then declines to
+weigh in on anything medication-related, which is the best available answer to
+a question asked that directly — but it is the closest any answer comes to
+reading as an alternative-to-medication claim, and the wording that would
+change it is the homepage H1, not the prompt. Flagged for Ben rather than
+edited: phase 11d was scoped to framing.
 
 ## Known open items (engineering)
 

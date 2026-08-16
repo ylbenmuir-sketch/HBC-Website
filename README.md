@@ -248,12 +248,15 @@ CHAT_BASE=http://localhost:3000 npm run check:answers
 npm run check:answers -- --retrieval   # no server, no key, no spend
 ```
 
-The one that asserts. 25 visitor questions and 8 concern lines through the live
-route, checked for the shape phase 11b fixed — recognition first rather than a
-negation, no announced honesty, one limit rather than three, the call as the
+The one that asserts. 25 visitor questions, 4 "does it help with X" lines and 8
+concern lines through the live route, checked for the shape phase 11b fixed —
+recognition first rather than a negation, no announced honesty, the call as the
 closing ask with the page link before it — plus grounding: every figure and
 every path in a reply has to appear in a passage retrieval actually handed
-over. The §3 refusal list, the off-topic gate probes and the unanswerable
+over. Phase 11d added the count that made "one limit rather than three" mean
+anything: limitation sentences are counted across the whole answer rather than
+looked for in adjacent pairs, and every row prints its count whether it passes
+or not. A boundary question is exempt, because there the limit *is* the answer. The §3 refusal list, the off-topic gate probes and the unanswerable
 topics run in the same command, because framing changes are exactly the kind
 that quietly move a boundary. Exits non-zero on any failure.
 
