@@ -164,6 +164,14 @@ const CONCERN_ALIASES: Record<string, string[]> = {
     // scored coverage 1.0 against it and was rejected for not being filed
     // under a single word of itself.
     "thought", "quiet",
+    // "I can't switch off" — Ben's call. Sleep ("a mind that won't shut off at
+    // night") and stress-resilience ("a system that never stands down") both
+    // had a claim on it, and the question fails the subject gate at coverage
+    // 1.0, so whichever list holds the word wins it outright. Anxiety it is.
+    // Only "switch": "off" is in "shut off", "off his medication" and "a day
+    // off", and a word that common files the concern under other people's
+    // questions.
+    "switch", "off",
   ],
   "focus-adhd": [
     "adhd", "add", "attention", "concentrate", "distracted", "procrastinate", "task", "scattered",

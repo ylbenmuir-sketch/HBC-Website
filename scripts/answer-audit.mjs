@@ -431,6 +431,8 @@ const MUST_NOT_MATCH = [
  */
 const CONCERN_ROUTING = [
   ["I feel on edge all day and can't settle", "anxiety"],
+  // Ben's call over sleep and stress-resilience, both of which had a claim.
+  ["I can't switch off", "anxiety"],
   ["My thoughts won't quiet down at night", "anxiety"],
   ["I overreact to small things and then replay it", "anxiety"],
   ["My body is braced all the time", "anxiety"],

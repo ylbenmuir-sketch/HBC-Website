@@ -597,12 +597,13 @@ removing "homework" from focus-adhd fails the sweep.
 
 ### Open question for Ben
 
-**"I can't switch off" — which concern owns it?** Coverage is 1.0 and it fails
-the subject gate only, so whichever list gets "switch"/"off" wins the question
-outright. Three have a real claim: **sleep** ("a mind that won't shut off at
-night" — the literal phrase), **anxiety** ("struggling to relax even when life
-is objectively calm"), **stress-resilience** ("a system that never stands
-down", and the passage that currently scores highest). Not guessed.
+**"I can't switch off" — settled: anxiety** (Ben's call). It failed the subject
+gate at coverage 1.0, so whichever list held the words won it outright, and
+three concerns had a real claim: sleep ("a mind that won't shut off at night" —
+the literal phrase), anxiety ("struggling to relax even when life is objectively
+calm"), and stress-resilience, whose own copy says "that genuine off-switch"
+twice and which therefore scored highest. Anxiety needed both "switch" and "off"
+to take it. Re-swept afterwards: 1 started matching, 0 stopped, 0 moved.
 
 ## Known open items (engineering)
 
