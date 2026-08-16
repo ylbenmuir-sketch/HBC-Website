@@ -31,6 +31,26 @@ CHAT_BASE=http://localhost:3001 npm run check:chat   # the §7 checklist
 npm run check:index                                   # mirrored-copy drift guard
 ```
 
+> **`check:chat` writes rows, and now refuses to write them anywhere real.**
+> Two of its conversations run a booking through to "yes", so every run inserts
+> two consultation rows and sends two lead-notification emails. Nothing marked
+> them as tests, and nothing downstream can tell them from real leads — a fake
+> Sarah in the morning call list costs somebody a phone call.
+>
+> A preflight now decides whether the run may proceed. It reads `.env.local` the
+> way the dev server does (plain node does not load it), and allows the run only
+> when the database is provably disposable: a loopback host from
+> `supabase start`, **or** a hosted project whose ref is named explicitly in
+> `CHECK_CHAT_ALLOW_PROJECT` — and, either way, only while
+> `consultation_requests` is empty. Missing credentials are fine and run as
+> before, since the insert then fails, which is §7's "submit while the API is
+> down" case. Anything else refuses and exits 1, including any error asking the
+> question. Fail closed.
+>
+> **As of phase 14 the project in `.env.local` holds 5 rows** and is refused on
+> both counts. Whether those five are earlier checklist runs or real leads is a
+> question for Ben — see the phase 14 report.
+
 > **Key format:** Anthropic keys begin `sk-ant-`. Two separate pastes into
 > `.env.local` arrived as `k-ant-…`, one character short — something eats the
 > leading character. A malformed key produces a 401, which is now visibly

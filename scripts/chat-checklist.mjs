@@ -25,9 +25,176 @@
  *   SUPABASE_SERVICE_ROLE_KEY. Without them the submit fails, which
  *   exercises §7's "submit while the API is down" case and not its
  *   "row lands in Supabase" one.
+ *
+ * Two of the booking conversations below run to "yes", which is a real insert
+ * into consultation_requests and a real notification email to whoever
+ * LEADS_NOTIFY_EMAIL names. See the preflight directly below: this refuses to
+ * run against a database that is not provably disposable.
  */
 
+import { readFileSync } from "node:fs";
+
 const BASE = `${process.env.CHAT_BASE ?? "http://localhost:3000"}/api/chat`;
+
+// ---------------------------------------------------------------------------
+// PREFLIGHT — which database is about to receive Sarah and Ben
+// ---------------------------------------------------------------------------
+//
+// This script asserts nothing (see the header) but it does *write*: "Full flow
+// end to end" and the wrong-number conversation both reach the confirmation and
+// answer yes, so each run inserts two consultation rows and pages a human twice.
+// That is fine against a scratch database and unacceptable against the one the
+// practice reads its leads out of — a fake Sarah in the morning list costs
+// somebody a phone call, and the rows are indistinguishable from real ones
+// after the fact.
+//
+// A database is allowed only when it is provably disposable, which means one of:
+//
+//   - its host is loopback — the `supabase start` local stack; or
+//   - CHECK_CHAT_ALLOW_PROJECT names the exact project ref in SUPABASE_URL,
+//     which cannot be satisfied without looking at which project that is.
+//
+// and, either way, `consultation_requests` is empty. Non-empty means somebody's
+// real leads may already be in there; it is also what stops the second run from
+// piling onto the first. Anything else — including any error asking the
+// question — refuses. Fail closed: the cost of a wrong "yes" here is a fake
+// lead in production, and the cost of a wrong "no" is typing one env var.
+//
+// The env is read the way the dev server reads it, since `npm run check:chat`
+// is plain node and does not load .env.local on its own. Missing credentials
+// entirely is safe and allowed: without them the insert fails, which is the
+// §7 "submit while the API is down" case the header already describes.
+
+function envFile(path) {
+  const out = {};
+  let raw;
+  try {
+    raw = readFileSync(new URL(path, import.meta.url), "utf8");
+  } catch {
+    return out;
+  }
+  for (const line of raw.split("\n")) {
+    const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!match) continue;
+    out[match[1]] = match[2].trim().replace(/^["']|["']$/g, "");
+  }
+  return out;
+}
+
+/** process.env first, then .env.local, then .env — Next's own precedence. */
+function resolveEnv(name) {
+  return (
+    process.env[name] ||
+    envFile("../.env.local")[name] ||
+    envFile("../.env")[name] ||
+    null
+  );
+}
+
+function refuse(reason, remedy) {
+  console.error(`\n  REFUSING TO RUN\n\n  ${reason}\n\n  ${remedy}\n`);
+  process.exit(1);
+}
+
+async function preflight() {
+  const url = resolveEnv("SUPABASE_URL");
+  const key = resolveEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!url || !key) {
+    console.log(
+      "  database:  no Supabase credentials visible — the two booking\n" +
+        "             conversations will fail at the insert, which is §7's\n" +
+        "             'submit while the API is down' case.\n"
+    );
+    return;
+  }
+
+  let host;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    refuse(
+      `SUPABASE_URL is not a URL: ${JSON.stringify(url)}`,
+      "Fix it, or unset it to run the checklist against no database at all."
+    );
+  }
+
+  const loopback =
+    host === "127.0.0.1" || host === "localhost" || host === "::1";
+  // https://<ref>.supabase.co
+  const ref = /^([a-z0-9]+)\.supabase\./.exec(host)?.[1] ?? host;
+  const allowed = process.env.CHECK_CHAT_ALLOW_PROJECT;
+
+  if (!loopback && allowed !== ref) {
+    refuse(
+      `SUPABASE_URL points at ${host}, which is not a local stack and has not\n` +
+        `  been named as disposable. Two conversations in this checklist run a\n` +
+        `  booking to completion, so this would insert two fake leads and send\n` +
+        `  two notification emails.`,
+      allowed
+        ? `CHECK_CHAT_ALLOW_PROJECT is set to "${allowed}", which is not "${ref}".`
+        : `If "${ref}" really is a scratch project, run:\n` +
+          `    CHECK_CHAT_ALLOW_PROJECT=${ref} npm run check:chat`
+    );
+  }
+
+  let response;
+  try {
+    response = await fetch(
+      `${url.replace(/\/$/, "")}/rest/v1/consultation_requests?select=id&limit=1`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          Prefer: "count=exact",
+          Range: "0-0",
+        },
+      }
+    );
+  } catch (error) {
+    refuse(
+      `Could not reach ${host} to check whether consultation_requests is empty:\n  ${error.message}`,
+      "The checklist writes rows, so it will not run without knowing what is in there."
+    );
+  }
+
+  if (!response.ok) {
+    refuse(
+      `${host} answered ${response.status} when asked how many rows\n` +
+        `  consultation_requests holds: ${(await response.text()).slice(0, 200)}`,
+      "The checklist writes rows, so it will not run without knowing what is in there."
+    );
+  }
+
+  // content-range comes back as "0-0/12", or "*/0" for an empty table.
+  const count = Number(
+    /\/(\d+)$/.exec(response.headers.get("content-range") ?? "")?.[1] ?? NaN
+  );
+  if (!Number.isFinite(count)) {
+    refuse(
+      `${host} did not return a row count for consultation_requests ` +
+        `(content-range: ${JSON.stringify(response.headers.get("content-range"))}).`,
+      "The checklist writes rows, so it will not run without knowing what is in there."
+    );
+  }
+  if (count > 0) {
+    refuse(
+      `consultation_requests on ${host} already holds ${count} row(s).\n` +
+        `  This checklist adds two more that look exactly like real leads, and\n` +
+        `  nothing downstream can tell them apart.`,
+      "Run it against an empty database:\n" +
+        "    delete from public.consultation_requests;\n" +
+        "  or point SUPABASE_URL at a local stack (supabase start)."
+    );
+  }
+
+  console.log(
+    `  database:  ${host} — empty, ${loopback ? "loopback" : "named disposable"}. ` +
+      "Two rows will be written.\n"
+  );
+}
+
+await preflight();
 
 let clients = 0;
 const nextClient = () => `10.${++clients % 250}.${(clients * 7) % 250}.${(clients * 13) % 250}`;

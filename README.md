@@ -239,6 +239,24 @@ NEXT_PUBLIC_FEATURE_ASSISTANT=true npm run dev
 CHAT_BASE=http://localhost:3000 npm run check:chat
 ```
 
+**It writes.** Two of its conversations run a booking to "yes", so each run
+inserts two consultation rows and sends two notification emails — rows that
+look exactly like real leads and can't be told apart afterwards. A preflight
+refuses to start unless the target database is provably disposable:
+
+| Condition | Result |
+| --- | --- |
+| No Supabase credentials visible | Runs. The insert fails, which is §7's "submit while the API is down" case. |
+| Loopback host (`supabase start`), table empty | Runs. |
+| Any hosted project, table empty | Refuses until `CHECK_CHAT_ALLOW_PROJECT=<project-ref>` names that exact project. |
+| Table holds any rows | Refuses, whatever the host. |
+| Can't reach the database, or it won't answer with a count | Refuses. |
+
+It reads `.env.local` the way the dev server does, since `npm run check:chat`
+is plain node and wouldn't otherwise see the same credentials the server has.
+Fail-closed by design: a wrong "yes" here puts a fake Sarah in somebody's
+morning call list.
+
 ### Running the answer audit
 
 ```bash
