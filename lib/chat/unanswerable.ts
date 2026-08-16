@@ -1,5 +1,5 @@
 import { SESSION_LENGTH } from "../site-config";
-import { hoursSummary, locationHours, locations } from "../locations";
+import { formattedHours, locationHours, locations } from "../locations";
 import { normalize } from "./refusals";
 
 /**
@@ -92,8 +92,21 @@ function hoursReply(): { body: string; offer: string } | null {
   const published = locations.filter((l) => locationHours(l) !== null);
   if (published.length === 0) return null;
 
+  // The page prints the week as list lines ("Tue–Fri 9a–6p", "Closed Sun–Mon")
+  // and a sentence cannot just join them: "Murfreesboro is open Tue–Thu 9a–6p,
+  // Closed Fri–Mon" reads as a contradiction. Open runs and closed runs are
+  // separated and given their own clause instead — same data, same order,
+  // read aloud.
   const lines = published
-    .map((l) => `${l.name} is open ${hoursSummary(l)!.replace(/ · /g, ", ")}.`)
+    .map((l) => {
+      const week = formattedHours(l);
+      const open = week.filter((line) => !line.startsWith("Closed"));
+      const shut = week
+        .filter((line) => line.startsWith("Closed"))
+        .map((line) => line.replace(/^Closed /, ""));
+      const closed = shut.length > 0 ? `, and closed ${shut.join(" and ")}` : "";
+      return `${l.name} is open ${open.join(" and ")}${closed}.`;
+    })
     .join(" ");
 
   return {
