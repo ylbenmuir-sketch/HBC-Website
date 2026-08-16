@@ -1,15 +1,13 @@
 # Two colour decisions
 
-**Status.** Ben chose `#5a6f5c` for sage and it is applied. Gold is unchanged
-and stays unchanged — neither option below was taken, and this file is the
-record of what was offered.
+**Status — settled.** Sage is **`#596e5b`**, applied. Gold is unchanged and
+stays unchanged; neither gold option was taken, and this file is the record of
+what was offered.
 
-**One correction to what this file originally said.** It described `#5a6f5c` as
-reaching "4.49 for sage-soft, which rounds to 4.5". That was loose, and it is
-the number the decision was made on: measured in the browser it is **4.4903**,
-which does not clear 4.5. The eyebrows on ivory-2 do clear, at 4.7019. The note
-panels and the contact phone number inside one sit at 4.4903 — short by 0.0097.
-`#596e5b`, one unit darker per channel, clears them at 4.5573 and is unapplied.
+Sage landed in two steps. `#5a6f5c` went in first and cleared the eyebrows but
+left the `.note-sage` panels at **4.4903** — under 4.5, not "4.5 rounded", and
+this file's original phrasing ("4.49 … which rounds to 4.5") is what made that
+look settled when it wasn't. `#596e5b` clears every sage pairing that ships.
 
 Every number below is measured the same way the hero was: hide every glyph,
 photograph the page, read the composited pixel under the text, compute the WCAG
@@ -90,17 +88,17 @@ in FAQ answers, breadcrumbs, the founder citation link and the sage note panels.
 | --- | --- | --- | --- | --- | --- | --- |
 | was | `#5e7360` | 94, 115, 96 | 4.8324 | **4.4333** | **4.2337** | 5.1255 |
 | minimum for ivory-2 | `#5d725f` | 93, 114, 95 | 4.9018 | **4.5015** | 4.2977 | 5.1990 |
-| **applied** | `#5a6f5c` | 90, 111, 92 | 5.1252 | **4.7019** | **4.4903** | 5.4361 |
-| clears sage-soft too | `#596e5b` | 89, 110, 91 | 5.2018 | 4.7721 | **4.5573** | 5.5173 |
+| tried, left the panels short | `#5a6f5c` | 90, 111, 92 | 5.1252 | 4.7019 | **4.4903** | 5.4361 |
+| **applied** | `#596e5b` | 89, 110, 91 | **5.2018** | **4.7721** | **4.5573** | **5.5173** |
 
 Two things worth knowing:
 
 - The darkest backdrop sage sits on is not ivory-2, it is `--sage-soft`
-  (`#e6ebe2`), the fill of the `.note-sage` panels on 11 routes — 4.2337:1
-  before, 4.4903:1 now. **It is the one pairing `#5a6f5c` does not lift over
-  4.5**, and the phone number in the `/contact` note panel is inside it.
-  `#596e5b` is the value that clears it, at 4.5573.
-- The change is 96.2% of today's value — one to four units per channel. It is
+  (`#e6ebe2`), the fill of the `.note-sage` panels on 11 routes — and the
+  `/contact` phone number sits inside one. It is the binding constraint, and
+  the reason the first value was not enough: 4.2337 before, 4.4903 at
+  `#5a6f5c`, **4.5573** at `#596e5b`.
+- The change is 94.9% of the original — five units per channel at most. It is
   not visible side by side.
 - `--sage-deep` is used as a *background* in exactly one place (`.loc-card .soon`
   badge, ivory text on sage-deep). Darkening it raises that pairing's contrast,
@@ -119,11 +117,23 @@ Two things worth knowing:
 
 ## Where this landed
 
-- **Gold — left alone.** Neither option applied. Every gold pairing in the
-  sweep still measures what it did: 3.24 on ivory, 3.43 on white, 4.20 on navy.
-- **Sage — `#5a6f5c` applied.** Eyebrows on ivory-2 clear at 4.7019. The
-  `.note-sage` panels do not, at 4.4903.
+- **Gold — left alone.** Neither option applied. Every gold pairing still
+  measures what it did: 3.24 on ivory, 3.43 on white, 4.20 on navy. 17 of the
+  23 pairings still under 4.5 sitewide are this one decision.
+- **Sage — `#596e5b` applied.** Measured on the page, worst case of each group:
 
-One decision still open: whether the note panels matter enough to take sage the
-last unit to `#596e5b` (4.5573 on sage-soft, 4.7721 on ivory-2). It is a
-one-line change and nothing else in the palette moves with it.
+  | | |
+  | --- | --- |
+  | `.note-sage` panels on `--sage-soft` | **4.5573** |
+  | the `/contact` phone number inside one | **4.5573** |
+  | section eyebrows on ivory-2 | **4.7721** |
+  | eyebrows on ivory and white | **5.2018** |
+  | `em.sage` inside an H2 | **4.7721** |
+
+  Every sage pairing that ships clears 4.5. One does not and never ships: the
+  "Embedded map — muted sage style" placeholder label at 3.53, which is behind
+  `SHOW_DRAFT_CONTENT`.
+
+Sitewide the sweep went 30 → 25 → **23** unique pairings under 4.5 across 34
+routes × four widths: 17 gold, 5 draft-only decorations, and the draft-only map
+label. Nothing that ships is under 4.5 except gold.

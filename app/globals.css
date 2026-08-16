@@ -34,15 +34,22 @@
   --line: rgba(28, 43, 58, 0.14);
   --sage: #8fa08d;
   --sage-soft: #e6ebe2;
-  /* Was #5e7360. Darkened 3.8% along its own ray — the smallest move that
+  /* Was #5e7360. Darkened 5.1% along its own ray — the smallest move that
      leaves the hue where it is — for contrast: every section eyebrow, the
-     inline links in FAQ answers, breadcrumbs, and the sage note panels are
-     this colour. See CONTRAST-OPTIONS.md for the measurements.
-     Ivory 5.13:1 · ivory-2 4.70:1 · white 5.44:1 · sage-soft 4.49:1.
-     The note panels on --sage-soft are the one pairing this does not lift
-     over 4.5 — they land 0.01 short. #596e5b clears them at 4.56 and is
-     Ben's call, not a rounding error to fix quietly. */
-  --sage-deep: #5a6f5c;
+     italic accent inside a heading, the inline links in FAQ answers,
+     breadcrumbs, and the sage note panels are all this colour.
+
+     Ivory 5.20:1 · ivory-2 4.77:1 · white 5.52:1 · sage-soft 4.56:1.
+
+     The binding backdrop is --sage-soft, not --ivory-2: the `.note-sage`
+     panels are the darkest ground sage sits on, and the /contact phone
+     number sits inside one. An earlier pass stopped at #5a6f5c, which
+     cleared the eyebrows and left those panels at 4.4903 — under 4.5, not
+     "4.5 rounded". This value clears every pairing.
+
+     See CONTRAST-OPTIONS.md for the full table and for the gold decision,
+     which was to leave gold alone. */
+  --sage-deep: #596e5b;
   --gold: #a9853f;
   --gold-soft: rgba(169, 133, 63, 0.35);
   --serif: var(--font-cormorant), Georgia, serif;
