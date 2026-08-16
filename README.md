@@ -256,9 +256,14 @@ every path in a reply has to appear in a passage retrieval actually handed
 over. Phase 11d added the count that made "one limit rather than three" mean
 anything: limitation sentences are counted across the whole answer rather than
 looked for in adjacent pairs, and every row prints its count whether it passes
-or not. A boundary question is exempt, because there the limit *is* the answer. The §3 refusal list, the off-topic gate probes and the unanswerable
-topics run in the same command, because framing changes are exactly the kind
-that quietly move a boundary. Exits non-zero on any failure.
+or not. A boundary question is exempt, because there the limit *is* the answer.
+It also fails an answer that carries process detail — how a visit opens, what
+the check-in covers — on a question that isn't about sessions or visits.
+
+The §3 refusal list, the off-topic gate probes, the unanswerable topics and the
+medication-substitution phrasings run in the same command, because framing
+changes are exactly the kind that quietly move a boundary. Exits non-zero on
+any failure.
 
 The run has two halves. `--retrieval` runs the first — refusals, gates,
 unanswerable topics and concern routing — as pure functions over the index:

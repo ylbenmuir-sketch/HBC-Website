@@ -4,6 +4,7 @@ import {
   PACKAGE_NOTE,
   PACKAGE_PRICE,
   PACKAGE_SESSIONS,
+  RISK_REVERSAL,
   SESSION_PRICE,
 } from "../site-config";
 
@@ -39,6 +40,7 @@ import {
 
 export type RefusalKind =
   | "medication"
+  | "medication-substitution"
   | "clinical-interpretation"
   | "diagnosis"
   | "prediction"
@@ -76,6 +78,32 @@ const REPLIES: Record<RefusalKind, { decline: string; offer: string }> = {
     decline: "That stays between you and your prescriber.",
     offer:
       "If you’d like to talk through how LENS fits alongside the care you already have, the free call is the place for it.",
+  },
+  /*
+   * Replace, reduce, substitute — the medication question that arrives as a
+   * question about *us*.
+   *
+   * "Can I help my child without medication?" used to fall through to
+   * retrieval, where it topped `page:home:what` and came back with the
+   * homepage headline: *help for anxiety, focus, and sleep — without
+   * medication*. On the homepage that line is positioning. Returned as the
+   * answer to a parent asking whether this can stand in for her child's
+   * medication, it is an alternative-to-medication claim, and the assistant is
+   * not permitted to make one at any volume.
+   *
+   * So it is answered here, in fixed copy, and never reaches retrieval or the
+   * model — which is the only way to be certain the H1 cannot come back. The
+   * three beats are the decline, what people actually come to us for (lifted
+   * from the /faq answer to "What kinds of concerns do clients come in with?"),
+   * and the free call with the fit promise. None of them says or implies that
+   * LENS is an alternative to anything.
+   */
+  "medication-substitution": {
+    decline:
+      "Whether medication stays, changes, or comes down isn’t something I can weigh in on — that stays between you and your prescriber.",
+    offer:
+      "What I can tell you is what people come to us for: anxiety and stress, focus and ADHD, sleep, emotional regulation, brain fog and memory, burnout, school struggles, and trauma-related stress. " +
+      `The first call is free. ${RISK_REVERSAL} Want me to set one up?`,
   },
   "clinical-interpretation": {
     decline:
@@ -230,6 +258,11 @@ const PATTERNS: Array<{ kind: RefusalKind; pattern: RegExp }> = [
  * "Help without medication" is the homepage headline, not a medication
  * question. Removed before matching so the phrase can be said back to the
  * assistant without tripping the medication rule.
+ *
+ * The strip is why the substitution patterns below run *first*, on the
+ * unstripped text: it is exactly the phrasing a parent uses when she is asking
+ * about her own child, and stripping it sent "can I help my child without
+ * medication?" past every refusal and into the homepage H1.
  */
 function stripBenignMedicationPhrases(text: string): string {
   return text.replace(
@@ -237,6 +270,47 @@ function stripBenignMedicationPhrases(text: string): string {
     " "
   );
 }
+
+/** The named drugs and the words for them. Not "dose"/"dosage": a question
+ * about a dose is a medication question and is answered by that rule. */
+const MEDICATIONS =
+  "medication|medications|medicine|meds|drugs|prescription|pills?|adderall|ritalin|concerta|vyvanse|strattera|prozac|zoloft|lexapro|ssri|stimulant|antidepressant";
+
+/**
+ * Someone in particular — her, her child, herself.
+ *
+ * Deliberately not "you" or "your": "do you help people without medication?"
+ * is a question about the practice, and the homepage answers it. The line
+ * between that and "can I help *my child* without medication?" is whose
+ * medication is being discussed, and a pronoun is what marks it.
+ */
+const A_PARTICULAR_PERSON = /\b(i|me|my|we|our|he|him|his|she|her|hers|they|them|their)\b/;
+
+/**
+ * Asking whether LENS can stand in for medication — for her, or for her child.
+ *
+ * Two shapes. The first names the swap outright ("instead of ritalin",
+ * "replace his meds") and needs nothing else: nobody asks that idly. The
+ * second is the softer phrasing — without, off, reduce, come off — which is
+ * *also* how the site describes itself, so it counts only when the message is
+ * about a particular person. That keeps the homepage headline sayable and
+ * catches the parent asking about her own child, which is the whole distance
+ * between positioning and a claim.
+ */
+const SUBSTITUTION: Array<{ pattern: RegExp; needsPerson: boolean }> = [
+  {
+    pattern: new RegExp(
+      `\\b(replace|replaces|replacing|substitute|substituting|instead of|in place of|rather than|alternative to|swap)\\b[^.?!]{0,20}\\b(${MEDICATIONS})\\b`
+    ),
+    needsPerson: false,
+  },
+  {
+    pattern: new RegExp(
+      `\\b(without|off|reduce|reducing|lower|lowering|wean|weaning|cut back on|come off|stop|stopping|avoid|avoiding|skip)\\b[^.?!]{0,20}\\b(${MEDICATIONS})\\b`
+    ),
+    needsPerson: true,
+  },
+];
 
 /**
  * The §3 check. Returns fixed copy for an out-of-scope question, or null when
@@ -246,7 +320,25 @@ function stripBenignMedicationPhrases(text: string): string {
  * is delegated to the model.
  */
 export function checkRefusal(message: string): Refusal | null {
-  const text = stripBenignMedicationPhrases(normalize(message));
+  const normalized = normalize(message);
+
+  // Before the strip, and before every other pattern: the substitution
+  // phrasings are the ones the strip was built to let through, and the ones
+  // that must never reach retrieval.
+  for (const { pattern, needsPerson } of SUBSTITUTION) {
+    const match = pattern.exec(normalized);
+    if (!match) continue;
+    if (needsPerson && !A_PARTICULAR_PERSON.test(normalized)) continue;
+    const { decline, offer } = REPLIES["medication-substitution"];
+    return {
+      kind: "medication-substitution",
+      reply: `${decline} ${offer}`,
+      declineOnly: decline,
+      matched: match[0],
+    };
+  }
+
+  const text = stripBenignMedicationPhrases(normalized);
 
   for (const { kind, pattern } of PATTERNS) {
     const match = pattern.exec(text);
