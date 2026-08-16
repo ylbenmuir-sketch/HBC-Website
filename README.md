@@ -244,6 +244,8 @@ CHAT_BASE=http://localhost:3000 npm run check:chat
 ```bash
 NEXT_PUBLIC_FEATURE_ASSISTANT=true npm run dev
 CHAT_BASE=http://localhost:3000 npm run check:answers
+
+npm run check:answers -- --retrieval   # no server, no key, no spend
 ```
 
 The one that asserts. 25 visitor questions and 8 concern lines through the live
@@ -253,8 +255,14 @@ closing ask with the page link before it — plus grounding: every figure and
 every path in a reply has to appear in a passage retrieval actually handed
 over. The §3 refusal list, the off-topic gate probes and the unanswerable
 topics run in the same command, because framing changes are exactly the kind
-that quietly move a boundary. Needs `ANTHROPIC_API_KEY`; exits non-zero on any
-failure.
+that quietly move a boundary. Exits non-zero on any failure.
+
+The run has two halves. `--retrieval` runs the first — refusals, gates,
+unanswerable topics and concern routing — as pure functions over the index:
+no server, no model, no key, deterministic. That is the half to run in CI and
+after a merge. The second half posts to a running route and needs
+`ANTHROPIC_API_KEY` to have credit on it; a boundary moving is a correctness
+bug and must not become undetectable because billing lapsed.
 
 ### Reading the §7 checklist
 

@@ -3,6 +3,17 @@
  *
  *   NEXT_PUBLIC_FEATURE_ASSISTANT=true PORT=3010 npm run dev
  *   CHAT_BASE=http://localhost:3010 npm run check:answers
+ *   npm run check:answers -- --retrieval    # no server, no key, no spend
+ *
+ * The run has two halves and they fail for different reasons. The **retrieval
+ * half** — refusals, gates, unanswerable topics, concern routing — is pure
+ * functions over the index: no server, no model, no API key, deterministic.
+ * The **answer half** posts to a running route and needs `ANTHROPIC_API_KEY`
+ * to have credit on it.
+ *
+ * `--retrieval` runs the first half alone, which is what to run in CI, after a
+ * merge, or on any day the key is empty: a boundary moving is a correctness
+ * bug, and it should never be undetectable because billing lapsed.
  *
  * `npm run check:chat` prints transcripts and asserts nothing, by design — §7
  * wants them read. This one asserts, because the thing it is checking is
@@ -566,6 +577,17 @@ function guardrails() {
 }
 
 const guardrailFailures = guardrails();
+
+// The retrieval half stands on its own — see the header. Nothing below this
+// line runs without a server and a funded key.
+if (process.argv.includes("--retrieval")) {
+  console.log(
+    guardrailFailures.length === 0
+      ? "\nretrieval half: guardrails hold. (Answer half skipped — needs a running route.)"
+      : `\nretrieval half: ${guardrailFailures.length} FAILURES`
+  );
+  process.exit(guardrailFailures.length === 0 ? 0 : 1);
+}
 
 const visitor = await audit("25 VISITOR QUESTIONS", VISITOR);
 const concerns = await audit("THE CONCERN SET", CONCERNS);
