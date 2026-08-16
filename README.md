@@ -50,7 +50,32 @@ npm run build                # production build
 npm run lint
 npm run check:index          # site assistant's content index vs. the pages
 npm run check:answers        # assistant answers: shape, guardrails, grounding
+npm run check:layout         # clipped text / overlap / overflow, every route
 ```
+
+### `npm run check:layout`
+
+```bash
+npm run dev
+CHECK_BASE=http://localhost:3000 npm run check:layout
+```
+
+Drives headless Chrome over every route in the running server's own sitemap at
+320 / 390 / 414 / 834px and reports clipped text, overlapping text, and
+anything past the right edge. Needs Google Chrome installed; no npm dependency.
+
+It exists because the phase 9 audit asked
+`document.documentElement.scrollWidth` and reported every page clean while text
+was being cut off. That number answers *can the page be scrolled sideways*, and
+a clipped element answers it "no" — `overflow: hidden` is precisely what stops
+content from widening the document. This measures the **text** (Range rects)
+against **the box allowed to contain it** (the nearest clipping ancestor's
+padding box). Read the header of `scripts/check-layout.mjs` for what it
+deliberately does not report, and why.
+
+Under `npm run dev` it sweeps 34 routes; a production build serves 25, because
+draft team profiles and draft articles are gated out of both the sitemap and
+the pages themselves. Audit dev to cover the drafts.
 
 The site runs without `.env.local` — every page renders; only the contact-form
 submission requires Supabase credentials.

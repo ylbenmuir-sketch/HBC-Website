@@ -49,6 +49,13 @@ img { max-width: 100%; display: block; }
 .wrap-wide { max-width: 1360px; margin: 0 auto; padding: 0 44px; }
 
 /* type */
+/* overflow-wrap: a word longer than its column is the one case where the
+   serif display sizes have no way out — "neurofeedback:" at the 52px article
+   size is 301px wide in a 272px column at 320px viewport, so it ran 5px past
+   the screen and body's overflow-x: hidden cut the tail off it. This does
+   nothing at all until a word cannot fit; every heading that fits today is
+   laid out to the same pixel. */
+h1, h2, h3, h4 { overflow-wrap: break-word; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 500; color: var(--navy); line-height: 1.1; }
 h1 { font-size: clamp(44px, 5.4vw, 76px); letter-spacing: -0.01em; }
 h2 { font-size: clamp(32px, 3.3vw, 46px); }
