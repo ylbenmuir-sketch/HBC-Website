@@ -557,6 +557,84 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* How it works follows the stories: the quotes are what makes someone
+          want to know what actually happens, and this is the answer. Phase 14
+          moved the whole section here from below the goals list — the DOM is
+          the only thing that says section order on this page (the mobile layer
+          is a plain flex column with no `order` overrides), so phone and
+          desktop moved together. */}
+      <section className="sec sec-navy home-journey">
+        <div className="wrap">
+          <div className="sec-head rv">
+            <div className="eyebrow">How it works</div>
+            <h2>Three steps. No homework, no screens, nothing to perform.</h2>
+          </div>
+          {/* Column count follows the steps; the tablet/mobile rules override
+              it untouched. Three is the whole plan — see the brief. */}
+          <div
+            className="journey rv"
+            style={{ "--journey-cols": 3 } as CSSProperties}
+          >
+            {[
+              {
+                n: "1",
+                h: "Talk",
+                p: "A free call — or send the form and we'll call you. Tell us what's going on, and we'll tell you honestly whether LENS is a fit.",
+              },
+              {
+                n: "2",
+                h: "Map",
+                p: "Your first visit: you sit down with a practitioner, we record a baseline of your brain activity, we walk you through what we see, and you leave with a written plan.",
+                link: {
+                  href: "/first-visit",
+                  label: "See what the first visit is like",
+                },
+              },
+              {
+                n: "3",
+                h: "Sessions",
+                p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
+                link: {
+                  href: "/how-lens-works",
+                  label: "See how LENS works",
+                },
+              },
+            ].map((s) => (
+              <div className="jstep" key={s.n}>
+                <div className="n">{s.n}</div>
+                <h3>{s.h}</h3>
+                <p>
+                  {s.p}
+                  {s.link && (
+                    <>
+                      {" "}
+                      <Link href={s.link.href}>{s.link.label} &rarr;</Link>
+                    </>
+                  )}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              marginTop: 52,
+              display: "flex",
+              gap: 26,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+            className="rv"
+          >
+            <TalkCta variant="invert" />
+            {startTiming && (
+              <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
+                {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Cost of inaction — the one place the site names it. One paragraph by
           design: specific pain with dignity, not stacked pain. */}
       <section className="sec home-stakes">
@@ -612,82 +690,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="sec sec-navy home-journey">
-        <div className="wrap">
-          <div className="sec-head rv">
-            <div className="eyebrow">How it works</div>
-            <h2>Three steps. No homework, no screens, nothing to perform.</h2>
-          </div>
-          {/* Column count follows the steps; the tablet/mobile rules override
-              it untouched. Three is the whole plan — see the brief. */}
-          <div
-            className="journey rv"
-            style={{ "--journey-cols": 3 } as CSSProperties}
-          >
-            {[
-              {
-                n: "1",
-                h: "Talk",
-                p: "A free phone call. Tell us what's going on — we'll tell you honestly whether LENS is a fit.",
-              },
-              {
-                n: "2",
-                h: "Map",
-                p: "Your first visit: a real conversation, a baseline recording of brain activity, and a written plan you keep.",
-                link: {
-                  href: "/first-visit",
-                  label: "See what the first visit is like",
-                },
-              },
-              {
-                n: "3",
-                h: "Sessions",
-                p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
-                link: {
-                  href: "/how-lens-works",
-                  label: "See how LENS works",
-                },
-              },
-            ].map((s) => (
-              <div className="jstep" key={s.n}>
-                <div className="n">{s.n}</div>
-                <h3>{s.h}</h3>
-                <p>
-                  {s.p}
-                  {s.link && (
-                    <>
-                      {" "}
-                      <Link href={s.link.href}>{s.link.label} &rarr;</Link>
-                    </>
-                  )}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              marginTop: 52,
-              display: "flex",
-              gap: 26,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-            className="rv"
-          >
-            <TalkCta variant="invert" />
-            {startTiming && (
-              <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
-                {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
-              </span>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* The Harmonized Brain Map — the site's largest differentiator, and what
-          makes the $150 tangible. Sits directly after the three-step module,
-          where step 2 ("Map") names it but doesn't show it. The claim sentence
-          is gated like every other unverified fact: production drops it and the
+          makes the $150 tangible. It used to sit directly after the three-step
+          module, which named the map in step 2 without showing it; phase 14
+          moved that module up behind the stories and left this section where it
+          was, so the two are no longer adjacent. The claim sentence is gated
+          like every other unverified fact: production drops it and the
           paragraph still reads complete. */}
       <section className="sec home-brain-map">
         <div className="wrap split">
