@@ -1,5 +1,10 @@
 import { SESSION_LENGTH } from "../site-config";
-import { formattedHours, locationHours, locations } from "../locations";
+import {
+  formattedHours,
+  locationHours,
+  locations,
+  type Location,
+} from "../locations";
 import { normalize } from "./refusals";
 
 /**
@@ -71,26 +76,150 @@ export type PreRetrievalTopic = {
    * change its own answer — or retire itself — the moment the data behind it
    * is confirmed, with no second cleanup task to remember.
    */
-  respond: () => { body: string; offer: string } | null;
+  respond: (message: string) => { body: string; offer: string } | null;
 };
 
+/** Sunday-first, matching the `week` tuple and JS `Date#getDay()`. */
+const DAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+] as const;
+
 /**
- * The hours answer: both weeks, and the difference between them.
+ * The day the visitor named, or null.
  *
- * Assembled from `hoursSummary`, the same function the location pages and the
- * cards print, so the assistant cannot drift from the page. Centers with no
- * confirmed week contribute nothing — Franklin has no hours at all until it
- * has an opening date.
+ * Full names only, deliberately: the patterns that bring a message here match
+ * full names too, so this can never disagree with what fired. It also keeps
+ * "sat" out of it — a word that is a day in a schedule and a verb in "he sat
+ * still through the whole thing".
  *
- * **Saturday is not buried.** Nashville is the only center open on one, and a
- * visitor whose only free day is Saturday is exactly the person this question
- * comes from. Same for Friday, which Murfreesboro does not keep. The centers
- * are named on their own lines rather than merged into a single week, because
- * a merged week would be true of neither.
+ * First match wins. "Friday or Saturday" is answered for Friday and the offer
+ * carries the rest, which is better than an answer that tries to be a table.
  */
-function hoursReply(): { body: string; offer: string } | null {
+function namedDay(text: string): number | null {
+  const found = DAY_NAMES.map((day, i) => ({ i, at: text.indexOf(day.toLowerCase()) }))
+    .filter((d) => d.at >= 0)
+    .sort((a, b) => a.at - b.at)[0];
+  return found ? found.i : null;
+}
+
+/** "9a–6p" for one center on one day, or null when it is closed. */
+function dayLabel(center: Location, day: number): string | null {
+  const week = locationHours(center);
+  const hours = week?.week[day];
+  return hours ? `${clockLabel(hours.opens)}–${clockLabel(hours.closes)}` : null;
+}
+
+/** "09:00" → "9a". Mirrors lib/locations.ts, which keeps its copy private. */
+function clockLabel(hhmm: string): string {
+  const [hour, minute] = hhmm.split(":").map(Number);
+  const suffix = hour < 12 ? "a" : "p";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return minute === 0
+    ? `${hour12}${suffix}`
+    : `${hour12}:${String(minute).padStart(2, "0")}${suffix}`;
+}
+
+/** The first day this center opens after `day`. Null if it never opens. */
+function nextOpenDay(center: Location, day: number): number | null {
+  const week = locationHours(center);
+  if (!week) return null;
+  for (let ahead = 1; ahead <= 7; ahead += 1) {
+    const next = (day + ahead) % 7;
+    if (week.week[next]) return next;
+  }
+  return null;
+}
+
+/** "Nashville and Murfreesboro", "Nashville, Murfreesboro and Franklin". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+/**
+ * The answer when the visitor named a day.
+ *
+ * The day she asked about is the first thing she reads, because that is the
+ * question. Opening with the full two-center schedule and leaving her to find
+ * Friday in it is the same failure as opening an answer with a disclaimer:
+ * everything is present and the thing she came for is buried.
+ *
+ * **Saturday and Friday are the reason this exists.** They are the two days
+ * the centers disagree about, and they are also the two a working parent is
+ * most likely to ask about. "Yes — Nashville, 8a–3p" is an answer; the full
+ * schedule is a document.
+ */
+function dayAnswer(published: Location[], day: number): string {
+  const name = DAY_NAMES[day];
+  const open = published
+    .map((center) => ({ center, times: dayLabel(center, day) }))
+    .filter((c): c is { center: Location; times: string } => c.times !== null);
+  const shut = published.filter((c) => dayLabel(c, day) === null);
+
+  // Closed everywhere: say so, then where she can actually go instead.
+  if (open.length === 0) {
+    const nearest = published.map((center) => ({
+      center,
+      next: nextOpenDay(center, day),
+    }));
+    const days = [...new Set(nearest.map((n) => (n.next === null ? "" : DAY_NAMES[n.next])))];
+    const where =
+      days.length === 1 && days[0]
+        ? `The next open day is ${days[0]} at ${published.length > 1 ? "both centers" : published[0].name}.`
+        : nearest
+            .filter((n) => n.next !== null)
+            .map((n) => `${n.center.name} opens again ${DAY_NAMES[n.next!]}.`)
+            .join(" ");
+    const everywhere =
+      published.length > 1 ? "Both centers are closed" : `${published[0].name} is closed`;
+    return `${everywhere} on ${name}s. ${where}`.trim();
+  }
+
+  // Open everywhere it could be.
+  if (shut.length === 0) {
+    const times = open.map((c) => `${c.center.name} ${c.times}`).join(" and ");
+    const lead = published.length > 1 ? "both centers are open" : `${open[0].center.name} is open`;
+    return `Yes — ${lead} on ${name}s: ${times}.`;
+  }
+
+  // The interesting case, and the one the two weeks make common: open at some
+  // centers and not others. Lead with the yes and where, then the exception —
+  // a visitor told only "yes" would turn up at the wrong door.
+  const no = joinNames(shut.map((c) => c.name));
+  const isAre = shut.length > 1 ? "are" : "is";
+  const yes =
+    open.length === 1
+      ? `${name}s are a ${open[0].center.name} day, ${open[0].times}`
+      : `${name}s are open at ${joinNames(
+          open.map((c) => `${c.center.name} ${c.times}`)
+        )}`;
+  return `Yes — ${yes}. ${no} ${isAre} closed on ${name}s.`;
+}
+
+/**
+ * The hours answer: the day she asked about, or both weeks and the difference
+ * between them when she didn't ask about one.
+ *
+ * Assembled from lib/locations.ts — `formattedHours` for the full week, the
+ * same function the location pages and the cards print, so the assistant
+ * cannot drift from the page. Centers with no confirmed week contribute
+ * nothing; Franklin has no hours at all until it has an opening date.
+ *
+ * **Saturday is never buried.** Nashville is the only center that keeps one,
+ * and a visitor whose only free day is Saturday is exactly the person this
+ * question comes from. Same for Friday, which Murfreesboro does not keep.
+ */
+function hoursReply(message: string): { body: string; offer: string } | null {
   const published = locations.filter((l) => locationHours(l) !== null);
   if (published.length === 0) return null;
+
+  const day = namedDay(message);
+  if (day !== null) {
+    return {
+      body: dayAnswer(published, day),
+      offer: "The free call is the quickest way to sort a time. Want me to set one up?",
+    };
+  }
 
   // The page prints the week as list lines ("Tue–Fri 9a–6p", "Closed Sun–Mon")
   // and a sentence cannot just join them: "Murfreesboro is open Tue–Thu 9a–6p,
@@ -119,11 +248,6 @@ function hoursReply(): { body: string; offer: string } | null {
   };
 }
 
-/**
- * Written to the §3 shape: say plainly what I can't tell them, then the single
- * primary ask. No apology, no hedge, no second CTA — the launcher is worded so
- * it isn't a button making the primary ask, and neither is this.
- */
 export const PRE_RETRIEVAL_TOPICS: PreRetrievalTopic[] = [
   {
     topic: "hours",
@@ -212,7 +336,7 @@ export function checkPreRetrieval(message: string): PreRetrievalAnswer | null {
   const text = normalize(message);
 
   for (const { topic, patterns, respond } of PRE_RETRIEVAL_TOPICS) {
-    const copy = respond();
+    const copy = respond(text);
     if (!copy) continue;
     for (const pattern of patterns) {
       const match = pattern.exec(text);

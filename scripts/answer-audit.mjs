@@ -503,6 +503,36 @@ const MUST_BE_PRE_ANSWERED = [
   ["Do you take walk-ins?", "hours"],
 ];
 
+/**
+ * Every day of the week, answered for the day she named.
+ *
+ * A visitor who asks about Friday should not have to read a two-center
+ * schedule and work out whether Friday is in it — the day comes first, the
+ * detail after. Each row asserts what the *first sentence* has to carry, which
+ * is the part that decides whether the answer is useful, plus the close so the
+ * bare "yes" still opens booking.
+ *
+ * The seven days are not interchangeable here. Tue–Thu are open at both
+ * centers, Fri and Sat at Nashville alone, and Sun–Mon at neither — so the
+ * table is also the record of which days the two weeks disagree about, and it
+ * fails the day either center changes its week without this being re-read.
+ */
+const HOURS_BY_DAY = [
+  ["Can I come on a Monday?", ["Both centers are closed on Mondays", "Tuesday"]],
+  ["Can I come on a Tuesday?", ["Yes", "both centers are open on Tuesdays", "Nashville 9a–6p", "Murfreesboro 9a–6p"]],
+  ["Can I come on a Wednesday?", ["Yes", "both centers are open on Wednesdays"]],
+  ["Can I come on a Thursday?", ["Yes", "both centers are open on Thursdays"]],
+  ["Can I come on a Friday?", ["Yes", "Fridays are a Nashville day, 9a–6p", "Murfreesboro is closed on Fridays"]],
+  ["Can I come on a Saturday?", ["Yes", "Saturdays are a Nashville day, 8a–3p", "Murfreesboro is closed on Saturdays"]],
+  ["Can I come on a Sunday?", ["Both centers are closed on Sundays", "Tuesday"]],
+];
+
+/** No day named: the full week, both centers, unchanged. */
+const HOURS_NO_DAY = [
+  "what are your hours",
+  ["Our centers keep different weeks", "Nashville is open Tue–Fri 9a–6p and Sat 8a–3p", "Murfreesboro is open Tue–Thu 9a–6p"],
+];
+
 /** A day *word* is not a day question. These must fall through. */
 const MUST_NOT_BE_PRE_ANSWERED = [
   "She melts down every Saturday morning",
@@ -553,9 +583,29 @@ function guardrails() {
     const result = checkPreRetrieval(question);
     if (result) failures.push(`over-fired as ${result.topic}: ${question}`);
   }
+
+  for (const [question, expected] of [...HOURS_BY_DAY, HOURS_NO_DAY]) {
+    const result = checkPreRetrieval(question);
+    if (!result) {
+      failures.push(`hours not answered: ${question}`);
+      continue;
+    }
+    for (const phrase of expected) {
+      if (!result.reply.includes(phrase)) {
+        failures.push(`hours answer missing "${phrase}": ${question}`);
+      }
+    }
+    // The day answer leads with the day. Opening with the full schedule is the
+    // failure this table exists to catch.
+    if (question !== HOURS_NO_DAY[0] && result.reply.startsWith("Our centers keep")) {
+      failures.push(`hours answer opens with the full schedule: ${question}`);
+    }
+    if (!ASK.test(result.reply)) failures.push(`hours answer drops the ask: ${question}`);
+  }
   console.log(
     `  pre-retrieval   ${MUST_BE_PRE_ANSWERED.length} answered here, ${MUST_NOT_BE_PRE_ANSWERED.length} must not be`
   );
+  console.log(`  hours by day    ${HOURS_BY_DAY.length} days + the no-day answer`);
 
   for (const [line, slug] of CONCERN_ROUTING) {
     const result = retrieve(line);
