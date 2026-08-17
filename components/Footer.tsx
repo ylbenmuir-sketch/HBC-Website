@@ -22,6 +22,7 @@ const groups = [
   {
     heading: "Learn",
     links: [
+      { label: "LENS neurofeedback", href: "/lens-neurofeedback" },
       { label: "How LENS works", href: "/how-lens-works" },
       { label: "Your first visit", href: "/first-visit" },
       { label: "FAQ", href: "/faq" },

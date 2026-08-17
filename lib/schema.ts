@@ -20,6 +20,7 @@ import {
   hasConfirmedAddress,
   locationHours,
   locationPhotos,
+  locations,
   mapsUrl,
 } from "./locations";
 import {
@@ -196,6 +197,61 @@ export function localBusinessSchema(location: Location) {
         }
       : {}),
     parentOrganization: { "@id": ORGANIZATION_ID },
+  };
+}
+
+/**
+ * The service itself, as one node — for /lens-neurofeedback.
+ *
+ * `Service` and not `MedicalTherapy`, `MedicalProcedure`, or any other type
+ * under MedicalEntity, for exactly the reason organizationSchema() is not a
+ * MedicalBusiness (SEO-AUDIT.md §2.5): the footer DISCLAIMER states this is a
+ * wellness practice and that LENS is not intended to diagnose or treat
+ * anything. A medical type in the markup would contradict the page it sits on,
+ * and rule 1 at the top of this file is that schema never asserts more than the
+ * page does. That rule costs a richer type here, and it is worth it.
+ *
+ * `provider` is an @id reference to the one Organization, per rule 2 — the
+ * name, url and logo are not restated.
+ *
+ * `areaServed` lists only centers that are actually open, the same set §9 of
+ * the page renders as location cards. Franklin is absent from both for the
+ * reason localBusinessSchema() is never called for it: a center that has not
+ * opened does not serve an area yet.
+ *
+ * No `offers` node. The page publishes real figures and could mirror them, but
+ * the package price carries PACKAGE_NOTE — the Brain Map is required first and
+ * does not count toward the twelve — and an Offer with the price and not the
+ * condition is the one way this file's rule gets broken quietly.
+ */
+export function serviceSchema({
+  name,
+  description,
+  path,
+}: {
+  name: string;
+  description: string;
+  path: string;
+}) {
+  const url = abs(path);
+  const openCenters = locations.filter((l) => !l.comingSoon);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${url}#service`,
+    name,
+    serviceType: "LENS neurofeedback",
+    description,
+    url,
+    provider: { "@id": ORGANIZATION_ID },
+    ...(openCenters.length > 0
+      ? {
+          areaServed: openCenters.map((l) => ({
+            "@type": "City",
+            name: l.address.addressLocality,
+          })),
+        }
+      : {}),
   };
 }
 
