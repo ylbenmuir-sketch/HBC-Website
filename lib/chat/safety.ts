@@ -49,7 +49,15 @@ export type CrisisPattern =
   | "death-wish"
   | "hopelessness"
   | "burden"
+  /** The word itself — "overdose", "overdosed". */
   | "overdose"
+  /**
+   * A described act with a quantity — "took a bunch of my pills", "swallowed
+   * the whole bottle". Kept apart from `overdose` because it reads as
+   * something that may **already have happened**, which is a different thing
+   * for a reviewer to see than someone using the word.
+   */
+  | "overdose-disclosed"
   | "harm-to-others"
   | "harm-to-others-feared"
   /** Target unstated — "thinking about hurting". Ambiguous by nature. */
@@ -169,6 +177,15 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
   { pattern: "suicide-named", regex: /\bsui\s+cide\b/i },
   { pattern: "suicide-named", regex: /\bkms\b/i },
   { pattern: "self-harm-named", regex: /\bself[\s-]*harm(?:s|ed|ing)?\b/i },
+  // "unalive" is here for the reason it exists: it is the euphemism people
+  // reach for *because* it gets past filters, which makes the population
+  // using it disproportionately the one §4.1 was written for. Matching it is
+  // the whole job. No ordinary sentence contains this word, so the spelling
+  // is as loose as the others — "un alive", "un-alive", any inflection.
+  {
+    pattern: "suicide-named",
+    regex: /\bun[\s-]*aliv(?:e|ed|es|ing)\b/i,
+  },
 
   // --- self-directed. A "-self" word is required: "will it hurt me?" is the
   // FAQ. "my self" (spaced) counts; so do the past and plural verb forms the
@@ -216,6 +233,24 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
   },
   { pattern: "hopelessness", regex: /\bnothing\s+(?:left\s+)?to\s+live\s+for\b/i },
   // "cannot" and "can not" were both missed by the old `can'?t`.
+  //
+  // ┌─ DELIBERATE OMISSION — do not "fix" this ─────────────────────────────┐
+  // │ "can't do this anymore" is NOT in the alternation above, and that is  │
+  // │ a decision, not an oversight. It reads like a sibling of "can't go    │
+  // │ on", and the temptation to add it will recur.                        │
+  // │                                                                      │
+  // │ It is also the single most likely sentence for an exhausted parent    │
+  // │ venting about homework to type — and an exhausted parent venting      │
+  // │ about homework is this site's *primary visitor*, not an edge case.    │
+  // │ Everywhere else in this file the over-fire trade is cheap: a rare     │
+  // │ sentence, one awkward 988 message. Here it inverts. The phrase is     │
+  // │ common in ordinary traffic and rare as a crisis disclosure that       │
+  // │ nothing else in this list would already have caught, so adding it     │
+  // │ buys very little detection and spends a lot of trust.                 │
+  // │                                                                      │
+  // │ If it ever goes in, it should go in on evidence from real            │
+  // │ conversations, not on symmetry with the line above it.               │
+  // └──────────────────────────────────────────────────────────────────────┘
   {
     pattern: "hopelessness",
     regex:
@@ -230,6 +265,53 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
     regex: /\bbetter\s+o(?:ff|f)\s+with\s*out\s+(?:me|him|her|them|us)\b/i,
   },
   { pattern: "overdose", regex: /\bover\s*dos(?:e|ed|es|ing)\b/i },
+
+  // --- overdose described rather than named --------------------------------
+  // Someone writing "i took a bunch of my pills" is not raising a topic, they
+  // are reporting something that may already have happened. That is the most
+  // acute thing this file can be handed, so these err harder toward firing
+  // than anything else in the list.
+  //
+  // The one discipline holding them back from ordinary traffic is **tense**:
+  // the verbs are past-tense ingestion (took / swallowed / downed / ate), not
+  // habitual present. "my son takes a bunch of pills for adhd" is a sentence
+  // a parent on this site really does write, and it stays quiet because
+  // "takes" is not in the list. Do not add it.
+  //
+  // A quantity word is also required, so "i took his pills to the doctor"
+  // does not reach these. Two over-fires are accepted and tested for rather
+  // than engineered around — "took a bunch of pills to the pharmacy" and
+  // "took all my meds this morning" both fire. A lookahead chasing "to the
+  // pharmacy" would be an arms race that weakens the pattern against the case
+  // it exists for.
+  {
+    // "swallowed a bunch of…" — no object needed. There is no innocuous
+    // sentence that starts this way.
+    pattern: "overdose-disclosed",
+    regex:
+      /\b(?:swallow(?:ed|ing)?|downed)\s+(?:a\s+)?(?:whole\s+)?(?:bunch|handful|load|lots?|ton|bottle|box|pack|packet|all)\b/i,
+  },
+  {
+    // Past-tense ingestion + a quantity + something you can be prescribed.
+    // The possessive slot repeats, because "my mom's pills" stacks two of
+    // them and a single slot silently missed the whole phrase.
+    pattern: "overdose-disclosed",
+    regex:
+      /\b(?:took|taken|swallow(?:ed|ing)?|downed|ate)\s+(?:a\s+)?(?:whole\s+)?(?:bunch|handful|load|lots?|ton|bottle|box|pack|packet|all|everything)\s+(?:of\s+)?(?:(?:my|the|his|her|their|mums?|moms?|dads?|kids?|sons?|daughters?)\s+){0,2}(?:pills?|meds?|medications?|medicine|tablets?|capsules?|painkillers?)\b/i,
+  },
+  {
+    // "took the whole bottle" — the container stands in for the count.
+    pattern: "overdose-disclosed",
+    regex:
+      /\b(?:took|taken|swallow(?:ed|ing)?|drank|downed|ate)\s+(?:the\s+|a\s+)?(?:whole|entire|rest\s+of\s+the|last\s+of\s+the)\s+(?:bottle|packet|pack|box|container|script|prescription|supply)\b/i,
+  },
+  {
+    // "took all my …" with the object left open, as asked: whatever noun
+    // follows, a first-person "took all my" is a disclosure worth firing on.
+    pattern: "overdose-disclosed",
+    regex:
+      /\b(?:took|taken|swallow(?:ed|ing)?|downed|ate)\s+all\s+(?:of\s+)?(?:my|his|her|their)\s+\w+/i,
+  },
 
   // --- harm to others. Still a first-person statement of intent, never a
   // bare verb — "the schedule is killing him" must not reach this. The
