@@ -255,7 +255,17 @@ const FAQ_KEYWORDS: Record<string, string[]> = {
   "Is it appropriate for children?": ["child", "kid", "age", "old", "young", "toddler", "teen", "teenager", "son", "daughter", "year", "appropriate"],
   "Do I have to do anything during the session?": ["anything", "screen", "task", "practice", "homework", "effort", "participate", "passive"],
   "How long is a session?": ["long", "time", "minute", "hour", "duration", "length", "quick"],
-  "How many sessions will I need?": ["many", "number", "often", "frequency", "week", "course", "program", "commit"],
+  // Ben confirmed the course and the taper, so this answer now carries both —
+  // and the question it has to be reachable by changed with it. "How many
+  // sessions" was never the only way people ask; "is this ongoing", "do I have
+  // to keep coming", "forever" are the same question asked by someone weighing
+  // the package price, and before these keys they retrieved nothing.
+  //
+  // Deliberately NOT "long": that word belongs to "How long is a session?" two
+  // entries up, and the note in ./unanswerable.ts records what happened the
+  // last time the two competed — "how long is a session" landed here and got a
+  // confident answer to a question nobody asked. Distinctive terms only.
+  "How many sessions will I need?": ["many", "number", "often", "frequency", "week", "course", "program", "commit", "maintenance", "taper", "ongoing", "indefinitely", "forever", "monthly", "quarterly"],
   "What does the first visit include?": ["first", "visit", "include", "baseline", "recording", "plan", "conversation"],
   "What kinds of concerns do clients come in with?": ["concern", "kind", "issue", "problem", "reason", "symptom", "struggle"],
   "Is this therapy or medical treatment?": ["therapy", "medical", "treatment", "diagnose", "psychiatric", "substitute", "clinic", "counseling"],

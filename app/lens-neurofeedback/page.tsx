@@ -13,10 +13,13 @@ import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
+  COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
   EXPERIENCES_DISCLAIMER,
   FIRST_VISIT_DURATION,
   INSURANCE_POLICY,
+  MAINTENANCE,
+  MAINTENANCE_NOTE,
   PACKAGE_NOTE,
   PACKAGE_PRICE,
   PACKAGE_SAVING,
@@ -27,6 +30,7 @@ import {
   STAT_SESSIONS,
   TESTIMONIALS,
   TRAINING_CLAIM,
+  TYPICAL_COURSE,
   VERIFIED_TESTIMONIALS,
   verifiedOr,
 } from "@/lib/site-config";
@@ -398,8 +402,14 @@ export default function LensNeurofeedbackPage() {
           the package price here as it does everywhere it appears, per Ben.
 
           Step 2 says "recording" and "map," and nothing else. See the Brain Map
-          note at the top of this file. Step 4 is the honest answer to how many
-          sessions, and it is the site's own: "it genuinely varies." */}
+          note at the top of this file.
+
+          Steps 4 and 5 are the course and the taper, both confirmed by Ben and
+          both read from lib/site-config.ts. They replaced a single step that
+          said "it genuinely varies" and stopped — honest, and an answer to
+          nothing. The order is deliberate: the wind-down lands before the
+          price, because "is this open-ended?" is the question a reader is
+          holding while they read what it costs. */}
       <section className="sec">
         <div className="wrap" style={{ maxWidth: 940 }}>
           <div className="sec-head rv">
@@ -448,14 +458,34 @@ export default function LensNeurofeedbackPage() {
               <div>
                 <h3>How many, and for how long</h3>
                 <p>
-                  It genuinely varies from person to person. We track how you
-                  feel at every visit, review progress together, and never ask
-                  you to commit to a long program up front.
+                  A typical course is {TYPICAL_COURSE.value.sessions} sessions,
+                  and {TYPICAL_COURSE.value.children}.{" "}
+                  {COURSE_VARIES_NOTE}
+                </p>
+              </div>
+            </div>
+            {/* The taper, as its own step. It is placed here — before the money
+                — because the question it answers ("is this open-ended?") is the
+                one a reader is holding while they read the next step, and an
+                answer that arrives after the price arrives too late. Stated as
+                cadence and nothing else: no adjective, no "and many clients
+                choose to continue", which is the sentence that would turn a
+                wind-down into an upsell. */}
+            <div className="row">
+              <div className="n">5</div>
+              <div>
+                <h3>Then it winds down</h3>
+                {/* No lead-in verb: the heading already says what this is, and
+                    MAINTENANCE.value opens with "weekly sessions taper", so any
+                    framing clause here repeated either the heading or the verb.
+                    A colon hands straight to the cadence. */}
+                <p>
+                  From there: {MAINTENANCE.value}. {MAINTENANCE_NOTE}
                 </p>
               </div>
             </div>
             <div className="row">
-              <div className="n">5</div>
+              <div className="n">6</div>
               <div>
                 <h3>Paying for it</h3>
                 <p>

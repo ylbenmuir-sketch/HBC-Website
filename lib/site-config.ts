@@ -350,6 +350,92 @@ export const PACKAGE_NOTE =
   `sessions begin, and it doesn’t count toward the ${PACKAGE_SESSIONS}.`;
 
 /**
+ * Typical course length — confirmed by Ben.
+ *
+ * Every page that raised this hedged it as "it genuinely varies", which was
+ * honest and useless in the same breath. Someone weighing the package price is
+ * asking whether this is open-ended, and "it varies" is the answer that sounds
+ * like yes. A typical shape, published with the caveat below, answers the
+ * question people are actually asking.
+ *
+ * **`sessions` is its own number and not a reference to PACKAGE_SESSIONS**,
+ * though both are 12 today. They are two facts that happen to coincide — how
+ * long a course usually runs, and how many sessions the package sells — and
+ * wiring one to the other would mean repricing the package silently rewrote a
+ * claim about how long people come in for. Copy states them separately and lets
+ * a reader put them together; nothing on the site says "the package is exactly
+ * a course", because that sentence goes wrong the moment either number moves.
+ *
+ * `children` is a clause about *course length*, not about how anyone responds.
+ * "Children's courses are often shorter" is a fact about the schedule; "children
+ * respond faster" would be an outcome claim wearing the same words, and this
+ * file's whole job is not letting those two swap places.
+ */
+export const TYPICAL_COURSE: Verifiable<{
+  sessions: number;
+  children: string;
+}> = {
+  value: { sessions: 12, children: "children’s courses are often shorter" },
+  verified: true,
+  note: "[Confirm typical course length]",
+};
+
+/**
+ * Maintenance, written as the taper it is — confirmed by Ben.
+ *
+ * One cadence rather than a service, because the fact a reader needs is that
+ * the commitment winds *down*. "Maintenance sessions are available" reads as an
+ * upsell bolted onto the end of a course; "weekly, then monthly, then a couple
+ * of times a year" answers the open-ended question by itself, with no adjective
+ * doing the persuading. State the cadence and leave it alone.
+ */
+export const MAINTENANCE: Verifiable = {
+  value:
+    "weekly sessions taper to monthly for three months, then quarterly or twice a year",
+  verified: true,
+  note: "[Confirm maintenance cadence]",
+};
+
+/**
+ * The caveat that rides the course length wherever it appears.
+ *
+ * PACKAGE_NOTE's rule applied to the same class of risk: a typical shape
+ * published without it is a typical shape read as a schedule, and the page that
+ * omits it is the one someone quotes back. It states what is true about the
+ * range rather than about the void — the phase 11d rule for limits, in
+ * lib/chat/answer.ts — so it sets an expectation instead of withdrawing one.
+ */
+export const COURSE_VARIES_NOTE =
+  "That’s the typical shape rather than a promise — how many sessions anyone " +
+  "needs varies, and we review it with you at every visit.";
+
+/**
+ * What maintenance costs, and what it is not part of.
+ *
+ * PACKAGE_NOTE's job for PACKAGE_NOTE's reason: state it wherever the taper
+ * appears, or the page that leaves it off is the one where "then quarterly or
+ * twice a year" reads as covered by the package price.
+ *
+ * SESSION_PRICE is interpolated rather than restated, and there is deliberately
+ * no second price constant: maintenance is a regular session on a longer
+ * interval, not a separate product, and a `MAINTENANCE_PRICE` sitting here
+ * would be a figure free to drift away from the one it is supposed to equal.
+ *
+ * **"aren't part of", not "sit outside".** The first draft used the latter, and
+ * the word `sit` put this string into the assistant's index carrying a term the
+ * concern router depends on: "my son can't sit still long enough to finish
+ * anything" routes to focus-adhd on the strength of `sit`, and one more
+ * document containing the word lowered its IDF just enough to drop that
+ * question's coverage below the gate (lib/chat/retrieve.ts, minCoverage). The
+ * audit caught it as an off-topic no-match. Every string in this file is
+ * indexed copy as well as page copy — a common word spent here is a word made
+ * cheaper everywhere it is load-bearing.
+ */
+export const MAINTENANCE_NOTE =
+  `Maintenance sessions are ${SESSION_PRICE}, the same as any regular session, ` +
+  `and they aren’t part of the ${PACKAGE_SESSIONS}-session package.`;
+
+/**
  * Insurance and payment, in Ben's words, verbatim.
  *
  * Replaces the [Confirm policy] / [Confirm HSA/FSA policy] pair. Held here

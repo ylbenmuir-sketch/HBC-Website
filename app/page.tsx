@@ -17,6 +17,7 @@ import ConfirmTag from "@/components/ConfirmTag";
 import { locations, hoursSummary } from "@/lib/locations";
 import {
   BRAIN_MAP_CLAIM,
+  COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
   EXPERIENCES_DISCLAIMER,
   FEATURE_CELEBRITY,
@@ -32,6 +33,7 @@ import {
   STAT_SESSIONS,
   TESTIMONIALS,
   TRISHA_APPROVAL_TAG,
+  TYPICAL_COURSE,
   TRISHA_QUOTE,
   TRISHA_VIDEO_URL,
   VERIFIED_TESTIMONIALS,
@@ -203,8 +205,16 @@ const homeFaqs = [
     a: "Neither. We're a wellness practice. LENS doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
   },
   {
+    // Shortened for the homepage — the taper's full cadence and the pricing
+    // note live on /faq and /lens-neurofeedback, and this accordion is three
+    // questions deep by design. What it must not do is disagree with them, so
+    // the course length and the wind-down both come from the constants rather
+    // than being summarised in prose that drifts.
     q: "How many sessions will I need?",
-    a: "It genuinely varies. We check in on how you're doing at every visit, review progress together, and never ask you to commit to a long program up front.",
+    a:
+      `A typical course is ${TYPICAL_COURSE.value.sessions} sessions, and ` +
+      `${TYPICAL_COURSE.value.children}. After that the schedule winds down ` +
+      `rather than continuing indefinitely. ${COURSE_VARIES_NOTE}`,
   },
 ];
 

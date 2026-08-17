@@ -1,7 +1,10 @@
 import {
   BRAIN_MAP_PRICE,
+  COURSE_VARIES_NOTE,
   FIRST_VISIT_DURATION,
   INSURANCE_POLICY,
+  MAINTENANCE,
+  MAINTENANCE_NOTE,
   PACKAGE_NOTE,
   PACKAGE_PRICE,
   PACKAGE_SAVING,
@@ -9,6 +12,7 @@ import {
   RISK_REVERSAL,
   SESSION_LENGTH,
   SESSION_PRICE,
+  TYPICAL_COURSE,
 } from "./site-config";
 
 /**
@@ -73,8 +77,20 @@ export const SITE_FAQS: SiteFaq[] = [
     a: `Regular sessions run ${SESSION_LENGTH.value} — brief enough to fit a lunch break or a school pickup. Your first visit, the Brain Map, takes ${FIRST_VISIT_DURATION}, because it includes the full conversation and the recording.`,
   },
   {
+    // Ben confirmed the typical course and the taper, so this answer states
+    // both instead of hedging. The old copy — "it genuinely varies from person
+    // to person" — was the whole answer, which meant the question a visitor was
+    // really asking ("is this open-ended?") went unanswered on every page that
+    // carried it. The variation is still here; it is now a caveat on a shape
+    // rather than a substitute for one. This array is what the site assistant
+    // indexes (lib/chat/content-index.ts), so the answer it gives changes with
+    // this edit and nothing has to be mirrored by hand.
     q: "How many sessions will I need?",
-    a: "It genuinely varies from person to person. We track how you feel at every visit, review progress together, and never ask you to commit to a long program up front.",
+    a:
+      `A typical course is ${TYPICAL_COURSE.value.sessions} sessions, and ` +
+      `${TYPICAL_COURSE.value.children}. From there the schedule winds down ` +
+      `rather than continuing indefinitely: ${MAINTENANCE.value}. ` +
+      `${MAINTENANCE_NOTE} ${COURSE_VARIES_NOTE}`,
   },
   {
     q: "What does the first visit include?",
