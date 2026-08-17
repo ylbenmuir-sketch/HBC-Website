@@ -390,9 +390,14 @@ export const TRAINING_CLAIM =
  *
  * These live in the artwork, not in code, which is exactly why they are
  * written down here: nothing else in the repo would catch them. The renders
- * are otherwise accurate — both carry the full 21 electrodes, and the bar
- * chart's own values match the copy on /how-lens-works (Pz at 7.0, below
- * 10 µV; F7 at 47.0, above 35 µV).
+ * are otherwise accurate — both carry the full BRAIN_MAP_POINTS electrodes.
+ *
+ * The bar chart's Pz (7.0) and F7 (47.0) used to be checked against the copy
+ * on /how-lens-works, which named the same two sites and the thresholds they
+ * sat either side of. Phase 15 replaced that copy with Fp1, Fp2, T4 and Cz,
+ * and deliberately publishes no µV value against any of them — a threshold is
+ * a line a reader can hold their own number up against. So the bar graph now
+ * agrees with no page, which is one more reason it is placed on none.
  *
  * 1. DONE — "Ideal range" → "typical range". The shipped heat map reads
  *    "Typical range"; the shipped bar graph labels its bands by value
@@ -413,6 +418,10 @@ export const TRAINING_CLAIM =
  *    control," "mood regulation," "attention and focus." Naming a condition
  *    next to an electrode implies the map detects it, which is a medical claim
  *    and contradicts DISCLAIMER at the bottom of this file.
+ *
+ *    /how-lens-works now sets the register to match: "sustained attention",
+ *    "impulse control", "emotional regulation", "sensory sensitivity". Label
+ *    the graphic in those words and it agrees with the page it sits on.
  *
  * The corrected heat map ships on the homepage (/images/brain-map-heat.png).
  * /how-lens-works still renders PlaceholderPlate: items 3 and 4 above are
