@@ -25,6 +25,7 @@ import {
   FOUNDER_LAST_NAME,
   FOUNDER_QUOTE,
   FRANKLIN_OPENING,
+  FULL_COURSE,
   REVIEWS,
   SAME_DAY_CALLBACK,
   SAMPLE_QUOTES_NOTE,
@@ -33,7 +34,6 @@ import {
   STAT_SESSIONS,
   TESTIMONIALS,
   TRISHA_APPROVAL_TAG,
-  TYPICAL_COURSE,
   TRISHA_QUOTE,
   TRISHA_VIDEO_URL,
   VERIFIED_TESTIMONIALS,
@@ -212,9 +212,9 @@ const homeFaqs = [
     // than being summarised in prose that drifts.
     q: "How many sessions will I need?",
     a:
-      `A typical course is ${TYPICAL_COURSE.value.sessions} sessions, and ` +
-      `${TYPICAL_COURSE.value.children}. After that the schedule winds down ` +
-      `rather than continuing indefinitely. ${COURSE_VARIES_NOTE}`,
+      `A full course is ${FULL_COURSE.value.sessions} sessions, then ` +
+      `maintenance, and ${FULL_COURSE.value.children}. The schedule winds ` +
+      `down rather than continuing indefinitely. ${COURSE_VARIES_NOTE}`,
   },
 ];
 

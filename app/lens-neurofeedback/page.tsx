@@ -17,6 +17,7 @@ import {
   ESTABLISHED_YEAR,
   EXPERIENCES_DISCLAIMER,
   FIRST_VISIT_DURATION,
+  FULL_COURSE,
   INSURANCE_POLICY,
   MAINTENANCE,
   MAINTENANCE_NOTE,
@@ -30,7 +31,6 @@ import {
   STAT_SESSIONS,
   TESTIMONIALS,
   TRAINING_CLAIM,
-  TYPICAL_COURSE,
   VERIFIED_TESTIMONIALS,
   verifiedOr,
 } from "@/lib/site-config";
@@ -458,8 +458,8 @@ export default function LensNeurofeedbackPage() {
               <div>
                 <h3>How many, and for how long</h3>
                 <p>
-                  A typical course is {TYPICAL_COURSE.value.sessions} sessions,
-                  and {TYPICAL_COURSE.value.children}.{" "}
+                  A full course is {FULL_COURSE.value.sessions} sessions, then
+                  maintenance, and {FULL_COURSE.value.children}.{" "}
                   {COURSE_VARIES_NOTE}
                 </p>
               </div>

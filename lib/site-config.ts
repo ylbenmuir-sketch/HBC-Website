@@ -350,34 +350,48 @@ export const PACKAGE_NOTE =
   `sessions begin, and it doesn’t count toward the ${PACKAGE_SESSIONS}.`;
 
 /**
- * Typical course length — confirmed by Ben.
+ * The full course — the recommended protocol, confirmed by Ben.
  *
  * Every page that raised this hedged it as "it genuinely varies", which was
  * honest and useless in the same breath. Someone weighing the package price is
  * asking whether this is open-ended, and "it varies" is the answer that sounds
- * like yes. A typical shape, published with the caveat below, answers the
+ * like yes. The protocol, published with the caveat below, answers the
  * question people are actually asking.
  *
+ * **This is what a full course *is*, not what clients are observed to do.**
+ * That distinction is why the constant is named FULL_COURSE and not
+ * TYPICAL_COURSE, which is what it was called until this edit. "A typical
+ * course is twelve sessions" is a claim about behaviour — it asserts that
+ * people on average complete twelve — and nothing on this site measures
+ * completion, so it was a number we could state but not support. The
+ * recommended course is twelve sessions whether or not any given person
+ * finishes it, which is true independent of completion rates and is the only
+ * version of this fact the site can stand behind.
+ *
+ * Copy must therefore never reintroduce "typically", "most clients", "usually"
+ * or "on average" around this number. Those words turn a protocol back into a
+ * statistic, and the statistic is the one nobody here has.
+ *
  * **`sessions` is its own number and not a reference to PACKAGE_SESSIONS**,
- * though both are 12 today. They are two facts that happen to coincide — how
- * long a course usually runs, and how many sessions the package sells — and
- * wiring one to the other would mean repricing the package silently rewrote a
- * claim about how long people come in for. Copy states them separately and lets
- * a reader put them together; nothing on the site says "the package is exactly
- * a course", because that sentence goes wrong the moment either number moves.
+ * though both are 12 today. They are two facts that happen to coincide — what
+ * a full course is, and how many sessions the package sells — and wiring one
+ * to the other would mean repricing the package silently rewrote the protocol.
+ * Copy states them separately and lets a reader put them together; nothing on
+ * the site says "the package is exactly a course", because that sentence goes
+ * wrong the moment either number moves.
  *
  * `children` is a clause about *course length*, not about how anyone responds.
  * "Children's courses are often shorter" is a fact about the schedule; "children
  * respond faster" would be an outcome claim wearing the same words, and this
  * file's whole job is not letting those two swap places.
  */
-export const TYPICAL_COURSE: Verifiable<{
+export const FULL_COURSE: Verifiable<{
   sessions: number;
   children: string;
 }> = {
   value: { sessions: 12, children: "children’s courses are often shorter" },
   verified: true,
-  note: "[Confirm typical course length]",
+  note: "[Confirm full course length]",
 };
 
 /**
@@ -399,15 +413,20 @@ export const MAINTENANCE: Verifiable = {
 /**
  * The caveat that rides the course length wherever it appears.
  *
- * PACKAGE_NOTE's rule applied to the same class of risk: a typical shape
- * published without it is a typical shape read as a schedule, and the page that
- * omits it is the one someone quotes back. It states what is true about the
- * range rather than about the void — the phase 11d rule for limits, in
- * lib/chat/answer.ts — so it sets an expectation instead of withdrawing one.
+ * PACKAGE_NOTE's rule applied to the same class of risk: a protocol published
+ * without it is a protocol read as a prediction, and the page that omits it is
+ * the one someone quotes back. It states what is true about the range rather
+ * than about the void — the phase 11d rule for limits, in lib/chat/answer.ts —
+ * so it sets an expectation instead of withdrawing one.
+ *
+ * It says "the recommended course" rather than "the typical shape" for the
+ * reason FULL_COURSE is named what it is: the caveat has to disclaim a
+ * prediction, not a measurement, and the old wording quietly reasserted the
+ * behavioural claim the number itself had just stopped making.
  */
 export const COURSE_VARIES_NOTE =
-  "That’s the typical shape rather than a promise — how many sessions anyone " +
-  "needs varies, and we review it with you at every visit.";
+  "That’s the recommended course rather than a promise — how many sessions " +
+  "anyone needs varies, and we review it with you at every visit.";
 
 /**
  * What maintenance costs, and what it is not part of.
