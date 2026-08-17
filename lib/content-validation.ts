@@ -40,7 +40,13 @@ check("Founder quote sign-off", FOUNDER_QUOTE.verified);
 // cannot end up naming a count the site no longer claims.
 check(`Session count (${STAT_SESSIONS.value})`, STAT_SESSIONS.verified);
 check("Founding year (2016)", ESTABLISHED_YEAR.verified);
-check("Google rating & review count", REVIEWS.verified);
+// Confirmed, so this passes today. It stays on the list for the reason
+// "Typical session length" below does: SHOW_REVIEWS reads `verified`, so
+// flipping it false takes the two bands and both centers' hero lines off the
+// site in one move. The per-center counts sit behind this same gate and carry
+// no `verified` of their own — a count is a number or it is null, and null
+// already renders as nothing.
+check("Google rating", REVIEWS.verified);
 check("Response-time claim", RESPONSE_TIME.verified);
 check("Same-day callback promise", SAME_DAY_CALLBACK.verified);
 check("Start-timing claim", START_TIMING.verified);

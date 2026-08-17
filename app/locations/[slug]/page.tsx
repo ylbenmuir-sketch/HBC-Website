@@ -13,6 +13,8 @@ import {
   formattedHours,
   getLocation,
   hasConfirmedAddress,
+  locationReviewCount,
+  reviewCountLabel,
   saturdayLabel,
   spacePhotoCount,
 } from "@/lib/locations";
@@ -96,6 +98,15 @@ export default async function LocationPage({
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
+  // This center's reviews, gated and counted in lib/locations.ts. Null for a
+  // center with none to publish, which is what keeps the line off Franklin —
+  // and the sentence is built once here rather than stored twice as copy, so
+  // the two open centers state their different counts in the same words.
+  const reviewCount = locationReviewCount(location);
+  const reviewLine =
+    reviewCount === null
+      ? null
+      : `${reviewCountLabel(reviewCount)} on Google, every one of them five stars.`;
   // Nashville's Saturday, promoted out of the hours block into a fact of its
   // own — see saturdayLabel(). Null for every center closed on Saturday, which
   // is what keeps this off the other two pages.
@@ -137,6 +148,22 @@ export default async function LocationPage({
                 </Btn>
               )}
             </div>
+            {/* This center's own reviews, beside this center's own CTA — the
+                homepage band adds both centers up, and a visitor on this page
+                is deciding about this room.
+
+                A `.micro` line and not a fourth `.facts3` cell: that grid is
+                three fixed columns in the narrow half of a `.split`, and the
+                comment below spells out why three is the budget. A paragraph
+                wraps; a fourth column would have orphaned onto a second row.
+
+                Identical wording at both centers, 144 or 15 — see `reviewCount`
+                on Murfreesboro in lib/locations.ts. */}
+            {reviewLine && (
+              <p className="micro" style={{ marginTop: 18 }}>
+                {reviewLine}
+              </p>
+            )}
             <div
               className="facts3"
               style={{

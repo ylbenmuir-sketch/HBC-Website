@@ -57,9 +57,13 @@ import type { Passage } from "./types";
  * conversation cannot, which means the only safe behaviour is not knowing it.
  *
  * - **Unverified facts** — `confirmed()`, for anything held in a `Verifiable`.
- *   Excluded today: the Google rating, the response-time and start-timing
- *   claims, the founder quote, the Brain Map differentiator claim, Franklin's
- *   opening date and street address, every [Name] practitioner.
+ *   Excluded today: the response-time and start-timing claims, the founder
+ *   quote, the Brain Map differentiator claim, Franklin's opening date and
+ *   street address, every [Name] practitioner.
+ *
+ *   The Google rating left this list when Ben confirmed it, and is still in
+ *   no passage — see "Reviews" below. A fact leaving this gate does not put
+ *   it in the index; it only stops this gate being the reason it is out.
  * - **Draft copy** — `draftFree()`, for data-driven strings still carrying a
  *   [bracketed] note.
  * - **Copy the site tags with a `ConfirmTag` sibling** — the `confirmTag`
@@ -82,6 +86,14 @@ import type { Passage } from "./types";
  *   permissioned, but a retrieved testimonial invites the assistant to imply
  *   an outcome, and §1 forbids predicting outcomes. Proof is the page's job,
  *   not the assistant's.
+ * - **Reviews.** Confirmed — 5.0 at both open centers, 144 in Nashville and 15
+ *   in Murfreesboro — published on the homepage, /stories and each center's
+ *   page, and still not indexed. Same reason as the testimonials directly
+ *   above: a rating quoted into a conversation is the assistant marshalling
+ *   proof, and it is one keystroke from the outcome claim §1 forbids. It is
+ *   also a figure that moves on Google's schedule and not on ours, so an
+ *   assistant that states it is an assistant that is wrong between edits.
+ *   A fact held as data does not become a passage just because it is sayable.
  * - **The homepage's three-question FAQ block.** A shortened restatement of
  *   /faq answers already indexed; two near-identical passages would compete
  *   with each other and cite the weaker page.

@@ -729,7 +729,12 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
     "FOUNDER_QUOTE.note!": "not indexed — the founder quote is in no passage",
     "FOUNDER_LAST_NAME.note!": "Verifiable-gated — and verified; FOUNDER_DISPLAY_NAME is not indexed regardless",
     "FRANKLIN_OPENING.note!": "Verifiable-gated — location:franklin:coming-soon omits the date by construction",
-    "REVIEWS.note!": "not indexed — ratings and review counts are in no passage",
+    // The `REVIEWS.note!` tag was here. Ben confirmed the rating and both
+    // review counts, so the tag is gone from the band along with the
+    // [Insert verified rating & count] note it carried. The copy beside it was
+    // never indexed and still isn't — no passage states a rating or a count,
+    // for the reason testimonials aren't indexed either (content-index.ts §
+    // "Testimonials and the location quotes"): proof is the page's job.
     TRISHA_APPROVAL_TAG: "not indexed — the celebrity band is in no passage",
     "Film 2–3 short testimonials": "not indexed — a production to-do, not a claim",
   },

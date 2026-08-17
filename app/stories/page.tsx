@@ -4,10 +4,10 @@ import Quote from "@/components/Quote";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
+import { combinedReviewCount, reviewCountLabel } from "@/lib/locations";
 import {
   EXPERIENCES_DISCLAIMER,
   REVIEWS,
-  SHOW_DRAFT_CONTENT,
   VERIFIED_TESTIMONIALS,
 } from "@/lib/site-config";
 
@@ -18,7 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default function StoriesPage() {
-  const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
+  // Gated on there being a count to print — see the same pair on the homepage.
+  const reviewCount = combinedReviewCount();
+  const showReviewBand = reviewCount !== null;
   // Real, permissioned quotes only. The page used to carry six sample quotes
   // for design review; those are gone now that verified ones exist, and the
   // grid simply renders however many there are rather than being padded.
@@ -72,12 +74,12 @@ export default function StoriesPage() {
               <div>
                 <strong>{REVIEWS.value.rating} ★</strong>
                 <span>Google rating across locations</span>
-                <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                  {REVIEWS.note!}
-                </ConfirmTag>
               </div>
               <div>
-                <strong>{REVIEWS.value.count}</strong>
+                {/* Same summed figure as the homepage band, from the same
+                    helper — the two pages state one number and cannot come
+                    apart. See combinedReviewCount() in lib/locations.ts. */}
+                <strong>{reviewCountLabel(reviewCount)}</strong>
                 <span>Read them unfiltered on Google</span>
               </div>
               <div>

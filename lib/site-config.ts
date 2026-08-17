@@ -144,12 +144,48 @@ export const ESTABLISHED_YEAR: Verifiable<number> = {
 /* Reviews & testimonials                                              */
 /* ------------------------------------------------------------------ */
 
-/** Google review block — hidden in production until both values verified. */
-export const REVIEWS: Verifiable<{ rating: string; count: string }> = {
-  value: { rating: "[4.x]", count: "[N] reviews" },
-  verified: false,
-  note: "[Insert verified rating & count, link live profiles]",
+/**
+ * Google rating — confirmed by Ben: 5.0 at both open centers, with no rating
+ * below five at either. That second half is the stronger fact and the one the
+ * copy leans on ("every one of them five stars"); a 5.0 average alone would
+ * not license it.
+ *
+ * **The rating is here; the counts are not.** They are per center, in
+ * lib/locations.ts, for the reason the weeks are — 144 and 15 are two facts
+ * and no sitewide constant can hold them both. The sitewide figure the review
+ * bands print is `combinedReviewCount()`, summed from those, so the band and
+ * the two location pages cannot disagree about how many reviews there are.
+ *
+ * One rating and not one per center because today there is genuinely one:
+ * both centers sit at 5.0, so a per-center copy would be the same number
+ * written twice. If they ever diverge, the rating moves into `reviews` beside
+ * the count and this constant goes the way BUSINESS_HOURS did.
+ *
+ * `verified` still gates every review surface on the site — the homepage band,
+ * the /stories band, and the line in each open center's hero.
+ *
+ * **No `AggregateRating` in the JSON-LD, deliberately.** Review markup a
+ * business emits about itself, on its own site, is the self-serving case
+ * Google names as a manual-action risk — and these figures are hand-entered
+ * from a screen, not read from Google, so the markup would assert a precision
+ * the data behind it doesn't have. The numbers are published as copy, where a
+ * reader can go and check them, and asserted to no crawler as structured
+ * fact. lib/schema.ts emits no rating node on any page; keep it that way.
+ */
+export const REVIEWS: Verifiable<{ rating: string }> = {
+  value: { rating: "5.0" },
+  verified: true,
+  note: "[Confirm Google rating]",
 };
+
+/**
+ * True when any review UI may render — the two bands and the per-center hero
+ * line. Shaped like SHOW_PHONE above, and for the same reason: the gate is one
+ * expression with one home, so flipping `REVIEWS.verified` back to false takes
+ * every review surface off the site at once rather than three pages each
+ * remembering to ask.
+ */
+export const SHOW_REVIEWS = REVIEWS.verified || SHOW_DRAFT_CONTENT;
 
 export type Testimonial = {
   theme: string;

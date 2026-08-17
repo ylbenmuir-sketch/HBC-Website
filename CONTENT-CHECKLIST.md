@@ -81,7 +81,24 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
       source for this figure. Anything that needs it reads it from here;
       nothing restates it.
 - [x] Founding year 2016 (`ESTABLISHED_YEAR`) — Confirmed by Ben.
-- [ ] Google rating & review count (`REVIEWS`) — block hidden until verified
+- [x] Google rating (`REVIEWS`) — 5.0 at both open centers, with no rating
+      below five at either. Confirmed by Ben. `SHOW_REVIEWS` gates every review
+      surface off this one flag: the homepage band, the /stories band, and the
+      line in each open center's hero.
+- [x] Review counts (`reviewCount`, `lib/locations.ts`) — Nashville 144,
+      Murfreesboro 15. Confirmed by Ben. Per center, like the hours: the
+      sitewide 159 the two bands print is `combinedReviewCount()` summing
+      these, so no total is typed anywhere and the band cannot drift from the
+      pages it adds up. Franklin has none and renders none.
+- [ ] Link the live Google profiles — the bands name Google ("Read them
+      unfiltered on Google") and link nowhere. Needs each center's Google
+      Business Profile review URL. Copy-only change; no figure depends on it.
+- [ ] **Do not add `AggregateRating` to the JSON-LD.** Deliberate, not an
+      oversight. Self-serving review markup on the reviewed business's own
+      site is a manual-action risk, and these figures are hand-entered rather
+      than machine-sourced from Google — the markup would assert a precision
+      the data doesn't have. Revisit only if the counts become automated
+      *and* the markup is confirmed to be eligible.
 - [x] Canonical domain (`SITE_URL`) — `https://harmonizedbraincenterstn.com`,
       apex canonical (`www` 301s to it). Confirmed by Ben.
 

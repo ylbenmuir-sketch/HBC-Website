@@ -14,7 +14,12 @@ import GuideCta from "@/components/GuideCta";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
-import { locations, hoursSummary } from "@/lib/locations";
+import {
+  locations,
+  combinedReviewCount,
+  hoursSummary,
+  reviewCountLabel,
+} from "@/lib/locations";
 import {
   BRAIN_MAP_CLAIM,
   COURSE_VARIES_NOTE,
@@ -233,7 +238,12 @@ export default function HomePage() {
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
   const homeQuotes = SHOW_DRAFT_CONTENT ? TESTIMONIALS : VERIFIED_TESTIMONIALS;
   const showStories = homeQuotes.length > 0;
-  const showReviewBand = REVIEWS.verified || SHOW_DRAFT_CONTENT;
+  // The band's own subject is the reviews, so it is gated on there being a
+  // count to print rather than on SHOW_REVIEWS alone — `combinedReviewCount()`
+  // already folds that gate in, and returns null when no center has any. That
+  // also removes the non-null assertion the old two-part gate needed.
+  const reviewCount = combinedReviewCount();
+  const showReviewBand = reviewCount !== null;
 
   return (
     <div className="home">
@@ -541,12 +551,13 @@ export default function HomePage() {
                 <div>
                   <strong>{REVIEWS.value.rating} ★</strong>
                   <span>Google rating across locations</span>
-                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                    {REVIEWS.note!}
-                  </ConfirmTag>
                 </div>
                 <div>
-                  <strong>{REVIEWS.value.count}</strong>
+                  {/* Summed from the per-center counts in lib/locations.ts,
+                      never typed: this band and the two location pages state
+                      the same reviews, and a hand-written total is the copy
+                      that goes stale the first time one center's changes. */}
+                  <strong>{reviewCountLabel(reviewCount)}</strong>
                   <span>From Nashville &amp; Murfreesboro clients</span>
                 </div>
                 <div>

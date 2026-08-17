@@ -6,6 +6,7 @@ import {
   PHONE_DISPLAY,
   SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
+  SHOW_REVIEWS,
   type Verifiable,
   isDraftText,
   verifiedOr,
@@ -85,6 +86,25 @@ export type Location = {
    * center's confirmed one.
    */
   hours: Verifiable<WeeklyHours> | null;
+  /**
+   * Google reviews for **this** center, or null for one with none to publish.
+   *
+   * Per center for the reason `hours` is: 144 and 15 are two facts, and the
+   * sitewide constant that used to hold a single count could only ever have
+   * been wrong about one of them. The combined figure the homepage and
+   * /stories bands print is summed from these (`combinedReviewCount()`), so
+   * the band cannot drift from the two pages it is adding up.
+   *
+   * The rating lives in REVIEWS (lib/site-config.ts) and not here: both
+   * centers sit at 5.0 today, so a per-center copy would be one number written
+   * twice. `REVIEWS.verified` gates this whole surface — page line and band
+   * alike — which is why the count is a plain number and carries no second
+   * gate of its own.
+   *
+   * Null, not 0, for a center with no reviews. Franklin has not opened, and
+   * "0 reviews" is a figure a reader weighs; nothing is the honest render.
+   */
+  reviewCount: number | null;
   phone: string;
   /** Card meta extras (locations index). */
   cardExtra: string;
@@ -256,6 +276,8 @@ export const locations: Location[] = [
       verified: true,
       note: "[Confirm hours]",
     },
+    /** Confirmed by Ben — 144 reviews, none rated below five. */
+    reviewCount: 144,
     phone: PHONE_DISPLAY,
     cardExtra: "Private lot on site, free for clients",
     practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
@@ -404,6 +426,16 @@ export const locations: Location[] = [
       verified: true,
       note: "[Confirm hours]",
     },
+    /**
+     * Confirmed by Ben — 15 reviews, none rated below five.
+     *
+     * A smaller number than Nashville's and stated in exactly the same words
+     * on the page, which is the point: this center is open three days a week
+     * and has been for less time, and copy that hedged the figure would tell a
+     * reader the number is a weakness before they had decided that themselves.
+     * Fifteen unbroken five-star reviews is a strong fact on its own terms.
+     */
+    reviewCount: 15,
     phone: PHONE_DISPLAY,
     cardExtra: "Private lot on site, free for clients",
     practitioners: ["[Name]", "[Name]"],
@@ -540,6 +572,8 @@ export const locations: Location[] = [
      * hero's "Status: Coming soon" fact says what a visitor actually needs.
      */
     hours: null,
+    /** No reviews: the center has no clients yet. See `reviewCount` on the type. */
+    reviewCount: null,
     phone: PHONE_DISPLAY,
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitioners: [],
@@ -804,4 +838,42 @@ export function saturdayLabel(location: Location): string | null {
  */
 export function spacePhotoCount(location: Location): number {
   return location.space.photos.filter((p) => p.kind === "photo").length;
+}
+
+/**
+ * This center's review count, or null when it has none to publish or the
+ * sitewide gate is off. The reader every page goes through, so `reviewCount`
+ * is never read raw and the gate cannot be forgotten on one surface.
+ */
+export function locationReviewCount(location: Location): number | null {
+  return SHOW_REVIEWS ? location.reviewCount : null;
+}
+
+/**
+ * Every center's reviews added up — the figure the homepage and /stories bands
+ * print, and the reason no "159" is typed anywhere in this repo.
+ *
+ * Summed rather than stored. A sitewide constant beside the two per-center
+ * counts is a third copy of a number the other two already determine, and the
+ * day one center's count is updated is the day the band starts contradicting
+ * the page it links to. Centers with no reviews contribute nothing rather than
+ * dragging a zero into the total, which is what keeps Franklin out of it.
+ *
+ * Null when the total is zero, so a caller drops the figure rather than
+ * printing "0 reviews".
+ */
+export function combinedReviewCount(): number | null {
+  if (!SHOW_REVIEWS) return null;
+  const total = locations.reduce((sum, l) => sum + (l.reviewCount ?? 0), 0);
+  return total > 0 ? total : null;
+}
+
+/**
+ * "144 reviews", "1 review". The pluralization lives here and not in each
+ * band, for the same reason `hoursSummary` owns its separator — three callers
+ * agreeing on a suffix by hand is three chances to disagree. Grouped over a
+ * thousand, which no count is today and one will be.
+ */
+export function reviewCountLabel(count: number): string {
+  return `${count.toLocaleString("en-US")} ${count === 1 ? "review" : "reviews"}`;
 }
