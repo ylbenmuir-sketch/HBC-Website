@@ -99,6 +99,37 @@ export const TRISHA_APPROVAL_TAG =
   "[Confirm approval: name · likeness · image · quote · Grammy credit · commercial use]";
 
 /* ------------------------------------------------------------------ */
+/* The guide (lead magnet)                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The downloadable guide behind `components/GuideCta.tsx`.
+ *
+ * Named here rather than in the component because two unrelated places say
+ * the title — the CTA a visitor reads, and the subject line of the signup
+ * notification in `lib/lead-notification.ts` — and they drifted apart once
+ * already: both shipped a placeholder title ("The Parent's Guide to Homework
+ * Battles") that outlived the guide it named. One constant, one title.
+ */
+export const GUIDE_TITLE = "The Ten-Minute Reset";
+export const GUIDE_SUBTITLE = "A practical guide for the hard moments";
+
+/**
+ * Served straight from `public/` — a static file, no route, no signed URL.
+ * That is what makes delivery work today: the download needs no provider, no
+ * key, and no verified sending domain, so a signup is never taken against a
+ * file we cannot hand over.
+ */
+export const GUIDE_PATH = "/guides/ten-minute-reset.pdf";
+
+/**
+ * What the file is called once it lands in her Downloads folder. The repo
+ * path stays lowercase-hyphenated like every other served asset; this is the
+ * name a person reads a week later, so it says whose guide it is.
+ */
+export const GUIDE_DOWNLOAD_NAME = "Harmonized-Ten-Minute-Reset.pdf";
+
+/* ------------------------------------------------------------------ */
 /* Founder                                                             */
 /* ------------------------------------------------------------------ */
 

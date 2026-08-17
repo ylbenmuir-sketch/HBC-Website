@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import {
+  GUIDE_DOWNLOAD_NAME,
+  GUIDE_PATH,
+  GUIDE_SUBTITLE,
+  GUIDE_TITLE,
+} from "@/lib/site-config";
 
 /**
  * Transitional CTA — the ask for the majority who are not calling today.
@@ -13,6 +19,20 @@ import { usePathname } from "next/navigation";
  * second system.
  *
  * Appears on /, /resources, and every /concerns/[slug] page.
+ *
+ * ## Delivery is the download, not an email
+ *
+ * The guide is a static file in `public/`, and the success state hands it
+ * over on the spot. That is deliberate and not a stopgap ranking below a
+ * "real" email send: the download needs no provider, no API key, and no
+ * verified sending domain, so it cannot half-work. Emailing her a copy needs
+ * DNS records this project does not have yet (see lib/lead-notification.ts),
+ * and a form that trades an address for a file we cannot send is a form that
+ * takes something and gives nothing back.
+ *
+ * So nothing here promises an email. If the emailed copy is added later it is
+ * an extra on top of a download that already worked — and this copy changes
+ * only once that send actually delivers to her, not when the code exists.
  */
 export default function GuideCta() {
   const pathname = usePathname();
@@ -25,7 +45,7 @@ export default function GuideCta() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) {
-      setErrorMessage("Please add an email address so we know where to send it.");
+      setErrorMessage("Please add an email address to get the guide.");
       setStatus("error");
       return;
     }
@@ -62,19 +82,28 @@ export default function GuideCta() {
         <div className="sec-head rv" style={{ marginBottom: 30 }}>
           <div className="eyebrow">Not ready to call?</div>
           <h2>
-            Get <em className="sage">The Parent&rsquo;s Guide to Homework Battles</em>.
+            Get <em className="sage">{GUIDE_TITLE}</em>.
           </h2>
-          <p className="sub">
-            A plain-language look at what&rsquo;s happening in a stuck brain,
-            and what actually helps.
-          </p>
+          <p className="sub">{GUIDE_SUBTITLE} &mdash; what to do in the ten
+            minutes when everything has already gone sideways.</p>
         </div>
 
         {status === "success" ? (
+          /* The file is right here. `download` keeps her on the page and
+             writes a self-explanatory name into her downloads, rather than
+             navigating away into the browser's PDF viewer. */
           <div className="note-sage rv" role="status">
-            {/* The guide does not exist yet — the address is captured and
-                stored; see the TODO in app/api/consultation/route.ts. */}
-            Thank you &mdash; we&rsquo;ll email it to you shortly.
+            <p style={{ marginBottom: 18 }}>
+              Thank you &mdash; here it is. The download starts when you tap
+              the button.
+            </p>
+            <a
+              className="btn btn-outline"
+              href={GUIDE_PATH}
+              download={GUIDE_DOWNLOAD_NAME}
+            >
+              Download the guide (PDF)
+            </a>
           </div>
         ) : (
           <form className="form rv" onSubmit={handleSubmit} noValidate>
@@ -97,7 +126,7 @@ export default function GuideCta() {
                   type="submit"
                   disabled={status === "submitting"}
                 >
-                  {status === "submitting" ? "Sending…" : "Send it to me"}
+                  {status === "submitting" ? "One moment…" : "Get the guide"}
                 </button>
               </div>
             </div>

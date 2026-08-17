@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     // A guide signup is only ever an address — nothing else is collected.
     if (!email) {
       return NextResponse.json(
-        { error: "Please add an email address so we know where to send it." },
+        { error: "Please add an email address to get the guide." },
         { status: 400 }
       );
     }
@@ -161,10 +161,12 @@ export async function POST(request: Request) {
   // two stay separate messages because a guide signup is not a callback and
   // must not read like one.
   //
-  // TODO: attach guide PDF — once the guide exists, email it to the visitor
-  // here, over the same Resend path lib/lead-notification.ts already uses.
-  // That send does need the address, and it goes to the visitor rather than
-  // to us. The notification below tells the team; it does not send the guide.
+  // The guide itself is not sent from here, and nothing is pending on this
+  // line. The visitor gets the PDF as a download in the success state of
+  // components/GuideCta.tsx — a static file, so delivery has no provider to
+  // fail and no key to be missing. An emailed copy could be added over the
+  // same Resend path, but only once the sending domain is verified; see the
+  // header of lib/lead-notification.ts for why that is not a detail.
   if (isGuide && email) {
     await sendGuideNotification();
   } else if (!isGuide && firstName && phone && helpingWho) {

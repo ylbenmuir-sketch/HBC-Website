@@ -178,6 +178,27 @@ no extra variable to set.
 The two remain separate messages: a guide signup is deliberately *not* shaped
 like a callback, so nobody phones someone who only wanted a PDF.
 
+### The guide, and how it actually reaches her
+
+The guide is **The Ten-Minute Reset** — title, subtitle, file path, and
+download filename all live in `lib/site-config.ts` (`GUIDE_*`), because the
+CTA and the notification subject both say the title and previously drifted
+onto a placeholder name that outlived the guide it described.
+
+**Delivery is the download.** `public/guides/ten-minute-reset.pdf` is a static
+file, and `components/GuideCta.tsx` hands it over in its success state the
+moment the row saves. No provider, no key, no verified domain — nothing that
+can be half-configured, which is the whole point.
+
+**No email carries the guide, and none should until DNS is done.** Resend is
+still on its shared test sender (`onboarding@resend.dev`), which delivers only
+to the Resend account owner. A send to the address a parent typed would be
+accepted by the API and silently never arrive — worse than not sending, since
+the form would have promised it. Emailing her a copy needs the sending domain
+verified in Resend (SPF, DKIM, DMARC published and green) and
+`LEADS_NOTIFY_FROM` moved onto it. Until then, don't add that send, and don't
+write copy that promises one.
+
 ## Content verification & draft mode
 
 Every unverified fact is centralized and **cannot ship to production**:
@@ -546,7 +567,9 @@ Also replace when assets exist:
   below the `FinalCTA` band on `/`, `/resources`, and `/concerns/[slug]`,
   asks for one field, and uses an outline button so it stays visually
   subordinate to the primary ask. It posts to the same API route — never
-  build it a second system.
+  build it a second system. Always *below* `FinalCTA`, never above it and
+  never on `/contact`: a page whose job is the phone call must not offer a
+  PDF as an easier way out.
 - The Trisha Yearwood video (`https://www.youtube.com/shorts/fhmoa68_uHY`)
   has embedding disabled — it must stay a thumbnail linking out, never an
   iframe.

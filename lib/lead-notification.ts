@@ -10,10 +10,24 @@
 //   2. Verify the sending domain in Resend (required for a real `from`).
 //   3. Set RESEND_API_KEY, LEADS_NOTIFY_EMAIL, and LEADS_NOTIFY_FROM.
 //
+// Everything here sends INWARD — to us, at LEADS_NOTIFY_EMAIL. Nothing in this
+// file emails a visitor, and step 2 is why: on Resend's shared test sender the
+// only deliverable recipient is the Resend account owner, so a send to the
+// address a parent typed would be accepted by the API and never arrive. That
+// is a worse failure than not sending at all, because the form would have
+// promised it. The guide is therefore delivered as a download the moment she
+// submits (components/GuideCta.tsx) and does not depend on this file working.
+//
+// An emailed copy is a fine addition once the domain is verified — SPF, DKIM,
+// and DMARC records published and green in Resend. Until then, do not add a
+// send to the visitor here, and do not write copy that promises one.
+//
 // Sending goes through Resend's REST API over fetch, deliberately without the
 // `resend` SDK — one POST does not justify a new dependency. Swapping in
 // Postmark or SendGrid means changing only the endpoint, headers, and body
 // keys below; the exported signature stays the same.
+
+import { GUIDE_TITLE } from "./site-config";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -119,10 +133,7 @@ export async function sendGuideNotification(): Promise<boolean> {
     whereToRead(),
   ].join("\n");
 
-  return deliver(
-    "New guide signup — The Parent's Guide to Homework Battles",
-    text
-  );
+  return deliver(`New guide signup — ${GUIDE_TITLE}`, text);
 }
 
 /**
