@@ -191,8 +191,12 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
     regex: /\bun[\s-]*aliv(?:e|ed|es|ing)\b/i,
   },
   {
+    // "sewerslidal" is the one worth spelling out: it is to "sewerslide"
+    // what "suicidal" is to "suicide", and a suffix list built from the verb
+    // forms alone misses the adjective people are most likely to type about
+    // themselves.
     pattern: "suicide-named",
-    regex: /\bsewer[\s-]*slid(?:e|es|ed|ing)\b/i,
+    regex: /\bsewer[\s-]*slid(?:e|es|ed|ing|al)\b/i,
   },
 
   // --- self-directed. A "-self" word is required: "will it hurt me?" is the
