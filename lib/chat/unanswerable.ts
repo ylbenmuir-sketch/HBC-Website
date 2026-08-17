@@ -319,8 +319,6 @@ export type PreRetrievalAnswer = {
   reply: string;
   /** The body alone, for a topic raised mid-booking. See `respond` above. */
   bodyOnly: string;
-  /** The phrase that matched, for the conversation log. Never shown. */
-  matched: string;
 };
 
 /**
@@ -339,16 +337,11 @@ export function checkPreRetrieval(message: string): PreRetrievalAnswer | null {
     const copy = respond(text);
     if (!copy) continue;
     for (const pattern of patterns) {
-      const match = pattern.exec(text);
-      if (match) {
+      if (pattern.test(text)) {
         return {
           topic,
           reply: `${copy.body} ${copy.offer}`,
           bodyOnly: copy.body,
-          // The day rule is two lookaheads, so it matches zero characters —
-          // its groups hold the words that actually fired. A log line saying a
-          // turn was gated on "" is the kind of thing that costs a morning.
-          matched: match[0] || match.slice(1).filter(Boolean).join(" + ") || topic,
         };
       }
     }

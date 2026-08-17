@@ -60,8 +60,6 @@ export type Refusal = {
    * statement, and exactly one question follows it.
    */
   declineOnly: string;
-  /** The phrase that matched, for the conversation log. Never shown. */
-  matched: string;
 };
 
 /**
@@ -326,29 +324,25 @@ export function checkRefusal(message: string): Refusal | null {
   // phrasings are the ones the strip was built to let through, and the ones
   // that must never reach retrieval.
   for (const { pattern, needsPerson } of SUBSTITUTION) {
-    const match = pattern.exec(normalized);
-    if (!match) continue;
+    if (!pattern.test(normalized)) continue;
     if (needsPerson && !A_PARTICULAR_PERSON.test(normalized)) continue;
     const { decline, offer } = REPLIES["medication-substitution"];
     return {
       kind: "medication-substitution",
       reply: `${decline} ${offer}`,
       declineOnly: decline,
-      matched: match[0],
     };
   }
 
   const text = stripBenignMedicationPhrases(normalized);
 
   for (const { kind, pattern } of PATTERNS) {
-    const match = pattern.exec(text);
-    if (match) {
+    if (pattern.test(text)) {
       const { decline, offer } = REPLIES[kind];
       return {
         kind,
         reply: `${decline} ${offer}`,
         declineOnly: decline,
-        matched: match[0],
       };
     }
   }

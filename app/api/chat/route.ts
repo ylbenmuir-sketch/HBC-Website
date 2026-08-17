@@ -166,7 +166,7 @@ export async function POST(request: Request) {
   const stop = checkSafety(message);
   if (stop) {
     applySafetyStop(session, stop);
-    return finish(stop.reply, stop.kind, stop.matched);
+    return finish(stop.reply, stop.kind, stop.pattern);
   }
 
   // ------------------------------------------------------------------

@@ -15,19 +15,6 @@
 // Postmark or SendGrid means changing only the endpoint, headers, and body
 // keys below; the exported signature stays the same.
 
-export type LeadNotification = {
-  firstName: string;
-  phone: string;
-  helpingWho: string;
-  concerns: string[];
-  preferredCenter: string | null;
-  bestTime: string | null;
-  note: string | null;
-  sourcePage: string | null;
-  /** "form" or "chat" — the channel, not the page. See §5 of phase-8-chatbot.md. */
-  source?: string;
-};
-
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 // The visitor is waiting on this request, so a hung provider must not hold the
@@ -37,30 +24,6 @@ const SEND_TIMEOUT_MS = 5000;
 // Resend's shared test sender. It only delivers to the Resend account owner,
 // which is enough to prove the wiring works but is not a launch value.
 const DEFAULT_FROM = "Harmonized Website <onboarding@resend.dev>";
-
-function line(label: string, value: string | null): string {
-  return `${label}: ${value && value.length > 0 ? value : "—"}`;
-}
-
-/** Centre-local time, since whoever reads this works in Middle Tennessee.
- *  Falls back to ISO if the runtime lacks full ICU data. */
-function stamp(date: Date): string {
-  try {
-    // Explicit components, not dateStyle/timeStyle — those cannot be combined
-    // with timeZoneName, and the combination throws.
-    return date.toLocaleString("en-US", {
-      timeZone: "America/Chicago",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    });
-  } catch {
-    return date.toISOString();
-  }
-}
 
 /**
  * Shared delivery. Never throws and never rejects: the Supabase row is already
@@ -113,30 +76,47 @@ async function deliver(subject: string, text: string): Promise<boolean> {
   }
 }
 
-/** A guide signup — an address and nothing else. */
-export type GuideNotification = {
-  email: string;
-  sourcePage: string | null;
-  submittedAt: Date;
-};
+/**
+ * Where the row actually is. Derived from SUPABASE_URL rather than a fourth
+ * env var, so there is nothing new to keep in sync; falls back to naming the
+ * table when the URL is unset or is not a hosted project ref.
+ *
+ * Both notifications end on this line. That is the whole design: the email
+ * says something arrived and points at the one place it is stored.
+ */
+function whereToRead(): string {
+  const ref = /^https:\/\/([a-z0-9-]+)\.supabase\.co\/?$/i.exec(
+    (process.env.SUPABASE_URL || "").trim()
+  )?.[1];
+
+  return ref
+    ? `Open it here: https://supabase.com/dashboard/project/${ref}/editor`
+    : "Open it in Supabase → Table Editor → public.consultation_requests.";
+}
 
 /**
- * Emails a guide signup to LEADS_NOTIFY_EMAIL.
+ * Tells LEADS_NOTIFY_EMAIL that someone asked for the guide.
  *
- * Deliberately not shaped like a callback: there is no name, phone, or best
- * time to call, and presenting it as one would invite a call nobody asked for.
- * The subject says plainly which kind of lead this is.
+ * Carries no signup content — not even the address, which is the only thing
+ * collected. An email address is less than a parent's note about her child,
+ * but it is still a person's contact detail, and there is no reason for it to
+ * exist in an inbox as well as in the row. Same rule, same shape as the
+ * consultation notice; the only difference is which one it says arrived.
+ *
+ * Still deliberately not shaped like a callback. Nobody phones someone who
+ * only wanted a PDF, and the subject line keeps saying so.
  */
-export async function sendGuideNotification(
-  signup: GuideNotification
-): Promise<boolean> {
+export async function sendGuideNotification(): Promise<boolean> {
   const text = [
-    "Someone asked for the guide. This is a download request, not a callback —",
-    "no name or phone was collected, and nobody is expecting to hear from us.",
+    "Someone asked for the guide.",
     "",
-    line("Email", signup.email),
-    line("Submitted from", signup.sourcePage),
-    line("Received", stamp(signup.submittedAt)),
+    "This is a download request, not a callback — no name or phone was",
+    "collected, and nobody is expecting to hear from us.",
+    "",
+    "The address is not in this email, on purpose — it's in Supabase, which is",
+    "where it's stored anyway.",
+    "",
+    whereToRead(),
   ].join("\n");
 
   return deliver(
@@ -146,40 +126,32 @@ export async function sendGuideNotification(
 }
 
 /**
- * Emails a new consultation request to LEADS_NOTIFY_EMAIL. Someone is waiting
- * for a phone call at the other end of this one.
+ * Tells LEADS_NOTIFY_EMAIL that a consultation request arrived. Someone is
+ * waiting for a phone call at the other end of this one.
+ *
+ * It deliberately carries no lead content — no name, no phone, no concerns,
+ * no note. The Supabase row is the source of truth and already holds all of
+ * it; copying a parent's description of her child into an inbox duplicates it
+ * into a second place with its own retention, its own forwarding, and its own
+ * search index, and buys nothing the row doesn't already give. So this is a
+ * pointer, not a record.
+ *
+ * That is also why it takes no argument. There is no lead in scope to be
+ * re-added to the body by a later edit — the property is structural rather
+ * than a matter of remembering. Everything the old body carried, channel
+ * ("form" or "chat", §5) included, is a column on the row this links to.
  */
-export async function sendLeadNotification(
-  lead: LeadNotification
-): Promise<boolean> {
-  // Plain text, not HTML — nothing here needs escaping, and it reads fine on a
-  // phone, which is where this will actually be opened.
-  // The assistant's leads go down this same path — §5 forbids a second
-  // notification route — so the channel is a line in the message rather than a
-  // different message. Whoever picks up the phone should know the person typed
-  // this to a chat widget and not into the form.
-  const viaChat = lead.source === "chat";
-
+export async function sendLeadNotification(): Promise<boolean> {
+  // Plain text, not HTML — it reads fine on a phone, which is where this will
+  // actually be opened.
   const text = [
-    viaChat
-      ? "A new consultation request just came in — collected by the site assistant."
-      : "A new consultation request just came in.",
+    "New consultation request received.",
     "",
-    line("Name", lead.firstName),
-    line("Phone", lead.phone),
-    line("Helping who", lead.helpingWho),
-    line("Concerns", lead.concerns.join(", ")),
-    line("Preferred center", lead.preferredCenter),
-    line("Best time to call", lead.bestTime),
-    line("Channel", viaChat ? "Site assistant (chat)" : "Contact form"),
-    line("Submitted from", lead.sourcePage),
+    "Details are not in this email, on purpose — they're in Supabase, which is",
+    "where they're stored anyway.",
     "",
-    "Note:",
-    lead.note && lead.note.length > 0 ? lead.note : "—",
+    whereToRead(),
   ].join("\n");
 
-  return deliver(
-    `New consultation request — ${lead.firstName} (${lead.helpingWho})`,
-    text
-  );
+  return deliver("New consultation request received", text);
 }

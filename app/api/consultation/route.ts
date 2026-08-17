@@ -156,34 +156,26 @@ export async function POST(request: Request) {
 
   // The row is saved — from here the request has succeeded no matter what.
   //
-  // Both kinds of lead page a human, with a message shaped to what was
-  // actually collected: a guide signup is an address, not a callback.
+  // Both kinds of lead page a human, and neither notification carries any of
+  // what was collected: they say which kind arrived and link to the row. The
+  // two stay separate messages because a guide signup is not a callback and
+  // must not read like one.
   //
   // TODO: attach guide PDF — once the guide exists, email it to the visitor
   // here, over the same Resend path lib/lead-notification.ts already uses.
-  // The notification below tells the team; it does not send the guide.
+  // That send does need the address, and it goes to the visitor rather than
+  // to us. The notification below tells the team; it does not send the guide.
   if (isGuide && email) {
-    await sendGuideNotification({
-      email,
-      sourcePage,
-      submittedAt: new Date(),
-    });
+    await sendGuideNotification();
   } else if (!isGuide && firstName && phone && helpingWho) {
-    // sendLeadNotification never throws; it logs its own failures and returns
-    // false, so this is awaited (rather than fired and forgotten, which a
-    // serverless runtime may kill before the request finishes) without any
-    // risk to the response.
-    await sendLeadNotification({
-      firstName,
-      phone,
-      helpingWho,
-      concerns,
-      preferredCenter,
-      bestTime,
-      note,
-      sourcePage,
-      source,
-    });
+    // Nothing about the lead is passed: the notification is a "go look" ping,
+    // and the row inserted above is where the details stay. See the comment on
+    // sendLeadNotification.
+    //
+    // It never throws; it logs its own failures and returns false, so this is
+    // awaited (rather than fired and forgotten, which a serverless runtime may
+    // kill before the request finishes) without any risk to the response.
+    await sendLeadNotification();
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

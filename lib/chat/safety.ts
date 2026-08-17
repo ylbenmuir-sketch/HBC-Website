@@ -31,13 +31,54 @@ export type SafetyEffect =
   /** §4.2 — collect no contact details for the rest of the session. */
   | "block-contact-collection";
 
+/**
+ * Which crisis pattern fired. These names are the *only* thing about a crisis
+ * turn that reaches the conversation log, so they are grouped to be useful to
+ * whoever ends up reviewing flagged lines: "self-harm-intent" and
+ * "harm-to-others" want different responses, and a reviewer who can only see
+ * `outcome: "crisis"` cannot tell them apart.
+ *
+ * Deliberately a closed union rather than a free string — a category cannot
+ * drift back into being a quotation if it has to be one of these.
+ */
+export type CrisisPattern =
+  | "suicide-named"
+  | "self-harm-named"
+  | "self-harm-intent"
+  | "life-ending-intent"
+  | "death-wish"
+  | "hopelessness"
+  | "burden"
+  | "overdose"
+  | "harm-to-others"
+  | "harm-to-others-feared"
+  /** Target unstated — "thinking about hurting". Ambiguous by nature. */
+  | "harm-ideation";
+
+/** Which under-18 signal fired. Same contract as CrisisPattern. */
+export type MinorPattern =
+  | "age-stated"
+  | "under-18-stated"
+  | "self-identified-minor"
+  | "school-grade"
+  | "age-referenced"
+  | "parents-unaware";
+
+export type SafetyPattern = CrisisPattern | MinorPattern;
+
 export type SafetyStop = {
   kind: SafetyKind;
   /** Fixed copy. Never model-generated — §4.1 says so outright. */
   reply: string;
   effect: SafetyEffect;
-  /** The phrase that matched, for the flagged-conversation log. Never shown. */
-  matched: string;
+  /**
+   * Which pattern fired, as a fixed category — **never the phrase that
+   * matched it.** This is what the flagged-conversation log records, and a
+   * log line is not the place for a sentence somebody typed about wanting to
+   * die. Category is enough to make the line actionable; the words are not
+   * ours to keep. Never shown to the visitor either way.
+   */
+  pattern: SafetyPattern;
 };
 
 /**
@@ -56,6 +97,45 @@ export const CRISIS_REPLY =
 export const MINOR_REPLY =
   "Thanks for reaching out. For anyone under 18 we’d need a parent or guardian to set things up — could you ask them to talk to us, or have them use the contact form?";
 
+/* -------------------------------------------------------------------------
+ * Shared fragments
+ *
+ * These exist because the worst bug this file has had was a copy-paste
+ * divergence, not a missing idea: the *minor* patterns spelled it `i'?m` and
+ * so caught apostrophe-less "im", while the *crisis* patterns spelled it
+ * `i\s*(?:'m| am)?` and did not. The result was that "im going to hurt
+ * someone" — typed without the apostrophe, which is how most people type on a
+ * phone — was silently missed by the more important of the two lists.
+ *
+ * Writing each shape once means the next fix lands everywhere at once. Any
+ * new pattern that needs "I'm" or "don't" must use these rather than inline
+ * its own spelling.
+ *
+ * normalize() already lowercases and folds curly quotes to straight ones, so
+ * the `['’]` classes and the `i` flags below are belt-and-braces: these
+ * patterns must keep working if that ever stops being true.
+ * ---------------------------------------------------------------------- */
+
+/** "i'm" · "im" · "i m" · "i am" · "iam". The `m` is required. */
+const IM = String.raw`i(?:\s*['’]?\s*m|\s*am)`;
+
+/** The same, with the `m` optional — so bare "i might", "i could" still hit. */
+const I_MAYBE = String.raw`i(?:\s*['’]?\s*m|\s*am)?`;
+
+/** "i'll" · "ill" · "i will" · "i might" … Optional, so bare "i" still hits. */
+const ILL = String.raw`i(?:\s*['’]?\s*ll|\s+will|\s+might|\s+may|\s+could|\s+am\s+going\s+to|\s+going\s+to)?`;
+
+/** "don't" · "dont" · "do not" · "doesn't" · "didnt". */
+const DONT = String.raw`(?:do|does|did)(?:\s*n['’]?t|\s+not)`;
+
+/**
+ * "want to" · "wants to" · "wanna" · "wana" — **the trailing "to" is
+ * optional**, which is the entire point. The old pattern was
+ * `wan(t|ts|na)\s+to\s+die`, so it required "wanna *to* die" and therefore
+ * never matched the way anyone actually types it.
+ */
+const WANT_TO = String.raw`(?:want|wants|wanted|wanna|wana|wanne|wnat)(?:\s+to)?`;
+
 /**
  * Crisis disclosure (§4.1).
  *
@@ -65,50 +145,165 @@ export const MINOR_REPLY =
  * phrase was ambiguous the tie went to firing — "can't go on" is in, and Ben
  * should expect it to catch the occasional exhausted parent.
  *
- * Two shapes are deliberately excluded because they are ordinary questions
- * about the service, and firing on them would be both wrong and alarming:
- * "will it hurt me" / "does it hurt" (the FAQ), and "this is killing him"
- * (a parent describing a hard schedule). Self-harm patterns therefore require
- * "myself", and harm-to-others requires a first-person statement of intent.
+ * That principle now extends to spelling. These are typed on phones, in
+ * distress, by people who are not proofreading: apostrophes are dropped,
+ * words are misspelled, spaces land in the wrong place. Every pattern here
+ * accepts those variants, because a false positive costs one awkward message
+ * and a false negative costs someone the 988 number.
+ *
+ * Two shapes are still deliberately excluded, because they are ordinary
+ * questions about the service and firing on them would be both wrong and
+ * alarming: "will it hurt me" / "does it hurt" (the FAQ), and "this is
+ * killing him" (a parent describing a hard schedule). Self-harm patterns
+ * therefore require a "-self" word, and harm-to-others requires a
+ * first-person statement of intent. Both exclusions are covered by the
+ * negative corpus in the audit — see the tests noted at the foot of the file.
  */
-const CRISIS_PATTERNS: RegExp[] = [
-  // Named outright — including a parent reporting it about a child.
-  /\bsuicid(e|al)\b/,
-  /\bself[- ]harm(ing)?\b/,
-  /\bkms\b/,
+const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
+  // --- named outright, including a parent reporting it about a child -------
+  // Spelling is loose on purpose. "sucide", "suiside" and "suicidle" are all
+  // things people type, and no ordinary English word has this shape — the
+  // other "-cide" words (homicide, pesticide) can't reach it, because the
+  // pattern is anchored to a word starting "su".
+  { pattern: "suicide-named", regex: /\bsu[iu]?[cs]id(?:e|es|al|le|ial)?\b/i },
+  { pattern: "suicide-named", regex: /\bsui\s+cide\b/i },
+  { pattern: "suicide-named", regex: /\bkms\b/i },
+  { pattern: "self-harm-named", regex: /\bself[\s-]*harm(?:s|ed|ing)?\b/i },
 
-  // Self-directed. "myself" is required: "will it hurt me?" is the FAQ.
-  /\b(kill|hurt|harm|cut|cutting|hurting|killing|harming)\s+(myself|himself|herself|themselves)\b/,
-  /\b(end|ending|take|taking)\s+(my|his|her|their)\s+(own\s+)?life\b/,
-  /\bend(ing)?\s+it\s+all\b/,
-  /\bwan(t|ts|na)\s+to\s+(die|be dead|not be here|not wake up|disappear forever)\b/,
-  /\bwish(es|ed)?\s+(i|he|she|they)\s+(was|were)\s+dead\b/,
-  /\bdon'?t\s+want\s+to\s+(live|be here|be alive|wake up|go on)\b/,
-  /\b(no|nothing)\s+(reason|point)\s+(to|in)\s+(liv(e|ing)|being here|going on)\b/,
-  /\bnothing\s+to\s+live\s+for\b/,
-  /\bbetter\s+off\s+(dead|without\s+(me|him|her|them))\b/,
-  /\boverdos(e|ed|ing)\b/,
-  /\bcan'?t\s+go\s+on\b/,
+  // --- self-directed. A "-self" word is required: "will it hurt me?" is the
+  // FAQ. "my self" (spaced) counts; so do the past and plural verb forms the
+  // original list left out.
+  {
+    pattern: "self-harm-intent",
+    regex:
+      /\b(?:kill|kills|killed|killing|hurt|hurts|hurting|harm|harms|harmed|harming|cut|cuts|cutting)\s+(?:my|him|her|them|your|it)\s*sel(?:f|ves)\b/i,
+  },
+  {
+    pattern: "life-ending-intent",
+    // "took her life" was missed by the old (end|ending|take|taking); "thier"
+    // and "live" are the two typos that actually show up.
+    regex:
+      /\b(?:end|ends|ended|ending|take|takes|took|taking)\s+(?:my|his|her|their|thier)\s+(?:own\s+)?li(?:f|v)e\b/i,
+  },
+  { pattern: "life-ending-intent", regex: /\bend(?:s|ed|ing)?\s+it\s+all\b/i },
+  {
+    pattern: "death-wish",
+    regex: new RegExp(
+      String.raw`\b${WANT_TO}\s+(?:die|be\s+dead|not\s+be\s+here|not\s+wake\s+up|disappear\s+forever)\b`,
+      "i"
+    ),
+  },
+  {
+    pattern: "death-wish",
+    regex: /\bwish(?:es|ed)?\s+(?:i|he|she|they|we)\s+(?:was|were)\s+(?:dead|gone)\b/i,
+  },
+  {
+    pattern: "death-wish",
+    regex:
+      /\bwish(?:es|ed)?\s+(?:i|he|she|they|we)\s+(?:was|were)\s*n['’]?t\s+(?:here|alive|born)\b/i,
+  },
+  {
+    pattern: "death-wish",
+    regex: new RegExp(
+      String.raw`\b${DONT}\s+${WANT_TO}\s+(?:live|be\s+here|be\s+alive|wake\s+up|go\s+on|exist)\b`,
+      "i"
+    ),
+  },
+  {
+    pattern: "hopelessness",
+    regex:
+      /\b(?:no|nothing|not\s+any)\s+(?:reason|point|purpose)\s+(?:to|in|for)\s+(?:liv(?:e|ing)|be(?:ing)?\s+here|go(?:ing)?\s+on|exist(?:ing)?)\b/i,
+  },
+  { pattern: "hopelessness", regex: /\bnothing\s+(?:left\s+)?to\s+live\s+for\b/i },
+  // "cannot" and "can not" were both missed by the old `can'?t`.
+  {
+    pattern: "hopelessness",
+    regex:
+      /\b(?:can['’]?t|cannot|can\s+not)\s+(?:go\s+on|keep\s+going|carry\s+on)\b/i,
+  },
+  // One alternation split in two, so the log can tell "better off dead" (a
+  // death wish) from "better off without me" (feeling like a burden). "of"
+  // for "off" is the typo that shows up here.
+  { pattern: "death-wish", regex: /\bbetter\s+o(?:ff|f)\s+dead\b/i },
+  {
+    pattern: "burden",
+    regex: /\bbetter\s+o(?:ff|f)\s+with\s*out\s+(?:me|him|her|them|us)\b/i,
+  },
+  { pattern: "overdose", regex: /\bover\s*dos(?:e|ed|es|ing)\b/i },
 
-  // Harm to others. A first-person statement of intent, never a bare verb —
-  // "the schedule is killing him" must not reach this.
-  /\bi\s*(?:'m|’m| am)?\s*(?:going to|gonna|about to|want to|wanna|need to|plan to|might|may|could)\s+(hurt|kill|harm|attack)\b/,
-  /\bi\s*(?:'m|’m| am)?\s*(?:afraid|scared|worried|terrified)\s+(?:that\s+)?i\s*(?:'ll|’ll| will| might| could| am going to| going to)?\s*(hurt|kill|harm)\b/,
-  /\bthinking\s+about\s+(hurting|killing|harming)\b/,
+  // --- harm to others. Still a first-person statement of intent, never a
+  // bare verb — "the schedule is killing him" must not reach this. The
+  // subject fragment is what used to require an apostrophe.
+  {
+    pattern: "harm-to-others",
+    regex: new RegExp(
+      String.raw`\b${I_MAYBE}\s+(?:going\s+to|gonna|gunna|about\s+to|want\s+to|wanna|wana|need\s+to|plan\s+to|planning\s+to|might|may|could|will)\s+(?:hurt|kill|harm|attack)\b`,
+      "i"
+    ),
+  },
+  {
+    pattern: "harm-to-others-feared",
+    regex: new RegExp(
+      String.raw`\b${I_MAYBE}\s+(?:afraid|scared|worried|terrified|frightened)\s+(?:that\s+)?${ILL}\s+(?:hurt|kill|harm|attack)\b`,
+      "i"
+    ),
+  },
+  // Sits under "harm to others" by history, but the target is unstated —
+  // named honestly so a reviewer doesn't read certainty into it.
+  {
+    pattern: "harm-ideation",
+    regex:
+      /\b(?:think(?:ing|in|s)?|thoughts?)\s+(?:about|of)\s+(?:hurt|kill|harm)(?:ing)?\b/i,
+  },
 ];
 
 /**
  * Under-18 disclosure (§4.2). First person only — "my son is 14" is a parent,
  * which is the site's primary audience, not a minor disclosing their own age.
  */
-const AGE_PATTERN =
-  /\b(?:i'?m|i am|im)\s+(\d{1,2})\s*(?:years? old)?\b(?!\s*(?:weeks?|months?|days?|hours?|minutes?|percent|%|out of|ft|feet|'|"|\/))/;
+const AGE_PATTERN = new RegExp(
+  // The `\b` sits after the optional unit so that "im 12yo" matches while
+  // "im 12345" still does not — the old pattern got the second half right
+  // and the first half wrong. The lookahead is unchanged in intent: it keeps
+  // "im 6 months pregnant" and "im 5'2" out.
+  String.raw`\b${IM}\s*(\d{1,2})\s*(?:y\/?o|yrs?|years?)?\b(?!\s*(?:weeks?|months?|days?|hours?|minutes?|percent|%|out\s+of|ft|feet|['’]|"|\/|:))`,
+  "i"
+);
 
-const MINOR_PATTERNS: RegExp[] = [
-  /\bi'?m\s+(a\s+)?(minor|teen|teenager|kid|child)\b/,
-  /\bi'?m\s+under\s*(18|eighteen)\b/,
-  /\bi'?m\s+in\s+(\d{1,2}(st|nd|rd|th)\s+grade|middle school|high school|elementary school|primary school)\b/,
-  /\bmy\s+(age\s+is|parents?\s+don'?t\s+know)\b/,
+const MINOR_PATTERNS: Array<{ pattern: MinorPattern; regex: RegExp }> = [
+  {
+    pattern: "self-identified-minor",
+    // "i am a teen" was missed by the old `i'?m` — it had no "am" branch.
+    regex: new RegExp(
+      String.raw`\b${IM}\s+(?:a\s+|an\s+|still\s+a\s+|only\s+a\s+|just\s+a\s+)?(?:minor|teen|teens|teenager|kid|child|underage|under\s*age)\b`,
+      "i"
+    ),
+  },
+  {
+    pattern: "under-18-stated",
+    regex: new RegExp(String.raw`\b${IM}\s+under\s*(?:18|eighteen)\b`, "i"),
+  },
+  {
+    pattern: "school-grade",
+    // Adds "grade 7", "the 7th grade", "middleschool", and junior high.
+    regex: new RegExp(
+      String.raw`\b${IM}\s+in\s+(?:the\s+)?(?:\d{1,2}\s*(?:st|nd|rd|th)?\s+grade|grade\s+\d{1,2}|middle\s*school|high\s*school|elementary\s*school|primary\s*school|jr\.?\s*high|junior\s*high)\b`,
+      "i"
+    ),
+  },
+  // Split from one alternation for the same reason as "better off dead"
+  // above: "my parents don't know" is a different thing to know about a
+  // conversation than "my age is", and the log should say which.
+  { pattern: "age-referenced", regex: /\bmy\s+age\s+is\b/i },
+  {
+    pattern: "parents-unaware",
+    // Widened past "parents": a minor writing this names whichever adult they
+    // have. "doesnt" and "do not" were both missed by the old `don'?t`.
+    regex: new RegExp(
+      String.raw`\bmy\s+(?:parents?|mom|mum|dad|mother|father|guardian)\s+${DONT}\s+know\b`,
+      "i"
+    ),
+  },
 ];
 
 /**
@@ -121,18 +316,23 @@ const MINOR_PATTERNS: RegExp[] = [
 export function checkSafety(message: string): SafetyStop | null {
   const text = normalize(message);
 
-  for (const pattern of CRISIS_PATTERNS) {
-    const match = pattern.exec(text);
-    if (match) {
+  // .test rather than .exec throughout: the matched text is no longer wanted
+  // anywhere, so it is never lifted out of the message in the first place.
+  // None of these carry /g, so .test holds no state between calls.
+  for (const { pattern, regex } of CRISIS_PATTERNS) {
+    if (regex.test(text)) {
       return {
         kind: "crisis",
         reply: CRISIS_REPLY,
         effect: "end-turn-and-flag",
-        matched: match[0],
+        pattern,
       };
     }
   }
 
+  // The one place a capture is still read — to check the number is a
+  // plausible age. The number itself is used for the comparison and then
+  // dropped; "age-stated" is what the log gets, not "i'm 12".
   const age = AGE_PATTERN.exec(text);
   if (age) {
     const years = Number(age[1]);
@@ -141,19 +341,18 @@ export function checkSafety(message: string): SafetyStop | null {
         kind: "minor",
         reply: MINOR_REPLY,
         effect: "block-contact-collection",
-        matched: age[0],
+        pattern: "age-stated",
       };
     }
   }
 
-  for (const pattern of MINOR_PATTERNS) {
-    const match = pattern.exec(text);
-    if (match) {
+  for (const { pattern, regex } of MINOR_PATTERNS) {
+    if (regex.test(text)) {
       return {
         kind: "minor",
         reply: MINOR_REPLY,
         effect: "block-contact-collection",
-        matched: match[0],
+        pattern,
       };
     }
   }

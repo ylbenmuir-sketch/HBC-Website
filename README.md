@@ -87,13 +87,13 @@ submission requires Supabase credentials.
 | `SUPABASE_URL` | Supabase project URL (Settings → API). Server-side only. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key used by `app/api/consultation/route.ts` to insert form submissions. **Never expose to the browser; never commit.** |
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for canonical tags, `og:url`, `sitemap.xml`, `robots.txt`, and JSON-LD. Apex form, no trailing slash — `https://harmonizedbraincenterstn.com`. Defaults to that value; set it explicitly in the deploy environment. |
-| `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new consultation request. Server-side only. Unset = leads save but nobody is notified. |
+| `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to announce each new consultation request. The email carries no lead content — it says one arrived and links to the row. Server-side only. Unset = leads save but nobody is notified. |
 | `LEADS_NOTIFY_EMAIL` | Inbox that receives new consultation requests. Required alongside `RESEND_API_KEY`. |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
-| `CHAT_LOG_TRANSCRIPTS` | `false` drops message text from the conversation log, keeping timing, outcome, and safety flags. Defaults to on — §8 asks Ben to read real transcripts in week one. |
+| `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
 ## Supabase setup
 
@@ -116,10 +116,16 @@ One table holds two row shapes, told apart by `type`:
 | `guide` | `components/GuideCta.tsx` | `email` only |
 
 A check constraint enforces each shape, so the nullable columns can't be
-abused. Both kinds notify `LEADS_NOTIFY_EMAIL`, with a message shaped to what
-was collected (`lib/lead-notification.ts`): a consultation reads as a callback
-request, a guide signup as a download — address, source page, and time only,
-so nobody phones someone who only wanted a PDF.
+abused. Both kinds notify `LEADS_NOTIFY_EMAIL` (`lib/lead-notification.ts`),
+and **neither email carries any of what was collected.** Each says which kind
+of request arrived and links to the Supabase row; the name, phone, concerns,
+free-text note, and email address all stay in the table. The table is already
+the source of truth, so copying any of it into an inbox would spread it
+without adding anything. The link is derived from `SUPABASE_URL`, so there is
+no extra variable to set.
+
+The two remain separate messages: a guide signup is deliberately *not* shaped
+like a callback, so nobody phones someone who only wanted a PDF.
 
 ## Content verification & draft mode
 
@@ -356,13 +362,31 @@ question a visitor will actually ask.
    The only thing `confirmTag` still excludes, so "do you serve Green Hills?"
    gets "I don't have that on the site". Confirming a center's list rejoins it
    to the index on its own — Franklin's is already confirmed and answers.
-2. **Conversation retention.** Transcripts go to the server log and inherit the
-   host's retention, which is a default rather than a decision.
-   `CHAT_LOG_TRANSCRIPTS=false` keeps the shape of every turn and drops the
-   words.
-3. **Who reads flagged conversations.** Crisis turns are logged at warn level
-   with a `[chat:FLAGGED:crisis]` marker. That is a log line, not a review
-   process — nobody is paged.
+2. **Conversation retention — decided: transcripts are not logged.** The
+   default is off in code, not just in the env. Every turn still logs its
+   shape (timing, outcome, grounding, safety flags); the words are dropped, so
+   nothing a visitor typed about her child inherits the host's default log
+   retention. `CHAT_LOG_TRANSCRIPTS="true"` turns them on for a bounded read.
+   With it off, no field in a log line holds visitor text — `detail` is a
+   fixed category, `passages` are our own content ids, `injectionSuspected` is
+   a boolean.
+3. **Who reads flagged conversations, and how.** Crisis turns are logged at
+   warn level with a `[chat:FLAGGED:crisis]` marker. That is a log line, not a
+   review process — nobody is paged.
+
+   **Whoever designs that process needs to know what it will have.** A flagged
+   line carries a *category*, not content: `detail` is a `SafetyPattern` from
+   `lib/chat/safety.ts` — `"self-harm-intent"`, `"harm-to-others"`,
+   `"death-wish"`, `"age-stated"` — chosen so that different responses are
+   distinguishable from each other. It does **not** carry the sentence that
+   triggered it, and (unless transcripts are on) neither does anything else in
+   the line. So a reviewer can see that a crisis fired, of what kind, in which
+   session, at what time, and on which turn. They cannot read what was said.
+
+   That is a real constraint on the design, not an oversight. A process that
+   depends on reading the visitor's words needs transcripts turned back on for
+   flagged turns specifically — a change to `lib/chat/logging.ts`, and a
+   decision to make on purpose rather than by leaving a default in place.
 
 One engineering item belongs with them: the session store and the rate-limit
 counters are both in-process, so on serverless they are per-instance. A booking
