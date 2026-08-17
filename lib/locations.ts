@@ -141,10 +141,11 @@ export type Location = {
    *
    * Verified as write links, not read links: both redirect to a Maps URL
    * carrying `!12e1` and `laa=nmx-review-solicitation-ia2` — Google's
-   * open-the-review-dialog parameters. So this must never be wired to "Read
-   * them unfiltered on Google", which is a read affordance; a visitor who
-   * clicked it expecting to read reviews would land on a form asking them to
-   * write one about a service they may not have had.
+   * open-the-review-dialog parameters. So this must never be wired to a read
+   * affordance such as "See them on our Google listing", which is what
+   * `reviewReadUrl` is for; a visitor who clicked it expecting to read
+   * reviews would land on a form asking them to write one about a service
+   * they may not have had.
    */
   reviewWriteUrl: string | null;
   phone: string;

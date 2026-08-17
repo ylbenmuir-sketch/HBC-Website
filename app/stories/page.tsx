@@ -80,7 +80,13 @@ export default function StoriesPage() {
                     helper — the two pages state one number and cannot come
                     apart. See combinedReviewCount() in lib/locations.ts. */}
                 <strong>{reviewCountLabel(reviewCount)}</strong>
-                <span>Read them unfiltered on Google</span>
+                {/* Not "Read them unfiltered on Google": this band carries no
+                    link — 159 is a total that exists on no Google page — and
+                    "read them" invited a click that isn't here. States where
+                    the reviews are instead, which is true and checkable. The
+                    per-center lines on the location pages are where the read
+                    links live. */}
+                <span>Every one of them public on Google</span>
               </div>
               <div>
                 <strong>Video stories</strong>

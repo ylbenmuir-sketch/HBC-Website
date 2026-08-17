@@ -92,22 +92,26 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
       sitewide 159 the two bands print is `combinedReviewCount()` summing
       these, so no total is typed anywhere and the band cannot drift from the
       pages it adds up. Franklin has none and renders none.
-- [ ] Link the live Google profiles — the bands name Google ("Read them
-      unfiltered on Google") and link nowhere. **Blocked on a usable read
-      link, not on a decision.** Ben supplied two `share.google` shorteners;
-      both resolve to a Google *Search* results page for the business
-      (`/search?…&q=Harmonized+Brain+Centers+-+Nashville&kgmid=/g/11cs29xsgj`
-      and `…kgmid=/g/11l68g9yns`) — a knowledge panel, not a review listing —
-      and the resolved URLs carry per-session junk (`sxsrf` with a timestamp,
-      `sca_esv`, `biw`/`bih` viewport dimensions, `client`, `utm_source`) that
-      must not be hardcoded into a page. Neither opens a write dialog.
-      Candidates that resolve clean and token-free, both HTTP 200 and
-      unverified visually because Maps renders client-side:
-      `https://www.google.com/maps?cid=690359003920868215` (Nashville) and
-      `…cid=978389547119317468` (Murfreesboro) for the profile, or the same
-      CIDs' `data=!4m6!3m5!1s…!9m1!1b1` form for the reviews tab. CIDs were
-      read out of Ben's own `g.page` links, so they are the right businesses.
-      Pick one form, click both, then wire.
+- [x] Link the live Google profiles (`reviewReadUrl`, `lib/locations.ts`) —
+      each open center's review line links to its own Maps listing by CID,
+      confirmed open by Ben. Nashville `?cid=690359003920868215`,
+      Murfreesboro `?cid=978389547119317468`.
+
+      Third form tried, and the two that failed are recorded so nobody
+      re-derives them: Ben's `share.google` shorteners resolved to a Google
+      *Search* knowledge panel rather than a listing, dragging per-session
+      junk with them (`sxsrf` with a timestamp, `sca_esv`, `biw`/`bih`
+      viewport dimensions, `client`, `utm_source`) that must never be
+      hardcoded into a page; the `data=!4m6!3m5!1s…!9m1!1b1` reviews-tab deep
+      link resolved clean but failed in Ben's browser. Store links **resolved,
+      never as a shortener** — a short link is a third party's promise to keep
+      redirecting somewhere, and the somewhere is what the site is claiming.
+
+      The sitewide bands on `/` and `/stories` are deliberately **not** linked
+      and are not an oversight: 159 is a total that exists on no Google page,
+      so either link would send a reader to one center's 144 or 15 under a
+      heading claiming 159. Their copy states where the reviews are ("Every
+      one of them public on Google") rather than inviting a click.
 - [x] Google "write a review" links (`reviewWriteUrl`, `lib/locations.ts`) —
       stored per center, rendered nowhere. Post-visit follow-up only; see the
       field's own note for why they stay off the public site.

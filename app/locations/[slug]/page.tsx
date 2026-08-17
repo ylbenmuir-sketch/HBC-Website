@@ -169,9 +169,11 @@ export default async function LocationPage({
                     the CID link opens this center's Maps listing with the
                     reviews on it, not a review list on its own, and link text
                     is a promise about where the click lands. The sitewide
-                    bands say "Read them unfiltered on Google" and stay
-                    unlinked — 159 is a total that exists on no Google page,
-                    so there is nothing honest for it to point at.
+                    bands stay unlinked and say "Every one of them public on
+                    Google" — 159 is a total that exists on no Google page, so
+                    there is nothing honest for it to point at, and the copy
+                    there states where the reviews are rather than inviting a
+                    click that isn't offered.
 
                     Same `rel="noopener"` as the two outbound links on the
                     homepage. No `noreferrer`: the referrer carries no secret
