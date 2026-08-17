@@ -47,6 +47,7 @@ import type { Passage } from "./types";
  */
 export const COPY_TOKENS = [
   "BRAIN_MAP_NAME",
+  "BRAIN_MAP_POINTS",
   "BRAIN_MAP_PRICE",
   "SESSION_PRICE",
   "SESSION_LENGTH",
@@ -124,7 +125,11 @@ export const MIRRORED_PAGES: MirroredPage[] = [
       },
       {
         id: "page:how-lens-works:idea",
-        title: "How LENS works — feedback, not force",
+        // Was "feedback, not force", which the page no longer says. The
+        // passage still answers the same questions — the keywords below are
+        // the visitor's words for it ("equipment", "machine", "shock") and
+        // outlive any one wording of the copy.
+        title: "How LENS works — the sensor and the signal",
         question: "How does LENS work?",
         keywords: [
           "how",
@@ -140,7 +145,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "hurt",
           "feel",
         ],
-        text: "What the equipment does: small sensors observe the brain’s electrical activity, and the system returns a brief, very low-energy feedback signal — far weaker than the everyday signals already around you. What you experience: a comfortable chair and a short, quiet visit. There’s nothing to watch, practice, or concentrate on, and most people — including young children — feel nothing at all. What we hope to support, honestly: many clients report feeling calmer, sleeping more easily, or thinking more clearly over a series of sessions. Every nervous system responds differently, nothing is guaranteed, and we review what you notice at every visit.",
+        text: "How LENS works. The sensor reads first. Small sensors sit on the scalp and read the brain’s electrical activity at that spot. Nothing goes in — the system is listening. Then it answers. Based on what it read, the system sends back a brief feedback signal, far weaker than the signal from the phone in your pocket, lasting a fraction of a second. That’s the whole thing. It’s called low-energy for a literal reason. The brain does the rest. The signal carries no instruction. What follows is your own nervous system responding to information about itself — which is why there’s nothing to practice, watch, or concentrate on. Most people, including young children, feel nothing at all. Sessions run {SESSION_LENGTH} in a comfortable chair.",
+        mirror:
+          "How LENS works The sensor reads first. Small sensors sit on the scalp and read the brain’s electrical activity at that spot. Nothing goes in — the system is listening. Then it answers. Based on what it read, the system sends back a brief feedback signal, far weaker than the signal from the phone in your pocket, lasting a fraction of a second. That’s the whole thing. It’s called low-energy for a literal reason. The brain does the rest. The signal carries no instruction. What follows is your own nervous system responding to information about itself — which is why there’s nothing to practice, watch, or concentrate on. Most people, including young children, feel nothing at all. Sessions run in a comfortable chair.",
       },
       {
         // Briefly split into a separate `:length` passage so the duration
@@ -175,21 +182,104 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         ],
       },
       {
+        /*
+         * The framing of "Where we look, and why" — deliberately NOT the four
+         * site descriptions the section is mostly made of.
+         *
+         * The page names Fp1, Fp2, T4 and Cz and says, for each, what a
+         * practitioner would look at that site for. On a page that is right,
+         * because the reader has the whole section in front of her, including
+         * the paragraph saying no site is read on its own. In a conversation
+         * the assistant hands back one passage, and a passage that pairs a
+         * site with a set of symptoms is an interpretation waiting for someone
+         * to supply their own reading.
+         *
+         * This was measured rather than assumed, and the measurement is the
+         * reason. Indexing the four descriptions was tried, and
+         * `check:answers --retrieval` passed — every guardrail held. What
+         * changed is *what was holding them*:
+         *
+         * - "what is Cz", "what does Cz do", "is my T4 elevated" go from
+         *   `nothing-known` — the word does not exist on this site, so no
+         *   threshold can reach them — to `incidental` at coverage 0.55–1.00.
+         *   Score and coverage both clear their floors; the only thing left
+         *   refusing them is the subject gate, i.e. the fact that "cz" is not
+         *   in the keyword list below. One plausible keyword edit, or one
+         *   threshold nudge made for an unrelated question, and the answer to
+         *   "is my T4 elevated" is the paragraph pairing T4 with a short fuse.
+         * - "She's overwhelmed by noise and crowds" — a KNOWN_MISS in the
+         *   audit — goes from weak-match (coverage 0.30, against a concern
+         *   passage) to incidental against THIS one at coverage 0.73. Same
+         *   single gate holding it.
+         * - The symptom clauses are the concern pages' own language, so this
+         *   passage joins the returned set for questions written to reach
+         *   them: 2nd for "homework takes three hours and ends in tears", 3rd
+         *   for "my projects stall at 90 percent". The top passage is still
+         *   the right concern — which is why the audit passes — but the model
+         *   is now handed electrode copy on a question about a child.
+         *
+         * A guardrail resting on one keyword's absence is not the same
+         * guardrail as one resting on the word not existing. ./answer.ts
+         * §"Out of bounds" would still tell the model to decline, but that is
+         * a prompt, and the deterministic decline it replaces is not.
+         *
+         * So what is mirrored is the count and the caveat: how many points a
+         * Brain Map records, and that the pattern across all of them — not any
+         * one site — is what the plan is built from. That answers "what does
+         * the brain map look at" and gives nothing to interpret.
+         */
         id: "page:how-lens-works:map",
         title: "What the brain map tells us",
         question: "What does the brain map show?",
+        // No "pz"/"f7" — the copy that named them is gone. No "mean",
+        // "interpret", "result" or "reading" either: they filed this under
+        // "what does my reading mean", which is a question this passage must
+        // not be the answer to. checkRefusal() takes most phrasings of it
+        // before retrieval; the rest belong in no-match.
         keywords: [
           "map",
           "brain",
-          "reading",
-          "result",
-          "mean",
-          "diagnosis",
-          "interpret",
-          "pz",
-          "f7",
+          "point",
+          "record",
+          "site",
+          "look",
+          "show",
+          "pattern",
+          "plan",
         ],
-        text: "What the map actually tells us. Pz is where analytical thinking and processing happen. What we’ve seen with clients whose Pz sits below 10 µV is difficulty switching that part on — logistical tasks that should be simple become a slog. F7 handles verbal expression. When we see F7 above 35 µV, that region is often overprocessing — and clients describe struggling to get out what they’re trying to say. None of that is a diagnosis.",
+        text: "Where we look, and why. A Brain Map records {BRAIN_MAP_POINTS} points. We don’t read any of these alone. One site tells you very little — the pattern across all {BRAIN_MAP_POINTS}, set against what you told us on the phone, is what your written plan is built from.",
+        mirror: [
+          "Where we look, and why A Brain Map records points.",
+          "We don’t read any of these alone. One site tells you very little — the pattern across all , set against what you told us on the phone, is what your written plan is built from.",
+        ],
+      },
+      {
+        // The third paragraph of the old `:idea` passage, now its own section
+        // and its own passage. Without it the rewrite would quietly take the
+        // site's only statement of what clients report out of the assistant's
+        // hands — and "what actually changes" is a question it gets.
+        id: "page:how-lens-works:expect",
+        title: "What to expect",
+        question: "What do clients notice?",
+        keywords: [
+          "expect",
+          "notice",
+          "report",
+          // Both forms: the stemmer takes "change" to `change` and "changes"
+          // to `chang`, so "what actually changes" reached this passage at
+          // coverage 1.0 and was rejected by the subject gate for not being
+          // filed under a word of itself. Same trap as meltdown/melts down.
+          "change",
+          "changes",
+          "difference",
+          "result",
+          "steadier",
+          "clearly",
+          "series",
+        ],
+        text: "What to expect. Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
+        mirror:
+          "What to expect Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
       },
       {
         id: "page:how-lens-works:is-is-not",
@@ -620,9 +710,12 @@ export const MIRRORED_PAGES: MirroredPage[] = [
  * check on the day one appears.
  */
 export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
-  "app/how-lens-works/page.tsx": {
-    "STAT_SESSIONS.note!": "Verifiable-gated — policy:scale reads confirmed(STAT_SESSIONS)",
-  },
+  // The phase 15 copy replacement took the sentence that carried the session
+  // count off this page ("a pattern we've seen across 140,000 sessions"), and
+  // its ConfirmTag with it. The count itself is unaffected — STAT_SESSIONS is
+  // verified, /about and the homepage proof band still render it, and
+  // policy:scale still states it to the assistant.
+  "app/how-lens-works/page.tsx": {},
   // Ben confirmed HSA/FSA and the first-visit duration; both tags are gone and
   // page:first-visit:insurance is back in the index.
   "app/first-visit/page.tsx": {},

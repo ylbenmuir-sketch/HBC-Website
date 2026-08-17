@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
-import ConfirmTag from "@/components/ConfirmTag";
 import { BrainMapCta, TalkCta } from "@/components/Buttons";
-import { STAT_SESSIONS, verifiedOr } from "@/lib/site-config";
+import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "How LENS Neurofeedback Works",
@@ -44,7 +43,6 @@ const lensIsNot = [
 ];
 
 export default function HowLensWorksPage() {
-  const sessionCount = verifiedOr(STAT_SESSIONS);
   return (
     <>
       <section className="page-hero center">
@@ -103,29 +101,37 @@ export default function HowLensWorksPage() {
         </div>
       </section>
 
+      {/* The mechanism, in the order it happens: read, answer, respond. The
+          three lead-ins are the sequence, not three topics — "The sensor reads
+          first / Then it answers / The brain does the rest" is what makes the
+          middle paragraph's "brief feedback signal" land as an answer to a
+          reading rather than as something being done to someone. It replaced
+          "What the equipment does / What you experience / What we hope to
+          support, honestly", which sorted the same facts by how reassuring
+          each one was. Session length interpolates; see SESSION_LENGTH. */}
       <section className="sec">
         <div className="wrap split">
           <div className="rv">
-            <div className="eyebrow">The idea, plainly</div>
-            <h2>Feedback, not force.</h2>
+            <h2>How LENS works</h2>
             <p>
-              <b>What the equipment does:</b> small sensors observe the
-              brain&rsquo;s electrical activity, and the system returns a
-              brief, very low-energy feedback signal &mdash; far weaker than
-              the everyday signals already around you.
+              <b>The sensor reads first.</b> Small sensors sit on the scalp and
+              read the brain&rsquo;s electrical activity at that spot. Nothing
+              goes in &mdash; the system is listening.
             </p>
             <p>
-              <b>What you experience:</b> a comfortable chair and a short,
-              quiet visit. There&rsquo;s nothing to watch, practice, or
-              concentrate on, and most people &mdash; including young children
-              &mdash; feel nothing at all.
+              <b>Then it answers.</b> Based on what it read, the system sends
+              back a brief feedback signal, far weaker than the signal from the
+              phone in your pocket, lasting a fraction of a second.
+              That&rsquo;s the whole thing. It&rsquo;s called low-energy for a
+              literal reason.
             </p>
             <p>
-              <b>What we hope to support, honestly:</b> many clients report
-              feeling calmer, sleeping more easily, or thinking more clearly
-              over a series of sessions. Every nervous system responds
-              differently, nothing is guaranteed, and we review what you
-              notice at every visit.
+              <b>The brain does the rest.</b> The signal carries no
+              instruction. What follows is your own nervous system responding
+              to information about itself &mdash; which is why there&rsquo;s
+              nothing to practice, watch, or concentrate on. Most people,
+              including young children, feel nothing at all. Sessions run{" "}
+              {SESSION_LENGTH.value} in a comfortable chair.
             </p>
           </div>
           <div className="rv">
@@ -192,46 +198,78 @@ export default function HowLensWorksPage() {
         </div>
       </section>
 
-      {/* What the map tells us. The sentence structure here is load-bearing:
-          "what we've seen with clients whose…" is pattern language from
-          clinical observation, not diagnosis, and it is what keeps a number on
-          a chart from reading as a verdict. Do not tighten it into
-          "Pz below 10 means…". The closing paragraph says plainly that none of
-          it is a diagnosis. */}
+      {/* Where we look. The grammar of every site paragraph is load-bearing and
+          is not to be tightened: each one names a function, then says this is
+          where we would LOOK when someone describes something — "this is one of
+          the first places we look", "something we'd read here", "someone we'd
+          look here for", "this is one we read when". None of them says a site
+          causes, indicates, or measures a symptom, and none may be rewritten
+          into "T4 explains a short fuse". The closing paragraph is the whole
+          point of the section: one site on its own is not read at all.
+
+          It replaced the Pz/F7 pair, which drew the same line the same way but
+          did it with two thresholds (below 10 µV, above 35 µV) — a number a
+          reader can hold their own map up against, which is the one thing a
+          published figure invites. The four sites here carry no values. */}
       <section className="sec">
-        <div className="wrap split">
-          <div className="rv">
-            <h2>What the map actually tells us.</h2>
-            <p>
-              Pz is where analytical thinking and processing happen. What
-              we&rsquo;ve seen with clients whose Pz sits below 10&nbsp;µV is
-              difficulty switching that part on &mdash; logistical tasks that
-              should be simple become a slog.
-            </p>
-            <p>
-              F7 handles verbal expression. When we see F7 above 35&nbsp;µV,
-              that region is often overprocessing &mdash; and clients describe
-              struggling to get out what they&rsquo;re trying to say.
-            </p>
-            <p>
-              None of that is a diagnosis. It&rsquo;s a pattern we&rsquo;ve seen{" "}
-              {sessionCount ? (
-                <>
-                  across {sessionCount} sessions
-                  {!STAT_SESSIONS.verified && (
-                    <ConfirmTag>{STAT_SESSIONS.note!}</ConfirmTag>
-                  )}
-                </>
-              ) : (
-                <>again and again</>
-              )}
-              , held up against what you told us in the room &mdash; and
-              it&rsquo;s why your plan starts where it starts instead of
-              somewhere generic.
+        <div className="wrap">
+          <div className="sec-head rv">
+            <h2>Where we look, and why</h2>
+            <p className="sub">
+              A Brain Map records {BRAIN_MAP_POINTS} points. Four we come back
+              to most:
             </p>
           </div>
-          <div className="rv">
-            <PlaceholderPlate spec="Brain lobe function diagram" />
+          <div className="split">
+            <div className="rv">
+              <p>
+                <b>Fp1 &mdash; left frontal.</b> Sustained attention and
+                getting started on things. When someone tells us about homework
+                that takes three hours, or projects that stall at 90 percent,
+                this is one of the first places we look.
+              </p>
+              <p>
+                <b>Fp2 &mdash; right frontal.</b> Impulse control &mdash; the
+                pause between wanting to do something and doing it. Parents
+                describing a child who blurts, interrupts, or acts before
+                thinking are describing something we&rsquo;d read here.
+              </p>
+              <p>
+                <b>T4 &mdash; right temporal.</b> Emotional regulation and
+                emotional memory. Someone with a short fuse, reactions that
+                feel outsized, or a slow recovery after being upset is someone
+                we&rsquo;d look here for.
+              </p>
+              <p>
+                <b>Cz &mdash; central midline.</b> Sensory sensitivity. This is
+                one we read when someone describes being overwhelmed by noise,
+                tags, crowds, or transitions.
+              </p>
+              <p>
+                We don&rsquo;t read any of these alone. One site tells you very
+                little &mdash; the pattern across all {BRAIN_MAP_POINTS}, set
+                against what you told us on the phone, is what your written
+                plan is built from.
+              </p>
+            </div>
+            <div className="rv">
+              <PlaceholderPlate spec="Brain lobe function diagram" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="sec sec-tight sec-ivory2">
+        <div className="wrap">
+          <div className="sec-head rv" style={{ marginBottom: 0 }}>
+            <h2>What to expect</h2>
+            <p>
+              Clients commonly report sleeping more easily, feeling steadier,
+              or thinking more clearly over a series of visits. How much
+              changes varies from person to person, and we review what
+              you&rsquo;re actually noticing at every visit &mdash;
+              that&rsquo;s what the plan follows.
+            </p>
           </div>
         </div>
       </section>

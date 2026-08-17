@@ -8,6 +8,7 @@ import {
 } from "../locations";
 import {
   BRAIN_MAP_NAME,
+  BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
   DISCLAIMER,
   ESTABLISHED_YEAR,
@@ -445,6 +446,7 @@ function allCentersPassage(): Passage {
 function pagePassages(): Passage[] {
   const values: Record<CopyToken, string> = {
     BRAIN_MAP_NAME,
+    BRAIN_MAP_POINTS: String(BRAIN_MAP_POINTS),
     BRAIN_MAP_PRICE,
     SESSION_PRICE,
     SESSION_LENGTH: SESSION_LENGTH.value,

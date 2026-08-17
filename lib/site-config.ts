@@ -319,6 +319,23 @@ export const PACKAGE_SAVING = "$200";
 export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
 
 /**
+ * Electrode sites recorded in a Brain Map — the 10-20 montage, so this is a
+ * property of the recording rather than a number anyone chose.
+ *
+ * A plain constant rather than a `Verifiable`: it is not a claim awaiting
+ * confirmation, and both graphics in the repo were checked against it (see the
+ * GRAPHICS CORRECTIONS note above — "both carry the full 21 electrodes").
+ *
+ * Three literal 21s predate this and are NOT yet reading it: the homepage
+ * brain-map paragraph and its image alt text (app/page.tsx), and the
+ * "21-point recording" on /first-visit. Each is mirrored into the assistant's
+ * index in lib/chat/site-copy.ts, so converting one means editing its mirror
+ * string and adding a copy token in the same change — worth doing, out of
+ * scope for the phase 15 copy replacement that introduced this.
+ */
+export const BRAIN_MAP_POINTS = 21;
+
+/**
  * The package caveat, and the one rule about where it goes: Ben's instruction
  * is to state it **wherever the package price appears**. It lives here as one
  * string for that reason — a caveat retyped per page is a caveat that ends up
