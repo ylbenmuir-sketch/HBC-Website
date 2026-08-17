@@ -103,10 +103,13 @@ export default async function LocationPage({
   // and the sentence is built once here rather than stored twice as copy, so
   // the two open centers state their different counts in the same words.
   const reviewCount = locationReviewCount(location);
+  // "on Google" moved out of the sentence and into the link, where it now
+  // names a destination rather than just a source — saying it in both places
+  // put "Google" twice in a line of fourteen words.
   const reviewLine =
     reviewCount === null
       ? null
-      : `${reviewCountLabel(reviewCount)} on Google, every one of them five stars.`;
+      : `${reviewCountLabel(reviewCount)}, every one of them five stars.`;
   // Nashville's Saturday, promoted out of the hours block into a fact of its
   // own — see saturdayLabel(). Null for every center closed on Saturday, which
   // is what keeps this off the other two pages.
@@ -161,7 +164,28 @@ export default async function LocationPage({
                 on Murfreesboro in lib/locations.ts. */}
             {reviewLine && (
               <p className="micro" style={{ marginTop: 18 }}>
-                {reviewLine}
+                {reviewLine}{" "}
+                {/* "See them on our Google listing", not "read the reviews":
+                    the CID link opens this center's Maps listing with the
+                    reviews on it, not a review list on its own, and link text
+                    is a promise about where the click lands. The sitewide
+                    bands say "Read them unfiltered on Google" and stay
+                    unlinked — 159 is a total that exists on no Google page,
+                    so there is nothing honest for it to point at.
+
+                    Same `rel="noopener"` as the two outbound links on the
+                    homepage. No `noreferrer`: the referrer carries no secret
+                    here, and passing it is what tells the Business Profile
+                    this traffic came from the site. */}
+                {location.reviewReadUrl && (
+                  <a
+                    href={location.reviewReadUrl}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    See them on our Google listing &rarr;
+                  </a>
+                )}
               </p>
             )}
             <div

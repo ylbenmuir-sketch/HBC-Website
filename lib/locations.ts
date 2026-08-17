@@ -106,8 +106,31 @@ export type Location = {
    */
   reviewCount: number | null;
   /**
+   * Where a visitor goes to read this center's reviews — its Google Maps
+   * listing, addressed by CID.
+   *
+   * The `cid=` form deliberately, and it is the third one tried. Ben's
+   * original `share.google` shorteners resolved to a Google *Search* knowledge
+   * panel rather than a listing, and dragged a timestamp, a rotating
+   * `sca_esv` token and the resolving browser's viewport dimensions along with
+   * them — none of which can be hardcoded into a page. The `data=!4m6…!9m1!1b1`
+   * reviews-tab deep link resolved clean here but failed in Ben's browser.
+   * These CID links he opened and confirmed land on the right listing.
+   *
+   * Stored resolved, never as a shortener: a short link is a promise by a
+   * third party to keep redirecting somewhere, and the somewhere is the part
+   * this site is actually claiming.
+   *
+   * Null for a center with no listing to link — see `reviewCount`.
+   */
+  reviewReadUrl: string | null;
+  /**
    * The center's Google "write a review" link. **Not rendered anywhere, and
    * not to be rendered on a public page.**
+   *
+   * Distinct from `reviewReadUrl` directly above, and named so the two cannot
+   * be confused at a call site: one invites a stranger to read, the other asks
+   * a client to write.
    *
    * Recorded here for post-visit follow-up — the message a practitioner sends
    * someone who has just finished a course of sessions — because that link is
@@ -297,6 +320,8 @@ export const locations: Location[] = [
     },
     /** Confirmed by Ben — 144 reviews, none rated below five. */
     reviewCount: 144,
+    /** CID 690359003920868215. Opened and confirmed by Ben. */
+    reviewReadUrl: "https://www.google.com/maps?cid=690359003920868215",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CXcjMjzbpZQJEBM/review",
     phone: PHONE_DISPLAY,
@@ -457,6 +482,8 @@ export const locations: Location[] = [
      * Fifteen unbroken five-star reviews is a strong fact on its own terms.
      */
     reviewCount: 15,
+    /** CID 978389547119317468. Opened and confirmed by Ben. */
+    reviewReadUrl: "https://www.google.com/maps?cid=978389547119317468",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CdyRAAAc8JMNEBM/review",
     phone: PHONE_DISPLAY,
@@ -597,6 +624,8 @@ export const locations: Location[] = [
     hours: null,
     /** No reviews: the center has no clients yet. See `reviewCount` on the type. */
     reviewCount: null,
+    /** Nothing to read: no reviews, and no listing to send anyone to. */
+    reviewReadUrl: null,
     /** No profile to review yet — the center has not opened. */
     reviewWriteUrl: null,
     phone: PHONE_DISPLAY,
