@@ -635,6 +635,56 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* The Harmonized Brain Map — the site's largest differentiator, and what
+          makes the $150 tangible. Directly after the three-step module again:
+          step 2 is called "Map" and names the thing without showing it, so this
+          is the section that shows it. Phase 14 moved the steps up behind the
+          stories and left this where it was, which broke that pairing for one
+          commit; the two travel together. The claim sentence is gated like
+          every other unverified fact — production drops it and the paragraph
+          still reads complete. */}
+      <section className="sec home-brain-map">
+        <div className="wrap split">
+          <div className="rv">
+            <div className="eyebrow">What you walk away with</div>
+            <h2>You&rsquo;ll see your own brain map.</h2>
+            <p>
+              On your first visit we record activity at 21 points across your
+              brain and turn it into a map you can actually read &mdash; where
+              things are running hot, where they&rsquo;re running quiet, and how
+              that lines up with what you came in describing. We built this.
+              {brainMapClaim && (
+                <>
+                  {" "}
+                  {brainMapClaim}
+                  <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
+                </>
+              )}
+            </p>
+            <div className="hero-ctas" style={{ marginTop: 30 }}>
+              <TalkCta />
+              <BrainMapCta />
+            </div>
+          </div>
+          <div className="rv">
+            {/* Pinned to the render's own 1184×860 ratio (height auto overrides
+                the .split 500px) so `cover` fills the frame without cropping —
+                a cropped diagram loses electrode labels and the legend. */}
+            <PhotoFrame
+              src="/images/brain-map-heat.png"
+              alt="A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at 21 points across the brain"
+              aspect="1184 / 860"
+              style={{ height: "auto" }}
+            />
+            {/* Not gated: the framing has to travel with the image, whether the
+                image is the real render or the plate standing in for it. */}
+            <p className="micro">
+              A picture of electrical activity &mdash; not a diagnosis.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Cost of inaction — the one place the site names it. One paragraph by
           design: specific pain with dignity, not stacked pain. */}
       <section className="sec home-stakes">
@@ -686,55 +736,6 @@ export default function HomePage() {
             >
               See what clients work toward, by concern
             </Btn>
-          </div>
-        </div>
-      </section>
-
-      {/* The Harmonized Brain Map — the site's largest differentiator, and what
-          makes the $150 tangible. It used to sit directly after the three-step
-          module, which named the map in step 2 without showing it; phase 14
-          moved that module up behind the stories and left this section where it
-          was, so the two are no longer adjacent. The claim sentence is gated
-          like every other unverified fact: production drops it and the
-          paragraph still reads complete. */}
-      <section className="sec home-brain-map">
-        <div className="wrap split">
-          <div className="rv">
-            <div className="eyebrow">What you walk away with</div>
-            <h2>You&rsquo;ll see your own brain map.</h2>
-            <p>
-              On your first visit we record activity at 21 points across your
-              brain and turn it into a map you can actually read &mdash; where
-              things are running hot, where they&rsquo;re running quiet, and how
-              that lines up with what you came in describing. We built this.
-              {brainMapClaim && (
-                <>
-                  {" "}
-                  {brainMapClaim}
-                  <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
-                </>
-              )}
-            </p>
-            <div className="hero-ctas" style={{ marginTop: 30 }}>
-              <TalkCta />
-              <BrainMapCta />
-            </div>
-          </div>
-          <div className="rv">
-            {/* Pinned to the render's own 1184×860 ratio (height auto overrides
-                the .split 500px) so `cover` fills the frame without cropping —
-                a cropped diagram loses electrode labels and the legend. */}
-            <PhotoFrame
-              src="/images/brain-map-heat.png"
-              alt="A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at 21 points across the brain"
-              aspect="1184 / 860"
-              style={{ height: "auto" }}
-            />
-            {/* Not gated: the framing has to travel with the image, whether the
-                image is the real render or the plate standing in for it. */}
-            <p className="micro">
-              A picture of electrical activity &mdash; not a diagnosis.
-            </p>
           </div>
         </div>
       </section>

@@ -48,17 +48,16 @@ otherwise, and it passes (22 mirrored passages).
 | Positional CSS | There is none — no `nth-child`, `+`, `~`, `:first-of-type` or `:last-of-type` selector in `globals.css` touches these sections. |
 | `MobileCtaBar` `.final` retire logic | Intact. Exercised at seven scroll positions rather than reasoned about: the bar appears once `.hero` clears the top, stays up through the moved section, and retires exactly when `.final` comes within 80% of the viewport height. `.hero` is still first and `.final` still second-to-last (the guide band has always been after it). |
 
-**One consequence you should look at.** The Brain Map section stayed where it
-was, so it is no longer directly after the step that names it. Its code comment
-used to claim that adjacency; I corrected the comment to describe what is
-actually true now rather than move a second section. **Moving the Brain Map
-section up to follow the steps again would be a layout decision, so I did not
-make it.**
+**Resolved since.** The Brain Map section was left behind by this move and
+stopped being adjacent to the step that names it. Ben's call was to bring it
+along, so it now sits directly after the three-step module again — step 2 is
+called "Map" and names the thing without showing it, and this is the section
+that shows it. The two travel together.
 
-Background sequence after the move, in case you want to eyeball it:
-concerns (ivory) → stories (ivory-2) → **how it works (navy)** → why now
-(ivory) → what could change (ivory-2) → brain map (ivory). I changed no
-section's background class.
+Final order, and no section's background class was changed:
+concerns (ivory) → stories (ivory-2) → **how it works (navy)** → **brain map
+(ivory)** → why now (ivory) → what could change (ivory-2) → founder note →
+locations → FAQ.
 
 ### e. Does step three now restate step two?
 
@@ -552,11 +551,6 @@ its own permissions gate is unchanged and still unsatisfied.
    `CHECK_CHAT_ALLOW_PROJECT=<ref>`; naming the ref is still required, since an
    empty table on a hosted project does not unlock the run on its own.
 
-### Still open
-
-- **Item 1** — the Brain Map section is no longer next to the step that names
-  it. Leave it, or move it up behind the steps?
-
 ### Settled since
 
 - **Item 5** — sage moved to `#596e5b`; every sage pairing that ships clears
@@ -567,3 +561,5 @@ its own permissions gate is unchanged and still unsatisfied.
   the `BUSINESS_HOURS` drift corrected across README, this handoff,
   CONTENT-CHECKLIST and SEO-AUDIT. The nine dead exports and
   `components/Eyebrow.tsx` are deleted.
+- **Item 1** — the Brain Map section moved up to follow the three steps.
+  Nothing on this list is open.
