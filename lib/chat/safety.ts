@@ -177,14 +177,22 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
   { pattern: "suicide-named", regex: /\bsui\s+cide\b/i },
   { pattern: "suicide-named", regex: /\bkms\b/i },
   { pattern: "self-harm-named", regex: /\bself[\s-]*harm(?:s|ed|ing)?\b/i },
-  // "unalive" is here for the reason it exists: it is the euphemism people
-  // reach for *because* it gets past filters, which makes the population
-  // using it disproportionately the one §4.1 was written for. Matching it is
-  // the whole job. No ordinary sentence contains this word, so the spelling
-  // is as loose as the others — "un alive", "un-alive", any inflection.
+  // "unalive" and "sewerslide" are here for the reason they exist: they are
+  // the euphemisms people reach for *because* they get past filters, which
+  // makes the population using them disproportionately the one §4.1 was
+  // written for. A list that catches "suicide" and misses these is tuned for
+  // the people who were never hiding. Matching them is the whole job.
+  //
+  // Neither appears in an ordinary sentence, so there is no trade-off to
+  // make and the spelling is as loose as everything else here: any
+  // inflection, and any of the space/hyphen/joined spellings.
   {
     pattern: "suicide-named",
     regex: /\bun[\s-]*aliv(?:e|ed|es|ing)\b/i,
+  },
+  {
+    pattern: "suicide-named",
+    regex: /\bsewer[\s-]*slid(?:e|es|ed|ing)\b/i,
   },
 
   // --- self-directed. A "-self" word is required: "will it hurt me?" is the
