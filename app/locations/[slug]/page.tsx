@@ -13,6 +13,8 @@ import {
   formattedHours,
   getLocation,
   hasConfirmedAddress,
+  saturdayLabel,
+  spacePhotoCount,
 } from "@/lib/locations";
 import { localBusinessSchema } from "@/lib/schema";
 import {
@@ -55,9 +57,22 @@ const firstVisitSteps = [
     p: "Brief readings at a series of points — nothing to feel.",
   },
   {
+    /**
+     * "No packages, no pressure" was false on the first half. The site
+     * publishes a {PACKAGE_SESSIONS}-session package at {PACKAGE_PRICE}
+     * (lib/site-config.ts) on /lens-neurofeedback and /first-visit, so this
+     * step contradicted two other pages and the practice's actual pricing.
+     *
+     * The fix is to drop the claim, not to relocate the pricing here: the cost
+     * cluster belongs to /first-visit (QUERY-TO-PAGE-MAP.md rule 1), and a
+     * package price stated on a location page would have to carry PACKAGE_NOTE
+     * with it — four times the length of every other step in this list. What
+     * survives is the part that was always true, which is also the part a
+     * first-time visitor is actually asking about.
+     */
     n: "4",
     h: "Plan & honest answers",
-    p: "Commit only if it feels right. No packages, no pressure.",
+    p: "You leave with a written plan you keep. Nothing is booked that day unless you want it to be.",
   },
 ];
 
@@ -81,6 +96,15 @@ export default async function LocationPage({
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
+  // Nashville's Saturday, promoted out of the hours block into a fact of its
+  // own — see saturdayLabel(). Null for every center closed on Saturday, which
+  // is what keeps this off the other two pages.
+  const saturday = saturdayLabel(location);
+  // Prose instead of an empty photo grid, in production, for a center whose
+  // photos are all placeholder plates. Draft builds keep the plates so the
+  // photography brief stays visible.
+  const showSpacePhotos = SHOW_DRAFT_CONTENT || spacePhotoCount(location) > 0;
+  const spaceBody = !showSpacePhotos ? location.space.body : undefined;
 
   return (
     <>
@@ -161,15 +185,37 @@ export default async function LocationPage({
                   ))}
                 </HeroFact>
               )}
-              {arrivalLines.length > 0 && (
-                <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
-                  {arrivalLines.map((l, i) => (
-                    <span key={l}>
-                      {i > 0 && <br />}
-                      {l}
-                    </span>
-                  ))}
-                </HeroFact>
+              {/* Saturday takes the third slot where a center keeps Saturday
+                  hours — Nashville, today, and no one else. `.facts3` is a
+                  three-column grid and this row is inside the narrow half of a
+                  `.split`, so a fourth fact either orphans onto a second row or
+                  squeezes four columns into ~500px; three is the budget, and
+                  most practices in the category are closed Saturday, so this is
+                  what it buys.
+
+                  Arrival gives way rather than Hours: the parking line it
+                  carries is stated again under "Getting here" below and on the
+                  locations-index card, and the Saturday is stated nowhere else
+                  in the hero. Times come from the same `hours` data the Hours
+                  fact reads, so the two restate each other and can't disagree. */}
+              {/* The times and nothing else. A second line was tried twice and
+                  both were wrong: "By appointment" implies the weekdays aren't,
+                  and anything about other practices being closed on Saturday is
+                  a comparison this site does not publish (/lens-neurofeedback
+                  §3). The gold label is the prominence; the fact is the fact. */}
+              {saturday ? (
+                <HeroFact label="Saturdays">{saturday}</HeroFact>
+              ) : (
+                arrivalLines.length > 0 && (
+                  <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
+                    {arrivalLines.map((l, i) => (
+                      <span key={l}>
+                        {i > 0 && <br />}
+                        {l}
+                      </span>
+                    ))}
+                  </HeroFact>
+                )
               )}
             </div>
           </div>
@@ -193,6 +239,52 @@ export default async function LocationPage({
         </div>
       </section>
 
+      {/* The substance section. "Neurofeedback" and "LENS" appeared zero times
+          in the body copy of either open center's page before this — the H1,
+          the title and the meta description carried them and nothing a reader
+          scrolled past did.
+
+          Three beats, and each hands off rather than restating: the definition
+          belongs to /lens-neurofeedback and the mechanism to /how-lens-works
+          (QUERY-TO-PAGE-MAP.md rule 1). What is genuinely local — who walks
+          into *this* center — is the middle paragraph, and it is the one that
+          differs most between the two pages. */}
+      {location.intro && (
+        <section className="sec">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="sec-head rv">
+              <div className="eyebrow">{location.intro.eyebrow}</div>
+              <h2>{location.intro.heading}</h2>
+            </div>
+            <div className="rv">
+              {location.intro.paragraphs.map((p) => (
+                <p key={p} style={{ marginBottom: 18 }}>
+                  {p}
+                </p>
+              ))}
+              {/* Location → concern links, moved here from the communities row
+                  where they sat under a heading about geography. The lead-in is
+                  per center; the three concerns are the ones /faq already names
+                  as what people most commonly come in for. */}
+              <p style={{ marginBottom: 18 }}>
+                {location.intro.concernsLead}{" "}
+                <Link href="/concerns/anxiety">anxiety and stress</Link>,{" "}
+                <Link href="/concerns/focus-adhd">focus and ADHD</Link>, and{" "}
+                <Link href="/concerns/sleep">sleep</Link>.
+              </p>
+              <div className="hero-ctas" style={{ marginTop: 26 }}>
+                <Btn href="/lens-neurofeedback" variant="ghost" arrow>
+                  What LENS is
+                </Btn>
+                <Btn href="/how-lens-works" variant="ghost" arrow>
+                  How a session works
+                </Btn>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="sec sec-ivory2">
         <div className="wrap">
           <div className="sec-head split rv">
@@ -204,25 +296,45 @@ export default async function LocationPage({
               {location.space.sub}
             </p>
           </div>
-          <div className="trio-feature rv">
-            {location.space.photos.map((p, i) =>
-              p.kind === "photo" ? (
-                <PhotoFrame
-                  key={i}
-                  src={p.src}
-                  alt={`Inside the ${location.name} center`}
-                  position={p.position}
-                  height={330}
-                  sizes="(max-width: 640px) 100vw, 33vw"
-                />
-              ) : (
-                <PlaceholderPlate key={i} spec={p.spec} height={330} />
-              )
-            )}
-          </div>
+          {/* Photos where there are photos; prose where there are not. A
+              production build of Murfreesboro rendered three empty sage
+              gradients under a heading about a room — see `space.body`. */}
+          {spaceBody ? (
+            <div className="rv" style={{ maxWidth: "62ch" }}>
+              {spaceBody.map((p) => (
+                <p key={p} style={{ marginBottom: 18 }}>
+                  {p}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <div className="trio-feature rv">
+              {location.space.photos.map((p, i) =>
+                p.kind === "photo" ? (
+                  <PhotoFrame
+                    key={i}
+                    src={p.src}
+                    alt={`Inside the ${location.name} center`}
+                    position={p.position}
+                    height={330}
+                    sizes="(max-width: 640px) 100vw, 33vw"
+                  />
+                ) : (
+                  <PlaceholderPlate key={i} spec={p.spec} height={330} />
+                )
+              )}
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Suppressed entirely when no member renders. Murfreesboro's roster is
+          two [placeholder] names, so production printed "Trained to one
+          standard. Yours from first call to final check-in." above an empty
+          grid — a heading promising a team the page then didn't show
+          (SEO-AUDIT.md §3.3). The section returns on its own with the first
+          confirmed name. */}
+      {team.length > 0 && (
       <section className="sec">
         <div className="wrap">
           <div className="sec-head rv">
@@ -253,6 +365,7 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+      )}
 
       <section className="sec sec-navy">
         <div className="wrap duo" style={{ alignItems: "start" }}>
@@ -320,10 +433,12 @@ export default async function LocationPage({
                     marginTop: 20,
                   }}
                 >
-                  <p style={{ color: "var(--ivory)" }}>
-                    The call is free, no referral is needed, and you&rsquo;ll
-                    never be asked to commit to a long program up front.
-                  </p>
+                  {/* Per center. One sentence hard-coded here put the same
+                      three clauses in the same navy box on both pages, which
+                      is most of what made them read as one page in
+                      production — the draft-only quote above is what varied,
+                      and it never ships. */}
+                  <p style={{ color: "var(--ivory)" }}>{location.goodToKnow}</p>
                 </div>
               </>
             )}
@@ -375,38 +490,52 @@ export default async function LocationPage({
           </div>
           <div className="rv">
             <div className="eyebrow">Planning your visit</div>
-            <h2>Easy to reach from anywhere in the metro.</h2>
+            <h2>{location.planning.reachHeading}</h2>
             <div className="lens-seq" style={{ marginTop: 24 }}>
               <div className="row">
                 <div className="n">—</div>
                 <div>
                   <h3>Getting here</h3>
+                  {/* Gated like every other confirmed fact, rather than on
+                      SHOW_DRAFT_CONTENT. The old ternary sent every production
+                      visitor "We'll send simple directions and arrival details
+                      when you book" — a non-answer that would have kept
+                      shipping after the directions were confirmed, because
+                      nothing about confirming them touched the branch. Now
+                      real copy renders and only a [placeholder] falls back. */}
                   <p>
-                    {SHOW_DRAFT_CONTENT
-                      ? location.planning.gettingHere
-                      : "We'll send simple directions and arrival details when you book."}
+                    {isDraftText(location.planning.gettingHere) &&
+                    !SHOW_DRAFT_CONTENT
+                      ? "We'll send simple directions and arrival details when you book."
+                      : location.planning.gettingHere}
                   </p>
                 </div>
               </div>
+              {/* Nashville's Saturday, Murfreesboro's three clinic days. The
+                  hero states the week as times; this states what the week
+                  means for someone deciding when — and where — to come. */}
+              {location.planning.scheduleNote && (
+                <div className="row">
+                  <div className="n">—</div>
+                  <div>
+                    <h3>{location.planning.scheduleNote.heading}</h3>
+                    <p>{location.planning.scheduleNote.body}</p>
+                  </div>
+                </div>
+              )}
               <div className="row">
                 <div className="n">—</div>
                 <div>
                   <h3>Communities served</h3>
-                  <p>
-                    {location.planning.communities}{" "}
-                    {location.planning.communitiesTag && (
-                      <ConfirmTag style={{ fontSize: 11 }}>
-                        {location.planning.communitiesTag}
-                      </ConfirmTag>
-                    )}{" "}
-                    {/* Location → concern links. Nothing pointed from a
-                        location page to a concern page before this, and the
-                        three named here are the ones /faq already says
-                        clients most commonly come in for. */}
-                    Clients here most often come in for{" "}
-                    <Link href="/concerns/anxiety">anxiety and stress</Link>,{" "}
-                    <Link href="/concerns/focus-adhd">focus and ADHD</Link>,
-                    and <Link href="/concerns/sleep">sleep</Link>.
+                  {/* Ben's client data, and the same array that feeds
+                      `areaServed` in the LocalBusiness markup — so the page and
+                      the schema list the same towns by construction. The
+                      [Confirm list] tag that used to sit here is gone, which is
+                      also what let the assistant start answering "do you serve
+                      Smyrna?" (lib/chat/content-index.ts). */}
+                  <p>{location.planning.communitiesLead}</p>
+                  <p style={{ marginTop: 10 }}>
+                    {location.planning.communities.join(" · ")}
                   </p>
                 </div>
               </div>
@@ -422,7 +551,7 @@ export default async function LocationPage({
         </div>
       </section>
 
-      <FinalCTA heading={location.finalHeading} />
+      <FinalCTA heading={location.finalHeading} sub={location.finalSub} />
     </>
   );
 }

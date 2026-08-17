@@ -743,8 +743,11 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   },
   "app/locations/[slug]/page.tsx": {
     "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
-    "location.planning.communitiesTag":
-      "excluded — location:<slug>:area, gated per center on the data rather than here",
+    // `location.planning.communitiesTag` was here, holding
+    // location:<slug>:area out of the index on both open centers. Ben's client
+    // data replaced the guessed community lists, the tag and the field are
+    // gone, and both passages are in the index — which is what lets the
+    // assistant answer "do you serve Smyrna?" and "do you serve Franklin?".
   },
   "app/concerns/[slug]/page.tsx": {},
   "app/what-we-help-with/page.tsx": {},

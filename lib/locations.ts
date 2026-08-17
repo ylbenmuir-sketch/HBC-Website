@@ -1,6 +1,10 @@
 import {
+  BRAIN_MAP_NAME,
+  BRAIN_MAP_POINTS,
+  FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
   PHONE_DISPLAY,
+  SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   type Verifiable,
   isDraftText,
@@ -106,6 +110,42 @@ export type Location = {
   };
   image?: { src: string; position: string };
   plateSpec?: string;
+  /**
+   * The substance section, between the hero and the space.
+   *
+   * It exists because "neurofeedback" and "LENS" appeared zero times in the
+   * body copy of either open center's page — a location page for a LENS
+   * practice that never said what LENS was. The three beats are fixed: what
+   * LENS is in two sentences, who comes to *this* center, and what a first
+   * visit involves.
+   *
+   * Each beat hands off rather than restating. /lens-neurofeedback owns the
+   * definition and /how-lens-works owns the mechanism (QUERY-TO-PAGE-MAP.md
+   * rule 1), so two sentences and a link is the whole budget here — a third
+   * page explaining the mechanism in full is how all three start competing.
+   *
+   * The middle paragraph is the one that must differ per center, and does:
+   * it is about who walks through *this* door, not about LENS.
+   *
+   * Optional, and absent on Franklin: "who comes to this center" is a
+   * paragraph a center with no clients cannot write, and the two sentences of
+   * LENS definition are not worth publishing on their own on a page whose
+   * whole job is a waitlist.
+   */
+  intro?: {
+    eyebrow: string;
+    heading: string;
+    /** Body paragraphs, in order: what LENS is · who comes here · first visit. */
+    paragraphs: string[];
+    /**
+     * Lead-in to the three concern links the template appends. The links are
+     * JSX and cannot live here — lib/locations.ts is imported by the
+     * assistant's index through plain Node type stripping (scripts/answer-audit.mjs),
+     * which reads `.ts` and not `.tsx`. So the data supplies the sentence up to
+     * the links and the template supplies the links.
+     */
+    concernsLead: string;
+  };
   space: {
     heading: string;
     sub: string;
@@ -113,16 +153,67 @@ export type Location = {
       | { kind: "photo"; src: string; position: string }
       | { kind: "plate"; spec: string }
     >;
+    /**
+     * Prose shown *instead of* the photo grid in production, for a center whose
+     * photos are all placeholder plates.
+     *
+     * Murfreesboro's three plates render in production as empty sage gradients
+     * under a heading about a room nobody can see — which is worse than saying
+     * something true about the center in words. Draft builds still show the
+     * plates, so the photography brief stays visible to whoever has to shoot it,
+     * and the grid comes back on its own the moment one real photo lands.
+     */
+    body?: string[];
   };
   team: TeamCard[];
   quote: { text: string; attribution: string; place: string };
+  /** Production stand-in for the draft-only client quote. Per center: the same
+   *  three lines on both pages made the two navy bands read as one page. */
+  goodToKnow: string;
   planning: {
+    /** H2 over the planning section — per center, because "anywhere in the
+     *  metro" is Nashville's claim and not Murfreesboro's. */
+    reachHeading: string;
     gettingHere: string;
-    communities: string;
-    communitiesTag?: string;
+    /**
+     * The center's schedule as a planning fact rather than a table of hours.
+     *
+     * Nashville's Saturday and Murfreesboro's three clinic days are the two
+     * places these centers most differ, and the hours block in the hero states
+     * the times without saying what they mean for a person deciding where to
+     * go. Neither note repeats a time: the week is data (`hours`), and a
+     * duplicated "8a–3p" here is a second copy free to drift from the first.
+     *
+     * Absent on a center with no hours to publish, for the reason the Hours
+     * hero fact is: Franklin's schedule is "not yet".
+     */
+    scheduleNote?: { heading: string; body: string };
+    /** Lead sentence over the community list — the shape of the catchment. */
+    communitiesLead: string;
+    /**
+     * Communities served, as names.
+     *
+     * A list and not a sentence since Ben's client data replaced the guessed
+     * one: sixteen and ten names respectively, which is a paragraph a reader
+     * skims and a string `communitiesServed()` had to parse back apart to feed
+     * `areaServed`. The array is the source for both, so the schema and the
+     * page cannot disagree about who is on it.
+     */
+    communities: string[];
     alsoNearby: string;
   };
   finalHeading: string;
+  /**
+   * The CTA band's sub — one limitation sentence, folded into the offer of the
+   * call and stated as scope rather than absence (the phase 11d pattern in
+   * lib/chat/answer.ts). Per center so the two bands don't read identically;
+   * both carry the same limitation and differ only in what the call is for.
+   *
+   * Omitted on Franklin, which falls back to FinalCTA's default: the band
+   * there is a waitlist ask, and a sentence scoping how much LENS helps
+   * belongs on a page that can actually book you.
+   */
+  finalSub?: string;
   /**
    * <title> override. Open centers lead with the category + city + state —
    * "neurofeedback nashville" is the highest-intent local query the site has,
@@ -166,20 +257,44 @@ export const locations: Location[] = [
       note: "[Confirm hours]",
     },
     phone: PHONE_DISPLAY,
-    cardExtra: "Free on-site parking",
+    cardExtra: "Private lot on site, free for clients",
     practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
     hero: {
       eyebrow: "Nashville, Tennessee",
-      titleLead: "A quiet place to get your ",
-      titleAccent: "bearings",
-      titleTail: " back.",
-      sub: "Serving families and professionals across Davidson County — a calm, comfortable center that feels more like a well-kept study than a clinic.",
-      arrivalLines: ["Free on-site parking,", "steps from the door"],
+      /**
+       * The H1 carries the service and the city in its first four words.
+       * "A quiet place to get your bearings back" read well and targeted
+       * nothing — this page is the site's highest-intent local surface
+       * (2,930 impressions at position 10.2) and the query is
+       * `neurofeedback nashville`.
+       *
+       * The tail is the differentiator, and it is true against `hours`
+       * above: Tue–Fri plus Saturday morning. Murfreesboro's H1 is built on
+       * a different axis (its catchment) so the two do not read as one
+       * sentence with the town swapped.
+       */
+      titleLead: "LENS neurofeedback in ",
+      titleAccent: "Nashville",
+      titleTail: " — Tuesday through Saturday.",
+      sub: "Gentle, passive sessions for adults, children, and families across Davidson County and the towns around it — in a calm center just off I-24, with Saturday mornings on the schedule.",
+      arrivalLines: ["Private lot on site,", "free for clients"],
     },
     image: { src: "/images/session-room.jpg", position: "center 55%" },
+    intro: {
+      eyebrow: "Why people come here",
+      heading: "What LENS is — and who comes to Thompson Lane.",
+      paragraphs: [
+        "LENS stands for Low Energy Neurofeedback System. Small sensors read the brain's electrical activity at a point on the scalp, and the system returns a brief feedback signal that lasts a fraction of a second — there is nothing to concentrate on, nothing to watch, and nothing to practice between visits.",
+        "This center sits in the middle of the metro, and it shows in who comes: working adults booking around a commute, school-age kids whose parents would rather not pull them out of class, and families driving in from Williamson, Sumner, and Wilson County.",
+        `A first visit runs ${FIRST_VISIT_DURATION} and starts with a conversation. Then ${BRAIN_MAP_NAME} — a ${BRAIN_MAP_POINTS}-point recording of brain activity, explained to you point by point, and a written plan you keep.`,
+      ],
+      concernsLead: "Clients here most often come in for",
+    },
     space: {
-      heading: "Designed to lower your shoulders the moment you walk in.",
-      sub: "No fluorescent hum, no waiting-room churn. Quiet rooms, comfortable chairs, and a team that isn't rushing you anywhere.",
+      /** No room count. Three photographs are three photographs, not evidence
+       *  of three rooms, and nothing on file says how many this center has. */
+      heading: "Quiet rooms, and no waiting-room churn.",
+      sub: "No fluorescent hum, no clipboard queue. Comfortable chairs, low light, and a team that isn't rushing you anywhere.",
       photos: [
         { kind: "photo", src: "/images/recline.jpg", position: "center 55%" },
         { kind: "photo", src: "/images/session-wide.jpg", position: "center 40%" },
@@ -211,18 +326,54 @@ export const locations: Location[] = [
       attribution: "Parent of an 11-year-old",
       place: "Nashville",
     },
+    /** Not "Saturday runs on the same schedule as weekdays" — it doesn't.
+     *  Saturday is 8a–3p against a weekday 9a–6p, and the hours block three
+     *  sections up says so. */
+    goodToKnow:
+      "The call is free, no referral is needed, and you can start on a Saturday if a weekday doesn't work.",
     planning: {
-      gettingHere: "[Neighborhood, nearest cross streets, highway access.]",
-      communities:
-        "Nashville, Belle Meade, Green Hills, Brentwood, Bellevue, Madison & nearby.",
-      communitiesTag: "[Confirm list]",
+      reachHeading: "Easy to reach from anywhere in the metro.",
+      gettingHere:
+        "Private lot on site, free for clients, steps from the door. We're just off I-24 at Thompson Lane, with I-440 ending immediately north of us.",
+      scheduleNote: {
+        heading: "Saturday appointments",
+        body: "We see clients on Saturday mornings — the reason a lot of working adults and school-age kids start here rather than waiting on a weekday slot.",
+      },
+      communitiesLead:
+        "This center draws from Davidson County and the Williamson, Sumner, and Wilson County towns around it.",
+      /**
+       * Ben's client data, replacing a guessed list ("Belle Meade, Green Hills,
+       * Bellevue") that carried a [Confirm list] tag and therefore kept the
+       * assistant's `location:nashville:area` passage out of the index
+       * entirely — the reason it could not answer "do you serve Franklin?".
+       */
+      communities: [
+        "Nashville",
+        "Franklin",
+        "Brentwood",
+        "Spring Hill",
+        "Mount Juliet",
+        "Hendersonville",
+        "Nolensville",
+        "Lebanon",
+        "College Grove",
+        "Thompson's Station",
+        "Antioch",
+        "Gallatin",
+        "Madison",
+        "Old Hickory",
+        "Fairview",
+        "Hermitage",
+      ],
       alsoNearby:
-        "Murfreesboro center · Franklin coming soon — transfer anytime; your plan travels with you.",
+        "Our Murfreesboro center is open now. Franklin opens soon — Williamson County clients come here in the meantime, and your plan travels with you when it opens.",
     },
     finalHeading: "Come see the space, meet the team, and ask us anything.",
+    finalSub:
+      "How much LENS helps varies from person to person, and it isn't a replacement for care you're already getting. A call is the fastest way to find out whether it fits — and whether a weekday or a Saturday suits you better.",
     metaTitle: "LENS Neurofeedback in Nashville, TN",
     metaDescription:
-      "LENS neurofeedback in Nashville, TN — gentle sessions for adults, children, and families across Davidson County. The first call is free.",
+      "LENS neurofeedback in Nashville, TN — gentle, passive sessions Tuesday through Saturday, just off I-24 at Thompson Lane. The first call is free.",
   },
   {
     slug: "murfreesboro",
@@ -254,24 +405,48 @@ export const locations: Location[] = [
       note: "[Confirm hours]",
     },
     phone: PHONE_DISPLAY,
-    cardExtra: "[Parking note]",
+    cardExtra: "Private lot on site, free for clients",
     practitioners: ["[Name]", "[Name]"],
     hero: {
       eyebrow: "Murfreesboro, Tennessee",
-      titleLead: "The same standard of care, ",
-      titleAccent: "closer",
-      titleTail: " to home.",
-      sub: "Serving families and professionals across Rutherford County — the same care model, the same training, and the same honest policies as every Harmonized center.",
-      arrivalLines: ["[Parking note]", ""],
+      /**
+       * Built on the catchment rather than the calendar, which is the axis
+       * Nashville's H1 does not use. "The same standard of care, closer to
+       * home" said nothing a search could find and, worse, framed this center
+       * as the satellite of the other one.
+       */
+      titleLead: "LENS neurofeedback for ",
+      titleAccent: "Rutherford County",
+      titleTail: " — in downtown Murfreesboro.",
+      sub: "Gentle, passive sessions for adults, children, and families from Smyrna to Shelbyville — in a calm center a few minutes off I-24, near Broad Street.",
+      arrivalLines: ["Private lot on site,", "free for clients"],
     },
     plateSpec: "Murfreesboro — reception or session room, natural light",
+    intro: {
+      eyebrow: "Why people come here",
+      heading: "What LENS is — and who comes to Chestnut Street.",
+      paragraphs: [
+        // Deliberately not Nashville's wording. Both pages have to expand the
+        // acronym, and that phrase is the only thing the two definitions share
+        // — the sentence around it is built differently on each so the pages
+        // don't open their body copy with the same twenty words.
+        "LENS is short for Low Energy Neurofeedback System, and the approach is passive by design: small sensors read the brain's own electrical activity, and the system answers with a feedback signal far weaker than the one from the phone in your pocket. There is nothing to perform, and nothing to keep up with at home.",
+        "This is the center for people who would otherwise drive past it: families from Smyrna, La Vergne and Christiana, commuters who work in Nashville and would rather not add the drive to the end of a day, and clients coming in from Bell Buckle, Shelbyville, Woodbury and Manchester.",
+        `A first visit runs ${FIRST_VISIT_DURATION}: a full conversation first, then ${BRAIN_MAP_NAME} — a ${BRAIN_MAP_POINTS}-point recording of brain activity — walked through with you point by point, and a written plan you keep.`,
+      ],
+      concernsLead: "People come to this center most often for",
+    },
     space: {
-      heading: "Designed to lower your shoulders the moment you walk in.",
-      sub: "No fluorescent hum, no waiting-room churn. Quiet rooms, comfortable chairs, and a team that isn't rushing you anywhere.",
+      heading: "A downtown center, built to the same standard.",
+      sub: "The same care model, the same training, and the same honest policies as every Harmonized center.",
       photos: [
         { kind: "plate", spec: "Murfreesboro interior — reception, natural light" },
         { kind: "plate", spec: "Murfreesboro session room — comfortable chair" },
         { kind: "plate", spec: "Murfreesboro exterior — entrance signage" },
+      ],
+      body: [
+        `The rooms are quiet and the chairs are comfortable, and nobody is moved through on a clock. A session runs ${SESSION_LENGTH.value}, and most people read or simply rest through it.`,
+        "Photography of this center is being produced now. Until it arrives we would rather show you nothing than show you somebody else's room.",
       ],
     },
     team: [
@@ -299,17 +474,53 @@ export const locations: Location[] = [
       attribution: "Adult client",
       place: "Murfreesboro",
     },
+    goodToKnow:
+      "The call is free, no referral is needed, and you'll never be asked to commit to a long program up front.",
     planning: {
-      gettingHere: "[Neighborhood, nearest cross streets, highway access.]",
-      communities: "Murfreesboro, Smyrna, La Vergne & nearby.",
-      communitiesTag: "[Confirm list]",
+      reachHeading: "A few minutes off I-24, in the middle of town.",
+      gettingHere:
+        "Private lot on site, free for clients. We're in downtown Murfreesboro, a few minutes off I-24 and just off Broad Street.",
+      /**
+       * Stated as the fact and then the alternative, not as a shortage. The
+       * three clinic days are the inverse of Nashville's Saturday, and each
+       * page carries only its own — which is what stops the pair from reading
+       * as one page with the town swapped.
+       */
+      scheduleNote: {
+        heading: "Our schedule here",
+        body: "This center runs Tuesday through Thursday. If Friday or Saturday works better for you, our Nashville center keeps those hours and your plan travels with you.",
+      },
+      /**
+       * Named by county rather than by compass. "The towns south and east of
+       * it" was wrong for four of the ten: Smyrna and La Vergne sit north-west
+       * of Murfreesboro, Eagleville and Rockvale west and south-west. Bedford,
+       * Cannon and Coffee is what the list past Rutherford actually is —
+       * Shelbyville and Bell Buckle, Woodbury, Manchester.
+       */
+      communitiesLead:
+        "This center draws from across Rutherford County, and from the Bedford, Cannon and Coffee County towns beyond it.",
+      /** Ben's client data — see the Nashville list above for why it is a list. */
+      communities: [
+        "Murfreesboro",
+        "Smyrna",
+        "Christiana",
+        "La Vergne",
+        "Eagleville",
+        "Rockvale",
+        "Woodbury",
+        "Manchester",
+        "Bell Buckle",
+        "Shelbyville",
+      ],
       alsoNearby:
         "Nashville center · Franklin coming soon — transfer anytime; your plan travels with you.",
     },
-    finalHeading: "Come see the space, meet the team, and ask us anything.",
+    finalHeading: "Start with a call — before you drive anywhere.",
+    finalSub:
+      "How much LENS helps varies from person to person, and it isn't a replacement for care you're already getting. A call is the fastest way to find out whether it fits, and which of our two centers is easier for you to reach.",
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
-      "LENS neurofeedback in Murfreesboro, TN — gentle sessions for adults, children, and families across Rutherford County. The first call is free.",
+      "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children, and families across Rutherford County. The first call is free.",
   },
   {
     slug: "franklin",
@@ -364,9 +575,19 @@ export const locations: Location[] = [
       attribution: `${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director`,
       place: "Harmonized Brain Centers",
     },
+    goodToKnow:
+      "The call is free, no referral is needed, and you can start at Nashville or Murfreesboro today and transfer when Franklin opens.",
     planning: {
+      reachHeading: "Williamson County, once the doors open.",
       gettingHere: "[Neighborhood, nearest cross streets, highway access.]",
-      communities: "Franklin, Brentwood, Spring Hill & Thompson's Station.",
+      communitiesLead:
+        "The Franklin center will serve the Williamson County towns our Nashville center already sees clients from.",
+      communities: [
+        "Franklin",
+        "Brentwood",
+        "Spring Hill",
+        "Thompson's Station",
+      ],
       alsoNearby:
         "Nashville & Murfreesboro centers are open now — start there and transfer anytime; your plan travels with you.",
     },
@@ -539,20 +760,48 @@ export function locationPhotos(location: Location): string[] {
 }
 
 /**
- * Community names for schema `areaServed`, derived from the same
- * `planning.communities` sentence the page renders — one source, so
- * confirming the list updates both.
+ * Community names for schema `areaServed` — the same list the page prints
+ * under "Communities served", so the two cannot disagree about who is on it.
  *
- * The sentence is written as "A, B, C & nearby." The trailing "nearby" is
- * copy, not a place, and is dropped. Returns [] while the list is still a
- * [placeholder], which keeps the schema silent whenever the page would be.
+ * This used to parse a prose sentence back apart on commas and ampersands,
+ * dropping a trailing "nearby" that was copy rather than a place. The data is
+ * a `string[]` now that Ben's client list replaced the guessed one: sixteen
+ * names do not fit in a sentence a reader will finish, and a parser standing
+ * between the page and the schema is one more thing that can be wrong about
+ * either. Each name still carries the [placeholder] gate individually.
  */
 export function communitiesServed(location: Location): string[] {
-  const line = location.planning.communities;
-  if (isDraftText(line)) return [];
-  return line
-    .replace(/\.$/, "")
-    .split(/,|\s&\s/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && s.toLowerCase() !== "nearby");
+  return location.planning.communities.filter(
+    (name) => SHOW_DRAFT_CONTENT || !isDraftText(name)
+  );
+}
+
+/**
+ * Saturday's hours as a label ("8a–3p"), or null for a center closed Saturday
+ * or with no publishable week.
+ *
+ * Nashville keeps Saturday hours and most practices in the category do not,
+ * which makes it the strongest differentiator on that page — so it gets a
+ * hero fact of its own rather than sitting as the last line of a three-line
+ * hours block. Derived from `week[6]` and not written as copy: the times have
+ * one home, and a page that states them twice states them differently
+ * eventually.
+ */
+export function saturdayLabel(location: Location): string | null {
+  const hours = locationHours(location);
+  const saturday = hours?.week[6];
+  if (!saturday) return null;
+  return `${clockLabel(saturday.opens)}–${clockLabel(saturday.closes)}`;
+}
+
+/**
+ * Real photographs in the "space" grid — plates are not photos.
+ *
+ * The template renders `space.body` prose instead of the grid when this is
+ * empty in production, so a center still waiting on photography says something
+ * true in words rather than showing three empty gradients under a heading
+ * about a room. Draft builds keep the plates, and their specs, visible.
+ */
+export function spacePhotoCount(location: Location): number {
+  return location.space.photos.filter((p) => p.kind === "photo").length;
 }

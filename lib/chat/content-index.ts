@@ -393,6 +393,35 @@ function locationPassages(loc: Location): Passage[] {
     });
   }
 
+  // Directions get their own passage rather than joining `:visiting` above.
+  // Length normalization is why: that passage is deliberately short and about
+  // the address, and padding it with two sentences of highway geography would
+  // lose "where are you?" to something that says less. Split, both questions
+  // have a passage sized for them.
+  const directions = draftFree(loc.planning.gettingHere);
+  if (directions) {
+    passages.push({
+      id: `location:${loc.slug}:directions`,
+      kind: "location",
+      title: `${loc.name} — getting here`,
+      href,
+      question: `How do I get to your ${loc.name} center?`,
+      keywords: [
+        ...keywords,
+        "directions",
+        "drive",
+        "driving",
+        "highway",
+        "interstate",
+        "exit",
+        "parking",
+        "park",
+        "lot",
+      ],
+      text: directions,
+    });
+  }
+
   const communities = communitiesServed(loc);
   if (communities.length > 0) {
     passages.push({
@@ -400,14 +429,14 @@ function locationPassages(loc: Location): Passage[] {
       kind: "location",
       title: `${loc.name} — communities served`,
       href,
+      question: `Do you serve ${communities[1] ?? communities[0]}?`,
       keywords: [...keywords, ...communities.map((c) => c.toLowerCase()), "serve", "area", "travel", "transfer"],
+      // No `confirmTag`. It carried `loc.planning.communitiesTag` —
+      // "[Confirm list]" on both open centers — which kept this passage out of
+      // the index entirely, so "do you serve Smyrna?" reached no passage at all
+      // while the page it would have quoted was printing the answer. Ben's
+      // client data replaced the guessed lists and the tag is gone with them.
       text: `${loc.name} serves ${communities.join(", ")}. ${draftFree(loc.planning.alsoNearby) ?? ""}`.trim(),
-      // The location page prints this list with `communitiesTag` beside it —
-      // "[Confirm list]" on Nashville and Murfreesboro today. Read from the
-      // data rather than named in site-copy.ts, so a center that confirms its
-      // list rejoins the index the moment the tag is dropped, one center at a
-      // time. Franklin carries no tag and is unaffected.
-      confirmTag: loc.planning.communitiesTag,
     });
   }
 

@@ -13,7 +13,7 @@ The gaps are almost all in what's *missing*, not what's broken:
 
 1. **No canonical URLs and no `og:url` on any page** — one config line fixes the whole site.
 2. **The canonical domain is unconfirmed** (`SITE_URL` carries a `[CONFIRM domain]` note). Every absolute URL on the site — sitemap, schema, OG images — depends on it.
-3. **No page targets "neurofeedback nashville" or "neurofeedback murfreesboro."** Location page titles are just city names ("Nashville — Harmonized Brain Centers"); the homepage title contains neither "neurofeedback" nor a place name. The site's highest-intent queries have no title-tag coverage at all.
+3. ~~**No page targets "neurofeedback nashville" or "neurofeedback murfreesboro."**~~ **Closed (Aug 2026).** Both location pages have been rewritten to hold their local cluster — title, H1, meta description and body copy — rather than ceding it to new `/neurofeedback-{city}/` URLs. See §3.3 and the decision note in QUERY-TO-PAGE-MAP.md. The homepage title still contains neither "neurofeedback" nor a place name; that one is open (§6.1 item 4).
 4. **Structured data is nearly absent**: three thin `LocalBusiness` blocks (no street address, hours, geo, or images) and nothing else — no Organization, no FAQPage despite ~41 Q&A pairs, no BreadcrumbList, no Person.
 5. **The /resources section publishes zero articles** (all six are draft-gated), and the site's biggest differentiator — the $150 Harmonized Brain Map — has no page of its own.
 6. **Local SEO is blocked on unverified facts**: no street addresses anywhere on the site or in schema, one shared phone number for all locations, no Google Business Profile links, no map embeds.
@@ -38,8 +38,8 @@ Everything above is fixable, and most of it before launch. The prioritized plan 
 | `/about/founder` | Our Founder — Harmonized Brain Centers | Body is a one-paragraph fallback in production (story is draft-gated) |
 | `/about/team` | Our Team — Harmonized Brain Centers | Only 2 members render (rest are placeholder-gated) |
 | `/locations` | Locations — Harmonized Brain Centers | Fine as hub |
-| `/locations/nashville` | Nashville — Harmonized Brain Centers | **Biggest single title miss on the site** — no "neurofeedback," no "TN" |
-| `/locations/murfreesboro` | Murfreesboro — Harmonized Brain Centers | Same |
+| `/locations/nashville` | LENS Neurofeedback in Nashville, TN — Harmonized Brain Centers | **Fixed.** Was "Nashville — Harmonized Brain Centers", the biggest single title miss on the site. The page has since been rewritten to hold the cluster (see §3.3) |
+| `/locations/murfreesboro` | LENS Neurofeedback in Murfreesboro, TN — Harmonized Brain Centers | **Fixed**, same |
 | `/locations/franklin` | Franklin — Coming Soon — Harmonized Brain Centers | OK for a waitlist page |
 | `/concerns/anxiety` | Anxiety & Nervous-System Overload — Harmonized Brain Centers | All 8 concern titles omit "neurofeedback" — the qualifying word people actually search with |
 | `/concerns/focus-adhd` | Focus, ADHD & follow-through — … | Same; also lowercase title casing inconsistency (only anxiety has a `metaTitle` override) |
@@ -114,7 +114,7 @@ Exactly one H1 per page everywhere — good. Hierarchy skips exist but are minor
 - **100% alt coverage.** Zero `<img>` without alt across all 26 pages; decorative images (resource-card thumbnails) correctly use `alt=""`.
 - Weak/duplicate alts worth improving: the three Nashville interior photos all say "Inside the Nashville center"; concern hero alts just repeat the concern title. Descriptive alts ("Reclining chair in a quiet LENS session room at the Nashville center") would serve image search better.
 - The hero LCP image has `priority` — good.
-- Murfreesboro and Franklin pages render **zero images** in production (all their photos are placeholder-gated). Combined with the gated team grid (§3.3), Murfreesboro is a visibly thinner page than Nashville.
+- Murfreesboro and Franklin pages render **zero images** in production (all their photos are placeholder-gated). Murfreesboro's "The space" section now renders prose in place of the three blank gradients, and its team section is suppressed rather than rendering an empty grid (§3.3) — the page is honest about what it has, but photography is still the fix (§6.2 item 22).
 
 ### 1.9 404s, orphans, and other checks
 
@@ -169,7 +169,7 @@ Several fields are blocked on unverified facts, but these are not:
 - `openingHoursSpecification` — **done, and the hours in this line were wrong.** The two centers do not keep one week: Nashville is Tue–Fri 9:00–18:00 plus Sat 8:00–15:00, Murfreesboro Tue–Thu 9:00–18:00. Both are confirmed and encoded per center from `hours` in `lib/locations.ts`; Franklin records none until it opens.
 - `priceRange` — the $150 Brain Map is a settled, rendered price.
 - `image` — Nashville has real interior photos in the repo.
-- `areaServed` — the communities lists render in production ("Nashville, Belle Meade, Green Hills, Brentwood, Bellevue, Madison"; "Murfreesboro, Smyrna, La Vergne").
+- `areaServed` — **done, and the lists in this line were guessed.** Ben's client data replaced them: 16 `City` nodes on Nashville and 10 on Murfreesboro, from the `string[]` the page itself prints (§3.4). The `[Confirm list]` tag that used to gate them is retired.
 - `parentOrganization` → the new Organization node.
 
 ### 2.4 Gated items with schema consequences (flagged per brief)
@@ -200,9 +200,26 @@ Several fields are blocked on unverified facts, but these are not:
 
 No GBP links, no `sameAs`, no map embeds (the map is a styled gradient placeholder), no directions content in production ("We'll send simple directions and arrival details when you book"), no review links. For "near me" and map-pack queries — which is where most "neurofeedback nashville" clicks actually go — the GBP *is* the ranking surface, and the site's job is to corroborate it. At launch: create/claim GBPs for Nashville and Murfreesboro (not Franklin), link them via `sameAs`, embed the map on each location page, and add each center's GBP review link to the stories page CTA.
 
-### 3.3 Location page depth
+### 3.3 Location page depth — rewritten (Aug 2026)
 
-The template is strong (unique H1s, hero subs naming the county, space/team/first-visit/planning sections), but production strips Murfreesboro hard: zero photos, an **empty team section** (the "Trained to one standard…" heading renders above a team grid with no members — verified in the built HTML), and a generic directions fallback. Nashville renders 5 photos and 1 team member. Murfreesboro needs at least one real photo and one named practitioner to stop reading as a satellite page — to users and to Google.
+**These two pages now own the local clusters.** QUERY-TO-PAGE-MAP.md's original plan was new `/neurofeedback-nashville/` and `/neurofeedback-murfreesboro/` URLs; the decision recorded there is that those are not being built, because the location pages already carry the address, hours, `geo`, `hasMap`, `areaServed` and `LocalBusiness` markup a new URL would start without — and what they actually lacked was body copy, which is cheaper to fix than authority is to rebuild.
+
+What this audit found, and what changed:
+
+| Finding | Resolution |
+|---|---|
+| H1s carried no service and no city ("A quiet place to get your bearings back") | Rewritten: "LENS neurofeedback in *Nashville* — Tuesday through Saturday." / "LENS neurofeedback for *Rutherford County* — in downtown Murfreesboro." |
+| "LENS" and "neurofeedback" appeared **zero times in body copy** on both pages | New section between hero and space: what LENS is in two sentences, who comes to *this* center, what a first visit involves — handing off to `/lens-neurofeedback` and `/how-lens-works` rather than restating them |
+| Communities were a guessed one-line sentence behind a `[Confirm list]` tag | Ben's verified client data — 16 towns Nashville, 10 Murfreesboro — as a `string[]` feeding both the page and schema `areaServed`. The tag is retired, which also put the assistant's `location:<slug>:area` passages back in its index |
+| "Getting here" was a production non-answer ("We'll send simple directions… when you book") | Real copy on both, gated on `isDraftText` rather than on draft mode — the old ternary would have kept shipping the non-answer after the facts were confirmed |
+| Murfreesboro rendered an **empty team section** under a heading promising a team | Section suppressed entirely when no member renders; returns on the first confirmed name |
+| Murfreesboro rendered three empty sage gradients under "The space" | Prose renders instead of the grid when a center has no real photographs; the plates and their specs stay visible in draft builds, and the grid returns with the first real photo |
+| Nashville's Saturday hours — a differentiator most practices in the category don't have — were the third line of an hours block | Own hero fact (derived from the `hours` data, not restated) and own row under "Planning your visit" |
+| First-visit step 4 claimed "No packages, no pressure" while the site publishes a 12-session package | Rewritten to the part that was true; pricing stays with `/first-visit` per QUERY-TO-PAGE-MAP.md rule 1 |
+
+**Still open:** Murfreesboro needs at least one real photograph and one named practitioner. Both are fact/asset gates, not code — the page degrades honestly without them now instead of rendering empty furniture.
+
+**The two pages must not converge.** They differ on seven axes: H1 construction, schedule emphasis (Nashville's Saturday vs. Murfreesboro's three clinic days), catchment (Davidson plus Williamson/Sumner/Wilson vs. Rutherford plus Bedford/Cannon/Coffee), access copy (interstate junction vs. downtown surface streets), photo-led vs. text-led space section, "Good to know" band, and cross-link direction. Any edit that turns one page's section into the other's with the town swapped removes the reason a shared template was safe here.
 
 County usage is good: "Davidson County," "Rutherford County," "Williamson County" appear in hero subs, descriptions, and card copy. "Middle Tennessee" is used consistently as the umbrella region.
 
@@ -210,15 +227,19 @@ County usage is good: "Davidson County," "Rutherford County," "Williamson County
 
 Current coverage is one sentence per location page:
 
-| Community | Where it appears in production | Assessment |
-|---|---|---|
-| Franklin | Own coming-soon page + footer + homepage card | Adequate pre-opening |
-| Brentwood | One mention on Nashville page, one on Franklin page | Thin — Brentwood is a high-value suburb with no open-center page claiming it |
-| Smyrna | One mention on Murfreesboro page | Thin |
-| La Vergne | One mention on Murfreesboro page | Thin |
-| Belle Meade / Green Hills / Bellevue / Madison | One mention on Nashville page | Fine for now |
+**Resolved as of the Aug 2026 rewrite.** The guessed list this section audited ("Belle Meade, Green Hills, Bellevue") is gone, replaced by Ben's verified client data:
 
-Don't build doorway pages ("Neurofeedback in Smyrna, TN" with no physical presence there rarely sustains rankings and risks doorway classification). Instead: (a) expand each location page's "Communities served" from a sentence into a short paragraph with drive-times ("15 minutes from Smyrna via I-24"), and (b) let the Franklin page carry Brentwood/Spring Hill/Thompson's Station intent until that center opens. Revisit dedicated community pages only if there's real content to put on them.
+| Center | Communities in production and in `areaServed` |
+|---|---|
+| Nashville | Nashville, Franklin, Brentwood, Spring Hill, Mount Juliet, Hendersonville, Nolensville, Lebanon, College Grove, Thompson's Station, Antioch, Gallatin, Madison, Old Hickory, Fairview, Hermitage |
+| Murfreesboro | Murfreesboro, Smyrna, Christiana, La Vergne, Eagleville, Rockvale, Woodbury, Manchester, Bell Buckle, Shelbyville |
+| Franklin | Franklin, Brentwood, Spring Hill, Thompson's Station (pre-opening; no `LocalBusiness`) |
+
+Each list is a `string[]` in `lib/locations.ts` read by the page, by `communitiesServed()` → schema `areaServed`, and by the site assistant's index — one source, so the three cannot disagree about who is on it. Retiring the `[Confirm list]` tag is what let the assistant start answering "do you serve Smyrna?" and "do you serve Franklin?"; both were retrieval gaps before, on a question the page itself was already answering.
+
+**Still don't build doorway pages.** "Neurofeedback in Smyrna, TN" with no physical presence there rarely sustains rankings and risks doorway classification.
+
+**Correction to this section's original advice:** it recommended drive-time copy ("15 minutes from Smyrna via I-24"). Don't. Drive times are unverifiable claims that vary by traffic and origin, and the practice has no basis for them. The directions copy that shipped names the road and the interchange and stops there — "just off I-24 at Thompson Lane, with I-440 ending immediately north of us" — with no exit numbers and no times.
 
 ---
 
@@ -229,8 +250,8 @@ Don't build doorway pages ("Neurofeedback in Smyrna, TN" with no physical presen
 | Route | Query it currently targets | Query it *should* target | Gap |
 |---|---|---|---|
 | `/` | "help for anxiety focus sleep without medication" (not a real query pattern) | **neurofeedback nashville / LENS neurofeedback middle tennessee** | Title has no category or place term. The eyebrow ("LENS Neurofeedback · Nashville & Murfreesboro") has the right idea — the title doesn't. |
-| `/locations/nashville` | "nashville" (nothing) | **neurofeedback nashville**, LENS neurofeedback nashville TN | Highest-intent local query on the site has no title coverage |
-| `/locations/murfreesboro` | — | **neurofeedback murfreesboro tn** | Same |
+| `/locations/nashville` | **neurofeedback nashville** | — | **Closed.** Title, H1, meta description and body copy all carry it; the page owns the cluster (§3.3) |
+| `/locations/murfreesboro` | **neurofeedback murfreesboro tn** | — | **Closed**, same |
 | `/locations/franklin` | — | neurofeedback franklin tn (pre-launch waitlist) | OK as-is |
 | `/concerns/anxiety` | "anxiety nervous system overload" | **neurofeedback for anxiety** | All 8 concern pages: add "neurofeedback" to titles via the existing `metaTitle` field |
 | `/concerns/focus-adhd` | — | **neurofeedback for ADHD** (support framing) | Same |
@@ -259,7 +280,9 @@ Don't build doorway pages ("Neurofeedback in Smyrna, TN" with no physical presen
 
 | Query | Closest current asset | What's needed |
 |---|---|---|
-| "neurofeedback nashville" | Nothing targets it | Homepage + Nashville page title rewrites (§6.1) |
+| ~~"neurofeedback nashville"~~ | `/locations/nashville` | **Closed** — title, H1 and body copy all carry it (§3.3). Homepage retarget still open |
+| ~~"neurofeedback murfreesboro"~~ | `/locations/murfreesboro` | **Closed** (§3.3) |
+| "neurofeedback smyrna / la vergne / brentwood / hendersonville" | The two location pages' communities lists + `areaServed` | Nothing further on-site. These are map-pack and long-tail queries the location pages now name explicitly; don't build per-town pages |
 | "LENS neurofeedback near me" | — | GBPs + enriched LocalBusiness + location titles; "near me" is won in the map pack |
 | "neurofeedback cost" / "how much does neurofeedback cost" | One FAQ answer + a paragraph on `/first-visit` | A dedicated cost/pricing page (or a `/resources` article) — competitors rank with transparent-pricing pages, and the site's $150 Brain Map is a strong answer it currently buries |
 | "brain mapping nashville" / "brain map test" | Homepage section only | **A `/brain-map` page.** The Harmonized Brain Map is the stated differentiator and the $150 entry offer, and it has no URL |
@@ -305,7 +328,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 |---|---|---|---|
 | 1 | **Confirm canonical domain**; set `NEXT_PUBLIC_SITE_URL` in prod env; configure host-level 301s (apex↔www, http→https). Removes the `[CONFIRM domain]` risk under every absolute URL. | Critical | S |
 | 2 | **Add canonicals + og:url**: `alternates: { canonical: "./" }` and `openGraph.url` in `app/layout.tsx` metadata; verify emitted tags on `/`, one concern page, one location page. | High | S |
-| 3 | **Rewrite location page titles** in `generateMetadata` ([app/locations/[slug]/page.tsx:24-37](app/locations/[slug]/page.tsx#L24-L37)): "LENS Neurofeedback in Nashville, TN", "LENS Neurofeedback in Murfreesboro, TN", Franklin unchanged. Update `metaDescription` in `lib/locations.ts` to lead with the same phrase. | High | S |
+| 3 | ~~**Rewrite location page titles**~~ **Done, and superseded by a full rewrite of both pages.** Titles carry "LENS Neurofeedback in {City}, TN"; Franklin unchanged. The titles alone were never going to hold the cluster — the pages behind them said nothing about LENS — so §3.3 records the copy, data and template changes that followed, and QUERY-TO-PAGE-MAP.md records the decision to strengthen these pages instead of building `/neurofeedback-{city}/`. | High | S → M |
 | 4 | **Rewrite homepage title** ([app/page.tsx:48-52](app/page.tsx#L48-L52)) to carry category + geography, e.g. `Neurofeedback in Nashville & Murfreesboro — Help for Anxiety, Focus & Sleep` (brand arrives via og:site_name; or keep brand and accept truncation). Keep the H1 as-is — it's a conversion asset. | High | S |
 | 5 | **Populate `metaTitle` for all 8 concerns** in [lib/concerns.ts](lib/concerns.ts) with the "Neurofeedback for X" pattern: Anxiety & Stress / ADHD & Focus / Sleep / Emotional Regulation / Brain Fog & Memory / Stress & Burnout / School Struggles / Trauma-Related Stress. Keep the "support" framing in descriptions to stay consistent with the wellness disclaimer. | High | S |
 | 6 | **Retitle `/adults` → "Neurofeedback for Adults"** and **`/children-families` → "Neurofeedback for Children & Teens"**; `/how-lens-works` → "How LENS Neurofeedback Works". | High | S |
@@ -314,7 +337,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 | 9 | **Add FAQPage JSON-LD** on `/faq` and concern pages. Refactor: store FAQ answers as plain strings (with optional rendered JSX variant) so the same data feeds `<details>` and schema. | Med | M |
 | 10 | **Add BreadcrumbList JSON-LD** wherever the visual crumb renders (concerns, locations, team, resources). One small shared component. | Med | S |
 | 11 | **Dedicated 1200×630 OG image**; fix the wrong declared dimensions (currently 1600×1067 vs actual 1500×843) in `app/layout.tsx`. | Med | S |
-| 12 | **Internal links for the two weak concerns**: add trauma + stress-resilience to the footer "Help with" group (or swap in an 8-item list); add a "Related concerns" link block to the concern template; link each location page's communities paragraph to 2–3 concern pages. | Med | S |
+| 12 | **Internal links for the two weak concerns**: add trauma + stress-resilience to the footer "Help with" group (or swap in an 8-item list); add a "Related concerns" link block to the concern template. ~~link each location page's communities paragraph to 2–3 concern pages~~ **done** — the anxiety/focus/sleep links moved out of the communities row (where they sat under a heading about geography) into the new body section, and each location page now also links to `/lens-neurofeedback` and `/how-lens-works`. | Med | S |
 | 13 | **Trim over-length descriptions**: `/about` (199 chars), `/children-families` (198) to ≤160. | Low | S |
 | 14 | Add `lastModified` to sitemap entries. | Low | S |
 | 15 | Fix heading skips: `lens-seq`/`care-grid` H4s → H3s; give `/contact` an H2. | Low | S |
@@ -329,7 +352,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 | 19 | **Publish `lens-vs-traditional-neurofeedback`.** | Copy | High |
 | 20 | **Create `/brain-map` page**: what the 21-point map is, sample image (already shipped on homepage), $150 offer, FAQs, CTA. Target "brain mapping nashville" + "what is a brain map." Link from homepage brain-map section, `/first-visit` cost card, and both location pages. | Design/copy | High |
 | 21 | **Cost transparency page or article** ("How much does neurofeedback cost?") anchored on the free call → $150 map → per-session pricing structure; publish once per-session pricing verifies. | Pricing verification | High |
-| 22 | **Murfreesboro parity**: at least one real interior photo and one named practitioner so the page stops rendering an empty team section and zero images. | Photography, roster | Med–High |
+| 22 | **Murfreesboro parity**: at least one real interior photo and one named practitioner. The page no longer *renders* an empty team section or three blank gradients — both degrade to prose or vanish (§3.3) — so this is now about depth rather than about a visible defect. Adding either asset restores the section automatically; no code change. | Photography, roster | Med |
 | 23 | **Founder page + Person schema** with surname, credentials, real story. Practitioner profiles → Person schema as they verify. | Roster verification | Med |
 | 24 | **Set up Google Search Console + Bing Webmaster Tools**, submit sitemap, verify indexation of all 25 URLs in week one. | Domain live | High (hygiene) |
 | 25 | Per-location phone numbers if operationally feasible; otherwise ensure the shared number is identical across site, schema, and both GBPs. | Ops decision | Med |
@@ -339,7 +362,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 | # | Task | Cadence / trigger |
 |---|---|---|
 | 26 | Publish remaining drafts (`what-the-equipment-does`, `exhausted-after-eight-hours`, `brain-fog-after-55`, `bad-at-school`), then the §5.2 new-article list. One well-made article/month beats four thin ones — each targets one named query and links to one concern + one location page. | Monthly |
-| 27 | Expand "Communities served" sections with drive-time copy for Brentwood, Smyrna, La Vergne, Franklin; revisit dedicated community pages only if content justifies them (avoid doorways). | Quarterly |
+| 27 | ~~Expand "Communities served" with drive-time copy~~ **Done, without the drive times** — both lists are Ben's verified client data and feed page + `areaServed` + assistant index from one array (§3.4). Drive times were the wrong ask: unverifiable, traffic-dependent, and the practice has no basis for them. Ongoing work is keeping the lists current as the client base moves, not adding copy around them. Still avoid per-town doorway pages. | Quarterly |
 | 28 | Local citations (Apple Maps, Yelp, health/wellness directories, chamber listings) with exact NAP; track consistency. | Post-GBP |
 | 29 | Review generation loop on GBP; refresh `/stories` with new verified quotes (keep `aggregateRating` off-site per §2.2). | Ongoing |
 | 30 | Video testimonials (already planned in the review band) — host on a YouTube channel, embed on `/stories`, `VideoObject` schema. | When filmed |
@@ -355,7 +378,7 @@ Effort: **S** ≤ half a day · **M** ≤ 2 days · **L** = ongoing/multi-day. E
 |---|---|
 | Street addresses + ZIPs | No on-page NAP, no schema address, no geo/map, GBP can't be corroborated — the largest local-SEO blocker |
 | Google rating & count | No social proof on `/stories`/homepage (keep ratings off on-site schema regardless) |
-| Practitioner roster | 3 team pages 404 (correctly), Murfreesboro team section renders empty, no Person schema, thin E-E-A-T |
+| Practitioner roster | 3 team pages 404 (correctly), Murfreesboro's team section is suppressed entirely (§3.3), no Person schema, thin E-E-A-T |
 | Founder surname + story | `/about/founder` is one paragraph; Person schema incomplete |
 | Resource article bodies | `/resources` is an empty shell; zero informational-query coverage; GuideCta promises an unwritten guide |
 | Response time / start timing | CTA-band copy only — negligible SEO impact |
