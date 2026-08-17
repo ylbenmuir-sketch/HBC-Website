@@ -744,9 +744,19 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
   .home .ccard ul { margin-bottom: 18px; }
   .home-concerns .sec-head { margin-bottom: 30px; }
   .home-concerns .sec-head .btn-ghost { padding: 10px 4px; }
+  /* The audience jump links are dropped on phones. Stacked under the H2 they
+     put three tap targets in one column with "Explore every concern", and of
+     the three only that one leaves the section, so it is the one that stays.
+     What the other two offer is a scroll to headings already sitting a swipe
+     below the fold, which is not a distance a visitor needs help with. Their
+     gold rules go with them: that rule is .btn-ghost's own border-bottom, so
+     hiding the button hides the rule. The group ids stay in the HTML either
+     way — a link landing here from elsewhere is what the scroll-margin-top
+     below still exists for. Above 760px the links sit beside their groups
+     and are left alone. */
+  .concern-jump { display: none; }
   /* one rail per audience group, each with its own dots — 4 cards is a
      shorter, more legible swipe than the six it replaced */
-  .concern-jump { gap: 20px; margin-top: 0; }
   .concern-group { scroll-margin-top: 82px; }
   .concern-group + .concern-group { margin-top: 56px; }
   .concern-group-head { font-size: 26px; margin-bottom: 18px; }
