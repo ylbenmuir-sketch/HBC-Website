@@ -2,7 +2,7 @@
 // page target, evaluate JS, capture screenshots. No npm deps — Node 24 has a
 // global WebSocket, which is the only thing a CDP client actually needs.
 import { spawn } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -10,7 +10,45 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** One fast probe of a CDP port. Null when nothing is listening there. */
+async function probePort(port, timeoutMs = 500) {
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/json/version`, {
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function launch({ port = 9333 } = {}) {
+  // Preflight: anything already answering on this port is a browser from a
+  // previous run that never reached close().
+  //
+  // This is not a tidiness check. The port is a constant, and the poll below
+  // takes the *first* answer it gets — so a stale browser means this run
+  // drives a renderer it did not configure and does not own, while the Chrome
+  // it actually spawned exits unable to bind. Nothing about that is visible in
+  // the output: the sweep reports normally. It also costs real time, because
+  // the abandoned instance keeps its renderers resident — an identical
+  // 130-combination sweep ran roughly twice as slow with one of these alive.
+  //
+  // Refusing rather than adopting or killing it: a browser this process did
+  // not start may belong to something else, and the remedy is one line.
+  const stale = await probePort(port);
+  if (stale) {
+    throw new Error(
+      `headless Chrome is already listening on debugging port ${port}` +
+        `\n\n  ${stale.Browser ?? "unknown build"}` +
+        `\n\n  Left behind by a run that was killed before it could close. This run` +
+        `\n  would attach to it instead of the browser it launches, and report a` +
+        `\n  normal-looking sweep driven by a renderer it doesn't own.` +
+        `\n\n  Clear it with:` +
+        `\n    pkill -f "remote-debugging-port=${port}"\n`
+    );
+  }
+
   const profile = mkdtempSync(join(tmpdir(), "cdp-profile-"));
   const proc = spawn(
     CHROME,
@@ -31,17 +69,49 @@ export async function launch({ port = 9333 } = {}) {
     { stdio: "ignore" }
   );
 
+  // close() kills Chrome on the happy path, and nothing did on any other one.
+  // A SIGTERM to this process — a tool timeout, a Ctrl-C, a pkill on the
+  // runner — left the browser resident and its profile on disk, and the next
+  // run then tripped the preflight above. Registered before the port poll, so
+  // a launch that never comes up also cleans up after itself.
+  //
+  // Everything here is synchronous because an "exit" handler cannot await.
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    try {
+      proc.kill("SIGKILL");
+    } catch {
+      /* already gone */
+    }
+    try {
+      rmSync(profile, { recursive: true, force: true });
+    } catch {
+      /* a profile left in tmp is not worth failing an exit path over */
+    }
+  };
+  process.once("exit", cleanup);
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+    // Explicit exit codes: registering a handler replaces Node's default
+    // behaviour of dying from the signal, so without these a killed run would
+    // clean up and then report success.
+    process.once(signal, () => {
+      cleanup();
+      process.exit(signal === "SIGINT" ? 130 : 143);
+    });
+  }
+
   let version = null;
   for (let i = 0; i < 100; i++) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/json/version`);
-      version = await res.json();
-      break;
-    } catch {
-      await sleep(150);
-    }
+    version = await probePort(port, 1000);
+    if (version) break;
+    await sleep(150);
   }
-  if (!version) throw new Error("Chrome did not expose a debugging port");
+  if (!version) {
+    cleanup();
+    throw new Error("Chrome did not expose a debugging port");
+  }
 
   const browser = await connect(version.webSocketDebuggerUrl);
   return {
@@ -65,7 +135,9 @@ export async function launch({ port = 9333 } = {}) {
         /* already gone */
       }
       browser.ws.close();
-      proc.kill();
+      // Through cleanup() rather than proc.kill() directly, so the happy path
+      // also removes the profile directory and disarms the exit handler.
+      cleanup();
     },
   };
 }

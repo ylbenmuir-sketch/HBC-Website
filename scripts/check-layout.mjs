@@ -5,9 +5,27 @@
  *   npm run dev
  *   CHECK_BASE=http://localhost:3000 npm run check:layout
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --widths 390
+ *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --routes /locations
  *
  * Needs Google Chrome installed; it drives a headless instance over the
  * DevTools protocol (scripts/layout/cdp.mjs) with no npm dependency.
+ *
+ * ## Scoping a run
+ *
+ * A full sweep is the expensive check in this repo by an order of magnitude —
+ * minutes, against seconds for every other one — and most changes touch two or
+ * three routes. `--routes` takes path prefixes and tests only what matches, so
+ * a location-page change sweeps four routes instead of twenty-six. `--widths`
+ * narrows the other axis.
+ *
+ * A prefix matches the route itself and everything under it: `--routes
+ * /locations` covers `/locations` and all three `/locations/[slug]` pages.
+ * Several are comma-separated. A filter that matches **nothing** is a failure,
+ * not an empty pass — a mistyped prefix must never report as a clean run,
+ * which is the same mistake in a different costume as the scrollWidth audit
+ * this file replaced.
+ *
+ * Scope the run to what changed; sweep everything before shipping.
  *
  * ## Why this exists, and what it replaces
  *
@@ -45,20 +63,119 @@
  *
  * Routes come from the running server's own sitemap, so the list cannot go
  * stale — note that draft-gated pages are in it under `npm run dev` and not in
- * a production build, which is the difference between 34 routes and 25.
+ * a production build, which is the difference between 35 routes and 26.
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { launch } from "./layout/cdp.mjs";
 
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.CHECK_BASE ?? "http://localhost:3000").replace(/\/$/, "");
-const widthArg = process.argv.indexOf("--widths");
-const WIDTHS = (widthArg > -1 ? process.argv[widthArg + 1] : "320,390,414,834")
-  .split(",")
-  .map(Number);
+
+const argValue = (name) => {
+  const i = process.argv.indexOf(name);
+  return i > -1 ? process.argv[i + 1] : undefined;
+};
+
+const WIDTHS = (argValue("--widths") ?? "320,390,414,834").split(",").map(Number);
 const verbose = process.argv.includes("--verbose");
 
+/** Path prefixes, normalized the way sitemap routes are: leading slash, no
+ *  trailing one, so `--routes locations/` and `--routes /locations` agree. */
+const ROUTE_FILTERS = (argValue("--routes") ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((p) => (p.startsWith("/") ? p : `/${p}`))
+  .map((p) => (p.length > 1 ? p.replace(/\/+$/, "") : p));
+
+/** A prefix covers the route itself and everything beneath it — `/locations`
+ *  selects `/locations` and `/locations/nashville`, but not `/locations-map`. */
+const selected = (route) =>
+  ROUTE_FILTERS.length === 0 ||
+  ROUTE_FILTERS.some((f) => route === f || route.startsWith(`${f}/`));
+
 const probe = readFileSync(new URL("./layout/probe.js", import.meta.url), "utf8");
+
+/**
+ * Refuse to run while a dev server and a production server are both up on this
+ * project.
+ *
+ * They share one `.next`. `next dev` rewrites it continuously, so a production
+ * server started from a build is serving a directory that is being replaced
+ * underneath it — and the failure is not a crash. Both servers keep answering,
+ * the sweep completes, and the result describes neither the build that was
+ * verified nor the source on disk. That cost a full production pass in the
+ * location-pages phase: a verified build was overwritten by a dev server on
+ * another port, and nothing anywhere said so.
+ *
+ * Only servers whose working directory is *this* project count, so two
+ * unrelated apps are none of this check's business. If the mode or the cwd
+ * can't be resolved the run continues — a check that can't see clearly should
+ * not be the thing that blocks work. `--allow-concurrent-servers` overrides.
+ */
+function serversHere() {
+  let out;
+  try {
+    out = execFileSync("ps", ["-Ao", "pid=,command="], { encoding: "utf8" });
+  } catch {
+    return []; // no ps, no opinion
+  }
+  const found = [];
+  for (const line of out.split("\n")) {
+    const m = line.match(/^\s*(\d+)\s+(.*)$/);
+    if (!m) continue;
+    const [, pid, command] = m;
+    if (Number(pid) === process.pid) continue;
+    // Shell wrappers carry whatever they were asked to run in their own
+    // command line, including this script's name and the very strings matched
+    // below. They are not servers.
+    if (/^\/bin\/(z|ba)?sh\b/.test(command)) continue;
+    if (command.includes("check-layout")) continue;
+    const mode = /\bnext\s+dev\b/.test(command)
+      ? "dev"
+      : /\bnext\s+start\b/.test(command)
+        ? "start"
+        : null;
+    if (mode && cwdOf(pid) === ROOT) found.push({ pid, mode });
+  }
+  return found;
+}
+
+function cwdOf(pid) {
+  try {
+    const out = execFileSync("lsof", ["-a", "-p", String(pid), "-d", "cwd", "-Fn"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    const line = out.split("\n").find((l) => l.startsWith("n"));
+    return line ? line.slice(1) : null;
+  } catch {
+    return null;
+  }
+}
+
+if (!process.argv.includes("--allow-concurrent-servers")) {
+  const servers = serversHere();
+  const dev = servers.filter((s) => s.mode === "dev");
+  const start = servers.filter((s) => s.mode === "start");
+  if (dev.length > 0 && start.length > 0) {
+    console.error(
+      `\n  a dev server and a production server are both running against this project's .next\n` +
+        `\n    next dev    pid ${dev.map((s) => s.pid).join(", ")}` +
+        `\n    next start  pid ${start.map((s) => s.pid).join(", ")}\n` +
+        `\n  next dev rewrites .next continuously, so the production server is serving` +
+        `\n  a build that is being replaced underneath it. Neither one crashes and the` +
+        `\n  sweep still completes — it just stops describing anything real.\n` +
+        `\n  Stop one of them, rebuild if it was the production one, and re-run.` +
+        `\n  --allow-concurrent-servers if you know they're unrelated.\n`
+    );
+    process.exit(1);
+  }
+}
 
 async function routes() {
   const res = await fetch(`${BASE}/sitemap.xml`);
@@ -70,12 +187,37 @@ async function routes() {
   return [...new Set(paths)].sort();
 }
 
-const list = await routes();
+const all = await routes();
+const list = all.filter(selected);
+
+// An empty selection exits non-zero. Falling through would audit nothing and
+// print "no clipped text, no overlap" — a mistyped prefix reading as a pass.
+if (list.length === 0) {
+  console.error(
+    `\n  --routes ${ROUTE_FILTERS.join(", ")} matched none of the ${all.length} routes in the sitemap.\n\n` +
+      all.map((r) => `    ${r}`).join("\n") +
+      "\n"
+  );
+  process.exit(1);
+}
+
 console.log(
-  `${list.length} route(s) from ${BASE}/sitemap.xml × ${WIDTHS.join(", ")}px\n`
+  ROUTE_FILTERS.length > 0
+    ? `${list.length} of ${all.length} route(s) matching ${ROUTE_FILTERS.join(", ")} × ${WIDTHS.join(", ")}px\n`
+    : `${list.length} route(s) from ${BASE}/sitemap.xml × ${WIDTHS.join(", ")}px\n`
 );
 
-const chrome = await launch();
+// Every way launch() fails is a condition the person running this can fix —
+// a stale browser on the port, or Chrome not installed where cdp.mjs looks.
+// Printed as the sentence it is, rather than as a stack trace through a
+// protocol driver that has nothing to do with the problem.
+let chrome;
+try {
+  chrome = await launch();
+} catch (error) {
+  console.error(`\n  ${error.message}`);
+  process.exit(1);
+}
 let page = await chrome.newPage();
 await page.init();
 

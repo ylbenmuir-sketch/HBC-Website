@@ -53,16 +53,66 @@ npm run check:answers        # assistant answers: shape, guardrails, grounding
 npm run check:layout         # clipped text / overlap / overflow, every route
 ```
 
+### Never edit source, or start a second server, while a check is running
+
+Two failure modes that cost real time, both silent — neither one fails the
+check, they just make its result describe nothing:
+
+- **Don't edit source while `check:layout` is running.** It reads a live
+  server. Any edit mid-sweep means the routes audited before the edit and the
+  ones after it came from different code, and the summary line covers both
+  without distinguishing them. Let it finish, or kill it and re-run.
+- **Never run `npm run dev` while `npm start` is serving the same build.** They
+  share one `.next`, and `next dev` rewrites it continuously — so the
+  production server ends up serving a directory that was replaced underneath
+  it. Both keep answering; nothing errors. `check:layout` now refuses to start
+  in this state (see below), but the hazard is broader than that one check: any
+  verification against a production server is void once a dev server has
+  touched the same `.next`.
+
+The general shape: these two mistakes invalidate results rather than failing
+loudly, so nothing tells you afterwards. Sequence the work instead — finish
+editing, then verify.
+
 ### `npm run check:layout`
 
 ```bash
 npm run dev
 CHECK_BASE=http://localhost:3000 npm run check:layout
+CHECK_BASE=http://localhost:3000 npm run check:layout -- --routes /locations
+CHECK_BASE=http://localhost:3000 npm run check:layout -- --routes /locations,/faq --widths 320,390
 ```
 
 Drives headless Chrome over every route in the running server's own sitemap at
 320 / 390 / 414 / 834px and reports clipped text, overlapping text, and
 anything past the right edge. Needs Google Chrome installed; no npm dependency.
+
+**Scope it to what changed.** A full sweep is the expensive check in this repo
+by an order of magnitude — minutes, where every other check is seconds — and
+most changes touch two or three routes. `--routes` takes comma-separated path
+prefixes; a prefix covers the route itself and everything under it, so
+`--routes /locations` tests `/locations` and all three location pages, four
+routes instead of twenty-six. `--widths` narrows the other axis. A filter that
+matches nothing exits non-zero rather than reporting an empty pass. Sweep
+everything before shipping.
+
+**When it's worth running at all.** Gate it on one question: did the DOM change,
+or did a string in a width-constrained container (hero fact, card meta, nav
+item, button label) get *longer*? If neither, skip it — `tsc`, `lint`,
+`check:index` and `check:answers -- --retrieval` together take about forty
+seconds and cover the rest.
+
+**Two preflights**, both for mistakes that were otherwise silent:
+
+- A headless Chrome already on the debugging port means a previous run was
+  killed before it could close. The port is fixed, so this run would attach to
+  that browser rather than the one it launches. It refuses, and prints the
+  `pkill` line. Chrome and its profile directory are now also cleaned up on
+  `SIGINT`/`SIGTERM`/`SIGHUP`, not just on the happy path, so this should stop
+  happening.
+- A `next dev` and a `next start` both running against this project's `.next`
+  is refused for the reason above. `--allow-concurrent-servers` overrides it if
+  they're genuinely unrelated.
 
 It exists because the phase 9 audit asked
 `document.documentElement.scrollWidth` and reported every page clean while text
@@ -73,9 +123,10 @@ against **the box allowed to contain it** (the nearest clipping ancestor's
 padding box). Read the header of `scripts/check-layout.mjs` for what it
 deliberately does not report, and why.
 
-Under `npm run dev` it sweeps 34 routes; a production build serves 25, because
+Under `npm run dev` it sweeps 35 routes; a production build serves 26, because
 draft team profiles and draft articles are gated out of both the sitemap and
-the pages themselves. Audit dev to cover the drafts.
+the pages themselves. Audit dev to cover the drafts — but only when a change
+has draft-gated branches, which is rarer than it sounds.
 
 The site runs without `.env.local` — every page renders; only the contact-form
 submission requires Supabase credentials.
