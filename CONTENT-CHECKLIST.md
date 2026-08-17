@@ -51,8 +51,10 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [x] Insurance & HSA/FSA (`INSURANCE_POLICY`) — self-pay, HSA/FSA accepted,
       superbill on request. Confirmed by Ben, verbatim; do not reword.
 - [x] Practitioner training (`TRAINING_CLAIM`) — OchsLabs certification plus
-      three months in-house. Confirmed by Ben, verbatim; **no superlative or
-      ranking claim** is to be added to it.
+      in-house certification over three months. Confirmed by Ben, verbatim;
+      **no superlative or ranking claim** is to be added to it. Two
+      certifications, and the word appears twice on purpose: the in-house step
+      is a certification in its own right, not a training period before one.
 - [x] **Session count disagreement — resolved.** `TRAINING_CLAIM` briefly said
       "more than 150,000 sessions" (written in error) against `STAT_SESSIONS`'s
       "140,000+", with `/about` rendering both. Fixed by removing the figure
@@ -91,8 +93,24 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
       these, so no total is typed anywhere and the band cannot drift from the
       pages it adds up. Franklin has none and renders none.
 - [ ] Link the live Google profiles — the bands name Google ("Read them
-      unfiltered on Google") and link nowhere. Needs each center's Google
-      Business Profile review URL. Copy-only change; no figure depends on it.
+      unfiltered on Google") and link nowhere. **Blocked on a usable read
+      link, not on a decision.** Ben supplied two `share.google` shorteners;
+      both resolve to a Google *Search* results page for the business
+      (`/search?…&q=Harmonized+Brain+Centers+-+Nashville&kgmid=/g/11cs29xsgj`
+      and `…kgmid=/g/11l68g9yns`) — a knowledge panel, not a review listing —
+      and the resolved URLs carry per-session junk (`sxsrf` with a timestamp,
+      `sca_esv`, `biw`/`bih` viewport dimensions, `client`, `utm_source`) that
+      must not be hardcoded into a page. Neither opens a write dialog.
+      Candidates that resolve clean and token-free, both HTTP 200 and
+      unverified visually because Maps renders client-side:
+      `https://www.google.com/maps?cid=690359003920868215` (Nashville) and
+      `…cid=978389547119317468` (Murfreesboro) for the profile, or the same
+      CIDs' `data=!4m6!3m5!1s…!9m1!1b1` form for the reviews tab. CIDs were
+      read out of Ben's own `g.page` links, so they are the right businesses.
+      Pick one form, click both, then wire.
+- [x] Google "write a review" links (`reviewWriteUrl`, `lib/locations.ts`) —
+      stored per center, rendered nowhere. Post-visit follow-up only; see the
+      field's own note for why they stay off the public site.
 - [ ] **Do not add `AggregateRating` to the JSON-LD.** Deliberate, not an
       oversight. Self-serving review markup on the reviewed business's own
       site is a manual-action risk, and these figures are hand-entered rather

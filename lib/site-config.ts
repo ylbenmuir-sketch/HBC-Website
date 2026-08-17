@@ -506,10 +506,20 @@ export const INSURANCE_POLICY =
 
 /**
  * Practitioner training, in Ben's words. It names a third party (OchsLabs) and
- * a training period, so it is a claim about the practice that has to stay
+ * a certification period, so it is a claim about the practice that has to stay
  * exactly as approved; do not tighten it for rhythm. Deliberately carries no
  * ranking or superlative — Ben's instruction, and the same discipline
  * BRAIN_MAP_CLAIM is held to below.
+ *
+ * **"Certified" twice is deliberate — do not vary it for rhythm.** The
+ * sentence used to read "then trained in-house for three months", and Ben
+ * confirmed that the in-house step is a certification in its own right and not
+ * a training period that precedes one. Two certifications is the fact: one
+ * from the company that created LENS, one from Harmonized. Swapping the second
+ * back to "trained" to avoid the repetition would understate the claim, which
+ * is the direction this file is normally careful to err in — but understating
+ * a credential a practitioner actually holds is its own kind of wrong, and
+ * this is the wording that was approved.
  *
  * **The last sentence names no number, on purpose.** It first read "More than
  * 150,000 sessions have shaped how we train", which contradicted
@@ -523,7 +533,7 @@ export const INSURANCE_POLICY =
  */
 export const TRAINING_CLAIM =
   "Every Harmonized practitioner is certified through OchsLabs, the company " +
-  "that created LENS, then trained in-house for three months before seeing " +
+  "that created LENS, then certified in-house over three months before seeing " +
   "clients on their own. Every session we’ve delivered has shaped how we train.";
 
 /**

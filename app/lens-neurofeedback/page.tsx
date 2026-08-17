@@ -546,8 +546,8 @@ export default function LensNeurofeedbackPage() {
       )}
 
       {/* §8 — who delivers it. TRAINING_CLAIM verbatim: it names a third party
-          (OchsLabs) and a training period, so it stays exactly as approved and
-          is not tightened for rhythm. The proof band carries the session count
+          (OchsLabs) and a certification period, so it stays exactly as approved
+          and is not tightened for rhythm. The proof band carries the session count
           and the year; TRAINING_CLAIM's closing sentence names the count's
           purpose without restating the figure, which is why the two can sit on
           one page without disagreeing. */}
@@ -556,9 +556,12 @@ export default function LensNeurofeedbackPage() {
           <div className="rv">
             <div className="eyebrow">Who delivers it</div>
             {/* "Certified through", not "trained by": TRAINING_CLAIM says
-                practitioners are certified *through* OchsLabs and then trained
-                in-house. "Trained by the people who created LENS" implies
-                OchsLabs staff do the training, which the claim does not say. */}
+                practitioners are certified *through* OchsLabs and then
+                certified again in-house. "Trained by the people who created
+                LENS" implies OchsLabs staff do the training, which the claim
+                does not say. The H2 names the OchsLabs half only — the second
+                certification is Harmonized's own, and a heading claiming both
+                would be the sentence below it, twice. */}
             <h2>Certified through the company that created LENS.</h2>
             <p>{TRAINING_CLAIM}</p>
             <div className="hero-ctas" style={{ marginTop: 30 }}>

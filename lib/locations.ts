@@ -105,6 +105,25 @@ export type Location = {
    * "0 reviews" is a figure a reader weighs; nothing is the honest render.
    */
   reviewCount: number | null;
+  /**
+   * The center's Google "write a review" link. **Not rendered anywhere, and
+   * not to be rendered on a public page.**
+   *
+   * Recorded here for post-visit follow-up — the message a practitioner sends
+   * someone who has just finished a course of sessions — because that link is
+   * per center and this file is where per-center facts live. Kept out of the
+   * site itself deliberately: a public "leave us a review" button next to a
+   * 5.0 average solicits from an audience that has already been shown the
+   * rating, which is the shape of review gating even when nothing is filtered.
+   *
+   * Verified as write links, not read links: both redirect to a Maps URL
+   * carrying `!12e1` and `laa=nmx-review-solicitation-ia2` — Google's
+   * open-the-review-dialog parameters. So this must never be wired to "Read
+   * them unfiltered on Google", which is a read affordance; a visitor who
+   * clicked it expecting to read reviews would land on a form asking them to
+   * write one about a service they may not have had.
+   */
+  reviewWriteUrl: string | null;
   phone: string;
   /** Card meta extras (locations index). */
   cardExtra: string;
@@ -278,6 +297,8 @@ export const locations: Location[] = [
     },
     /** Confirmed by Ben — 144 reviews, none rated below five. */
     reviewCount: 144,
+    /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
+    reviewWriteUrl: "https://g.page/r/CXcjMjzbpZQJEBM/review",
     phone: PHONE_DISPLAY,
     cardExtra: "Private lot on site, free for clients",
     practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
@@ -436,6 +457,8 @@ export const locations: Location[] = [
      * Fifteen unbroken five-star reviews is a strong fact on its own terms.
      */
     reviewCount: 15,
+    /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
+    reviewWriteUrl: "https://g.page/r/CdyRAAAc8JMNEBM/review",
     phone: PHONE_DISPLAY,
     cardExtra: "Private lot on site, free for clients",
     practitioners: ["[Name]", "[Name]"],
@@ -574,6 +597,8 @@ export const locations: Location[] = [
     hours: null,
     /** No reviews: the center has no clients yet. See `reviewCount` on the type. */
     reviewCount: null,
+    /** No profile to review yet — the center has not opened. */
+    reviewWriteUrl: null,
     phone: PHONE_DISPLAY,
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitioners: [],
