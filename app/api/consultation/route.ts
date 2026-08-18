@@ -162,8 +162,8 @@ export async function POST(request: Request) {
   // must not read like one.
   //
   // The guide itself is not sent from here, and nothing is pending on this
-  // line. The visitor gets the PDF as a download in the success state of
-  // components/GuideCta.tsx — a static file, so delivery has no provider to
+  // line. The visitor gets the guide in the success state of
+  // components/GuideCta.tsx — static files, so delivery has no provider to
   // fail and no key to be missing. An emailed copy could be added over the
   // same Resend path, but only once the sending domain is verified; see the
   // header of lib/lead-notification.ts for why that is not a detail.

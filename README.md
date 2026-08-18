@@ -180,15 +180,33 @@ like a callback, so nobody phones someone who only wanted a PDF.
 
 ### The guide, and how it actually reaches her
 
-The guide is **The Ten-Minute Reset** — title, subtitle, file path, and
-download filename all live in `lib/site-config.ts` (`GUIDE_*`), because the
-CTA and the notification subject both say the title and previously drifted
+The guide is **Why regulation fails** — title, subtitle, both file paths, and
+the download filename all live in `lib/site-config.ts` (`GUIDE_*`), because
+the CTA and the notification subject both say the title and previously drifted
 onto a placeholder name that outlived the guide it described.
 
-**Delivery is the download.** `public/guides/ten-minute-reset.pdf` is a static
-file, and `components/GuideCta.tsx` hands it over in its success state the
-moment the row saves. No provider, no key, no verified domain — nothing that
-can be half-configured, which is the whole point.
+**Delivery is reading it.** The guide ships in two forms, both static files
+under `public/guides/`:
+
+| File | Role |
+| --- | --- |
+| `why-regulation-fails.html` | The one that leads. A standalone page — own markup, own inline styles, no Next route — opened in a new tab from the CTA's success state. |
+| `why-regulation-fails.pdf` | Offered second, for keeping and printing. |
+
+`components/GuideCta.tsx` hands both over the moment the row saves. No
+provider, no key, no verified domain — nothing that can be half-configured,
+which is the whole point. The HTML leads because most of these submits happen
+on a phone, where a page opens and is read while a download becomes a file to
+find later.
+
+**The HTML is outside the app.** It is not a route, so it gets no layout, no
+header, no breadcrumbs, and no `Metadata` export; it carries its own `<title>`,
+description, and disclaimer. It is absent from `app/sitemap.ts`, and therefore
+also from `npm run check:layout`, which enumerates routes by fetching
+`/sitemap.xml`. Two consequences worth knowing: nothing in the build validates
+its markup or its links, and it hardcodes the PDF at
+`/guides/why-regulation-fails.pdf` in two places — so renaming either file
+means editing the HTML in the same commit.
 
 **No email carries the guide, and none should until DNS is done.** Resend is
 still on its shared test sender (`onboarding@resend.dev`), which delivers only

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   GUIDE_DOWNLOAD_NAME,
+  GUIDE_HTML_PATH,
   GUIDE_PATH,
   GUIDE_SUBTITLE,
   GUIDE_TITLE,
@@ -20,18 +21,23 @@ import {
  *
  * Appears on /, /resources, and every /concerns/[slug] page.
  *
- * ## Delivery is the download, not an email
+ * ## Delivery is reading it, not an email
  *
- * The guide is a static file in `public/`, and the success state hands it
- * over on the spot. That is deliberate and not a stopgap ranking below a
- * "real" email send: the download needs no provider, no API key, and no
- * verified sending domain, so it cannot half-work. Emailing her a copy needs
- * DNS records this project does not have yet (see lib/lead-notification.ts),
- * and a form that trades an address for a file we cannot send is a form that
- * takes something and gives nothing back.
+ * The guide is two static files in `public/`, and the success state opens the
+ * readable one on the spot. That is deliberate and not a stopgap ranking
+ * below a "real" email send: static files need no provider, no API key, and
+ * no verified sending domain, so delivery cannot half-work. Emailing her a
+ * copy needs DNS records this project does not have yet (see
+ * lib/lead-notification.ts), and a form that trades an address for something
+ * we cannot hand over is a form that takes and gives nothing back.
+ *
+ * The HTML leads and the PDF follows, because most of these submits happen on
+ * a phone. A web page opens and is readable; a downloaded PDF becomes a file
+ * in a folder to be found later, which is a different and worse promise. The
+ * PDF stays for the parent who wants to keep or print it.
  *
  * So nothing here promises an email. If the emailed copy is added later it is
- * an extra on top of a download that already worked — and this copy changes
+ * an extra on top of delivery that already worked — and this copy changes
  * only once that send actually delivers to her, not when the code exists.
  */
 export default function GuideCta() {
@@ -84,26 +90,44 @@ export default function GuideCta() {
           <h2>
             Get <em className="sage">{GUIDE_TITLE}</em>.
           </h2>
-          <p className="sub">{GUIDE_SUBTITLE} &mdash; what to do in the ten
-            minutes when everything has already gone sideways.</p>
+          <p className="sub">{GUIDE_SUBTITLE} &mdash; in adults and in children.</p>
         </div>
 
         {status === "success" ? (
-          /* The file is right here. `download` keeps her on the page and
-             writes a self-explanatory name into her downloads, rather than
-             navigating away into the browser's PDF viewer. */
+          /* Both files are already here, so the confirmation is the delivery.
+             Reading leads: the HTML opens in a new tab rather than replacing
+             the page she was on, since the guide is a standalone document
+             with no way back into the site's nav. The PDF stays second, for
+             keeping and printing, and `download` names it for her folder
+             instead of dropping her into a viewer. */
           <div className="note-sage rv" role="status">
-            <p style={{ marginBottom: 18 }}>
-              Thank you &mdash; here it is. The download starts when you tap
-              the button.
+            <p style={{ marginBottom: 20 }}>
+              Thank you &mdash; you can read it right now.
             </p>
-            <a
-              className="btn btn-outline"
-              href={GUIDE_PATH}
-              download={GUIDE_DOWNLOAD_NAME}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 20,
+              }}
             >
-              Download the guide (PDF)
-            </a>
+              <a
+                className="btn btn-primary"
+                href={GUIDE_HTML_PATH}
+                target="_blank"
+                rel="noopener"
+              >
+                Read the guide
+              </a>
+              <a
+                className="btn btn-ghost"
+                href={GUIDE_PATH}
+                download={GUIDE_DOWNLOAD_NAME}
+              >
+                Or save the PDF
+              </a>
+            </div>
           </div>
         ) : (
           <form className="form rv" onSubmit={handleSubmit} noValidate>

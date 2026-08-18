@@ -103,31 +103,44 @@ export const TRISHA_APPROVAL_TAG =
 /* ------------------------------------------------------------------ */
 
 /**
- * The downloadable guide behind `components/GuideCta.tsx`.
+ * The guide behind `components/GuideCta.tsx`.
  *
  * Named here rather than in the component because two unrelated places say
  * the title — the CTA a visitor reads, and the subject line of the signup
  * notification in `lib/lead-notification.ts` — and they drifted apart once
- * already: both shipped a placeholder title ("The Parent's Guide to Homework
- * Battles") that outlived the guide it named. One constant, one title.
+ * already: both shipped a placeholder title that outlived the guide it named.
+ * One constant, one title.
  */
-export const GUIDE_TITLE = "The Ten-Minute Reset";
-export const GUIDE_SUBTITLE = "A practical guide for the hard moments";
+export const GUIDE_TITLE = "Why regulation fails";
+export const GUIDE_SUBTITLE =
+  "What's happening underneath attention problems, emotional reactivity, brain fog and poor sleep";
 
 /**
- * Served straight from `public/` — a static file, no route, no signed URL.
- * That is what makes delivery work today: the download needs no provider, no
- * key, and no verified sending domain, so a signup is never taken against a
- * file we cannot hand over.
+ * The guide ships in two forms, and the HTML is the primary one.
+ *
+ * `GUIDE_HTML_PATH` is a standalone static page — its own markup, its own
+ * inline styles, no Next route behind it. That is why it can be opened and
+ * read on a phone in the ten seconds after a form submit, which a PDF cannot
+ * honestly claim. `GUIDE_PATH` is the same guide as a file to keep.
+ *
+ * Both are served straight from `public/`, which is what makes delivery work
+ * with nothing configured: no provider, no key, no verified sending domain,
+ * so a signup is never taken against something we cannot hand over.
+ *
+ * The HTML hardcodes the PDF at its literal path in two places (a header
+ * "save a copy" link and a button in the closing card). Renaming either file
+ * means editing `public/guides/why-regulation-fails.html` in the same commit
+ * — it is a static file, so nothing here or in the build will catch it.
  */
-export const GUIDE_PATH = "/guides/ten-minute-reset.pdf";
+export const GUIDE_HTML_PATH = "/guides/why-regulation-fails.html";
+export const GUIDE_PATH = "/guides/why-regulation-fails.pdf";
 
 /**
  * What the file is called once it lands in her Downloads folder. The repo
  * path stays lowercase-hyphenated like every other served asset; this is the
  * name a person reads a week later, so it says whose guide it is.
  */
-export const GUIDE_DOWNLOAD_NAME = "Harmonized-Ten-Minute-Reset.pdf";
+export const GUIDE_DOWNLOAD_NAME = "Harmonized-Why-Regulation-Fails.pdf";
 
 /* ------------------------------------------------------------------ */
 /* Founder                                                             */
