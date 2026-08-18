@@ -150,7 +150,7 @@ export default async function ConcernPage({
       </section>
 
       <FinalCTA />
-      <GuideCta />
+      <GuideCta headingLead={`${concern.guideHeading} Read`} />
     </>
   );
 }

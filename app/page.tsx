@@ -880,7 +880,7 @@ export default function HomePage() {
       </section>
 
       <FinalCTA />
-      <GuideCta />
+      <GuideCta headingLead="Four problems, one explanation. Read" />
       <MobileCtaBar />
     </div>
   );

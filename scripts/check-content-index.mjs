@@ -33,6 +33,25 @@
  * Add a tag, remove one, or rename one, and the check fails until somebody says
  * in that table whether the copy beside it is now excluded or still safe.
  *
+ * ## 3. The static guide
+ *
+ * `public/guides/why-regulation-fails.html` is a hand-authored file served
+ * straight from `public/`. It has no route, so `next build` never compiles
+ * it, `tsc` never sees it, and `check:layout` never loads it — nothing in
+ * this repo reads that file except this check.
+ *
+ * It hardcodes four things that also live in `lib/site-config.ts`: the phone
+ * number twice (`tel:` href and display text), and the guide's own PDF path
+ * twice. Those are copies, not references, and a copy with nothing watching
+ * it is how the site ends up publishing a disconnected number in a document
+ * people keep. So the values are asserted against their source here.
+ *
+ * It also asserts the guide links to the site with root-relative hrefs. It
+ * shipped once with absolute `https://harmonizedbraincenterstn.com` links,
+ * which work in production and send every preview and local visitor to the
+ * live site instead — a bug that tests clean everywhere except where you
+ * would notice it.
+ *
  * Runs on plain Node — site-copy.ts holds no runtime imports, so Node's
  * built-in TypeScript stripping can read it without a build step. Keep it that
  * way: that is why the inventory names tags as strings instead of importing
@@ -100,6 +119,8 @@ if (dumpIndex !== -1) {
 
 const { MIRRORED_PAGES, COPY_TOKENS, CONFIRM_TAG_NAMES, CONFIRM_TAG_INVENTORY } =
   await import("../lib/chat/site-copy.ts");
+const { PHONE_TEL, PHONE_DISPLAY, GUIDE_PATH, GUIDE_HTML_PATH, SITE_URL } =
+  await import("../lib/site-config.ts");
 
 const failures = [];
 let checked = 0;
@@ -199,6 +220,69 @@ for (const [sourceFile, declared] of Object.entries(CONFIRM_TAG_INVENTORY)) {
   }
 }
 
+/* ---------------------------------------------------------------- */
+/* 3. The static guide                                                */
+/* ---------------------------------------------------------------- */
+
+const guideFile = `public${GUIDE_HTML_PATH}`;
+let guideChecks = 0;
+
+function guideMustContain(html, needle, what) {
+  guideChecks += 1;
+  if (!html.includes(needle)) {
+    failures.push(
+      `${guideFile}\n    no longer contains ${what}: ${needle}\n` +
+        `    It is a static file — nothing else in the build reads it. Update the\n` +
+        `    HTML by hand to match lib/site-config.ts, in the same commit.`
+    );
+  }
+}
+
+let guideHtml = null;
+try {
+  guideHtml = readFileSync(join(ROOT, guideFile), "utf8");
+} catch {
+  failures.push(
+    `${guideFile}\n    is missing, but lib/site-config.ts points GUIDE_HTML_PATH at it\n` +
+      `    Either restore the file or retire the GUIDE_* block and the CTA with it.`
+  );
+}
+
+if (guideHtml !== null) {
+  guideMustContain(guideHtml, `href="tel:${PHONE_TEL}"`, "the site phone number");
+  guideMustContain(guideHtml, PHONE_DISPLAY, "the displayed phone number");
+  guideMustContain(guideHtml, `href="${GUIDE_PATH}"`, "its own PDF link");
+
+  // The PDF the guide offers has to actually be there. Two links point at it
+  // and neither is reachable from any route, so a rename breaks a download
+  // that nothing else would exercise.
+  guideChecks += 1;
+  try {
+    readFileSync(join(ROOT, `public${GUIDE_PATH}`));
+  } catch {
+    failures.push(
+      `public${GUIDE_PATH}\n    is linked twice from ${guideFile} but does not exist\n` +
+        `    Restore it, or rename it in site-config AND in the guide's markup.`
+    );
+  }
+
+  // Root-relative or off-site, never our own domain spelled out: an absolute
+  // self-link works in production and silently leaves every preview.
+  guideChecks += 1;
+  const host = new URL(SITE_URL).host.replace(/^www\./, "");
+  const absolute = [
+    ...guideHtml.matchAll(new RegExp(`href="https?://(?:www\\.)?${host}[^"]*"`, "g")),
+  ].map((m) => m[0]);
+  if (absolute.length > 0) {
+    failures.push(
+      `${guideFile}\n    links to this site absolutely ${absolute.length} time(s):\n` +
+        absolute.map((a) => `      ${a}`).join("\n") +
+        `\n    Make them root-relative (/contact, /first-visit, …). Absolute self-links\n` +
+        `    resolve in production and send every preview visitor to the live site.`
+    );
+  }
+}
+
 const taggedPages = Object.keys(CONFIRM_TAG_INVENTORY).length;
 const taggedCount = Object.values(CONFIRM_TAG_INVENTORY).reduce(
   (n, tags) => n + Object.keys(tags).length,
@@ -218,5 +302,6 @@ if (failures.length > 0) {
 
 console.log(
   `✓ content index: ${checked} mirrored passage(s) match their source pages\n` +
-    `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)`
+    `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)\n` +
+    `✓ static guide: ${guideChecks} site-config value(s) still match ${guideFile}`
 );

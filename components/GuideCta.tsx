@@ -21,6 +21,19 @@ import {
  *
  * Appears on /, /resources, and every /concerns/[slug] page.
  *
+ * ## The heading is per-page
+ *
+ * `headingLead` is everything in the H2 before the guide's italicized title;
+ * the component supplies the title and the full stop, so the guide cannot be
+ * framed on a page without being named on it. Ten pages carried one identical
+ * H2 until this prop existed, which the SEO audit flagged as cross-page
+ * heading duplication — the same guide now gets introduced by whatever the
+ * page it sits on is about.
+ *
+ * Concern pages read their lead-in from `guideHeading` in lib/concerns.ts, so
+ * the copy lives in the content layer with the rest of the concern; `/` and
+ * `/resources` pass literals, having no such record to read from.
+ *
  * ## Delivery is reading it, not an email
  *
  * The guide is two static files in `public/`, and the success state opens the
@@ -40,7 +53,13 @@ import {
  * an extra on top of delivery that already worked — and this copy changes
  * only once that send actually delivers to her, not when the code exists.
  */
-export default function GuideCta() {
+export default function GuideCta({
+  /** Everything before the italic title, e.g. "Why calm doesn't hold. Read".
+   *  No trailing space or period — the component adds both. */
+  headingLead = "Get",
+}: {
+  headingLead?: string;
+}) {
   const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<
@@ -88,7 +107,7 @@ export default function GuideCta() {
         <div className="sec-head rv" style={{ marginBottom: 30 }}>
           <div className="eyebrow">Not ready to call?</div>
           <h2>
-            Get <em className="sage">{GUIDE_TITLE}</em>.
+            {headingLead} <em className="sage">{GUIDE_TITLE}</em>.
           </h2>
           <p className="sub">{GUIDE_SUBTITLE} &mdash; in adults and in children.</p>
         </div>

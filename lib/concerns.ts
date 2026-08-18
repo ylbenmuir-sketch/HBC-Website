@@ -74,6 +74,23 @@ export type Concern = {
    */
   metaTitle: string;
   metaDescription: string;
+  /**
+   * Lead-in for the GuideCta heading on this page, e.g. "Why calm doesn't
+   * hold." The component appends the guide's title, so this is the framing
+   * only — one sentence, ending in a period.
+   *
+   * Required, not optional. The same guide sits below the FinalCTA band on
+   * all eight of these pages plus `/` and `/resources`, and shipping one
+   * heading ten times was flagged in the SEO audit as cross-page duplication.
+   * A default would let the eleventh concern quietly rejoin the duplicate.
+   *
+   * Every lead-in is drawn from the guide's own sections, so none of them
+   * promises more than the guide delivers. Two are hedged deliberately:
+   * brain-fog does not say "isn't age" (a claim about cognitive change we
+   * don't get to make in a heading), and trauma stays descriptive rather
+   * than diagnostic.
+   */
+  guideHeading: string;
 };
 
 export const concerns: Concern[] = [
@@ -130,6 +147,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Anxiety & Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
+    guideHeading: "Why calm doesn't hold.",
   },
   {
     slug: "focus-adhd",
@@ -184,6 +202,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for ADHD & Focus",
     metaDescription:
       "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
+    guideHeading: "Why trying harder stops working.",
   },
   {
     slug: "sleep",
@@ -238,6 +257,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Sleep",
     metaDescription:
       "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
+    guideHeading: "Why eight hours isn't rest.",
   },
   {
     slug: "emotional-regulation",
@@ -292,6 +312,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Emotional Regulation",
     metaDescription:
       "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
+    guideHeading: "Why it isn't discipline.",
   },
   {
     slug: "brain-fog",
@@ -346,6 +367,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Brain Fog & Memory",
     metaDescription:
       "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
+    guideHeading: "Why the fog comes and goes.",
   },
   {
     slug: "stress-resilience",
@@ -400,6 +422,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Stress & Burnout",
     metaDescription:
       "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
+    guideHeading: "Why the same week lands differently.",
   },
   {
     slug: "children-school",
@@ -454,6 +477,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for School Struggles",
     metaDescription:
       "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
+    guideHeading: "Why school is the hard part.",
   },
   {
     slug: "trauma",
@@ -508,6 +532,7 @@ export const concerns: Concern[] = [
     metaTitle: "Neurofeedback for Trauma-Related Stress",
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
+    guideHeading: "Why the alarm stays on.",
   },
 ];
 

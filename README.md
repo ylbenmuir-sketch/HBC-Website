@@ -203,10 +203,36 @@ find later.
 header, no breadcrumbs, and no `Metadata` export; it carries its own `<title>`,
 description, and disclaimer. It is absent from `app/sitemap.ts`, and therefore
 also from `npm run check:layout`, which enumerates routes by fetching
-`/sitemap.xml`. Two consequences worth knowing: nothing in the build validates
-its markup or its links, and it hardcodes the PDF at
-`/guides/why-regulation-fails.pdf` in two places — so renaming either file
-means editing the HTML in the same commit.
+`/sitemap.xml`. `next build` never compiles it and `tsc` never sees it — so
+nothing validates its markup, and the values it duplicates from
+`lib/site-config.ts` are copies, not references.
+
+`npm run check:index` is the one thing that reads it (§3 of
+`scripts/check-content-index.mjs`). It asserts five things: the `tel:` href and
+the displayed phone both still match `PHONE_TEL`/`PHONE_DISPLAY`, the PDF link
+still matches `GUIDE_PATH`, that PDF actually exists on disk, and the guide
+links to the site **root-relatively**. That last one is a real regression, not
+a hypothetical: the guide shipped with absolute
+`https://harmonizedbraincenterstn.com` links, which resolve correctly in
+production and send every preview and localhost visitor off to the live site —
+a bug that tests clean everywhere except where you'd notice it.
+
+**Deferred: the guide is not in the sitemap, on purpose.** It is ~2,000 words
+with real heading structure, `robots: index, follow`, and its own title and
+description, and it targets queries no page on the site answers. It would
+plausibly rank. `robots.txt` already allows it and the CTA links to it, so
+Google will find it regardless; listing it only changes discovery speed. Three
+things to settle first, in order:
+
+1. **No canonical tag.** It covers ground adjacent to the `/resources`
+   articles. Indexing it alongside them is a decision to make deliberately,
+   not a side effect of adding a line to `sitemap.ts`.
+2. **`app/sitemap.ts` is written around Next routes** — a list of path strings
+   mapped to `MetadataRoute.Sitemap`. A `.html` suffix works but breaks that
+   assumption for the next person reading the file.
+3. **Listing it enrolls it in `check:layout`**, which is a genuine benefit —
+   and it is hand-authored CSS outside the design system, so budget for
+   fixing what the detectors find before it passes.
 
 **No email carries the guide, and none should until DNS is done.** Resend is
 still on its shared test sender (`onboarding@resend.dev`), which delivers only
@@ -249,6 +275,11 @@ Both warn in a normal production build and **throw** under
 unverified fact or a missing lead-notification setting. Unverified content only
 hides itself; missing config silently drops leads on the floor, which is why it
 fails the same gate.
+
+`npm run check:index` adds a third, outside the build: the static guide in
+`public/guides/` duplicates values from `lib/site-config.ts` and is compiled by
+nothing, so those copies are asserted against their source there. See "The
+guide, and how it actually reaches her" above.
 
 ## Content model
 
@@ -587,7 +618,10 @@ Also replace when assets exist:
   subordinate to the primary ask. It posts to the same API route — never
   build it a second system. Always *below* `FinalCTA`, never above it and
   never on `/contact`: a page whose job is the phone call must not offer a
-  PDF as an easier way out.
+  PDF as an easier way out. Its H2 is per-page (`headingLead`; concern pages
+  read `guideHeading` from `lib/concerns.ts`) — one guide, framed by whatever
+  the page it sits on is about. Don't reintroduce a shared default heading:
+  ten identical H2s is what the SEO audit flagged.
 - The Trisha Yearwood video (`https://www.youtube.com/shorts/fhmoa68_uHY`)
   has embedding disabled — it must stay a thumbnail linking out, never an
   iframe.

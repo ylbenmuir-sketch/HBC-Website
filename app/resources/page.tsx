@@ -70,7 +70,7 @@ export default function ResourcesPage() {
       </section>
 
       <FinalCTA />
-      <GuideCta />
+      <GuideCta headingLead="Start with" />
     </>
   );
 }
