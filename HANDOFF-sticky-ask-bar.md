@@ -8,6 +8,31 @@ onto one controller so they can never both be on screen.
 
 ---
 
+## 0. Second pass — what changed since you last looked
+
+Three things, in the order you asked for them.
+
+**1. A press now does different things depending on what pressed it.** Touch
+goes straight to the panel and the panel's composer takes the focus; a mouse
+puts a caret in the ask bar itself and keeps typing local until Enter. Decided
+per event from `pointerType`, with `(pointer: coarse)` as the fallback — a
+pointer question asked as one, never as a width. §5.1 below is rewritten;
+that judgement call is now resolved rather than open.
+
+**2. The composer placeholder is fixed, and I audited the rest.**
+`#a6adb4` → `var(--slate)`: **2.27:1 → 5.69:1**. Every piece of text and every
+placeholder in both the ask bar and the assistant panel now clears 4.5:1,
+measured in a browser rather than by eye. Two *non-text* things came back
+under 3:1 and I left both alone — see §7, they are yours to call.
+
+**3. The breakpoint sweep found one more real defect, in an image.** All three
+JS↔CSS width pairs agree, tested at both sides of each boundary. But
+`trisha.jpg` declared `sizes="220px"` while CSS takes it full-bleed below
+760px, so phones were fetching a 256px-wide source for a 390px slot. Fixed.
+Details in §8.
+
+---
+
 ## 1. Look at this first
 
 Run `NEXT_PUBLIC_FEATURE_ASSISTANT=true npm run dev` (it is already `true` in
@@ -23,10 +48,16 @@ your `.env.local`), then, in this order:
 2. **Desktop, any page.** Judge the hierarchy call. The bar is cream on cream
    with a sage mark and a sage arrow, and I think it sits below the hero CTA
    where it should — but that is a taste judgement and it is yours.
-3. **Tap the bar (anywhere on it, not just the field).** The panel should open
-   with the greeting and nothing else. Then Tab to the field from the keyboard,
-   type, and press Enter: the panel should open with what you typed already
-   posted as your first message.
+3. **Press the bar with a finger, then with a mouse.** They now do different
+   things on purpose, and this is the change most worth eyeballing:
+   - *Finger* (or Responsive mode in devtools, or a real phone): anywhere on
+     the bar opens the panel and the panel's composer already has the caret
+     and the keyboard. No caret ever appears in the bar itself.
+   - *Mouse*: clicking the bar — the cream either side of the field counts —
+     puts a caret in the bar. Type; nothing opens. Enter sends it and the
+     panel opens with your words already posted as the first message. The
+     arrow at the right end still sends, because it looks like it should.
+   - *Keyboard*: Tab to the field, type, Enter. Same as before, both ways.
 4. **Placeholder rotation.** Load a page cold — it must always start on "Does
    this actually work?" — then leave it four seconds. Hover it: it should stop.
 5. **The footer at 390px.** Scroll to the very bottom. The last line of the
@@ -105,8 +136,10 @@ post it twice.
 | --- | --- |
 | `app/layout.tsx` | Wraps the body in `BottomBarProvider`; mounts `BottomBarDock` last. |
 | `components/MobileCtaBar.tsx` | Reports to the controller instead of setting a body attribute nobody owned; portals its markup into the dock; reads the 760px breakpoint in JS so it cannot claim a footprint it does not have. Keeps its own scroll logic and its homepage-only scope. |
-| `components/SiteAssistant.tsx` | Consumes the open request and the prefill; reports `open` to the controller; launcher retired behind `SHOW_LEGACY_LAUNCHER`. |
-| `app/globals.css` | New "BOTTOM BAR DOCK" section at the end (~185 lines). Nothing above it was deleted. |
+| `components/SiteAssistant.tsx` | Consumes the open request and the prefill; reports `open` to the controller; launcher retired behind `SHOW_LEGACY_LAUNCHER`. **Second pass:** the composer's focus moved from a passive effect to a layout effect, so it lands inside the tap gesture and iOS actually raises the keyboard. |
+| `components/StickyAskBar.tsx` | **Second pass:** `onPress` splits touch from mouse (§5.1). |
+| `app/globals.css` | New "BOTTOM BAR DOCK" section at the end (~185 lines). Nothing above it was deleted. **Second pass:** `.assistant-compose input::placeholder` `#a6adb4` → `var(--slate)`. |
+| `app/page.tsx` | **Second pass:** `trisha.jpg` `sizes` corrected (§8). |
 | `README.md` | New "The bottom of the screen" section; component table updated. |
 
 **Deliberately not deleted:** the launcher button, its CSS
@@ -123,19 +156,46 @@ rule still works). Flip `SHOW_LEGACY_LAUNCHER` to `true` in
 Everything here I decided rather than asked. Ordered by how likely you are to
 want to change it.
 
-**1. Tapping the field opens the panel instead of letting you type in it.**
-The brief says "tapping anywhere on the bar opens the bot" and also "if the
-user typed text before opening, pass it through". Those only coexist one way:
-a *pointer* press anywhere — field included — opens the panel, and the typed
-path belongs to the keyboard (Tab in, type, Enter). So on a phone or with a
-mouse, the field is an affordance and the real typing happens in the panel,
-which focuses its own composer. The prefill still works and is still worth
-having: keyboard users get it, and so does anything that fills the field
-without a pointer. If you would rather a click placed a caret and only the
-chrome opened the panel, that is one handler in `StickyAskBar.tsx` — remove
-the `preventDefault` and move `open(false)` off the layer.
-*Side effect worth knowing:* because the press is prevented, dragging on the
-expanded bar does not scroll the page. Same as any fixed opaque bar.
+**1. A press is read by input device, not by screen size.** *(Rewritten this
+pass — the first version opened the panel for every pointer, which made the
+field an affordance a mouse could never type into.)*
+
+`StickyAskBar.onPress` asks one question — was this a finger? — and branches:
+
+| | what a press does | why |
+| --- | --- | --- |
+| **Touch / pen** | straight to the panel; this field never takes the caret | a finger has no caret and no keyboard of its own, so there is exactly one place worth putting focus, and it is the composer |
+| **Mouse on the strip** | focus this field, place a caret | the cream either side of the field *is* the field as far as anyone looking at it is concerned |
+| **Mouse on the field** | left entirely alone | so the caret lands where the click did |
+| **Mouse on the arrow** | send | it reads as "send" and has to keep meaning it |
+| **Keyboard** | untouched | Tab fires no pointer event; Enter sends |
+
+The question is answered from `event.pointerType` first, falling back to a
+`(pointer: coarse)` media query when the event will not say. `pointerType` is
+the better of the two and it is why it is first: on a touchscreen laptop the
+*primary* pointer is a mouse, so the media query answers "fine" for a press
+that was a finger — the event knows, and the device profile does not. A width
+breakpoint would have been wrong in both directions (a 1280px touchscreen, a
+390px browser window on a desktop), which is why there isn't one.
+
+A stylus is grouped with touch. It is precise, but it arrives with a
+touchscreen and no keyboard, so the composer is still where its owner wants
+the caret to end up. Say the word if you would rather pen behaved as fine.
+
+*Side effect worth knowing:* on touch the press is prevented, so dragging on
+the expanded bar does not scroll the page — same as any fixed opaque bar. On
+a mouse nothing is prevented over the field itself, so text selection inside
+it behaves normally.
+
+**1b. The panel's composer focus is now a layout effect, and that is
+load-bearing on iOS.** Safari only raises the on-screen keyboard for a
+`focus()` that happens inside a user gesture. React flushes a discrete event's
+state update synchronously, so a layout effect still runs inside the
+pointerdown that opened the panel, while a passive effect is scheduled for
+after paint and lands outside it. With the passive version the caret appeared
+and the keyboard did not — precisely the half-working state a bar that looks
+like a text field must not produce. `useFocusEffect` in `SiteAssistant.tsx`
+swaps to `useEffect` on the server so SSR does not warn.
 
 **2. The bar does not hide at the footer.** The old launcher parked itself as
 the footer arrived, because a corner pill sat on the disclaimer. The brief
@@ -156,12 +216,10 @@ mark and arrow / `--sage-soft` arrow disc / `--line` borders. No new colour
 values anywhere. If you want the ring off gold too, it is one declaration in
 the `.askbar:focus-within` rule.
 
-**4. Placeholder colour is `--slate`, not the assistant composer's `#a6adb4`.**
-The existing composer placeholder is about 2:1 against its field and would
-have failed the 4.5:1 requirement outright. `--slate` on `--ivory` measures
-**5.36:1** (asserted in the self-check, not eyeballed). I did **not** change
-the assistant composer's own placeholder — out of scope for this branch, but
-it is a real contrast bug and worth its own commit.
+**4. Placeholder colour is `--slate` in both fields now.** The ask bar's is
+**5.36:1** on `--ivory`; the assistant composer's, fixed this pass, is
+**5.69:1** on white. They were deliberately made the same token so the two
+fields read as the same field. Full audit in §7.
 
 **5. The rotation pauses on hover and focus, and stops permanently on typing —
 but it also pauses while the call bar has the footprint.** Nothing is
@@ -205,10 +263,11 @@ composer would — through the same `lib/chat/safety.ts` gate.
 
 ## 6. Verification
 
-**Green:** `npm run lint`, `npx tsc --noEmit`, `npm run build`.
+**Green:** `npm run lint`, `npx tsc --noEmit`, `npm run build`,
+`npm run check:index`.
 
-**Behavioural self-check — 108 assertions, 0 failures.** Written for this
-branch, driven through the repo's own CDP harness
+**Behavioural self-check — 132 assertions, 0 failures** (was 108; the pointer
+matrix added 24). Driven through the repo's own CDP harness
 (`scripts/layout/cdp.mjs`), at 390 / 768 / 1280 across `/`, `/faq` and
 `/first-visit`. It covers: real `<input>` with an aria-label and a rounded
 field; first placeholder on every cold load; rotation at 4s; pause on hover
@@ -219,25 +278,152 @@ it collapses; full-bleed and flush to the bottom; no horizontal overflow;
 measured placeholder contrast; the CTA bar taking the footprint and the ask
 bar yielding with *both bars measured at the same rect*; never both visible;
 the ask bar returning on scroll-up; footer copy clearing the dock at page end;
-tap-to-open with no prefill; Enter-to-open with the typed text arriving as the
-first visitor message; the dock retiring while the panel is open; and reduced
-motion producing no rotation and a 0s transition.
+the dock retiring while the panel is open; and reduced motion producing no
+rotation and a 0s transition.
 
-Two of the failures it found were real bugs in my code (the 760/1060
-breakpoint, the scroll epsilon), both fixed above. The script is not committed
-— it is throwaway, and it stubs `/api/chat` so no model calls or Supabase
-writes happen. Say the word if you want it in `scripts/`.
+**The pointer matrix runs at every width**, with `pointerType` set explicitly
+on each event so the same eight assertions run at 390, 768 and 1280 — this is
+a device question, so the test had to be one too, not a width sample. Per
+width: touch opens the panel · touch lands focus in the panel's composer ·
+touch opens with no prefill when nothing was typed · mouse on the strip does
+*not* open · mouse on the strip puts the caret in the bar · typing after a
+mouse click stays local · Enter after a mouse click opens · the mouse-typed
+text arrives as the first visitor message · mouse on the field itself does not
+open · mouse on the arrow does.
+
+**Contrast audit — 14 of 14 text and placeholder colours pass**, in four panel
+states. §7.
+
+**Breakpoint audit — 6 of 6**, each pair asserted at both sides of its
+boundary. §8.
+
+Three of the failures these found were real bugs in my code — the 760/1060
+breakpoint, the scroll epsilon, and the `sizes` attribute — all fixed. None of
+the three scripts is committed: they are throwaway, and they stub `/api/chat`
+so no model calls or Supabase writes happen. Say the word if you want them in
+`scripts/`.
 
 **Repo layout audit:** `npm run check:layout -- --widths 320,390,768,834,1280`
-across all 35 routes. Result is in the PR description.
+across all 35 routes — 175 combinations, clean.
 
-**Not run:** `npm run check:chat` and `npm run check:answers`. Both make live
-model calls, and `check:chat` inserts real rows and sends real notification
-mail — nothing this branch changes touches the answering path.
+**Not run, deliberately:** `npm run check:chat` and `npm run check:answers`.
+Both hit live models, and `check:chat` inserts real Supabase rows and sends
+real notification mail. Nothing on this branch touches the answering path.
 
 ---
 
-## 7. Constraints
+## 7. Contrast audit — ask bar + assistant panel
+
+Measured in a browser, not by eye: every element in either surface, walked in
+four states (bar at rest, panel on the greeting, mid-conversation, and the
+`ended` panel), with each colour resolved against the background it is
+actually painted on and checked against the threshold WCAG asks for at that
+size and weight.
+
+### Fixed
+
+| What | Was | Now |
+| --- | --- | --- |
+| `.assistant-compose input::placeholder` | `#a6adb4` on white — **2.27:1** | `var(--slate)` — **5.69:1** |
+
+That was the only failing piece of type in either surface. `#a6adb4` is a grey
+that arrived with the widget and belongs to no palette here; `--slate` is the
+site's own secondary-text token and is what the ask bar's placeholder already
+used, so the two fields now match.
+
+### Everything else, passing
+
+`.askbar-input::placeholder` 5.36:1 · `.assistant-sub` 4.92:1 ·
+`.assistant-ended` 4.92:1 · `.assistant-chip` 12.33:1 · `.assistant-title`
+12.47:1 · assistant bubbles 10.81:1 · visitor bubbles 13.60:1 · inline links
+11.91:1 / 12.47:1 · Send button 13.60:1. **14 of 14 text and placeholder
+colours clear 4.5:1.**
+
+### Found, not fixed — both non-text, both yours to call
+
+These are graphics, not type, so the bar is 3:1 (SC 1.4.11) rather than 4.5:1,
+and both are design decisions rather than oversights. I did not want to
+redesign either one inside a branch about the bottom bar.
+
+**1. The typing indicator — `.assistant-typing span`, 1.31:1 at rest.**
+Sage-deep at `opacity: 0.22` on the sage bubble. It breathes to `0.72`
+(**2.76:1**) and under `prefers-reduced-motion` the animation stops at `0.5`
+(**1.94:1**), so it is under 3:1 at every point in its cycle. The information
+is also carried by `aria-label="Typing"`, so screen readers are fine — this is
+purely about whether a low-vision visitor can see that a reply is coming.
+*Proposed fix:* the dots need **0.8** to clear 3:1 (3.16:1), which means
+`0%, 72%, 100% { opacity: 0.8 }` and a `1.0` peak — a much more present
+indicator than the one that was designed. The `translateY(-2.5px)` bounce
+carries most of the "typing" reading anyway, so it would still work. One
+number in `@keyframes assistant-breathe` plus the resting value plus the
+reduced-motion `0.5`. Say go and it is a two-line change.
+
+**2. The avatar's gold ring — `.assistant-avatar svg`, 2.97:1.** The 0.9px
+gold stroke around the sage waveform, on `--ivory-2`. Three hundredths under,
+and it is pure decoration next to the word "Assistant", which is what actually
+identifies the panel — 1.4.11 exempts decoration explicitly. Clearing it would
+mean inventing a darker gold, which is the palette rot the launcher's own
+comments warn about. **Recommend leaving it.**
+
+### Found outside the scope you named
+
+`.form input::placeholder, .form textarea::placeholder` is the same
+`#a6adb4` at the same **2.27:1**, on the contact form — the site's primary
+lead capture. Identical defect, identical one-line fix (`var(--slate)`), but
+it is not the ask bar or the assistant panel, so I left it rather than widen
+this diff. It is the highest-value of the three unapplied items.
+
+---
+
+## 8. Breakpoint sweep
+
+Every place a width is written in TS and again in CSS is a place the two can
+drift with nothing visibly wrong to see. Each pair was tested at **both sides
+of its boundary**, asserting the JS behaviour and the CSS rule flip together.
+
+| Pair | JS | CSS | Verdict |
+| --- | --- | --- | --- |
+| CTA bar visibility | `MobileCtaBar.CALL_BAR_QUERY` | the `@media` block giving `.cta-bar` its `display: flex` | **agree** at 760 and 761 *(this is the one that was broken; fixed last pass)* |
+| Assistant body scroll-lock | `matchMedia("(max-width: 760px)")` in `SiteAssistant` | the block turning `.assistant-panel` into a full-height sheet | **agree** at 760 and 761 |
+| Assistant short placeholder | `SiteAssistant.NARROW_QUERY` | the `@media (max-width: 360px)` block tightening `.assistant-compose` | **agree** at 360 and 361 |
+
+**No other behavioural gate carries an independent width number.** `Header`
+applies `.tucked` / `.scrolled` at every width and lets CSS be the only gate —
+safe by construction, nothing to drift. `ConcernRail` measures its own element
+rather than the viewport. `BottomBarContext`'s constants are scroll distances,
+not widths. The remaining `matchMedia` calls are `prefers-reduced-motion` and
+the new `(pointer: coarse)`, neither of which is a width.
+
+### The one other real defect: `sizes` attributes
+
+A `sizes` attribute is a width written in TSX whose counterpart is the CSS
+grid, so it is the same class of drift one flight down. I swept every `<img>`
+on nine routes at 390 / 834 / 1280, comparing the width `sizes` claims against
+the width the stylesheet actually gives the element.
+
+**Fixed — `app/page.tsx`, the Trisha Yearwood video still:**
+
+```
+sizes="220px"  →  sizes="(max-width: 760px) 100vw, 220px"
+```
+
+220px is only true above 760. Below it, `globals.css` gives `.celeb-video`
+`width: auto; align-self: stretch; margin: 0 -24px` and it goes full-bleed. The
+browser was fetching a **256px-wide source for a 390px slot** — 780px-worth at
+2× DPR — which made it the blurriest image on the site, on a phone, in the
+celebrity band. Invisible at desktop, where the attribute was written. Same
+breakpoint number as the rule that causes it, stated in a comment beside it.
+
+**Found, not fixed — seven over-declarations.** `founder.jpg` (`200px` for a
+106px slot), the Nashville gallery (`33vw` for 204/312px), the About team
+portraits (`25vw` for 245px). Over-declaring makes the browser pick a *larger*
+source than it needs: bytes, not blur, and in every case the file it lands on
+is small. These are a perf pass, not a correctness one, and tuning them
+belongs in its own branch. Full list in the PR.
+
+---
+
+## 9. Constraints
 
 - Nothing merged, nothing deployed.
 - `.env.local`, `.env.example` and deploy config untouched. No credentials

@@ -20,6 +20,14 @@ import { useBottomBar } from "./BottomBarContext";
  * only when the controller says `active === "ask"`. It never decides that for
  * itself — see BottomBarContext.
  *
+ * **What a press does depends on the input device, not the screen size.** A
+ * touch has no caret and no keyboard of its own, so tapping the bar goes
+ * straight to the panel and the panel's composer takes the focus — one caret,
+ * one keyboard, in the place the conversation actually happens. A mouse has
+ * both, so clicking the bar puts a caret in *this* field and typing stays
+ * here until Enter (or the arrow) sends it. See `pressIsCoarse` below for how
+ * that is decided; it is a pointer question and it is asked as one.
+ *
  * No PHI. This is an anonymous marketing-site entry point: the field is a
  * plain unnamed text input with autocomplete off, nothing is stored here, and
  * whatever is typed goes to /api/chat exactly as a message typed into the
@@ -40,6 +48,26 @@ const PROMPTS = [
 ];
 
 const ROTATE_MS = 4000;
+
+/**
+ * "Is the thing pressing this bar a finger?"
+ *
+ * Asked as a pointer question, never as a width one — a 1280px touchscreen
+ * and a 390px window on a laptop both exist, and a breakpoint gets each of
+ * them backwards. Two signals, in order of how much they actually know:
+ *
+ * 1. `event.pointerType` on the press itself. This is the only signal that is
+ *    right on a hybrid device, where the primary pointer is a mouse and the
+ *    press was still a finger.
+ * 2. `(pointer: coarse)` for the browsers and synthetic events that leave
+ *    pointerType empty. It describes the device's *primary* pointer, which is
+ *    the best available guess when the event will not say.
+ *
+ * A stylus counts as coarse. It is precise, but it comes with a touchscreen
+ * and no keyboard, so the panel's composer is still where its owner wants the
+ * caret to end up.
+ */
+const COARSE_QUERY = "(pointer: coarse)";
 
 /** The launcher's waveform, cropped out of its ring. Same path as Logo.tsx. */
 function AskWave() {
@@ -81,10 +109,25 @@ export default function StickyAskBar({ active }: { active: boolean }) {
    */
   const openedByKeyboard = useRef(false);
   const wasAssistantOpen = useRef(false);
+  /** The fallback half of pressIsCoarse — see COARSE_QUERY. */
+  const coarsePrimary = useRef(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setReduced(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // A ref, not state: nothing renders differently for a coarse pointer, and a
+  // laptop that has a touchscreen plugged in mid-session should not re-render
+  // the bar to find out.
+  useEffect(() => {
+    const mq = window.matchMedia(COARSE_QUERY);
+    const apply = () => {
+      coarsePrimary.current = mq.matches;
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -144,21 +187,58 @@ export default function StickyAskBar({ active }: { active: boolean }) {
     setDraft("");
   }
 
+  /** See COARSE_QUERY. Event first, media query only where the event is silent. */
+  function pressIsCoarse(e: React.PointerEvent) {
+    if (e.pointerType === "mouse") return false;
+    if (e.pointerType === "touch" || e.pointerType === "pen") return true;
+    return coarsePrimary.current;
+  }
+
+  /**
+   * One press handler, two behaviours, chosen by what did the pressing.
+   *
+   * **Coarse (finger, stylus).** Straight to the panel. The default is
+   * prevented so this field never takes the caret on the way: the panel
+   * focuses its own composer in a layout effect, inside the same gesture, and
+   * two focus moves in one tap is two keyboard flashes on iOS. Tapping
+   * anywhere counts — at a glance the bar is one object, and an object with a
+   * dead zone reads as broken.
+   *
+   * **Fine (mouse, trackpad).** A caret, here. Clicking the field itself is
+   * left entirely alone so the caret lands where the click did; clicking the
+   * cream either side of it focuses the field, because the strip *is* the
+   * field as far as anyone looking at it is concerned. Nothing opens until
+   * Enter — the one exception being the arrow, which reads as "send" and has
+   * to keep meaning it.
+   *
+   * Keyboard users touch none of this. They arrive by Tab, which fires no
+   * pointer event at all, and leave by Enter.
+   */
+  function onPress(e: React.PointerEvent) {
+    if (!active) return;
+
+    if (pressIsCoarse(e)) {
+      e.preventDefault();
+      open(false);
+      return;
+    }
+
+    const target = e.target as HTMLElement | null;
+    if (target?.closest(".askbar-go")) {
+      e.preventDefault();
+      open(false);
+      return;
+    }
+    if (target === inputRef.current) return;
+    e.preventDefault();
+    inputRef.current?.focus();
+  }
+
   return (
-    // Tapping anywhere on the bar opens the assistant, not just the field —
-    // at a glance this is one object, and an object with a dead zone reads as
-    // broken. pointerdown rather than click, with the default prevented, so
-    // the tap never focuses this input on the way: the panel focuses its own
-    // composer a beat later and two focus moves means two keyboard flashes on
-    // iOS. Keyboard users are unaffected — they arrive by Tab, which fires no
-    // pointer event, and leave by Enter.
     <div
       className="bottombar-layer askbar-layer"
       data-on={active}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        open(false);
-      }}
+      onPointerDown={onPress}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -194,6 +274,11 @@ export default function StickyAskBar({ active }: { active: boolean }) {
           tabIndex={active ? 0 : -1}
           enterKeyHint="send"
         />
+        {/* Decorative, deliberately: `aria-hidden` and not a button. Enter is
+            the keyboard path and it is on the form, so a second tab stop here
+            would add a control without adding a capability. onPress gives it
+            its click back for mouse users, who are the only ones who would
+            aim at it. */}
         <span className="askbar-go" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path

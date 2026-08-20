@@ -1069,7 +1069,13 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
 /* 16px is not a taste call: iOS zooms the viewport on focus for anything
    smaller, which would break the sheet's height math mid-conversation. */
 .assistant-compose input { flex: 1; min-width: 0; font-family: var(--sans); font-size: 16px; color: var(--ink); background: #fff; border: 0; border-radius: 14px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(28, 43, 58, 0.07), 0 6px 14px -10px rgba(28, 43, 58, 0.4); }
-.assistant-compose input::placeholder { color: #a6adb4; }
+/* Was #a6adb4 — a grey that came in with the widget and belongs to no
+   palette here. On the white field it measured 2.27:1, roughly half of what
+   a placeholder needs, and it was the only failing piece of type in either
+   the panel or the ask bar. --slate is the site's own secondary-text token
+   and lands at 5.69:1 on white; it is also exactly what the ask bar's
+   placeholder uses, so the two fields now read as the same field. */
+.assistant-compose input::placeholder { color: var(--slate); }
 .assistant-compose button { flex: none; font-family: var(--sans); font-size: 14.5px; font-weight: 600; color: var(--ivory); background: var(--navy); border: 0; border-radius: 14px; padding: 0 20px; min-height: 46px; cursor: pointer; transition: background 0.2s var(--ease-soft), opacity 0.2s var(--ease-soft); }
 .assistant-compose button:hover:not(:disabled) { background: var(--navy-deep); }
 .assistant-compose button:disabled { opacity: 0.38; cursor: default; }

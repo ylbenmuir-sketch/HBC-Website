@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { usePathname } from "next/navigation";
 import { useBottomBar } from "./BottomBarContext";
 
@@ -113,6 +120,17 @@ const STARTERS = [
 const NARROW_QUERY = "(max-width: 360px)";
 const PLACEHOLDER = "Ask about LENS or a first visit…";
 const PLACEHOLDER_NARROW = "Ask a question…";
+
+/**
+ * useLayoutEffect on the client, useEffect on the server.
+ *
+ * There is exactly one layout effect in this file and it is the composer's
+ * focus (see below). React would warn about it during SSR — layout effects do
+ * nothing there — and this component *is* server-rendered, dynamic import or
+ * not, so the hook is swapped rather than the warning suppressed.
+ */
+const useFocusEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 type Message = { from: "assistant" | "visitor"; text: string };
 
@@ -350,7 +368,19 @@ export default function SiteAssistant() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  useEffect(() => {
+  /**
+   * The composer takes focus the moment the panel exists.
+   *
+   * A *layout* effect, not a passive one, and that is the whole point on iOS.
+   * The ask bar opens this panel from a pointerdown handler; React flushes a
+   * discrete event's update synchronously, so a layout effect still runs
+   * inside that gesture, while a passive effect is scheduled for after paint
+   * and lands outside it. Safari only raises the on-screen keyboard for a
+   * focus() that happens inside a user gesture — outside one, focus lands and
+   * the keyboard does not, which is the exact half-working state a tap on a
+   * bar that looks like a text field must not produce.
+   */
+  useFocusEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
