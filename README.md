@@ -27,8 +27,14 @@ compositions), so desktop rendering is untouched. Key pieces:
   the short mobile eyebrow/sub for the desktop copy.
 - **PhotoFrame** — optional `positionMobile` (per-crop art direction via the
   `--ph-pos-m` custom property) and `aspect` props; desktop callers unchanged.
-- **Sticky CTA** — `components/MobileCtaBar.tsx` (homepage, ≤760px only);
-  same "Get a Free Call Today" → `/contact` ask, retiring near the final CTA band.
+- **Bottom bar dock** — one fixed footprint, two bars, one controller.
+  `components/BottomBarContext.tsx` decides which is in it; the bars only
+  report their state to it. See "The bottom of the screen" below.
+  - **Sticky CTA** — `components/MobileCtaBar.tsx` (homepage, ≤760px only);
+    same "Get a Free Call Today" → `/contact` ask, retiring near the final CTA band.
+  - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route, every
+    width, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a field that opens the
+    site assistant with whatever was typed into it.
 - Motion (drawer stagger, sticky-bar entrance, reveals) is gated behind
   `prefers-reduced-motion` like everything else.
 
@@ -294,6 +300,43 @@ All page copy that varies by entity is data-driven:
 | `lib/team.ts` | `/about/team` grid + `/about/team/[slug]` profiles |
 | `lib/resources.ts` | `/resources` cards + `/resources/[slug]` articles (homework-battles seeded) |
 
+## The bottom of the screen
+
+Two things want to be anchored to the bottom of the viewport — the homepage's
+"Get a Free Call Today" bar and the sticky ask bar that opens the site
+assistant — and they must never be there together.
+
+They used to settle it between themselves, with a pair of CSS rules pointing
+at each other: `MobileCtaBar` marked `body[data-cta-bar]` and a rule stood the
+assistant's launcher down, while the launcher marked `body[data-assistant-open]`
+and a mirrored rule stood the CTA bar down. Two rules, two owners, and no one
+place that could answer *what is at the bottom of the screen right now* — which
+is why the JS breakpoint and the CSS breakpoint were free to disagree without
+anything looking wrong.
+
+Now `components/BottomBarContext.tsx` is that place. Everything
+bottom-anchored reports its state to it and reads `active` back:
+
+| `active` | when |
+| --- | --- |
+| `"none"` | the assistant panel is open — the panel *is* the bottom of the screen |
+| `"call"` | the CTA bar is showing; it is the primary conversion path and always wins the tie |
+| `"ask"` | everything else |
+
+`components/BottomBarDock.tsx` renders both bars into a single fixed grid
+cell, so they are the same size in the same place. A yield is a 200ms
+crossfade in that one footprint rather than an unmount — one bar changing
+state, not two elements fighting. Both stay in the DOM (`visibility`, never
+`display`), so the dock's height never moves, and `footer.site` reserves
+`--bottombar-h` at the end of the document so no copy is ever permanently
+under a bar. Under `prefers-reduced-motion` the swap is instant and the ask
+bar's placeholder stops rotating.
+
+If the CTA bar's breakpoint moves, move it in both places: `CALL_BAR_QUERY` in
+`MobileCtaBar.tsx` and the `@media (max-width: 760px)` block in `globals.css`
+that gives `.cta-bar` its `display: flex`. The two disagreeing is an invisible
+bug, not a visual one — the ask bar simply stops existing on the homepage.
+
 ## Site assistant
 
 **Shipping disabled.** The widget renders and `/api/chat` answers anything
@@ -320,7 +363,10 @@ everything below exists to keep that true.
 | `lib/chat/retrieve.ts` | §2 — BM25, the "I don't know" thresholds, the fixed no-match reply |
 | `lib/chat/answer.ts` | §2 — the system prompt and the **only** model call |
 | `lib/chat/rate-limit.ts`, `logging.ts` | §6 |
-| `components/SiteAssistant.tsx` | §6 — the widget |
+| `components/SiteAssistant.tsx` | §6 — the panel (and the retired launcher pill, behind `SHOW_LEGACY_LAUNCHER`) |
+| `components/StickyAskBar.tsx` | The way in — the sticky field that opens the panel |
+| `components/BottomBarContext.tsx` | Which bottom bar is on screen, for everything that is bottom-anchored |
+| `components/BottomBarDock.tsx` | The one fixed footprint both bars share |
 
 ### The request path
 

@@ -392,7 +392,14 @@ export default function HomePage() {
                 src="/images/trisha.jpg"
                 alt=""
                 fill
-                sizes="220px"
+                // 220px is only true above 760. Below it, globals.css gives
+                // .celeb-video `width: auto; align-self: stretch; margin: 0
+                // -24px` — it goes full-bleed, edge to edge. The bare "220px"
+                // had the browser fetching a 256px-wide source for a 390px
+                // slot (780px at 2x), which is the blurriest image on the
+                // site and looks like nothing at all on desktop, where it was
+                // written. Same breakpoint as the rule that causes it.
+                sizes="(max-width: 760px) 100vw, 220px"
                 style={{ objectFit: "cover", objectPosition: "center 30%" }}
               />
               <span className="play">

@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { usePathname } from "next/navigation";
+import { useBottomBar } from "./BottomBarContext";
 
 /**
  * The site assistant widget (phase-8-chatbot.md §6; appearance per phase 11).
@@ -10,17 +18,23 @@ import { usePathname } from "next/navigation";
  * Rendered only when NEXT_PUBLIC_FEATURE_ASSISTANT is true — app/layout.tsx
  * makes that decision, so nothing here is reachable while the flag is off.
  *
+ * The way in is the sticky ask bar (components/StickyAskBar.tsx), not the
+ * floating "Have a question?" pill — the pill is retired in place behind
+ * SHOW_LEGACY_LAUNCHER below. The ask bar hands this panel an open request
+ * through BottomBarContext, together with anything the visitor had typed into
+ * it, which arrives here as their first message.
+ *
  * §6's placement rules, and how each is met:
  *
  * - **Bottom right, closed by default.** `open` starts false and is only ever
- *   set by a click. There is no timer, no scroll trigger, and no
+ *   set by a visitor action — a tap or Enter on the ask bar, which is what an
+ *   assistantRequest is. There is no timer, no scroll trigger, and no
  *   exit-intent hook anywhere in this file — §6 forbids an auto-opening popup,
  *   and the way to keep that true is to have nothing that could open it.
- * - **Never covers the mobile CTA bar.** At ≤760px the two never share the
- *   screen: MobileCtaBar marks `body[data-cta-bar]` while it is showing, and
- *   the launcher yields to it (globals.css). Opening the panel marks
- *   `body[data-assistant-open]`, which retires the bar for the duration. One
- *   floating affordance at a time, and the CTA bar always wins the tie.
+ * - **Never covers the mobile CTA bar.** BottomBarContext is the single
+ *   arbiter: this panel reports `open` to it and the controller retires both
+ *   bottom bars for the duration. One thing at the bottom of the screen at a
+ *   time, and where the CTA bar and the ask bar disagree the CTA bar wins.
  * - **Respects prefers-reduced-motion.** Every transition is disabled by the
  *   gate in globals.css, alongside the site's existing ones.
  * - **Must not block or degrade LCP.** The launcher does not render on the
@@ -29,15 +43,32 @@ import { usePathname } from "next/navigation";
  *   image for the main thread and nothing appears while the visitor is still
  *   taking the page in. The panel's markup does not exist until it is opened.
  *
- * It introduces no CTA. The launcher says "Questions?", not "Get a Free Call
+ * It introduces no CTA. The ask bar offers a field, not "Get a Free Call
  * Today" — the assistant is an addition to the contact form, and a second
  * button making the primary ask would be exactly the competing CTA the README
- * forbids. It is deliberately the quieter object on screen: a soft sage pill
+ * forbids. It is deliberately the quieter object on screen: ink on cream,
  * against the navy of TalkCta.
  */
 
 /** The beat after idle before the launcher arrives — §11.2's "on the page a moment". */
 const ARRIVAL_DELAY_MS = 1400;
+
+/**
+ * The floating "Have a question?" launcher pill.
+ *
+ * OFF. The sticky ask bar (components/StickyAskBar.tsx) replaced it as the
+ * way into this panel — a field a visitor can put a question in rather than a
+ * button that asks them whether they have one. Nothing about the pill has
+ * been deleted: the markup below, its CSS in globals.css, its arrival timing,
+ * its footer parking and its focus-restore all still work. Flip this to true
+ * and the old behaviour comes back, minus the ask bar's claim on the bottom
+ * of the screen, which BottomBarContext would then hand to the CTA bar and
+ * nothing else.
+ *
+ * Typed rather than inferred so the whole file does not narrow to dead code
+ * around a literal `false`.
+ */
+const SHOW_LEGACY_LAUNCHER: boolean = false;
 
 /**
  * §2: the first message must disclose what this is. Hard-coded, not
@@ -89,6 +120,17 @@ const STARTERS = [
 const NARROW_QUERY = "(max-width: 360px)";
 const PLACEHOLDER = "Ask about LENS or a first visit…";
 const PLACEHOLDER_NARROW = "Ask a question…";
+
+/**
+ * useLayoutEffect on the client, useEffect on the server.
+ *
+ * There is exactly one layout effect in this file and it is the composer's
+ * focus (see below). React would warn about it during SSR — layout effects do
+ * nothing there — and this component *is* server-rendered, dynamic import or
+ * not, so the hook is swapped rather than the warning suppressed.
+ */
+const useFocusEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 type Message = { from: "assistant" | "visitor"; text: string };
 
@@ -159,6 +201,7 @@ function paragraphs(text: string) {
 
 export default function SiteAssistant() {
   const pathname = usePathname();
+  const { assistantRequest, setAssistantOpen } = useBottomBar();
   const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
   const [parked, setParked] = useState(false);
@@ -177,8 +220,67 @@ export default function SiteAssistant() {
   const launcherRef = useRef<HTMLButtonElement>(null);
   /** Set by close() so the focus-restore effect knows the close was ours. */
   const restoreFocus = useRef(false);
+  /**
+   * A question the ask bar collected before this panel existed, waiting for
+   * the panel to be open enough to send it. A ref rather than state: it is
+   * consumed exactly once and re-rendering on it would be re-rendering on
+   * something nothing draws.
+   */
+  const prefill = useRef<string | null>(null);
+  /**
+   * The current render's submit(), parked where an effect can reach it.
+   * submit() is deliberately a plain function rather than a useCallback — it
+   * reads `sending` and `ended` fresh on every call — so an effect that
+   * listed it as a dependency would re-run on every render. This keeps the
+   * dependency list honest about what actually triggers a send.
+   */
+  const submitRef = useRef(submit);
   const panelId = useId();
   const titleId = useId();
+
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
+  /**
+   * The ask bar asked for this panel. Opening it is the whole contract:
+   * mount if the arrival timer has not fired yet (a visitor who taps in the
+   * first second must not have to wait out an animation budget), open, and
+   * queue whatever they had typed as their first message.
+   */
+  useEffect(() => {
+    if (!assistantRequest) return;
+    // `entered` alongside `mounted`, in the same batch, so the widget's first
+    // paint already has the class. Staging them a frame apart is what makes
+    // the launcher pill arrive gently, and there is no pill any more — left
+    // as-is it would instead fade the panel in over the root's 0.6s, on top
+    // of the panel's own entrance.
+    setMounted(true);
+    setEntered(true);
+    setOpen(true);
+    const text = assistantRequest.text.trim();
+    if (text) prefill.current = text;
+  }, [assistantRequest]);
+
+  /** The controller decides what is at the bottom of the screen; tell it. */
+  useEffect(() => {
+    setAssistantOpen(open);
+    return () => setAssistantOpen(false);
+  }, [open, setAssistantOpen]);
+
+  /**
+   * Send the queued question once the panel is actually open, so it lands in
+   * a transcript the visitor can see rather than into a closed widget. The
+   * ref is one-shot: cleared before the send, so a re-render mid-flight
+   * cannot post the same question twice.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const text = prefill.current;
+    if (!text) return;
+    prefill.current = null;
+    submitRef.current(text);
+  }, [open]);
 
   // Defer past first paint so the launcher never competes with LCP, then wait
   // a further beat so it arrives after the visitor has settled rather than
@@ -217,7 +319,7 @@ export default function SiteAssistant() {
   // otherwise sits on top of the last line of the footer disclaimer at phone
   // widths, and that text is not something a widget gets to cover.
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !SHOW_LEGACY_LAUNCHER) return;
     const footer = document.querySelector("footer.site");
     if (!footer || typeof IntersectionObserver !== "function") return;
     const io = new IntersectionObserver(
@@ -266,7 +368,19 @@ export default function SiteAssistant() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  useEffect(() => {
+  /**
+   * The composer takes focus the moment the panel exists.
+   *
+   * A *layout* effect, not a passive one, and that is the whole point on iOS.
+   * The ask bar opens this panel from a pointerdown handler; React flushes a
+   * discrete event's update synchronously, so a layout effect still runs
+   * inside that gesture, while a passive effect is scheduled for after paint
+   * and lands outside it. Safari only raises the on-screen keyboard for a
+   * focus() that happens inside a user gesture — outside one, focus lands and
+   * the keyboard does not, which is the exact half-working state a tap on a
+   * bar that looks like a text field must not produce.
+   */
+  useFocusEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
@@ -537,22 +651,28 @@ export default function SiteAssistant() {
         </div>
       )}
 
-      {/* Opens, and only opens. The header X is the one way out — a launcher
+      {/* RETIRED — see SHOW_LEGACY_LAUNCHER at the top of this file. The
+          sticky ask bar is the way in now. Everything below is intact and
+          one boolean away from returning.
+
+          Opens, and only opens. The header X is the one way out — a launcher
           that relabels itself "Close" puts two close controls on screen and
           makes the pill a mode switch instead of an invitation. It is
           `display: none` while the panel is open (globals.css), so there is
           nothing to press and no expanded state to announce; aria-haspopup
           says what it does instead of aria-expanded saying what it is. */}
-      <button
-        type="button"
-        className="assistant-launcher"
-        ref={launcherRef}
-        onClick={() => setOpen(true)}
-        aria-haspopup="dialog"
-      >
-        <AssistantWave />
-        Have a question?
-      </button>
+      {SHOW_LEGACY_LAUNCHER && (
+        <button
+          type="button"
+          className="assistant-launcher"
+          ref={launcherRef}
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+        >
+          <AssistantWave />
+          Have a question?
+        </button>
+      )}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import JsonLd from "@/components/JsonLd";
+import { BottomBarProvider } from "@/components/BottomBarContext";
+import BottomBarDock from "@/components/BottomBarDock";
 import dynamic from "next/dynamic";
 import { organizationSchema } from "@/lib/schema";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
@@ -85,20 +87,30 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
       <body>
-        {/* The one Organization node, sitewide. Location pages reference it by
-            @id rather than restating it — see lib/schema.ts. */}
-        <JsonLd data={organizationSchema()} />
-        <RevealOnScroll />
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        {/* Site assistant — OFF. Renders only with
-            NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
-            .env.example, not in draft mode, not in dev. Wired in so Ben can
-            audit it by flipping one variable in one environment, and so the
-            flag is the only thing between it and a visitor. See
-            phase-8-chatbot.md §6 and README → Site assistant. */}
-        {FEATURE_ASSISTANT && <SiteAssistant />}
+        {/* One controller for everything anchored to the bottom of the
+            viewport — the sticky ask bar, the homepage CTA bar, and the
+            assistant panel that retires both. See BottomBarContext. */}
+        <BottomBarProvider askAvailable={FEATURE_ASSISTANT}>
+          {/* The one Organization node, sitewide. Location pages reference it
+              by @id rather than restating it — see lib/schema.ts. */}
+          <JsonLd data={organizationSchema()} />
+          <RevealOnScroll />
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          {/* Site assistant — OFF. Renders only with
+              NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
+              .env.example, not in draft mode, not in dev. Wired in so Ben can
+              audit it by flipping one variable in one environment, and so the
+              flag is the only thing between it and a visitor. See
+              phase-8-chatbot.md §6 and README → Site assistant. */}
+          {FEATURE_ASSISTANT && <SiteAssistant />}
+          {/* Last in the body so the dock's fixed layers sit above the page
+              without needing to outbid anything on z-index. The ask bar only
+              exists behind the same flag as the assistant it opens — with the
+              flag off this is the homepage CTA bar and nothing else. */}
+          <BottomBarDock askAvailable={FEATURE_ASSISTANT} />
+        </BottomBarProvider>
       </body>
     </html>
   );
