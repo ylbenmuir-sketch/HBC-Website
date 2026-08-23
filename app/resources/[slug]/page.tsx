@@ -4,6 +4,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
+import { Btn } from "@/components/Buttons";
 import { resources, getResource, isPublishable } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
@@ -22,7 +23,9 @@ export async function generateMetadata({
   const article = getResource((await params).slug);
   if (!article) return {};
   return {
-    title: article.title,
+    // metaTitle, not title: the on-page headline is written to be read and
+    // targets nothing anybody types. See the field note in lib/resources.ts.
+    title: article.metaTitle,
     description: article.metaDescription,
     openGraph: { type: "article" },
   };
@@ -83,6 +86,24 @@ export default async function ArticlePage({
                   return (
                     <div className="note-sage" key={i}>
                       {block.text}
+                    </div>
+                  );
+                // Ghost buttons rather than inline anchors — `.article p` has
+                // no link rule, so an inline link renders as plain body text.
+                // Same handoff pattern as /lens-neurofeedback.
+                case "links":
+                  return (
+                    <div key={i} style={{ margin: "40px 0" }}>
+                      <p className="sub" style={{ fontSize: 16 }}>
+                        {block.text}
+                      </p>
+                      <div className="hero-ctas" style={{ marginTop: 18 }}>
+                        {block.items.map((l) => (
+                          <Btn key={l.href} href={l.href} variant="ghost" arrow>
+                            {l.label}
+                          </Btn>
+                        ))}
+                      </div>
                     </div>
                   );
                 default:
