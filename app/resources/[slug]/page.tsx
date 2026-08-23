@@ -7,12 +7,16 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ReadMore from "@/components/ReadMore";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
+import JsonLd from "@/components/JsonLd";
+import { articleSchema } from "@/lib/schema";
 import {
   resources,
   getResource,
   isPublishable,
   bylineText,
   clusterSiblings,
+  formatArticleDate,
+  lastChanged,
 } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
@@ -47,7 +51,12 @@ export async function generateMetadata({
     // `openGraph` object rather than merging into it, so naming one field here
     // used to delete og:url, og:image, og:site_name and og:locale from every
     // article and drop the Twitter card to `summary`. See lib/metadata.ts.
-    openGraph: { ...SHARED_OPEN_GRAPH, type: "article" },
+    openGraph: {
+      ...SHARED_OPEN_GRAPH,
+      type: "article",
+      publishedTime: article.datePublished,
+      modifiedTime: lastChanged(article),
+    },
   };
 }
 
@@ -62,6 +71,7 @@ export default async function ArticlePage({
 
   return (
     <>
+      <JsonLd data={articleSchema(article)} />
       <Breadcrumbs
         trail={[
           { label: "Resources", href: "/resources" },
@@ -80,7 +90,27 @@ export default async function ArticlePage({
               {article.tag} &middot; {article.readTime}
             </div>
             <h1>{article.title}</h1>
-            <div className="meta">{bylineText(article.byline)}</div>
+            {/* The publisher credit, then the date the copy was written.
+                `<time>` rather than a bare string so the machine-readable
+                value and the one a reader sees cannot drift; both are pinned
+                to UTC in formatArticleDate. "Updated" appears only when the
+                copy actually changed after publication — an article showing
+                two identical dates is telling the reader nothing twice. */}
+            <div className="meta">
+              {bylineText(article.byline)} &middot;{" "}
+              <time dateTime={article.datePublished}>
+                {formatArticleDate(article.datePublished)}
+              </time>
+              {article.dateModified && (
+                <>
+                  {" "}
+                  &middot; Updated{" "}
+                  <time dateTime={article.dateModified}>
+                    {formatArticleDate(article.dateModified)}
+                  </time>
+                </>
+              )}
+            </div>
             <p className="lede">{article.lede}</p>
           </div>
           {article.image ? (

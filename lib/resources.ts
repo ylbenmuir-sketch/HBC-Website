@@ -208,6 +208,37 @@ export type Resource = {
    * three built clusters to satisfy a type would be the wrong kind of tidy.
    */
   cluster: "focus" | "anxiety" | "sleep" | null;
+  /**
+   * When this article's copy was written, as `YYYY-MM-DD`.
+   *
+   * There was no date field on this type at all, so the site could not express
+   * freshness anywhere — not in schema, not on the page, not in the sitemap,
+   * whose `lastmod` was one hand-maintained constant claiming all 37 URLs
+   * changed on the same day. For informational content that is a real
+   * handicap: an undated article is one Google cannot place in time and a
+   * reader cannot judge (SEO-AUDIT-2.md §2.3, §2.4).
+   *
+   * Seeded from this repository's history — the commit in which each
+   * article's `lede` stopped being a `[Draft lede]` — rather than from the day
+   * the field was added, which would have backdated nothing and forward-dated
+   * everything. Nine were written on 2026-08-23; `homework-battles` came in
+   * with the design-system port on 2026-07-13.
+   *
+   * Hand-maintained from here, and deliberately not derived from git at build
+   * time: a shallow CI clone has no history to read, and the date would then
+   * silently become the deploy date on the pages that most need it not to be.
+   */
+  datePublished: string;
+  /**
+   * When the copy last changed, as `YYYY-MM-DD`. Omitted when it has not
+   * changed since publication — an article whose two dates are identical is
+   * better described by one of them than by two.
+   *
+   * Editorial changes only. Adding a field to this type is not a revision of
+   * the article, and claiming it is would make the freshness signal the field
+   * exists to carry mean nothing within a month.
+   */
+  dateModified?: string;
   tag: string;
   title: string;
   crumbLabel: string;
@@ -293,6 +324,8 @@ export const resources: Resource[] = [
   {
     slug: "homework-battles",
     cluster: "focus",
+    datePublished: "2026-07-13",
+    dateModified: "2026-08-23",
     tag: "For parents",
     title: "Homework battles: what's really happening in a stuck brain",
     crumbLabel: "Homework battles",
@@ -369,6 +402,7 @@ export const resources: Resource[] = [
   {
     slug: "exhausted-after-eight-hours",
     cluster: "sleep",
+    datePublished: "2026-08-23",
     tag: "Sleep",
     title: "Why you're exhausted after eight hours of sleep",
     crumbLabel: "Exhausted after eight hours",
@@ -447,6 +481,7 @@ export const resources: Resource[] = [
   {
     slug: "the-3am-waking",
     cluster: "sleep",
+    datePublished: "2026-08-23",
     tag: "Sleep",
     title: "The 3 a.m. waking, and why it isn’t random",
     crumbLabel: "The 3 a.m. waking",
@@ -530,6 +565,7 @@ export const resources: Resource[] = [
   {
     slug: "when-sleep-hygiene-isnt-it",
     cluster: "sleep",
+    datePublished: "2026-08-23",
     tag: "Sleep",
     title: "When sleep hygiene isn’t the problem",
     crumbLabel: "When sleep hygiene isn’t it",
@@ -604,6 +640,7 @@ export const resources: Resource[] = [
     slug: "lens-vs-traditional-neurofeedback",
     // /compare is P3 in QUERY-TO-PAGE-MAP.md and unbuilt.
     cluster: null,
+    datePublished: "2026-07-13",
     tag: "How it works",
     title: "LENS vs. traditional neurofeedback: an honest comparison",
     crumbLabel: "LENS vs. traditional neurofeedback",
@@ -628,6 +665,7 @@ export const resources: Resource[] = [
   {
     slug: "bad-at-school",
     cluster: "focus",
+    datePublished: "2026-08-23",
     tag: "For parents",
     title: "When a bright kid starts saying “I'm just bad at school”",
     crumbLabel: "“Bad at school”",
@@ -705,6 +743,7 @@ export const resources: Resource[] = [
   {
     slug: "the-last-ten-percent",
     cluster: "focus",
+    datePublished: "2026-08-23",
     tag: "For adults",
     title: "The last ten percent: why finishing is a different job from starting",
     crumbLabel: "The last ten percent",
@@ -786,6 +825,7 @@ export const resources: Resource[] = [
   {
     slug: "lens-and-medication",
     cluster: "focus",
+    datePublished: "2026-08-23",
     // Held for Ben's read while it was the one article whose whole subject is
     // the boundary around medication. Read and approved as written, Aug 2026 —
     // the hold is gone, the copy is unchanged.
@@ -862,6 +902,7 @@ export const resources: Resource[] = [
   {
     slug: "told-to-just-relax",
     cluster: "anxiety",
+    datePublished: "2026-08-23",
     tag: "For adults",
     title: "Why you can’t relax when there’s nothing to relax about",
     crumbLabel: "“Just relax”",
@@ -948,6 +989,7 @@ export const resources: Resource[] = [
   {
     slug: "braced-for-something",
     cluster: "anxiety",
+    datePublished: "2026-08-23",
     tag: "For adults",
     title: "Why your body stays braced when nothing is happening",
     crumbLabel: "A body that stays braced",
@@ -1026,6 +1068,7 @@ export const resources: Resource[] = [
   {
     slug: "alongside-therapy",
     cluster: "anxiety",
+    datePublished: "2026-08-23",
     tag: "How it works",
     title: "Can you do LENS while you’re seeing a therapist?",
     crumbLabel: "LENS and therapy",
@@ -1092,6 +1135,7 @@ export const resources: Resource[] = [
     slug: "brain-fog-after-55",
     // No cluster in QUERY-TO-PAGE-MAP.md at all.
     cluster: null,
+    datePublished: "2026-07-13",
     tag: "Adults 55+",
     title: "Brain fog after 55: what's normal, what's worth attention",
     crumbLabel: "Brain fog after 55",
@@ -1118,6 +1162,7 @@ export const resources: Resource[] = [
     slug: "what-the-equipment-does",
     // /is-lens-safe is P2 in QUERY-TO-PAGE-MAP.md and unbuilt.
     cluster: null,
+    datePublished: "2026-07-13",
     tag: "How it works",
     title: "What the equipment actually does (and doesn't do)",
     crumbLabel: "The equipment",
@@ -1140,6 +1185,29 @@ export const resources: Resource[] = [
       "A tour of the LENS system — what the sensors read, what the feedback signal is, and what the equipment never does.",
   },
 ];
+
+/**
+ * "August 23, 2026" from "2026-08-23".
+ *
+ * Pinned to UTC at both ends. `new Date("2026-08-23")` is midnight UTC, and
+ * formatting that in any timezone west of Greenwich prints the day before —
+ * which on a server rendering in one zone and a reader sitting in another is
+ * a date that disagrees with the `datetime` attribute beside it.
+ */
+export function formatArticleDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** The date this article last changed — its revision if it has one, else its
+ *  publication date. What `lastmod` and `dateModified` both want. */
+export function lastChanged(r: Resource): string {
+  return r.dateModified ?? r.datePublished;
+}
 
 export function getResource(slug: string): Resource | undefined {
   return resources.find((r) => r.slug === slug);

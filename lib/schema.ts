@@ -23,6 +23,7 @@ import {
   locations,
   mapsUrl,
 } from "./locations";
+import { type Resource, lastChanged } from "./resources";
 import {
   ESTABLISHED_YEAR,
   FOUNDER_DISPLAY_NAME,
@@ -267,6 +268,46 @@ export function serviceSchema({
           })),
         }
       : {}),
+  };
+}
+
+/**
+ * Article, for the ten `/resources/[slug]` pages.
+ *
+ * They emitted `Organization` + `BreadcrumbList` and nothing else — the same
+ * markup as a navigation stub, on a thousand words of original writing. No
+ * headline, no author, no publisher, no dates, no image. For informational
+ * content that is the difference between a page Google can place and one it
+ * has to guess at (SEO-AUDIT-2.md §2.4).
+ *
+ * `Article`, not `BlogPosting`: these are not a blog and are not dated as one.
+ *
+ * `author` and `publisher` are both the Organization, by @id, because that is
+ * exactly what the visible byline says. `Byline.org` is a publisher and never
+ * a person — see the type in lib/resources.ts — and the one place a human may
+ * be credited, `reviewer`, is unverified on every article today, so no `Person`
+ * appears here either. Rule 1 at the top of this file: an article whose review
+ * nobody has confirmed does not get a reviewer in its markup.
+ *
+ * `image` only for articles that have a real photograph. A `PlaceholderPlate`
+ * is a description of a photograph somebody still has to take.
+ */
+export function articleSchema(r: Resource) {
+  const url = abs(`/resources/${r.slug}`);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}#article`,
+    mainEntityOfPage: url,
+    url,
+    headline: r.title,
+    description: r.metaDescription,
+    articleSection: r.tag,
+    datePublished: r.datePublished,
+    dateModified: lastChanged(r),
+    author: { "@id": ORGANIZATION_ID },
+    publisher: { "@id": ORGANIZATION_ID },
+    ...(r.image ? { image: abs(r.image.src) } : {}),
   };
 }
 
