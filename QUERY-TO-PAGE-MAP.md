@@ -57,10 +57,10 @@ Rule 6, applied the same way the location clusters were:
 | Nashville local | `/locations/nashville/` | `neurofeedback nashville` | lens therapy nashville, biofeedback nashville, brain mapping nashville, neurofeedback near me | 2,930 impr pos 10.2 · 193 GBP | **Rewritten** — see decision above |
 | Murfreesboro local | `/locations/murfreesboro/` | `neurofeedback murfreesboro` | lens therapy murfreesboro, neurofeedback rutherford county, smyrna / christiana / la vergne | 325 impr **pos 3.5, 0 clicks** | **Rewritten** — see decision above |
 | Brain mapping | `/brain-map/` | `brain mapping therapy` | brain map, qeeg nashville, brain mapping near me | 819 impr pos 8.2 · 22 GBP | Section only, no page |
-| ADHD / focus | `/adhd-focus/` | `adhd help without medication` | neurofeedback for adhd, adhd focus support nashville, non-medication adhd support | 6,277 impr, **0 clicks**, pos 58.8 | `/add-adhd/` — rewrite |
-| Anxiety | `/anxiety/` | `neurofeedback for anxiety` | anxiety help nashville, drug-free anxiety support, calm nervous system | 7,017 impr, **0 clicks**, pos 50.1 | `/stressanxiety/` — rewrite |
-| Sleep | `/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | 2,702 impr, 0 clicks, pos 60.2 | `/sleepproblems/` — rewrite |
-| Mood | `/mood/` | `neurofeedback for depression` | low mood support, drug-free depression support | 3,472 impr, 1 click, pos 49.1 | `/depression/` — rewrite |
+| ADHD / focus | `/concerns/focus-adhd/` | `adhd help without medication` | neurofeedback for adhd, adhd focus support nashville, non-medication adhd support | 6,277 impr, **0 clicks**, pos 58.8 | `/add-adhd/` — rewrite |
+| Anxiety | `/concerns/anxiety/` | `neurofeedback for anxiety` | anxiety help nashville, drug-free anxiety support, calm nervous system | 7,017 impr, **0 clicks**, pos 50.1 | `/stressanxiety/` — rewrite |
+| Sleep | `/concerns/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | 2,702 impr, 0 clicks, pos 60.2 | `/sleepproblems/` — rewrite |
+| Mood | **none** | ~~`neurofeedback for depression`~~ | — | 3,472 impr, 1 click, pos 49.1 | **Unassigned — see the decision below** |
 | Concussion / TBI | `/concerns/concussion/` | `post concussion symptoms` | post-concussion support, post concussion syndrome nashville, tbi support middle tennessee, still not right after concussion | 3,331 impr, 1 click · 487 impr pos 12.8 | **Built** — see decision above |
 | Children | `/for-children/` | `neurofeedback for children` | neurofeedback for kids, help for my child's focus, child emotional regulation | **157 impr, 0 clicks** — near-zero surface | **Missing — P1** |
 | Cost / access | `/pricing/` | `neurofeedback cost` | how much does neurofeedback cost, is neurofeedback covered by insurance, hsa fsa | Present in tail, no page | **Missing — P2** |
@@ -79,12 +79,12 @@ Rule 6, applied the same way the location clusters were:
 3. Homepage retarget to `neurofeedback therapy` as primary
 
 **P1 — first 30 days post-launch**
-4. `/adhd-focus/` full rewrite
-5. `/anxiety/` full rewrite
+4. `/concerns/focus-adhd/` full rewrite
+5. `/concerns/anxiety/` full rewrite
 6. `/for-children/` new
 
 **P2 — 30–90 days**
-7. `/sleep/`, `/mood/` rewrites (~~`/concussion-recovery/`~~ — shipped early as `/concerns/concussion/`; see the decision above)
+7. `/concerns/sleep/` rewrite (`/mood/` is unassigned — see the decision below) (~~`/concussion-recovery/`~~ — shipped early as `/concerns/concussion/`; see the decision above)
 8. `/pricing/`, `/is-lens-safe/`
 
 **P3 — opportunistic**
@@ -97,22 +97,87 @@ Rule 6, applied the same way the location clusters were:
 - **`adhd testing`, `adhd assessment`, `adhd evaluation`, `adhd diagnosis`** — HBC does not diagnose. The Brain Map is not an ADHD assessment. Ranking for these produces unqualified leads and a scope-of-practice exposure. Target help/support intent instead.
 - **`vibroacoustic chair`, `acoustic chair`, `vibro chair`** — purchase intent for furniture. Currently the site's #2 click driver and commercially near-worthless.
 - **`concussion treatment`, `concussion therapy`, `tbi treatment`, `head injury treatment`** — treatment intent for a medical injury. HBC does not treat concussion or brain injury and the copy may not imply it, so ranking here produces exactly the visitor `/concerns/concussion/` is built to send to a doctor. Target the post-clearance half of the cluster instead.
+- **`neurofeedback for depression`, `depression treatment`, `depression therapy`, `low mood support`** — **added Aug 2026.** There is no mood concern page and the practice has not decided whether it serves this at all, so there is nothing on the site that can honestly answer these. Ranking here produces exactly the visitor nobody can help. Revisit only if the scope question in the `/mood/` decision above is answered yes; until then the 3,472 impressions stay unpursued on purpose.
 - **`pandas treatment`** — appeared in the tail. Verify HBC treats this before creating any surface for it.
+
+---
+
+## Decision: the concern clusters live on `/concerns/[slug]/`, and `/mood/` is not being built
+
+This map routed the three concern clusters to new `/adhd-focus/`, `/anxiety/`
+and `/sleep/` pages, and the mood cluster to `/mood/`. **None of those pages
+exist and none is being built.** Rule 6, for the third time, after the location
+clusters and the concussion cluster:
+
+- **The concern pages already carry every signal a new URL would have to earn
+  from zero** — breadcrumbs, FAQ-eligible structure, the guide CTA, the
+  free-call CTA, inbound links from the header, footer, `/what-we-help-with`,
+  the homepage, `/adults` and `/lens-neurofeedback`, and eight sibling pages of
+  internal link equity. `/anxiety/` starts with none of it.
+- **Two pages per concern is rule 1 violated on purpose.** `/anxiety/` and
+  `/concerns/anxiety/` answer the same question for the same visitor.
+- **All three already hold their head term.** `metaTitle` on each is
+  "Neurofeedback for Anxiety & Stress", "…for ADHD & Focus", "…for Sleep". The
+  head-term work the new URLs were for is done, on the pages that exist.
+
+**`/mood/` is a different case and is not resolved by the above.** There is no
+mood or depression concern page, and one is not being created by redirect —
+a destination is not a decision to offer a service. So the cluster is
+**unassigned**: `neurofeedback for depression` is targeted by nothing, and its
+3,472 impressions are deliberately not pursued until somebody decides whether
+this practice serves that concern at all. That is a scope-of-practice question,
+not an SEO one. Until it is answered, treat `depression treatment`,
+`depression therapy` and `neurofeedback for depression` the way **Do not
+target** treats the concussion terms.
 
 ---
 
 ## Redirects required at launch
 
-| Legacy | New |
-|---|---|
-| `/add-adhd/` | `/adhd-focus/` |
-| `/stressanxiety/` | `/anxiety/` |
-| `/sleepproblems/` | `/sleep/` |
-| `/depression/` | `/mood/` |
-| `/concussion-and-tbi/` | `/concerns/concussion/` |
-| `/vibro-acoustic-chair/` | `/vibroacoustic-therapy/` |
+301 permanent, unless noted. **Every destination below was checked against the
+routes the build actually emits** — the previous version of this table pointed
+four of its six entries at URLs that do not exist, which would have thrown away
+the inherited surface on day one rather than carrying it over.
 
-301 permanent. `/trisha-yearwood/` keeps its URL — it has the site's best CTR and existing equity.
+| Legacy | Destination | Route exists? |
+|---|---|---|
+| `/add-adhd/` | `/concerns/focus-adhd/` | ✅ |
+| `/stressanxiety/` | `/concerns/anxiety/` | ✅ |
+| `/sleepproblems/` | `/concerns/sleep/` | ✅ |
+| `/concussion-and-tbi/` | `/concerns/concussion/` | ✅ |
+| `/depression/` | `/what-we-help-with/` | ✅ — **proposed, needs Ben** |
+| `/vibro-acoustic-chair/` | **410 Gone** | n/a — **proposed, needs Ben** |
+| `/trisha-yearwood/` | `/stories/` | ✅ — **proposed, needs Ben** |
+
+### The three proposals
+
+**`/depression/` → `/what-we-help-with/`.** The hub names all nine concerns
+and asserts that none of them is depression care, which is the honest thing
+this redirect can say. A concern page would imply a service the practice does
+not offer; a 410 throws away real equity for a page whose visitors may well be
+served by something on the hub. If the answer to the scope question above is
+"we don't serve this at all", switch it to 410 then — not now, and not by
+default.
+
+**`/vibro-acoustic-chair/` → 410 Gone.** The map says retain
+`/vibroacoustic-therapy/`; no such page exists or is planned, and "retain"
+cannot be honoured by a table. This URL is the site's #2 click driver and the
+map's own note calls the traffic "purchase intent, not clinical" and
+"commercially near-worthless" — furniture shoppers. 410 retires it deliberately
+and tells Google so. The alternative is `/` if the clicks are wanted for any
+reason, which would mean answering a furniture query with a wellness homepage.
+**Either way the "Keep, do not expand" row in the map above is currently
+describing a page that isn't being built, and that contradiction is Ben's to
+resolve.**
+
+**`/trisha-yearwood/` → `/stories/`.** The map says this URL keeps its own —
+best CTR on the site, position 2.7 — but keeping it means building a page, and
+that page's content is gated behind `FEATURE_CELEBRITY`, which does not open
+until name, likeness, image, quote, Grammy credit and commercial-use
+permissions are all on file. Shipping a URL that ranks for a person's name
+before those exist is the one thing that gate is for. `/stories/` carries the
+client quotes, claims nothing about anybody, and can be swapped for a real page
+the day the permissions land.
 
 ---
 
