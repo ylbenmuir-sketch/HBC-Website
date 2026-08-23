@@ -145,39 +145,55 @@ the inherited surface on day one rather than carrying it over.
 | `/stressanxiety/` | `/concerns/anxiety/` | ✅ |
 | `/sleepproblems/` | `/concerns/sleep/` | ✅ |
 | `/concussion-and-tbi/` | `/concerns/concussion/` | ✅ |
-| `/depression/` | `/what-we-help-with/` | ✅ — **proposed, needs Ben** |
-| `/vibro-acoustic-chair/` | **410 Gone** | n/a — **proposed, needs Ben** |
-| `/trisha-yearwood/` | `/stories/` | ✅ — **proposed, needs Ben** |
+| `/depression/` | `/what-we-help-with/` | ✅ — **approved, Ben, Aug 2026** |
+| `/vibro-acoustic-chair/` | **410 Gone** | n/a — **approved, Ben, Aug 2026** |
+| `/trisha-yearwood/` | `/stories/` | ✅ — **approved, Ben, Aug 2026** |
 
-### The three proposals
+### The three decisions, and the reasoning behind each
 
-**`/depression/` → `/what-we-help-with/`.** The hub names all nine concerns
-and asserts that none of them is depression care, which is the honest thing
-this redirect can say. A concern page would imply a service the practice does
-not offer; a 410 throws away real equity for a page whose visitors may well be
-served by something on the hub. If the answer to the scope question above is
-"we don't serve this at all", switch it to 410 then — not now, and not by
-default.
+All three were proposed with the table rewrite and **approved by Ben in
+August 2026**. Recorded here rather than in a commit message because each one
+is a standing answer to a question that will be asked again the first time
+somebody reads the traffic numbers and wonders why nothing is chasing them.
 
-**`/vibro-acoustic-chair/` → 410 Gone.** The map says retain
-`/vibroacoustic-therapy/`; no such page exists or is planned, and "retain"
-cannot be honoured by a table. This URL is the site's #2 click driver and the
-map's own note calls the traffic "purchase intent, not clinical" and
-"commercially near-worthless" — furniture shoppers. 410 retires it deliberately
-and tells Google so. The alternative is `/` if the clicks are wanted for any
-reason, which would mean answering a furniture query with a wellness homepage.
-**Either way the "Keep, do not expand" row in the map above is currently
-describing a page that isn't being built, and that contradiction is Ben's to
-resolve.**
+**`/depression/` → `/what-we-help-with/`. Approved.** The hub names all nine
+concerns, and in doing so says that none of them is depression care — which is
+the honest thing this redirect can say. The two rejected alternatives, and why:
 
-**`/trisha-yearwood/` → `/stories/`.** The map says this URL keeps its own —
-best CTR on the site, position 2.7 — but keeping it means building a page, and
-that page's content is gated behind `FEATURE_CELEBRITY`, which does not open
-until name, likeness, image, quote, Grammy credit and commercial-use
-permissions are all on file. Shipping a URL that ranks for a person's name
-before those exist is the one thing that gate is for. `/stories/` carries the
-client quotes, claims nothing about anybody, and can be swapped for a real page
-the day the permissions land.
+- *A concern page* (emotional-regulation was the nearest) would imply a service
+  the practice does not offer. A redirect destination is read as an answer, and
+  that answer would have been wrong.
+- *A 410* throws away real equity from 3,472 impressions for a page whose
+  visitors may well be served by something on the hub. If the scope question
+  above is ever answered "we don't serve this at all", switch to 410 **then** —
+  as a decision, not as a default.
+
+**`/vibro-acoustic-chair/` → 410 Gone. Approved.** The map's "retain
+`/vibroacoustic-therapy/`" cannot be honoured by a redirect table: no such page
+exists or is planned, and "retain" means building one. So the choice was
+between retiring the URL and pointing it somewhere.
+
+410 rather than 404, and rather than `/`. The traffic is furniture shopping —
+the map's own note calls it "purchase intent, not clinical" and "commercially
+near-worthless" — so the clicks are worth nothing to this practice even though
+the URL is the site's #2 click driver. A 410 says *deliberately gone* where a
+404 says *possibly a mistake*, and Google drops it faster. Pointing it at `/`
+would answer a furniture query with a wellness homepage, which is a bounce with
+extra steps. **Consequence to accept: the "Keep, do not expand" row in the map
+above now describes a page nobody is building, and the impressions go with it.**
+
+**`/trisha-yearwood/` → `/stories/`. Approved.** The map says this URL keeps
+its own — best CTR on the site, position 2.7, real equity — and keeping it
+means building a page. That page's content is gated behind
+`FEATURE_CELEBRITY`, which does not open until name, likeness, image, quote,
+Grammy credit and commercial-use permissions are all on file. Shipping a URL
+that ranks for a living person's name before those exist is precisely what that
+gate is for, and the equity is not worth doing it a day early.
+
+`/stories/` carries the client quotes, claims nothing about anybody, and is the
+closest honest answer to what that visitor came for. **Revisit the day the
+permissions land:** at that point the right move is a real page at the original
+URL and this line comes out.
 
 ---
 
