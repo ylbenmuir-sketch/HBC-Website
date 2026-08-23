@@ -158,6 +158,27 @@ export const FOUNDER_DISPLAY_NAME = FOUNDER_LAST_NAME.verified
   ? `${FOUNDER_FIRST_NAME} ${FOUNDER_LAST_NAME.value}`
   : FOUNDER_FIRST_NAME;
 
+/**
+ * The founder's team-card bio — three claims about a named person.
+ *
+ * "Sets the clinical standard", "trains every practitioner" and "still keeps a
+ * client schedule" are statements about what one identified individual does,
+ * and none of them was confirmed. They shipped anyway because `bio` is a plain
+ * string on TeamMember and the only gate there reads brackets — the same hole
+ * the article bylines went through (lib/resources.ts → Byline).
+ *
+ * Gated exactly like FOUNDER_QUOTE below: unverified, so production renders no
+ * bio at all and the card keeps the name, role, photo and link to her story,
+ * all of which are true today. Confirm the sentence or replace it, then flip
+ * the flag.
+ */
+export const FOUNDER_BIO: Verifiable = {
+  value:
+    "Sets the clinical standard, trains every practitioner, and still keeps a client schedule.",
+  verified: false,
+  note: "[Founder bio — confirm all three claims]",
+};
+
 /** Founder quote — softened draft; needs the founder's personal sign-off. */
 export const FOUNDER_QUOTE: Verifiable = {
   value:
@@ -279,7 +300,15 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     theme: "Brain fog & fatigue · Adults",
-    text: "I had so many issues with brain fog, focus, and fatigue — working with Laura helped me feel like myself again. If you have any hesitations, let my story encourage you. Take the leap.",
+    // REDACTED, not rewritten. The client said "working with Laura"; Laura is
+    // not on the confirmed roster and nobody has confirmed she may be named on
+    // the site, so the name is replaced with the role it refers to and nothing
+    // else in the sentence moves. The name is not load-bearing here — what the
+    // quote is about is brain fog, focus and fatigue, and the encouragement at
+    // the end — so the testimonial keeps its meaning and its verified status.
+    //
+    // Do not restore the name on the assumption it was lost. It was taken out.
+    text: "I had so many issues with brain fog, focus, and fatigue — working with my practitioner helped me feel like myself again. If you have any hesitations, let my story encourage you. Take the leap.",
     relationship: "Adult client",
     firstName: "Sarah Ruth",
     lastInitial: "H.",

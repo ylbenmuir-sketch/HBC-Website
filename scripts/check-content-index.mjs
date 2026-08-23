@@ -160,6 +160,7 @@ const { FOUNDER_FIRST_NAME, FOUNDER_LAST_NAME } =
   await import("../lib/site-config.ts");
 const { resources } = await import("../lib/resources.ts");
 const { team } = await import("../lib/team.ts");
+const { TESTIMONIALS } = await import("../lib/site-config.ts");
 
 const failures = [];
 let checked = 0;
@@ -341,7 +342,7 @@ if (guideHtml !== null) {
 }
 
 /* ---------------------------------------------------------------- */
-/* 4. Bylines — authorship and review credits                        */
+/* 4. Credited people — bylines and testimonials                     */
 /* ---------------------------------------------------------------- */
 
 /**
@@ -407,6 +408,59 @@ for (const r of resources) {
   }
 }
 
+/**
+ * A testimonial may name the client (there are fields for that, and they carry
+ * a first name and an initial) and may name nobody else.
+ *
+ * A quote that thanks a practitioner by name is a staffing claim wearing a
+ * client's voice: it asserts that the person works here and may be named here,
+ * and it renders in production on the strength of `verified`, which is a flag
+ * about whether the *client* said it. One shipped — "working with Laura helped
+ * me feel like myself again" — while every practitioner on the roster was
+ * still a [placeholder].
+ *
+ * The name is not in ROSTER_NAMES, so the check above could never have caught
+ * it. This one looks for the shape instead: a capitalised word that is not
+ * starting a sentence, not an acronym, not "I", and not a place or product the
+ * site legitimately names. Redact rather than delete when it fires — see the
+ * note on that testimonial in lib/site-config.ts.
+ */
+const QUOTE_CAPS_ALLOWED = new Set([
+  "I", "I'm", "I've", "I'd", "I'll",
+  "LENS", "Harmonized", "Brain", "Centers", "Map",
+  "Nashville", "Murfreesboro", "Franklin", "Tennessee",
+]);
+
+let quoteChecks = 0;
+
+for (const t of TESTIMONIALS) {
+  quoteChecks += 1;
+  // Sentence-initial words are legitimate; everything after a full stop,
+  // question or exclamation mark starts one.
+  const words = t.text.split(/\s+/);
+  let atSentenceStart = true;
+  for (const raw of words) {
+    const word = raw.replace(/^[("'“‘]+/, "").replace(/[)"'”’,;:—–]+$/, "");
+    const isCap = /^[A-Z][a-z’']/.test(word);
+    if (
+      isCap &&
+      !atSentenceStart &&
+      !QUOTE_CAPS_ALLOWED.has(word) &&
+      !QUOTE_CAPS_ALLOWED.has(word.replace(/[’']s$/, ""))
+    ) {
+      failures.push(
+        `lib/site-config.ts → testimonial "${t.firstName ?? t.theme}"\n` +
+          `    the quote names someone: "${word}"\n` +
+          `    A testimonial may name the client (firstName / lastInitial) and nobody\n` +
+          `    else. If it is a practitioner, nothing here confirms they work here or\n` +
+          `    may be named — redact the word and record it, do not delete the quote.\n` +
+          `    If it is a place or product the site names, add it to QUOTE_CAPS_ALLOWED.`
+      );
+    }
+    atSentenceStart = /[.!?]["'”’)]?$/.test(raw);
+  }
+}
+
 const taggedPages = Object.keys(CONFIRM_TAG_INVENTORY).length;
 const taggedCount = Object.values(CONFIRM_TAG_INVENTORY).reduce(
   (n, tags) => n + Object.keys(tags).length,
@@ -428,5 +482,6 @@ console.log(
   `✓ content index: ${checked} mirrored passage(s) match their source pages\n` +
     `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)\n` +
     `✓ static guide: ${guideChecks} site-config value(s) still match ${guideFile}\n` +
-    `✓ bylines: ${bylineChecks} article(s) credit no unconfirmed person`
+    `✓ bylines: ${bylineChecks} article(s) credit no unconfirmed person\n` +
+    `✓ testimonials: ${quoteChecks} quote(s) name nobody but the client`
 );
