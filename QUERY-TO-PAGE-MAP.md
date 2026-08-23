@@ -32,6 +32,22 @@ The reasoning, recorded so it isn't relitigated:
 
 ---
 
+## Decision: the concussion cluster lives on `/concerns/concussion/`
+
+This map originally routed the concussion/TBI cluster to a new `/concussion-recovery/` page. **That page is not being built.** The cluster is assigned to `/concerns/concussion/`, built as the ninth concern page.
+
+Rule 6, applied the same way the location clusters were:
+
+- **It is a concern, and the site already has a concern pattern that ranks.** `/concerns/[slug]` carries breadcrumbs, FAQ-eligible structure, the guide CTA, the free-call CTA, cross-links from the header, footer, `/what-we-help-with`, the homepage and `/adults`, and eight sibling pages of internal link equity. `/concussion-recovery/` starts with none of it.
+- **`/concussion-recovery/` names an outcome we are not allowed to claim.** The URL itself would assert that LENS is part of a recovery from a brain injury. That is the one thing this page's copy may never say, and a slug is not a place to put a caveat. `/concerns/concussion` names the topic and claims nothing.
+- **Two pages here would be rule 1 violated twice over.** `/concussion-recovery/` and `/concerns/concussion/` answer the same query for the same visitor.
+
+**Primary target moved** from `concussion therapy` to `post concussion symptoms`. "Therapy" is treatment intent for an injury, which is traffic this practice cannot serve and should not rank for — the same reasoning as `adhd testing` under **Do not target**. The recoverable demand in this cluster is the *post*-clearance query: someone who has been checked, been cleared, and is still not right. That is what the page is about, and it is the only half of the cluster the copy can honestly answer.
+
+**What is deliberately not on the page:** no sport, league, team or athlete is named — "professional athletes" is the ceiling on that claim and the page is already at it. No recovery, healing or speed-of-recovery claim appears anywhere, in copy or in metadata. And the page opens with a block telling a recently injured visitor to see a doctor instead of us, above its own CTAs; the site assistant carries the same rule as a check that fires before retrieval (`head-injury` in `lib/chat/safety.ts`). Ranking for acute-injury queries is not the goal, and the page is built to hand those visitors on rather than convert them.
+
+---
+
 ## The map
 
 | Cluster | Page | Primary target | Supporting terms | Demand signal | Status |
@@ -45,7 +61,7 @@ The reasoning, recorded so it isn't relitigated:
 | Anxiety | `/anxiety/` | `neurofeedback for anxiety` | anxiety help nashville, drug-free anxiety support, calm nervous system | 7,017 impr, **0 clicks**, pos 50.1 | `/stressanxiety/` — rewrite |
 | Sleep | `/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | 2,702 impr, 0 clicks, pos 60.2 | `/sleepproblems/` — rewrite |
 | Mood | `/mood/` | `neurofeedback for depression` | low mood support, drug-free depression support | 3,472 impr, 1 click, pos 49.1 | `/depression/` — rewrite |
-| Concussion / TBI | `/concussion-recovery/` | `concussion therapy` | post-concussion support, tbi recovery nashville, concussion therapy murfreesboro | 3,331 impr, 1 click · 487 impr pos 12.8 | `/concussion-and-tbi/` — rewrite |
+| Concussion / TBI | `/concerns/concussion/` | `post concussion symptoms` | post-concussion support, post concussion syndrome nashville, tbi support middle tennessee, still not right after concussion | 3,331 impr, 1 click · 487 impr pos 12.8 | **Built** — see decision above |
 | Children | `/for-children/` | `neurofeedback for children` | neurofeedback for kids, help for my child's focus, child emotional regulation | **157 impr, 0 clicks** — near-zero surface | **Missing — P1** |
 | Cost / access | `/pricing/` | `neurofeedback cost` | how much does neurofeedback cost, is neurofeedback covered by insurance, hsa fsa | Present in tail, no page | **Missing — P2** |
 | Trust / safety | `/is-lens-safe/` | `is neurofeedback safe` | neurofeedback side effects, does neurofeedback work, neurofeedback reviews | Present in tail, no page | **Missing — P2** |
@@ -68,7 +84,7 @@ The reasoning, recorded so it isn't relitigated:
 6. `/for-children/` new
 
 **P2 — 30–90 days**
-7. `/sleep/`, `/mood/`, `/concussion-recovery/` rewrites
+7. `/sleep/`, `/mood/` rewrites (~~`/concussion-recovery/`~~ — shipped early as `/concerns/concussion/`; see the decision above)
 8. `/pricing/`, `/is-lens-safe/`
 
 **P3 — opportunistic**
@@ -80,6 +96,7 @@ The reasoning, recorded so it isn't relitigated:
 
 - **`adhd testing`, `adhd assessment`, `adhd evaluation`, `adhd diagnosis`** — HBC does not diagnose. The Brain Map is not an ADHD assessment. Ranking for these produces unqualified leads and a scope-of-practice exposure. Target help/support intent instead.
 - **`vibroacoustic chair`, `acoustic chair`, `vibro chair`** — purchase intent for furniture. Currently the site's #2 click driver and commercially near-worthless.
+- **`concussion treatment`, `concussion therapy`, `tbi treatment`, `head injury treatment`** — treatment intent for a medical injury. HBC does not treat concussion or brain injury and the copy may not imply it, so ranking here produces exactly the visitor `/concerns/concussion/` is built to send to a doctor. Target the post-clearance half of the cluster instead.
 - **`pandas treatment`** — appeared in the tail. Verify HBC treats this before creating any surface for it.
 
 ---
@@ -92,7 +109,7 @@ The reasoning, recorded so it isn't relitigated:
 | `/stressanxiety/` | `/anxiety/` |
 | `/sleepproblems/` | `/sleep/` |
 | `/depression/` | `/mood/` |
-| `/concussion-and-tbi/` | `/concussion-recovery/` |
+| `/concussion-and-tbi/` | `/concerns/concussion/` |
 | `/vibro-acoustic-chair/` | `/vibroacoustic-therapy/` |
 
 301 permanent. `/trisha-yearwood/` keeps its URL — it has the site's best CTR and existing equity.

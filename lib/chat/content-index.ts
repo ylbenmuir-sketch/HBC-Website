@@ -39,7 +39,7 @@ import type { Passage } from "./types";
  * The site assistant's knowledge base (phase-8-chatbot.md §2).
  *
  * Server-side only. This is the entire set of things the assistant knows: all
- * 8 concerns and their 24 FAQs, the 14 questions on /faq, the centers, the
+ * 9 concerns and their 24 FAQs, the 14 questions on /faq, the centers, the
  * four pages whose copy is mirrored in site-copy.ts, and the sitewide
  * policies. If a fact is not in here, the assistant does not have it — §2 is
  * explicit that a confident wrong answer about a wellness service is worse
@@ -241,6 +241,46 @@ const CONCERN_ALIASES: Record<string, string[]> = {
     "battle", "standoff", "meltdown", "melt", "transition", "sensory", "frustration",
     "bright", "son", "daughter", "teen", "homeschool",
   ],
+  /*
+   * The new-topic list, and the one where a widening is most likely to cost
+   * somebody else a question. Three rules were applied on top of the two in
+   * the note above:
+   *
+   * - **Nothing that is already carrying a route.** "brain" belongs to the
+   *   Brain Map and to brain-fog, "fog" and "foggy" to brain-fog, "noise" to
+   *   focus and children-school, "doctor" to FAQ 12, "sleep" to sleep. Every
+   *   one of them appears in this concern's published copy, so its passages
+   *   already score on them; putting them in this list would have multiplied
+   *   them again *and* dropped their IDF on the passages that depend on them.
+   *   "still foggy after a concussion" was the routing case that mattered and
+   *   it lands here on "concussion" alone.
+   * - **The words the copy uses, made findable** — "cleared", "scan",
+   *   "referral", "athlete" are all on the page and were reachable only
+   *   through prose.
+   * - **"car"/"accident"/"wreck"/"whiplash"**, which nothing else on the site
+   *   says. A visitor typing "I was in a car accident and I'm not the same"
+   *   has one page here and this is it.
+   */
+  concussion: [
+    "concussion", "concussions", "concussed", "head", "injury", "injuries",
+    "tbi", "post", "hit", "knock", "knocked",
+    // The page's own credibility line: physicians, referrals, athletes.
+    "physician", "physicians", "refer", "referral", "referrals", "referred",
+    "athlete", "athletes", "sport", "sports",
+    // How a parent describes a youth injury without naming anything: "he got
+    // a concussion playing". Generic on purpose — no sport, league or team is
+    // named anywhere on this page or in its keys.
+    //
+    // NOT "game": it grounded the local-fixture question in the audit's
+    // off-topic gate suite on the medical-first passage. The word is a sports
+    // word here and a schedule word there, and the gate is right.
+    "play", "playing",
+    // How people describe the event, none of which the rest of the site says.
+    "car", "accident", "wreck", "crash", "collision", "whiplash",
+    // "the scans come back clean", "you've been cleared" — the lead and the
+    // block, both of which people quote back.
+    "scan", "scans", "cleared",
+  ],
   // Not "safe": on this page the word belongs to "the past keeps the present
   // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
   // question with a plain answer on /faq — into trauma copy.
@@ -311,6 +351,33 @@ function concernPassages(c: Concern): Passage[] {
   ];
 
   return [
+    /*
+     * The medical-first block, when the concern has one — first in the list
+     * because it is first on the page.
+     *
+     * It is indexed for the visitor who is *past* the acute window and reads
+     * this page's own framing of where the line falls. The visitor who is not
+     * past it never reaches retrieval at all: `head-injury` in ./safety.ts
+     * stops the turn before any passage is scored. This passage is therefore
+     * not the safety net — it is the copy, published, and the assistant is
+     * held to it like any other.
+     */
+    ...(c.medicalFirst
+      ? [
+          {
+            id: `concern:${c.slug}:medical-first`,
+            kind: "concern" as const,
+            title: `${c.title} — start with a doctor`,
+            href,
+            question: "Should I see a doctor first?",
+            keywords: [
+              ...keywords,
+              "recent", "urgent", "emergency", "doctor", "first", "later",
+            ],
+            text: `${c.medicalFirst.urgent} ${c.medicalFirst.laterLead} ${c.medicalFirst.gap}`,
+          },
+        ]
+      : []),
     {
       id: `concern:${c.slug}:signs`,
       kind: "concern",
@@ -339,14 +406,22 @@ function concernPassages(c: Concern): Passage[] {
       keywords: [...keywords, "treat", "treatment", "cure", "diagnose", "medication", "instead", "replace"],
       text: c.howHelp.note,
     },
-    {
-      id: `concern:${c.slug}:goals`,
-      kind: "concern",
-      title: `${c.title} — common goals`,
-      href,
-      keywords: [...keywords, "goal", "hope", "change", "better", "improve"],
-      text: `${c.goalsHeading} ${c.goals.join(" ")}`,
-    },
+    // Both of the bands below are optional on the page, so both are optional
+    // here: a concern that publishes no goal cards and no FAQs contributes no
+    // passages for them. See `goalsHeading` in ../concerns.ts for why
+    // concussion has neither.
+    ...(c.goals.length > 0
+      ? [
+          {
+            id: `concern:${c.slug}:goals`,
+            kind: "concern" as const,
+            title: `${c.title} — common goals`,
+            href,
+            keywords: [...keywords, "goal", "hope", "change", "better", "improve"],
+            text: `${c.goalsHeading} ${c.goals.join(" ")}`,
+          },
+        ]
+      : []),
     ...c.faqs.map((faq, i): Passage => ({
       id: `concern:${c.slug}:faq:${i + 1}`,
       kind: "concern-faq",

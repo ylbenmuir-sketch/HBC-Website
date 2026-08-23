@@ -102,10 +102,10 @@ export const metadata: Metadata = {
 const PROSE = { marginBottom: 18 } as const;
 
 /**
- * The eight concern pages, focus first.
+ * The nine concern pages, focus first.
  *
  * Focus and attention lead because that is the intent this page is built to
- * serve. The seven that follow carry the same card, the same two lines, and
+ * serve. The eight that follow carry the same card, the same two lines, and
  * the same visual weight, because anxiety, sleep and emotional regulation are
  * as much of the practice — this section is not an ADHD page with appendices.
  *
@@ -168,6 +168,17 @@ const concernCards = [
       "Staying vigilant in rooms where nothing is wrong",
       "Startling easily, settling slowly",
     ],
+  },
+  {
+    title: "Post-concussion symptoms",
+    href: "/concerns/concussion",
+    points: [
+      "The fog that lifts and returns",
+      "Sleep that never fully recovered",
+    ],
+    // Nine cards fill this grid's three desktop columns exactly; it only goes
+    // ragged once the columns drop to two, so the fill is scoped there.
+    fill: "narrow" as const,
   },
 ];
 

@@ -42,6 +42,16 @@ const adultConcerns = [
     points: ["Rest that doesn't restore", "Wanting more margin, not more hacks"],
     href: "/concerns/stress-resilience",
   },
+  // Seventh in a three-column grid, so it fills its own row rather than
+  // leaving two empty cells beside it (ConcernCard's `fill`). Last, because it
+  // is the one entry here that starts with a medical event rather than with
+  // how a week feels.
+  {
+    title: "Post-concussion symptoms",
+    points: ["Cleared, and still not yourself", "Fog that lifts and returns"],
+    href: "/concerns/concussion",
+    fill: "always" as const,
+  },
 ];
 
 export default function AdultsPage() {

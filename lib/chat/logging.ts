@@ -57,6 +57,14 @@
 export type TurnOutcome =
   | "crisis"
   | "minor"
+  /**
+   * A head injury described as recent, or with a red-flag symptom beside it.
+   * Not flagged the way a crisis is — the turn ends with the doctor-first copy
+   * and the conversation carries on normally — but worth counting separately,
+   * because how often it fires is the number that says whether the concussion
+   * page is reaching people it should be sending elsewhere first.
+   */
+  | "head-injury"
   | "refusal"
   /** A topic the site has decided not to answer yet — see ./unanswerable.ts. */
   | "unanswerable"

@@ -82,6 +82,23 @@ const STOPWORDS = new Set(
     "had has have having he her here hers him his how i if in into is it its ive just " +
     "know like ll me might much must my need no not now of on once one only or other " +
     "our out over own re please put said same say see she should so some such take tell " +
+    // "everyone" sits with "all", "any", "some" and "one" above, and its
+    // absence went unnoticed only because the site had never used the word.
+    // /concerns/concussion does — once, in "cluster in everyone else" — and
+    // that single use broke "My son is snapping at everyone", a routing case
+    // in the audit that had nothing to do with concussion.
+    //
+    // The mechanism is worth writing down, because any new page can repeat
+    // it. A word the corpus has never used costs `unknownTermIdf`, 3.4. A
+    // word it uses *once* is worth log(1 + (N - 0.5)/1.5) ≈ 4.3 — more. So a
+    // term crossing from unknown to known-once raises the denominator in
+    // coverageOf() and pushes every question containing it *down*, even
+    // though nothing about those questions changed. Adding copy is not
+    // supposed to be able to un-route a question somewhere else, and for a
+    // word that carries meaning it doesn't — the passage that gains the word
+    // gains the score too. It only bites on words like this one, which no
+    // passage is ever going to be *about*.
+    "everyone " +
     "than that the their them then there these they thing think this those through to " +
     // "where" and "who" are deliberately NOT here. On this corpus they are
     // discriminative rather than noise: they appear almost only in the curated

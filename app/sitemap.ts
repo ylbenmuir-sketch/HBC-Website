@@ -15,7 +15,7 @@ import { team } from "@/lib/team";
  *
  * **Bump this when site content changes**, not when code does.
  */
-const CONTENT_REVISION = new Date("2026-08-16");
+const CONTENT_REVISION = new Date("2026-08-22");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPaths = [

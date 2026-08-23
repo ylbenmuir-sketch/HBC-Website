@@ -19,7 +19,7 @@ import { normalize } from "./refusals";
  * is made, no booking question is asked or answered.
  */
 
-export type SafetyKind = "crisis" | "minor";
+export type SafetyKind = "crisis" | "minor" | "head-injury";
 
 /**
  * What the rest of the conversation must do once a check has fired. Returned
@@ -29,7 +29,19 @@ export type SafetyEffect =
   /** §4.1 — clear any booking in progress, flag the conversation, end the turn. */
   | "end-turn-and-flag"
   /** §4.2 — collect no contact details for the rest of the session. */
-  | "block-contact-collection";
+  | "block-contact-collection"
+  /**
+   * Recent head injury — clear any booking in progress and end the turn, but
+   * do not flag the conversation and do not block contact for the rest of it.
+   *
+   * The booking is cleared for the same reason §4.1 clears it: somebody who
+   * hit their head on Saturday should not be walked through name, phone and
+   * preferred center in the same breath as "go to urgent care". Contact
+   * collection is *not* blocked, because nothing about a head injury makes
+   * this person a minor or a crisis — they may well be back in the same
+   * session asking about later, and the assistant should be able to help.
+   */
+  | "end-turn";
 
 /**
  * Which crisis pattern fired. These names are the *only* thing about a crisis
@@ -63,6 +75,15 @@ export type CrisisPattern =
   /** Target unstated — "thinking about hurting". Ambiguous by nature. */
   | "harm-ideation";
 
+/**
+ * Which head-injury signal fired. Same contract as CrisisPattern.
+ *
+ * Two, because they are two different things for a reviewer to see: someone
+ * saying *when* it happened, and someone describing a symptom that means the
+ * emergency room whenever it happened.
+ */
+export type HeadInjuryPattern = "recent-head-injury" | "head-injury-red-flag";
+
 /** Which under-18 signal fired. Same contract as CrisisPattern. */
 export type MinorPattern =
   | "age-stated"
@@ -72,7 +93,7 @@ export type MinorPattern =
   | "age-referenced"
   | "parents-unaware";
 
-export type SafetyPattern = CrisisPattern | MinorPattern;
+export type SafetyPattern = CrisisPattern | HeadInjuryPattern | MinorPattern;
 
 export type SafetyStop = {
   kind: SafetyKind;
@@ -100,6 +121,29 @@ export type SafetyStop = {
 export const CRISIS_REPLY =
   "I’m really glad you told me. I’m an assistant and I’m not the right help for this, but people are available right now — you can call or text 988 (Suicide & Crisis Lifeline) any time, or text HOME to 741741. If someone is in immediate danger, please call 911.\n\n" +
   "Our team is here for the LENS side of things whenever you’re ready.";
+
+/**
+ * Recent head injury.
+ *
+ * Not in §4 — the section predates /concerns/concussion — but it belongs
+ * here for §4.1's reason: it has to fire on the check rather than on the
+ * model's judgment, and it has to fire *before* refusals, because "do I have
+ * a concussion? I hit my head an hour ago" is a diagnosis question by shape
+ * and an emergency by content. A refusal would answer the shape.
+ *
+ * Every sentence is the concussion page's own approved copy, in the same
+ * words, plus the 911 line — which is ours, and is the only thing here the
+ * page does not say, because a page cannot tell whether the person reading it
+ * is vomiting.
+ *
+ * It does NOT end on "Want me to set one up?". The site's every other reply
+ * closes on the free call; this one must not, because the next thing this
+ * visitor does should be seeing a doctor and not booking us. The door is left
+ * open instead, the way CRISIS_REPLY leaves it.
+ */
+export const HEAD_INJURY_REPLY =
+  "If your head injury was recent, start with a doctor. Emergency care exists for a reason, and the first days after a head injury are not the time for anything else. Nothing here replaces that, and we’d tell you the same thing on the phone. If anyone has been knocked out, is vomiting, confused, or getting worse, call 911.\n\n" +
+  "We’re here for later — weeks or months out, once you’ve been checked and cleared and something still isn’t back.";
 
 /** §4.2, verbatim. */
 export const MINOR_REPLY =
@@ -351,6 +395,143 @@ const CRISIS_PATTERNS: Array<{ pattern: CrisisPattern; regex: RegExp }> = [
   },
 ];
 
+/* -------------------------------------------------------------------------
+ * Recent head injury
+ *
+ * /concerns/concussion is written for someone weeks or months past a head
+ * injury who was cleared and still isn't right. A meaningful share of the
+ * traffic that finds a concussion page is not that person: they hit their
+ * head on Saturday and are searching on Sunday. For them the correct answer
+ * is urgent care, and the wrong answer is a passage about neurofeedback —
+ * which is exactly what retrieval will hand back now that the page exists and
+ * is filed under "concussion", "head", "injury" and "hit".
+ *
+ * So this fires here, before retrieval and before refusals, and returns fixed
+ * copy. Same contract as everything else in this file: no model, no passages,
+ * nothing a widening of the alias list can reach.
+ *
+ * ## The line it draws
+ *
+ * The topic is not the trigger. "Do you help with post-concussion symptoms?"
+ * and "I had a concussion two years ago and still feel foggy" are the page's
+ * audience, and both must reach the page — a check that fired on the word
+ * would delete the concern from the assistant entirely, which is the opposite
+ * failure and just as real. What fires is an injury described with either:
+ *
+ *   - **recency** — today, last night, three days ago, "just hit"; or
+ *   - **a red flag** — knocked out, vomiting, confused, won't wake up.
+ *
+ * Both halves must appear in the same message, in either order, which is why
+ * these are written as lookahead pairs rather than as distance-bounded
+ * patterns: "I hit my head. I've been throwing up since." puts a full stop
+ * between them, and a `[^.?!]` window would have missed it.
+ *
+ * Where the two pull against each other the tie goes to firing, as everywhere
+ * else in this file — but the over-fire here is cheap in a way it isn't for
+ * crisis. Somebody browsing the concussion page who gets told to see a doctor
+ * first has been told the page's own opening line.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The injury itself: named, or described as a blow to the head.
+ *
+ * Not "car accident" or "whiplash" on their own, deliberately. Both are on
+ * the concussion page as things people arrive with *months and sometimes
+ * years* after the fact, and a bare mention of either is far more likely to
+ * be that visitor than an acute one. They still fire when they arrive with a
+ * head blow or a red flag beside them, because then the pattern below has its
+ * other half.
+ */
+const HEAD_EVENT = [
+  String.raw`concussion(?:s|ed)?`,
+  String.raw`concussed`,
+  String.raw`head\s+injur(?:y|ies)`,
+  String.raw`head\s+trauma`,
+  String.raw`(?:traumatic\s+)?brain\s+injur(?:y|ies)`,
+  String.raw`\btbi\b`,
+  String.raw`skull\s+fractur`,
+  // "hit my head", "banged his head", "cracked her head". The possessive is
+  // required: "hit my brother" and "the deadline hit me" are not this.
+  String.raw`(?:hit|hits|hitting|bang|banged|bump|bumped|smack|smacked|whack|whacked|knock|knocked|struck|slam|slammed|crack|cracked)\s+(?:my|his|her|their|our|the)\s+head`,
+  String.raw`hit\s+in\s+the\s+head`,
+  String.raw`(?:took|take|takes|taking)\s+(?:a\s+)?(?:hit|blow|knock|shot)\s+to\s+(?:the|my|his|her|their)\s+head`,
+  // "got knocked out", not bare "knocked out" — "I'm knocked out from work"
+  // is a tired parent, and this site is full of them.
+  String.raw`(?:got|was|were|been|being)\s+knocked\s+(?:out|unconscious)`,
+].join("|");
+
+/**
+ * When it happened.
+ *
+ * Everything here means days rather than weeks. The page's own boundary is
+ * "weeks or months out", so "three weeks ago" is deliberately absent: that
+ * visitor is the audience, not the emergency.
+ *
+ * Bare "just" is not in this list. "I just want to know if you help with
+ * concussions" would have fired on it, and that is the one over-fire worth
+ * engineering around — it is a question about the service from someone who is
+ * fine. The word is admitted only glued to a verb of injury.
+ */
+const RECENT = [
+  "today",
+  "tonight",
+  "yesterday",
+  String.raw`last\s+night`,
+  String.raw`this\s+(?:morning|afternoon|evening|week|weekend)`,
+  String.raw`an?\s+hour\s+ago`,
+  String.raw`\d+\s+(?:hours?|minutes?|mins?)\s+ago`,
+  String.raw`a\s+few\s+(?:hours?|days?)\s+ago`,
+  String.raw`(?:a\s+)?couple\s+(?:of\s+)?days?\s+ago`,
+  String.raw`[1-6]\s+days?\s+ago`,
+  String.raw`(?:just|right)\s+now`,
+  String.raw`just\s+(?:hit|bang|banged|bump|bumped|got|had|took|knocked|fell|fallen|crash|crashed)`,
+  String.raw`earlier\s+(?:today|tonight)`,
+  "recently",
+].join("|");
+
+/**
+ * Symptoms that mean the emergency room whatever the timeline says.
+ *
+ * These count only alongside a HEAD_EVENT, which is what keeps "I threw up
+ * this morning" and "he had a seizure years ago" out of it.
+ */
+const RED_FLAG = [
+  String.raw`knocked\s+(?:out|unconscious)`,
+  String.raw`lost\s+consciousness`,
+  String.raw`black(?:ed)?\s+out`,
+  String.raw`passed\s+out`,
+  "unconscious",
+  String.raw`vomit(?:s|ed|ing)?`,
+  String.raw`throw(?:ing|n)?\s+up`,
+  String.raw`threw\s+up`,
+  String.raw`slurr(?:ed|ing)`,
+  "seizure",
+  "convulsi",
+  String.raw`won['’]?t\s+wake`,
+  String.raw`can['’]?t\s+stay\s+awake`,
+  String.raw`(?:one\s+)?pupil`,
+  String.raw`clear\s+fluid`,
+  String.raw`getting\s+worse`,
+].join("|");
+
+/**
+ * Both halves anywhere in the message, in either order.
+ *
+ * Lookaheads rather than a distance window, for the reason in the section
+ * note above — and the same shape the hours topic in ./unanswerable.ts uses
+ * for "a day word plus an availability word".
+ */
+const bothPresent = (a: string, b: string) =>
+  new RegExp(String.raw`(?=[\s\S]*(?:${a}))(?=[\s\S]*(?:${b}))`, "i");
+
+const HEAD_INJURY_PATTERNS: Array<{
+  pattern: HeadInjuryPattern;
+  regex: RegExp;
+}> = [
+  { pattern: "recent-head-injury", regex: bothPresent(HEAD_EVENT, RECENT) },
+  { pattern: "head-injury-red-flag", regex: bothPresent(HEAD_EVENT, RED_FLAG) },
+];
+
 /**
  * Under-18 disclosure (§4.2). First person only — "my son is 14" is a parent,
  * which is the site's primary audience, not a minor disclosing their own age.
@@ -419,6 +600,20 @@ export function checkSafety(message: string): SafetyStop | null {
         kind: "crisis",
         reply: CRISIS_REPLY,
         effect: "end-turn-and-flag",
+        pattern,
+      };
+    }
+  }
+
+  // Before the minor checks, deliberately: a fifteen-year-old who writes "I
+  // hit my head at practice today" needs the doctor line, not a note about
+  // parental consent. Nothing here changes what §4.2 does on the next turn.
+  for (const { pattern, regex } of HEAD_INJURY_PATTERNS) {
+    if (regex.test(text)) {
+      return {
+        kind: "head-injury",
+        reply: HEAD_INJURY_REPLY,
+        effect: "end-turn",
         pattern,
       };
     }

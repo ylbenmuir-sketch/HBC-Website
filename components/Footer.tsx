@@ -16,6 +16,7 @@ const groups = [
       // shortTitle values from lib/concerns.ts, like the four above.
       { label: "Stress & resilience", href: "/concerns/stress-resilience" },
       { label: "Trauma-related stress", href: "/concerns/trauma" },
+      { label: "Concussion & TBI", href: "/concerns/concussion" },
       { label: "All concerns", href: "/what-we-help-with" },
     ],
   },

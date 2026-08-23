@@ -1,9 +1,15 @@
 /**
- * All 8 concerns from what-we-help-with.html, data-driven.
+ * All 9 concerns from what-we-help-with.html, data-driven.
  * The anxiety entry is seeded verbatim from concern-anxiety.html; the other
  * seven reuse its page structure with copy drawn from the overview mockups
  * (kept to the same no-hype standard — no medical claims, ever).
+ *
+ * Concussion is the ninth and the first that did not come from those mockups:
+ * its copy is approved verbatim and it opens with a block telling a recently
+ * injured visitor to see a doctor instead. See `medicalFirst`.
  */
+
+import { BRAIN_MAP_POINTS } from "./site-config";
 
 export type ConcernFaq = {
   q: string;
@@ -29,21 +35,72 @@ export type Concern = {
   slug: string;
   /** Short name used in nav/cards, e.g. "Anxiety & stress". */
   shortTitle: string;
-  /** Full display title, split so the em.sage italic word can be styled. */
+  /**
+   * Full display title — breadcrumbs, cross-links, and the titles the
+   * assistant's passages carry. Normally the same words as titleLead +
+   * titleAccent below.
+   */
   title: string;
-  /** The italicized sage word/phrase within the title (rendered after titleLead). */
+  /**
+   * The page's H1, split so the em.sage italic phrase can be styled
+   * (rendered as titleLead then titleAccent).
+   *
+   * Usually this *is* `title`, one string cut in two. Concussion is the
+   * exception: its approved H1 is a sentence ("Cleared by your doctor, and
+   * still not right."), which is the right headline and the wrong breadcrumb,
+   * so there the two fields carry different words on purpose.
+   */
   titleLead: string;
   titleAccent: string;
   who: string;
+  /**
+   * The hero eyebrow, when "Concern · {who}" is not what the page should open
+   * with. /concerns/concussion opens on "After a concussion", because the
+   * audience word that matters there is *when*, not who.
+   */
+  heroEyebrow?: string;
   heroSub: string;
+  /**
+   * The block that has to be read before anything else on the page.
+   *
+   * Only /concerns/concussion carries one, and it is the reason this field
+   * exists rather than a `note-sage` panel further down: some visitors arrive
+   * days after a head injury, and for them the correct answer is a doctor, not
+   * us. So the block sits between the lead and the page's own CTAs — nothing
+   * on the page invites a call to us above it — and it is styled *up*, not
+   * down. `.medical-first` in globals.css is deliberately larger and darker
+   * than body copy; a footnote treatment here would be the failure.
+   *
+   * The three parts are one continuous piece of approved copy, split only so
+   * the symptom sentences between them can be set as a list. Do not soften,
+   * reorder, or move any of it below the fold.
+   */
+  medicalFirst?: {
+    /** "If your head injury was recent, start with a doctor…" */
+    urgent: string;
+    /** "This page is for later…" — what precedes the `recognize` list. */
+    laterLead: string;
+    /** "That gap — medically cleared, functionally not yourself…" */
+    gap: string;
+  };
   /** Overview page (what-we-help-with) copy. */
   overview: {
     recognize: string;
     approach: string;
   };
-  /** Detail page content. */
-  goalsHeading: string;
-  faqHeading: string;
+  /**
+   * Detail page content.
+   *
+   * The two headings are optional because their sections are: an empty
+   * `goals` or `faqs` array drops the whole band, heading included. Concussion
+   * ships with both empty — its copy is approved verbatim and contains no goal
+   * cards and no questions, and writing three of each for a page about brain
+   * injury would mean inventing outcomes on the one page that must not carry
+   * any. A heading with no cards under it renders an empty <h2>, which is
+   * loud; that is the intended failure mode if the two ever fall out of step.
+   */
+  goalsHeading?: string;
+  faqHeading?: string;
   recognize: string[];
   howHelp: { p1: string; p2: string; note: string };
   goals: string[]; // "Common goal" quote cards
@@ -533,6 +590,92 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
     guideHeading: "Why the alarm stays on.",
+  },
+  {
+    /*
+     * The ninth concern, and the only one whose copy was approved as a block
+     * rather than assembled from the mockups. Everything below is verbatim.
+     *
+     * Three things about this entry are not like the other eight, and all
+     * three are deliberate:
+     *
+     * 1. `medicalFirst` — the page leads with "start with a doctor". Some of
+     *    the people who find this page are days out from a head injury, and
+     *    for them the correct answer is emergency care. The assistant carries
+     *    the same rule as a check that fires before retrieval, so a recent
+     *    injury described in the chat never reaches a passage about LENS
+     *    (`head-injury` in lib/chat/safety.ts).
+     * 2. No goal cards and no FAQs. A "Common goal" quote on this page would
+     *    be an outcome claim about a brain injury, which is the one thing the
+     *    copy may never make. Empty rather than invented; the bands drop.
+     * 3. No photo. `image: null` with no `plateSpec` — the hero is copy only,
+     *    so nothing sits between the H1 and the medical-first block.
+     *
+     * Nothing here names a sport, a league, a team or a person. "Professional
+     * athletes" is the ceiling on that claim and it is already at it.
+     */
+    slug: "concussion",
+    shortTitle: "Concussion & TBI",
+    // Not the H1 — see `titleLead` on the type. This is what breadcrumbs, the
+    // related-concern links and the assistant's passage titles say.
+    title: "Post-concussion symptoms",
+    titleLead: "Cleared by your doctor, and ",
+    titleAccent: "still not right.",
+    // Mostly adults. Youth sport is a real slice of this audience, but every
+    // line of approved copy addresses an adult in the second person, so the
+    // audience line says what the page actually is.
+    who: "Most often adults",
+    heroEyebrow: "After a concussion",
+    heroSub:
+      "Most concussion recovery advice ends at the point where the scans come back clean. For a lot of people, that's not where the problem ends.",
+    medicalFirst: {
+      urgent:
+        "If your head injury was recent, start with a doctor. Emergency care exists for a reason, and the first days after a head injury are not the time for anything else. Nothing here replaces that, and we'd tell you the same thing on the phone.",
+      laterLead:
+        "This page is for later. Weeks or months out. You've been checked, you've been cleared, and something still isn't back.",
+      gap:
+        "That gap — medically cleared, functionally not yourself — is where most people are told to wait it out. Some do recover on their own. Others are still waiting a year later.",
+    },
+    overview: {
+      // The same four sentences the page sets as a list, run together — this
+      // is the /what-we-help-with entry, which is prose.
+      recognize:
+        "The fog that lifts and returns. Light and noise that wear on you in a way they didn't before. Sleep that never fully recovered. A shorter fuse than you used to have, and the sense that you're working harder to do the same things.",
+      // The referral line is the strongest credibility signal on the site, so
+      // it is what the hub entry leads with rather than a description of the
+      // sessions.
+      approach:
+        "Physicians in Middle Tennessee refer patients to us — we work from a standing referral list. We also see professional athletes, and people recovering from car accidents, months and sometimes years after the injury.",
+    },
+    recognize: [
+      "The fog that lifts and returns",
+      "Light and noise that wear on you in a way they didn't before",
+      "Sleep that never fully recovered",
+      "A shorter fuse than you used to have, and the sense that you're working harder to do the same things",
+    ],
+    howHelp: {
+      p1: "Post-concussion symptoms tend to cluster the same way attention, sleep, mood and mental fatigue cluster in everyone else: they're outputs of a nervous system struggling to regulate. That's why the person recovering from a car accident and the parent whose kid can't settle often describe surprisingly similar days.",
+      // The point count interpolates like every other figure on the site, so
+      // the page and lib/site-config.ts cannot disagree about the Brain Map.
+      p2: `A ${BRAIN_MAP_POINTS}-point recording and a written plan you keep. We walk you through what we see, alongside what you tell us about how your days actually go.`,
+      // The only sentence on this page that is not in the approved block. It
+      // is here because all eight other concerns carry the same boundary, and
+      // because it is the passage the assistant needs when someone asks "does
+      // LENS help with concussion?" — without it that question has no limit to
+      // answer with. Worded to say less than the others, not more: no verb
+      // that could be read as treating an injury.
+      note: "LENS is a wellness service. It doesn't treat concussion or brain injury of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
+    },
+    goals: [],
+    faqs: [],
+    image: null,
+    // The clusters the copy names — attention, sleep, mood, mental fatigue —
+    // rather than the concerns nearest alphabetically.
+    related: ["brain-fog", "sleep", "emotional-regulation"],
+    metaTitle: "Neurofeedback for Post-Concussion Symptoms & TBI",
+    metaDescription:
+      "LENS neurofeedback support in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. Physician-referred. If your injury is recent, see a doctor first.",
+    guideHeading: "Why these problems travel together.",
   },
 ];
 

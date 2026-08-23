@@ -186,6 +186,16 @@ export function applySafetyStop(session: ChatSession, stop: SafetyStop): void {
     session.draft = {};
     return;
   }
+  // A recent head injury ends the turn and clears a half-finished booking —
+  // nobody should be answering "which center?" in the same breath as "go to
+  // urgent care" — but it neither flags the conversation nor closes the door
+  // on contact details. The same visitor may well come back to this session
+  // asking about later, which is what the page is for.
+  if (stop.kind === "head-injury") {
+    session.step = "idle";
+    session.draft = {};
+    return;
+  }
   session.blockedFromContact = true;
   session.step = "idle";
   session.draft = {};

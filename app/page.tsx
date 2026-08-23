@@ -98,6 +98,10 @@ const concern = {
     title: "Stress & resilience",
     href: "/concerns/stress-resilience",
   },
+  concussion: {
+    title: "Post-concussion symptoms",
+    href: "/concerns/concussion",
+  },
 };
 
 // The audience split, defined once. Each group is a label and an anchor id,
@@ -188,6 +192,25 @@ const adultConcerns = [
       "Coffee doing the work sleep should",
       "Eight hours that feel like four",
     ],
+  },
+  // Adults only, and the reasoning is on the page rather than the audience:
+  // every line of approved concussion copy addresses an adult in the second
+  // person, and there is no parent-facing version of it to put on a card in
+  // the group above. Youth sport is a real part of this audience and reaches
+  // the page through search, the header and /what-we-help-with — none of which
+  // is split by audience — rather than through a card whose bullets nobody has
+  // written yet.
+  //
+  // `fill` because this makes five cards in a four-column grid. It spans the
+  // second row rather than sitting alone in a quarter of it; see ConcernCard.
+  {
+    ...concern.concussion,
+    points: [
+      "Cleared by a doctor and still not right",
+      "Fog that lifts and returns",
+      "Light and noise that wear on you",
+    ],
+    fill: "always" as const,
   },
 ];
 
