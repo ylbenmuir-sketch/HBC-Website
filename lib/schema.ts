@@ -52,11 +52,21 @@ export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
  * DISCLAIMER states this is a wellness practice and not a medical clinic, and
  * schema that contradicts the page copy is worse than a generic type.
  *
- * `sameAs` is absent on purpose: there are no Google Business Profiles or
- * social profiles yet. Add it here (one array, one place) when they exist.
+ * `sameAs` carries the Google Business Profiles — one entry per center that
+ * has a listing, addressed by CID, taken from the same `reviewReadUrl` the
+ * pages link to. This is the field that lets Google reconcile "the site" and
+ * "the two listings" into one entity rather than three, and it is the
+ * strongest such signal available to a practice with no social profiles. Both
+ * URLs are Ben-confirmed (see the field note in lib/locations.ts); a center
+ * without a listing contributes nothing rather than a guess.
+ *
+ * Social profiles, when they exist, belong in this same array.
  */
 export function organizationSchema() {
   const foundingYear = verifiedOr(ESTABLISHED_YEAR);
+  const profiles = locations
+    .map((l) => l.reviewReadUrl)
+    .filter((url): url is string => url !== null);
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -68,6 +78,7 @@ export function organizationSchema() {
       "Gentle LENS neurofeedback for adults, children, and families across Middle Tennessee.",
     ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
     ...(foundingYear ? { foundingDate: String(foundingYear) } : {}),
+    ...(profiles.length > 0 ? { sameAs: profiles } : {}),
     // First name only until the surname verifies (FOUNDER_LAST_NAME), which is
     // what FOUNDER_DISPLAY_NAME already resolves to.
     founder: {
@@ -147,6 +158,9 @@ function openingHoursSpecification(hours: WeeklyHours) {
  *    with no confirmed hours (Franklin) omits the field rather than guessing.
  *  - `parentOrganization` — an @id reference to the sitewide Organization,
  *    not a copy of it.
+ *  - `sameAs` — this center's own Google Business Profile, by CID. The
+ *    Organization node lists both; each LocalBusiness lists only its own, so
+ *    the two listings resolve to two places rather than to each other.
  *
  * Street address and ZIP stay behind hasConfirmedAddress() exactly as the UI
  * does.
@@ -187,6 +201,7 @@ export function localBusinessSchema(location: Location) {
         }
       : {}),
     ...(map ? { hasMap: map } : {}),
+    ...(location.reviewReadUrl ? { sameAs: [location.reviewReadUrl] } : {}),
     ...(hours ? { openingHoursSpecification: openingHoursSpecification(hours) } : {}),
     description: location.metaDescription,
     priceRange: "$$",
