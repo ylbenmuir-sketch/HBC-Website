@@ -4,13 +4,19 @@
  * are [placeholders] until the real roster is confirmed.
  */
 
-import { FOUNDER_DISPLAY_NAME } from "./site-config";
+import { FOUNDER_BIO, FOUNDER_DISPLAY_NAME, verifiedOr } from "./site-config";
 
 export type TeamMember = {
   /** Profile slug under /about/team/, or null for members without a profile page. */
   slug: string | null;
   name: string;
   role: string;
+  /**
+   * One line under the role. **May be empty**, and an empty one renders no
+   * paragraph rather than an empty tag — that is how a bio held behind a
+   * `Verifiable` degrades without taking the whole card with it. The founder's
+   * is the only one that does this today; see FOUNDER_BIO.
+   */
   bio: string;
   image?: { src: string; position: string };
   plateSpec?: string;
@@ -34,7 +40,10 @@ export const team: TeamMember[] = [
     founder: true,
     name: FOUNDER_DISPLAY_NAME,
     role: "Founder & Clinical Director",
-    bio: "Sets the clinical standard, trains every practitioner, and still keeps a client schedule.",
+    // Three unconfirmed claims about a named person, so production renders no
+    // bio and the card keeps only what is true — name, role, photo, and the
+    // link to her story. See FOUNDER_BIO in ./site-config.
+    bio: verifiedOr(FOUNDER_BIO) ?? "",
     image: { src: "/images/founder.jpg", position: "center 22%" },
   },
   {

@@ -412,7 +412,7 @@ export default async function LocationPage({
                 )}
                 <h3>{m.name}</h3>
                 <div className="role">{m.role}</div>
-                <p>{m.bio}</p>
+                {m.bio && <p>{m.bio}</p>}
               </div>
             ))}
           </div>

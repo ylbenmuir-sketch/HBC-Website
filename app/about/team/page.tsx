@@ -55,7 +55,7 @@ export default function TeamPage() {
                 )}
                 <h3>{m.name}</h3>
                 <div className="role">{m.role}</div>
-                <p>{m.bio}</p>
+                {m.bio && <p>{m.bio}</p>}
                 {m.founder && (
                   <Link
                     className="btn btn-ghost"
