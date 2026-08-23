@@ -281,7 +281,12 @@ export const concerns: Concern[] = [
       recognize:
         "A mind that won't shut off at night. Waking at 3 a.m. for no reason. Sleeping many hours and still waking exhausted.",
       approach:
-        "Sleep is one of the first things we ask about at every visit, because it's often where clients notice change earliest. Your plan adjusts to what your nights are telling us.",
+        // The causal clause is deliberately gone: "because it's often where
+        // clients notice change earliest" ranked sleep against every other
+        // domain for speed of change, which is a claim about results and one
+        // nothing here measures. The rest is process and stands. Same cut in
+        // howHelp.p1 and faqs[0] below; see the note above `goals`.
+        "Sleep is one of the first things we ask about at every visit. Your plan adjusts to what your nights are telling us.",
     },
     goalsHeading: "The changes people running on empty most often name.",
     faqHeading: "Asked by almost everyone who comes in exhausted.",
@@ -293,7 +298,28 @@ export const concerns: Concern[] = [
       "Waking exhausted no matter how long you slept",
     ],
     howHelp: {
-      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS sessions are quiet and passive — and sleep is often the first thing clients tell us has shifted, which is why we ask about it at every visit.",
+      /*
+       * "and sleep is often the first thing clients tell us has shifted" is
+       * gone for the reason above. Its trailing clause — "which is why we ask
+       * about it at every visit" — had that claim as its antecedent and could
+       * not be left standing on its own.
+       *
+       * **The ask survives in p2**, which already opens "Sleep is one of the
+       * first things we ask about at every visit. Your plan adjusts to what
+       * your nights are telling us." That is the reason, one sentence later,
+       * and it is why p1 does not restate it.
+       *
+       * Restating it here was tried and reverted. Every wording that kept the
+       * ask in p1 had to name sleep or nights again, and this passage already
+       * carries each of those twice — `concern:sleep:approach` concatenates
+       * overview.approach, p1 and p2. A third "nights" raised the term
+       * frequency enough to take the bare query `night` off
+       * `concern:sleep:signs`, which is the passage that actually describes
+       * the concern and the one HANDOFF-concern-passage-ties.md says should
+       * win bare topic words. The ending here adds no sleep vocabulary at all
+       * and the sweep comes back at zero.
+       */
+      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS sessions are quiet and passive — nothing to perform, and nothing to keep up with between visits.",
       p2: "Sleep is one of the first things we ask about at every visit. Your plan adjusts to what your nights are telling us — falling asleep, staying asleep, and how mornings actually feel.",
       note: "LENS is a wellness service, not a treatment for sleep disorders. It works alongside — never in place of — care from your doctor. Individual experiences vary.",
     },
@@ -305,7 +331,12 @@ export const concerns: Concern[] = [
     faqs: [
       {
         q: "When do people notice changes in sleep?",
-        a: "It varies honestly — sleep is often where clients notice change earliest, sometimes within the first few sessions; for others it builds gradually. Your check-ins make progress visible either way.",
+        // The comparative is gone; the hedged range it was wrapped around is
+        // untouched and still answers the question. The anxiety and brain-fog
+        // versions of this answer are deliberately NOT edited: they say "some
+        // notice … within the first few sessions", which is a range with no
+        // claim about which domain moves first, and that is the distinction.
+        a: "It varies honestly — sometimes within the first few sessions; for others it builds gradually. Your check-ins make progress visible either way.",
       },
       {
         q: "Do I have to do anything between sessions?",

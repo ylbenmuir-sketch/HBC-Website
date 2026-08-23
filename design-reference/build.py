@@ -347,7 +347,16 @@ ENTRIES = [
  ("Focus, ADHD &amp; follow-through","Adults &amp; children","concern-anxiety.html",
   "Homework that takes three hours and ends in tears. Projects that stall at 90 percent. Losing track mid-task, and procrastinating on things you genuinely care about.",
   "LENS supports the brain's own capacity to settle and organize — nothing to practice, no tasks to perform. Focus and follow-through are tracked at every check-in."),
- ("Sleep difficulties","Adults &amp; children","concern-anxiety.html",
+# DO NOT COPY THE CLAUSE BELOW FORWARD. "because it's often where clients
+ # notice change earliest" originated here, was carried into lib/concerns.ts
+ # (sleep: overview.approach, howHelp.p1, faqs[0]) and from there into a
+ # resources article, and was cut from all four in Aug 2026: it ranks sleep
+ # against every other domain for speed of change, which is a claim about
+ # results that nothing measures. The mockup text is left as it was — this is
+ # a historical record, not live copy — but the live wording is now
+ # "Sleep is one of the first things we ask about at every visit. Your plan
+ # adjusts to what your nights are telling us."
+  ("Sleep difficulties","Adults &amp; children","concern-anxiety.html",
   "A mind that won't shut off at night. Waking at 3 a.m. for no reason. Sleeping many hours and still waking exhausted.",
   "Sleep is one of the first things we ask about at every visit, because it's often where clients notice change earliest. Your plan adjusts to what your nights are telling us."),
  ("Emotional regulation","Often children — and their parents","concern-anxiety.html",
