@@ -1,4 +1,4 @@
-import Link from "next/link";
+import ChromeLink from "./ChromeLink";
 import { LogoName } from "./Logo";
 import FooterGroup from "./FooterGroup";
 import { DISCLAIMER } from "@/lib/site-config";
@@ -69,9 +69,9 @@ export default function Footer() {
           {groups.map((g) => (
             <FooterGroup key={g.heading} heading={g.heading}>
               {g.links.map((l) => (
-                <Link key={l.href + l.label} href={l.href}>
+                <ChromeLink key={l.href + l.label} href={l.href}>
                   {l.label}
-                </Link>
+                </ChromeLink>
               ))}
             </FooterGroup>
           ))}

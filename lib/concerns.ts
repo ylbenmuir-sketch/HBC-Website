@@ -766,9 +766,19 @@ export const concerns: Concern[] = [
     // The clusters the copy names — attention, sleep, mood, mental fatigue —
     // rather than the concerns nearest alphabetically.
     related: ["brain-fog", "sleep", "emotional-regulation"],
-    metaTitle: "Neurofeedback for Post-Concussion Symptoms & TBI",
+    // 42 chars + the 27-char brand suffix = 69, down from 75. "& TBI" is what
+    // goes: `post concussion symptoms` is the target query and leads the
+    // title, TBI is a supporting term the H1 and the body both carry, and the
+    // last words of a 75-character title are not rendered in a result. The
+    // "Neurofeedback for X" pattern this field requires costs the rest — no
+    // concern page can reach 60 while the template appends the brand.
+    metaTitle: "Neurofeedback for Post-Concussion Symptoms",
     metaDescription:
-      "LENS neurofeedback support in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. Physician-referred. If your injury is recent, see a doctor first.",
+      // 158 chars, down from 186. The "Physician-referred." sentence is what
+      // goes: it now has four other homes (see PHYSICIAN_REFERRALS), and the
+      // doctor-first sentence is the one that must survive truncation on this
+      // page of all pages.
+      "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. If your injury is recent, see a doctor first.",
     guideHeading: "Why these problems travel together.",
   },
 ];

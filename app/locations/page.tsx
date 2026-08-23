@@ -45,6 +45,9 @@ export default function LocationsPage() {
                 key={loc.slug}
                 location={loc}
                 imageHeight={260}
+                // This grid is the page body — each card is a section of it,
+                // and an h3 directly under the h1 was a skipped level.
+                headingLevel={2}
                 meta={
                   loc.comingSoon ? (
                     <>

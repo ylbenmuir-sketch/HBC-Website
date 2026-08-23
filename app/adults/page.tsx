@@ -7,8 +7,11 @@ import { Btn, TalkCta } from "@/components/Buttons";
 
 export const metadata: Metadata = {
   title: "Neurofeedback for Adults",
+  // 156 chars, down from 171. "and resilience" is what goes: the list was
+  // running past 160 and losing its last clause to truncation anyway, and
+  // /concerns/stress-resilience is the page that owns that word.
   description:
-    "Gentle LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, emotional regulation, and resilience. Short sessions, nothing to practice, no homework.",
+    "Gentle LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, and emotional regulation. Short sessions, nothing to practice, no homework.",
 };
 
 const adultConcerns = [

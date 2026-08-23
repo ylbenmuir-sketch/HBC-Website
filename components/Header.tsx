@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import ChromeLink from "./ChromeLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LogoMark, LogoName } from "./Logo";
@@ -97,47 +97,47 @@ export default function Header() {
       }`}
     >
       <div className="nav">
-        <Link className="logo" href="/">
+        <ChromeLink className="logo" href="/">
           <LogoMark />
           <LogoName />
-        </Link>
+        </ChromeLink>
         <nav className="nav-links" aria-label="Primary">
           <div>
-            <Link
+            <ChromeLink
               className={`top${isHelpActive(pathname) ? " active" : ""}`}
               href="/what-we-help-with"
             >
               What We Help With
-            </Link>
+            </ChromeLink>
             <div className="mega">
               <div className="col">
                 <h5>Adults</h5>
                 {megaAdults.map((l) => (
-                  <Link key={l.label} href={l.href}>
+                  <ChromeLink key={l.label} href={l.href}>
                     {l.label}
-                  </Link>
+                  </ChromeLink>
                 ))}
-                <Link href="/adults">All adult concerns →</Link>
+                <ChromeLink href="/adults">All adult concerns →</ChromeLink>
               </div>
               <div className="col">
                 <h5>Children &amp; families</h5>
                 {megaChildren.map((l) => (
-                  <Link key={l.label} href={l.href}>
+                  <ChromeLink key={l.label} href={l.href}>
                     {l.label}
-                  </Link>
+                  </ChromeLink>
                 ))}
-                <Link href="/children-families">All children&apos;s concerns →</Link>
+                <ChromeLink href="/children-families">All children&apos;s concerns →</ChromeLink>
               </div>
             </div>
           </div>
           {topLinks.map((l) => (
             <div key={l.href}>
-              <Link
+              <ChromeLink
                 className={`top${active(l.href) ? " active" : ""}`}
                 href={l.href}
               >
                 {l.label}
-              </Link>
+              </ChromeLink>
             </div>
           ))}
         </nav>
@@ -146,9 +146,9 @@ export default function Header() {
             {PHONE_DISPLAY}
           </a>
         )}
-        <Link className="nav-cta" href="/contact">
+        <ChromeLink className="nav-cta" href="/contact">
           Get a Free Call Today
-        </Link>
+        </ChromeLink>
         <button
           className={`nav-burger${open ? " is-open" : ""}`}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -164,35 +164,35 @@ export default function Header() {
       <div id="mobile-drawer" className={`drawer${open ? " open" : ""}`}>
         <div className="d-inner">
           <nav className="d-nav" aria-label="Mobile">
-            <Link className="d-top" href="/what-we-help-with">
+            <ChromeLink className="d-top" href="/what-we-help-with">
               What We Help With
-            </Link>
+            </ChromeLink>
             <div className="d-group">
               <h5>Adults</h5>
               {megaAdults.map((l) => (
-                <Link key={l.label} href={l.href}>
+                <ChromeLink key={l.label} href={l.href}>
                   {l.label}
-                </Link>
+                </ChromeLink>
               ))}
-              <Link href="/adults">All adult concerns →</Link>
+              <ChromeLink href="/adults">All adult concerns →</ChromeLink>
               <h5>Children &amp; families</h5>
               {megaChildren.map((l) => (
-                <Link key={l.label} href={l.href}>
+                <ChromeLink key={l.label} href={l.href}>
                   {l.label}
-                </Link>
+                </ChromeLink>
               ))}
-              <Link href="/children-families">All children&apos;s concerns →</Link>
+              <ChromeLink href="/children-families">All children&apos;s concerns →</ChromeLink>
             </div>
             {topLinks.map((l) => (
-              <Link key={l.href} className="d-top" href={l.href}>
+              <ChromeLink key={l.href} className="d-top" href={l.href}>
                 {l.label}
-              </Link>
+              </ChromeLink>
             ))}
           </nav>
           <div className="d-cta">
-            <Link className="nav-cta" href="/contact">
+            <ChromeLink className="nav-cta" href="/contact">
               Get a Free Call Today
-            </Link>
+            </ChromeLink>
             {SHOW_PHONE && (
               <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
                 or call <b>{PHONE_DISPLAY}</b>

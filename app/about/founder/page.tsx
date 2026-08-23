@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   title: "Our Founder",
   // Derived so the description carries the surname the moment it verifies —
   // this is the page a search for the founder by name should land on.
-  description: `${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director — the clinical standard behind every Harmonized practitioner, and the reason the check-in question is always “how are you actually feeling?”`,
+  //
+  // 148 chars with the surname, down from 182. The quoted check-in question
+  // was the part running past 160, and a description that truncates mid-quote
+  // reads worse than one that never opened the quotation marks.
+  description: `${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director — the clinical standard behind every Harmonized practitioner, and the reason we ask how you actually feel.`,
 };
 
 export default function FounderPage() {

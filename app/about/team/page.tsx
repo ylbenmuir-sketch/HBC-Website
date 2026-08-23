@@ -53,7 +53,10 @@ export default function TeamPage() {
                 ) : (
                   <PlaceholderPlate spec={m.plateSpec ?? ""} height={360} />
                 )}
-                <h3>{m.name}</h3>
+                {/* h2, not h3 — same reason as /locations and /resources:
+                    this grid is the page body, and an h3 sitting directly
+                    under the h1 skipped a level. */}
+                <h2>{m.name}</h2>
                 <div className="role">{m.role}</div>
                 {m.bio && <p>{m.bio}</p>}
                 {m.founder && (

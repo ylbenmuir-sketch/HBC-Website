@@ -58,9 +58,14 @@ export const metadata: Metadata = {
   //
   // og:title and twitter:title are derived from this by Next, so they follow
   // automatically — don't restate them here.
+  // 53 characters. It was 75 — past the ~580px Google renders, so the tail
+  // ("Focus & Sleep") was being cut off in the result anyway. What survives is
+  // what the homepage is actually competing for: the exact `neurofeedback
+  // therapy` target and both city names. The three symptom words move to the
+  // description, which has room for them, and to the concern spokes that own
+  // those queries.
   title: {
-    absolute:
-      "Neurofeedback in Nashville & Murfreesboro — Help for Anxiety, Focus & Sleep",
+    absolute: "Neurofeedback Therapy in Nashville & Murfreesboro, TN",
   },
 };
 

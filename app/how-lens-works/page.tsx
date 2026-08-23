@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
-import { BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -357,6 +357,22 @@ export default function HowLensWorksPage() {
                 ))}
               </ul>
             </div>
+          </div>
+          {/* Fourteen inbound contextual links, more than any page on the site
+              except /what-we-help-with and /contact, and one outbound — a
+              near-terminal node forwarding almost nothing (SEO-AUDIT-2.md §4).
+              Three handoffs in the site's ghost-button vocabulary, with the
+              labels it already gives these destinations elsewhere. */}
+          <div className="hero-ctas rv" style={{ marginTop: 44 }}>
+            <Btn href="/lens-neurofeedback" variant="ghost" arrow>
+              What LENS is
+            </Btn>
+            <Btn href="/first-visit" variant="ghost" arrow>
+              Your first visit
+            </Btn>
+            <Btn href="/faq" variant="ghost" arrow>
+              The full FAQ
+            </Btn>
           </div>
         </div>
       </section>

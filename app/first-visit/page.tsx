@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
-import { BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_PRICE,
@@ -151,6 +151,22 @@ export default function FirstVisitPage() {
                 data that shapes your plan.
               </p>
             </div>
+          </div>
+          {/* This page received five inbound contextual links and passed one
+              out — a near-terminal node absorbing authority and forwarding
+              almost none (SEO-AUDIT-2.md §4). Three handoffs, in the ghost-
+              button vocabulary the rest of the site uses, with the labels the
+              rest of the site already gives these three destinations. */}
+          <div className="hero-ctas rv" style={{ marginTop: 40 }}>
+            <Btn href="/lens-neurofeedback" variant="ghost" arrow>
+              What LENS is
+            </Btn>
+            <Btn href="/how-lens-works" variant="ghost" arrow>
+              How a session works
+            </Btn>
+            <Btn href="/faq" variant="ghost" arrow>
+              The full FAQ
+            </Btn>
           </div>
         </div>
       </section>

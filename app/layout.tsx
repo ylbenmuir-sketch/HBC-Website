@@ -83,7 +83,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      {/* The dock's footprint, reserved in the server-rendered HTML rather than
+          by an effect after hydration. BottomBarProvider still sets and clears
+          this attribute — it has to, for the homepage CTA bar, which mounts on
+          one route and is not known here — but when the assistant flag is on
+          the dock is docked from the first frame, and the footer's reserve
+          should be there from the first frame too. Applied at hydration it
+          moved the end of every page. See the reserve block in globals.css. */}
+      <body data-bottombar={FEATURE_ASSISTANT ? "on" : undefined}>
         {/* One controller for everything anchored to the bottom of the
             viewport — the sticky ask bar, the homepage CTA bar, and the
             assistant panel that retires both. See BottomBarContext. */}

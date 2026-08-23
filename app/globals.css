@@ -115,7 +115,11 @@ footer.site a:focus-visible, footer.site button:focus-visible {
 }
 
 /* buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--sans); font-weight: 600; font-size: 16px; text-decoration: none; padding: 18px 34px; border-radius: 3px; transition: background 0.2s, color 0.2s, border-color 0.2s; cursor: pointer; border: 0; }
+/* `min-height: 44px` is Google's recommended tap target, and it is on the base
+   rather than on `.btn-ghost` because the variants that fell short of it —
+   ghost buttons at 43px, and the compact header CTA — all inherit from here.
+   A floor, not a height: every button already taller than 44px is untouched. */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--sans); font-weight: 600; font-size: 16px; text-decoration: none; padding: 18px 34px; min-height: 44px; border-radius: 3px; transition: background 0.2s, color 0.2s, border-color 0.2s; cursor: pointer; border: 0; }
 .btn-primary { background: var(--navy); color: var(--ivory); }
 .btn-primary:hover { background: var(--navy-deep); }
 .btn-invert { background: var(--ivory); color: var(--navy); }
@@ -129,6 +133,10 @@ footer.site a:focus-visible, footer.site button:focus-visible {
 .btn-outline:hover { border-color: var(--navy); }
 .arrow { font-size: 18px; line-height: 1; transform: translateY(-1px); }
 .micro { font-size: 13.5px; color: var(--slate); margin-top: 12px; }
+/* The 404's "start from the homepage" link. `.micro` is small print and has no
+   link rule of its own, which on that page would leave the last route out
+   looking like a full stop. */
+.micro a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .on-dark .micro { color: rgba(251, 248, 241, 0.55); }
 
 /* header + mega menu */
@@ -144,7 +152,11 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
 .nav-links a.top.active { color: var(--sage-deep); box-shadow: inset 0 -2px 0 var(--gold); }
 .nav-cta { background: var(--navy); color: var(--ivory) !important; padding: 13px 24px; border-radius: 3px; font-weight: 600 !important; font-size: 15px; text-decoration: none; flex: none; }
 .nav-cta:hover { background: var(--navy-deep); }
-.nav-tel { font-size: 14px; color: var(--slate); text-decoration: none; flex: none; }
+/* 24px minimum height, per WCAG 2.5.8. This link measured 141x23 on every
+   page on the site — the header phone number, and one of only two tap-target
+   failures in the build. Padding rather than a height so the text stays where
+   it was and the box grows around it. */
+.nav-tel { font-size: 14px; color: var(--slate); text-decoration: none; flex: none; display: inline-flex; align-items: center; min-height: 24px; padding: 4px 0; }
 .nav-tel b { color: var(--navy); }
 /* mega */
 .mega { position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(8px); background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(21, 34, 48, 0.35); padding: 34px 40px; display: none; gap: 56px; min-width: 640px; }
@@ -399,8 +411,12 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .loc-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
 .loc-card .ph, .loc-card .plate { height: 240px; border-radius: 0; }
 .loc-card .body { padding: 32px 34px 34px; display: flex; flex-direction: column; flex: 1; }
-.loc-card h3 { font-size: 27px; }
-.loc-card .city { font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 4px 0 16px; }
+/* h2 or h3 — a card grid that is the whole page body marks each card as a
+   top-level section (/locations, /resources, /about/team), while the same card
+   under a section heading elsewhere stays an h3. Both render identically, the
+   way .ccard's two levels already do. */
+.loc-card h3, .loc-card h2 { font-size: 27px; }
+.loc-card .city { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 4px 0 16px; }
 .loc-card .meta { font-size: 14.5px; color: var(--slate); line-height: 1.8; margin-bottom: 24px; }
 .loc-card .meta b { color: var(--ink); font-weight: 600; }
 .loc-card a.go { margin-top: auto; color: var(--navy); font-weight: 600; font-size: 14.5px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); align-self: flex-start; padding-bottom: 2px; }
@@ -492,7 +508,7 @@ details.faq .a a { color: var(--sage-deep); }
 /* team */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
 .member .ph, .member .plate { height: 360px; margin-bottom: 20px; }
-.member h3 { font-size: 25px; }
+.member h3, .member h2 { font-size: 25px; }
 .member .role { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 5px 0 10px; }
 .member p { color: var(--slate); font-size: 15px; }
 
@@ -524,8 +540,8 @@ details.faq .a a { color: var(--sage-deep); }
 .res-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none; }
 .res-card .ph, .res-card .plate { height: 210px; border-radius: 0; }
 .res-card .body { padding: 28px 30px 32px; display: flex; flex-direction: column; flex: 1; }
-.res-card .tag { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 10px; }
-.res-card h3 { font-size: 23px; color: var(--navy); line-height: 1.25; margin-bottom: 10px; }
+.res-card .tag { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 10px; }
+.res-card h3, .res-card h2 { font-size: 23px; color: var(--navy); line-height: 1.25; margin-bottom: 10px; }
 .res-card p { font-size: 14.5px; color: var(--slate); }
 .res-card span.read { margin-top: auto; padding-top: 18px; color: var(--navy); font-weight: 600; font-size: 14px; }
 
@@ -1408,6 +1424,11 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
      viewport on focus. Same reason as the assistant's own composer. */
   font-size: 16px; line-height: 1.4;
   color: var(--ink); background: transparent; border: 0; padding: 0;
+  /* 24px minimum, per WCAG 2.5.8. At 16px/1.4 the field measured 22px tall on
+     every page — the second of the build's two tap-target failures, and the
+     one a thumb actually aims at. The bar's own min-height is unchanged, so
+     nothing about the pill moves. */
+  min-height: 24px;
   /* The longest prompt does not fit the collapsed pill; it truncates rather
      than being replaced by a shorter one, so the rotation stays one list. */
   text-overflow: ellipsis;

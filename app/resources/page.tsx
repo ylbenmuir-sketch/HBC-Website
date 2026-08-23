@@ -59,7 +59,10 @@ export default function ResourcesPage() {
                 )}
                 <div className="body">
                   <div className="tag">{r.tag}</div>
-                  <h3>{r.title}</h3>
+                  {/* h2, not h3: this grid is the page body and each article
+                      is a section of it. An h3 under the h1 with no h2 between
+                      was a skipped level. */}
+                  <h2>{r.title}</h2>
                   <p>{r.excerpt}</p>
                   <span className="read">Read →</span>
                 </div>
