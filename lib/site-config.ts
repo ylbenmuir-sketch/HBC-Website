@@ -633,6 +633,54 @@ export const INFORMATION_SHARING =
   "Nothing you tell us goes to anyone unless you ask us to send it. We don’t " +
   "sell it, and we don’t use it for marketing unless you’ve told us we can.";
 
+/* ------------------------------------------------------------------ */
+/* Privacy notice (/privacy-policy)                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * When the privacy notice last changed. A date a reader can check is the
+ * difference between a policy and a page of assurances.
+ *
+ * Bump it when the notice itself changes — not when the site does.
+ */
+export const PRIVACY_EFFECTIVE_DATE = "2026-08-23";
+
+/**
+ * How long a form submission is kept before it is deleted.
+ *
+ * **Unverified, and the page drops the whole paragraph without it.** Retention
+ * is an operational decision nobody has made: the Supabase table has no
+ * expiry, `lib/chat/logging.ts` records that platform retention applies to the
+ * server log until somebody chooses otherwise, and no figure exists anywhere
+ * in this repository to read. A number invented here would be the one sentence
+ * on the page a person could hold the practice to, which is exactly the
+ * sentence not to guess at.
+ */
+export const PRIVACY_RETENTION: Verifiable = {
+  value:
+    "We keep consultation requests for [retention period] and guide sign-ups " +
+    "for [retention period], then delete them.",
+  verified: false,
+  note: "[Retention period — confirm]",
+};
+
+/**
+ * The promise to hand back or delete what somebody has sent us.
+ *
+ * **Unverified.** Every other claim on that page describes something the code
+ * already does and can be checked against it. This one is a commitment about
+ * how the practice will answer an email, it has no implementation anywhere,
+ * and it is the kind of sentence that is quoted back. Ben confirms it or the
+ * paragraph does not render.
+ */
+export const PRIVACY_ACCESS_REQUESTS: Verifiable = {
+  value:
+    "Ask us for a copy of what you’ve sent us, or ask us to delete it, and " +
+    "we will — call or use the contact form and say so.",
+  verified: false,
+  note: "[Access & deletion requests — confirm]",
+};
+
 /**
  * Practitioner training, in Ben's words. It names a third party (OchsLabs) and
  * a certification period, so it is a claim about the practice that has to stay

@@ -47,6 +47,9 @@ const groups = [
       { label: "Our founder", href: "/about/founder" },
       { label: "Our team", href: "/about/team" },
       { label: "Contact", href: "/contact" },
+      // The footer is where people look for this one, and until now there was
+      // nowhere on the site to look. See app/privacy-policy/page.tsx.
+      { label: "Privacy", href: "/privacy-policy" },
     ],
   },
 ];

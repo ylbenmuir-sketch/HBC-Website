@@ -47,6 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/faq",
     "/contact",
     "/resources",
+    "/privacy-policy",
   ];
 
   // Draft team profiles / articles are excluded outside draft mode — they

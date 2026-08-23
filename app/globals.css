@@ -474,6 +474,16 @@ details.faq .a a { color: var(--sage-deep); }
 /* inline links inside a lens-seq row (location "Communities served") */
 .lens-seq p a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 
+/* Inline links inside `.article` prose, for the one page that needs them.
+
+   `.article p` has no link rule on purpose — the articles hand off with ghost
+   buttons, so a link inside their body copy would be a link nobody could see,
+   and the fix there is not to add a rule (see the `links` block in
+   lib/resources.ts). /privacy-policy borrows the same prose column and does
+   need inline links: "call this number" and "use the contact form" belong in
+   the sentence, not in a button under it. Same treatment as .lens-seq p a. */
+.policy p a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+
 /* team */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
 .member .ph, .member .plate { height: 360px; margin-bottom: 20px; }
