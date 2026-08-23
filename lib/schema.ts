@@ -47,6 +47,13 @@ export function abs(path: string): string {
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 
 /**
+ * Stable @id for the founder. Declared beside the Organization's because the
+ * two nodes reference each other — `founder` on the Organization, `worksFor`
+ * on the Person — and an id used in two files should be readable in one place.
+ */
+export const FOUNDER_ID = `${SITE_URL}/about/founder#person`;
+
+/**
  * Sitewide Organization. Rendered once, in the root layout.
  *
  * Deliberately NOT a medical type — see SEO-AUDIT.md §2.5. The footer
@@ -82,8 +89,14 @@ export function organizationSchema() {
     ...(profiles.length > 0 ? { sameAs: profiles } : {}),
     // First name only until the surname verifies (FOUNDER_LAST_NAME), which is
     // what FOUNDER_DISPLAY_NAME already resolves to.
+    //
+    // `@id` matches the standalone Person emitted on /about/founder, so the
+    // two are one entity rather than two nodes with the same name. The name
+    // and jobTitle stay here as well: this node has to be readable on the 37
+    // pages that carry it and never fetch the founder page.
     founder: {
       "@type": "Person",
+      "@id": FOUNDER_ID,
       name: FOUNDER_DISPLAY_NAME,
       jobTitle: "Founder & Clinical Director",
     },
@@ -268,6 +281,37 @@ export function serviceSchema({
           })),
         }
       : {}),
+  };
+}
+
+/**
+ * The founder, as a standalone entity — for /about/founder.
+ *
+ * Fully licensed by what that page already says. It names her in the `<title>`,
+ * in the H1, in the meta description, in the image alt, and the sitewide
+ * Organization node has carried her as `founder` all along; this gives that
+ * person an `@id` of her own so the two references resolve to one entity
+ * instead of to a name that happens to repeat.
+ *
+ * `worksFor` points at the Organization by @id, and `founder` on the
+ * Organization now points back here, which is what closes the loop.
+ *
+ * Nothing else. No credentials, no `alumniOf`, no `knowsAbout` — those are
+ * §5's, waiting on facts nobody has supplied, and rule 1 at the top of this
+ * file is that schema never asserts more than the page does. The `@id` is
+ * stable, so the day the bio and the credentials land they attach to the
+ * entity that is already there rather than minting a second one.
+ */
+export function founderSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": FOUNDER_ID,
+    name: FOUNDER_DISPLAY_NAME,
+    jobTitle: "Founder & Clinical Director",
+    url: abs("/about/founder"),
+    image: abs("/images/founder.jpg"),
+    worksFor: { "@id": ORGANIZATION_ID },
   };
 }
 

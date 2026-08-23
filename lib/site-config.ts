@@ -634,6 +634,38 @@ export const INFORMATION_SHARING =
   "sell it, and we don’t use it for marketing unless you’ve told us we can.";
 
 /* ------------------------------------------------------------------ */
+/* Credibility                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The physician-referral claim — approved copy, and the strongest credibility
+ * signal the practice has.
+ *
+ * It lived in one place: the `overview.approach` field of `/concerns/concussion`
+ * in lib/concerns.ts, which put it on the concussion page and its hub entry
+ * and nowhere else. A doctor-refers-to-us claim is not a concussion fact. It
+ * belongs wherever somebody is deciding whether to trust the practice, which
+ * is /about, both location pages, and the homepage proof band
+ * (SEO-AUDIT-2.md §5, §8.2 C11).
+
+ * Here, in one place, for INSURANCE_POLICY's reason: a sentence restated on
+ * five pages is a sentence that will read five different ways within a year,
+ * and this one is a claim about other people's behaviour. Do not paraphrase it
+ * at a call site.
+ *
+ * A plain constant, not a `Verifiable`. It is approved copy already on the
+ * live site, not a fact awaiting confirmation.
+ *
+ * The concussion page still carries it, and still carries the sentence about
+ * athletes and car accidents that follows it — that page's copy is approved as
+ * a block and moving the line off it would be an edit to approved copy rather
+ * than a placement decision.
+ */
+export const PHYSICIAN_REFERRALS =
+  "Physicians in Middle Tennessee refer patients to us — we work from a " +
+  "standing referral list.";
+
+/* ------------------------------------------------------------------ */
 /* Privacy notice (/privacy-policy)                                    */
 /* ------------------------------------------------------------------ */
 

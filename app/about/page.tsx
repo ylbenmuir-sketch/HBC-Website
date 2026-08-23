@@ -6,6 +6,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import {
   FOUNDER_DISPLAY_NAME,
+  PHYSICIAN_REFERRALS,
   STAT_SESSIONS,
   TRAINING_CLAIM,
   verifiedOr,
@@ -65,6 +66,12 @@ export default function AboutPage() {
             stat: "Every visit",
             label: "progress reviewed with a structured check-in",
           },
+          // Same compression of PHYSICIAN_REFERRALS the homepage band
+          // carries. The full sentence is in the care grid below.
+          {
+            stat: "Physician-referred",
+            label: "We work from a standing referral list",
+          },
         ]}
       />
 
@@ -93,6 +100,12 @@ export default function AboutPage() {
               center &mdash; so the experience doesn&rsquo;t depend on which
               door you walk through.
             </p>
+            {/* The referral claim in full. It sat on /concerns/concussion and
+                nowhere else, which put the best credibility signal the
+                practice has on the page fewest people deciding about the
+                practice ever read. Approved copy, interpolated from
+                site-config so this page and that one cannot come apart. */}
+            <p>{PHYSICIAN_REFERRALS}</p>
             <Btn href="/about/founder" variant="ghost" arrow>
               The founder&rsquo;s story
             </Btn>

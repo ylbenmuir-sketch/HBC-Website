@@ -4,6 +4,8 @@ import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
+import JsonLd from "@/components/JsonLd";
+import { founderSchema } from "@/lib/schema";
 import { FOUNDER_DISPLAY_NAME, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -16,6 +18,9 @@ export const metadata: Metadata = {
 export default function FounderPage() {
   return (
     <>
+      {/* The one page that is about a person gets that person as an entity.
+          Everything in it is already on the page — see founderSchema(). */}
+      <JsonLd data={founderSchema()} />
       <Breadcrumbs
         trail={[{ label: "About", href: "/about" }, { label: "Our founder" }]}
       />

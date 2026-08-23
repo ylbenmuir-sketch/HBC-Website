@@ -22,6 +22,7 @@ import { localBusinessSchema } from "@/lib/schema";
 import {
   PHONE_DISPLAY,
   PHONE_TEL,
+  PHYSICIAN_REFERRALS,
   SHOW_DRAFT_CONTENT,
   SHOW_PHONE,
   isDraftText,
@@ -325,6 +326,13 @@ export default async function LocationPage({
                 <Link href="/concerns/focus-adhd">focus and ADHD</Link>, and{" "}
                 <Link href="/concerns/sleep">sleep</Link>.
               </p>
+              {/* The referral claim, on the two pages a local search lands on.
+                  It sat on /concerns/concussion alone; a doctor-refers-to-us
+                  claim is not a concussion fact, and "who else trusts this
+                  center" is exactly the question somebody choosing between
+                  two Nashville listings is asking. Approved copy, one home —
+                  see PHYSICIAN_REFERRALS in lib/site-config.ts. */}
+              <p style={{ marginBottom: 18 }}>{PHYSICIAN_REFERRALS}</p>
               <div className="hero-ctas" style={{ marginTop: 26 }}>
                 <Btn href="/lens-neurofeedback" variant="ghost" arrow>
                   What LENS is

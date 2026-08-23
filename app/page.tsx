@@ -464,6 +464,14 @@ export default function HomePage() {
             todo: ESTABLISHED_YEAR.note,
             verified: Boolean(establishedYear),
           },
+          // The referral claim, in the band's own two-part shape. Both halves
+          // are words from PHYSICIAN_REFERRALS — the band cannot hold the
+          // sentence, and this is a compression of it rather than a rewrite.
+          // The full sentence is on /about and both location pages.
+          {
+            stat: "Physician-referred",
+            label: "We work from a standing referral list",
+          },
         ]}
       />
 

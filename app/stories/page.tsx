@@ -1,10 +1,11 @@
+import { Fragment } from "react";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import Quote from "@/components/Quote";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
-import { combinedReviewCount, reviewCountLabel } from "@/lib/locations";
+import { combinedReviewCount, locations, reviewCountLabel } from "@/lib/locations";
 import {
   EXPERIENCES_DISCLAIMER,
   REVIEWS,
@@ -21,6 +22,9 @@ export default function StoriesPage() {
   // Gated on there being a count to print — see the same pair on the homepage.
   const reviewCount = combinedReviewCount();
   const showReviewBand = reviewCount !== null;
+  // Centers with a listing to read. A center without one contributes no link
+  // rather than a dead one — Franklin has not opened.
+  const listings = locations.filter((l) => l.reviewReadUrl);
   // Real, permissioned quotes only. The page used to carry six sample quotes
   // for design review; those are gone now that verified ones exist, and the
   // grid simply renders however many there are rather than being padded.
@@ -87,6 +91,30 @@ export default function StoriesPage() {
                     per-center lines on the location pages are where the read
                     links live. */}
                 <span>Every one of them public on Google</span>
+                {/* The read links, per center.
+
+                    The band's own figure stays unlinked for the reason the
+                    comment above gives — 159 is a total that exists on no
+                    Google page, so there is nothing honest for it to point at.
+                    What was missing was any route from the page about client
+                    stories to the 159 stories themselves, which is a strange
+                    thing for that page not to offer (SEO-AUDIT-2.md §8.2 C12).
+                    Two links, one per listing, is the form that is true: each
+                    one lands on the reviews it names.
+
+                    Same `rel="noopener"` and deliberate lack of `noreferrer`
+                    as the location pages — the referrer is what tells the
+                    Business Profile this traffic came from the site. */}
+                <span className="review-links">
+                  {listings.map((l, i) => (
+                    <Fragment key={l.slug}>
+                      {i > 0 && " · "}
+                      <a href={l.reviewReadUrl!} target="_blank" rel="noopener">
+                        {l.name} &rarr;
+                      </a>
+                    </Fragment>
+                  ))}
+                </span>
               </div>
               <div>
                 <strong>Video stories</strong>

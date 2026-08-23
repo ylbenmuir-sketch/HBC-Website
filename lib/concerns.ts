@@ -16,6 +16,7 @@ import {
   FIRST_VISIT_DURATION,
   FULL_COURSE,
   MAINTENANCE,
+  PHYSICIAN_REFERRALS,
 } from "./site-config";
 
 export type ConcernFaq = {
@@ -682,9 +683,10 @@ export const concerns: Concern[] = [
         "The fog that lifts and returns. Light and noise that wear on you in a way they didn't before. Sleep that never fully recovered. A shorter fuse than you used to have, and the sense that you're working harder to do the same things.",
       // The referral line is the strongest credibility signal on the site, so
       // it is what the hub entry leads with rather than a description of the
-      // sessions.
-      approach:
-        "Physicians in Middle Tennessee refer patients to us — we work from a standing referral list. We also see professional athletes, and people recovering from car accidents, months and sometimes years after the injury.",
+      // sessions. Interpolated from site-config now that /about, both location
+      // pages and the homepage proof band state it too — one sentence, one
+      // home, so five pages cannot drift into five wordings.
+      approach: `${PHYSICIAN_REFERRALS} We also see professional athletes, and people recovering from car accidents, months and sometimes years after the injury.`,
     },
     recognize: [
       "The fog that lifts and returns",

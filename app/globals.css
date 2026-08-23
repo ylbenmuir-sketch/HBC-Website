@@ -388,6 +388,11 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .review-band strong { display: block; font-family: var(--serif); font-size: 26px; color: var(--navy); font-weight: 600; }
 .review-band span { font-size: 13.5px; color: var(--slate); }
 .review-band .todo { color: var(--gold); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; display: block; margin-top: 4px; }
+/* Per-center read links under the review count on /stories. `.review-band
+   span` gives them the band's small type; these need the link treatment and a
+   line of their own, since they sit under a sentence rather than in it. */
+.review-band .review-links { display: block; margin-top: 8px; }
+.review-band .review-links a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 
 /* location cards */
 .loc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
@@ -640,6 +645,12 @@ html.js .rv.in { opacity: 1; transform: none; }
   .proof-grid { grid-template-columns: 1fr 1fr; }
   .proof-grid > div:nth-child(2n) { border-right: 0; }
   .proof-grid > div { border-bottom: 1px solid var(--line); }
+  /* An odd number of stats leaves the last one alone on its row with a
+     dangling right border and a hole beside it. It spans instead. Not a
+     special case for the five-stat band: any stat can drop out of a
+     production build when its `verified` gate is false, so the count here has
+     always been able to go odd. */
+  .proof-grid > div:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
   .entry { grid-template-columns: 1fr; gap: 26px; padding: 48px 0; }
   .loc-grid, .team-grid, .res-grid { grid-template-columns: 1fr 1fr; }
   .family-row { grid-template-columns: 1fr; }
@@ -866,6 +877,9 @@ html.js .rv.in { opacity: 1; transform: none; }
   .proof-grid > div:nth-child(2n) { border-right: 0 !important; }
   .proof-grid > div:nth-child(2n + 1) { border-right: 1px solid var(--line) !important; }
   .proof-grid > div:nth-last-child(-n + 2) { border-bottom: 0; }
+  /* See the same rule at the tablet breakpoint. */
+  .proof-grid > div:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0 !important; }
+  .proof-grid > div:last-child { border-bottom: 0; }
   .proof-grid strong { font-size: clamp(26px, 7.6vw, 32px); margin-bottom: 5px; }
   .proof-grid span { font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.5; display: block; }
 
