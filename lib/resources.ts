@@ -20,6 +20,36 @@
  * `goals`, so aiming it at focus-adhd would put an article about the exact
  * words one page claims onto a different one.
  *
+ * ## The anxiety cluster, and the collision it had to avoid
+ *
+ * Three more support /concerns/anxiety: `told-to-just-relax`,
+ * `braced-for-something` (+ stress-resilience) and `alongside-therapy`
+ * (+ /faq). Same rule — none targets `neurofeedback for anxiety`.
+ *
+ * **`/concerns/anxiety` and `/concerns/sleep` both claim racing thoughts at
+ * bedtime**, in words so close that one `goals` string is identical on both
+ * pages ("Falling asleep without an hour of ceiling-staring."). The site's
+ * existing split is by noun and is asserted in CONCERN_ROUTING: *thoughts* go
+ * to anxiety, *sleep / 3am / awake* go to sleep. These articles stay on the
+ * right side of it three ways:
+ *
+ * 1. **No article targets a sleep-onset query.** That half of the demand
+ *    belongs to /concerns/sleep and to the sleep cluster's own articles.
+ * 2. **`told-to-just-relax` hands off explicitly.** Its "If nights are the
+ *    hard part" section names the boundary and sends that reader to
+ *    /concerns/sleep — the pattern /lens-neurofeedback §2 uses to hand the
+ *    mechanism to /how-lens-works instead of restating it.
+ * 3. **The four ranking surfaces stay clear.** "racing thoughts", "won't shut
+ *    off at night", "ceiling-staring" and "3 a.m." appear in no `title`,
+ *    `metaTitle`, `excerpt` or `metaDescription` here. Those four fields are
+ *    where a page declares what it is competing for; body prose may describe
+ *    the experience, and does.
+ *
+ * Retrieval is not a risk in either direction: lib/chat/content-index.ts
+ * imports concerns, faq, locations and site-config and never this file, so no
+ * article is an indexed passage and no article can move a routing line. The
+ * sweep is run against these anyway, as proof rather than as diagnosis.
+ *
  * ## Every fact here traces
  *
  * To a verified constant in ./site-config, or to copy already in the site
@@ -553,6 +583,232 @@ export const resources: Resource[] = [
     metaTitle: "Can You Do LENS Neurofeedback While on Medication?",
     metaDescription:
       "Yes — LENS is routinely used alongside other care. What we do and don’t do about medication, stated plainly.",
+  },
+  {
+    slug: "told-to-just-relax",
+    tag: "For adults",
+    title: "Why you can’t relax when there’s nothing to relax about",
+    crumbLabel: "“Just relax”",
+    excerpt: "Being told to relax assumes the problem is that you haven’t tried.",
+    image: { src: "/images/session-room.jpg", position: "center 45%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "Life is fine. The week is ordinary, nothing is wrong, and you are still braced for something. Then somebody tells you to relax — and the advice is so obviously correct that failing at it starts to feel like a verdict.",
+    body: [
+      { type: "h2", text: "The advice assumes the problem is effort" },
+      {
+        type: "p",
+        text: "“Just relax” isn’t really an instruction. It’s a description of the desired outcome, handed over as though naming it were the hard part. If relaxing were available you would have done it, which is the whole of why the sentence lands badly — and why the people saying it are usually surprised by the reaction.",
+      },
+      {
+        type: "p",
+        text: "The mismatch is between what the phrase assumes and what is actually in short supply. It assumes calm is a choice you keep declining to make. What people describe instead is a body that stays on alert long after the moment has passed: constantly on edge, braced for something, struggling to relax even when life is objectively calm. That last clause is the one that matters. The difficulty isn’t proportionate to what’s happening, which is exactly why arguing about what’s happening doesn’t move it.",
+      },
+      { type: "h2", text: "Why calm isn’t a decision" },
+      {
+        type: "p",
+        text: "Your nervous system has a range it works well inside. Above it you are reactive; below it you are flat. Most of what gets called a focus problem, a temper problem or a motivation problem is a system operating outside that range — and so is a good deal of what gets called not being able to relax. Arousal regulation is a measurable property of the nervous system, and it varies, across people and within the same person across a day.",
+      },
+      {
+        type: "p",
+        text: "It also isn’t fixed. Regulation is a capacity that depletes and recovers, which is why an ordinary Tuesday evening is manageable one week and not the next. Nothing about the week got harder; what was available to meet it got smaller. Consistency is the wrong benchmark, and holding yourself to your own best day sets a standard the system cannot meet.",
+      },
+      {
+        type: "blockquote",
+        text: "Being told to relax is being asked to spend the thing that has already run out.",
+      },
+      {
+        type: "p",
+        text: "It is also why the standard advice underperforms. Most strategies for regulation require the very capacity that is in short supply — they work when you don’t need them and fail when you do. “Notice it before it escalates” requires the noticing. None of that makes the strategies wrong. It makes the conclusion wrong, and the conclusion is usually that you didn’t try hard enough.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Put the structure outside yourself. Something that runs without your attention beats something that needs it — the same sequence every evening, an alarm rather than an intention, a decision made in the morning about what the evening is allowed to contain.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand before it fails rather than after. A thing postponed by fifteen minutes often goes fine; the same thing pushed through a rising state usually costs the next hour, and the argument afterwards is rarely about the thing.",
+      },
+      {
+        type: "p",
+        text: "Treat the load as the intervention rather than the background. Sleep, food and unbroken recovery time are not the soft version of this — they are the largest single lever most people have and the first thing dropped when the week fills up. A few weeks of honest attention there tells you what is left underneath.",
+      },
+      {
+        type: "p",
+        text: "And rule out the ordinary causes, because several of them produce exactly this. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders are common, and they are identified by testing rather than by inference. If nobody has looked, that is the thing to do first. We can’t do it, and neither can an article.",
+      },
+      { type: "h2", text: "If nights are the hard part" },
+      {
+        type: "p",
+        text: "Evenings are when most people notice this, and not being able to switch off at bedtime is one of the most common things anyone tells us. Sleep is its own subject though, with its own page and its own answer: a mind that won’t settle at bedtime and a body braced at two in the afternoon are not one problem wearing different clothes. If the nights are the main event for you, start there instead — the link is at the foot of this page.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "LENS is a wellness service and one gentle option among several. An anxious nervous system often feels like a system working harder than it needs to, and a session asks nothing of it — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits. Most people, including young children, feel nothing at all.",
+      },
+      {
+        type: "p",
+        text: `Sessions run ${SESSION_LENGTH.value} in a comfortable chair, and many clients read or simply rest. It is one of the calmest hours of most clients’ week, which is worth stating plainly to somebody who has spent years being told to relax: there is nothing here to get right. Clients commonly report feeling steadier over a series of visits, and how much changes varies from person to person, which is why we ask at every visit rather than predicting.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
+          { href: "/concerns/sleep", label: "Sleep difficulties" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Tell us what it actually feels like. We’ll be straight with you.",
+    finalSub:
+      "Bring the version you don’t say out loud. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Can’t Relax When Nothing’s Wrong? Why “Just Relax” Doesn’t Work",
+    metaDescription:
+      "Being told to relax assumes the problem is that you haven’t tried. A plain-language look at why an ordinary week doesn’t produce a settled body.",
+  },
+  {
+    slug: "braced-for-something",
+    tag: "For adults",
+    title: "Why your body stays braced when nothing is happening",
+    crumbLabel: "A body that stays braced",
+    excerpt: "The physical half of it — jaw, shoulders, gut — and why it outlasts whatever caused it.",
+    image: { src: "/images/ear-clip-adult.jpg", position: "center 40%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "The meeting ended two hours ago. The jaw is still set, the shoulders are still somewhere up near the ears, and the stomach has its own opinion about all of it. Nothing is happening. The body has not been told.",
+    body: [
+      { type: "h2", text: "Bracing is a state, not a mood" },
+      {
+        type: "p",
+        text: "People describe this to us in physical terms far more often than emotional ones — carrying stress in the jaw, the shoulders, the gut; unable to recover after a difficult day; functioning perfectly well and quietly running on empty. The word “anxiety” sometimes never comes up, because it doesn’t present as a feeling. It presents as a body doing something nobody asked it to.",
+      },
+      {
+        type: "p",
+        text: "That is a reasonable way to describe it rather than a euphemism for one. Arousal regulation is a measurable property of the nervous system, and it varies — across people, and within the same person across a day. Above the range you are reactive; below it you are flat. Bracing is what the top half looks like from the inside, and it has physical outputs because the system producing it is a physical one.",
+      },
+      { type: "h2", text: "Why it outlasts what caused it" },
+      {
+        type: "p",
+        text: "The part people find hardest to explain is the lag. The stressful thing is over, sometimes by hours, and the body is still braced for it. What that describes is a system not moving between states cleanly, rather than one stuck at a setting — going up and coming back down are two different jobs, and the second one has its own cost.",
+      },
+      {
+        type: "blockquote",
+        text: "A body still braced two hours after the meeting is not reacting to the meeting. It is still finishing it.",
+      },
+      {
+        type: "p",
+        text: "It is also why the physical and the mental versions of this travel together. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance, and it is more useful to read that as one problem with several outputs than as four separate ones. Returning to baseline after a spike is one of those outputs. So are the shoulders. None of which makes the physical part less real or more psychological — it makes it the same event, read from the other end.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Address the load rather than the incident. Sleep, food and unbroken recovery time are not soft interventions; they are the largest single lever most people have, and the one most often skipped for being unglamorous.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand before it fails, not after. A hard conversation postponed by fifteen minutes often goes fine. The same conversation pushed through a rising state usually costs the evening as well.",
+      },
+      {
+        type: "p",
+        text: "And be careful about the conclusion when the usual advice doesn’t land. Most strategies for regulation require the very capacity that is in short supply — they work when you don’t need them and fail when you do. That is an argument against the conclusion people draw from failing at them, not against the strategies.",
+      },
+      { type: "h2", text: "Have it looked at" },
+      {
+        type: "p",
+        text: "This belongs first rather than last. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders all produce this picture; they are common; and they are identified by testing rather than by inference. A jaw that won’t unclench and a gut that won’t settle are also exactly the kind of thing a doctor should hear about directly. We can’t test for any of it, and neither can an article — if nobody has looked, that is where to start.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "LENS is a wellness service, not a treatment for anything, and it belongs after the paragraph above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home.",
+      },
+      {
+        type: "p",
+        text: `A session runs ${SESSION_LENGTH.value} in a comfortable chair. What we check at every visit is what you would actually notice: sleep, tension, reactivity, and how the day after a hard day goes — and the plan follows that rather than a template. Clients commonly report feeling steadier over a series of visits, and how much changes varies from person to person.`,
+      },
+      {
+        type: "links",
+        text: "The two pages this one sits closest to.",
+        items: [
+          { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
+          { href: "/concerns/stress-resilience", label: "Stress & resilience" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Describe it in whatever words you’ve got. We’ll be straight with you.",
+    finalSub:
+      "Including the physical part nobody asks about. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Why Your Body Stays Braced When Nothing Is Wrong",
+    metaDescription:
+      "Jaw, shoulders, gut — the physical half of nervous-system overload, why it outlasts whatever caused it, and when to have it checked.",
+  },
+  {
+    slug: "alongside-therapy",
+    tag: "How it works",
+    title: "Can you do LENS while you’re seeing a therapist?",
+    crumbLabel: "LENS and therapy",
+    excerpt: "Yes — and we’d rather you did. What coordinating actually looks like.",
+    image: { src: "/images/session-wide.jpg", position: "center 40%" },
+    readTime: "4 min read",
+    byline: HBC_BYLINE,
+    lede: "This one usually arrives with an apology attached, as though asking might be disloyal to somebody. It isn’t, and the answer is short. What takes longer is why we mean it.",
+    body: [
+      { type: "h2", text: "The short answer" },
+      {
+        type: "p",
+        text: "Yes, and please keep seeing them. LENS is routinely used alongside other care, and we’re glad to coordinate with providers you already trust. Nobody here is going to ask you to choose.",
+      },
+      { type: "h2", text: "Why we’d rather you kept your therapist" },
+      {
+        type: "p",
+        text: "Partly because of what LENS is not. It is not a medical treatment, a diagnosis or a cure, and it is not a replacement for your doctor, your therapist, or school supports. A wellness service that offers itself as the thing you do instead of therapy has quietly promised something it has no way to deliver.",
+      },
+      {
+        type: "blockquote",
+        text: "Anything positioning itself as the alternative to your therapist has told you what it thinks of your therapist, not what it can do for you.",
+      },
+      {
+        type: "p",
+        text: "And partly because the two do different work. Therapy is where you think about what happened and what it means. A LENS visit opens with a structured check-in on how the week actually went — sleep, tension, reactivity — and then you sit in a comfortable chair with nothing to do and nothing to get right. Those are not the same hour, and neither one is a lighter version of the other.",
+      },
+      { type: "h2", text: "What coordinating actually looks like" },
+      {
+        type: "p",
+        text: "Undramatic, mostly. You tell us who you’re working with, because it’s part of what’s going on — the same as sleep and stress and the shape of your week. If you’d like your therapist to know what we’re doing, we’re happy to explain it to them directly. That’s a normal request rather than an awkward one, and we coordinate happily with therapists, teachers and pediatricians.",
+      },
+      {
+        type: "p",
+        text: "What that amounts to is a conversation about what the service is and what your check-ins are tracking — offered because you asked for it, not as a matter of routine.",
+      },
+      { type: "h2", text: "What we don’t do" },
+      {
+        type: "p",
+        text: "We don’t advise on medication; that stays between you and your prescriber. We don’t have opinions about what your therapy is for, or about when you’re finished with it. And we don’t diagnose or treat medical or psychiatric conditions — Harmonized is a wellness practice, not a medical clinic, which is the same reason your therapist’s work is theirs and not ours.",
+      },
+      {
+        type: "p",
+        text: "And if what you describe on the phone sounds like a job for the person you’re already seeing, we’ll say so then, rather than after you’ve booked.",
+      },
+      {
+        type: "links",
+        text: "Where to read more.",
+        items: [
+          { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
+          { href: "/faq", label: "The full FAQ" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Bring your therapist’s questions too. We’ll answer them straight.",
+    finalSub:
+      "Tell us what’s going on and who you’re already working with. We’ll answer honestly and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Can You Do LENS Neurofeedback Alongside Therapy?",
+    metaDescription:
+      "Yes — LENS is routinely used alongside other care. Why we’d rather you kept your therapist, and what coordinating actually involves.",
   },
   {
     slug: "brain-fog-after-55",
