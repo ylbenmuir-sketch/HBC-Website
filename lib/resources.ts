@@ -40,7 +40,65 @@
  * the package price.
  */
 
-import { FOUNDER_DISPLAY_NAME, SESSION_LENGTH } from "./site-config";
+import {
+  SESSION_LENGTH,
+  SITE_NAME,
+  verifiedOr,
+  type Verifiable,
+} from "./site-config";
+
+/**
+ * Who wrote an article, and who reviewed it.
+ *
+ * Structured rather than a string, because a string is what let
+ * "By the Harmonized team · Reviewed by [founder], Clinical Director" ship on
+ * four production URLs. It named a person, credited her with a review nobody
+ * had confirmed, and passed every gate in this repo — `isPublishable` reads
+ * brackets, and there were none to read.
+ *
+ * Two rules, and the type enforces the first:
+ *
+ * 1. **A named individual can only appear in `reviewer`, which is a
+ *    `Verifiable`.** There is nowhere else in this shape to put a person, so
+ *    an unconfirmed review credit cannot render in production — `verifiedOr`
+ *    drops it. `org` is a publisher, not a byline for a human.
+ * 2. **`org` may not smuggle one back in.** A type cannot tell
+ *    "Harmonized Brain Centers" from "Sheri Rowney, Clinical Director", so
+ *    `npm run check:index` reads it: any roster name, any credential, and any
+ *    review verb in `org` fails there. That check is the guard the bracket
+ *    gate could not be.
+ */
+export type Byline = {
+  /** The publisher. An organisation — never a person. See rule 2 above. */
+  org: string;
+  /**
+   * The named reviewer and their title, and the only place a person may be
+   * credited. Absent until Ben confirms the review actually happened; wrapped
+   * so that adding it early still cannot ship it.
+   */
+  reviewer?: Verifiable<{ name: string; title: string }>;
+};
+
+/**
+ * The byline as rendered. In production an unverified reviewer disappears and
+ * the publisher credit stands alone, which is the true statement either way.
+ */
+export function bylineText(b: Byline): string {
+  const reviewer = b.reviewer ? verifiedOr(b.reviewer) : null;
+  return reviewer
+    ? `By ${b.org} · Reviewed by ${reviewer.name}, ${reviewer.title}`
+    : `By ${b.org}`;
+}
+
+/**
+ * The publisher credit every article carries today.
+ *
+ * `SITE_NAME`, not "the Harmonized team": the second asserts that staff wrote
+ * the piece, which is a claim about people and is not confirmed. The practice
+ * published it, which is true without qualification and is what a publisher
+ * byline says.
+ */
+const HBC_BYLINE: Byline = { org: SITE_NAME };
 
 export type ArticleBlock =
   | { type: "p"; text: string }
@@ -75,7 +133,20 @@ export type Resource = {
   image?: { src: string; position: string };
   plateSpec?: string;
   readTime: string;
-  byline: string;
+  byline: Byline;
+  /**
+   * Finished copy deliberately held back, and who it is waiting on.
+   *
+   * Deliberately not the bracket gate. A `[Draft]` article is one nobody has
+   * written; a held one is written, checked, and waiting on a named person to
+   * read it. Bracketing it to keep it out of the build would make `[Draft]`
+   * mean two things and would hide a decision behind a placeholder — and the
+   * article would come back the moment somebody "finished" it.
+   *
+   * Set it and the article does not build, does not enter the sitemap, and
+   * 404s, exactly as a draft does. Delete the line to publish.
+   */
+  hold?: string;
   lede: string;
   body: ArticleBlock[];
   finalHeading: string;
@@ -105,11 +176,21 @@ const DRAFT_FINAL_SUB =
 
 import { isDraftText } from "./site-config";
 
-/** A resource is publishable once its lede and body carry no [draft] notes. */
+/**
+ * A resource is publishable once its lede and body carry no [draft] notes.
+ *
+ * The byline is checked structurally rather than for brackets: an unverified
+ * reviewer does not gate the article, it simply doesn't render, so a piece
+ * still publishes under its publisher credit while a review is pending. What
+ * must never happen is the credit rendering, and `bylineText` is what stops
+ * that, with `check:index` watching `org`.
+ */
 export function isPublishable(r: Resource): boolean {
   return (
+    !r.hold &&
     !isDraftText(r.lede) &&
-    !isDraftText(r.byline) &&
+    !isDraftText(r.byline.org) &&
+    !isDraftText(r.byline.reviewer?.value.name) &&
     r.body.every((b) => !isDraftText(b.text))
   );
 }
@@ -123,8 +204,7 @@ export const resources: Resource[] = [
     excerpt: "Why “try harder” backfires — and what helps instead.",
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
     readTime: "6 min read",
-    byline:
-      `By the Harmonized team · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director`, // [Confirm byline & review date]
+    byline: HBC_BYLINE,
     lede: "Your child is bright. You know it, their teacher knows it — and yet a worksheet that should take twenty minutes just consumed the whole evening and everyone's patience. Here's what's often happening underneath, and why “try harder” tends to make it worse.",
     body: [
       { type: "h2", text: "It usually isn't a motivation problem" },
@@ -200,8 +280,7 @@ export const resources: Resource[] = [
       "Sleep quantity isn't sleep quality. A plain-language look at a wired-but-tired nervous system.",
     image: { src: "/images/relax.jpg", position: "center 40%" },
     readTime: "5 min read",
-    byline:
-      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
+    byline: HBC_BYLINE,
     lede: "[Draft lede — sleep quantity isn't sleep quality; what a wired-but-tired nervous system looks like from the inside.]",
     body: [
       {
@@ -224,8 +303,7 @@ export const resources: Resource[] = [
     excerpt: "Active training vs. passive feedback — and who tends to prefer which.",
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
     readTime: "6 min read",
-    byline:
-      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
+    byline: HBC_BYLINE,
     lede: "[Draft lede — active training vs. passive feedback, explained without jargon or salesmanship.]",
     body: [
       {
@@ -248,8 +326,7 @@ export const resources: Resource[] = [
     excerpt: "The self-story problem — and how to interrupt it early.",
     plateSpec: "Parent and teen talking at kitchen table — candid",
     readTime: "5 min read",
-    byline:
-      `By the Harmonized team · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director`, // [Confirm byline & review date]
+    byline: HBC_BYLINE,
     lede: "It usually arrives as a throwaway line, mid-argument, and it’s easy to hear as self-pity. It’s closer to a conclusion. Somewhere in the last year or two your child ran an experiment, over and over, and this is the result they believe it produced.",
     body: [
       { type: "h2", text: "It’s a conclusion, not a mood" },
@@ -325,8 +402,7 @@ export const resources: Resource[] = [
     excerpt: "Work that stalls at 90 percent isn’t unfinished for the reason it looks like.",
     image: { src: "/images/sensors-adult.jpg", position: "center 40%" },
     readTime: "5 min read",
-    byline:
-      `By the Harmonized team · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director`, // [Confirm byline & review date]
+    byline: HBC_BYLINE,
     lede: "The work is done. What’s left is the formatting, the send, the one phone call — an hour at most, and it has been three weeks. It’s one of the patterns people name when they call us, and it’s almost never the discipline problem it looks like from outside.",
     body: [
       { type: "h2", text: "Ninety percent is not almost done" },
@@ -400,14 +476,17 @@ export const resources: Resource[] = [
   },
   {
     slug: "lens-and-medication",
+    // Written, checked, and not shipping until Ben has read it. It is the one
+    // article on the site whose whole subject is the boundary around
+    // medication, and the cost of a wrong sentence in it is not an SEO cost.
+    hold: "Awaiting Ben's read — medication boundary copy",
     tag: "How it works",
     title: "Can you do LENS while you’re on medication?",
     crumbLabel: "LENS and medication",
     excerpt: "The short answer is yes. The longer answer is about what we don’t do.",
     image: { src: "/images/checkin.jpg", position: "center 40%" },
     readTime: "4 min read",
-    byline:
-      `By the Harmonized team · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director`, // [Confirm byline & review date]
+    byline: HBC_BYLINE,
     lede: "It’s one of the first questions people ask on the phone, and it usually arrives carefully — as though there might be a wrong answer. There isn’t. But the question underneath it deserves a straighter reply than yes.",
     body: [
       { type: "h2", text: "The short answer" },
@@ -480,8 +559,7 @@ export const resources: Resource[] = [
       "A calm, non-alarmist guide to cognitive change — and when to talk to your doctor.",
     image: { src: "/images/ear-clip-senior.jpg", position: "center 45%" },
     readTime: "7 min read",
-    byline:
-      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
+    byline: HBC_BYLINE,
     lede: "[Draft lede — a calm, non-alarmist guide to cognitive change after 55, and when it's worth a conversation with your doctor.]",
     body: [
       {
@@ -504,8 +582,7 @@ export const resources: Resource[] = [
     excerpt: "A tour of the LENS system — sensors, signals, and safety.",
     image: { src: "/images/lens-device.jpg", position: "center" },
     readTime: "5 min read",
-    byline:
-      `By [Practitioner name] · Reviewed by ${FOUNDER_DISPLAY_NAME}, Clinical Director · [Month Year]`,
+    byline: HBC_BYLINE,
     lede: "[Draft lede — a plain tour of the LENS system: what the sensors read, what the feedback signal is, and what the equipment never does.]",
     body: [
       {

@@ -52,15 +52,50 @@
  * live site instead — a bug that tests clean everywhere except where you
  * would notice it.
  *
- * Runs on plain Node — site-copy.ts holds no runtime imports, so Node's
- * built-in TypeScript stripping can read it without a build step. Keep it that
- * way: that is why the inventory names tags as strings instead of importing
- * them, and why content-index.ts resolves the names to constants instead.
+ * ## 4. Bylines
+ *
+ * The gate in lib/resources.ts reads brackets. A byline reading
+ * "By the Harmonized team · Reviewed by <a real person>, Clinical Director"
+ * has none, so it shipped on four production URLs crediting someone with a
+ * review nobody had confirmed. Brackets are the wrong detector for this: an
+ * authorship claim is wrong precisely when it looks finished.
+ *
+ * So `Byline.reviewer` is a `Verifiable` — production drops it until it is
+ * confirmed — and this check watches the half a type cannot: that nobody puts
+ * a person back into `org`. Any roster name, any credential, any review verb
+ * there is a failure. A reviewer that IS set must name someone the site can
+ * actually stand behind, which today means the founder and nobody else, since
+ * every practitioner on the roster is still a [placeholder].
+ *
+ * Runs on plain Node, with no build step — Node's own TypeScript stripping
+ * reads lib/ directly. site-copy.ts still holds no runtime imports, which is
+ * why the inventory names tags as strings instead of importing them and why
+ * content-index.ts resolves the names to constants instead; keep it that way.
+ *
+ * The resolve hook below is the same one scripts/answer-audit.mjs installs,
+ * and for the same reason: lib/ imports are extensionless, which Node's ESM
+ * resolver will not do on its own. It arrived here when check 4 started
+ * reading lib/resources.ts, which — unlike site-copy.ts and site-config.ts —
+ * imports something.
  */
 
 import { readFileSync } from "node:fs";
+import { registerHooks } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+
+// Extensionless lib/ imports. node_modules is exempt for the reason
+// answer-audit.mjs records: CommonJS dependencies resolve them the normal way
+// and break if this touches them.
+registerHooks({
+  resolve(spec, ctx, next) {
+    const local = !ctx.parentURL?.includes("/node_modules/");
+    if (local && spec.startsWith(".") && !/\.(ts|tsx|js|mjs|cjs|json)$/.test(spec)) {
+      return next(`${spec}.ts`, ctx);
+    }
+    return next(spec, ctx);
+  },
+});
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -121,6 +156,10 @@ const { MIRRORED_PAGES, COPY_TOKENS, CONFIRM_TAG_NAMES, CONFIRM_TAG_INVENTORY } 
   await import("../lib/chat/site-copy.ts");
 const { PHONE_TEL, PHONE_DISPLAY, GUIDE_PATH, GUIDE_HTML_PATH, SITE_URL } =
   await import("../lib/site-config.ts");
+const { FOUNDER_FIRST_NAME, FOUNDER_LAST_NAME } =
+  await import("../lib/site-config.ts");
+const { resources } = await import("../lib/resources.ts");
+const { team } = await import("../lib/team.ts");
 
 const failures = [];
 let checked = 0;
@@ -248,6 +287,24 @@ try {
   );
 }
 
+// The guide is now also a MIRRORED_PAGES entry, and that entry names its path
+// twice as literals — site-copy.ts stays import-free, so it cannot read
+// GUIDE_HTML_PATH. Assert the two agree rather than letting a rename split
+// them: the mirror check would still pass against a file the CTA no longer
+// serves, which is drift that reads as a clean run.
+const guideMirror = MIRRORED_PAGES.find((p) => p.href === GUIDE_HTML_PATH);
+guideChecks += 1;
+if (!guideMirror) {
+  failures.push(
+    `lib/chat/site-copy.ts\n    no MIRRORED_PAGES entry has href "${GUIDE_HTML_PATH}"\n` +
+      `    The guide is indexed copy. If GUIDE_HTML_PATH moved, move the entry with it.`
+  );
+} else if (guideMirror.sourceFile !== `public${GUIDE_HTML_PATH}`) {
+  failures.push(
+    `lib/chat/site-copy.ts\n    guide entry reads ${guideMirror.sourceFile}, but GUIDE_HTML_PATH says public${GUIDE_HTML_PATH}`
+  );
+}
+
 if (guideHtml !== null) {
   guideMustContain(guideHtml, `href="tel:${PHONE_TEL}"`, "the site phone number");
   guideMustContain(guideHtml, PHONE_DISPLAY, "the displayed phone number");
@@ -283,6 +340,73 @@ if (guideHtml !== null) {
   }
 }
 
+/* ---------------------------------------------------------------- */
+/* 4. Bylines — authorship and review credits                        */
+/* ---------------------------------------------------------------- */
+
+/**
+ * Every name the site can put in print, plus the founder's parts on their own
+ * — "Sheri" alone in an `org` is the same claim as the full name.
+ */
+const ROSTER_NAMES = [
+  FOUNDER_FIRST_NAME,
+  FOUNDER_LAST_NAME.value,
+  `${FOUNDER_FIRST_NAME} ${FOUNDER_LAST_NAME.value}`,
+  ...team.map((m) => m.name),
+].filter((n) => n && !n.includes("["));
+
+/** Names the site may credit: confirmed, and not a [placeholder] roster slot. */
+const CREDITABLE = new Set(
+  FOUNDER_LAST_NAME.verified
+    ? [`${FOUNDER_FIRST_NAME} ${FOUNDER_LAST_NAME.value}`]
+    : []
+);
+
+/** Words that turn a publisher line into a credit for a person. */
+const CREDIT_WORDS =
+  /\b(reviewed|written|authored|edited|by\s+dr\b|MD|PhD|PsyD|LCSW|RN|Director|Practitioner|Clinician)\b/i;
+
+let bylineChecks = 0;
+
+for (const r of resources) {
+  bylineChecks += 1;
+  const { org, reviewer } = r.byline;
+
+  for (const name of ROSTER_NAMES) {
+    if (org.includes(name)) {
+      failures.push(
+        `lib/resources.ts → ${r.slug}\n    byline.org names a person: "${org}"\n` +
+          `    A person belongs in byline.reviewer, which is a Verifiable and so\n` +
+          `    cannot render before the credit is confirmed. org is a publisher.`
+      );
+    }
+  }
+
+  const credit = org.match(CREDIT_WORDS);
+  if (credit) {
+    failures.push(
+      `lib/resources.ts → ${r.slug}\n    byline.org carries a credit word: "${credit[0]}" in "${org}"\n` +
+        `    Credentials and review verbs belong in byline.reviewer, behind the gate.`
+    );
+  }
+
+  if (reviewer) {
+    if (typeof reviewer.verified !== "boolean") {
+      failures.push(
+        `lib/resources.ts → ${r.slug}\n    byline.reviewer is not a Verifiable — it has no \`verified\` flag\n` +
+          `    Without one nothing drops it in production, which is the bug this guards.`
+      );
+    }
+    if (reviewer.verified && !CREDITABLE.has(reviewer.value?.name)) {
+      failures.push(
+        `lib/resources.ts → ${r.slug}\n    byline.reviewer is verified but names "${reviewer.value?.name}",\n` +
+          `    who is not someone the site can stand behind. Creditable today:\n` +
+          `    ${[...CREDITABLE].join(", ") || "(nobody — no confirmed roster name)"}`
+      );
+    }
+  }
+}
+
 const taggedPages = Object.keys(CONFIRM_TAG_INVENTORY).length;
 const taggedCount = Object.values(CONFIRM_TAG_INVENTORY).reduce(
   (n, tags) => n + Object.keys(tags).length,
@@ -303,5 +427,6 @@ if (failures.length > 0) {
 console.log(
   `✓ content index: ${checked} mirrored passage(s) match their source pages\n` +
     `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)\n` +
-    `✓ static guide: ${guideChecks} site-config value(s) still match ${guideFile}`
+    `✓ static guide: ${guideChecks} site-config value(s) still match ${guideFile}\n` +
+    `✓ bylines: ${bylineChecks} article(s) credit no unconfirmed person`
 );

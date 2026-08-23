@@ -5,7 +5,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
-import { resources, getResource, isPublishable } from "@/lib/resources";
+import { resources, getResource, isPublishable, bylineText } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export function generateStaticParams() {
@@ -55,7 +55,7 @@ export default async function ArticlePage({
               {article.tag} &middot; {article.readTime}
             </div>
             <h1>{article.title}</h1>
-            <div className="meta">{article.byline}</div>
+            <div className="meta">{bylineText(article.byline)}</div>
             <p className="lede">{article.lede}</p>
           </div>
           {article.image ? (
