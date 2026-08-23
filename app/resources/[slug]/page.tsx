@@ -5,6 +5,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
+import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { resources, getResource, isPublishable, bylineText } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
@@ -27,7 +28,11 @@ export async function generateMetadata({
     // targets nothing anybody types. See the field note in lib/resources.ts.
     title: article.metaTitle,
     description: article.metaDescription,
-    openGraph: { type: "article" },
+    // Spread, not `{ type: "article" }` alone. Next replaces the parent
+    // `openGraph` object rather than merging into it, so naming one field here
+    // used to delete og:url, og:image, og:site_name and og:locale from every
+    // article and drop the Twitter card to `summary`. See lib/metadata.ts.
+    openGraph: { ...SHARED_OPEN_GRAPH, type: "article" },
   };
 }
 

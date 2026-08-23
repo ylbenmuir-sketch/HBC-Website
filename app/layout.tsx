@@ -8,6 +8,7 @@ import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
 import dynamic from "next/dynamic";
 import { organizationSchema } from "@/lib/schema";
+import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
@@ -54,26 +55,9 @@ export const metadata: Metadata = {
   // ?utm_… / ?gclid= variants and any apex-vs-www drift from indexing as
   // separate URLs.
   alternates: { canonical: "./" },
-  openGraph: {
-    siteName: SITE_NAME,
-    type: "website",
-    locale: "en_US",
-    // Same relative trick as the canonical above, for the same reason.
-    url: "./",
-    // A purpose-built 1200x630 — the size every platform crops to. The old
-    // value pointed at /images/hero.jpg and declared it 1600x1067 when the
-    // file is actually 1500x843, so previews cropped against the wrong
-    // aspect ratio. Per-location and per-article images come later
-    // (SEO-AUDIT.md §6.3 item 33).
-    images: [
-      {
-        url: "/images/og-default.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Harmonized Brain Centers — gentle LENS neurofeedback for adults, children, and families in Nashville and Murfreesboro",
-      },
-    ],
-  },
+  // Spread, never restated. A route that declares its own `openGraph` replaces
+  // this object wholesale rather than merging into it — see lib/metadata.ts.
+  openGraph: { ...SHARED_OPEN_GRAPH, type: "website" },
 };
 
 export const viewport: Viewport = {
