@@ -113,6 +113,133 @@ export type MirroredPage = {
 
 export const MIRRORED_PAGES: MirroredPage[] = [
   {
+    /**
+     * The guide (`public/guides/why-regulation-fails.html`).
+     *
+     * A static file with no route, which is why it was never in here: the
+     * other four entries are page components, and nothing about a `.html`
+     * served from `public/` looked like one. The consequence was that the
+     * biggest CTA on the site handed out a document the assistant could not
+     * quote a line of. `normalizePage` strips tags and decodes entities, so
+     * it reads this file exactly as it reads a `.tsx` one — the CSS in the
+     * `<style>` block survives as noise and matches no mirror.
+     *
+     * ## What is mirrored, and what is deliberately not
+     *
+     * **Not the two-directions lists** ("Too high / Too low"). They are the
+     * guide's best writing and the worst possible passage for this index: a
+     * dozen symptom phrases lifted almost word for word from the `recognize`
+     * arrays of five different concerns. HANDOFF-concern-passage-ties.md
+     * records that concern routing is already decided by length rather than
+     * relevance for 86% of single-alias queries; a passage holding every
+     * concern's symptom words at once is the one addition most likely to
+     * take those queries off the pages that own them. The concern pages do
+     * symptom matching. The guide is here for the mechanism.
+     *
+     * **Not the "Where we fit" card.** Free call, first visit, the
+     * {BRAIN_MAP_POINTS}-point recording, the phone number — every fact in
+     * it already has a passage, and a second copy would compete with the one
+     * that owns it for no gain.
+     *
+     * What is left is the six passages below: the model, why the symptoms
+     * co-occur, why capacity varies day to day, why the standard advice
+     * underperforms, what an EEG cannot do, and the instruction to rule out
+     * the medical causes first. None of that is anywhere else in the index.
+     */
+    sourceFile: "public/guides/why-regulation-fails.html",
+    href: "/guides/why-regulation-fails.html",
+    passages: [
+      {
+        id: "guide:regulation",
+        title: "Why regulation fails — the guide",
+        question: "Why does regulation fail?",
+        keywords: ["regulation", "willpower", "discipline", "arousal", "range", "reactive", "flat", "motivation", "temper", "lazy", "guide"],
+        text: "Regulation is not willpower. Your nervous system has a range it works well inside. Above it, you are reactive. Below it, you are flat. Most of what gets called a focus problem, a temper problem, or a motivation problem is a system operating outside that range. Arousal regulation is a measurable property of the nervous system, and it varies — across people, and within the same person across a day.",
+        mirror: [
+          "Regulation is not willpower. Your nervous system has a range it works well inside. Above it, you are reactive. Below it, you are flat. Most of what gets called a focus problem, a temper problem, or a motivation problem is a system operating outside that range.",
+          "Arousal regulation is a measurable property of the nervous system, and it varies — across people, and within the same person across a day.",
+        ],
+      },
+      {
+        id: "guide:travel-together",
+        title: "Why these problems travel together",
+        question: "Why do all of these happen together?",
+        keywords: ["together", "travel", "separate", "outputs", "cause", "apnea", "thyroid", "iron", "deficiency", "grief", "model", "cluster"],
+        text: "Why these problems travel together. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance. It is more useful to read it as one problem with several outputs. It does not predict that they have one cause. Sleep apnea, iron deficiency, thyroid dysfunction, anxiety disorders, grief, medication effects and a genuinely bad job can all produce this picture. A model is not a diagnosis, and this guide is not a substitute for one.",
+        mirror: [
+          "Why these problems travel together. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance.",
+          "It is more useful to read it as one problem with several outputs.",
+          "It does not predict that they have one cause. Sleep apnea, iron deficiency, thyroid dysfunction, anxiety disorders, grief, medication effects and a genuinely bad job can all produce this picture. A model is not a diagnosis, and this guide is not a substitute for one.",
+        ],
+      },
+      {
+        id: "guide:capacity",
+        title: "Why the same person is fine one day and not the next",
+        question: "Why can they do it some days and not others?",
+        // No "tuesday"/"thursday", though the copy names both. Day names route
+        // hours questions, and hours are answered before retrieval from the two
+        // confirmed weeks (lib/chat/unanswerable.ts) — so "Can I come on a
+        // Tuesday?" never reaches this passage. Keywording the days anyway
+        // would put a passage about capacity depletion one gate away from a
+        // question about opening times. If that pre-answer is ever removed,
+        // this is the passage to check first.
+        keywords: ["capacity", "trait", "depletes", "recovers", "inconsistent", "varies", "subtractive", "debt"],
+        text: "Why the same person is fine Tuesday and not Thursday. Regulation is not a fixed trait. It is a capacity that depletes and recovers, which is why performance on identical tasks varies so much within the same person. But capacity on Thursday is not the same quantity as capacity on Tuesday. Sleep debt, illness, an unresolved conflict, sensory load, hunger, and the cumulative cost of holding it together all week are subtractive. The task did not get harder. The available capacity got smaller.",
+        mirror: [
+          "Why the same person is fine Tuesday and not Thursday. Regulation is not a fixed trait. It is a capacity that depletes and recovers, which is why performance on identical tasks varies so much within the same person.",
+          "But capacity on Thursday is not the same quantity as capacity on Tuesday. Sleep debt, illness, an unresolved conflict, sensory load, hunger, and the cumulative cost of holding it together all week are subtractive. The task did not get harder. The available capacity got smaller.",
+        ],
+      },
+      {
+        id: "guide:standard-advice",
+        title: "Why the standard advice underperforms",
+        question: "Why don't the usual strategies work?",
+        keywords: ["strategies", "strategy", "advice", "planner", "routine", "scaffolding", "structure", "tips", "underperforms", "supply"],
+        text: "Why the standard advice underperforms. Most strategies for attention and emotional regulation require the very capacity that is in short supply. They work when you don't need them and fail when you do. This is not an argument against strategy. Structure, routine and external scaffolding are genuinely useful, and for many people they are enough.",
+        mirror: [
+          "Why the standard advice underperforms. Most strategies for attention and emotional regulation require the very capacity that is in short supply. They work when you don't need them and fail when you do.",
+          "This is not an argument against strategy. Structure, routine and external scaffolding are genuinely useful, and for many people they are enough.",
+        ],
+      },
+      {
+        id: "guide:eeg-limits",
+        title: "What an EEG can and cannot tell you",
+        // Not "What can a brain map not tell you?" — that scored 0.67 against
+        // page:how-lens-works:map's "What does the brain map show?" in the
+        // duplicate sweep (scripts/answer-audit.mjs), and question text is
+        // weighted ×3, so the two would have traded the map questions between
+        // them by length. They answer different things: that passage is where
+        // we look, this one is what a reading cannot establish. The wording
+        // now says so and shares no term with it.
+        //
+        // Nor "Can an EEG diagnose anything?", which was the first fix: the ×3
+        // question weight took "diagnose" and "Can you diagnose me?" off
+        // faq:10, and faq:10 ("Neither. We're a wellness practice…") is the
+        // boundary answer that should surface for anything reducing to that
+        // word. Both questions are refused before retrieval, so nothing was
+        // broken — but the same rule was applied to "medical" below and
+        // applying it to one word and not the other would be arbitrary.
+        question: "What are the limits of an EEG?",
+        keywords: ["eeg", "cannot", "diagnose", "diagnostic", "predict", "baseline", "limits", "autism", "overclaim"],
+        text: "What a map can tell you It can Show relative patterns of electrical activity across regions, at the time of the recording. It can Give a baseline that later recordings can be compared against. It cannot Diagnose ADHD, anxiety, autism, depression, or any other condition. No EEG finding is diagnostic of those. It cannot Tell you that one reading at one site caused one symptom. Single-site interpretation of that kind is not supported. It cannot Predict what will happen next, for you specifically.",
+        mirror: "What a map can tell you It can Show relative patterns of electrical activity across regions, at the time of the recording. It can Give a baseline that later recordings can be compared against. It cannot Diagnose ADHD, anxiety, autism, depression, or any other condition. No EEG finding is diagnostic of those. It cannot Tell you that one reading at one site caused one symptom. Single-site interpretation of that kind is not supported. It cannot Predict what will happen next, for you specifically.",
+      },
+      {
+        id: "guide:medical-first",
+        title: "Some of this is medical",
+        question: "Could this be something medical instead?",
+        // No bare "medical": faq:10 is the site's boundary answer ("Neither.
+        // We're a wellness practice…") and is what should surface for anything
+        // that reduces to that one word. The ×2 keyword boost took it off
+        // faq:10 in the sweep; the word is still in the text, so this passage
+        // stays reachable for the questions it is actually about.
+        keywords: ["testing", "tested", "thyroid", "apnea", "iron", "inference", "doctor", "ruled"],
+        text: "Some of this is medical, and testing is how you find out. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders all produce this picture. They are common, and they are identified by testing rather than by inference. If that hasn't been looked at, it's worth looking at — we can't do it, and neither can a guide.",
+        mirror: "Some of this is medical, and testing is how you find out. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders all produce this picture. They are common, and they are identified by testing rather than by inference. If that hasn't been looked at, it's worth looking at — we can't do it, and neither can a guide.",
+      },
+    ],
+  },
+  {
     sourceFile: "app/how-lens-works/page.tsx",
     href: "/how-lens-works",
     passages: [

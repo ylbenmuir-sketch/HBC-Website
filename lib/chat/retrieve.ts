@@ -81,7 +81,20 @@ const STOPWORDS = new Set(
     "but by can cant come could did do does doesnt doing dont for from get give go " +
     "had has have having he her here hers him his how i if in into is it its ive just " +
     "know like ll me might much must my need no not now of on once one only or other " +
-    "our out over own re please put said same say see she should so some such take tell " +
+    "our out over own re please put said same say see " +
+    // "several" joins "some", "any" and "all" above, and arrives the same way
+    // "everyone" did — the guide uses it once ("one problem with several
+    // outputs"), which took the word from unknown to known-once and pushed
+    // every question containing it down. It broke "my son wakes up several
+    // times a night", which had been reaching concern:sleep:goals and became
+    // an off-topic no-match: coverage fell below the gate because the
+    // denominator grew and no sleep passage contains the word.
+    //
+    // Same test as before: is any passage ever going to be *about* this word?
+    // No. So scoring it can only cost, and the fix belongs here rather than in
+    // the guide's sentence.
+    "several " +
+    "she should so some such take tell " +
     // "everyone" sits with "all", "any", "some" and "one" above, and its
     // absence went unnoticed only because the site had never used the word.
     // /concerns/concussion does — once, in "cluster in everyone else" — and
