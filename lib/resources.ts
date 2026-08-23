@@ -402,7 +402,7 @@ export const resources: Resource[] = [
       },
       {
         type: "p",
-        text: `Sessions run ${SESSION_LENGTH.value} in a comfortable chair. Sleep is one of the first things we ask about at every visit, because it is often where clients notice change earliest, and the plan follows what your nights are actually telling us — falling asleep, staying asleep, and how the mornings feel. How much changes varies from person to person.`,
+        text: `Sessions run ${SESSION_LENGTH.value} in a comfortable chair. Sleep is one of the first things we ask about at every visit, and the plan follows what your nights are actually telling us — falling asleep, staying asleep, and how the mornings feel. How much changes varies from person to person.`,
       },
       {
         type: "links",
