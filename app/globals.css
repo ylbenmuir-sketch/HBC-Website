@@ -32,6 +32,18 @@
   --ivory: #fbf8f1;
   --ivory-2: #f4eee1;
   --line: rgba(28, 43, 58, 0.14);
+  /* --line is a hairline for dividers and card edges, where 1.30:1 is the
+     point: it should separate without drawing attention. An interactive
+     control is a different requirement — WCAG 1.4.11 asks 3:1 for the visual
+     boundary of anything you are meant to operate — and the guide form was
+     the case that proved it. A white field on --ivory-2 is 1.16:1 of fill
+     against ground, so the border is the entire affordance, and at 1.30:1
+     there was effectively no border: the email input and its outline button
+     read as floating text on ivory. Same navy, more of it.
+
+     0.54 alpha · on #fff 3.39:1 · on --ivory-2 3.25:1 · on --ivory 3.33:1.
+     Used by .form fields and .btn-outline; dividers keep --line. */
+  --line-control: rgba(28, 43, 58, 0.54);
   --sage: #8fa08d;
   --sage-soft: #e6ebe2;
   /* Was #5e7360. Darkened 5.1% along its own ray — the smallest move that
@@ -110,7 +122,10 @@ footer.site a:focus-visible, footer.site button:focus-visible {
 .btn-invert:hover { background: #fff; }
 .btn-ghost { color: var(--navy); padding: 18px 4px; border-bottom: 1px solid var(--gold-soft); border-radius: 0; }
 .btn-ghost:hover { border-color: var(--gold); }
-.btn-outline { border: 1px solid var(--line); color: var(--navy); background: transparent; }
+/* The border is the only thing that makes this a button: the fill is
+   transparent and the label is plain navy, so at --line's 1.30:1 "Get the
+   guide" was a line of text nobody read as pressable. See --line-control. */
+.btn-outline { border: 1px solid var(--line-control); color: var(--navy); background: transparent; }
 .btn-outline:hover { border-color: var(--navy); }
 .arrow { font-size: 18px; line-height: 1; transform: translateY(-1px); }
 .micro { font-size: 13.5px; color: var(--slate); margin-top: 12px; }
@@ -392,9 +407,12 @@ details.faq .a a { color: var(--sage-deep); }
 
 /* forms */
 .form label { display: block; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 22px 0 8px; }
-.form input, .form select, .form textarea { width: 100%; border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 16px 18px; font-family: var(--sans); font-size: 16px; color: var(--ink); }
+.form input, .form select, .form textarea { width: 100%; border: 1px solid var(--line-control); border-radius: 4px; background: #fff; padding: 16px 18px; font-family: var(--sans); font-size: 16px; color: var(--ink); }
 .form textarea { height: 120px; resize: vertical; }
-.form input::placeholder, .form textarea::placeholder { color: #a6adb4; }
+/* Was #a6adb4 — 2.27:1 on the white field, under 4.5:1 and the faintest type
+   on the site. --slate is 5.69:1 there, and is already what the ask bar's
+   placeholder uses, so every placeholder now reads as the same field. */
+.form input::placeholder, .form textarea::placeholder { color: var(--slate); }
 .form .two { display: flex; gap: 16px; } .form .two > div { flex: 1; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip { border: 1px solid var(--line); border-radius: 100px; padding: 11px 18px; font-size: 14px; color: var(--ink); background: #fff; cursor: pointer; font-family: var(--sans); }
