@@ -122,7 +122,14 @@ const STOPWORDS = new Set(
     // (§5.1), so scoring it would only produce confident answers from
     // unrelated copy.
     "too us use very want was way we well were what when which while whom why " +
-    "will with would you your yours").split(" ")
+    // "youve" belongs beside "ive" above: the same contraction, and both
+    // reduce to two words already on this list. Its absence went unnoticed
+    // until policy:information-sharing arrived carrying "you've told us we
+    // can" and, on the strength of that alone, joined the four passages
+    // handed to the model for "you've been cleared" — a concussion question
+    // with nothing to do with privacy. Same test as "everyone" and "several":
+    // no passage is ever going to be *about* this word.
+    "will with would you your yours youve").split(" ")
 );
 
 /** Words the plural/tense rules below must not touch. */

@@ -13,6 +13,7 @@ import {
   DISCLAIMER,
   ESTABLISHED_YEAR,
   FIRST_VISIT_DURATION,
+  INFORMATION_SHARING,
   INSURANCE_POLICY,
   PACKAGE_NOTE,
   PACKAGE_PRICE,
@@ -711,6 +712,51 @@ function policyPassages(): Passage[] {
       ].join(" "),
     },
   ];
+
+  passages.push({
+    /*
+     * "Do you share my information?" had no answer at all — nothing in the
+     * index mentioned sharing, selling or marketing, so the question reached
+     * the fixed no-match copy. INFORMATION_SHARING is the site's answer and
+     * this passage is that constant and nothing else.
+     *
+     * **It states a practice and never a regulatory status.** No statute, no
+     * "compliance", nothing about what kind of entity this is — the constant's
+     * own comment records that the HIPAA framing in Ben's notice is a separate
+     * question under review, and a passage is the worst possible place to
+     * pre-empt it: the assistant answers from these words with nothing else to
+     * go on. If that review ever changes the copy, it changes here, once.
+     *
+     * `href: null`, like policy:disclaimer. No page is *about* this — the copy
+     * appears inside one article on a different subject, and offering
+     * "Can you do LENS while you're seeing a therapist?" to somebody asking
+     * about their data is a worse answer than offering nothing.
+     *
+     * No "record" or "records" in the keywords, though they are the words a
+     * privacy question often uses. Both sit in 13 passages already, nearly all
+     * of them about the Brain Map *recording*, and keywords carry double
+     * weight — filing this under them would have traded a privacy answer for
+     * a brain-map one in both directions.
+     */
+    id: "policy:information-sharing",
+    kind: "policy",
+    title: "What happens to what you tell us",
+    href: null,
+    question: "Do you share my information?",
+    /*
+     * No "sell" either, and that one was caught rather than predicted: with it
+     * here, "Do you sell TVs?" — an off-topic probe in the audit — grounded on
+     * this passage. The word was new to the corpus, so it carried full IDF,
+     * and doubling it as a keyword made a passage about privacy the best
+     * answer to a question about televisions. It stays in the text, where a
+     * real privacy question still reaches it without the boost.
+     */
+    keywords: [
+      "share", "information", "confidential", "privacy", "private",
+      "marketing", "consent", "data",
+    ],
+    text: INFORMATION_SHARING,
+  });
 
   const phone = confirmed(PHONE);
   if (phone) {
