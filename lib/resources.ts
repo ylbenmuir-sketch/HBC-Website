@@ -700,7 +700,7 @@ export const resources: Resource[] = [
       },
       {
         type: "p",
-        text: "It is also why the physical and the mental versions of this travel together. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance, and it is more useful to read that as one problem with several outputs than as four separate ones. Returning to baseline after a spike is one of those outputs. So are the shoulders. None of which makes the physical part less real or more psychological — it makes it the same event, read from the other end.",
+        text: "It is also why the physical and the mental versions of this travel together. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance, and it is more useful to read that as one problem with several outputs than as four separate ones. Returning to baseline after a spike is one of those outputs. None of which makes the physical part less real or more psychological — it makes it the same event, read from the other end.",
       },
       { type: "h2", text: "What tends to help" },
       {
@@ -765,7 +765,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Why we’d rather you kept your therapist" },
       {
         type: "p",
-        text: "Partly because of what LENS is not. It is not a medical treatment, a diagnosis or a cure, and it is not a replacement for your doctor, your therapist, or school supports. A wellness service that offers itself as the thing you do instead of therapy has quietly promised something it has no way to deliver.",
+        text: "Partly because of what LENS is not. It is not a medical treatment, a diagnosis or a cure, and it is not a replacement for your doctor, your therapist, or school supports.",
       },
       {
         type: "blockquote",
