@@ -5,8 +5,15 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
+import ReadMore from "@/components/ReadMore";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
-import { resources, getResource, isPublishable, bylineText } from "@/lib/resources";
+import {
+  resources,
+  getResource,
+  isPublishable,
+  bylineText,
+  clusterSiblings,
+} from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export function generateStaticParams() {
@@ -123,6 +130,11 @@ export default async function ArticlePage({
           </div>
         </div>
       </section>
+
+      {/* Sibling links, which are how a cluster reads as a cluster rather than
+          as ten unconnected essays behind an index. By `cluster`, not by
+          shared concern page — see clusterSiblings in lib/resources.ts. */}
+      <ReadMore articles={clusterSiblings(article)} tone="ivory2" />
 
       <FinalCTA heading={article.finalHeading} sub={article.finalSub} />
     </>

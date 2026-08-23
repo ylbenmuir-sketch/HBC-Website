@@ -10,7 +10,9 @@ import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import { Btn, TalkCta } from "@/components/Buttons";
 import JsonLd from "@/components/JsonLd";
+import ReadMore from "@/components/ReadMore";
 import { concerns, getConcern } from "@/lib/concerns";
+import { articlesForConcern } from "@/lib/resources";
 import { faqPageSchema } from "@/lib/schema";
 
 export function generateStaticParams() {
@@ -43,6 +45,11 @@ export default async function ConcernPage({
     .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
   const medical = concern.medicalFirst;
+
+  // The articles that link up to this concern, linking back down. Derived from
+  // their own handoff blocks, so the loop cannot half-close — see
+  // articlesForConcern in lib/resources.ts.
+  const reading = articlesForConcern(concern.slug);
 
   return (
     <>
@@ -240,6 +247,11 @@ export default async function ConcernPage({
           </div>
         </div>
       </section>
+
+      {/* Plain, so the page keeps alternating against the ivory2 band above.
+          Drops whole on a concern no article feeds — concussion, trauma and
+          emotional-regulation today. */}
+      <ReadMore articles={reading} />
 
       {/* The closing line is approved copy on the concussion page and belongs
           with the ask, so it replaces the band's standard sub there. */}

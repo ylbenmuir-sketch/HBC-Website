@@ -186,6 +186,28 @@ export type ArticleBlock =
 
 export type Resource = {
   slug: string;
+  /**
+   * Which of the three clusters this article belongs to — the headings at the
+   * top of this file, as data.
+   *
+   * It exists so articles in one cluster can link to each other (C15). Sibling
+   * links are how a cluster reads as a cluster rather than as a set of
+   * unconnected essays behind an index, and `concernsFed` below cannot supply
+   * them: two articles can share a concern page across the anxiety/sleep
+   * boundary this file spends four paragraphs defending, and pairing them off
+   * that way would undo it. `told-to-just-relax` hands the night to
+   * `/concerns/sleep` and `the-3am-waking` hands the thoughts back to
+   * `/concerns/anxiety`; they point at each other across the line on purpose
+   * and are not siblings.
+   *
+   * Required, so a new article has to say where it belongs rather than
+   * defaulting into somebody's cluster — and nullable, because three drafted
+   * slugs belong to clusters that do not exist yet (`/compare`,
+   * `/is-lens-safe`, and in one case nothing in QUERY-TO-PAGE-MAP.md at all).
+   * Null is the honest answer for those, and forcing them into one of the
+   * three built clusters to satisfy a type would be the wrong kind of tidy.
+   */
+  cluster: "focus" | "anxiety" | "sleep" | null;
   tag: string;
   title: string;
   crumbLabel: string;
@@ -246,7 +268,7 @@ const ADULT_NOTE =
 const STANDARD_FINAL_SUB =
   "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
-import { isDraftText } from "./site-config";
+import { SHOW_DRAFT_CONTENT, isDraftText } from "./site-config";
 
 /**
  * A resource is publishable once its lede and body carry no [draft] notes.
@@ -270,6 +292,7 @@ export function isPublishable(r: Resource): boolean {
 export const resources: Resource[] = [
   {
     slug: "homework-battles",
+    cluster: "focus",
     tag: "For parents",
     title: "Homework battles: what's really happening in a stuck brain",
     crumbLabel: "Homework battles",
@@ -345,6 +368,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "exhausted-after-eight-hours",
+    cluster: "sleep",
     tag: "Sleep",
     title: "Why you're exhausted after eight hours of sleep",
     crumbLabel: "Exhausted after eight hours",
@@ -422,6 +446,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "the-3am-waking",
+    cluster: "sleep",
     tag: "Sleep",
     title: "The 3 a.m. waking, and why it isn’t random",
     crumbLabel: "The 3 a.m. waking",
@@ -504,6 +529,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "when-sleep-hygiene-isnt-it",
+    cluster: "sleep",
     tag: "Sleep",
     title: "When sleep hygiene isn’t the problem",
     crumbLabel: "When sleep hygiene isn’t it",
@@ -576,6 +602,8 @@ export const resources: Resource[] = [
   },
   {
     slug: "lens-vs-traditional-neurofeedback",
+    // /compare is P3 in QUERY-TO-PAGE-MAP.md and unbuilt.
+    cluster: null,
     tag: "How it works",
     title: "LENS vs. traditional neurofeedback: an honest comparison",
     crumbLabel: "LENS vs. traditional neurofeedback",
@@ -599,6 +627,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "bad-at-school",
+    cluster: "focus",
     tag: "For parents",
     title: "When a bright kid starts saying “I'm just bad at school”",
     crumbLabel: "“Bad at school”",
@@ -675,6 +704,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "the-last-ten-percent",
+    cluster: "focus",
     tag: "For adults",
     title: "The last ten percent: why finishing is a different job from starting",
     crumbLabel: "The last ten percent",
@@ -755,6 +785,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "lens-and-medication",
+    cluster: "focus",
     // Held for Ben's read while it was the one article whose whole subject is
     // the boundary around medication. Read and approved as written, Aug 2026 —
     // the hold is gone, the copy is unchanged.
@@ -830,6 +861,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "told-to-just-relax",
+    cluster: "anxiety",
     tag: "For adults",
     title: "Why you can’t relax when there’s nothing to relax about",
     crumbLabel: "“Just relax”",
@@ -915,6 +947,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "braced-for-something",
+    cluster: "anxiety",
     tag: "For adults",
     title: "Why your body stays braced when nothing is happening",
     crumbLabel: "A body that stays braced",
@@ -992,6 +1025,7 @@ export const resources: Resource[] = [
   },
   {
     slug: "alongside-therapy",
+    cluster: "anxiety",
     tag: "How it works",
     title: "Can you do LENS while you’re seeing a therapist?",
     crumbLabel: "LENS and therapy",
@@ -1056,6 +1090,8 @@ export const resources: Resource[] = [
   },
   {
     slug: "brain-fog-after-55",
+    // No cluster in QUERY-TO-PAGE-MAP.md at all.
+    cluster: null,
     tag: "Adults 55+",
     title: "Brain fog after 55: what's normal, what's worth attention",
     crumbLabel: "Brain fog after 55",
@@ -1080,6 +1116,8 @@ export const resources: Resource[] = [
   },
   {
     slug: "what-the-equipment-does",
+    // /is-lens-safe is P2 in QUERY-TO-PAGE-MAP.md and unbuilt.
+    cluster: null,
     tag: "How it works",
     title: "What the equipment actually does (and doesn't do)",
     crumbLabel: "The equipment",
@@ -1105,4 +1143,65 @@ export const resources: Resource[] = [
 
 export function getResource(slug: string): Resource | undefined {
   return resources.find((r) => r.slug === slug);
+}
+
+/**
+ * Every article a visitor can actually reach — the same filter
+ * `generateStaticParams`, the index and the sitemap already apply, in one
+ * place so a cross-link block can never offer a route that 404s.
+ */
+export function liveResources(): Resource[] {
+  return resources.filter((r) => SHOW_DRAFT_CONTENT || isPublishable(r));
+}
+
+/**
+ * The concern pages an article links up to, read off the article's own
+ * handoff blocks.
+ *
+ * Derived rather than declared, and that is the point. The reciprocal of "this
+ * article links up to /concerns/sleep" is "that concern page should link back
+ * down here", and the two halves of a cluster loop that are computed from one
+ * fact cannot drift apart. A hand-maintained second list would eventually
+ * disagree with the prose, and the prose is the half a reader sees.
+ *
+ * Only `/concerns/*` counts. Articles also hand off to `/faq` and `/adults`,
+ * which are not cluster homes and have no "read more" block to reciprocate
+ * with.
+ */
+export function concernsFed(r: Resource): string[] {
+  const slugs = new Set<string>();
+  for (const block of r.body) {
+    if (block.type !== "links") continue;
+    for (const item of block.items) {
+      const m = /^\/concerns\/([a-z0-9-]+)$/.exec(item.href);
+      if (m) slugs.add(m[1]);
+    }
+  }
+  return [...slugs];
+}
+
+/**
+ * Published articles that link up to this concern, in publication order.
+ *
+ * This is the half of the cluster that was never built. Every article linked
+ * up to exactly two destinations and no concern page linked back to any of
+ * them, which left the ten articles on one inbound link apiece at depth 2 —
+ * the pages doing the informational-query work were the least supported pages
+ * on the site (SEO-AUDIT-2.md §4).
+ */
+export function articlesForConcern(slug: string): Resource[] {
+  return liveResources().filter((r) => concernsFed(r).includes(slug));
+}
+
+/**
+ * The other published articles in this one's cluster.
+ *
+ * By `cluster`, not by shared concern page: see the field note on the type.
+ * Pairing articles off by the concern pages they happen to share would marry
+ * `told-to-just-relax` to `the-3am-waking`, which are the two pieces that hold
+ * the anxiety/sleep boundary from opposite sides.
+ */
+export function clusterSiblings(r: Resource): Resource[] {
+  if (!r.cluster) return [];
+  return liveResources().filter((o) => o.cluster === r.cluster && o.slug !== r.slug);
 }
