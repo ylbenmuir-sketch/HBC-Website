@@ -71,6 +71,7 @@
  */
 
 import {
+  INFORMATION_SHARING,
   SESSION_LENGTH,
   SITE_NAME,
   verifiedOr,
@@ -782,7 +783,7 @@ export const resources: Resource[] = [
       },
       {
         type: "p",
-        text: "What that amounts to is a conversation about what the service is and what your check-ins are tracking — offered because you asked for it, not as a matter of routine.",
+        text: `What that amounts to is a conversation about what the service is and what your check-ins are tracking. ${INFORMATION_SHARING}`,
       },
       { type: "h2", text: "What we don’t do" },
       {

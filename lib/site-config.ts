@@ -604,6 +604,36 @@ export const INSURANCE_POLICY =
   "reimbursement.";
 
 /**
+ * What happens to what a client tells us — from Ben's client privacy notice,
+ * confirmed.
+ *
+ * Here rather than typed into the one article that needed it, for
+ * INSURANCE_POLICY's reason: this is an answer people quote back, and the
+ * first page to restate it in slightly different words is the one that ends
+ * up being wrong. A /privacy page, the contact form, the FAQ and the
+ * assistant would each need it eventually.
+ *
+ * **Written as what we do, not as a legal claim, and deliberately narrower
+ * than the notice it comes from.** The notice's own HIPAA framing is a
+ * separate question Ben is reviewing, so nothing here names a statute, says
+ * "compliance", or characterises the practice's regulatory status — this
+ * describes a practice, and it would remain true whatever that review
+ * concludes. Do not add any of that later without Ben saying so.
+ *
+ * Two standards, and they are not the same, so the sentence keeps them apart:
+ * information goes to another provider **only at the client's request**, and
+ * it is **never sold**, while marketing use requires explicit consent.
+ *
+ * Not in the assistant's index. It is a plain constant that no passage in
+ * lib/chat/content-index.ts reads, which is a deliberate hold rather than an
+ * oversight — a policy passage changes the retrieval corpus and wants the
+ * before/after sweep run against it. Worth doing; not done here.
+ */
+export const INFORMATION_SHARING =
+  "Nothing you tell us goes to anyone unless you ask us to send it. We don’t " +
+  "sell it, and we don’t use it for marketing unless you’ve told us we can.";
+
+/**
  * Practitioner training, in Ben's words. It names a third party (OchsLabs) and
  * a certification period, so it is a claim about the practice that has to stay
  * exactly as approved; do not tighten it for rhythm. Deliberately carries no
