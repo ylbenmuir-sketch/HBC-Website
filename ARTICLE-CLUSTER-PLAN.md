@@ -175,9 +175,12 @@ which can't see it, because the string contains no brackets and so passes
 the author, and that Sheri has actually reviewed each piece.
 
 Related, smaller: **"Clinical Director"** is the title in that byline, on a
-practice whose own `DISCLAIMER` says "not a medical clinic". It is pre-existing
-approved copy and was not changed here, but it is worth a second look now that
-it appears four more times.
+practice whose own `DISCLAIMER` says "not a medical clinic". **Reviewed and
+kept, Aug 2026** — an internal role title asserts a position, not a licence,
+and the scope claim is made by `DISCLAIMER` and `TRAINING_CLAIM`, which every
+reader meets first. The full reasoning is recorded in `lib/site-config.ts`
+above `FOUNDER_BIO`, including what would change the answer. Not to be
+reopened without one of those conditions.
 
 **b) `lens-and-medication` is the highest-risk article of the four and should
 not publish without explicit sign-off.** Every sentence in it traces —

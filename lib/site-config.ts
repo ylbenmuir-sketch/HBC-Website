@@ -159,6 +159,32 @@ export const FOUNDER_DISPLAY_NAME = FOUNDER_LAST_NAME.verified
   : FOUNDER_FIRST_NAME;
 
 /**
+ * "Founder & Clinical Director" stays as written. Decided Aug 2026, Ben.
+ *
+ * Raised because the title sits on a practice whose own DISCLAIMER says
+ * "not a medical clinic", and because it had just been found riding an
+ * unconfirmed review credit in the article bylines. Both are real; neither
+ * makes the title wrong.
+ *
+ * The reasoning, recorded so it is not reopened: an internal role title
+ * describes a position inside this organisation. It does not assert a licence,
+ * a registration, or a scope of practice, and nothing on the site pairs it
+ * with a credential that would. The scope claim is made by DISCLAIMER, which
+ * appears on every page and is explicit, and by TRAINING_CLAIM, which says
+ * exactly what certification a practitioner holds and from whom. A reader
+ * meets both before they could infer anything from a job title.
+ *
+ * What WOULD change this: pairing the title with a clinical credential
+ * (Dr., MD, PhD, LCSW, "licensed"), or using it to justify a claim the
+ * practice cannot otherwise make. Neither is present.
+ *
+ * Note for whoever edits it anyway — the string is written out in eight
+ * places (here via lib/team.ts, lib/locations.ts twice, lib/schema.ts
+ * jobTitle, and four alt/eyebrow strings in app/). It is not a constant, so a
+ * change means finding all eight.
+ */
+
+/**
  * The founder's team-card bio — three claims about a named person.
  *
  * "Sets the clinical standard", "trains every practitioner" and "still keeps a
