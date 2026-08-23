@@ -145,6 +145,11 @@ export type Resource = {
    *
    * Set it and the article does not build, does not enter the sitemap, and
    * 404s, exactly as a draft does. Delete the line to publish.
+   *
+   * **Unset on every article is the correct state, not a disabled one.** It
+   * held `lens-and-medication` until Ben read it; he approved the copy as
+   * written and it shipped. The field stays because the next piece that needs
+   * one specific person's eyes should not have to borrow the bracket gate.
    */
   hold?: string;
   lede: string;
@@ -476,10 +481,9 @@ export const resources: Resource[] = [
   },
   {
     slug: "lens-and-medication",
-    // Written, checked, and not shipping until Ben has read it. It is the one
-    // article on the site whose whole subject is the boundary around
-    // medication, and the cost of a wrong sentence in it is not an SEO cost.
-    hold: "Awaiting Ben's read — medication boundary copy",
+    // Held for Ben's read while it was the one article whose whole subject is
+    // the boundary around medication. Read and approved as written, Aug 2026 —
+    // the hold is gone, the copy is unchanged.
     tag: "How it works",
     title: "Can you do LENS while you’re on medication?",
     crumbLabel: "LENS and medication",
