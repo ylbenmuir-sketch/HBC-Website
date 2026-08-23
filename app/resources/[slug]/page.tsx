@@ -33,7 +33,15 @@ export async function generateMetadata({
   return {
     // metaTitle, not title: the on-page headline is written to be read and
     // targets nothing anybody types. See the field note in lib/resources.ts.
-    title: article.metaTitle,
+    //
+    // `absolute`, so the root layout's " — Harmonized Brain Centers" template
+    // does not apply. Twenty-seven characters of suffix put every one of these
+    // ten titles past the ~60 Google renders, on a template where the brand is
+    // pure waste: og:site_name already carries it, an article ranks on the
+    // question it answers, and the words being pushed out of the SERP were the
+    // end of that question. Concern and location titles keep the suffix —
+    // there the brand next to a place name is doing work.
+    title: { absolute: article.metaTitle },
     description: article.metaDescription,
     // Spread, not `{ type: "article" }` alone. Next replaces the parent
     // `openGraph` object rather than merging into it, so naming one field here
