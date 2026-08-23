@@ -50,7 +50,12 @@ export default async function ArticlePage({
       />
       <section className="sec-tight">
         <div className="wrap article">
-          <div className="rv">
+          {/* `above-fold`: the article template has no `.page-hero`, so the
+              exemption is marked by hand. The header block holds the mobile
+              LCP element (`p.lede`); the image below it is the desktop one,
+              where 420px of it sits inside a 900px-tall first screen. Both are
+              exempt from the reveal gate for the reason in globals.css. */}
+          <div className="rv above-fold">
             <div className="eyebrow">
               {article.tag} &middot; {article.readTime}
             </div>
@@ -64,14 +69,14 @@ export default async function ArticlePage({
               alt={article.title}
               position={article.image.position}
               height={420}
-              className="rv"
+              className="rv above-fold"
               sizes="(max-width: 760px) 100vw, 760px"
             />
           ) : (
             <PlaceholderPlate
               spec={article.plateSpec ?? ""}
               height={420}
-              className="rv"
+              className="rv above-fold"
               style={{ margin: "40px 0" }}
             />
           )}

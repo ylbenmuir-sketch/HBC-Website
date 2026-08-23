@@ -534,10 +534,36 @@ footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); pa
 .foot-grid a:hover { color: var(--ivory); }
 .disclaimer { padding-top: 28px; font-size: 12.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.55); max-width: 112ch; }
 
-/* reveal motion */
-.rv { opacity: 0; transform: translateY(14px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.rv.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } }
+/* reveal motion
+
+   The hidden state is gated twice, and both gates are load-bearing.
+
+   `html.js` is added synchronously in <head> (app/layout.tsx), so the hidden
+   state only ever exists in a browser that will run the observer. Every
+   section on this site opts into `.rv`; without the guard a visitor with no JS
+   gets a blank page.
+
+   The first-screen containers are then exempt, because LCP is measured at
+   *paint* and an element sitting at opacity 0 has not painted. SEO-AUDIT-2.md
+   §2.1 measured what that cost: the homepage hero image finished downloading
+   at 1,243ms and LCP did not fire until 2,752ms — a second and a half in which
+   the pixel was available and the CSS was refusing to show it. The same 1.5s
+   sat on every template, which is the difference between comfortably passing
+   the one Core Web Vital that is still a ranking signal and borderline failing
+   it.
+
+   Below the fold the gate costs nothing — those elements are not candidates
+   for the largest contentful paint of the first viewport — so the reveal is
+   unchanged everywhere a visitor can actually watch it happen. What she loses
+   is the fade on the block that is already on screen when the page arrives,
+   which she was never going to see fade in anyway. */
+.rv { transition: opacity 0.7s ease, transform 0.7s ease; }
+html.js .rv { opacity: 0; transform: translateY(14px); }
+html.js .hero .rv,
+html.js .page-hero .rv,
+html.js .rv.above-fold { opacity: 1; transform: none; transition: none; }
+html.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html.js .rv { opacity: 1; transform: none; transition: none; } }
 
 /* responsive layout classes for sections the mockups sized with inline
    styles (desktop values identical to the mockups; they collapse below) */

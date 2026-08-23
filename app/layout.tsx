@@ -86,6 +86,19 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+      <head>
+        {/* The `js` class the reveal gate hangs off. Synchronous and first in
+            <head> so it lands before the stylesheet can apply anything, which
+            is the whole point: `.rv`'s hidden state is written as `html.js .rv`
+            so it exists only in a browser that will run the observer that
+            clears it. A no-JS visitor gets the page rather than a blank ivory
+            screen. See the reveal-motion block in globals.css. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add("js")`,
+          }}
+        />
+      </head>
       <body>
         {/* One controller for everything anchored to the bottom of the
             viewport — the sticky ask bar, the homepage CTA bar, and the
