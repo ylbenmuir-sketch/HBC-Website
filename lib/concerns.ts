@@ -9,7 +9,14 @@
  * injured visitor to see a doctor instead. See `medicalFirst`.
  */
 
-import { BRAIN_MAP_POINTS } from "./site-config";
+import {
+  BRAIN_MAP_NAME,
+  BRAIN_MAP_POINTS,
+  COURSE_VARIES_NOTE,
+  FIRST_VISIT_DURATION,
+  FULL_COURSE,
+  MAINTENANCE,
+} from "./site-config";
 
 export type ConcernFaq = {
   q: string;
@@ -605,9 +612,10 @@ export const concerns: Concern[] = [
      *    the same rule as a check that fires before retrieval, so a recent
      *    injury described in the chat never reaches a passage about LENS
      *    (`head-injury` in lib/chat/safety.ts).
-     * 2. No goal cards and no FAQs. A "Common goal" quote on this page would
-     *    be an outcome claim about a brain injury, which is the one thing the
-     *    copy may never make. Empty rather than invented; the bands drop.
+     * 2. No goal cards. A "Common goal" quote on this page would be an
+     *    outcome claim about a brain injury, which is the one thing the copy
+     *    may never make. Empty rather than invented; the band drops. The FAQs
+     *    below were approved separately and are not part of the block.
      * 3. No photo. `image: null` with no `plateSpec` — the hero is copy only,
      *    so nothing sits between the H1 and the medical-first block.
      *
@@ -667,7 +675,60 @@ export const concerns: Concern[] = [
       note: "LENS is a wellness service. It doesn't treat concussion or brain injury of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
     },
     goals: [],
-    faqs: [],
+    /*
+     * Six, and every one of them is a question this audience asks rather than
+     * a question the layout wanted. The rules they are written under:
+     *
+     * - Nothing claims a recovery, an improvement, or a speed. Where a
+     *   question invites one — "is it too late?" — the answer refuses the
+     *   prediction in the first sentence rather than hedging its way around
+     *   it, which is what makes that question safe to publish at all.
+     * - Nothing compares LENS to another modality on whether it works. FAQ 2
+     *   names vestibular and vision rehab because people ask about them by
+     *   name; the only comparison it draws is what a session asks of you,
+     *   which is a fact about our format and not a claim about theirs.
+     * - Every figure interpolates. The course, the taper and the caveat that
+     *   rides them come from lib/site-config.ts like everywhere else.
+     * - FAQ 3 does not assert a safety finding about combining LENS with
+     *   rehab. The site's own "Is it safe?" answer is about the signal being
+     *   gentle and noninvasive, and this does not reach past it — it answers
+     *   the practical question and hands the clinical one back to the team
+     *   running the rehab.
+     */
+    faqs: [
+      {
+        // "after a concussion" is not decoration. Worded as the plain "What
+        // happens at a first visit?" this passage *took* that question from
+        // page:first-visit:five-parts sitewide — a concern FAQ's question is
+        // weighted x3 and this passage is far shorter, so it won on both
+        // counts, and a visitor asking a general question got an answer that
+        // says "it isn't a medical assessment of your injury". The question a
+        // concern FAQ asks has to be a question about that concern.
+        q: "What should I expect the first time I come in after a head injury?",
+        a: `The first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. We walk you through what we see alongside what you tell us about how your days actually go. It isn't a medical assessment of your injury, and it isn't a test you can fail.`,
+      },
+      {
+        q: "How is this different from vestibular or vision therapy?",
+        a: "It's a different thing, and we don't do either one. Vestibular and vision rehab are clinical therapies delivered by clinicians. LENS is a wellness service, and a session asks nothing of you — no exercises, no drills, nothing to practice between visits. If you're doing either, keep doing it.",
+      },
+      {
+        q: "Can I do this alongside rehab I'm already doing?",
+        a: "Yes — that's usually how it goes. LENS is routinely used alongside other care, and we're glad to coordinate with providers you already trust. If your doctor or your rehab team has told you to hold off on anything, follow them; we'd say the same on the phone.",
+      },
+      {
+        q: "How long do people usually come?",
+        a: `A full course is ${FULL_COURSE.value.sessions} sessions, then maintenance — ${MAINTENANCE.value}. ${COURSE_VARIES_NOTE}`,
+      },
+      {
+        q: "Do I need a referral?",
+        a: "No. Physicians in Middle Tennessee do refer patients to us — we work from a standing referral list — but you don't need a referral to call. If you'd rather your doctor was in the loop, we're glad to coordinate with them.",
+      },
+      {
+        q: "It's been over a year. Is it too late?",
+        a: "We don't predict how it would go for anyone. What we can tell you is that people come to us months and sometimes years after the injury, and a practitioner will tell you honestly on the free call whether LENS is a fit.",
+      },
+    ],
+    faqHeading: "Asked by almost everyone who comes in after a head injury.",
     image: null,
     // The clusters the copy names — attention, sleep, mood, mental fatigue —
     // rather than the concerns nearest alphabetically.

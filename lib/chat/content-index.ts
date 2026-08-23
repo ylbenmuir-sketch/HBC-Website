@@ -246,14 +246,24 @@ const CONCERN_ALIASES: Record<string, string[]> = {
    * somebody else a question. Three rules were applied on top of the two in
    * the note above:
    *
-   * - **Nothing that is already carrying a route.** "brain" belongs to the
-   *   Brain Map and to brain-fog, "fog" and "foggy" to brain-fog, "noise" to
-   *   focus and children-school, "doctor" to FAQ 12, "sleep" to sleep. Every
-   *   one of them appears in this concern's published copy, so its passages
-   *   already score on them; putting them in this list would have multiplied
-   *   them again *and* dropped their IDF on the passages that depend on them.
-   *   "still foggy after a concussion" was the routing case that mattered and
-   *   it lands here on "concussion" alone.
+   * - **Nothing that is already carrying a route** — with one exception,
+   *   added later and on evidence. "brain" belongs to the Brain Map and to
+   *   brain-fog, "noise" to focus and children-school, "doctor" to FAQ 12,
+   *   "sleep" to sleep. Every one of them appears in this concern's published
+   *   copy, so its passages already score on them; putting them in this list
+   *   would have multiplied them again *and* dropped their IDF on the
+   *   passages that depend on them.
+   *
+   *   The exception is "fog"/"foggy", which is here for the reason the note
+   *   above gives for "homework": a word can genuinely belong to two
+   *   concerns. It was left out at first and had to come back when the six
+   *   FAQs shipped — six more passages carrying "concussion" dropped that
+   *   term's IDF far enough that "I had a concussion months ago and still
+   *   feel foggy" fell under the coverage floor, because no concussion
+   *   passage matched "foggy" at all. ("fog" and "foggy" are different tokens:
+   *   the stemmer leaves a trailing "y" alone, so the page's own "the fog that
+   *   lifts and returns" was never reachable from the word people type.) The
+   *   cost to brain-fog is measured in the sweep, not assumed.
    * - **The words the copy uses, made findable** — "cleared", "scan",
    *   "referral", "athlete" are all on the page and were reachable only
    *   through prose.
@@ -280,6 +290,8 @@ const CONCERN_ALIASES: Record<string, string[]> = {
     // "the scans come back clean", "you've been cleared" — the lead and the
     // block, both of which people quote back.
     "scan", "scans", "cleared",
+    // Shared with brain-fog on purpose — see the note above.
+    "fog", "foggy",
   ],
   // Not "safe": on this page the word belongs to "the past keeps the present
   // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
