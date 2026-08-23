@@ -331,12 +331,44 @@ const FAQ_KEYWORDS: Record<string, string[]> = {
   // confident answer to a question nobody asked. Distinctive terms only.
   "How many sessions will I need?": ["many", "number", "often", "frequency", "week", "course", "program", "commit", "maintenance", "taper", "ongoing", "indefinitely", "forever", "monthly", "quarterly"],
   "What does the first visit include?": ["first", "visit", "include", "baseline", "recording", "plan", "conversation"],
-  "What kinds of concerns do clients come in with?": ["concern", "kind", "issue", "problem", "reason", "symptom", "struggle"],
+  // "help" is here because without it this answer was unreachable by the
+  // question it exists for. "What do you help with?" is §7 accuracy question
+  // 16, and it tokenizes to the single term `help` — a word this answer's
+  // question and prose both happen not to contain, so the subject gate
+  // rejected the one passage on the site that lists what people come in with,
+  // and the question was answered by a focus-and-ADHD FAQ instead.
+  "What kinds of concerns do clients come in with?": ["concern", "kind", "issue", "problem", "reason", "symptom", "struggle", "help"],
   "Is this therapy or medical treatment?": ["therapy", "medical", "treatment", "diagnose", "psychiatric", "substitute", "clinic", "counseling"],
   "Can I continue seeing my doctor or therapist?": ["doctor", "therapist", "psychiatrist", "counselor", "medication", "prescriber", "alongside", "coordinate", "continue", "keep", "stop"],
   "What does it cost?": ["cost", "price", "pricing", "much", "expensive", "afford", "pay", "fee", "payment", "dollar", "free"],
   "Does insurance cover it?": ["insurance", "cover", "coverage", "hsa", "fsa", "medicare", "medicaid", "reimburse", "claim", "bill"],
   "What if I'm unsure whether it's right for me?": ["unsure", "sure", "right", "fit", "skeptical", "doubt", "hesitant", "worth", "sceptical"],
+};
+
+/**
+ * Titles for /faq passages that need one of their own.
+ *
+ * A passage title is weighted (RETRIEVAL.titleWeight), so "Frequently asked
+ * questions" repeated fourteen times is two tokens of noise on every one of
+ * them. That is harmless right up until a passage has to *win* a word, and
+ * then the title is a slot the passage is wasting.
+ *
+ * One entry, and it is the case that forced this: "What do you help with?" is
+ * §7 accuracy question 16 and tokenizes to the single term `help`. The answer
+ * that lists what people come in with contains that word nowhere — not in its
+ * prose, not in its question — so it lost the question outright to
+ * `concern:focus-adhd:faq:3`, whose own question is "How do you know whether
+ * it's helping?" and whose "helping" stems to `help` at question weight. A
+ * keyword alone could not beat that (keywords are weighted 2, questions 3);
+ * with the title carrying the word too, the passage that answers the question
+ * wins it.
+ *
+ * The title is also what a visitor sees as the link label, and "What we help
+ * with" is a better one for this answer than "Frequently asked questions".
+ * Add an entry here only where both of those are true.
+ */
+const FAQ_TITLES: Record<string, string> = {
+  "What kinds of concerns do clients come in with?": "What we help with",
 };
 
 /** Retrieval keys shared by every passage about a given center. */
@@ -381,7 +413,13 @@ function concernPassages(c: Concern): Passage[] {
             kind: "concern" as const,
             title: `${c.title} — start with a doctor`,
             href,
-            question: "Should I see a doctor first?",
+            // Not "Should I see a doctor first?", which is what this shipped
+            // as. That is brain-fog FAQ 2 almost word for word — "Should I see
+            // my doctor first?" — and this passage took it, so a visitor
+            // worried about cognitive change got a page about head injuries.
+            // A synthetic question is still a question in the index, weighted
+            // x3 like any other, and it has to be about *this* passage.
+            question: "Is it too soon to come in after a head injury?",
             keywords: [
               ...keywords,
               "recent", "urgent", "emergency", "doctor", "first", "later",
@@ -743,7 +781,11 @@ const ALL_PASSAGES: Passage[] = [
     (faq, i): Passage => ({
       id: `faq:${i + 1}`,
       kind: "faq",
-      title: "Frequently asked questions",
+      // All fourteen share one title, which is the honest label for a /faq
+      // passage and contributes nothing to routing — the same three words on
+      // fourteen passages cannot tell them apart. FAQ_TITLES overrides it for
+      // the one answer that has a real name of its own; see there.
+      title: FAQ_TITLES[faq.q] ?? "Frequently asked questions",
       href: "/faq",
       question: faq.q,
       keywords: FAQ_KEYWORDS[faq.q],

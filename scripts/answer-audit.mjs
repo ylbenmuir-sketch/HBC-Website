@@ -85,7 +85,7 @@ registerHooks({
 });
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const { retrieve } = await import(`${ROOT}/lib/chat/retrieve.ts`);
+const { retrieve, tokenize } = await import(`${ROOT}/lib/chat/retrieve.ts`);
 const { checkRefusal } = await import(`${ROOT}/lib/chat/refusals.ts`);
 const { checkSafety } = await import(`${ROOT}/lib/chat/safety.ts`);
 const { checkPreRetrieval } = await import(`${ROOT}/lib/chat/unanswerable.ts`);
@@ -644,6 +644,59 @@ const MUST_NOT_MATCH = [
 ];
 
 /**
+ * Questions in the index that are near-duplicates of each other.
+ *
+ * This is the rule the PAGE_ROUTING list could not be. A list records the
+ * collisions somebody already noticed; the collision that matters is the next
+ * one, and it arrives the same way every time — an author writes the natural
+ * question for a new FAQ, the natural question is one the site already
+ * answers somewhere else, and whichever passage is shorter takes it. The
+ * concussion FAQs did this twice in one sitting: "What happens at a first
+ * visit?" took §7 accuracy question 6, and "Should I see a doctor first?" took
+ * brain-fog's FAQ 2.
+ *
+ * Nothing catches that at authoring time except comparing the questions, so
+ * that is what this does: Jaccard over the stemmed tokens of every question in
+ * the index, failing at 0.6. The pairs below are the ones that already existed
+ * when the check was written, each with the reason it stays.
+ *
+ * Stale entries fail too. A pair that stops duplicating has to leave this
+ * table, for the same reason CONFIRM_TAG_INVENTORY fails on a tag that is no
+ * longer on its page: an allowlist nobody prunes is an allowlist that hides
+ * the next collision instead of surfacing it.
+ */
+const DUPLICATE_QUESTIONS_ALLOWED = [
+  // --- two passages about the same subject on different pages. Both answers
+  // are true and compatible, and whichever wins, the visitor is answered.
+  ["faq:12", "page:first-visit:cost"],
+  ["faq:12", "policy:pricing"],
+  ["page:first-visit:cost", "policy:pricing"],
+  ["faq:13", "page:first-visit:insurance"],
+  ["faq:8", "page:first-visit:what"],
+  ["page:about:who", "page:about:team"],
+  ["page:how-lens-works:session", "page:first-visit:after"],
+  ["location:nashville:visiting", "location:nashville:directions"],
+  ["location:murfreesboro:visiting", "location:murfreesboro:directions"],
+  // --- the same question on two concerns, kept deliberately. Each pair says
+  // compatible things, so the tie has no wrong side; asserting a winner would
+  // freeze whichever passage happens to be shorter today rather than fix
+  // anything. Reworded only if one of the answers ever stops agreeing with
+  // the other.
+  ["concern:anxiety:faq:2", "concern:trauma:faq:2"],
+  ["concern:anxiety:faq:3", "concern:brain-fog:faq:3"],
+  ["concern:focus-adhd:faq:1", "concern:children-school:faq:1"],
+];
+
+/** Stemmed-token overlap, 0–1. Same tokenizer retrieval scores with. */
+function questionSimilarity(a, b) {
+  const A = new Set(tokenize(a));
+  const B = new Set(tokenize(b));
+  const shared = [...A].filter((t) => B.has(t)).length;
+  const union = A.size + B.size - shared;
+  return union === 0 ? 0 : shared / union;
+}
+
+/**
  * Sitewide questions, and the page that has to answer them.
  *
  * `MUST_ANSWER` asserts only that these are not refused and not gated — it
@@ -663,6 +716,15 @@ const MUST_NOT_MATCH = [
  */
 const PAGE_ROUTING = [
   ["What happens at a first visit?", "page:first-visit:"],
+  // Both added after the collision sweep. "What do you help with?" was
+  // answered by a focus-and-ADHD FAQ about tracking progress, because it
+  // tokenizes to the single term `help` and faq:9 contained the word nowhere.
+  // "Should I see my doctor first?" is brain-fog FAQ 2, and the concussion
+  // page's medical-first passage had taken it with a near-identical synthetic
+  // question — a visitor worried about cognitive change was being answered
+  // about head injuries.
+  ["What do you help with?", "faq:9"],
+  ["Should I see my doctor first?", "concern:brain-fog:faq:2"],
   ["What is the Brain Map?", "page:how-lens-works:map"],
   ["How does LENS work?", "page:how-lens-works:"],
   ["What is LENS neurofeedback?", "faq:1"],
@@ -1252,6 +1314,38 @@ function guardrails() {
     }
   }
   console.log(`  page routing    ${PAGE_ROUTING.length} sitewide questions`);
+
+  const DUPLICATE_THRESHOLD = 0.6;
+  const questioned = CONTENT_INDEX.filter((p) => p.question);
+  const allowed = new Set(
+    DUPLICATE_QUESTIONS_ALLOWED.map(([a, b]) => [a, b].sort().join("|"))
+  );
+  const seen = new Set();
+  for (let i = 0; i < questioned.length; i += 1) {
+    for (let j = i + 1; j < questioned.length; j += 1) {
+      const a = questioned[i];
+      const b = questioned[j];
+      const score = questionSimilarity(a.question, b.question);
+      if (score < DUPLICATE_THRESHOLD) continue;
+      const key = [a.id, b.id].sort().join("|");
+      seen.add(key);
+      if (allowed.has(key)) continue;
+      failures.push(
+        `duplicate question (${score.toFixed(2)}): ${a.id} ${JSON.stringify(a.question)} ` +
+          `vs ${b.id} ${JSON.stringify(b.question)} — reword one, or record why both stay`
+      );
+    }
+  }
+  for (const key of allowed) {
+    if (!seen.has(key)) {
+      failures.push(
+        `DUPLICATE_QUESTIONS_ALLOWED holds ${key}, which no longer duplicates — drop the entry`
+      );
+    }
+  }
+  console.log(
+    `  duplicate qs    ${questioned.length} questions compared, ${allowed.size} pair(s) allowed`
+  );
 
   if (failures.length === 0) console.log("\n  all guardrails hold.");
   else for (const failure of failures) console.log(`  FAIL  ${failure}`);
