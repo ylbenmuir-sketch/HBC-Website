@@ -272,7 +272,23 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .goals-list { list-style: none; column-count: 2; column-gap: 60px; margin-top: 6px; }
 .goals-list li { padding: 13px 0 13px 30px; position: relative; font-size: 16.5px; color: var(--ink); break-inside: avoid; border-bottom: 1px solid var(--line); }
 .goals-list li::before { content: ""; position: absolute; left: 0; top: 24px; width: 14px; height: 1.5px; background: var(--gold); }
-.note-sage { padding: 22px 26px; background: var(--sage-soft); border-radius: 4px; font-size: 14.5px; color: var(--sage-deep); line-height: 1.6; }
+/* The border is not decoration. --sage-soft against --ivory-2 is 1.05:1 —
+   the panel and the section it sits in are the same luminance, separated by
+   hue alone, so in greyscale or to a low-vision reader the panel has no
+   edges and no extent. That matters most on the one this class exists for:
+   GuideCta's confirmation, the panel that tells someone their submit worked.
+
+   The fill cannot be the fix. Darkening --sage-soft until it clears 3:1
+   against --ivory-2 needs roughly a 0.57 scale, and --sage-deep body text on
+   it drops under 4.5:1 at about 0.93 — the panel loses its own text long
+   before it gains an edge. So the boundary goes on the border, where it
+   costs the text nothing.
+
+   --sage-deep is the panel's own text colour, so this adds no token and no
+   new hue: 4.56:1 against the fill inside, and against every ground the
+   class actually sits on — --ivory-2 4.77:1, --ivory 5.20:1, #fff 5.52:1
+   (the white card in ContactForm's success state). */
+.note-sage { padding: 22px 26px; background: var(--sage-soft); border: 1px solid var(--sage-deep); border-radius: 4px; font-size: 14.5px; color: var(--sage-deep); line-height: 1.6; }
 
 /* lens explain */
 .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; align-items: center; }
