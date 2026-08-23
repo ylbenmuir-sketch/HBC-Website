@@ -50,6 +50,35 @@
  * article is an indexed passage and no article can move a routing line. The
  * sweep is run against these anyway, as proof rather than as diagnosis.
  *
+ * ## The sleep cluster, and the same boundary from the other side
+ *
+ * Three more behind /concerns/sleep: `exhausted-after-eight-hours`,
+ * `the-3am-waking` (+ anxiety) and `when-sleep-hygiene-isnt-it`
+ * (+ stress-resilience).
+ *
+ * The anxiety cluster already conceded the night — `told-to-just-relax` ships
+ * with an "If nights are the hard part" section pointing at /concerns/sleep —
+ * so the discipline here is the reciprocal, and `the-3am-waking` is where it
+ * matters. Waking at three with a racing mind is the exact point the two
+ * clusters meet. That article is about the *waking*; where the thoughts are
+ * the story it says so and hands off to /concerns/anxiety in a mirror-image
+ * section. **The two articles point at each other across the boundary rather
+ * than both claiming it**, which is what makes the line visible from both
+ * sides instead of only from one.
+ *
+ * The vocabulary rule runs both ways too, and is checked both ways: no
+ * anxiety-owned string ("just relax", "on edge", "braced", "switch off") on a
+ * sleep article's four ranking surfaces, and no sleep-owned string ("racing
+ * thoughts", "3 a.m.", "won't shut off") on an anxiety article's. The one
+ * string the two concern pages share verbatim — "an hour of ceiling-staring",
+ * identical in both `goals` arrays — belongs to neither cluster's articles and
+ * appears on no surface at all.
+ *
+ * "Insomnia" appears in no title or metaTitle either. It is a supporting term
+ * in QUERY-TO-PAGE-MAP.md and it names a disorder, and /concerns/sleep's own
+ * limits note says LENS is not a treatment for sleep disorders — so a title
+ * carrying it would target the one framing the page underneath it disclaims.
+ *
  * ## Every fact here traces
  *
  * To a verified constant in ./site-config, or to copy already in the site
@@ -207,7 +236,14 @@ const STANDARD_NOTE =
 const ADULT_NOTE =
   "This article is educational and isn't medical advice. LENS is a wellness service and doesn't diagnose or treat any condition. If you have health concerns, talk with your doctor.";
 
-const DRAFT_FINAL_SUB =
+/**
+ * The default closing sub, and the one limitation sentence for any article
+ * that has no more specific one. Renamed from `DRAFT_FINAL_SUB` when
+ * `exhausted-after-eight-hours` shipped carrying it: a constant with "DRAFT"
+ * in its name sitting under live copy invites somebody to treat the copy as
+ * provisional, and this sentence is neither draft nor placeholder.
+ */
+const STANDARD_FINAL_SUB =
   "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
 import { isDraftText } from "./site-config";
@@ -317,19 +353,226 @@ export const resources: Resource[] = [
     image: { src: "/images/relax.jpg", position: "center 40%" },
     readTime: "5 min read",
     byline: HBC_BYLINE,
-    lede: "[Draft lede — sleep quantity isn't sleep quality; what a wired-but-tired nervous system looks like from the inside.]",
+    lede: "You were in bed for eight hours. You didn’t wake in the night, or if you did you don’t remember it. And you got up feeling as though you’d been awake for most of it. The number was fine. The night wasn’t.",
     body: [
+      { type: "h2", text: "Quantity is the wrong measure" },
       {
         type: "p",
-        text: "[Draft article — plain, non-clinical language. Cite sources where claims are made; keep the no-hype standard.]",
+        text: "Hours in bed is the figure everyone tracks, because it is the one that is easy to count. It is also the one that explains the least. What people arrive describing is eight hours that feel like four, waking exhausted no matter how long they slept, and nights that are simply inconsistent — different every week, with nothing obvious separating a good one from a bad one.",
+      },
+      {
+        type: "p",
+        text: "What that pattern points at isn’t duration. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance, and it is more useful to read that as one problem with several outputs than as four separate ones. Sleep is one of the outputs. Counting hours measures the bed; it doesn’t measure the system that was supposed to be using it.",
+      },
+      { type: "h2", text: "A wired evening doesn’t stand down because the lights went out" },
+      {
+        type: "p",
+        text: "The most common version of this is an evening that never came down. A wired, on-alert evening doesn’t stand down just because the lights went out — the room changed and the system didn’t. Sleep then happens on top of a state that was never going to be slept through, and the morning reports on that rather than on the clock.",
+      },
+      {
+        type: "blockquote",
+        text: "Eight hours spent on top of a system that never came down is eight hours of the wrong thing.",
+      },
+      {
+        type: "p",
+        text: "It is also why the same person gets a good night and a bad one with no change in routine. Regulation is a capacity that depletes and recovers, and what was available on Tuesday is not what is available on Thursday. Nothing about the bedtime got harder. What was there to meet it got smaller.",
+      },
+      { type: "h2", text: "Have the ordinary causes ruled out first" },
+      {
+        type: "p",
+        text: "This belongs before anything else on this page, and one item belongs before the rest of it. Sleep apnea produces exactly this picture — a full night, every morning, unrefreshing — and it is common, it is identified by testing rather than by inference, and it is not something to reason your way past. Thyroid problems, low iron, medication effects, and mood and anxiety disorders all produce it too. If nobody has looked, that is the first move. We can’t test for any of it, and neither can an article.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Address the load rather than the night. Food, unbroken recovery time and what the day actually asked of you are not the soft version of sleep advice — they are the largest single lever most people have, and the one most often skipped for being unglamorous.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand on the evening before it fails. What the last two hours before bed contain matters more than what happens in the final ten minutes, and a decision made at nine o’clock is a great deal easier than one made at eleven.",
+      },
+      {
+        type: "p",
+        text: "And be careful about the conclusion when the standard advice doesn’t work. Most strategies for regulation require the very capacity that is in short supply — they work when you don’t need them and fail when you do. That is an argument against the conclusion, not against the strategies.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "LENS is a wellness service, not a treatment for sleep disorders, and it belongs after the rule-out above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits.",
+      },
+      {
+        type: "p",
+        text: `Sessions run ${SESSION_LENGTH.value} in a comfortable chair. Sleep is one of the first things we ask about at every visit, because it is often where clients notice change earliest, and the plan follows what your nights are actually telling us — falling asleep, staying asleep, and how the mornings feel. How much changes varies from person to person.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/sleep", label: "Sleep difficulties" },
+          { href: "/concerns/brain-fog", label: "Brain fog, memory & mental fatigue" },
+        ],
       },
       { type: "note", text: ADULT_NOTE },
     ],
     finalHeading: "The next step is a conversation, not a commitment.",
-    finalSub: DRAFT_FINAL_SUB,
+    finalSub: STANDARD_FINAL_SUB,
     metaTitle: "Tired After 8 Hours’ Sleep: Why Quantity Isn’t Quality",
     metaDescription:
       "Sleep quantity isn't sleep quality. A plain-language look at a wired-but-tired nervous system.",
+  },
+  {
+    slug: "the-3am-waking",
+    tag: "Sleep",
+    title: "The 3 a.m. waking, and why it isn’t random",
+    crumbLabel: "The 3 a.m. waking",
+    excerpt: "Waking in the small hours for no reason, and no way back down.",
+    image: { src: "/images/recline.jpg", position: "center 55%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "You didn’t wake for a reason. No noise, no bad dream you can recall, nothing to do. You were simply awake, at more or less the hour you were awake yesterday — and then you were awake for another ninety minutes.",
+    body: [
+      { type: "h2", text: "It is rarely the noise, or the temperature, or the bathroom" },
+      {
+        type: "p",
+        text: "The first thing most people do is look for the cause in the room. Sometimes it is there. More often the trigger turns out to be incidental — something small that a lighter night let through and a heavier one would not have noticed at all.",
+      },
+      {
+        type: "p",
+        text: "What people describe to us is waking frequently, or at 3 a.m. for no reason, on nights that are otherwise unremarkable. The consistency is the interesting part. A system waking at roughly the same point most nights is doing something regular, and regular things tend to have a mechanism rather than a cause you can name from inside them at the time.",
+      },
+      { type: "h2", text: "Getting back down is the harder half" },
+      {
+        type: "p",
+        text: "The waking is usually not what costs the night. The ninety minutes afterwards are. Going up and coming back down are two different jobs, and at three in the morning the second one is being attempted with whatever is left after a full day — which is not much.",
+      },
+      {
+        type: "blockquote",
+        text: "Waking is a moment. The hour and a half afterwards is the part that costs you tomorrow.",
+      },
+      {
+        type: "p",
+        text: "It is also why the advice that works at bedtime does so little here. Regulation is a capacity that depletes and recovers, and what you had at eleven o’clock is not what you have at three. Holding yourself to the version of you that fell asleep easily sets a standard the system cannot meet at that hour.",
+      },
+      { type: "h2", text: "If the thoughts are the main event" },
+      {
+        type: "p",
+        text: "For some people the waking is incidental and the mind is the whole story — awake, and immediately going through everything. That is a different subject with a different page behind it. If the same circling is there in the afternoon, with nothing in particular setting it off, the nights are one symptom rather than the problem, and the anxiety page is the better place to start. The link is at the foot of this one.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Make the plan before you need it. What you do at three in the morning is best decided at nine in the evening, because deciding anything at three is precisely the thing that isn’t available.",
+      },
+      {
+        type: "p",
+        text: "Lower the stakes on the waking itself. A night interrupted once is an ordinary night. The arithmetic people do about how much sleep is left is usually what turns it into a bad one.",
+      },
+      {
+        type: "p",
+        text: "And treat the load as the intervention. Food, unbroken recovery time, and what the day asked of you shape the night more than anything that happens in the last ten minutes before bed.",
+      },
+      { type: "h2", text: "Have it looked at" },
+      {
+        type: "p",
+        text: "Waking repeatedly at night is one of the things a doctor should hear about directly. Sleep apnea is the common one and it is identified by testing rather than by inference; thyroid problems, low iron, medication effects, and mood and anxiety disorders all produce broken nights too. They are common, and none of them is something to reason your way past. We can’t test for any of it, and neither can an article — if nobody has looked, that is the first move rather than the last.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "LENS is a wellness service, not a treatment for sleep disorders, and it belongs after the paragraph above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home.",
+      },
+      {
+        type: "p",
+        text: `A session runs ${SESSION_LENGTH.value} in a comfortable chair. Sleep is one of the first things we ask about at every visit, and what we track is specific: falling asleep, staying asleep, and how the mornings actually feel. The plan follows that rather than a template, and how much changes varies from person to person.`,
+      },
+      {
+        type: "links",
+        text: "The two pages this one sits closest to.",
+        items: [
+          { href: "/concerns/sleep", label: "Sleep difficulties" },
+          { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Tell us what your nights actually look like.",
+    finalSub:
+      "We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — on the phone, before you book anything.",
+    metaTitle: "Waking at 3 A.M. Every Night — Why It Isn’t Random",
+    metaDescription:
+      "Waking in the small hours with no reason and no way back to sleep — what tends to be underneath it, and what to have checked.",
+  },
+  {
+    slug: "when-sleep-hygiene-isnt-it",
+    tag: "Sleep",
+    title: "When sleep hygiene isn’t the problem",
+    crumbLabel: "When sleep hygiene isn’t it",
+    excerpt: "You’ve done the blackout blind and the no-screens rule. It’s worth knowing what that does and doesn’t rule out.",
+    plateSpec: "Bedside table at night — book, lamp, no phone — still life",
+    readTime: "4 min read",
+    byline: HBC_BYLINE,
+    lede: "The room is dark. The phone charges in the kitchen. Caffeine stops at noon, and the routine has been the same for six weeks. The nights are exactly as they were. That is worth something — just not what it feels like it’s worth.",
+    body: [
+      { type: "h2", text: "What the advice is actually for" },
+      {
+        type: "p",
+        text: "Sleep hygiene is a set of conditions. It removes the obstacles that would stop a working system from sleeping — light, stimulation, a schedule that moves every night, caffeine at the wrong end of the day. For a great many people that is enough, and it is the right first thing to try precisely because it is cheap and it often works.",
+      },
+      {
+        type: "p",
+        text: "What it does not do is supply the capacity to fall asleep. So when six honest weeks change nothing, the useful conclusion is not that you did it wrong. It is that obstacles were not what was in the way.",
+      },
+      {
+        type: "blockquote",
+        text: "Sleep hygiene clears the runway. It was never the engine.",
+      },
+      { type: "h2", text: "Why failing at it feels personal" },
+      {
+        type: "p",
+        text: "Most strategies for regulation require the very capacity that is in short supply — they work when you don’t need them and fail when you do. A wind-down routine needs you to have something left to wind down with. “Don’t clock-watch” requires not doing the thing you are already doing.",
+      },
+      {
+        type: "p",
+        text: "None of that makes the advice wrong. It makes the conclusion wrong, and the conclusion people reach is almost always about themselves — that they didn’t commit properly, or that they are uniquely bad at something everybody else manages.",
+      },
+      { type: "h2", text: "What the six weeks did tell you" },
+      {
+        type: "p",
+        text: "Something real, and it is worth collecting. You now know the nights are not being produced by light, screens, caffeine or an irregular schedule, because those are gone and the nights are not. That is a result, and it narrows what is left.",
+      },
+      {
+        type: "p",
+        text: "What is left divides in two. Some of it is medical: sleep apnea, thyroid problems, low iron, medication effects, and mood and anxiety disorders all produce nights like this, they are common, and they are identified by testing rather than by inference. If nobody has looked, that is the next move, and it is not ours to do.",
+      },
+      {
+        type: "p",
+        text: "The rest is the load itself — food, unbroken recovery time, and what the day is asking of you. That is the largest single lever most people have and the one most often skipped for being unglamorous. A few honest weeks there tells you what remains underneath.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "After both of those, rather than instead of either. LENS is a wellness service and not a treatment for sleep disorders. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform, and nothing to keep up with at home, which is worth saying plainly to somebody who has just spent six weeks keeping something up.",
+      },
+      {
+        type: "p",
+        text: `A session runs ${SESSION_LENGTH.value} in a comfortable chair. Sleep is one of the first things we ask about at every visit, and the plan follows what your nights are telling us rather than a template. How much changes varies from person to person.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/sleep", label: "Sleep difficulties" },
+          { href: "/concerns/stress-resilience", label: "Stress & resilience" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Already tried the obvious things? Say so on the call.",
+    finalSub:
+      "We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Sleep Hygiene Not Working? What That Does and Doesn’t Rule Out",
+    metaDescription:
+      "You’ve done the routine, the blackout blind and the no-screens rule, and the nights are the same. What that tells you, and what to do next.",
   },
   {
     slug: "lens-vs-traditional-neurofeedback",
@@ -349,7 +592,7 @@ export const resources: Resource[] = [
       { type: "note", text: ADULT_NOTE },
     ],
     finalHeading: "The next step is a conversation, not a commitment.",
-    finalSub: DRAFT_FINAL_SUB,
+    finalSub: STANDARD_FINAL_SUB,
     metaTitle: "LENS vs. Traditional Neurofeedback: An Honest Comparison",
     metaDescription:
       "Active training vs. passive feedback — an honest comparison of LENS and traditional neurofeedback.",
@@ -830,7 +1073,7 @@ export const resources: Resource[] = [
       { type: "note", text: ADULT_NOTE },
     ],
     finalHeading: "The next step is a conversation, not a commitment.",
-    finalSub: DRAFT_FINAL_SUB,
+    finalSub: STANDARD_FINAL_SUB,
     metaTitle: "Brain Fog After 55: What’s Normal, What’s Worth Attention",
     metaDescription:
       "A calm, non-alarmist guide to brain fog after 55 — what's normal, what's worth attention, and when to talk to your doctor.",
@@ -853,7 +1096,7 @@ export const resources: Resource[] = [
       { type: "note", text: ADULT_NOTE },
     ],
     finalHeading: "The best way to understand LENS is to talk with someone who does it every day.",
-    finalSub: DRAFT_FINAL_SUB,
+    finalSub: STANDARD_FINAL_SUB,
     metaTitle: "What LENS Neurofeedback Equipment Actually Does",
     metaDescription:
       "A tour of the LENS system — what the sensors read, what the feedback signal is, and what the equipment never does.",
