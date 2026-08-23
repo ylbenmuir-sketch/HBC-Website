@@ -57,6 +57,8 @@ npm run lint
 npm run check:index          # site assistant's content index vs. the pages
 npm run check:answers        # assistant answers: shape, guardrails, grounding
 npm run check:layout         # clipped text / overlap / overflow, every route
+npm run check:cwv            # LCP / CLS / TBT per template — production build only
+npm run check:links          # inbound links, depth, PageRank — production build only
 ```
 
 ### Never edit source, or start a second server, while a check is running
@@ -79,6 +81,60 @@ check, they just make its result describe nothing:
 The general shape: these two mistakes invalidate results rather than failing
 loudly, so nothing tells you afterwards. Sequence the work instead — finish
 editing, then verify.
+
+### `npm run check:cwv` and `npm run check:links`
+
+Both were written for `SEO-AUDIT-2.md` and promoted here because both of its
+largest findings were things no check in this repository could see. Both need a
+**production build served by `next start`**, not `next dev` — the dev server
+ships an unminified bundle and rebuilds on demand, so its numbers describe the
+dev server rather than the site.
+
+```bash
+rm -rf .next && npm run build
+npx next start -p 3123
+CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv
+CHECK_BASE=http://127.0.0.1:3123 npm run check:links
+```
+
+**`check:cwv`** drives headless Chrome through nine routes — one per template —
+on a throttled mobile profile (412×823, 4× CPU, 1.6 Mbps / 150 ms RTT) and a
+desktop one, cache disabled per navigation, and reports LCP, CLS, TBT, transfer
+size and which element the LCP actually was. Only the mobile pass is gated, at
+Google's "good" thresholds; desktop is reported for context and has never been
+the failing one.
+
+*Run it before shipping anything that touches the critical path*: CSS that hides
+or reveals content, a new above-the-fold image, a font change, a component that
+mounts into the first viewport, an `images` setting in `next.config.ts`, or a
+Next version bump. `--save baseline.json` then `--baseline baseline.json` on a
+later run prints the LCP delta per route, which is the form to use for a
+before/after.
+
+It exists because `.rv { opacity: 0 }` held LCP 1.5 seconds past the moment the
+hero image had finished downloading, on every template, and nothing could have
+caught it: `check:layout` forces every reveal open before it measures anything,
+precisely so it can audit boxes — which makes it blind to *when* the reveal
+happens.
+
+**`check:links`** parses `<main>` on every route in the running server's sitemap
+and reports inbound links, outbound links, BFS depth from `/`, and damped
+PageRank share. It fails on a route with fewer than two in-content inbound
+links, and lists the routes deliberately exempted from that with the reason.
+Depth is reported and never gated — in a `<main>`-only graph a page linked from
+the header on all 37 routes reads as unreachable, which is true of the editorial
+graph and false of the site.
+
+*Run it after any change to what links to what*: a new page, a new template
+block, an edit to the header or footer, a new article, a cluster
+reorganisation. Also worth running **before** writing an article, to see which
+pages are currently starved. `--all-links` reproduces the whole-document graph
+including chrome, which is the view that shows how flat the navigation makes
+everything.
+
+It exists because all ten articles shipped with exactly one inbound link apiece
+while every chrome-linked page had thirty-six, and the concern pages they fed
+linked back to none of them.
 
 ### `npm run check:layout`
 

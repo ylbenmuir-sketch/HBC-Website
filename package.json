@@ -10,7 +10,9 @@
     "check:index": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-content-index.mjs",
     "check:chat": "node scripts/chat-checklist.mjs",
     "check:layout": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-layout.mjs",
-    "check:answers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/answer-audit.mjs"
+    "check:answers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/answer-audit.mjs",
+    "check:cwv": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-cwv.mjs",
+    "check:links": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-links.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
