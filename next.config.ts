@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
 const nextConfig: NextConfig = {
+  /**
+   * Pin the workspace root to this directory.
+   *
+   * Turbopack infers the root by walking up for lockfiles, finds a stray
+   * 90-byte `package-lock.json` in the home directory — no package.json, no
+   * node_modules, an orphan from an `npm install` run in the wrong place —
+   * and picks *that* as the root, warning on every build. Naming the root
+   * explicitly is the fix that lives in the repo: it holds regardless of what
+   * else appears above this directory on anyone's machine.
+   */
+  turbopack: {
+    root: dirname(fileURLToPath(import.meta.url)),
+  },
   images: {
     /**
      * AVIF first, WebP second, and the browser takes the first it can decode.
