@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ConfirmTag from "@/components/ConfirmTag";
 import FinalCTA from "@/components/FinalCTA";
 import { formatArticleDate } from "@/lib/resources";
 import {
@@ -43,11 +42,20 @@ export const metadata: Metadata = {
  * code rather than from a template.
  *
  * **Everything promissory is gated.** Retention and the access/deletion
- * commitment are `Verifiable` values in lib/site-config.ts with
- * `verified: false`, so in production their paragraphs do not render at all.
- * They are the two sentences on this page a person could hold the practice to,
- * and neither has a fact behind it yet. A privacy notice that quietly invents
- * a retention period is worse than one that does not mention retention.
+ * commitment are `Verifiable` values in lib/site-config.ts. Both are confirmed
+ * now and both paragraphs render; the gates stay, because they are what keeps
+ * this page unable to publish a promise nobody made. They are the two
+ * sentences here a person could hold the practice to, and they shipped only
+ * once somebody had actually decided them.
+ *
+ * Neither is implemented in code — there is no deletion job and no expiry on
+ * the Supabase table. They describe a practice a person carries out. If that
+ * changes, the constant and the mechanism move together.
+ *
+ * The access paragraph promises **no response time**: "within X days" is the
+ * natural next clause and nobody has agreed to it. It routes through the phone
+ * and the contact form because **the site publishes no email address** —
+ * see the note on PRIVACY_ACCESS_REQUESTS.
  *
  * ## What it deliberately does not mention
  *
@@ -176,9 +184,7 @@ export default function PrivacyPolicyPage() {
             {retention && (
               <>
                 <h2>How long we keep it</h2>
-                <p>
-                  {retention} <ConfirmTag>{PRIVACY_RETENTION.note!}</ConfirmTag>
-                </p>
+                <p>{retention}</p>
               </>
             )}
 
@@ -194,25 +200,33 @@ export default function PrivacyPolicyPage() {
             {accessRequests && (
               <>
                 <h2>Asking us about your information</h2>
-                <p>
-                  {accessRequests}{" "}
-                  <ConfirmTag>{PRIVACY_ACCESS_REQUESTS.note!}</ConfirmTag>
-                </p>
+                <p>{accessRequests}</p>
               </>
             )}
 
+            {/* This section supplies the number and says who is on the other
+                end. It deliberately does NOT restate the two routes — the
+                approved access copy directly above already names them, and
+                saying it twice in adjacent paragraphs is how a page starts
+                reading like boilerplate. */}
             <h2>Reaching a person about this</h2>
             <p>
-              Call{" "}
               {SHOW_PHONE ? (
-                <b>
-                  <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
-                </b>
+                <>
+                  The number is{" "}
+                  <b>
+                    <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
+                  </b>
+                  , and the <Link href="/contact">contact form</Link> reaches
+                  the same people.
+                </>
               ) : (
-                "us"
-              )}
-              , or use the <Link href="/contact">contact form</Link> and say
-              what you&rsquo;re asking about. A person reads it.
+                <>
+                  The <Link href="/contact">contact form</Link> reaches us.
+                </>
+              )}{" "}
+              Either way a person reads it &mdash; there is nothing automated
+              on the other end of this.
             </p>
 
             <h2>Changes to this page</h2>

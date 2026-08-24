@@ -869,18 +869,13 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // gone, faq:6, faq:12 and faq:13 are back in the index, and the three
   // `rendered` overrides that existed only to hold the tags went with them.
   "app/faq/page.tsx": {},
-  // The privacy notice. Both tags sit on `Verifiable`s with `verified: false`,
-  // so in production their paragraphs do not render and neither does the tag —
-  // retention and the access/deletion promise are the two sentences on that
-  // page nobody has supplied a fact for. Neither is indexed: no passage in
-  // content-index.ts states a retention period or a deletion promise, and
-  // INFORMATION_SHARING, which the page does render, carries no tag because
-  // Ben confirmed it.
-  "app/privacy-policy/page.tsx": {
-    "PRIVACY_RETENTION.note!": "not indexed — no passage states a retention period",
-    "PRIVACY_ACCESS_REQUESTS.note!":
-      "not indexed — no passage promises access or deletion",
-  },
+  // The privacy notice. Ben confirmed retention (24 months from last contact
+  // for consultation requests, 12 for guide sign-ups) and the access/deletion
+  // promise, so both paragraphs render and both tags are gone. Neither claim
+  // is indexed: no passage in content-index.ts states a retention period or
+  // promises deletion, and adding one would change the retrieval corpus and
+  // wants the before/after sweep — the same hold INFORMATION_SHARING is under.
+  "app/privacy-policy/page.tsx": {},
   "app/locations/page.tsx": {
     "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
     CONCIERGE_TAG: "not indexed — concierge sessions are in no passage",

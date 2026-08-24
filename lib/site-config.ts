@@ -678,38 +678,58 @@ export const PHYSICIAN_REFERRALS =
 export const PRIVACY_EFFECTIVE_DATE = "2026-08-23";
 
 /**
- * How long a form submission is kept before it is deleted.
+ * How long a form submission is kept before it is deleted — confirmed by Ben.
  *
- * **Unverified, and the page drops the whole paragraph without it.** Retention
- * is an operational decision nobody has made: the Supabase table has no
- * expiry, `lib/chat/logging.ts` records that platform retention applies to the
- * server log until somebody chooses otherwise, and no figure exists anywhere
- * in this repository to read. A number invented here would be the one sentence
- * on the page a person could hold the practice to, which is exactly the
- * sentence not to guess at.
+ * Two periods, because they are two different things: a consultation request
+ * is a conversation that may still be live, and its clock runs from the last
+ * time anybody was in touch rather than from the day it arrived. A guide
+ * sign-up is an email address that asked for a PDF, and nothing follows it.
+ *
+ * Written as what we do, and it ends by saying what happens at the end of the
+ * period, because a retention sentence that names a number and stops has told
+ * a reader the least interesting half of it.
+ *
+ * **Nothing here implements this yet.** The Supabase table has no expiry and
+ * there is no deletion job; the sentence describes a practice somebody carries
+ * out. If that changes — a scheduled purge, a different period — this constant
+ * and the job have to move together, and this is the copy a person will hold
+ * the practice to.
  */
 export const PRIVACY_RETENTION: Verifiable = {
   value:
-    "We keep consultation requests for [retention period] and guide sign-ups " +
-    "for [retention period], then delete them.",
-  verified: false,
+    "We keep consultation requests for 24 months from the last time we were " +
+    "in touch, and guide sign-ups for 12 months. At the end of that we delete " +
+    "them.",
+  verified: true,
   note: "[Retention period — confirm]",
 };
 
 /**
- * The promise to hand back or delete what somebody has sent us.
+ * The promise to say what we hold about someone, and to delete it — confirmed
+ * by Ben.
  *
- * **Unverified.** Every other claim on that page describes something the code
- * already does and can be checked against it. This one is a commitment about
- * how the practice will answer an email, it has no implementation anywhere,
- * and it is the kind of sentence that is quoted back. Ben confirms it or the
- * paragraph does not render.
+ * **Deliberately promises no timeframe.** "We'll respond within X days" is the
+ * natural next clause and it is not confirmed, so it is not here. An
+ * unqualified "we will" is a commitment the practice can keep; a deadline
+ * nobody has agreed to is one it might not.
+ *
+ * **The route is the phone and the contact form, because the site publishes no
+ * email address.** Not an omission on this page — there is no `mailto:`
+ * anywhere in the build, no address in this file, none in lib/locations.ts,
+ * none in the guide. The only two addresses in the repository are Resend's
+ * shared test sender in a code comment and a commented-out
+ * `LEADS_NOTIFY_EMAIL` in .env.example, which nothing reads and which is a
+ * lead-notification inbox rather than somewhere a person writes about their
+ * own data. Publishing either would be inventing a contact route, and the two
+ * this site does publish already reach a human. If Ben wants an email route
+ * here, the address is his to supply and it belongs in this file.
  */
 export const PRIVACY_ACCESS_REQUESTS: Verifiable = {
   value:
-    "Ask us for a copy of what you’ve sent us, or ask us to delete it, and " +
-    "we will — call or use the contact form and say so.",
-  verified: false,
+    "You can ask us what we hold about you, and you can ask us to delete it. " +
+    "Either way, we will. Call us or use the contact form and say that’s what " +
+    "you’re asking about.",
+  verified: true,
   note: "[Access & deletion requests — confirm]",
 };
 
