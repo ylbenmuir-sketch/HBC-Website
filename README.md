@@ -58,6 +58,7 @@ npm run check:index          # site assistant's content index vs. the pages
 npm run check:answers        # assistant answers: shape, guardrails, grounding
 npm run check:layout         # clipped text / overlap / overflow, every route
 npm run check:cwv            # LCP / CLS / TBT per template — production build only
+npm run check:fonts          # what the font swap moves — production build only
 npm run check:links          # inbound links, depth, PageRank — production build only
 ```
 
@@ -144,6 +145,50 @@ everything.
 It exists because all ten articles shipped with exactly one inbound link apiece
 while every chrome-linked page had thirty-six, and the concern pages they fed
 linked back to none of them.
+
+### `npm run check:fonts`
+
+```bash
+CHECK_BASE=http://127.0.0.1:3123 npm run check:fonts
+CHECK_BASE=http://127.0.0.1:3123 npm run check:fonts -- --sweep
+```
+
+Loads every route twice — once with every `woff2` blocked, so what is painted is
+the fallback, and once normally — and diffs the geometry. What it prints is what
+a visitor sees jump when the swap lands, measured **deterministically**: no
+timing, no waiting to see which side of the coin a load falls on.
+
+That is the difference between this and `check:cwv`. `check:cwv` measures the
+consequence, and only on the loads where the swap loses the race — the homepage
+returned CLS 0.0194 on twelve runs out of fourteen and 0.066 on the other two,
+which is a page behaving two ways rather than a probe misreading one. This
+measures the mechanism, on every load.
+
+**Gated:** no heading inside a first viewport may change height at a mobile
+width. A heading that reflows moves everything under it, and that was the whole
+of this site's font-swap CLS: the homepage H1 was 53px taller in the fallback at
+412px because "without medication." needed 390px of a 364px column. Headings and
+body copy that rewrap below the fold are printed and not gated — nothing visible
+moves, and no single `size-adjust` holds every line on a site still. `/adults` at
+1440px is a named exception, because its H1 sits on the wrap boundary from the
+other side and the value that holds the homepage still costs a line there.
+
+**`--sweep`** re-derives the fallback `size-adjust` values instead of checking
+them: for each candidate it swaps a fallback with those metrics into the page and
+scores the result against the real-font render, counting only what is inside the
+first viewport. The numbers in the fallback-metrics block at the top of
+`app/globals.css` came out of this, and they are deliberately the middle of the
+band that holds mobile still rather than its edge — a pair one step from a
+boundary is one headline edit away from moving. Re-run it when a headline's text
+or size changes, when a face changes, or after a `next/font` bump.
+
+It exists because `next/font` generates no *italic* fallback face. An italic
+request matched the upright fallback and Chrome synthesised the slant at the
+upright width — 14% too wide for Cormorant italic — so the accent phrase in
+nearly every hero H1 wrapped to a line it does not occupy once the real font
+lands. Nothing in the repository could see it: `check:layout` measures a page
+whose fonts have loaded, and `check:cwv` saw it as a spread it was already
+printing under the table.
 
 ### `npm run check:layout`
 

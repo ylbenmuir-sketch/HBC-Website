@@ -12,6 +12,7 @@
     "check:layout": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-layout.mjs",
     "check:answers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/answer-audit.mjs",
     "check:cwv": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-cwv.mjs",
+    "check:fonts": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-font-swap.mjs",
     "check:links": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-links.mjs"
   },
   "dependencies": {

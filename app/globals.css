@@ -7,6 +7,91 @@
    Type: Cormorant Garamond (display) + DM Sans (text/UI)
    ============================================================ */
 
+/* ============================================================
+   FALLBACK FONT METRICS — what the browser paints before
+   Cormorant arrives, sized so that "before" and "after" break
+   their lines in the same places.
+   ============================================================
+
+   `next/font` generates one of these per family and it is normally enough.
+   It was not here, for two reasons.
+
+   **1. There is no italic fallback.** One adjusted upright face is emitted
+   per family, so an italic request — `em.sage`, which is in the H1 of nearly
+   every template — matched that upright face and Chrome synthesised the
+   slant at the upright face's width. Measured across every italic run the
+   site renders, real Cormorant italic is 87.7% of that width.
+
+   **2. The objective is line breaks, not widths.** `next/font` matches
+   average character width, which is the right default and is not what
+   decides a layout: a heading reflows when one word crosses the wrap
+   boundary, and the homepage H1's second line sits 4px short of it. The
+   width-matched values (95.2% upright, 87.7% italic, both measured over
+   3,600 text runs) still left that line flipping. So these numbers are
+   chosen by measuring the thing that matters — the same probe, sweeping
+   size-adjust against 15 routes at five widths, scoring only what is inside
+   the first viewport, because that is what CLS counts.
+
+   At 93.2/86.5 the homepage and both location pages stop moving at 390px and
+   412px, /what-we-help-with and /stories drop from 80px and 65px to 31px at
+   834px, and total in-fold drift across the site falls from 1,960px to
+   1,182px. The safe band is 92.8–93.5 upright and 86–87 italic; these are
+   its middle, so a headline edit does not immediately fall out of it.
+
+   **What it does not fix, and it is the honest half of this:** /adults gains
+   an 84px hero shift at 1440px, because its H1 sits on the same knife edge
+   in the other direction and no single pair satisfies both — the homepage
+   needs ≤93.5 and /adults needs ≥94.5. Mobile is the gated profile and the
+   ranked one, so mobile wins. Four templates keep a 19–49px in-fold shift
+   that predates this and is not serif-driven.
+
+   Every number is measured, and the two kinds are:
+
+     size-adjust      swept for line-break parity (above), inside the band
+                      the width-weighted ratio of real to substitute defines
+     ascent/descent   the real face's own ratios divided by size-adjust, so
+                      the override describes the same em box after scaling.
+                      Nothing on the site uses `line-height: normal`, so these
+                      affect baselines rather than block heights.
+
+   Re-measure rather than nudge these by eye when a heading's text or size
+   changes — the sweep is scripted, see README → Fonts.
+
+   `local()` and nothing else, deliberately: a name that does not resolve
+   fails the face (Chrome reports `status: "error"`) and the chain falls
+   through to Georgia unadjusted, which is exactly where this site was
+   before. Tinos and Liberation Serif are metric clones of Times New Roman,
+   so they share these numbers and cover Linux/ChromeOS. **Android has
+   neither, and falls through to Noto Serif with no overrides at all** —
+   `next/font`'s own fallback has the same gap, and closing it would mean
+   shipping numbers for a font nobody here can measure. Field CLS on Android
+   is therefore not what this change moves.
+
+   The italic face names the italic outline explicitly: `local("Times New
+   Roman")` under `font-style: italic` matches the *upright* face and would
+   publish upright text where the design is italic. */
+
+@font-face {
+  font-family: "Cormorant Tuned Fallback";
+  font-style: normal;
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Tinos"),
+    local("Liberation Serif");
+  ascent-override: 99.13%;
+  descent-override: 30.79%;
+  line-gap-override: 0%;
+  size-adjust: 93.2%;
+}
+@font-face {
+  font-family: "Cormorant Tuned Fallback";
+  font-style: italic;
+  src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"),
+    local("Tinos Italic"), local("Liberation Serif Italic");
+  ascent-override: 106.81%;
+  descent-override: 33.18%;
+  line-gap-override: 0%;
+  size-adjust: 86.5%;
+}
+
 @theme {
   --color-navy: #1c2b3a;
   --color-navy-deep: #152230;
@@ -21,6 +106,11 @@
   --color-line: rgba(28, 43, 58, 0.14);
 
   --font-serif: var(--font-cormorant), Georgia, serif;
+  /* The italic serif is a second family, not a style of the first — see the
+     note on `cormorantItalic` in app/layout.tsx. Every italic serif rule in
+     this file names it; asking the upright family for italic gets a
+     synthesised slant at the upright width. */
+  --font-serif-italic: var(--font-cormorant-italic), Georgia, serif;
   --font-sans: var(--font-dm-sans), Helvetica, Arial, sans-serif;
 }
 
@@ -65,6 +155,7 @@
   --gold: #a9853f;
   --gold-soft: rgba(169, 133, 63, 0.35);
   --serif: var(--font-cormorant), Georgia, serif;
+  --serif-italic: var(--font-cormorant-italic), Georgia, serif;
   --sans: var(--font-dm-sans), Helvetica, Arial, sans-serif;
 }
 
@@ -99,7 +190,10 @@ h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
 .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--gold); }
 .eyebrow.center { justify-content: center; } .eyebrow.center::before { display: none; }
 .on-dark { color: var(--ivory); } .on-dark .sub { color: rgba(251, 248, 241, 0.68); }
-em.sage { font-style: italic; color: var(--sage-deep); }
+/* font-family, not just font-style: the italic serif is its own family so
+   it can stay out of the preload (app/layout.tsx). Without this the em
+   inherits the upright family from its heading and Chrome fakes the slant. */
+em.sage { font-family: var(--serif-italic); font-style: italic; color: var(--sage-deep); }
 
 /* gold placeholder tags ([CONFIRM] / [Insert …]) — dev/draft mode only */
 .todo-tag { color: var(--gold); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -381,7 +475,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .care-list h3 { font-size: 22px; }
 .founder-note { display: grid; grid-template-columns: 200px 1fr; gap: 44px; align-items: center; margin-top: 64px; padding-top: 56px; border-top: 1px solid var(--line); }
 .founder-note .ph { height: 230px; border-radius: 4px; }
-.founder-note blockquote { font-family: var(--serif); font-style: italic; font-size: 24px; line-height: 1.5; color: var(--navy); }
+.founder-note blockquote { font-family: var(--serif-italic); font-style: italic; font-size: 24px; line-height: 1.5; color: var(--navy); }
 .founder-note cite { display: block; font-family: var(--sans); font-style: normal; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin-top: 14px; }
 .founder-note cite a { color: var(--sage-deep); }
 
@@ -390,7 +484,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .quote { background: var(--ivory); border: 1px solid var(--line); border-radius: 4px; padding: 44px 46px; box-shadow: 0 20px 44px -36px rgba(28, 43, 58, 0.3); }
 .sec-ivory2 .quote { background: #fff; }
 .quote .theme { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 16px; }
-.quote p { font-family: var(--serif); font-size: 23px; line-height: 1.5; color: var(--navy); font-style: italic; }
+.quote p { font-family: var(--serif-italic); font-size: 23px; line-height: 1.5; color: var(--navy); font-style: italic; }
 .quote footer { margin-top: 20px; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; }
 .quote footer b { color: var(--sage-deep); }
 .sample-note { font-size: 11.5px; color: var(--slate); opacity: 0.8; margin-top: 20px; letter-spacing: 0.04em; }
@@ -540,7 +634,7 @@ details.faq .a a { color: var(--sage-deep); }
 .article p { margin-bottom: 24px; font-size: 17.5px; color: var(--ink); }
 .article h2 { font-size: 32px; margin: 48px 0 18px; }
 .article .ph { height: 420px; margin: 40px 0; }
-.article blockquote { font-family: var(--serif); font-style: italic; font-size: 26px; color: var(--sage-deep); border-left: 2px solid var(--gold); padding-left: 26px; margin: 40px 0; line-height: 1.45; }
+.article blockquote { font-family: var(--serif-italic); font-style: italic; font-size: 26px; color: var(--sage-deep); border-left: 2px solid var(--gold); padding-left: 26px; margin: 40px 0; line-height: 1.45; }
 
 /* resource cards */
 .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
@@ -726,9 +820,9 @@ html.js .rv.in { opacity: 1; transform: none; }
 /* celebrity feature — compact band */
 .celeb-band { padding: 56px 0; }
 .celeb-grid { display: grid; grid-template-columns: 1fr 220px; gap: 64px; align-items: center; }
-.celeb-name { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: clamp(34px, 3vw, 46px); color: var(--ivory); line-height: 1.05; margin: 14px 0 8px; display: inline-block; border-bottom: 1px solid var(--gold-soft); padding-bottom: 10px; }
+.celeb-name { font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: clamp(34px, 3vw, 46px); color: var(--ivory); line-height: 1.05; margin: 14px 0 8px; display: inline-block; border-bottom: 1px solid var(--gold-soft); padding-bottom: 10px; }
 .celeb-role { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 12px 0 18px; }
-.celeb-quote { font-family: var(--serif); font-style: italic; font-size: 19px; line-height: 1.5; color: rgba(251, 248, 241, 0.85); max-width: 56ch; border-left: 2px solid var(--gold); padding-left: 20px; }
+.celeb-quote { font-family: var(--serif-italic); font-style: italic; font-size: 19px; line-height: 1.5; color: rgba(251, 248, 241, 0.85); max-width: 56ch; border-left: 2px solid var(--gold); padding-left: 20px; }
 .celeb-video { width: min(220px, 100%); aspect-ratio: 9 / 16; border-radius: 6px; overflow: hidden; box-shadow: 0 30px 70px -36px rgba(0, 0, 0, 0.6); border: 1px solid rgba(251, 248, 241, 0.14); justify-self: end; display: flex; align-items: center; justify-content: center; text-decoration: none; position: relative; }
 .celeb-video > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
 .celeb-video::after { content: ""; position: absolute; inset: 0; background: rgba(21, 34, 48, 0.18); transition: background 0.2s; }
@@ -1013,7 +1107,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .celeb-video::after, .celeb-video:hover::after { background: linear-gradient(to top, rgba(21, 34, 48, 1) 0%, rgba(21, 34, 48, 1) 25%, rgba(21, 34, 48, 0.38) 44%, rgba(21, 34, 48, 0.12) 62%, rgba(21, 34, 48, 0.02) 78%); }
   .celeb-video .play { width: 64px; height: 64px; }
   .celeb-id { display: flex; position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 2; flex-direction: column; gap: 3px; }
-  .celeb-id-name { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 31px; color: var(--ivory); line-height: 1.1; }
+  .celeb-id-name { font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: 31px; color: var(--ivory); line-height: 1.1; }
   .celeb-id-role { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
   .celeb-cta { order: 4; margin-top: 28px !important; }
   .celeb-cta .btn-invert { width: 100%; justify-content: center; min-height: 52px; }
