@@ -119,6 +119,21 @@ export default function PrivacyPolicyPage() {
               nowhere here to enter them.
             </p>
 
+            {/* THIS SECTION IS A CLAIM ABOUT THE BUILD, AND IT IS TRUE ONLY
+                FOR AS LONG AS THE BUILD KEEPS IT TRUE.
+
+                Adding an analytics tag, a Search Console verification script,
+                an advertising pixel, a chat widget from a third party, a
+                map embed, or any font, script or image loaded from another
+                origin falsifies it. `SEO-AUDIT-2.md` §8.2 C9 asks for GA4 or a
+                privacy-friendly equivalent, so this is a change somebody is
+                going to make.
+
+                Whoever makes it edits this section in the SAME COMMIT. Not the
+                next one, not the follow-up ticket — a privacy notice that
+                says "there are none" while a tag is live is worse than having
+                had no privacy notice at all, and the gap between the two
+                commits is exactly when it would be wrong. */}
             <h2>Cookies, analytics and tracking</h2>
             <p>
               There are none. This site sets no cookies, stores nothing in your

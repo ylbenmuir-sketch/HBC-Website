@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 
@@ -329,9 +330,16 @@ export default function ContactForm() {
       >
         {status === "submitting" ? "Sending…" : "Request my conversation"}
       </button>
+      {/* The privacy link sits here, on the sentence that is already about
+          what happens to what she sends us, rather than in a separate line of
+          fine print. This is the one form on the site that collects a name, a
+          phone number and a free-text note, so it is the one place a person
+          might reasonably want to check before pressing the button — and the
+          footer is a long way from a submit button. */}
       <p className="micro" style={{ textAlign: "center" }}>
         No payment details, no intake forms today. We never share your
-        information, and there&rsquo;s no obligation after we talk.
+        information, and there&rsquo;s no obligation after we talk.{" "}
+        <Link href="/privacy-policy">What happens to what you tell us</Link>.
       </p>
     </form>
   );
