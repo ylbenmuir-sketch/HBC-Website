@@ -5,6 +5,7 @@
  *   npm run build && npx next start -p 3123
  *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv
  *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv -- --routes /,/faq
+ *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv -- --runs 1
  *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv -- --save baseline.json
  *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cwv -- --baseline baseline.json
  *
@@ -39,6 +40,24 @@
  * These are lab numbers on localhost, where TTFB is ~2ms. Real hosting adds to
  * every LCP figure. Treat them as a regression signal and a relative
  * before/after, not as a prediction of field data.
+ *
+ * ## Repeatability
+ *
+ * Every figure is a **median of three runs**, and the scroll pass waits for the
+ * page to stop shifting before each step rather than moving on a fixed timer.
+ * Both exist for the same reason: a check that reports a different number each
+ * time teaches people to ignore it. Before either, three consecutive homepage
+ * runs returned CLS 0.0091, 0.0558 and 0.0091 — the ask bar's collapse
+ * animation being caught once or twice depending on where a fixed-cadence
+ * scroll happened to land mid-transition.
+ *
+ * Runs that still disagree are **printed, not smoothed**: any route whose LCP
+ * spread exceeds 15% (or 150ms), whose CLS spread exceeds 0.02, or whose LCP
+ * element was not the same element every time, is listed under the table. A
+ * median that quietly hides an unstable page is the same failure in a better
+ * disguise.
+ *
+ * `--runs 1` is the quick form while iterating on one route.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { launch } from "./layout/cdp.mjs";
@@ -98,6 +117,24 @@ const PROFILES = {
   },
 };
 
+/**
+ * How many times each route is measured. The reported figure is the median.
+ *
+ * Three, not one, because a lab CWV number is a sample of a noisy process —
+ * this is the same reason Lighthouse's own guidance is to run five times and
+ * take the median. The settle-based scroll pass below removes the large,
+ * structural source of variance; runs handle what is left, which is ordinary
+ * scheduler jitter on a throttled renderer.
+ *
+ * `--runs 1` is the quick form for iterating on one route. Anything you would
+ * quote to somebody, or save as a baseline, should be a median.
+ */
+const RUNS = Math.max(1, Number(argValue("--runs") ?? 3));
+
+/** Median of a numeric sample. Even-length samples take the lower middle,
+ *  so the value reported is always one that was actually measured. */
+const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor((xs.length - 1) / 2)];
+
 const only = argValue("--profile");
 const profiles = only ? [only] : ["mobile", "desktop"];
 for (const name of profiles) {
@@ -119,7 +156,7 @@ for (const name of profiles) {
  */
 const OBSERVERS = `
 (() => {
-  window.__cwv = { lcp: 0, lcpEl: "", cls: 0, tbt: 0 };
+  window.__cwv = { lcp: 0, lcpEl: "", cls: 0, tbt: 0, n: 0 };
   try {
     new PerformanceObserver((list) => {
       for (const e of list.getEntries()) {
@@ -138,7 +175,12 @@ const OBSERVERS = `
       for (const e of list.getEntries()) {
         // Shifts within 500ms of a user interaction are excluded from CLS by
         // definition. This probe only scrolls, which does not count.
-        if (!e.hadRecentInput) window.__cwv.cls += e.value;
+        if (!e.hadRecentInput) {
+          window.__cwv.cls += e.value;
+          // Bumped on every counted shift. The scroll pass waits on this
+          // going quiet before it moves again — see settleScroll below.
+          window.__cwv.n += 1;
+        }
       }
     }).observe({ type: "layout-shift", buffered: true });
   } catch {}
@@ -202,16 +244,43 @@ async function measure(page, browser, url, profile) {
   // CLS through a full slow scroll: shifts from lazy content and from
   // anything that mounts on scroll are part of the visitor's experience and
   // are not visible in a page that never moves.
+  //
+  // Each step waits for the page to stop shifting before taking the next one,
+  // rather than moving on a fixed 120ms timer. That is not politeness, it is
+  // what makes the number repeatable. The sticky ask bar collapses to a pill
+  // on a scroll-direction run and expands again on the way back, animating
+  // its width and min-height over 200ms — a real layout shift, and the site's
+  // only remaining source of CLS. On a fixed cadence the next scroll landed
+  // partway through that transition, so whether the run caught one crossfade
+  // or two came down to timing: three consecutive homepage runs returned
+  // 0.0091, 0.0558, 0.0091. Settling on quiet makes every step land at the
+  // same offset with the same work already finished, which is the difference
+  // between a check people read and a check people learn to ignore.
   await page.eval(
     `(async () => {
+       const idle = async (quiet, cap) => {
+         const start = performance.now();
+         let seen = window.__cwv.n;
+         let changed = performance.now();
+         while (
+           performance.now() - changed < quiet &&
+           performance.now() - start < cap
+         ) {
+           await new Promise((r) => setTimeout(r, 40));
+           if (window.__cwv.n !== seen) {
+             seen = window.__cwv.n;
+             changed = performance.now();
+           }
+         }
+       };
        const step = Math.round(window.innerHeight * 0.5);
        const end = document.body.scrollHeight;
        for (let y = 0; y < end; y += step) {
          window.scrollTo(0, y);
-         await new Promise((r) => setTimeout(r, 120));
+         await idle(200, 1200);
        }
        window.scrollTo(0, 0);
-       await new Promise((r) => setTimeout(r, 400));
+       await idle(300, 1500);
        return 1;
      })()`,
     { awaitPromise: true }
@@ -233,9 +302,15 @@ async function measure(page, browser, url, profile) {
 const baselinePath = argValue("--baseline");
 const baseline = baselinePath ? JSON.parse(readFileSync(baselinePath, "utf8")) : null;
 
-console.log(`\n  Core Web Vitals — ${BASE}\n`);
+console.log(
+  `\n  Core Web Vitals — ${BASE}` +
+    (RUNS > 1 ? ` — median of ${RUNS} runs per route` : " — single run per route") +
+    "\n"
+);
 
 const results = {};
+/** Routes whose runs disagreed enough to be worth saying out loud. */
+const unstable = [];
 const chrome = await launch({ port: 9334 });
 try {
   for (const profile of profiles) {
@@ -248,19 +323,34 @@ try {
       `  ${"route".padEnd(34)} ${"LCP".padStart(7)} ${"CLS".padStart(7)} ${"TBT".padStart(6)} ${"kB".padStart(6)}  LCP element`
     );
     for (const route of ROUTES) {
-      // A fresh target per route: an observer installed on a reused page
-      // survives the navigation and double-counts.
-      const page = await chrome.newPage();
-      await page.init();
-      let row;
-      try {
-        row = await measure(page, chrome.browser, `${BASE}${route}`, profile);
-      } catch (error) {
-        console.log(`  ${route.padEnd(34)}  ERROR — ${error.message.split("\n")[0].slice(0, 60)}`);
+      const samples = [];
+      for (let run = 0; run < RUNS; run++) {
+        // A fresh target per run: an observer installed on a reused page
+        // survives the navigation and double-counts.
+        const page = await chrome.newPage();
+        await page.init();
+        try {
+          samples.push(await measure(page, chrome.browser, `${BASE}${route}`, profile));
+        } catch (error) {
+          console.log(
+            `  ${route.padEnd(34)}  ERROR — ${error.message.split("\n")[0].slice(0, 60)}`
+          );
+        }
         await page.close();
-        continue;
       }
-      await page.close();
+      if (samples.length === 0) continue;
+
+      const row = {
+        lcp: median(samples.map((s) => s.lcp)),
+        // The element is a fact about the page, not a sample — it has been
+        // identical across runs in every case measured. Taking the first is
+        // honest as long as they agree, so disagreement is reported below.
+        lcpEl: samples[0].lcpEl,
+        cls: median(samples.map((s) => s.cls)),
+        tbt: median(samples.map((s) => s.tbt)),
+        transferKb: median(samples.map((s) => s.transferKb)),
+        runs: samples.length,
+      };
       results[`${profile}${route}`] = row;
 
       const was = baseline?.[`${profile}${route}`];
@@ -270,11 +360,46 @@ try {
           String(row.tbt).padStart(4)
         }ms ${String(row.transferKb).padStart(6)}  ${row.lcpEl.slice(0, 40)}${delta}`
       );
+
+      // Spread is printed, never smoothed away. A median that hides a route
+      // swinging between two values reports a stable number about an unstable
+      // page, which is the failure this whole mechanism exists to avoid.
+      //
+      // A bimodal reading here is usually the page, not the probe: the
+      // homepage font swap either lands before the fallback is painted or
+      // after it, and a real visitor gets the same coin flip. Read a spread as
+      // a finding to chase, not as a reason to re-run until it looks tidy.
+      if (samples.length > 1) {
+        const lcps = samples.map((s) => s.lcp);
+        const clss = samples.map((s) => s.cls);
+        const els = new Set(samples.map((s) => s.lcpEl));
+        const lcpSpread = Math.max(...lcps) - Math.min(...lcps);
+        const clsSpread = Math.max(...clss) - Math.min(...clss);
+        if (lcpSpread > Math.max(150, row.lcp * 0.15)) {
+          unstable.push(`${profile}${route} — LCP ${lcps.join(" / ")} ms`);
+        }
+        if (clsSpread > 0.02) {
+          unstable.push(`${profile}${route} — CLS ${clss.join(" / ")}`);
+        }
+        if (els.size > 1) {
+          unstable.push(`${profile}${route} — LCP element differed: ${[...els].join(" / ")}`);
+        }
+      }
     }
     console.log("");
   }
 } finally {
   await chrome.close();
+}
+
+if (unstable.length) {
+  console.log(
+    `  ${unstable.length} measurement(s) varied across runs. The medians above stand;\n` +
+      `  these are worth a look, because a page that measures two different ways\n` +
+      `  is usually a page that behaves two different ways for a visitor too.\n`
+  );
+  for (const u of unstable) console.log(`    ${u}`);
+  console.log("");
 }
 
 const savePath = argValue("--save");

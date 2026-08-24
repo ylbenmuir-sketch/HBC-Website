@@ -104,6 +104,15 @@ size and which element the LCP actually was. Only the mobile pass is gated, at
 Google's "good" thresholds; desktop is reported for context and has never been
 the failing one.
 
+Every figure is a **median of three runs**, and the scroll pass waits for the
+page to stop shifting before each step rather than moving on a fixed timer.
+Both are there because a check that reports a different number each time
+teaches people to ignore it: before either, three consecutive homepage runs
+returned CLS 0.0091, 0.0558 and 0.0091. Runs that still disagree are printed
+under the table rather than smoothed away — and a spread there is usually the
+page rather than the probe, so it is a finding to chase. `--runs 1` is the
+quick form while iterating on one route.
+
 *Run it before shipping anything that touches the critical path*: CSS that hides
 or reveals content, a new above-the-fold image, a font change, a component that
 mounts into the first viewport, an `images` setting in `next.config.ts`, or a
