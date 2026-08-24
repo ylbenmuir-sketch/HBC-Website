@@ -3,6 +3,7 @@ import Link from "next/link";
 import FinalCTA from "@/components/FinalCTA";
 import { formatArticleDate } from "@/lib/resources";
 import {
+  EMAIL_ADDRESS,
   FEATURE_ASSISTANT,
   INFORMATION_SHARING,
   PHONE_DISPLAY,
@@ -20,6 +21,40 @@ export const metadata: Metadata = {
   description:
     "What the Harmonized Brain Centers website collects, what happens to it, and who else sees it. Nothing you tell us goes anywhere unless you ask us to send it.",
 };
+
+/**
+ * The approved access sentence with the address inside it made tappable.
+ *
+ * The copy stays one string in lib/site-config.ts — this does not compose a
+ * sentence out of fragments, it finds the address in a sentence somebody
+ * approved and wraps that substring in a `mailto:`. Two consequences worth
+ * knowing: a build where EMAIL is unverified renders the phone-and-form
+ * fallback, which contains no address, so `parts` is length 1 and the sentence
+ * passes through untouched; and if the address is ever reformatted inside the
+ * copy it degrades to plain text rather than breaking.
+ *
+ * The `<wbr>` after the "@" is not decoration. The address is one 32-character
+ * word in a 272px column at 320px, and `check:layout` caught it running past
+ * the viewport and being clipped; this offers the line a break at the one place
+ * a reader would put it. `<wbr>` adds no character, so the address still copies
+ * and still dials as itself.
+ */
+function withMailto(text: string) {
+  const parts = text.split(EMAIL_ADDRESS);
+  if (parts.length === 1) return text;
+  const [mailbox, domain] = EMAIL_ADDRESS.split("@");
+  return parts.flatMap((part, i) =>
+    i === 0
+      ? [part]
+      : [
+          <a key={i} href={`mailto:${EMAIL_ADDRESS}`}>
+            {mailbox}@<wbr />
+            {domain}
+          </a>,
+          part,
+        ]
+  );
+}
 
 /**
  * The privacy notice — a trust floor for a site that collects a name, a phone
@@ -53,9 +88,10 @@ export const metadata: Metadata = {
  * changes, the constant and the mechanism move together.
  *
  * The access paragraph promises **no response time**: "within X days" is the
- * natural next clause and nobody has agreed to it. It routes through the phone
- * and the contact form because **the site publishes no email address** —
- * see the note on PRIVACY_ACCESS_REQUESTS.
+ * natural next clause and nobody has agreed to it. It now names three routes —
+ * the email address Ben supplied, the phone, and the contact form — and the
+ * address in it is **the only one this site publishes anywhere**; see the notes
+ * on EMAIL and PRIVACY_ACCESS_REQUESTS before putting it in a second place.
  *
  * ## What it deliberately does not mention
  *
@@ -200,15 +236,18 @@ export default function PrivacyPolicyPage() {
             {accessRequests && (
               <>
                 <h2>Asking us about your information</h2>
-                <p>{accessRequests}</p>
+                <p>{withMailto(accessRequests)}</p>
               </>
             )}
 
             {/* This section supplies the number and says who is on the other
-                end. It deliberately does NOT restate the two routes — the
+                end. It deliberately does NOT restate the three routes — the
                 approved access copy directly above already names them, and
                 saying it twice in adjacent paragraphs is how a page starts
-                reading like boilerplate. */}
+                reading like boilerplate. The email address in particular stays
+                in that one paragraph: repeating it here would double the
+                site's published-address count for a reader who has just read
+                it one line up. */}
             <h2>Reaching a person about this</h2>
             <p>
               {SHOW_PHONE ? (

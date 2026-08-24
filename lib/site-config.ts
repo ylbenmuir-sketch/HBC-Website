@@ -59,6 +59,34 @@ export const PHONE_TEL = PHONE.value.tel;
 /** True when any phone UI (header tel, call buttons) may render. */
 export const SHOW_PHONE = PHONE.verified || SHOW_DRAFT_CONTENT;
 
+/**
+ * Primary email — supplied by Ben, 23 August 2026, and the first address this
+ * site publishes anywhere. The note on PRIVACY_ACCESS_REQUESTS below said the
+ * address was Ben's to supply and that it belonged in this file; this is that
+ * note being answered rather than overruled.
+ *
+ * Shaped like PHONE above, and gated the same way, because it is the same kind
+ * of fact: a contact route a visitor may act on, which is wrong to publish
+ * unless somebody confirmed it. Unverifying it takes the address out of the
+ * privacy notice's access paragraph and that paragraph falls back to the
+ * phone-and-form wording it carried before — see PRIVACY_ACCESS_REQUESTS.
+ *
+ * **It is published in exactly one place: that paragraph.** Not the footer,
+ * not /contact, not the NAP block on either location page, and not as `email`
+ * on the schema nodes. Each of those is a defensible place for it and none of
+ * them was asked for — a footer address is an address every scraper on the
+ * internet has, which is a decision to take deliberately rather than to
+ * acquire as a side effect of the privacy page needing a route.
+ */
+export const EMAIL: Verifiable = {
+  value: "ben@harmonizedbraincenterstn.com",
+  verified: true,
+  note: "[Confirm email address]",
+};
+export const EMAIL_ADDRESS = EMAIL.value;
+/** True when any email UI (currently the privacy access paragraph) may render. */
+export const SHOW_EMAIL = EMAIL.verified || SHOW_DRAFT_CONTENT;
+
 /* ------------------------------------------------------------------ */
 /* Feature flags — conditional sections                                */
 /* ------------------------------------------------------------------ */
@@ -713,22 +741,34 @@ export const PRIVACY_RETENTION: Verifiable = {
  * unqualified "we will" is a commitment the practice can keep; a deadline
  * nobody has agreed to is one it might not.
  *
- * **The route is the phone and the contact form, because the site publishes no
- * email address.** Not an omission on this page — there is no `mailto:`
- * anywhere in the build, no address in this file, none in lib/locations.ts,
- * none in the guide. The only two addresses in the repository are Resend's
- * shared test sender in a code comment and a commented-out
- * `LEADS_NOTIFY_EMAIL` in .env.example, which nothing reads and which is a
- * lead-notification inbox rather than somewhere a person writes about their
- * own data. Publishing either would be inventing a contact route, and the two
- * this site does publish already reach a human. If Ben wants an email route
- * here, the address is his to supply and it belongs in this file.
+ * **Three routes now, because Ben supplied an address.** This note used to
+ * record that the site published no email address anywhere, and that inventing
+ * one — Resend's shared test sender from a code comment, or the commented-out
+ * `LEADS_NOTIFY_EMAIL` in .env.example — would have been publishing a route
+ * nobody reads. EMAIL above closes that: a real inbox, confirmed, and this is
+ * the one paragraph on the site that renders it. Email leads because it is the
+ * route that suits this particular request — a data question is a thing a
+ * person wants in writing, with a copy of what they sent.
+ *
+ * **The routes are gated on SHOW_EMAIL, and the fallback is the wording that
+ * shipped before.** Unverifying EMAIL does not leave a sentence pointing at an
+ * address the site is no longer sure of; it restores "Call us or use the
+ * contact form", which is a true sentence in its own right. That is the whole
+ * reason the copy is assembled here rather than typed as one literal.
+ *
+ * The address is rendered as a `mailto:` link by the privacy page, which
+ * splits this string on EMAIL_ADDRESS to find it. Keep the address in the
+ * sentence verbatim — no formatting, no line break through it — or it renders
+ * as plain text, which is a degradation rather than a break.
  */
 export const PRIVACY_ACCESS_REQUESTS: Verifiable = {
   value:
     "You can ask us what we hold about you, and you can ask us to delete it. " +
-    "Either way, we will. Call us or use the contact form and say that’s what " +
-    "you’re asking about.",
+    "Either way, we will. " +
+    (SHOW_EMAIL
+      ? `Email us at ${EMAIL_ADDRESS}, call us, or use the contact form, `
+      : "Call us or use the contact form ") +
+    "and say that’s what you’re asking about.",
   verified: true,
   note: "[Access & deletion requests — confirm]",
 };

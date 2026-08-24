@@ -32,6 +32,11 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [x] Primary phone number (`PHONE`) — (615) 331-8762. Confirmed by Ben. The
       phone UI (header tel link, call buttons, the sticky bar's dial button)
       renders everywhere as a result.
+- [x] Primary email address (`EMAIL`) — ben@harmonizedbraincenterstn.com.
+      Supplied by Ben. It renders in exactly one place, the privacy notice's
+      access paragraph, and nowhere else: not the footer, not `/contact`, not
+      the NAP blocks, not the schema nodes. Unverifying it drops the address
+      and that paragraph falls back to "Call us or use the contact form".
 - [ ] Response-time claim "within one business day" (`RESPONSE_TIME`)
 - [x] Same-day callback (`SAME_DAY_CALLBACK`) — Confirmed by Ben. This is what
       puts "A real person calls you back **today**" in the hero and in the

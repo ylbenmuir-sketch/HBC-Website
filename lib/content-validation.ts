@@ -1,6 +1,7 @@
 import { locations } from "./locations";
 import {
   BRAIN_MAP_CLAIM,
+  EMAIL,
   ESTABLISHED_YEAR,
   FOUNDER_LAST_NAME,
   FOUNDER_QUOTE,
@@ -34,6 +35,11 @@ function check(label: string, verified: boolean) {
 }
 
 check("Primary phone number", PHONE.verified);
+// Confirmed, so this passes today. It is on the list for the same reason the
+// phone is: SHOW_EMAIL reads `verified`, and flipping it false takes the
+// address out of the privacy notice's access paragraph — which falls back to
+// the phone-and-form wording rather than losing the paragraph.
+check("Primary email address", EMAIL.verified);
 check("Founder last name", FOUNDER_LAST_NAME.verified);
 check("Founder quote sign-off", FOUNDER_QUOTE.verified);
 // Figure interpolated rather than typed into the label, so the build log

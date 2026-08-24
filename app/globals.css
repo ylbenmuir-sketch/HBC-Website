@@ -504,6 +504,13 @@ details.faq .a a { color: var(--sage-deep); }
    need inline links: "call this number" and "use the contact form" belong in
    the sentence, not in a button under it. Same treatment as .lens-seq p a. */
 .policy p a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+/* The email address is one 32-character word, and at 320px the prose column is
+   272px wide. `check:layout` caught it running 7px past the viewport and being
+   clipped there. The page also gives it a <wbr> after the "@", so the break
+   lands between the mailbox and the domain rather than mid-domain; this is the
+   backstop for a column too narrow even for "harmonizedbraincenterstn.com",
+   and it is the same reasoning as the overflow-wrap on the headings above. */
+.policy p a[href^="mailto:"] { overflow-wrap: break-word; }
 
 /* team */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
