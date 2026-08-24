@@ -40,9 +40,21 @@ export async function generateMetadata({
   const location = getLocation((await params).slug);
   if (!location) return {};
   return {
-    title:
-      location.metaTitle ??
-      (location.comingSoon ? `${location.name} — Coming Soon` : location.name),
+    // `absolute` on the two open centers, for the reason /concerns/[slug] and
+    // /resources/[slug] drop the suffix: "LENS Neurofeedback in Nashville, TN"
+    // names the category, the city and the state and needs no brand to be
+    // legible, and 27 characters of one pushed both pages past 60.
+    //
+    // The coming-soon fallback KEEPS the template. "Franklin — Coming Soon" is
+    // a bare place name; without the brand beside it, it is a title that does
+    // not say whose Franklin or what is coming. It also sits at 49 characters
+    // with the suffix, so it was never paying the cost this change exists to
+    // remove.
+    title: location.metaTitle
+      ? { absolute: location.metaTitle }
+      : location.comingSoon
+        ? `${location.name} — Coming Soon`
+        : location.name,
     description: location.metaDescription,
   };
 }

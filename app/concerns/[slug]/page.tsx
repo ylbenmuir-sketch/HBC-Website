@@ -27,7 +27,13 @@ export async function generateMetadata({
   const concern = getConcern((await params).slug);
   if (!concern) return {};
   return {
-    title: concern.metaTitle,
+    // `absolute`, so the root layout's " — Harmonized Brain Centers" template
+    // does not apply. Same reasoning as /resources/[slug]: 27 characters of
+    // suffix put every one of these titles into the 61-69 band Google starts
+    // truncating, and the brand is not what the page competes on. A title that
+    // already opens "Neurofeedback for …" identifies itself; og:site_name
+    // carries the brand into link previews either way.
+    title: { absolute: concern.metaTitle },
     description: concern.metaDescription,
   };
 }

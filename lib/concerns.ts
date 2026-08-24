@@ -136,6 +136,11 @@ export type Concern = {
    * Keep the "support" framing in metaDescription rather than here; a title
    * has no room to hedge, and the description is where the wellness
    * disclaimer stays consistent.
+   *
+   * **This is the whole `<title>`.** app/concerns/[slug]/page.tsx sets it
+   * `absolute`, so the root layout's " — Harmonized Brain Centers" template
+   * does not append. The budget is therefore the full ~60 characters Google
+   * renders, not 33.
    */
   metaTitle: string;
   metaDescription: string;
@@ -766,13 +771,12 @@ export const concerns: Concern[] = [
     // The clusters the copy names — attention, sleep, mood, mental fatigue —
     // rather than the concerns nearest alphabetically.
     related: ["brain-fog", "sleep", "emotional-regulation"],
-    // 42 chars + the 27-char brand suffix = 69, down from 75. "& TBI" is what
-    // goes: `post concussion symptoms` is the target query and leads the
-    // title, TBI is a supporting term the H1 and the body both carry, and the
-    // last words of a 75-character title are not rendered in a result. The
-    // "Neurofeedback for X" pattern this field requires costs the rest — no
-    // concern page can reach 60 while the template appends the brand.
-    metaTitle: "Neurofeedback for Post-Concussion Symptoms",
+    // 48 chars, and the whole title — the brand suffix no longer appends. It
+    // was briefly cut to "…Post-Concussion Symptoms" (42) to buy back the 27
+    // characters the template was taking; dropping the suffix bought them back
+    // properly, so "& TBI" comes home. `post concussion symptoms` is still the
+    // target query and still leads.
+    metaTitle: "Neurofeedback for Post-Concussion Symptoms & TBI",
     metaDescription:
       // 158 chars, down from 186. The "Physician-referred." sentence is what
       // goes: it now has four other homes (see PHYSICIAN_REFERRALS), and the

@@ -284,6 +284,12 @@ export type Location = {
    * none of it. Omitted for coming-soon centers, which fall back to the
    * "{name} — Coming Soon" form: a page for an unopened center should not
    * compete for queries it can't serve yet.
+   *
+   * **When set, this is the whole `<title>`.** app/locations/[slug]/page.tsx
+   * sets it `absolute`, so the brand suffix does not append — a title naming
+   * the category, the city and the state identifies itself without it. The
+   * coming-soon fallback still takes the suffix, because "Franklin — Coming
+   * Soon" on its own does not say whose Franklin.
    */
   metaTitle?: string;
   metaDescription: string;
