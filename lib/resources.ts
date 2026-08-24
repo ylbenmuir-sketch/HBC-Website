@@ -632,7 +632,9 @@ export const resources: Resource[] = [
     finalHeading: "Already tried the obvious things? Say so on the call.",
     finalSub:
       "We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
-    metaTitle: "Sleep Hygiene Not Working? What That Does and Doesn’t Rule Out",
+    // 58 chars, was 62. A four-character edit; `sleep hygiene not working`
+    // still leads the title verbatim.
+    metaTitle: "Sleep Hygiene Not Working? What That Does and Doesn’t Mean",
     metaDescription:
       "You’ve done the routine, the blackout blind and the no-screens rule, and the nights are the same. What that tells you, and what to do next.",
   },
@@ -736,7 +738,8 @@ export const resources: Resource[] = [
     finalHeading: "Wondering whether this describes your child? Ask us.",
     finalSub:
       "A free phone call with a practitioner — honest answers, no pressure, and a plain “not a fit” if that’s the truth.",
-    metaTitle: "“I’m Just Bad at School” — Helping a Bright Kid Who’s Given Up",
+    // 58 chars, was 62. Both halves survive; only the tense changes.
+    metaTitle: "“I’m Just Bad at School”: Helping a Bright Kid Who Gave Up",
     metaDescription:
       "The self-story problem — what to do when a bright kid starts saying “I'm just bad at school,” and how to interrupt it early.",
   },
@@ -982,7 +985,10 @@ export const resources: Resource[] = [
     finalHeading: "Tell us what it actually feels like. We’ll be straight with you.",
     finalSub:
       "Bring the version you don’t say out loud. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
-    metaTitle: "Can’t Relax When Nothing’s Wrong? Why “Just Relax” Doesn’t Work",
+    // 56 chars. Was 63 — "Doesn’t Work" for "Fails" is the smallest edit
+    // that clears 60, and `told to just relax anxiety` still reads off the
+    // two quoted words and the opening clause.
+    metaTitle: "Can’t Relax When Nothing’s Wrong? Why “Just Relax” Fails",
     metaDescription:
       "Being told to relax assumes the problem is that you haven’t tried. A plain-language look at why an ordinary week doesn’t produce a settled body.",
   },
