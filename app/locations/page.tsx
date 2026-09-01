@@ -7,12 +7,12 @@ import {
   locations,
   hasConfirmedAddress,
   hoursSummary,
+  locationPhone,
   practitionerNames,
 } from "@/lib/locations";
 import {
   CONCIERGE_TAG,
   SHOW_DRAFT_CONTENT,
-  SHOW_PHONE,
   isDraftText,
 } from "@/lib/site-config";
 
@@ -102,8 +102,10 @@ export default function LocationsPage() {
                           separator: Murfreesboro's cardExtra is still a
                           [placeholder], which used to leave a dangling "·"
                           after the phone number. */}
+                      {/* The center's own line — see `phone` on the type in
+                          lib/locations.ts. */}
                       {[
-                        SHOW_PHONE ? loc.phone : null,
+                        locationPhone(loc)?.display ?? null,
                         SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)
                           ? loc.cardExtra
                           : null,

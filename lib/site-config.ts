@@ -213,24 +213,34 @@ export const FOUNDER_DISPLAY_NAME = FOUNDER_LAST_NAME.verified
  */
 
 /**
- * The founder's team-card bio — three claims about a named person.
+ * The founder's team-card bio — claims about a named person, so it stays a
+ * `Verifiable` even now that it is verified: a bio that ever needs
+ * re-confirming comes off the card with one flag, the way the previous
+ * wording did.
  *
- * "Sets the clinical standard", "trains every practitioner" and "still keeps a
- * client schedule" are statements about what one identified individual does,
- * and none of them was confirmed. They shipped anyway because `bio` is a plain
- * string on TeamMember and the only gate there reads brackets — the same hole
- * the article bylines went through (lib/resources.ts → Byline).
+ * Rewritten September 2026 from the bio on the practice's previous site, per
+ * Ben's roster brief. What the old bio said that this one deliberately does
+ * not: "the nation's leading LENS practitioner" (no ranking or superlative
+ * claims anywhere on this site), her personal session count (unverified),
+ * and "opened in 2015" (the founding year is 2016 — ESTABLISHED_YEAR, below,
+ * which this string cannot interpolate without reordering the file, so it
+ * names no year and the proof band states it instead). "Keeps a client
+ * schedule in Nashville" is confirmed by Ben's center assignment, which
+ * lists her at the Nashville center like any other practitioner.
  *
- * Gated exactly like FOUNDER_QUOTE below: unverified, so production renders no
- * bio at all and the card keeps the name, role, photo and link to her story,
- * all of which are true today. Confirm the sentence or replace it, then flip
- * the flag.
+ * The previous value — "Sets the clinical standard, trains every
+ * practitioner, and still keeps a client schedule" — shipped unverified and
+ * was gated off; the first two of its three claims were never confirmed and
+ * are not restated here.
  */
 export const FOUNDER_BIO: Verifiable = {
   value:
-    "Sets the clinical standard, trains every practitioner, and still keeps a client schedule.",
-  verified: false,
-  note: "[Founder bio — confirm all three claims]",
+    "LENS came into her life through family — her brother and sister-in-law " +
+    "opened a LENS practice in Colorado after her nephew's brain injury. She " +
+    "trained as a practitioner, brought the work to Tennessee, and still " +
+    "keeps a client schedule in Nashville.",
+  verified: true,
+  note: "[Founder bio — Ben to review wording]",
 };
 
 /** Founder quote — softened draft; needs the founder's personal sign-off. */

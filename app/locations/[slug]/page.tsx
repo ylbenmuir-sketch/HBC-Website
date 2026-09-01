@@ -13,6 +13,7 @@ import {
   formattedHours,
   getLocation,
   hasConfirmedAddress,
+  locationPhone,
   locationReviewCount,
   reviewCountLabel,
   saturdayLabel,
@@ -20,11 +21,8 @@ import {
 } from "@/lib/locations";
 import { localBusinessSchema } from "@/lib/schema";
 import {
-  PHONE_DISPLAY,
-  PHONE_TEL,
   PHYSICIAN_REFERRALS,
   SHOW_DRAFT_CONTENT,
-  SHOW_PHONE,
   isDraftText,
 } from "@/lib/site-config";
 
@@ -101,6 +99,9 @@ export default async function LocationPage({
 
   const addressConfirmed = hasConfirmedAddress(location);
   const showAddressLine = addressConfirmed || SHOW_DRAFT_CONTENT;
+  // This center's own number — Murfreesboro's line on the Murfreesboro page,
+  // not the sitewide one. Same value the card and the LocalBusiness carry.
+  const phone = locationPhone(location);
   // Draft team members / arrival notes never ship (see site-config).
   const team = location.team.filter(
     (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
@@ -158,9 +159,9 @@ export default async function LocationPage({
             <p className="sub">{location.hero.sub}</p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
-              {SHOW_PHONE && (
-                <Btn href={`tel:${PHONE_TEL}`} variant="ghost">
-                  Call {PHONE_DISPLAY}
+              {phone && (
+                <Btn href={`tel:${phone.tel}`} variant="ghost">
+                  Call {phone.display}
                 </Btn>
               )}
             </div>

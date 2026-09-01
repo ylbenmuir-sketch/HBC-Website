@@ -5,7 +5,11 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { team } from "@/lib/team";
-import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
+import {
+  SHOW_DRAFT_CONTENT,
+  TRAINING_CLAIM,
+  isDraftText,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Our Team",
@@ -29,10 +33,11 @@ export default function TeamPage() {
           <h1>
             Practitioners who will know your name &mdash; and your story.
           </h1>
+          {/* TRAINING_CLAIM verbatim — the certification is stated once
+              here, for the whole roster, rather than restated per bio
+              (Ben's rule; the claim's one home is lib/site-config.ts). */}
           <p className="sub">
-            Every Harmonized practitioner completes the same LENS training
-            and works from the same care model. Here&rsquo;s who you&rsquo;ll
-            meet.
+            {TRAINING_CLAIM} Here&rsquo;s who you&rsquo;ll meet.
           </p>
         </div>
       </section>

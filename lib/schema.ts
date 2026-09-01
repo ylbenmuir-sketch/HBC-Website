@@ -19,6 +19,7 @@ import {
   communitiesServed,
   hasConfirmedAddress,
   locationHours,
+  locationPhone,
   locationPhotos,
   locations,
   mapsUrl,
@@ -186,13 +187,17 @@ export function localBusinessSchema(location: Location) {
   const addressConfirmed = hasConfirmedAddress(location);
   const map = mapsUrl(location);
   const hours = locationHours(location);
+  // The center's own line, not the sitewide one — the same number the page's
+  // call button renders, per rule 1 above. The audit's local-SEO finding was
+  // both LocalBusiness nodes asserting one telephone for two centers.
+  const phone = locationPhone(location);
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": `${url}#localbusiness`,
     name: `${SITE_NAME} — ${location.name}`,
     url,
-    ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
+    ...(phone ? { telephone: phone.tel } : {}),
     address: {
       "@type": "PostalAddress",
       ...(addressConfirmed

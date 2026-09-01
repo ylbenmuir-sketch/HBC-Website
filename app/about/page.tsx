@@ -4,6 +4,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
+import { practitionerBandStat } from "@/lib/team";
 import {
   FOUNDER_DISPLAY_NAME,
   PHYSICIAN_REFERRALS,
@@ -54,9 +55,11 @@ export default function AboutPage() {
             label: "sessions provided",
             todo: STAT_SESSIONS.note,
           },
+          // Same derived cell the homepage band carries — see the comment
+          // there. lib/team.ts counts it from the roster; nothing is typed.
           {
-            stat: "Two centers",
-            label: "open today — Franklin coming soon",
+            stat: practitionerBandStat(),
+            label: "across two open centers — Franklin coming soon",
           },
           {
             stat: "One standard",

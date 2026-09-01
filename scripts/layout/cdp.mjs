@@ -6,7 +6,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+// Overridable for environments where Chrome lives elsewhere — remote Linux
+// runners keep a Chromium at /opt/pw-browsers/chromium, and the default
+// below is the macOS install path this script was written against.
+const CHROME =
+  process.env.CHECK_CHROME ??
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -64,6 +69,13 @@ export async function launch({ port = 9333 } = {}) {
       "--force-device-scale-factor=1",
       "--force-color-profile=srgb",
       "--disable-lcd-text",
+      // Extra flags for the environment, space-separated — containerized
+      // runners need "--no-sandbox" (Chromium refuses to start as root
+      // without it). Never bake that into the defaults: it is a real
+      // sandbox being turned off, and a local run has no reason to.
+      ...(process.env.CHECK_CHROME_FLAGS
+        ? process.env.CHECK_CHROME_FLAGS.split(" ")
+        : []),
       "about:blank",
     ],
     { stdio: "ignore" }

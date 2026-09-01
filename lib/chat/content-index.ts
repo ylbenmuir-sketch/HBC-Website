@@ -29,6 +29,7 @@ import {
   TRAINING_CLAIM,
   type Verifiable,
 } from "../site-config";
+import { practitionerBandStat } from "../team";
 import {
   MIRRORED_PAGES,
   type ConfirmTagName,
@@ -511,6 +512,11 @@ function locationPassages(loc: Location): Passage[] {
       text: `${loc.name}, ${loc.address.addressRegion}. ${loc.hero.sub}`,
     });
   } else {
+    // This center's own confirmed number — four words, so the passage stays
+    // short (see the note below) while "how do I call Murfreesboro?" lands
+    // on the right line. policy:phone still answers the general question
+    // with both centers' numbers.
+    const phone = confirmed(loc.phone);
     passages.push({
       id: `location:${loc.slug}:visiting`,
       kind: "location",
@@ -524,6 +530,7 @@ function locationPassages(loc: Location): Passage[] {
       text: [
         `Our ${loc.name} center serves ${loc.county}.`,
         address ? `The address is ${address}.` : null,
+        phone ? `Call ${phone.display}.` : null,
         parking ? `${parking}.` : null,
       ]
         .filter(Boolean)
@@ -758,8 +765,22 @@ function policyPassages(): Passage[] {
     text: INFORMATION_SHARING,
   });
 
+  /*
+   * One passage, every number. Per center now that Murfreesboro has its own
+   * line (lib/locations.ts `phone`): "what's the Murfreesboro number?" and
+   * "what's your phone number?" are the same passage, and a passage per
+   * center would split "phone", "number" and "call" across two documents and
+   * weaken both. Strictly confirmed(), like everything in the index — a
+   * center whose number is unverified is simply not in the sentence.
+   */
+  const centerPhones = locations
+    .filter((l) => !l.comingSoon)
+    .flatMap((l) => {
+      const phone = confirmed(l.phone);
+      return phone ? [{ name: l.name, display: phone.display }] : [];
+    });
   const phone = confirmed(PHONE);
-  if (phone) {
+  if (centerPhones.length > 0 || phone) {
     passages.push({
       id: "policy:phone",
       kind: "policy",
@@ -767,7 +788,12 @@ function policyPassages(): Passage[] {
       href: "/contact",
       question: "What is your phone number?",
       keywords: ["phone", "number", "call", "text", "reach", "contact", "speak"],
-      text: `You can reach ${SITE_NAME} at ${phone.display}.`,
+      text:
+        centerPhones.length > 0
+          ? `You can reach ${centerPhones
+              .map((c) => `our ${c.name} center at ${c.display}`)
+              .join(" and ")}.`
+          : `You can reach ${SITE_NAME} at ${phone!.display}.`,
     });
   }
 
@@ -805,6 +831,9 @@ function policyPassages(): Passage[] {
     text: [
       sessions ? `${SITE_NAME} has provided ${sessions} LENS sessions across its centers.` : null,
       `${open.join(" and ")} ${open.length === 1 ? "is" : "are"} open${soon.length > 0 ? `, with ${soon.join(" and ")} coming soon` : ""}.`,
+      // The same derived figure the proof bands render (lib/team.ts) — the
+      // assistant and the band cannot disagree about how many there are.
+      `${practitionerBandStat()} work across our centers.`,
       "Adults, teens, and children are all seen.",
       established ? `Serving Middle Tennessee since ${established}.` : null,
     ]

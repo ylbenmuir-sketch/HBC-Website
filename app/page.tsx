@@ -20,6 +20,7 @@ import {
   hoursSummary,
   reviewCountLabel,
 } from "@/lib/locations";
+import { practitionerBandStat } from "@/lib/team";
 import {
   BRAIN_MAP_CLAIM,
   COURSE_VARIES_NOTE,
@@ -455,9 +456,14 @@ export default function HomePage() {
             todo: STAT_SESSIONS.note,
             verified: Boolean(sessionCount),
           },
+          // Counted from the roster (lib/team.ts), never typed, so this cell
+          // cannot drift from /about/team. It replaced "Two centers", which
+          // survives in the label: the person count is the credential a
+          // visitor weighing new practices actually needs, stated plainly —
+          // no superlative, no comparison to anyone (Ben's positioning rule).
           {
-            stat: "Two centers",
-            label: "Nashville & Murfreesboro — Franklin coming soon",
+            stat: practitionerBandStat(),
+            label: "across Nashville & Murfreesboro — Franklin coming soon",
           },
           {
             stat: "All ages",

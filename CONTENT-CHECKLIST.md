@@ -24,14 +24,33 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
 - [ ] Founder quote wording personally approved (`FOUNDER_QUOTE`)
 - [ ] Founder story page copy (drafted with Sheri) — `app/about/founder/page.tsx`
 - [ ] Real founder photograph approved (no AI likeness) — `/images/founder.jpg`
-- [ ] Practitioner names, roles, bios, certifications (`lib/team.ts`)
-- [ ] Client care coordinator name (`lib/team.ts`)
+- [x] Roster — names, roles, and center assignments (`lib/team.ts`).
+      Confirmed by Ben, September 2026: nine practitioners and two office
+      managers across the two open centers. Certifications are stated once,
+      via `TRAINING_CLAIM`, never per person.
+- [x] Bios — Sheri Rowney (`FOUNDER_BIO`), Christiana Vorst, Kathy Wike,
+      Gwen Minton, Brenna Perkins (`lib/team.ts`), rewritten from the old
+      site's About page to this site's content rules. Awaiting Ben's read.
+- [ ] Bios — Laura Scott, Danielle Turner, Amanda Thomas, Ben Muir,
+      Denise Miller, Kylie Mason (`lib/team.ts`). `[Placeholder]`-gated;
+      their cards stay out of production until Ben supplies copy.
+- [ ] Christiana Vorst's old-site bio — her card copy was built from Ben's
+      confirmed specialization only (the old page's copy for her could not
+      be retrieved); flesh out when Ben supplies or approves more.
+- [ ] Portraits for everyone but the founder (`lib/team.ts` plateSpecs) —
+      `/images/practitioner-2.jpg` is an unidentified practitioner and must
+      not be attributed to a named person without confirmation.
 
 ## Contact & operations
 
 - [x] Primary phone number (`PHONE`) — (615) 331-8762. Confirmed by Ben. The
       phone UI (header tel link, call buttons, the sticky bar's dial button)
       renders everywhere as a result.
+- [x] Murfreesboro phone number (`phone` on the center in
+      `lib/locations.ts`) — (615) 203-2650. Supplied by Ben, published on
+      the old site. The Murfreesboro page, its index card, its LocalBusiness
+      node, and the assistant now carry the center's own line; sitewide
+      surfaces stay on `PHONE`.
 - [x] Primary email address (`EMAIL`) — ben@harmonizedbraincenterstn.com.
       Supplied by Ben. It renders in exactly one place, the privacy notice's
       access paragraph, and nowhere else: not the footer, not `/contact`, not

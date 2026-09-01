@@ -3,7 +3,7 @@ import {
   BRAIN_MAP_POINTS,
   FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
-  PHONE_DISPLAY,
+  PHONE,
   SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   SHOW_REVIEWS,
@@ -11,6 +11,7 @@ import {
   isDraftText,
   verifiedOr,
 } from "./site-config";
+import { practitionersAt, teamForCenter } from "./team";
 
 /**
  * Location data. Nashville is seeded from location-nashville.html;
@@ -19,6 +20,13 @@ import {
  * the LocalBusiness JSON-LD on each location page.
  */
 
+/**
+ * What a location page's team section renders per person. The two open
+ * centers' lists are derived from the roster (lib/team.ts → teamForCenter),
+ * which owns each person's facts and center assignment; only Franklin's
+ * hiring card is still written here as a literal. `TeamMember` satisfies
+ * this shape, so the derivation is an assignment, not a mapping.
+ */
 export type TeamCard = {
   name: string;
   role: string;
@@ -148,7 +156,25 @@ export type Location = {
    * they may not have had.
    */
   reviewWriteUrl: string | null;
-  phone: string;
+  /**
+   * This center's own phone number, shaped and gated like PHONE in
+   * lib/site-config.ts.
+   *
+   * Per center for the reason `hours` and `reviewCount` are: the audit's
+   * local-SEO finding was one phone number published for two centers, and
+   * Murfreesboro has its own line — (615) 203-2650, published on the
+   * practice's previous site — that the sitewide constant could not hold.
+   * Nashville's number and the practice's primary line are today the same
+   * fact, so that center references PHONE rather than restating the digits
+   * (see the field on Nashville below).
+   *
+   * Every per-center surface reads this through `locationPhone()`: the
+   * location page's call button, the locations-index card, the LocalBusiness
+   * `telephone`, and the assistant's phone passage. Sitewide surfaces —
+   * header, mobile call bar, CTA bands, /contact, the Organization node —
+   * stay on PHONE, deliberately: they speak for the practice, not a center.
+   */
+  phone: Verifiable<{ display: string; tel: string }>;
   /** Card meta extras (locations index). */
   cardExtra: string;
   /**
@@ -331,9 +357,15 @@ export const locations: Location[] = [
     reviewReadUrl: "https://www.google.com/maps?cid=690359003920868215",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CXcjMjzbpZQJEBM/review",
-    phone: PHONE_DISPLAY,
+    /**
+     * PHONE's own value and flag, not a copy: Nashville's line is the
+     * practice's primary number, and referencing the one constant means
+     * re-confirming or changing it can never leave this center behind.
+     */
+    phone: { value: PHONE.value, verified: PHONE.verified },
     cardExtra: "Private lot on site, free for clients",
-    practitioners: [FOUNDER_DISPLAY_NAME, "[Name]", "[Name]"],
+    /** From the roster's center assignments — see practitionersAt (lib/team.ts). */
+    practitioners: practitionersAt("nashville"),
     hero: {
       eyebrow: "Nashville, Tennessee",
       /**
@@ -376,26 +408,14 @@ export const locations: Location[] = [
         { kind: "photo", src: "/images/art-wall.jpg", position: "center 45%" },
       ],
     },
-    team: [
-      {
-        name: FOUNDER_DISPLAY_NAME,
-        role: "Founder & Clinical Director",
-        bio: "Sets the standard every practitioner trains to — and still keeps a Nashville client schedule.",
-        image: { src: "/images/founder.jpg", position: "center 22%" },
-      },
-      {
-        name: "[Practitioner name]",
-        role: "Practitioner · Children & Teens",
-        bio: "[Two lines: why they love working with kids, and how they put nervous first-timers at ease.]",
-        image: { src: "/images/practitioner-2.jpg", position: "32% 18%" },
-      },
-      {
-        name: "[Name]",
-        role: "Client Care Coordinator",
-        bio: "The first voice you'll hear on the phone, and the person who keeps scheduling painless.",
-        plateSpec: "Client care coordinator portrait — natural light",
-      },
-    ],
+    /**
+     * From the roster (lib/team.ts), which owns who works here — this used
+     * to be a hand-written list whose founder bio restated two claims
+     * FOUNDER_BIO had gated off, which is exactly the drift deriving ends.
+     * The page's own [placeholder] gate still decides which of these cards
+     * production renders.
+     */
+    team: teamForCenter("nashville"),
     quote: {
       text: "I expected something clinical and intimidating. What I found was a calm room, people who listened longer than any appointment I've ever had, and — three months later — a kid who likes school again.",
       attribution: "Parent of an 11-year-old",
@@ -493,9 +513,21 @@ export const locations: Location[] = [
     reviewReadUrl: "https://www.google.com/maps?cid=978389547119317468",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CdyRAAAc8JMNEBM/review",
-    phone: PHONE_DISPLAY,
+    /**
+     * Murfreesboro's own line — supplied by Ben (September 2026 roster
+     * brief), published on the practice's previous site, and the number its
+     * own listings carry. This is the fact that closes the audit's "one
+     * phone number for two centers" finding: the page, the card, and the
+     * LocalBusiness node for this center all read it via locationPhone().
+     */
+    phone: {
+      value: { display: "(615) 203-2650", tel: "+16152032650" },
+      verified: true,
+      note: "[Confirm Murfreesboro phone]",
+    },
     cardExtra: "Private lot on site, free for clients",
-    practitioners: ["[Name]", "[Name]"],
+    /** From the roster's center assignments — see practitionersAt (lib/team.ts). */
+    practitioners: practitionersAt("murfreesboro"),
     hero: {
       eyebrow: "Murfreesboro, Tennessee",
       /**
@@ -538,26 +570,14 @@ export const locations: Location[] = [
         "Photography of this center is being produced now. Until it arrives we would rather show you nothing than show you somebody else's room.",
       ],
     },
-    team: [
-      {
-        name: "[Practitioner name]",
-        role: "Practitioner · Murfreesboro",
-        bio: "[Two lines: background, years with Harmonized, and what clients say about working with them.]",
-        plateSpec: "Practitioner portrait — natural light, ivory backdrop",
-      },
-      {
-        name: "[Practitioner name]",
-        role: "Practitioner · Murfreesboro",
-        bio: "[Two lines.]",
-        plateSpec: "Practitioner portrait — natural light, ivory backdrop",
-      },
-      {
-        name: "[Name]",
-        role: "Client Care Coordinator",
-        bio: "The first voice you'll hear on the phone, and the person who keeps scheduling painless.",
-        plateSpec: "Client care coordinator portrait — natural light",
-      },
-    ],
+    /**
+     * From the roster (lib/team.ts). Christiana Vorst and Kathy Wike carry
+     * real bios, so this section renders in production now — the suppressed
+     * empty-grid state the template guards against ended when the roster was
+     * confirmed. Laura Scott and Kylie Mason stay [placeholder]-gated until
+     * Ben supplies their copy.
+     */
+    team: teamForCenter("murfreesboro"),
     quote: {
       text: "Nobody oversold anything — they just kept asking how I was sleeping. By week four: better than I had in years.",
       attribution: "Adult client",
@@ -635,7 +655,8 @@ export const locations: Location[] = [
     reviewReadUrl: null,
     /** No profile to review yet — the center has not opened. */
     reviewWriteUrl: null,
-    phone: PHONE_DISPLAY,
+    /** The practice's primary line — an unopened center has no line of its own. */
+    phone: { value: PHONE.value, verified: PHONE.verified },
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitioners: [],
     waitlistLine: "Founding-client openings are limited",
@@ -899,6 +920,22 @@ export function saturdayLabel(location: Location): string | null {
  */
 export function spacePhotoCount(location: Location): number {
   return location.space.photos.filter((p) => p.kind === "photo").length;
+}
+
+/**
+ * This center's phone number, or null while it is unverified in a production
+ * build. Every per-center surface goes through here — the page's call
+ * button, the index card, the LocalBusiness `telephone`, and the
+ * assistant's phone passage read the same value or the same nothing — so no
+ * surface can publish a number another one is hiding. Note this gates on the
+ * center's own flag, not SHOW_PHONE: SHOW_PHONE is the sitewide number's
+ * gate, and the day one of the two is in doubt the other should not follow
+ * it off the site.
+ */
+export function locationPhone(
+  location: Location
+): { display: string; tel: string } | null {
+  return verifiedOr(location.phone);
 }
 
 /**
