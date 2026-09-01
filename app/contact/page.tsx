@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
 import ConfirmTag from "@/components/ConfirmTag";
-import {
-  CONTACT_RESPONSE_TAG,
-  PHONE_DISPLAY,
-  SHOW_DRAFT_CONTENT,
-  SHOW_PHONE,
-} from "@/lib/site-config";
+import { locationPhone, locations } from "@/lib/locations";
+import { CONTACT_RESPONSE_TAG, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Talk With Our Team",
@@ -15,6 +11,23 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  /**
+   * Both open centers' own lines, not the one sitewide number: the person on
+   * this page is deciding which center to visit, and the local number is part
+   * of that decision — it shouldn't take a trip to a location page to find.
+   * Each number carries its own center's gate (locationPhone), so one line in
+   * doubt comes off this list without taking the other with it. Franklin has
+   * no line of its own and is filtered with comingSoon, not by phone: its
+   * `phone` field holds the sitewide number, which is not a fact about a
+   * center a person could call.
+   */
+  const centerPhones = locations
+    .filter((l) => !l.comingSoon)
+    .flatMap((l) => {
+      const phone = locationPhone(l);
+      return phone ? [{ name: l.name, phone }] : [];
+    });
+
   return (
     <>
       <section className="page-hero center">
@@ -40,10 +53,20 @@ export default function ContactPage() {
                 exactly as the div it replaces. */}
             <h2 className="eyebrow">What happens next</h2>
             <WhatHappensNext />
-            {SHOW_PHONE && (
+            {centerPhones.length > 0 && (
               <div className="note-sage" style={{ marginTop: 34 }}>
-                Prefer to talk now? Call <b>{PHONE_DISPLAY}</b> &mdash; a real
-                person answers during business hours.
+                Prefer to talk now? Call the center closer to you &mdash; a
+                real person answers during business hours.
+                <div style={{ marginTop: 8 }}>
+                  {centerPhones.map(({ name, phone }) => (
+                    <div key={name}>
+                      {name} &mdash;{" "}
+                      <a href={`tel:${phone.tel}`}>
+                        <b>{phone.display}</b>
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             <div

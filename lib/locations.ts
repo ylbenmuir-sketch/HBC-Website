@@ -170,9 +170,13 @@ export type Location = {
    *
    * Every per-center surface reads this through `locationPhone()`: the
    * location page's call button, the locations-index card, the LocalBusiness
-   * `telephone`, and the assistant's phone passage. Sitewide surfaces —
-   * header, mobile call bar, CTA bands, /contact, the Organization node —
-   * stay on PHONE, deliberately: they speak for the practice, not a center.
+   * `telephone`, the assistant's phone passage, and /contact's
+   * call-the-center-closer-to-you list — that page's reader is deciding
+   * between centers, so it names both lines rather than sending them to a
+   * location page for the local one. Sitewide surfaces — header, mobile call
+   * bar, CTA bands, the Organization node, the contact form's post-submit
+   * note — stay on PHONE, deliberately: they speak for the practice, not a
+   * center.
    */
   phone: Verifiable<{ display: string; tel: string }>;
   /** Card meta extras (locations index). */

@@ -4,7 +4,8 @@
  * Eleven people: nine practitioners and two office managers, plus the
  * Franklin hiring card. Five practitioners have published bios, rewritten
  * here to this site's content rules from the bios on the practice's previous
- * site (harmonizedbraincenterstn.com/about). Six people are confirmed by
+ * site (harmonizedbraincenterstn.com/about) and confirmed by Ben on the
+ * deployed preview. Six people are confirmed by
  * name and role only — their bios stay [placeholders], which is what keeps
  * their cards out of production until Ben supplies copy (see the gate in
  * app/about/team/page.tsx).

@@ -219,7 +219,9 @@ export const FOUNDER_DISPLAY_NAME = FOUNDER_LAST_NAME.verified
  * wording did.
  *
  * Rewritten September 2026 from the bio on the practice's previous site, per
- * Ben's roster brief. What the old bio said that this one deliberately does
+ * Ben's roster brief, and confirmed by Ben on the deployed preview — the
+ * Colorado origin story included. What the old bio said that this one
+ * deliberately does
  * not: "the nation's leading LENS practitioner" (no ranking or superlative
  * claims anywhere on this site), her personal session count (unverified),
  * and "opened in 2015" (the founding year is 2016 — ESTABLISHED_YEAR, below,

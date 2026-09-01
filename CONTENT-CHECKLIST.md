@@ -16,6 +16,61 @@ Every unverified fact lives in `lib/site-config.ts` (or is marked with
 To verify a fact: replace its `value` in `lib/site-config.ts` and set
 `verified: true` (or replace the `[bracketed]` string in the data file).
 
+## What Ben still needs to supply — working checklist
+
+The copy the site is waiting on, in one self-contained list (September 2026).
+Each item also appears in its home section below with fuller context; this is
+the short form to work from directly.
+
+### Six gated team cards (`lib/team.ts`)
+
+Names, roles, and center assignments are confirmed — only the bio copy is
+missing, and a card stays out of production until its bio lands. The
+`[bracketed]` text in the file is the brief for each.
+
+- [ ] **Laura Scott** — LENS Practitioner, Nashville & Murfreesboro. Two
+      lines: background, path to LENS, what clients say about working with
+      her.
+- [ ] **Danielle Turner** — LENS Practitioner, Nashville. Same two lines.
+- [ ] **Amanda Thomas** — LENS Practitioner, Nashville. Same two lines.
+- [ ] **Ben Muir** — LENS Practitioner, Nashville. Same two lines.
+- [ ] **Denise Miller** — Office Manager, Nashville. One line: what she
+      handles, and how she keeps scheduling painless.
+- [ ] **Kylie Mason** — Office Manager, Murfreesboro. One line, as above.
+
+Optional: Christiana Vorst's card ships now on her confirmed kids/teens
+specialization; a fuller bio can replace it whenever Ben supplies one.
+
+### /about/founder (`app/about/founder/page.tsx`)
+
+Production currently shows a two-sentence stand-in; the full page needs:
+
+- [ ] **Founder story** — 3–4 short paragraphs drafted with Sheri: what led
+      her to LENS, the first clients, the conviction that became the care
+      model, and why the practice trains others rather than staying a solo
+      practice. Plus one paragraph on training the team (the curriculum, the
+      apprenticeship, what she looks for in a practitioner) and one on what's
+      next (Franklin).
+- [ ] **`FOUNDER_QUOTE`** (`lib/site-config.ts`) — Sheri's personal sign-off
+      on the drafted wording ("We built Harmonized so that every family
+      gets…"). It stays off the homepage until verified, and the same wording
+      is typed into Franklin's quote band as a plain string — approve or
+      replace both together. The founder page's own draft blockquote ("The
+      measure of our work isn't a chart…") is *different* wording, also
+      unapproved: sign it off too, or drop it when the story lands.
+
+### Photographs
+
+- [ ] **Portraits** — everyone on the roster except Sheri renders a
+      placeholder plate: Christiana Vorst, Kathy Wike, Gwen Minton, Brenna
+      Perkins, Laura Scott, Danielle Turner, Amanda Thomas, Ben Muir, Denise
+      Miller, Kylie Mason. `/images/practitioner-2.jpg` is a real photo of an
+      *unidentified* practitioner and must not be attributed to any named
+      person without confirmation.
+- [ ] **Founder photograph** — `/images/founder.jpg` is on file and in use;
+      the formal approval that it is the real photograph (no AI likeness) is
+      still open, in Identity & people below.
+
 ## Identity & people
 
 - [x] Founder last name (`FOUNDER_LAST_NAME`) — "Rowney". Confirmed by Ben.
@@ -30,7 +85,9 @@ To verify a fact: replace its `value` in `lib/site-config.ts` and set
       via `TRAINING_CLAIM`, never per person.
 - [x] Bios — Sheri Rowney (`FOUNDER_BIO`), Christiana Vorst, Kathy Wike,
       Gwen Minton, Brenna Perkins (`lib/team.ts`), rewritten from the old
-      site's About page to this site's content rules. Awaiting Ben's read.
+      site's About page to this site's content rules. Confirmed by Ben on the
+      deployed preview, September 2026 — Sheri's Colorado origin story and
+      Christiana's kids/teens specialization included.
 - [ ] Bios — Laura Scott, Danielle Turner, Amanda Thomas, Ben Muir,
       Denise Miller, Kylie Mason (`lib/team.ts`). `[Placeholder]`-gated;
       their cards stay out of production until Ben supplies copy.
