@@ -251,8 +251,8 @@ Every one of these needs a *direct* rule to its final new destination. Chaining 
 | `/concussion-and-tbi/` ✅, `/concussion-tbi1/` | `/concerns/concussion` | |
 | `/emotional-balance/`, `/emotional-balance22/` | `/concerns/emotional-regulation` | |
 | `/depression/` ✅, `/depression1/` | `/what-we-help-with` | Approved reasoning holds |
-| `/peakperformance/`, `/self-development/` | `/concerns/stress-resilience` | **Decision needed** — nearest honest destination, or 410 |
-| `/migrainesandpain/`, `/migraines-and-fibromyalgia/` | ? | **Decision needed** — the rebuild covers no migraine concern. Nearest honest destination is `/what-we-help-with`; a 410 is defensible. Do not invent a concern page for it. |
+| `/peakperformance/`, `/self-development/` | ~~`/concerns/stress-resilience`~~ `/concerns/performance` | **Decided, Ben, Sept 2026** — the performance concern page was built and both URLs 301 to it directly, no chain |
+| `/migrainesandpain/`, `/migraines-and-fibromyalgia/` | ~~?~~ `/concerns/migraines` | **Decided, Ben, Sept 2026** — "do not invent a concern page for it" is superseded, not wrong when written: the rebuild then covered no migraine concern. Ben approved building `/concerns/migraines` (see QUERY-TO-PAGE-MAP for the rules it is built under), and both URLs 301 to it directly, no chain |
 | `/vibro-acoustic-chair/` ✅ | 410 Gone | |
 | `/trisha-yearwood/` ✅ | `/stories` | |
 | `/testimonials/`, `/testimonials1/` | `/stories` | |

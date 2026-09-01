@@ -134,3 +134,32 @@ between passages that say compatible things, and asserting a winner would
 freeze whichever passage happens to be shorter today rather than fix anything.
 They are the concern-vs-concern entries at the foot of
 `DUPLICATE_QUESTIONS_ALLOWED`.
+
+---
+
+## Update — Sept 2026, after `/concerns/performance` and `/concerns/migraines`
+
+The measured figures above describe the 9-concern, 66-passage index and are
+left as written. What the two new concerns changed, against the threshold at
+the top of the previous section:
+
+| Concern | Passages |
+|---|---|
+| concussion | **10** (unchanged — still the closest to the line) |
+| performance | 7 (signs, approach, limits, goals, 3 FAQs) |
+| migraines | 7 (medical-first, signs, approach, limits, 3 FAQs — no goals) |
+| the other eight | 7 each |
+
+**No concern crossed ~12; option D stays optional.** Two decisions were made
+specifically to keep it that way, and both are load-bearing:
+
+- Migraines shipped with **three FAQs, deliberately** — its structure is
+  concussion's, and concussion's six FAQs are what took it from 4 passages to
+  10. Adding migraine FAQs is how this concern inherits the same curve; count
+  before writing the fourth.
+- The migraine alias list **excludes `concussion`, `head` and `post`.**
+  Carrying them would add its seven passages to the tie set for the bare word
+  "concussion" — 10 + 7 is past the threshold through the side door. The
+  cross-traffic routes on the migraine page's own prose instead, which says
+  "concussion" in exactly three passages (signs, medical-first, FAQ 2) and is
+  commented in lib/concerns.ts not to grow.

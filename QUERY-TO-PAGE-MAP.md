@@ -62,6 +62,8 @@ Rule 6, applied the same way the location clusters were:
 | Sleep | `/concerns/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | 2,702 impr, 0 clicks, pos 60.2 | `/sleepproblems/` — rewrite |
 | Mood | **none** | ~~`neurofeedback for depression`~~ | — | 3,472 impr, 1 click, pos 49.1 | **Unassigned — see the decision below** |
 | Concussion / TBI | `/concerns/concussion/` | `post concussion symptoms` | post-concussion support, post concussion syndrome nashville, tbi support middle tennessee, still not right after concussion | 3,331 impr, 1 click · 487 impr pos 12.8 | **Built** — see decision above |
+| Peak performance | `/concerns/performance/` | `neurofeedback for high performers` | peak performance neurofeedback, executive brain fog, performance decline, can't focus like I used to | `/peakperformance/` legacy cluster | **Built, Sept 2026** — see decision below |
+| Migraines | `/concerns/migraines/` | `post concussion headaches` | migraines after concussion, chronic migraine support nashville, tried everything for migraines | `/migrainesandpain/` legacy cluster | **Built, Sept 2026** — see decision below |
 | Children | `/for-children/` | `neurofeedback for children` | neurofeedback for kids, help for my child's focus, child emotional regulation | **157 impr, 0 clicks** — near-zero surface | **Missing — P1** |
 | Cost / access | `/pricing/` | `neurofeedback cost` | how much does neurofeedback cost, is neurofeedback covered by insurance, hsa fsa | Present in tail, no page | **Missing — P2** |
 | Trust / safety | `/is-lens-safe/` | `is neurofeedback safe` | neurofeedback side effects, does neurofeedback work, neurofeedback reviews | Present in tail, no page | **Missing — P2** |
@@ -98,6 +100,14 @@ Rule 6, applied the same way the location clusters were:
 - **`vibroacoustic chair`, `acoustic chair`, `vibro chair`** — purchase intent for furniture. Currently the site's #2 click driver and commercially near-worthless.
 - **`concussion treatment`, `concussion therapy`, `tbi treatment`, `head injury treatment`** — treatment intent for a medical injury. HBC does not treat concussion or brain injury and the copy may not imply it, so ranking here produces exactly the visitor `/concerns/concussion/` is built to send to a doctor. Target the post-clearance half of the cluster instead.
 - **`neurofeedback for depression`, `depression treatment`, `depression therapy`, `low mood support`** — **added Aug 2026.** There is no mood concern page and the practice has not decided whether it serves this at all, so there is nothing on the site that can honestly answer these. Ranking here produces exactly the visitor nobody can help. Revisit only if the scope question in the `/mood/` decision above is answered yes; until then the 3,472 impressions stay unpursued on purpose.
+- **`migraine treatment`, `migraine relief`, `migraine cure`, `headache treatment`** —
+  **added Sept 2026, with the `/concerns/migraines/` build.** Treatment intent for a
+  neurological condition, the concussion reasoning verbatim: HBC does not treat
+  migraines and the page never says otherwise, so ranking here produces exactly the
+  visitor the page is built to hand to a doctor. The page targets the who-comes-in
+  half of the cluster — post-concussion headaches, tried-everything, already under
+  care — and its metaTitle deliberately breaks the "Neurofeedback for X" pattern
+  ("Migraines & LENS Neurofeedback") because "for migraines" is itself a claim.
 - **`pandas treatment`** — appeared in the tail. Verify HBC treats this before creating any surface for it.
 
 ---
@@ -132,6 +142,38 @@ target** treats the concussion terms.
 
 ---
 
+## Decision: `/concerns/performance/` and `/concerns/migraines/` — built, Sept 2026
+
+Both approved by Ben, September 2026, as the tenth and eleventh concerns. The
+standing answers, recorded here the way the earlier decisions were:
+
+**`/concerns/performance/`** is the destination for the `/peakperformance/`
+and `/self-development/` legacy URLs. The slug is `performance`, not
+`peak-performance` — the `/concussion-recovery/` reasoning applies: a URL that
+names an outcome asserts it, and a slug is not a place to put a caveat. The
+page is written as a **decline story, not an optimization story** (Ben's
+call): the audience is executives, founders, and professional musicians who
+used to operate at a level they can't reach now, and nothing on the page
+promises enhancement above baseline. "Peak performance" is the query, not the
+promise — it appears in the metaDescription, in a decline frame, and nowhere
+else.
+
+**`/concerns/migraines/`** is the destination for the `/migrainesandpain/`
+and `/migraines-and-fibromyalgia/` legacy URLs. SEO-AUDIT-2 §2.6 said "do not
+invent a concern page for it" — that guidance is **superseded by Ben's
+decision** to build the page (annotated there, not deleted), and the page is
+built under the strictest rules on the site: it never says LENS helps,
+relieves, reduces, or treats migraines, in any hedged form; it describes who
+comes in, never what happens to them; medical care leads the page above its
+own CTAs (the concussion ordering, via `medicalFirst`); and the site
+assistant carries a matching pre-retrieval stop (`headache` in
+`lib/chat/safety.ts`) that shipped in the same commit as the page — an acute
+or worst-ever headache reaches fixed doctor-first copy, never a passage. The
+primary target is the post-concussion half of the cluster, which is the
+strongest and most honest angle; the treatment half is in **Do not target**.
+
+---
+
 ## Redirects required at launch
 
 301 permanent, unless noted. **Every destination below was checked against the
@@ -148,6 +190,10 @@ the inherited surface on day one rather than carrying it over.
 | `/depression/` | `/what-we-help-with/` | ✅ — **approved, Ben, Aug 2026** |
 | `/vibro-acoustic-chair/` | **410 Gone** | n/a — **approved, Ben, Aug 2026** |
 | `/trisha-yearwood/` | `/stories/` | ✅ — **approved, Ben, Aug 2026** |
+| `/peakperformance/` | `/concerns/performance/` | ✅ — **approved, Ben, Sept 2026** |
+| `/self-development/` | `/concerns/performance/` | ✅ — direct, no chain through `/peakperformance/` — **approved, Ben, Sept 2026** |
+| `/migrainesandpain/` | `/concerns/migraines/` | ✅ — **approved, Ben, Sept 2026** |
+| `/migraines-and-fibromyalgia/` | `/concerns/migraines/` | ✅ — direct, no chain through `/migrainesandpain/` — **approved, Ben, Sept 2026** |
 
 ### The three decisions, and the reasoning behind each
 
