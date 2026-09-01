@@ -19,7 +19,7 @@ import { normalize } from "./refusals";
  * is made, no booking question is asked or answered.
  */
 
-export type SafetyKind = "crisis" | "minor" | "head-injury";
+export type SafetyKind = "crisis" | "minor" | "head-injury" | "headache";
 
 /**
  * What the rest of the conversation must do once a check has fired. Returned
@@ -31,15 +31,17 @@ export type SafetyEffect =
   /** §4.2 — collect no contact details for the rest of the session. */
   | "block-contact-collection"
   /**
-   * Recent head injury — clear any booking in progress and end the turn, but
-   * do not flag the conversation and do not block contact for the rest of it.
+   * Recent head injury, or an acute headache — clear any booking in progress
+   * and end the turn, but do not flag the conversation and do not block
+   * contact for the rest of it.
    *
    * The booking is cleared for the same reason §4.1 clears it: somebody who
    * hit their head on Saturday should not be walked through name, phone and
    * preferred center in the same breath as "go to urgent care". Contact
-   * collection is *not* blocked, because nothing about a head injury makes
-   * this person a minor or a crisis — they may well be back in the same
-   * session asking about later, and the assistant should be able to help.
+   * collection is *not* blocked, because nothing about a head injury or a
+   * headache makes this person a minor or a crisis — they may well be back
+   * in the same session asking about later, and the assistant should be able
+   * to help.
    */
   | "end-turn";
 
@@ -84,6 +86,21 @@ export type CrisisPattern =
  */
 export type HeadInjuryPattern = "recent-head-injury" | "head-injury-red-flag";
 
+/**
+ * Which headache signal fired. Same contract as CrisisPattern.
+ *
+ * Three, because they are three different things for a reviewer to see —
+ * and because two of them get the emergency reply and one gets the gentler
+ * one. "headache-red-flag" is a headache with a neurological symptom beside
+ * it; "headache-severe" is the thunderclap presentation named as such
+ * ("worst headache of my life", sudden); "headache-now" is someone in the
+ * middle of an attack with no red flag in the message.
+ */
+export type HeadachePattern =
+  | "headache-red-flag"
+  | "headache-severe"
+  | "headache-now";
+
 /** Which under-18 signal fired. Same contract as CrisisPattern. */
 export type MinorPattern =
   | "age-stated"
@@ -93,7 +110,11 @@ export type MinorPattern =
   | "age-referenced"
   | "parents-unaware";
 
-export type SafetyPattern = CrisisPattern | HeadInjuryPattern | MinorPattern;
+export type SafetyPattern =
+  | CrisisPattern
+  | HeadInjuryPattern
+  | HeadachePattern
+  | MinorPattern;
 
 export type SafetyStop = {
   kind: SafetyKind;
@@ -144,6 +165,43 @@ export const CRISIS_REPLY =
 export const HEAD_INJURY_REPLY =
   "If your head injury was recent, start with a doctor. Emergency care exists for a reason, and the first days after a head injury are not the time for anything else. Nothing here replaces that, and we’d tell you the same thing on the phone. If anyone has been knocked out, is vomiting, confused, or getting worse, call 911.\n\n" +
   "We’re here for later — weeks or months out, once you’ve been checked and cleared and something still isn’t back.";
+
+/**
+ * Acute headache — the emergency presentations.
+ *
+ * Not in §4 — the section predates /concerns/migraines — but it belongs here
+ * for the head-injury check's reason, and with more force: a sudden severe
+ * headache, or "the worst headache of my life", is the textbook call-911
+ * presentation, and before this check existed both fell through every stage
+ * to NO_MATCH_REPLY — which ends "Want me to set one up?". An assistant
+ * offering to book a free consultation to somebody describing a thunderclap
+ * headache is the exact failure this file exists to prevent.
+ *
+ * It also has to exist *before* the migraine page does: the moment that page
+ * enters the index, "I have a migraine right now" stops being a no-match and
+ * starts retrieving passages about who comes in for LENS. The check and the
+ * page ship together, the way `head-injury` shipped with /concerns/concussion.
+ *
+ * The first two sentences are the migraine page's own medical-first copy, in
+ * the same words. The reply must not end on a booking ask, for the
+ * HEAD_INJURY_REPLY reason: the next thing this visitor does should be
+ * calling a doctor, not us.
+ */
+export const HEADACHE_EMERGENCY_REPLY =
+  "A sudden, severe headache — or the worst headache of your life — is a medical emergency: call 911 or get to an emergency room now. The same goes for a headache with anything new alongside it — confusion, trouble seeing or speaking, weakness or numbness, a stiff neck with a fever. Nothing here comes before that, and we’d tell you the same thing on the phone.\n\n" +
+  "We’re here for later, alongside the care of a doctor who already knows your headaches.";
+
+/**
+ * The gentler variant, for somebody in the middle of an attack with no red
+ * flag in the message. Ben's call (Sept 2026): someone mid-attack should hear
+ * "if this one is unusual for you or the worst you've had, that's a doctor
+ * now," not be walked toward a booking. So the reply names the line a person
+ * can check themselves against, keeps the 911 route visible, and leaves the
+ * door open the way HEAD_INJURY_REPLY does — no ask.
+ */
+export const HEADACHE_NOW_REPLY =
+  "If this headache is unusual for you, or the worst you’ve had, that’s a doctor right now — not a chat with us, and we’d tell you the same thing on the phone. If anything new has come with it — confusion, trouble seeing or speaking, weakness or numbness — call 911.\n\n" +
+  "And if it’s the migraine you already know and manage, the middle of one isn’t the time for anything here. We’re here for later, once it’s passed.";
 
 /** §4.2, verbatim. */
 export const MINOR_REPLY =
@@ -532,6 +590,153 @@ const HEAD_INJURY_PATTERNS: Array<{
   { pattern: "head-injury-red-flag", regex: bothPresent(HEAD_EVENT, RED_FLAG) },
 ];
 
+/* -------------------------------------------------------------------------
+ * Acute headache
+ *
+ * /concerns/migraines is written for someone whose migraines are long-
+ * standing and already under a doctor's care. As with the concussion page, a
+ * share of the traffic that finds a migraine page is not that person: they
+ * have the worst headache of their life and are typing it into a chat box.
+ * For them the correct answer is 911, and the wrong answer is a passage
+ * about who comes in for LENS — which is what retrieval hands back now that
+ * the page exists and is filed under "migraine" and "headache".
+ *
+ * ## The line it draws
+ *
+ * The topic is not the trigger — the head-injury rule, restated because the
+ * temptation recurs per page. "Do you help with migraines?", "I get
+ * migraines", "chronic migraines after a concussion" are the page's
+ * audience, and all must reach it. What fires is:
+ *
+ *   - **a red flag** — a headache with a neurological symptom beside it
+ *     (confusion, trouble speaking, numbness, a stiff neck with fever); or
+ *   - **the thunderclap presentation named as such** — "worst headache of my
+ *     life", sudden, out of nowhere; or
+ *   - **an attack happening now** — "I have a migraine right now". This one
+ *     gets the gentler reply: for a known migraine sufferer mid-attack the
+ *     answer is "if this one is unusual, that's a doctor now", not a 911
+ *     order, and either way not a booking. Ben's call, Sept 2026.
+ *
+ * ## Deliberately NOT in the severe list
+ *
+ * "excruciating", "unbearable" and "blinding" — the adjectives chronic
+ * sufferers use for their *normal*. "I've had excruciating migraines for
+ * twenty years, can you help?" is the page's core audience, and sending that
+ * person a 911 message deletes the concern for exactly the people it was
+ * built for. The over-fire trade inverts here the way "can't do this
+ * anymore" inverts in the crisis list: common in ordinary traffic, rare as a
+ * disclosure nothing else would catch. If any of the three ever goes in, it
+ * goes in on evidence from real conversations.
+ *
+ * Also absent: "vomiting" and "light and noise" (routine parts of an
+ * ordinary migraine — vomiting stays a red flag where it belongs, beside a
+ * HEAD_EVENT), and bare "vision" ("I can't see properly during an aura" is a
+ * sufferer describing their known condition; "can't see" still fires,
+ * because a message in the middle of that is a message to hand a doctor).
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The headache itself: named, or described as present-tense head pain.
+ * "headaches" and "head ache" both reach `head\s*aches?`.
+ */
+const HEADACHE_WORD = [
+  String.raw`migraines?`,
+  String.raw`head\s*aches?`,
+  String.raw`head\s+pain`,
+  String.raw`my\s+head\s+is\s+(?:pounding|splitting|throbbing|killing\s+me|exploding)`,
+].join("|");
+
+/**
+ * Neurological symptoms that mean the emergency room when they arrive with a
+ * headache. Narrower than the head-injury RED_FLAG on purpose — see the
+ * section note for what was left out and why.
+ */
+const HEADACHE_RED_FLAG = [
+  String.raw`confus(?:ed|ion|ing)`,
+  String.raw`can['’]?t\s+see`,
+  String.raw`los(?:t|ing)\s+(?:my\s+)?vision`,
+  String.raw`trouble\s+(?:seeing|speaking|talking)`,
+  String.raw`slurr(?:ed|ing)`,
+  String.raw`numb(?:ness)?\b`,
+  String.raw`weakness`,
+  String.raw`stiff\s+neck`,
+  String.raw`fever`,
+  String.raw`seizure`,
+  String.raw`convulsi`,
+  String.raw`passed\s+out`,
+  String.raw`fainted?`,
+  String.raw`black(?:ed)?\s+out`,
+  String.raw`won['’]?t\s+wake`,
+].join("|");
+
+/**
+ * The thunderclap presentation, named. "sudden(ly)" is here even though "my
+ * migraines suddenly got worse" will catch an occasional chronic sufferer —
+ * sudden change is the medically significant word, and the tie goes to
+ * firing.
+ */
+const HEADACHE_SUDDEN = [
+  String.raw`thunderclap`,
+  String.raw`out\s+of\s+nowhere`,
+  String.raw`sudden(?:ly)?`,
+  String.raw`never\s+had\s+(?:one|a\s+head\s*ache|a\s+migraine)\s+like`,
+].join("|");
+
+/**
+ * An attack happening now. Three shapes: the singular first-person report
+ * ("I have a migraine" — the plural "I have migraines" is the chronic
+ * visitor and does not match), present-tense head pain, and a headache word
+ * beside a right-now word.
+ */
+const HEADACHE_NOW_PATTERNS: RegExp[] = [
+  new RegExp(
+    String.raw`\b(?:${IM}\s+having|i\s+have|i\s*['’]?\s*ve\s+got)\s+(?:a|this|the)\s+(?:\w+\s+){0,2}(?:migraine|head\s*ache)\b`,
+    "i"
+  ),
+  /\bmy\s+head\s+is\s+(?:pounding|splitting|throbbing|killing\s+me|exploding)\b/i,
+  bothPresent(
+    HEADACHE_WORD,
+    String.raw`right\s+now|as\s+we\s+speak|at\s+the\s+moment|in\s+the\s+middle\s+of\s+one`
+  ),
+];
+
+/**
+ * Ordered most-acute first: a red flag outranks "severe", which outranks
+ * "now", so the message that carries two signals is logged (and answered) as
+ * the worse one. Checked *after* the head-injury patterns, so "I got knocked
+ * out and I have a headache and I'm confused" keeps firing as
+ * head-injury-red-flag — the injury is the fact a reviewer needs first.
+ */
+const HEADACHE_PATTERNS: Array<{
+  pattern: HeadachePattern;
+  regex: RegExp;
+  reply: string;
+}> = [
+  {
+    pattern: "headache-red-flag",
+    regex: bothPresent(HEADACHE_WORD, HEADACHE_RED_FLAG),
+    reply: HEADACHE_EMERGENCY_REPLY,
+  },
+  {
+    // "worst headache", with up to two words in between — "worst ever
+    // headache", "the worst possible migraine". The adjacency is what keeps
+    // "the worst part of my week is the migraines" from firing.
+    pattern: "headache-severe",
+    regex: /\bworst\s+(?:\w+\s+){0,2}(?:migraine|head\s*ache|head\s+pain)/i,
+    reply: HEADACHE_EMERGENCY_REPLY,
+  },
+  {
+    pattern: "headache-severe",
+    regex: bothPresent(HEADACHE_WORD, HEADACHE_SUDDEN),
+    reply: HEADACHE_EMERGENCY_REPLY,
+  },
+  ...HEADACHE_NOW_PATTERNS.map((regex) => ({
+    pattern: "headache-now" as const,
+    regex,
+    reply: HEADACHE_NOW_REPLY,
+  })),
+];
+
 /**
  * Under-18 disclosure (§4.2). First person only — "my son is 14" is a parent,
  * which is the site's primary audience, not a minor disclosing their own age.
@@ -613,6 +818,20 @@ export function checkSafety(message: string): SafetyStop | null {
       return {
         kind: "head-injury",
         reply: HEAD_INJURY_REPLY,
+        effect: "end-turn",
+        pattern,
+      };
+    }
+  }
+
+  // After head-injury (see the ordering note on HEADACHE_PATTERNS), before
+  // the minor checks for the head-injury reason: the fifteen-year-old with
+  // the worst headache of their life needs the doctor line first.
+  for (const { pattern, regex, reply } of HEADACHE_PATTERNS) {
+    if (regex.test(text)) {
+      return {
+        kind: "headache",
+        reply,
         effect: "end-turn",
         pattern,
       };

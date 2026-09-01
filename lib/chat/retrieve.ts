@@ -66,11 +66,23 @@ export const RETRIEVAL = {
   /** A supporting passage scoring less than this much of the best one is padding. */
   supportingScoreRatio: 0.35,
   /**
-   * What a word the site has never used costs. Unknown words are the clearest
-   * signal that a question is about something else — "Do you sell CBD oil?" is
-   * three of them — so they count against coverage. Capped, because a long
-   * message about a real concern should not be rejected for the incidental
-   * words around it.
+   * What a word the site has never used costs, at minimum. Unknown words are
+   * the clearest signal that a question is about something else — "Do you
+   * sell CBD oil?" is three of them — so they count against coverage.
+   * Capped, because a long message about a real concern should not be
+   * rejected for the incidental words around it.
+   *
+   * **A floor, not the cost.** The cost actually charged is the larger of
+   * this and the IDF a three-passage term has in the current corpus — see
+   * `unknownCost` in buildSearchIndex(). This constant was tuned against a
+   * 124-passage corpus, and IDF grows with corpus size while a fixed cost
+   * does not: when the two migraine/performance concerns took the index to
+   * 138 passages, idf("offer") crossed 3.4 with no new use of the word
+   * anywhere, and "Do you offer massage?" — an off-topic gate case — started
+   * grounding on the homepage headline. The sixth corpus-growth bite, and
+   * the first fixed at the mechanism instead of the symptom: an unknown word
+   * must never become cheaper than a rare known one just because the site
+   * gained pages.
    */
   unknownTermIdf: 3.4,
   maxUnknownTerms: 3,
@@ -212,7 +224,17 @@ function buildSearchIndex(passages: Passage[]) {
     return Math.log(1 + (total - seen + 0.5) / (seen + 0.5));
   };
 
-  return { documents, total, avgLength, idf };
+  // What coverageOf charges for a word the corpus has never seen: the tuned
+  // floor, or what a three-passage term is worth at the corpus's current
+  // size — whichever is more. Anchored to df=3 so the cost tracks the same
+  // curve real IDF grows on; see the note on RETRIEVAL.unknownTermIdf for
+  // the regression that made this scale instead of sit still.
+  const unknownCost = Math.max(
+    RETRIEVAL.unknownTermIdf,
+    Math.log(1 + (total - 3 + 0.5) / 3.5)
+  );
+
+  return { documents, total, avgLength, idf, unknownCost };
 }
 
 /**
@@ -277,7 +299,7 @@ function coverageOf(terms: string[], doc: IndexedPassage): number {
   }
 
   possible +=
-    Math.min(unknown, RETRIEVAL.maxUnknownTerms) * RETRIEVAL.unknownTermIdf;
+    Math.min(unknown, RETRIEVAL.maxUnknownTerms) * search.unknownCost;
 
   return possible === 0 ? 0 : matched / possible;
 }

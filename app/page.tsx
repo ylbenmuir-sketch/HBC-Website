@@ -104,6 +104,18 @@ const concern = {
     title: "Stress & resilience",
     href: "/concerns/stress-resilience",
   },
+  trauma: {
+    title: "Trauma-related stress",
+    href: "/concerns/trauma",
+  },
+  performance: {
+    title: "Performance & mental sharpness",
+    href: "/concerns/performance",
+  },
+  migraines: {
+    title: "Migraines",
+    href: "/concerns/migraines",
+  },
   concussion: {
     title: "Post-concussion symptoms",
     href: "/concerns/concussion",
@@ -199,6 +211,31 @@ const adultConcerns = [
       "Eight hours that feel like four",
     ],
   },
+  // The second row (Sept 2026). Performance and migraines are adult-grouped
+  // by decision — performance's audience is executives, founders and
+  // musicians; every line of migraine framing addresses an adult managing
+  // their own medical care, concussion's reasoning exactly. Trauma joins
+  // them for two reasons that arrived together: it was the one concern on
+  // neither homepage group (and the one the footer note calls out as
+  // link-starved), and its card is what takes the group from seven cards —
+  // a ragged 4+2+span — to eight in two full rows, which is why concussion's
+  // `fill` came off in the same edit.
+  {
+    ...concern.performance,
+    points: [
+      "Used to handle a lot more than this",
+      "Word recall is a struggle",
+      "Finishing by the deadline is a fight",
+    ],
+  },
+  {
+    ...concern.trauma,
+    points: [
+      "Vigilant in rooms where nothing is wrong",
+      "Startling easily, settling slowly",
+      "The past crowding the present",
+    ],
+  },
   // Adults only, and the reasoning is on the page rather than the audience:
   // every line of approved concussion copy addresses an adult in the second
   // person, and there is no parent-facing version of it to put on a card in
@@ -206,9 +243,6 @@ const adultConcerns = [
   // the page through search, the header and /what-we-help-with — none of which
   // is split by audience — rather than through a card whose bullets nobody has
   // written yet.
-  //
-  // `fill` because this makes five cards in a four-column grid. It spans the
-  // second row rather than sitting alone in a quarter of it; see ConcernCard.
   {
     ...concern.concussion,
     points: [
@@ -216,7 +250,16 @@ const adultConcerns = [
       "Fog that lifts and returns",
       "Light and noise that wear on you",
     ],
-    fill: "always" as const,
+  },
+  // Last, beside concussion — the two pages that start with a medical event,
+  // and the pair the migraine card's own page links across to.
+  {
+    ...concern.migraines,
+    points: [
+      "Under a doctor's care, and staying there",
+      "Headaches that date to a concussion",
+      "A long list of things already tried",
+    ],
   },
 ];
 

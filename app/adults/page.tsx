@@ -41,19 +41,31 @@ const adultConcerns = [
     href: "/concerns/emotional-regulation",
   },
   {
-    title: "Performance & resilience",
+    // "Stress & resilience" again, not "Performance & resilience": that
+    // blend existed while performance had no page of its own, and a card
+    // wearing the next card's first word would split one query between two
+    // destinations — rule 1 of QUERY-TO-PAGE-MAP, in miniature.
+    title: "Stress & resilience",
     points: ["Rest that doesn't restore", "Wanting more margin, not more hacks"],
     href: "/concerns/stress-resilience",
   },
-  // Seventh in a three-column grid, so it fills its own row rather than
-  // leaving two empty cells beside it (ConcernCard's `fill`). Last, because it
-  // is the one entry here that starts with a medical event rather than with
-  // how a week feels.
+  {
+    title: "Performance & mental sharpness",
+    points: ["Used to handle a lot more", "Deadlines and recall slipping"],
+    href: "/concerns/performance",
+  },
+  // The two medical-event entries close the grid, which is nine cards now —
+  // three full rows in three columns, so concussion's `fill` came off with
+  // the count.
   {
     title: "Post-concussion symptoms",
     points: ["Cleared, and still not yourself", "Fog that lifts and returns"],
     href: "/concerns/concussion",
-    fill: "always" as const,
+  },
+  {
+    title: "Migraines",
+    points: ["Under a doctor's care, and staying there", "A long list already tried"],
+    href: "/concerns/migraines",
   },
 ];
 
@@ -99,7 +111,10 @@ export default function AdultsPage() {
         <div className="wrap">
           <div className="sec-head rv">
             <div className="eyebrow">Where adults start</div>
-            <h2>The six concerns adults bring us most.</h2>
+            {/* No count in the heading — it was "the six concerns" until the
+                grid reached nine, and a number in copy is a fact that rots
+                one card-add later. */}
+            <h2>The concerns adults bring us most.</h2>
           </div>
           <div className="concern-grid rv">
             {adultConcerns.map((c) => (

@@ -65,6 +65,14 @@ export type TurnOutcome =
    * page is reaching people it should be sending elsewhere first.
    */
   | "head-injury"
+  /**
+   * An acute headache — a red flag beside it, the thunderclap presentation
+   * named, or an attack happening now. Same posture as head-injury: doctor
+   * copy, turn ends, nothing flagged. Counted separately because how often
+   * it fires is the number that says whether /concerns/migraines is reaching
+   * people it should be sending to a doctor first.
+   */
+  | "headache"
   | "refusal"
   /** A topic the site has decided not to answer yet — see ./unanswerable.ts. */
   | "unanswerable"

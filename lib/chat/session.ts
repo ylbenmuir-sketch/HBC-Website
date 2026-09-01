@@ -186,12 +186,15 @@ export function applySafetyStop(session: ChatSession, stop: SafetyStop): void {
     session.draft = {};
     return;
   }
-  // A recent head injury ends the turn and clears a half-finished booking —
-  // nobody should be answering "which center?" in the same breath as "go to
-  // urgent care" — but it neither flags the conversation nor closes the door
-  // on contact details. The same visitor may well come back to this session
-  // asking about later, which is what the page is for.
-  if (stop.kind === "head-injury") {
+  // A recent head injury or an acute headache ends the turn and clears a
+  // half-finished booking — nobody should be answering "which center?" in the
+  // same breath as "go to urgent care" — but neither flags the conversation
+  // nor closes the door on contact details. The same visitor may well come
+  // back to this session asking about later, which is what both pages are
+  // for. Matched on the effect rather than the kind, which is what
+  // SafetyEffect exists for: the route must not be able to honour the stop
+  // and forget its meaning when the next end-turn kind arrives.
+  if (stop.effect === "end-turn") {
     session.step = "idle";
     session.draft = {};
     return;

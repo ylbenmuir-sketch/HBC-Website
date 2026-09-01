@@ -295,6 +295,69 @@ const CONCERN_ALIASES: Record<string, string[]> = {
     // Shared with brain-fog on purpose — see the note above.
     "fog", "foggy",
   ],
+  /*
+   * The decline-story concern, and the alias list with the most known-term
+   * collisions to refuse. Applied here, the rules from the two notes above:
+   *
+   * - **The clean territory is taken whole.** "performance", "executive",
+   *   "founder", "musician", "creative", "flow", "stage", "level", "peak",
+   *   "operate" — all df=0 before this page, so none of them can cost anyone
+   *   else a question. "peak" is the query word itself; it belongs to nothing
+   *   else and never will.
+   * - **Brain-fog's core vocabulary is NOT here.** "sharp", "recall", "word"
+   *   and "fog" (df=7, 7, 7 and 19) are what that concern's routing runs on.
+   *   This page's own prose says "brain fog" and "word recall" because that
+   *   is Ben's recognition language — that cost is already paid and was
+   *   measured in the sweep — but multiplying the terms again through this
+   *   list would be a second, avoidable hit. A visitor typing "brain fog"
+   *   still belongs on /concerns/brain-fog.
+   * - **Stem traps, spelled both ways**: "deadline"/"deadlines" stem apart
+   *   (deadline / deadlin), like meltdown/melt. "executive"/"executives" too
+   *   (executive / executiv). Both forms are listed.
+   * - **"handle"/"handling" (df=2) are taken anyway** — also a stem pair
+   *   (handle / handl) — because "I used to be able to handle a lot" is the
+   *   H1 and the single most likely sentence to be typed back at us. The
+   *   passages that held the word before are goal cards (anxiety's "Handling
+   *   a normal Tuesday", stress-resilience's "Handling normal stress"); the
+   *   ship sweep showed every anxiety and stress-resilience routing line
+   *   unmoved, and "handling stress used to be easier" — which used to
+   *   no-match — reaching this concern.
+   */
+  performance: [
+    "performance", "performer", "executive", "executives", "founder", "ceo",
+    "musician", "music", "creative", "flow", "stage", "studio",
+    "deadline", "deadlines", "level", "operate", "peak", "sharper",
+    "handle", "handling",
+  ],
+  /*
+   * The strictest page's list, and deliberately the shortest: every core
+   * term was df=0 before this page — "migraine", "headache", "aura",
+   * "neurologist" appear nowhere else in the corpus — so this concern's
+   * routing is clean territory and takes nothing from anyone.
+   *
+   * - **Stem traps**: "migraines" stems to `migrain` and "migraine" to
+   *   itself; "headaches" to `headach`, "headache" to itself. All four
+   *   forms are listed, or the singular and plural queries reach different
+   *   token sets (the meltdown/melt lesson, twice over).
+   * - **NOT "concussion", "head", or "post"** — those are the concussion
+   *   page's own aliases, and putting them here would add this concern's
+   *   passages to the tie set for the bare word "concussion", which
+   *   HANDOFF-concern-passage-ties.md says is at 10 passages of a ~12
+   *   threshold. The cross-question ("my headaches started after a
+   *   concussion") routes on this page's own prose, which says the word in
+   *   exactly three passages — see the note on howHelp.p1 in lib/concerns.ts.
+   * - **NOT "pain"** ("Does it hurt?" owns it) and **NOT "trigger"**
+   *   (trauma's alias — migraine triggers vs. trauma triggers is a genuine
+   *   collision, and "migraine triggers" carries `migraine` anyway).
+   */
+  migraines: [
+    "migraine", "migraines", "headache", "headaches", "aura",
+    "neurologist", "neurology",
+    // df=0 sitewide, and without it "chronic migraines" — as likely a query
+    // as this concern gets — fell under the coverage floor: "chronic" priced
+    // as an unknown word outweighed the one known term beside it.
+    "chronic",
+  ],
   // Not "safe": on this page the word belongs to "the past keeps the present
   // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
   // question with a plain answer on /faq — into trauma copy.
@@ -389,6 +452,28 @@ const LOCATION_KEYWORDS = [
   "clinic",
 ];
 
+/**
+ * The synthetic question on each medical-first passage, keyed by concern.
+ *
+ * Per concern because the passages are: when migraines became the second
+ * concern to carry `medicalFirst`, a question shared by the template put the
+ * identical string on two passages and DUPLICATE_QUESTIONS failed at 1.00 —
+ * whichever passage was shorter would have taken the question sitewide.
+ *
+ * Two rules, learned the hard way on the concussion entry: a synthetic
+ * question is still a question in the index, weighted x3 like any other, so
+ * (1) it has to be about *this* passage — not "Should I see a doctor first?",
+ * which is brain-fog FAQ 2 almost word for word, and that passage took it —
+ * and (2) it has to differ from every other medical-first question. A concern
+ * that gains `medicalFirst` without an entry here indexes `question:
+ * undefined`, which check:answers surfaces as the passage losing its own
+ * acute-window questions; add the entry in the same change.
+ */
+const MEDICAL_FIRST_QUESTIONS: Record<string, string> = {
+  concussion: "Is it too soon to come in after a head injury?",
+  migraines: "When is a headache an emergency?",
+};
+
 function concernPassages(c: Concern): Passage[] {
   const href = `/concerns/${c.slug}`;
   const keywords = [
@@ -415,13 +500,8 @@ function concernPassages(c: Concern): Passage[] {
             kind: "concern" as const,
             title: `${c.title} — start with a doctor`,
             href,
-            // Not "Should I see a doctor first?", which is what this shipped
-            // as. That is brain-fog FAQ 2 almost word for word — "Should I see
-            // my doctor first?" — and this passage took it, so a visitor
-            // worried about cognitive change got a page about head injuries.
-            // A synthetic question is still a question in the index, weighted
-            // x3 like any other, and it has to be about *this* passage.
-            question: "Is it too soon to come in after a head injury?",
+            // Per concern, not shared — see MEDICAL_FIRST_QUESTIONS.
+            question: MEDICAL_FIRST_QUESTIONS[c.slug],
             keywords: [
               ...keywords,
               "recent", "urgent", "emergency", "doctor", "first", "later",

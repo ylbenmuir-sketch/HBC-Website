@@ -1,22 +1,32 @@
 /**
- * All 9 concerns from what-we-help-with.html, data-driven.
- * The anxiety entry is seeded verbatim from concern-anxiety.html; the other
+ * All 11 concerns, data-driven. The first eight are from what-we-help-with.html:
+ * the anxiety entry is seeded verbatim from concern-anxiety.html; the other
  * seven reuse its page structure with copy drawn from the overview mockups
  * (kept to the same no-hype standard — no medical claims, ever).
  *
  * Concussion is the ninth and the first that did not come from those mockups:
  * its copy is approved verbatim and it opens with a block telling a recently
  * injured visitor to see a doctor instead. See `medicalFirst`.
+ *
+ * Performance and migraines are the tenth and eleventh (Sept 2026, from Ben's
+ * brief). Performance is written as a decline story on purpose — see the note
+ * on its entry. Migraines is the second concern to carry `medicalFirst`, and
+ * the strictest page on the site: it describes who comes in and never what
+ * happens to them. Its rules are on the entry.
  */
 
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
+  BRAIN_MAP_PRICE,
   COURSE_VARIES_NOTE,
   FIRST_VISIT_DURATION,
   FULL_COURSE,
   MAINTENANCE,
   PHYSICIAN_REFERRALS,
+  RISK_REVERSAL,
+  SESSION_LENGTH,
+  SESSION_PRICE,
 } from "./site-config";
 
 export type ConcernFaq = {
@@ -71,17 +81,26 @@ export type Concern = {
   /**
    * The block that has to be read before anything else on the page.
    *
-   * Only /concerns/concussion carries one, and it is the reason this field
-   * exists rather than a `note-sage` panel further down: some visitors arrive
-   * days after a head injury, and for them the correct answer is a doctor, not
+   * /concerns/concussion carries one, and it is the reason this field exists
+   * rather than a `note-sage` panel further down: some visitors arrive days
+   * after a head injury, and for them the correct answer is a doctor, not
    * us. So the block sits between the lead and the page's own CTAs — nothing
    * on the page invites a call to us above it — and it is styled *up*, not
    * down. `.medical-first` in globals.css is deliberately larger and darker
    * than body copy; a footnote treatment here would be the failure.
    *
-   * The three parts are one continuous piece of approved copy, split only so
-   * the symptom sentences between them can be set as a list. Do not soften,
-   * reorder, or move any of it below the fold.
+   * /concerns/migraines carries the second (Sept 2026): a sudden severe or
+   * worst-ever headache is a medical emergency, and medical care leads that
+   * page before anything about LENS — the same ordering, for the same
+   * visitor-arriving-too-soon reason. Its `urgent` copy is mirrored by the
+   * assistant's `headache` stop in lib/chat/safety.ts, the way concussion's
+   * is mirrored by `head-injury`; edit one and the other moves in the same
+   * commit.
+   *
+   * On concussion the three parts are one continuous piece of approved copy,
+   * split only so the symptom sentences between them can be set as a list.
+   * Do not soften, reorder, or move any of it below the fold — on either
+   * page.
    */
   medicalFirst?: {
     /** "If your head injury was recent, start with a doctor…" */
@@ -116,6 +135,15 @@ export type Concern = {
   image: { src: string; position: string } | null;
   plateSpec?: string;
   /**
+   * A prominent cross-link rendered inside the medical-first body layout,
+   * after `howHelp.p1` — for when another page is the honest first read.
+   * Only /concerns/migraines carries one, pointing at /concerns/concussion:
+   * post-concussion headache is that page's strongest and most honest angle,
+   * and the concussion page (with its physician-referral relationship) is
+   * the real credibility behind it. Ignored by the non-medical layout.
+   */
+  bodyLink?: { label: string; href: string };
+  /**
    * Slugs of 3 concerns to cross-link at the foot of this page.
    *
    * Concern pages linked to nothing but the hub before this, which left
@@ -127,11 +155,19 @@ export type Concern = {
    */
   related: string[];
   /**
-   * <title> for the page, always "Neurofeedback for X". Required, not
+   * <title> for the page, "Neurofeedback for X". Required, not
    * optional: the display `title` above is the on-page headline and reads as
    * a symptom ("Sleep difficulties"), which targets nothing — "neurofeedback"
    * is the qualifying word people actually search with. Required so a new
    * concern can't ship without one.
+   *
+   * **One standing exception — migraines — and it stays one.** Its title is
+   * "Migraines & LENS Neurofeedback": a conjunction, not the pattern's "for".
+   * "Neurofeedback *for* Migraines" is a treatment claim about a neurological
+   * condition, made in the one field that has no room to hedge, and that page
+   * may not make it at any volume. Approved by Ben (Sept 2026). Do not
+   * "restore" the pattern there, and do not treat the exception as license
+   * anywhere else — every other concern keeps "Neurofeedback for X".
    *
    * Keep the "support" framing in metaDescription rather than here; a title
    * has no room to hedge, and the description is where the wellness
@@ -637,6 +673,97 @@ export const concerns: Concern[] = [
   },
   {
     /*
+     * The tenth concern (Sept 2026), from Ben's brief, and the redirect
+     * destination for the legacy /peakperformance/ and /self-development/
+     * URLs. Three decisions worth recording:
+     *
+     * 1. **It is a decline story, not an optimization story.** Ben's call.
+     *    The audience is executives, founders, and professional musicians —
+     *    not people in crisis, people who used to operate at a level they
+     *    can't reach now. Nothing on this page promises enhancement above
+     *    baseline; "peak performance" is the query, not the promise, and it
+     *    appears only in the metaDescription. The recognize list is Ben's own
+     *    recognition language, near-verbatim.
+     * 2. **The slug is `performance`, not `peak-performance`.** The
+     *    concussion-recovery reasoning from QUERY-TO-PAGE-MAP applies: a URL
+     *    that names an outcome asserts it, and a slug is not a place to put
+     *    a caveat. Approved by Ben.
+     * 3. **The medical rule-out is on the page twice** — a clause in the
+     *    limits note and FAQ 1 — because the same picture (fog, recall,
+     *    stress tolerance) can come from causes a doctor can test for, and
+     *    that is what every concern page owes its reader.
+     */
+    slug: "performance",
+    shortTitle: "Performance",
+    // Not the H1 — the approved H1 is a sentence, like concussion's. This is
+    // what breadcrumbs, cross-links and the assistant's passage titles say.
+    title: "Performance & mental sharpness",
+    titleLead: "You used to be able to handle ",
+    titleAccent: "more than this.",
+    who: "Executives, founders & musicians",
+    heroSub:
+      "For people who used to operate at a level they can't reach now — not a crisis, just a gap you can feel between how you worked then and how the same week goes today.",
+    overview: {
+      recognize:
+        "Brain fog where there didn't use to be any. Word recall that's become a struggle. Stress that used to be easier to handle, creative flow that used to come, and work that no longer gets finished by the deadline.",
+      approach:
+        "Nothing about a session asks you to perform — no drills, no scores, nothing to practice between visits. We track the specifics you actually name, week to week: recall, deadlines, how a heavy day lands.",
+    },
+    goalsHeading:
+      "The changes people operating below their own baseline most often name.",
+    faqHeading: "Asked by almost everyone who used to handle more.",
+    recognize: [
+      "“I used to be able to handle a lot” — and it was true",
+      "Brain fog, and word recall that's become a struggle",
+      "Handling stress used to be easier than it is now",
+      "Creative flow that used to come on its own",
+      "Struggling to finish things by the deadline",
+    ],
+    howHelp: {
+      p1: "Operating below your own baseline is its own kind of tiring — you know exactly where the level is, because you used to work at it. LENS sessions ask nothing of you: small sensors, a very low-energy feedback signal, nothing to perform and nothing to practice between visits. A strange fit for high performers, and a deliberate one.",
+      p2: `Your first visit is ${BRAIN_MAP_NAME} — ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. It's a recording, not a test you can fail. After that, every visit tracks the specifics you named: recall, deadlines, stress recovery, how the week actually went.`,
+      note: "LENS is a wellness service, not a treatment for any condition — and a marked change in memory or thinking is worth ruling out with your doctor, because the same picture can come from causes testing finds. LENS works alongside — never in place of — that care. Individual experiences vary.",
+    },
+    goals: [
+      "Finishing by the deadline, without the all-nighter.",
+      "A heavy week that lands like a heavy week used to.",
+      "Walking off stage — or out of the boardroom — knowing it went the way it used to.",
+    ],
+    faqs: [
+      {
+        // The medical rule-out, asked the way this audience asks it. Not
+        // "Could this be something medical?" — the guide's medical-first
+        // passage asks nearly those words, and DUPLICATE_QUESTIONS caught
+        // the collision at authoring time (0.67). The answer refuses
+        // nothing — it says "worth ruling out" in the first sentence, which
+        // is the honest version and the one the page owes.
+        q: "Should I rule anything out first?",
+        a: "Worth ruling out, genuinely. The picture on this page — fog, recall, stress tolerance — can come from causes a doctor can test for, and if the change has been fast or marked, start there. LENS is a wellness service and never replaces that evaluation; plenty of people pursue both at once.",
+      },
+      {
+        q: "I don't have a diagnosis. Is this for me?",
+        a: "Yes. No diagnosis is needed here, and most of the people this page describes don't have one — they have a gap between how they used to operate and how things go now. The first visit starts from your specifics, not from a label.",
+      },
+      {
+        // The busy-executive question — time first, and the prices ride
+        // along. Worded away from the sitewide "What does it cost?" and "How
+        // long is a session?" so DUPLICATE_QUESTIONS_ALLOWED stays empty of
+        // this page. Every figure interpolates.
+        q: "How much time does this actually take?",
+        a: `Regular sessions are ${SESSION_LENGTH.value}, brief enough to keep inside a working day, and your first visit — ${BRAIN_MAP_NAME}, ${BRAIN_MAP_PRICE} — runs ${FIRST_VISIT_DURATION}. A full course is ${FULL_COURSE.value.sessions} sessions at ${SESSION_PRICE} each, then maintenance: ${MAINTENANCE.value}. ${COURSE_VARIES_NOTE}`,
+      },
+    ],
+    image: { src: "/images/ear-clip-adult.jpg", position: "center 40%" },
+    related: ["brain-fog", "stress-resilience", "focus-adhd"],
+    metaTitle: "Neurofeedback for High Performers",
+    // "peak performance" lives here, in a decline frame — the query is
+    // targeted without the title or the page promising the peak. 159 chars.
+    metaDescription:
+      "LENS neurofeedback support for executives, founders, and musicians searching for peak performance — people who used to operate at a level they can't reach now.",
+    guideHeading: "Why handling it got harder.",
+  },
+  {
+    /*
      * The ninth concern, and the only one whose copy was approved as a block
      * rather than assembled from the mockups. Everything below is verbatim.
      *
@@ -784,6 +911,130 @@ export const concerns: Concern[] = [
       // page of all pages.
       "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. If your injury is recent, see a doctor first.",
     guideHeading: "Why these problems travel together.",
+  },
+  {
+    /*
+     * The eleventh concern (Sept 2026), and the highest-risk page on the
+     * site: migraine is a neurological condition. The rules this entry is
+     * written under, from Ben's brief — read them before editing a word:
+     *
+     * - **Never** say LENS helps, relieves, reduces, or treats migraines.
+     *   Not hedged, not "many clients report", not "some find relief". No
+     *   outcome claim in any form, anywhere on this page. That is why there
+     *   is no "many clients tell us…" sentence here when every non-medical
+     *   concern carries one.
+     * - The page describes WHO COMES IN, not what happens to them. The
+     *   recognize list is a list of arrivals, not symptoms we address.
+     * - Medical care leads the page, before anything about LENS — the
+     *   concussion ordering, via `medicalFirst`. The `urgent` copy is
+     *   mirrored by the `headache` stop in lib/chat/safety.ts; the check and
+     *   this entry ship together and move together.
+     * - The `gap` paragraph is Ben's approved framing, near-verbatim. The
+     *   free call is where "what would LENS do for mine?" gets answered —
+     *   by a practitioner, not by this page and not by the assistant.
+     * - No goal cards, concussion's reason exactly: a "common goal" quote on
+     *   this page would be an outcome claim about a neurological condition.
+     *   Empty rather than invented; the band drops.
+     * - Post-concussion headache is the strongest and most honest angle, and
+     *   the concussion page carries the credibility (the physician-referral
+     *   relationship), so `bodyLink` sends readers there prominently.
+     * - No photo: `image: null`, so nothing sits between the H1 and the
+     *   medical-first block.
+     */
+    slug: "migraines",
+    shortTitle: "Migraines",
+    title: "Migraines",
+    // The approved H1, a sentence like concussion's; breadcrumbs and
+    // cross-links say "Migraines".
+    titleLead: "After you've tried ",
+    titleAccent: "a lot of other things.",
+    who: "Most often adults",
+    // The relationship is the eyebrow, the way "After a concussion" made
+    // *when* the eyebrow: medical care is the frame this page sits inside.
+    heroEyebrow: "Alongside your medical care",
+    heroSub:
+      "People come to us for migraines after they've tried a lot of other things — often already under a doctor's care, often with headaches that started after a concussion. We don't treat migraines. This page is about who comes in, not about what would happen for you.",
+    medicalFirst: {
+      // Mirrored by HEADACHE_EMERGENCY_REPLY in lib/chat/safety.ts (which
+      // adds nothing — unlike concussion's, this block already carries the
+      // 911 line, because the emergency it names can't wait for a phone).
+      urgent:
+        "A sudden, severe headache — or the worst headache of your life — is a medical emergency: call 911 or get to an emergency room now. The same goes for a headache with anything new alongside it — confusion, trouble seeing or speaking, weakness or numbness, a stiff neck with a fever. Nothing here comes before that, and we'd tell you the same thing on the phone.",
+      laterLead:
+        "This page is for the long haul. Migraines a doctor already knows about, that have been part of your life for a while:",
+      // Ben's approved framing — build the page around this, don't soften it.
+      gap:
+        "People come to us for migraines after they've tried a lot of other things. Often they're already under a doctor's care — care that continues exactly as it is — and often the headaches started after a concussion. We don't treat migraines, and we won't tell you what LENS would do for yours. That's what the free call is for.",
+    },
+    overview: {
+      // Who comes in — arrivals, not symptoms. This is the hub entry. It
+      // joins the recognize list in the indexed `signs` passage, so it says
+      // "date to" for the reason the list does — see the note there.
+      recognize:
+        "Headaches that date to a concussion and won't fully leave. Migraines that have outlasted years of good-faith attempts. A doctor or neurologist already involved — and staying involved.",
+      approach: `We don't treat migraines, and we won't tell you what LENS would do for yours — that's what the free call is for. ${PHYSICIAN_REFERRALS} When the headaches date to a head injury, our concussion page describes that territory properly.`,
+    },
+    recognize: [
+      // "date to", not "started after" — the heroSub already says "started
+      // after a concussion", and this list joins it in the same indexed
+      // passage (`signs`). Doubling "started" there put that passage into
+      // the four for "I start things and never finish them", a focus-adhd
+      // routing line with nothing migraine about it. Same reason this line
+      // avoids a second "never".
+      "Headaches that date to a concussion and won't fully leave",
+      "Migraines that have outlasted years of good-faith attempts",
+      "A doctor or neurologist already involved — and staying involved",
+      "A list, somewhere, of everything that's already been tried",
+    ],
+    howHelp: {
+      // "concussion" appears in exactly three passages of this concern —
+      // signs, medical-first, and FAQ 2 — and deliberately not here or in
+      // `approach`, which say "head injury" instead. Every extra passage
+      // carrying the word lowers its IDF for the concussion page's own
+      // routing; the sweep that shipped this entry measured the cost at
+      // three and it is not free to grow.
+      p1: "For many of the people this page describes, the story starts with a head injury — medically handled, and headaches that arrived with it and stayed. That picture sits close to the rest of our work: attention, sleep, mood, and mental fatigue clustering around a nervous system struggling to regulate. The headaches themselves stay your doctor's territory.",
+      p2: `The first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. It's a recording, not a test — and not a medical assessment of your headaches.`,
+      // The one limitation sentence, concussion's register: worded to say
+      // less than the other concerns' notes, not more.
+      note: "LENS is a wellness service. It doesn't treat migraines or headaches of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
+    },
+    goals: [],
+    faqs: [
+      {
+        q: "Do I stop seeing my doctor or neurologist?",
+        a: "No — and we'd say so on the phone. Your medical care continues exactly as it is. LENS is a wellness service that runs alongside it; we're glad to coordinate with providers you already trust, and we never advise on medication.",
+      },
+      {
+        // "read the concussion one first", not "starting with" — the
+        // question already carries "started" at x3 weight (it has to, for
+        // routing), and one more `start` in the answer was enough to lift
+        // this passage into the four for the bare query "start", which
+        // belongs to focus-adhd and the homepage steps.
+        q: "My headaches started after a concussion. Which page should I read?",
+        a: "Both — read the concussion one first. Post-concussion symptoms are the territory we know best, and that page says what this one can't: who comes in after a head injury, and what the first visit looks like weeks or months out.",
+      },
+      {
+        // The refusal made into content, in Ben's words. This is the passage
+        // the assistant needs when someone asks the question directly — the
+        // answer is that the page won't answer it, and why.
+        q: "What would LENS do for my migraines?",
+        a: `We won't tell you — not to be cagey, but because we don't predict outcomes and we don't treat migraines. That's exactly what the free call is for: a practitioner talks it through with you honestly. ${RISK_REVERSAL}`,
+      },
+    ],
+    faqHeading: "Asked by almost everyone who calls about migraines.",
+    image: null,
+    bodyLink: { label: "Read the concussion page", href: "/concerns/concussion" },
+    related: ["concussion", "sleep", "stress-resilience"],
+    // The one standing exception to "Neurofeedback for X" — see the note on
+    // the type. A conjunction, because "for migraines" is a treatment claim
+    // and a title has no room to hedge. Approved by Ben, Sept 2026.
+    metaTitle: "Migraines & LENS Neurofeedback",
+    // 160 chars. The boundary sentence leads so it survives truncation —
+    // this page of all pages, concussion's reasoning.
+    metaDescription:
+      "We don't treat migraines. People come to us after they've tried a lot of other things — often under a doctor's care, often after a concussion. Middle Tennessee.",
+    guideHeading: "Why the same systems keep coming up.",
   },
 ];
 

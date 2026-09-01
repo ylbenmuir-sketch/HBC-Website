@@ -156,6 +156,17 @@ export default async function ConcernPage({
                 <h2>Why this looks like the rest of our work.</h2>
               </div>
               <p className="rv">{concern.howHelp.p1}</p>
+              {concern.bodyLink && (
+                /* The honest first read, made prominent — see `bodyLink` in
+                   lib/concerns.ts. A real button rather than a text link:
+                   on /concerns/migraines this is the page's strongest and
+                   most credible content, and it lives somewhere else. */
+                <div className="rv" style={{ marginTop: 22 }}>
+                  <Btn href={concern.bodyLink.href} variant="ghost" arrow>
+                    {concern.bodyLink.label}
+                  </Btn>
+                </div>
+              )}
               <div className="note-sage rv" style={{ marginTop: 30 }}>
                 {concern.howHelp.note}
               </div>

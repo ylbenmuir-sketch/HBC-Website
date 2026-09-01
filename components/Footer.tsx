@@ -17,6 +17,8 @@ const groups = [
       { label: "Stress & resilience", href: "/concerns/stress-resilience" },
       { label: "Trauma-related stress", href: "/concerns/trauma" },
       { label: "Concussion & TBI", href: "/concerns/concussion" },
+      { label: "Performance", href: "/concerns/performance" },
+      { label: "Migraines", href: "/concerns/migraines" },
       { label: "All concerns", href: "/what-we-help-with" },
     ],
   },
