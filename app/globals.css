@@ -253,8 +253,33 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
 .nav-tel { font-size: 14px; color: var(--slate); text-decoration: none; flex: none; display: inline-flex; align-items: center; min-height: 24px; padding: 4px 0; }
 .nav-tel b { color: var(--navy); }
 /* mega */
-.mega { position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(8px); background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(21, 34, 48, 0.35); padding: 34px 40px; display: none; gap: 56px; min-width: 640px; }
+/* --mega-gap is the visible space between the header and the panel, and
+   --mega-edge the panel's border. Both are named because the hover bridge
+   below has to reproduce them exactly; a literal in one place and not the
+   other is how the gap came back. */
+.mega { --mega-gap: 8px; --mega-edge: 1px; position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(var(--mega-gap)); background: #fff; border: var(--mega-edge) solid var(--line); border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(21, 34, 48, 0.35); padding: 34px 40px; display: none; gap: 56px; min-width: 640px; }
+/* The hover region is the wrapper, and .mega is inside it, so pointing at the
+   panel does keep the wrapper :hover — but the panel is translated
+   --mega-gap below the wrapper's box, and that band is in neither. Walking
+   the pointer straight down from the trigger, elementFromPoint returned the
+   <section> underneath for every pixel of it, so the menu closed at the
+   wrapper's bottom edge and not one link was reachable by hover.
+
+   This strip is a transparent part of .mega that spans exactly that band, so
+   the trip down never leaves the hover region. Offsets on an absolutely
+   positioned child resolve against .mega's *padding* box, which is inside the
+   border, so it has to clear --mega-edge as well as --mega-gap — an 8px strip
+   leaves the top 1px of the gap uncovered, which is precisely where the menu
+   used to close. It paints nothing and takes no space: the nav is pixel-for-
+   pixel what it was. */
+.mega::before { content: ""; position: absolute; left: 0; right: 0; top: calc(-1 * (var(--mega-gap) + var(--mega-edge))); height: calc(var(--mega-gap) + var(--mega-edge)); }
 .nav-links > div:hover .mega, .nav-links > div:focus-within .mega { display: flex; }
+/* Escape dismisses the panel while the trigger keeps focus. Without it the
+   :focus-within rule above would re-open the panel on the very element
+   Escape hands focus back to. Header.tsx clears the attribute on mouseleave
+   and on focus leaving the wrapper, so the next hover or Tab opens it again.
+   Same specificity as the rule above, so it wins on source order. */
+.nav-links > div[data-mega-dismissed] .mega { display: none; }
 .mega h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
 .mega a { display: block; color: var(--ink); text-decoration: none; font-size: 15px; padding: 7px 0; }
 .mega a:hover { color: var(--sage-deep); }

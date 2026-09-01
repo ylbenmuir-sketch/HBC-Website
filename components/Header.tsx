@@ -47,10 +47,20 @@ export default function Header() {
   // returns on the first scroll up. Never hides while the drawer is open or
   // focus is inside the header.
   const [hidden, setHidden] = useState(false);
+  // Escape has to beat the CSS. The panel opens on :hover and :focus-within,
+  // which means the trigger Escape returns focus to is itself enough to hold
+  // it open — so dismissing needs a state the CSS can see, not just a blur.
+  // Cleared the moment the pointer leaves the wrapper or focus moves out of
+  // it, so the next hover or Tab opens the panel normally.
+  const [megaDismissed, setMegaDismissed] = useState(false);
   const lastY = useRef(0);
   const headerRef = useRef<HTMLElement>(null);
+  const helpTriggerRef = useRef<HTMLAnchorElement>(null);
 
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setMegaDismissed(false);
+  }, [pathname]);
   useEffect(() => {
     // The scroll lock goes on <html>, never on <body>. An overflow that isn't
     // `visible` makes an element a scroll container, and this header is a
@@ -102,8 +112,26 @@ export default function Header() {
           <LogoName />
         </ChromeLink>
         <nav className="nav-links" aria-label="Primary">
-          <div>
+          <div
+            data-mega-dismissed={megaDismissed ? "" : undefined}
+            onKeyDown={(e) => {
+              if (e.key !== "Escape") return;
+              setMegaDismissed(true);
+              // Focus first, while the panel is still displayed: hiding it
+              // out from under a focused link would drop focus to <body>.
+              helpTriggerRef.current?.focus();
+            }}
+            onMouseLeave={() => setMegaDismissed(false)}
+            onBlur={(e) => {
+              // focusout bubbles; relatedTarget is where focus went. Escape's
+              // own move to the trigger stays inside, so it must not clear.
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                setMegaDismissed(false);
+              }
+            }}
+          >
             <ChromeLink
+              ref={helpTriggerRef}
               className={`top${isHelpActive(pathname) ? " active" : ""}`}
               href="/what-we-help-with"
             >
