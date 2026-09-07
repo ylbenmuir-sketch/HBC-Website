@@ -81,6 +81,11 @@ export default function ContactForm() {
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
   const [note, setNote] = useState("");
+  // The honeypot. Real visitors never see this field and so always submit it
+  // empty; scripted spam fills every input it finds. The value is passed
+  // straight through to the platform, which classifies it — nothing on the
+  // site rejects a submission because of it.
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
@@ -115,6 +120,7 @@ export default function ContactForm() {
           preferred_center: preferredCenter,
           best_time: bestTime,
           note: note.trim(),
+          website,
           source_page: from || pathname,
         }),
       });
@@ -311,6 +317,36 @@ export default function ContactForm() {
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
+
+      {/*
+        Hidden from real users three ways, because one is not reliable:
+        off-screen (not display:none, which some bots skip), out of the tab
+        order, and hidden from assistive tech. Left in the DOM and left
+        submitting, because a honeypot only works if a bot can find it.
+      */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+      </div>
 
       {status === "error" && (
         <p
