@@ -665,7 +665,7 @@ details.faq .a a { color: var(--sage-deep); }
 /* The two review-listing links on /is-lens-safe — a sentence of links, in
    the same treatment, at body size. */
 .review-out { font-size: 17px; line-height: 2; }
-.review-out a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
+.review-out a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .review-out a:hover { border-color: var(--gold); }
 
 /* Inline links inside `.article` prose, for the one page that needs them.
