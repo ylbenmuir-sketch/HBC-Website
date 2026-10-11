@@ -358,6 +358,26 @@ const CONCERN_ALIASES: Record<string, string[]> = {
     // as an unknown word outweighed the one known term beside it.
     "chronic",
   ],
+  /*
+   * Depression (Oct 2026). The visitor's words for the page's words — the
+   * page says "low mood", "flat", "stuck", "motivation"; people type
+   * "depressed", "unmotivated", "sad". Nothing here weakens the crisis
+   * check: lib/chat/safety.ts runs on the raw message before any passage is
+   * scored, and these are routing keys for the visitor who is *past* the
+   * acute window — "do you help with depression?" — not for the one in it.
+   *
+   * NOT "hopeless", "worthless" or "tired of living": those are crisis
+   * vocabulary, and a routing key that makes a concern passage the best
+   * answer to a sentence the safety check happens not to catch is the one
+   * widening this list must never make. NOT "therapy"/"therapist" either —
+   * both belong to faq:10 and faq:11, and the page's own prose already
+   * carries them.
+   */
+  depression: [
+    "depression", "depressed", "mood", "moods", "low", "flat", "motivation",
+    "motivated", "unmotivated", "stuck", "stuckness", "sad", "sadness",
+    "heavy", "heavier", "antidepressant", "antidepressants",
+  ],
   // Not "safe": on this page the word belongs to "the past keeps the present
   // from feeling safe", and it would pull "Is LENS safe?" — a §7 accuracy
   // question with a plain answer on /faq — into trauma copy.
@@ -472,6 +492,11 @@ const LOCATION_KEYWORDS = [
 const MEDICAL_FIRST_QUESTIONS: Record<string, string> = {
   concussion: "Is it too soon to come in after a head injury?",
   migraines: "When is a headache an emergency?",
+  // The 988 block. A crisis message never reaches retrieval (safety.ts
+  // stops the turn first), so this question is for the visitor asking
+  // *about* the line — and if a phrasing the check does not catch ever
+  // lands here, the passage it retrieves is the one that says 988.
+  depression: "Where do I turn if I'm in crisis right now?",
 };
 
 function concernPassages(c: Concern): Passage[] {

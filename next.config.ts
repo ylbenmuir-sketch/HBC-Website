@@ -113,9 +113,11 @@ const nextConfig: NextConfig = {
       ...to(["/sleepproblems", "/sleep-disorder"], "/concerns/sleep"),
       ...to(["/concussion-and-tbi", "/concussion-tbi1"], "/concerns/concussion"),
       ...to(["/emotional-balance", "/emotional-balance22"], "/concerns/emotional-regulation"),
-      // Approved, Ben, Aug 2026 — the hub, not a concern page: a destination
-      // is read as an answer, and no concern page offers depression care.
-      ...to(["/depression", "/depression1"], "/what-we-help-with"),
+      // The hub until Oct 2026 (approved, Ben, Aug 2026: "a destination is
+      // read as an answer, and no concern page offers depression care").
+      // Ben decided to build /concerns/depression in Oct 2026, so the answer
+      // exists and the legacy URL points at it. Same reasoning, new fact.
+      ...to(["/depression", "/depression1"], "/concerns/depression"),
       // Approved, Ben, Sept 2026 — direct, no chain through the other slug.
       ...to(["/peakperformance", "/self-development"], "/concerns/performance"),
       ...to(["/migrainesandpain", "/migraines-and-fibromyalgia"], "/concerns/migraines"),

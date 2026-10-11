@@ -11,8 +11,16 @@
  * Performance and migraines are the tenth and eleventh (Sept 2026, from Ben's
  * brief). Performance is written as a decline story on purpose — see the note
  * on its entry. Migraines is the second concern to carry `medicalFirst`, and
- * the strictest page on the site: it describes who comes in and never what
- * happens to them. Its rules are on the entry.
+ * describes who comes in and never what happens to them. Its rules are on
+ * the entry.
+ *
+ * Depression is the twelfth (Oct 2026, Ben's decision) and the highest-risk
+ * page on the site: the third to carry `medicalFirst`, the only one whose
+ * urgent block renders *above the headline*, and the only one that names
+ * 988. It is written to low mood, lost motivation and stuckness — the
+ * language of the practice's own service description — never to a
+ * diagnosis, and never as an alternative to antidepressants or to therapy.
+ * Its rules are on the entry; read them before editing a word.
  *
  * **"Neurofeedback" is in every heroSub and once more in every howHelp.p1**
  * (Oct 2026, SEO-AUDIT-3 A1). The concern bodies were written in brand
@@ -117,6 +125,16 @@ export type Concern = {
   medicalFirst?: {
     /** "If your head injury was recent, start with a doctor…" */
     urgent: string;
+    /**
+     * Render `urgent` before the eyebrow and the H1, not after the lead.
+     *
+     * Concussion and migraines put the block between the lead and the CTAs,
+     * which is "before anything inviting a call". /concerns/depression puts
+     * it before anything at all: the visitor it is written for may be in
+     * crisis, and for them the 988 line is the page. Nothing — not the
+     * headline, not the sub — reads ahead of it.
+     */
+    aboveHeadline?: boolean;
     /** "This page is for later…" — what precedes the `recognize` list. */
     laterLead: string;
     /** "That gap — medically cleared, functionally not yourself…" */
@@ -146,6 +164,13 @@ export type Concern = {
   faqs: ConcernFaq[];
   image: { src: string; position: string } | null;
   plateSpec?: string;
+  /**
+   * The eyebrow over "Who we see." in the medical-first body layout. It
+   * defaults to "Physician referrals", which is true of the two pages whose
+   * `overview.approach` leads with the referral line; depression's leads
+   * with the care that continues, so it names that instead.
+   */
+  whoEyebrow?: string;
   /**
    * A prominent cross-link rendered inside the medical-first body layout,
    * after `howHelp.p1` — for when another page is the honest first read.
@@ -1076,6 +1101,118 @@ export const concerns: Concern[] = [
       "We don't treat migraines. People come to us after they've tried a lot of other things — often under a doctor's care, often after a concussion. Middle Tennessee.",
     guideHeading: "Why the same systems keep coming up.",
     dateModified: "2026-10-10",
+  },
+  {
+    /*
+     * The twelfth concern (Oct 2026) and the highest-risk page on the site:
+     * depression is a psychiatric diagnosis, and the visitor this page
+     * reaches may be in crisis. The rules it is written under, from Ben's
+     * brief — read them before editing a word:
+     *
+     * - **Urgent routing comes before anything else.** `aboveHeadline`
+     *   renders the 988 block ahead of the eyebrow and the H1, styled up
+     *   (`.medical-first`), never as a footnote. It names 988, the text
+     *   line and 911 plainly. The assistant's crisis stop (lib/chat/
+     *   safety.ts) carries the same numbers and fires before retrieval, so
+     *   no passage of this page is ever the answer to a crisis message.
+     * - **"Alongside", said directly.** LENS is never an alternative to
+     *   antidepressants or to therapy. The sub, the gap paragraph, the
+     *   approach, the note and FAQ 1 all say it runs alongside that care,
+     *   and that the care continues exactly as it is.
+     * - **No outcome language at all.** Not hedged, not "many clients
+     *   report". Where the non-medical concerns describe what clients
+     *   report, this page describes who comes in and what a first visit is.
+     *   No goal cards; the band drops. The `recognize` list is a list of
+     *   arrivals.
+     * - **The hero speaks to low mood, lost motivation and stuckness** —
+     *   the language of the practice's own service description — not to
+     *   clinical depression. The word "depression" appears where it has to
+     *   for the page to be findable (the title, the FAQ that refuses to
+     *   answer, the note that says we don't treat it) and nowhere as a thing
+     *   we address.
+     * - Three FAQs, deliberately (HANDOFF-concern-passage-ties.md): seven
+     *   passages, the same count as migraines. Count before writing the
+     *   fourth.
+     */
+    slug: "depression",
+    shortTitle: "Depression & low mood",
+    title: "Low mood & lost motivation",
+    titleLead: "Low mood, no motivation, and a stuck feeling that ",
+    titleAccent: "won't lift.",
+    who: "Most often adults",
+    // The relationship is the eyebrow, migraines' reasoning: the care that
+    // continues is the frame this page sits inside.
+    heroEyebrow: "Alongside your care",
+    heroSub:
+      "Days that feel flat. Getting started on anything feels heavier than it should. You're functioning, and you're stuck — and you may already be seeing someone about it. LENS neurofeedback here runs alongside that care, never instead of it. This page is about who comes in, not about what would happen for you.",
+    medicalFirst: {
+      aboveHeadline: true,
+      // The same numbers as CRISIS_REPLY in lib/chat/safety.ts, in the same
+      // order: 988, the text line, 911. Edit one and the other moves in the
+      // same commit.
+      urgent:
+        "If you're thinking about ending your life, or you're worried you might hurt yourself, call or text 988 — the Suicide & Crisis Lifeline — now, any hour, or text HOME to 741741. If you or someone with you is in immediate danger, call 911. Nothing on this page comes before that, and we'd tell you the same thing on the phone.",
+      laterLead:
+        "This page is for the long stretch. Low mood a doctor or a therapist may already know about, that has been part of life for a while:",
+      // Ben's framing — build the page around this, don't soften it.
+      gap:
+        "People come to us for low mood after a lot has already been tried, and usually with care already in place — a therapist, a doctor, a prescriber — that continues exactly as it is. LENS runs alongside antidepressants and alongside therapy; it isn't an alternative to either, and we'll say so on the phone. We don't treat depression, and we won't tell you what LENS would do for yours. That's what the free call is for.",
+    },
+    overview: {
+      // Who comes in — arrivals, not symptoms. This is the hub entry, and it
+      // joins the recognize list in the indexed `signs` passage.
+      recognize:
+        "Days that feel flat more often than not. Getting started on anything — work, a call, the dishes — feels heavier than it should. Functioning, and stuck. Often already under a therapist's or a doctor's care, and staying there.",
+      approach:
+        "We don't treat depression, and LENS isn't an alternative to antidepressants or to therapy — it runs alongside the care you already have, and that care continues exactly as it is. What LENS would do for you is a question for the free call, not for this page.",
+    },
+    recognize: [
+      "Days that feel flat more often than not",
+      "Getting started on anything feels heavier than it should",
+      "Functioning on the outside, stuck on the inside",
+      "A therapist, doctor, or prescriber already involved — and staying involved",
+    ],
+    howHelp: {
+      p1: "The people this page describes tend to arrive with the same cluster the rest of our neurofeedback work turns on: sleep that doesn't restore, attention that won't hold, a mood that has gone flat, and a tiredness that isn't about hours slept. We read that as a nervous system struggling to regulate. Whether it adds up to depression is a question for your doctor or your therapist, not for us.",
+      p2: `The first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. It's a recording, not a test — and not an assessment of your mood.`,
+      // The one limitation sentence, migraines' register, with the
+      // "alongside" boundary stated in it because on this page it is the
+      // boundary.
+      note: "LENS neurofeedback is a wellness service. It doesn't treat depression or any mood disorder, it isn't an alternative to antidepressants or to therapy, and it never stands in for the care of a doctor. Individual experiences vary.",
+    },
+    goals: [],
+    faqs: [
+      {
+        q: "Do I stop my antidepressants or my therapy?",
+        a: "No — and we'd say so on the phone. Both continue exactly as they are. LENS is a wellness service that runs alongside them, not an alternative to either; we're glad to coordinate with providers you already trust, and we never advise on medication.",
+      },
+      {
+        q: "Can I come in if I haven't seen anyone about this yet?",
+        a: "Yes — no diagnosis and no referral is needed to call. If what you describe on the call sounds like something a doctor or a therapist should hear first, we'll tell you so plainly, and we'll still be here alongside that care afterward.",
+      },
+      {
+        // The refusal made into content, migraines' pattern: the answer is
+        // that the page won't answer it, and why.
+        q: "What would LENS do for my low mood?",
+        a: `We won't tell you — not to be cagey, but because we don't predict outcomes and we don't treat depression. That's exactly what the free call is for: a practitioner talks it through with you honestly. ${RISK_REVERSAL}`,
+      },
+    ],
+    faqHeading: "Asked by almost everyone who calls about low mood.",
+    image: null,
+    whoEyebrow: "The care that continues",
+    // The clusters p1 names — sleep, attention, tiredness — not the
+    // concerns nearest alphabetically.
+    related: ["sleep", "stress-resilience", "brain-fog"],
+    // The second standing exception to "Neurofeedback for X", for the
+    // migraines reason exactly: "for depression" is a treatment claim about
+    // a psychiatric condition, made in the one field that has no room to
+    // hedge. A conjunction, with the low-mood language first. 54 chars.
+    metaTitle: "Low Mood, Depression & LENS Neurofeedback in Middle TN",
+    // 156 chars. The boundary sentence leads so it survives truncation.
+    metaDescription:
+      "We don't treat depression. People come to us for low mood and lost motivation alongside the care they already have — therapy, a doctor, a prescriber. Middle TN.",
+    guideHeading: "Why flat days and poor sleep travel together.",
+    dateModified: "2026-10-11",
   },
 ];
 

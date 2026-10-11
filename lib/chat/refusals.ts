@@ -156,7 +156,7 @@ const PATTERNS: Array<{ kind: RefusalKind; pattern: RegExp }> = [
   {
     kind: "medication",
     pattern:
-      /\b(medication|medications|medicine|meds|prescription|prescribe[sd]?|prescriber|dosage|dose|adderall|ritalin|concerta|vyvanse|strattera|prozac|zoloft|lexapro|ssri|stimulant|antidepressant|wean(ing)? (him|her|them|me|off)|taper(ing)?)\b/,
+      /\b(medication|medications|medicine|meds|prescription|prescribe[sd]?|prescriber|dosage|dose|adderall|ritalin|concerta|vyvanse|strattera|prozac|zoloft|lexapro|ssris?|stimulants?|antidepressants?|wean(ing)? (him|her|them|me|off)|taper(ing)?)\b/,
   },
 
   // --- clinical interpretation ------------------------------------------
@@ -271,8 +271,11 @@ function stripBenignMedicationPhrases(text: string): string {
 
 /** The named drugs and the words for them. Not "dose"/"dosage": a question
  * about a dose is a medication question and is answered by that rule. */
+// Plurals are spelled out: "can this replace my antidepressants?" is how the
+// question arrives, and `antidepressant\b` did not reach it — found by the
+// depression page's audit lines (scripts/answer-audit.mjs).
 const MEDICATIONS =
-  "medication|medications|medicine|meds|drugs|prescription|pills?|adderall|ritalin|concerta|vyvanse|strattera|prozac|zoloft|lexapro|ssri|stimulant|antidepressant";
+  "medication|medications|medicine|meds|drugs|prescription|pills?|adderall|ritalin|concerta|vyvanse|strattera|prozac|zoloft|lexapro|ssris?|stimulants?|antidepressants?";
 
 /**
  * Someone in particular — her, her child, herself.

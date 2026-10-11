@@ -83,7 +83,7 @@ export default async function ConcernPage({
       <Breadcrumbs trail={trail} />
 
       {medical ? (
-        /* The medical-first hero (only /concerns/concussion today).
+        /* The medical-first hero (concussion, migraines, depression).
 
            One column, no photo, and the CTAs *below* the block rather than
            above it. That order is the whole point: a visitor who hit their
@@ -93,6 +93,15 @@ export default async function ConcernPage({
            a warning styled like a footnote is read like one. */
         <section className="page-hero">
           <div className="wrap" style={{ maxWidth: 860 }}>
+            {/* /concerns/depression: the block renders before the eyebrow
+                and the H1, because for the visitor it is written for the
+                988 line is the page. See `aboveHeadline` in lib/concerns.ts. */}
+            {medical.aboveHeadline && (
+              <div className="medical-first rv" style={{ marginTop: 0, marginBottom: 40 }}>
+                <p>{medical.urgent}</p>
+              </div>
+            )}
+
             <div className="rv">
               <div className="eyebrow">{concern.heroEyebrow}</div>
               <h1 style={{ maxWidth: "none" }}>
@@ -102,9 +111,11 @@ export default async function ConcernPage({
               <p className="sub">{concern.heroSub}</p>
             </div>
 
-            <div className="medical-first rv">
-              <p>{medical.urgent}</p>
-            </div>
+            {!medical.aboveHeadline && (
+              <div className="medical-first rv">
+                <p>{medical.urgent}</p>
+              </div>
+            )}
 
             <div className="medical-later rv">
               <p>{medical.laterLead}</p>
@@ -197,7 +208,9 @@ export default async function ConcernPage({
           <section className="sec sec-ivory2">
             <div className="wrap duo">
               <div className="rv">
-                <div className="eyebrow">Physician referrals</div>
+                <div className="eyebrow">
+                  {concern.whoEyebrow ?? "Physician referrals"}
+                </div>
                 <h2 style={{ margin: "22px 0 16px" }}>Who we see.</h2>
                 <p>{concern.overview.approach}</p>
               </div>

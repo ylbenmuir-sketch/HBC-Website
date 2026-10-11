@@ -19,6 +19,7 @@ const groups = [
       { label: "Concussion & TBI", href: "/concerns/concussion" },
       { label: "Performance", href: "/concerns/performance" },
       { label: "Migraines", href: "/concerns/migraines" },
+      { label: "Depression & low mood", href: "/concerns/depression" },
       { label: "All concerns", href: "/what-we-help-with" },
     ],
   },

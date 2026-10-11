@@ -50,9 +50,8 @@ const adultConcerns = [
     points: ["Used to handle a lot more", "Deadlines and recall slipping"],
     href: "/concerns/performance",
   },
-  // The two medical-event entries close the grid, which is nine cards now —
-  // three full rows in three columns, so concussion's `fill` came off with
-  // the count.
+  // The two medical-event entries, then the mood card. Nine cards filled
+  // three rows exactly; the tenth takes `fill` so the last row closes.
   {
     title: "Post-concussion symptoms",
     points: ["Cleared, and still not yourself", "Fog that lifts and returns"],
@@ -62,6 +61,14 @@ const adultConcerns = [
     title: "Migraines",
     points: ["Under a doctor's care, and staying there", "A long list already tried"],
     href: "/concerns/migraines",
+  },
+  // The tenth card (Oct 2026): a fourth row with one card in it, so it
+  // spans the row rather than leaving two empty cells beside it.
+  {
+    title: "Low mood & lost motivation",
+    points: ["Days that feel flat more often than not", "Functioning, and stuck"],
+    href: "/concerns/depression",
+    fill: "always" as const,
   },
 ];
 
