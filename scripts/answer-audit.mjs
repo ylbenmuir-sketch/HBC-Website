@@ -730,7 +730,9 @@ const PAGE_ROUTING = [
   // about head injuries.
   ["What do you help with?", "faq:9"],
   ["Should I see my doctor first?", "concern:brain-fog:faq:2"],
-  ["What is the Brain Map?", "page:how-lens-works:map"],
+  // /brain-map owns the term now (Oct 2026); the four-site passage moved
+  // there with it.
+  ["What is the Brain Map?", "page:brain-map:"],
   ["How does LENS work?", "page:how-lens-works:"],
   ["What is LENS neurofeedback?", "faq:1"],
   ["How many sessions will I need?", "faq:7"],

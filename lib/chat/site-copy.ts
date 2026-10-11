@@ -309,6 +309,120 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         ],
       },
       {
+        // The third paragraph of the old `:idea` passage, now its own section
+        // and its own passage. Without it the rewrite would quietly take the
+        // site's only statement of what clients report out of the assistant's
+        // hands — and "what actually changes" is a question it gets.
+        id: "page:how-lens-works:expect",
+        title: "What to expect",
+        question: "What do clients notice?",
+        keywords: [
+          "expect",
+          "notice",
+          "report",
+          // Both forms: the stemmer takes "change" to `change` and "changes"
+          // to `chang`, so "what actually changes" reached this passage at
+          // coverage 1.0 and was rejected by the subject gate for not being
+          // filed under a word of itself. Same trap as meltdown/melts down.
+          "change",
+          "changes",
+          "difference",
+          "result",
+          "steadier",
+          "clearly",
+          "series",
+        ],
+        text: "What to expect. Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
+        mirror:
+          "What to expect Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
+      },
+    ],
+  },
+  {
+    /**
+     * The two lists /how-lens-works sets side by side, read from lib/lens.ts
+     * since /brain-map carries the "is not" half too. The passage still
+     * offers /how-lens-works, where both halves are published together.
+     */
+    sourceFile: "lib/lens.ts",
+    href: "/how-lens-works",
+    passages: [
+      {
+        id: "page:how-lens-works:is-is-not",
+        title: "What LENS is — and what it isn’t",
+        question: "Is LENS a medical treatment?",
+        keywords: [
+          "medical",
+          "treatment",
+          "cure",
+          "diagnosis",
+          "therapy",
+          "stimulation",
+          "guarantee",
+          "replace",
+          "medication",
+          "doctor",
+        ],
+        text: "What LENS is — and what it isn’t. LENS is: Gentle and noninvasive — nothing enters the body. Passive — no concentrating or performing. Brief — sessions fit real, busy lives. Personalized from your check-ins, every visit. A wellness service alongside the care you trust. LENS is not: A medical treatment, diagnosis, or cure. Electrical stimulation — it reads far more than it sends. A screen-based training program to master. A guaranteed outcome — every brain responds differently. A replacement for your doctor, therapist, or school supports.",
+        mirror: [
+          "Gentle and noninvasive — nothing enters the body",
+          "Passive — no concentrating or performing",
+          "Brief — sessions fit real, busy lives",
+          "Personalized from your check-ins, every visit",
+          "A wellness service alongside the care you trust",
+          "A medical treatment, diagnosis, or cure",
+          "Electrical stimulation — it reads far more than it sends",
+          "A screen-based training program to master",
+          "A guaranteed outcome — every brain responds differently",
+          "A replacement for your doctor, therapist, or school supports",
+        ],
+      },
+    ],
+  },
+  {
+    /**
+     * /brain-map (Oct 2026) — the page that owns the term. Its three
+     * passages replace two that used to carry the map: `page:home:brain-map`
+     * (the homepage section is a two-sentence handoff now) and
+     * `page:how-lens-works:map`, which moved here whole, comment and all —
+     * read it before mirroring a word more of the four-site section.
+     */
+    sourceFile: "app/brain-map/page.tsx",
+    href: "/brain-map",
+    passages: [
+      {
+        // The rule, in the page's own three lead-ins. "What is the Brain
+        // Map?" is PAGE_ROUTING's question in scripts/answer-audit.mjs and
+        // lands here; the four-site passage below asks a different one so
+        // the two cannot tie (DUPLICATE_QUESTIONS_ALLOWED would otherwise
+        // have to hold them). "eeg" and "qeeg" are the words people search —
+        // the page says what they mean here and claims nothing clinical.
+        id: "page:brain-map:what",
+        title: "The Harmonized Brain Map",
+        question: "What is the Brain Map?",
+        keywords: [
+          "map",
+          "brain",
+          "mapping",
+          "record",
+          "recording",
+          "eeg",
+          "qeeg",
+          // Not "test": it grounded "Where can I get a COVID test?" — an
+          // off-topic probe in the audit — here. The prose says the word
+          // twice, which is enough for "is the brain map a test".
+          "diagnosis",
+          "points",
+        ],
+        text: "A recording that guides a plan. It’s a recording. Small sensors read the brain’s electrical activity at each point, and nothing goes in — the same listening a LENS session starts with, held for a few moments at each site. It isn’t a test. There’s nothing to pass or fail, nothing it diagnoses, and no result that says what you have. Nobody here reads it for a condition, and we’d tell you the same thing on the phone. It guides a plan. The pattern across all {BRAIN_MAP_POINTS} points, set against what you told us on the phone and in the room, is what your written plan is built from. The map tells us where to look. You tell us what matters.",
+        mirror: [
+          "A recording that guides a plan.",
+          "It’s a recording. Small sensors read the brain’s electrical activity at each point, and nothing goes in — the same listening a LENS session starts with, held for a few moments at each site.",
+          "It isn’t a test. There’s nothing to pass or fail, nothing it diagnoses, and no result that says what you have. Nobody here reads it for a condition, and we’d tell you the same thing on the phone.",
+          "It guides a plan. The pattern across all points, set against what you told us on the phone and in the room, is what your written plan is built from. The map tells us where to look. You tell us what matters.",
+        ],
+      },
+      {
         /*
          * The framing of "Where we look, and why" — deliberately NOT the four
          * site descriptions the section is mostly made of.
@@ -355,9 +469,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
          * one site — is what the plan is built from. That answers "what does
          * the brain map look at" and gives nothing to interpret.
          */
-        id: "page:how-lens-works:map",
+        id: "page:brain-map:map",
         title: "What the brain map tells us",
-        question: "What does the brain map show?",
+        question: "Where do you look on the map?",
         // No "pz"/"f7" — the copy that named them is gone. No "mean",
         // "interpret", "result" or "reading" either: they filed this under
         // "what does my reading mean", which is a question this passage must
@@ -381,61 +495,19 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         ],
       },
       {
-        // The third paragraph of the old `:idea` passage, now its own section
-        // and its own passage. Without it the rewrite would quietly take the
-        // site's only statement of what clients report out of the assistant's
-        // hands — and "what actually changes" is a question it gets.
-        id: "page:how-lens-works:expect",
-        title: "What to expect",
-        question: "What do clients notice?",
-        keywords: [
-          "expect",
-          "notice",
-          "report",
-          // Both forms: the stemmer takes "change" to `change` and "changes"
-          // to `chang`, so "what actually changes" reached this passage at
-          // coverage 1.0 and was rejected by the subject gate for not being
-          // filed under a word of itself. Same trap as meltdown/melts down.
-          "change",
-          "changes",
-          "difference",
-          "result",
-          "steadier",
-          "clearly",
-          "series",
-        ],
-        text: "What to expect. Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
-        mirror:
-          "What to expect Clients commonly report sleeping more easily, feeling steadier, or thinking more clearly over a series of visits. How much changes varies from person to person, and we review what you’re actually noticing at every visit — that’s what the plan follows.",
-      },
-      {
-        id: "page:how-lens-works:is-is-not",
-        title: "What LENS is — and what it isn’t",
-        question: "Is LENS a medical treatment?",
-        keywords: [
-          "medical",
-          "treatment",
-          "cure",
-          "diagnosis",
-          "therapy",
-          "stimulation",
-          "guarantee",
-          "replace",
-          "medication",
-          "doctor",
-        ],
-        text: "What LENS is — and what it isn’t. LENS is: Gentle and noninvasive — nothing enters the body. Passive — no concentrating or performing. Brief — sessions fit real, busy lives. Personalized from your check-ins, every visit. A wellness service alongside the care you trust. LENS is not: A medical treatment, diagnosis, or cure. Electrical stimulation — it reads far more than it sends. A screen-based training program to master. A guaranteed outcome — every brain responds differently. A replacement for your doctor, therapist, or school supports.",
+        // Two of the four cards. "What we'd suggest" and "What it costs"
+        // interpolate the course and the prices, which faq:7 and
+        // policy:pricing already carry — a third copy of each figure would
+        // compete with the passage that owns it for no gain.
+        id: "page:brain-map:plan",
+        title: "What the written plan contains",
+        question: "What is in the written plan?",
+        keywords: ["plan", "written", "keep", "contain", "contains", "suggest", "noticed", "track"],
+        text: "What the written plan actually contains. What we noticed: What the recording shows, set against what you described. We walk you through the map point by point rather than handing you a report. What we’d track: Sleep, mood, focus, energy — asked about at every visit, so the plan follows what you actually report rather than the map alone.",
         mirror: [
-          "Gentle and noninvasive — nothing enters the body",
-          "Passive — no concentrating or performing",
-          "Brief — sessions fit real, busy lives",
-          "Personalized from your check-ins, every visit",
-          "A wellness service alongside the care you trust",
-          "A medical treatment, diagnosis, or cure",
-          "Electrical stimulation — it reads far more than it sends",
-          "A screen-based training program to master",
-          "A guaranteed outcome — every brain responds differently",
-          "A replacement for your doctor, therapist, or school supports",
+          "What the written plan actually contains.",
+          "What the recording shows, set against what you described. We walk you through the map point by point rather than handing you a report.",
+          "Sleep, mood, focus, energy — asked about at every visit, so the plan follows what you actually report rather than the map alone.",
         ],
       },
     ],
@@ -505,9 +577,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "dollar",
           "free",
         ],
-        text: "The phone call is free. {BRAIN_MAP_NAME} — your first visit — is {BRAIN_MAP_PRICE} and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Regular sessions are {SESSION_PRICE} and run {SESSION_LENGTH}. A {PACKAGE_SESSIONS}-session package is {PACKAGE_PRICE} — {PACKAGE_SAVING} less than paying per session. {PACKAGE_NOTE}",
+        text: "The phone call is free. {BRAIN_MAP_NAME} — your first visit — is {BRAIN_MAP_PRICE} and includes the full conversation, a {BRAIN_MAP_POINTS}-point recording, your map explained point by point, and a written plan you keep. Regular sessions are {SESSION_PRICE} and run {SESSION_LENGTH}. A {PACKAGE_SESSIONS}-session package is {PACKAGE_PRICE} — {PACKAGE_SAVING} less than paying per session. {PACKAGE_NOTE}",
         mirror:
-          "The phone call is free. — your first visit — is and includes the full conversation, a 21-point recording, your map explained point by point, and a written plan you keep. Regular sessions are and run . A -session package is — less than paying per session.",
+          "The phone call is free. — your first visit — is and includes the full conversation, a -point recording, your map explained point by point, and a written plan you keep. Regular sessions are and run . A -session package is — less than paying per session.",
       },
       {
         id: "page:first-visit:insurance",
@@ -767,27 +839,6 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
         ],
       },
-      {
-        id: "page:home:brain-map",
-        title: "The Harmonized Brain Map",
-        question: "What do I walk away with?",
-        keywords: [
-          "map",
-          "brain",
-          "21",
-          "point",
-          "read",
-          "keep",
-          "walk",
-          "away",
-          "diagnosis",
-        ],
-        text: "You’ll see your own brain map. On your first visit we record activity at 21 points across your brain and turn it into a map you can actually read — where things are running hot, where they’re running quiet, and how that lines up with what you came in describing. We built this. A picture of electrical activity — not a diagnosis.",
-        mirror: [
-          "You’ll see your own brain map. On your first visit we record activity at 21 points across your brain and turn it into a map you can actually read — where things are running hot, where they’re running quiet, and how that lines up with what you came in describing. We built this.",
-          "A picture of electrical activity — not a diagnosis.",
-        ],
-      },
     ],
   },
   {
@@ -855,6 +906,9 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // Ben confirmed HSA/FSA and the first-visit duration; both tags are gone and
   // page:first-visit:insurance is back in the index.
   "app/first-visit/page.tsx": {},
+  // /brain-map (Oct 2026). BRAIN_MAP_CLAIM and its tag stayed on the
+  // homepage; this page renders none.
+  "app/brain-map/page.tsx": {},
   // Ben confirmed the training and review process; page:about:training carries
   // his approved wording and is back in the index.
   "app/about/page.tsx": {},

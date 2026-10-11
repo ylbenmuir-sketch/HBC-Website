@@ -4,6 +4,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import {
   BRAIN_MAP_NAME,
+  BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
   FIRST_VISIT_DURATION,
   INSURANCE_POLICY,
@@ -128,8 +129,8 @@ export default function FirstVisitPage() {
               <p>
                 The phone call is free. {BRAIN_MAP_NAME} &mdash; your first
                 visit &mdash; is {BRAIN_MAP_PRICE} and includes the full
-                conversation, a 21-point recording, your map explained point by
-                point, and a written plan you keep. Regular sessions are{" "}
+                conversation, a {BRAIN_MAP_POINTS}-point recording, your map
+                explained point by point, and a written plan you keep. Regular sessions are{" "}
                 {SESSION_PRICE} and run {SESSION_LENGTH.value}. A{" "}
                 {PACKAGE_SESSIONS}-session package is {PACKAGE_PRICE} &mdash;{" "}
                 {PACKAGE_SAVING} less than paying per session. {PACKAGE_NOTE}
@@ -157,10 +158,14 @@ export default function FirstVisitPage() {
           </div>
           {/* This page received five inbound contextual links and passed one
               out — a near-terminal node absorbing authority and forwarding
-              almost none (SEO-AUDIT-2.md §4). Three handoffs, in the ghost-
-              button vocabulary the rest of the site uses, with the labels the
-              rest of the site already gives these three destinations. */}
+              almost none (SEO-AUDIT-2.md §4). Handoffs in the ghost-button
+              vocabulary the rest of the site uses, with the labels the rest
+              of the site already gives these destinations. /brain-map leads:
+              part 3 above names the recording, and that is its page. */}
           <div className="hero-ctas rv" style={{ marginTop: 40 }}>
+            <Btn href="/brain-map" variant="ghost" arrow>
+              The Brain Map, explained
+            </Btn>
             <Btn href="/lens-neurofeedback" variant="ghost" arrow>
               What LENS is
             </Btn>

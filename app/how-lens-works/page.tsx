@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
-import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { LENS_IS, LENS_IS_NOT } from "@/lib/lens";
 import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -34,13 +34,6 @@ const sessionSteps = [
   },
 ];
 
-const lensIsNot = [
-  "A medical treatment, diagnosis, or cure",
-  "Electrical stimulation — it reads far more than it sends",
-  "A screen-based training program to master",
-  "A guaranteed outcome — every brain responds differently",
-  "A replacement for your doctor, therapist, or school supports",
-];
 
 export default function HowLensWorksPage() {
   const trail = hubTrail("/how-lens-works");
@@ -201,62 +194,28 @@ export default function HowLensWorksPage() {
         </div>
       </section>
 
-      {/* Where we look. The grammar of every site paragraph is load-bearing and
-          is not to be tightened: each one names a function, then says this is
-          where we would LOOK when someone describes something — "this is one of
-          the first places we look", "something we'd read here", "someone we'd
-          look here for", "this is one we read when". None of them says a site
-          causes, indicates, or measures a symptom, and none may be rewritten
-          into "T4 explains a short fuse". The closing paragraph is the whole
-          point of the section: one site on its own is not read at all.
-
-          It replaced the Pz/F7 pair, which drew the same line the same way but
-          did it with two thresholds (below 10 µV, above 35 µV) — a number a
-          reader can hold their own map up against, which is the one thing a
-          published figure invites. The four sites here carry no values. */}
-      <section className="sec">
-        <div className="wrap">
-          <div className="sec-head rv">
-            <h2>Where we look, and why</h2>
-            <p className="sub">
-              A Brain Map records {BRAIN_MAP_POINTS} points. Four we come back
-              to most:
+      {/* The map hands off. The four-site "where we look" passage and the
+          lobe-diagram plate lived here until Oct 2026 and moved to /brain-map
+          with their grammar intact — a section about what the Brain Map
+          records was this page competing with the page built to own the
+          term (QUERY-TO-PAGE-MAP.md, rule 1). What stays is the fact this
+          page needs to state the mechanism: a session starts from a
+          recording, and the recording has a page. */}
+      <section className="sec sec-tight">
+        <div className="wrap" style={{ maxWidth: 880 }}>
+          <div className="sec-head rv" style={{ marginBottom: 0 }}>
+            <div className="eyebrow">Your map</div>
+            <h2>The recording your plan is built from.</h2>
+            <p>
+              A Brain Map records {BRAIN_MAP_POINTS} points on your first
+              visit. What each point tells us, what the written plan
+              contains, and what the map can&rsquo;t tell you are on their own
+              page.
             </p>
-          </div>
-          <div className="split">
-            <div className="rv">
-              <p>
-                <b>Fp1 &mdash; left frontal.</b> Sustained attention and
-                getting started on things. When someone tells us about homework
-                that takes three hours, or projects that stall at 90 percent,
-                this is one of the first places we look.
-              </p>
-              <p>
-                <b>Fp2 &mdash; right frontal.</b> Impulse control &mdash; the
-                pause between wanting to do something and doing it. Parents
-                describing a child who blurts, interrupts, or acts before
-                thinking are describing something we&rsquo;d read here.
-              </p>
-              <p>
-                <b>T4 &mdash; right temporal.</b> Emotional regulation and
-                emotional memory. Someone with a short fuse, reactions that
-                feel outsized, or a slow recovery after being upset is someone
-                we&rsquo;d look here for.
-              </p>
-              <p>
-                <b>Cz &mdash; central midline.</b> Sensory sensitivity. This is
-                one we read when someone describes being overwhelmed by noise,
-                tags, crowds, or transitions.
-              </p>
-              <p>
-                We don&rsquo;t read any of these alone. One site tells you very
-                little &mdash; the pattern across all {BRAIN_MAP_POINTS}, set
-                against what you told us on the phone, is what your written
-                plan is built from.
-              </p>
-            </div>
-            <div className="rv">
-              <PlaceholderPlate spec="Brain lobe function diagram" />
+            <div className="hero-ctas" style={{ marginTop: 26 }}>
+              <Btn href="/brain-map" variant="ghost" arrow>
+                About the Harmonized Brain Map
+              </Btn>
             </div>
           </div>
         </div>
@@ -310,12 +269,13 @@ export default function HowLensWorksPage() {
               >
                 LENS is
               </h3>
+              {/* Both lists read lib/lens.ts — /brain-map carries the
+                  "is not" half too, and one list in one file is what keeps
+                  the two pages saying the same thing. */}
               <ul className="goals-list" style={{ columnCount: 1 }}>
-                <li>Gentle and noninvasive — nothing enters the body</li>
-                <li>Passive — no concentrating or performing</li>
-                <li>Brief — sessions fit real, busy lives</li>
-                <li>Personalized from your check-ins, every visit</li>
-                <li>A wellness service alongside the care you trust</li>
+                {LENS_IS.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
               </ul>
             </div>
             <div style={{ padding: "52px 54px", background: "var(--navy)" }}>
@@ -332,7 +292,7 @@ export default function HowLensWorksPage() {
                 LENS is not
               </h3>
               <ul style={{ listStyle: "none" }}>
-                {lensIsNot.map((item, i) => (
+                {LENS_IS_NOT.map((item, i) => (
                   <li
                     key={item}
                     style={{
@@ -340,7 +300,7 @@ export default function HowLensWorksPage() {
                       position: "relative",
                       color: "rgba(251,248,241,.85)",
                       borderBottom:
-                        i < lensIsNot.length - 1
+                        i < LENS_IS_NOT.length - 1
                           ? "1px solid rgba(251,248,241,.12)"
                           : undefined,
                     }}

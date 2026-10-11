@@ -501,12 +501,10 @@ export const BRAIN_MAP_NAME = "The Harmonized Brain Map";
  * confirmation, and both graphics in the repo were checked against it (see the
  * GRAPHICS CORRECTIONS note above — "both carry the full 21 electrodes").
  *
- * Three literal 21s predate this and are NOT yet reading it: the homepage
- * brain-map paragraph and its image alt text (app/page.tsx), and the
- * "21-point recording" on /first-visit. Each is mirrored into the assistant's
- * index in lib/chat/site-copy.ts, so converting one means editing its mirror
- * string and adding a copy token in the same change — worth doing, out of
- * scope for the phase 15 copy replacement that introduced this.
+ * Every "21" on the site reads it now (Oct 2026): the homepage handoff and
+ * its image alt, /first-visit's cost card, and all of /brain-map. The
+ * mirrors in lib/chat/site-copy.ts carry it as the {BRAIN_MAP_POINTS} copy
+ * token, so the pages and the assistant cannot disagree about the count.
  */
 export const BRAIN_MAP_POINTS = 21;
 
@@ -851,15 +849,17 @@ export const TRAINING_CLAIM =
  *    next to an electrode implies the map detects it, which is a medical claim
  *    and contradicts DISCLAIMER at the bottom of this file.
  *
- *    /how-lens-works now sets the register to match: "sustained attention",
+ *    /brain-map now sets the register to match: "sustained attention",
  *    "impulse control", "emotional regulation", "sensory sensitivity". Label
  *    the graphic in those words and it agrees with the page it sits on.
  *
- * The corrected heat map ships on the homepage (/images/brain-map-heat.png).
- * /how-lens-works still renders PlaceholderPlate: items 3 and 4 above are
- * unfixed because that asset has not been supplied. The bar graph
- * (/images/brain-map-bars.png) is in the repo but not placed on any page.
- * See CONTENT-CHECKLIST.md → Photography.
+ * The corrected heat map ships on /brain-map and the homepage
+ * (/images/brain-map-heat.png). /brain-map renders the PlaceholderPlate for
+ * the lobe graphic beside the four-site section (moved there from
+ * /how-lens-works, Oct 2026): items 3 and 4 above are unfixed because that
+ * asset has not been supplied. The bar graph (/images/brain-map-bars.png) is
+ * in the repo but not placed on any page. See CONTENT-CHECKLIST.md →
+ * Photography.
  */
 
 /**

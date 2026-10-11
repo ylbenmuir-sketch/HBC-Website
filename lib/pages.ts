@@ -68,7 +68,7 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "Help for anxiety, focus, and sleep without medication — gentle LENS neurofeedback for adults and kids across Middle Tennessee.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "Home",
   },
@@ -122,16 +122,36 @@ export const staticPages: StaticPage[] = [
     title: "How LENS Neurofeedback Works",
     description:
       "LENS stands for Low Energy Neurofeedback System. The whole idea without the jargon — and exactly what a session feels like from the chair.",
-    dateModified: "2026-08-23",
+    // The four-site "where we look" section moved to /brain-map.
+    dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "How LENS works",
+  },
+  {
+    path: "/brain-map",
+    // Absolute, like the concern titles: the brand suffix would put it past
+    // 60, and a title that opens on the category identifies itself. "Brain
+    // Map" and "EEG Recording" are the two phrasings the cluster searches
+    // with (brain map / qEEG / EEG — QUERY-TO-PAGE-MAP.md); "qEEG" stays in
+    // the body, as a word people search rather than a thing we call ours.
+    // 57 chars.
+    title: "Brain Map & EEG Recording in Nashville & Murfreesboro, TN",
+    absoluteTitle: true,
+    // 158 chars. The boundary leads — "a recording, not a test" is the rule
+    // the page is written under, and the one sentence that must survive
+    // truncation.
+    description:
+      "The Harmonized Brain Map is a 21-point recording of brain activity — a recording that guides a plan, not a test. What it involves, what it costs, and what it can't tell you.",
+    dateModified: "2026-10-11",
+    type: "WebPage",
+    crumb: "The Brain Map",
   },
   {
     path: "/first-visit",
     title: "Your First Visit",
     description:
       "No clipboard queue, no waiting-room limbo, no surprises. The first visit at Harmonized Brain Centers, minute by minute, for adults and for children.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "Your first visit",
   },

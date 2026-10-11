@@ -23,6 +23,7 @@ import {
 import { practitionerBandStat } from "@/lib/team";
 import {
   BRAIN_MAP_CLAIM,
+  BRAIN_MAP_POINTS,
   COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
   EXPERIENCES_DISCLAIMER,
@@ -736,24 +737,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* The Harmonized Brain Map — the site's largest differentiator, and what
-          makes the $150 tangible. Directly after the three-step module again:
-          step 2 is called "Map" and names the thing without showing it, so this
-          is the section that shows it. Phase 14 moved the steps up behind the
-          stories and left this where it was, which broke that pairing for one
-          commit; the two travel together. The claim sentence is gated like
-          every other unverified fact — production drops it and the paragraph
-          still reads complete. */}
+      {/* The Harmonized Brain Map — a handoff now, not the section that owned
+          it (Oct 2026). The brain-mapping cluster was landing here, on a
+          section, and a section cannot rank for a term; /brain-map owns it
+          and carries the full copy. What stays is the pairing with step 2
+          above ("Map" names the thing, this shows it) and the render — said
+          in two sentences, with no "brain map" in the H2, so the homepage
+          supports the page instead of competing with it. The claim sentence
+          is gated like every other unverified fact. BrainMapCta left with
+          the copy: it has four homes (components/Buttons.tsx), and the fourth
+          is /brain-map now. */}
       <section className="sec home-brain-map">
         <div className="wrap split">
           <div className="rv">
             <div className="eyebrow">What you walk away with</div>
-            <h2>You&rsquo;ll see your own brain map.</h2>
+            <h2>A written plan &mdash; and the recording it&rsquo;s built from.</h2>
             <p>
-              On your first visit we record activity at 21 points across your
-              brain and turn it into a map you can actually read &mdash; where
-              things are running hot, where they&rsquo;re running quiet, and how
-              that lines up with what you came in describing. We built this.
+              Your first visit includes a {BRAIN_MAP_POINTS}-point recording of
+              your brain&rsquo;s electrical activity, turned into a map you can
+              actually read and walked through point by point. We built this.
               {brainMapClaim && (
                 <>
                   {" "}
@@ -764,7 +766,9 @@ export default function HomePage() {
             </p>
             <div className="hero-ctas" style={{ marginTop: 30 }}>
               <TalkCta />
-              <BrainMapCta />
+              <Btn href="/brain-map" variant="ghost" arrow>
+                About the Harmonized Brain Map
+              </Btn>
             </div>
           </div>
           <div className="rv">
@@ -773,7 +777,7 @@ export default function HomePage() {
                 a cropped diagram loses electrode labels and the legend. */}
             <PhotoFrame
               src="/images/brain-map-heat.png"
-              alt="A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at 21 points across the brain"
+              alt={`A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at ${BRAIN_MAP_POINTS} points across the brain`}
               aspect="1184 / 860"
               style={{ height: "auto" }}
             />
