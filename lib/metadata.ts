@@ -28,6 +28,18 @@ import { SITE_NAME } from "./site-config";
  * differ on, and leaving it out means each caller has to state it, rather than
  * inheriting "website" onto an article by accident.
  */
+/**
+ * The same object minus `images`, for a segment that generates its own card
+ * through opengraph-image.tsx. An explicit `images` in a route's metadata
+ * beats the file convention, so a route that spreads SHARED_OPEN_GRAPH
+ * whole silently discards the card it generated (SEO-AUDIT-3 A6).
+ */
+export const SHARED_OPEN_GRAPH_WITHOUT_IMAGES = {
+  siteName: SITE_NAME,
+  locale: "en_US",
+  url: "./",
+};
+
 export const SHARED_OPEN_GRAPH = {
   siteName: SITE_NAME,
   locale: "en_US",

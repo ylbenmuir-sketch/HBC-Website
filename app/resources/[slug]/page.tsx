@@ -6,7 +6,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ReadMore from "@/components/ReadMore";
-import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
+import { SHARED_OPEN_GRAPH_WITHOUT_IMAGES } from "@/lib/metadata";
 import PageSchema from "@/components/PageSchema";
 import { articleSchema } from "@/lib/schema";
 import {
@@ -51,8 +51,14 @@ export async function generateMetadata({
     // `openGraph` object rather than merging into it, so naming one field here
     // used to delete og:url, og:image, og:site_name and og:locale from every
     // article and drop the Twitter card to `summary`. See lib/metadata.ts.
+    //
+    // `images` is left OUT of the spread: this segment has its own
+    // opengraph-image.tsx, and an explicit `images` here beats the file
+    // convention — which is how every article kept unfurling as the default
+    // card after the generated ones existed. Without it the generated card
+    // is what Next emits.
     openGraph: {
-      ...SHARED_OPEN_GRAPH,
+      ...SHARED_OPEN_GRAPH_WITHOUT_IMAGES,
       type: "article",
       publishedTime: article.datePublished,
       modifiedTime: lastChanged(article),
