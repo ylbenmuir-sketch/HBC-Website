@@ -278,8 +278,10 @@ const homeFaqs = [
     a: "LENS is gentle and noninvasive — nothing enters the body, and the feedback signal is far weaker than the everyday signals already around you. Most people, including young children, feel nothing at all during a session.",
   },
   {
+    // Leads with the same sentence as lib/faq.ts answer 10 — see the note
+    // there for why it no longer opens "Neither."
     q: "Is this therapy or medical treatment?",
-    a: "Neither. We're a wellness practice. LENS doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
+    a: "LENS is offered as a wellness service, not medical treatment. We're a wellness practice: LENS doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
   },
   {
     // Shortened for the homepage — the taper's full cadence and the pricing

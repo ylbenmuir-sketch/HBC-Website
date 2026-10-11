@@ -104,8 +104,15 @@ export const SITE_FAQS: SiteFaq[] = [
     a: "Most commonly: anxiety and stress, focus and ADHD, sleep, emotional regulation, brain fog and memory, burnout, school struggles, and trauma-related stress.",
   },
   {
+    // Not "Neither." — decided Oct 2026 (SEO-AUDIT-3 P1). The homepage title
+    // says "Neurofeedback Therapy" because that is the head term and names the
+    // modality; a flat "Neither" on the same site read as a contradiction to
+    // anyone quoting both. The boundary is unchanged: a wellness service, not
+    // medical treatment. The same sentence leads the homepage's version of
+    // this answer and the §4 paragraph on /lens-neurofeedback — edit all three
+    // together.
     q: "Is this therapy or medical treatment?",
-    a: "Neither. We're a wellness practice. LENS doesn't diagnose or treat medical or psychiatric conditions, and it isn't a substitute for care from your doctor or therapist.",
+    a: "LENS is offered as a wellness service, not medical treatment. We're a wellness practice: LENS doesn't diagnose or treat medical or psychiatric conditions, and it isn't a substitute for care from your doctor or therapist.",
   },
   {
     q: "Can I continue seeing my doctor or therapist?",

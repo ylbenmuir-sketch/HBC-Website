@@ -214,7 +214,7 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         //
         // Nor "Can an EEG diagnose anything?", which was the first fix: the ×3
         // question weight took "diagnose" and "Can you diagnose me?" off
-        // faq:10, and faq:10 ("Neither. We're a wellness practice…") is the
+        // faq:10, and faq:10 ("LENS is offered as a wellness service…") is the
         // boundary answer that should surface for anything reducing to that
         // word. Both questions are refused before retrieval, so nothing was
         // broken — but the same rule was applied to "medical" below and
@@ -228,8 +228,8 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         id: "guide:medical-first",
         title: "Some of this is medical",
         question: "Could this be something medical instead?",
-        // No bare "medical": faq:10 is the site's boundary answer ("Neither.
-        // We're a wellness practice…") and is what should surface for anything
+        // No bare "medical": faq:10 is the site's boundary answer ("LENS is
+        // offered as a wellness service…") and is what should surface for anything
         // that reduces to that one word. The ×2 keyword boost took it off
         // faq:10 in the sweep; the word is still in the text, so this passage
         // stays reachable for the questions it is actually about.

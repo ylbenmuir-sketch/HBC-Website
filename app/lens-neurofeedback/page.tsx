@@ -57,13 +57,19 @@ import {
  *
  * ## "LENS therapy" is the query, not a self-description
  *
- * The head term this page is built for is `lens therapy` (10,900+ impressions
- * at positions 13.9–17.1, the largest unclaimed cluster on the site). The site
- * also answers "Is this therapy or medical treatment?" with **"Neither"**
- * (lib/faq.ts). Both are true and they are not in tension, as long as the
+ * The head term this page is built for is `lens therapy` — the one
+ * non-branded query earning clicks in volume on the live site (1,101
+ * impressions, 13 clicks in the Oct 2026 three-month pull; see
+ * QUERY-TO-PAGE-MAP.md, "Measured, Oct 2026"). The site also answers "Is
+ * this therapy or medical treatment?" with "LENS is offered as a wellness
+ * service, not medical treatment" (lib/faq.ts — it used to open "Neither",
+ * which contradicted the homepage's "Neurofeedback Therapy" title; P1 in
+ * SEO-AUDIT-3). Both are true and they are not in tension, as long as the
  * phrase only ever appears as a question the page answers — which is what §4
  * is for. Nothing here describes what Harmonized offers as "LENS therapy," and
- * nothing added later should.
+ * nothing added later should. This page is also the redirect target for the
+ * legacy /what-is-lens/ and /lens-therapy/ URLs, so "LENS therapy" must keep
+ * appearing in its body.
  *
  * ## The Brain Map is a recording
  *
@@ -339,9 +345,10 @@ export default function LensNeurofeedbackPage() {
           </div>
           <div className="rv">
             <p style={PROSE}>
-              Neither. We&rsquo;re a wellness practice. LENS doesn&rsquo;t
-              diagnose or treat medical or psychiatric conditions, and it
-              isn&rsquo;t a substitute for care from your doctor or therapist.
+              LENS is offered as a wellness service, not medical treatment.
+              We&rsquo;re a wellness practice: LENS doesn&rsquo;t diagnose or
+              treat medical or psychiatric conditions, and it isn&rsquo;t a
+              substitute for care from your doctor or therapist.
             </p>
             <p style={PROSE}>
               If you&rsquo;re already seeing someone, please keep seeing them.
