@@ -1,8 +1,13 @@
 # Two colour decisions
 
-**Status — settled.** Sage is **`#596e5b`**, applied. Gold is unchanged and
-stays unchanged; neither gold option was taken, and this file is the record of
-what was offered.
+**Status — settled, then finished.** Sage is **`#596e5b`**, applied. Gold took
+option B in two steps: `--gold-ink: #856831` for the wordmark subtitle and the
+location-hero labels (Oct 10), then every remaining gold-on-light text rule
+(Oct 11). The gold-on-navy numerals and the Trisha role lines, which option B
+left at 4.20, took a third token lifted the other way — `--gold-lift:
+#b8924a`, 4.98 on navy, 5.56 on navy-deep. `--gold` itself is unchanged and
+remains the colour of rules, marks, borders and the footer wordmark. The
+tables below are the record of what was offered when gold was still 3.24.
 
 Sage landed in two steps. `#5a6f5c` went in first and cleared the eyebrows but
 left the `.note-sage` panels at **4.4903** — under 4.5, not "4.5 rounded", and

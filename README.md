@@ -420,7 +420,7 @@ All page copy that varies by entity is data-driven:
 | File | Drives |
 | --- | --- |
 | `lib/site-config.ts` | Phone number, disclaimer, review stats, **every [CONFIRM]/[Insert] placeholder value** |
-| `lib/concerns.ts` | All 8 concern pages (`/concerns/[slug]`) + the What We Help With entries |
+| `lib/concerns.ts` | All 12 concern pages (`/concerns/[slug]`) + the What We Help With entries |
 | `lib/faq.ts` | The 14 questions on `/faq` — the accordion, the FAQPage JSON-LD, and the assistant's index all read this one array |
 | `lib/locations.ts` | `/locations/[slug]` (Nashville seeded; Murfreesboro/Franklin data-driven) + location cards + JSON-LD addresses |
 | `lib/team.ts` | `/about/team` grid + `/about/team/[slug]` profiles |
@@ -748,7 +748,7 @@ or work through the files below:
 
 | File | Placeholders to replace |
 | --- | --- |
-| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, concierge service area & pricing |
+| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, the five concierge facts (`CONCIERGE_*`) |
 | `lib/locations.ts` | Franklin street address + ZIP (Nashville and Murfreesboro are confirmed; a confirmed address also unlocks `geo` and `hasMap` in the LocalBusiness JSON-LD, so add `geo` coordinates when Franklin's lands), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
 | `lib/team.ts` | Practitioner names, bios, certifications, focus areas, schedules; coordinator name; Franklin opening date |
 | `lib/resources.ts` | Article bylines (`[Practitioner name]`, `[Month Year]`) and the `[Draft…]`/`[Body copy…]` article bodies (homework-battles included) |
@@ -779,10 +779,9 @@ Also replace when assets exist:
   (`TalkCta` in `components/Buttons.tsx`). Don't introduce competing CTAs.
 - One secondary CTA exists: **"Book Your Brain Map — $150"** (`BrainMapCta`),
   the priced first visit, for visitors who arrive already sold. It appears in
-  exactly four places — the homepage hero, the homepage Harmonized Brain Map
-  section, `/first-visit`, and `/how-lens-works` — always beside `TalkCta`,
-  never instead of it, and it points at the same `/contact` destination.
-  Don't add a fifth.
+  exactly four places — the homepage hero, `/brain-map`, `/first-visit`, and
+  `/how-lens-works` — always beside `TalkCta`, never instead of it, and it
+  points at the same `/contact` destination. Don't add a fifth.
 - One transitional CTA exists: `components/GuideCta.tsx` ("Not ready to
   call?"), an email capture for visitors who aren't calling today. It sits
   below the `FinalCTA` band on `/`, `/resources`, and `/concerns/[slug]`,
@@ -822,18 +821,23 @@ Also replace when assets exist:
 
 ```
 /                       homepage (index.html)
-/what-we-help-with      all 8 concerns, entry rows
+/what-we-help-with      all 12 concerns, entry rows, and the concierge row
 /concerns/[slug]        anxiety · focus-adhd · sleep · emotional-regulation ·
-                        brain-fog · stress-resilience · children-school · trauma
+                        brain-fog · stress-resilience · children-school · trauma ·
+                        concussion · performance · migraines · depression
 /adults                 adults landing
 /children-families      children & families landing
-/how-lens-works         LENS explainer
+/lens-neurofeedback     what LENS is (the modality page)
+/how-lens-works         LENS explainer — mechanism and the session
+/brain-map              the Harmonized Brain Map: a recording that guides a plan
+/is-lens-safe           safe / legit / worth it — the disclosure page (FAQPage)
 /first-visit            first visit, minute by minute
 /about                  about + care model
 /about/founder          founder story
 /about/team             team grid
 /about/team/[slug]      practitioner profiles
 /locations              all locations + concierge band
+/concierge              concierge LENS — at home or on-site; five [CONFIRM] facts
 /locations/[slug]       nashville · murfreesboro · franklin (JSON-LD on each)
 /stories                client stories (sample copy)
 /faq                    full FAQ
@@ -843,8 +847,8 @@ Also replace when assets exist:
 /resources/feed.xml     RSS 2.0 of the published articles
 /llms.txt               entity summary + every URL with a one-line description,
                         generated from the same modules the assistant indexes
-/robots.txt, /sitemap.xml   app/robots.ts (named AI agents, all allowed by
-                        default — see the file) and app/sitemap.ts
+/robots.txt, /sitemap.xml   app/robots.ts (named AI agents, all allowed —
+                        Ben's decision, Oct 2026; see the file) and app/sitemap.ts
 /concerns/*/opengraph-image, /locations/*/opengraph-image,
 /resources/*/opengraph-image   per-route share cards (lib/og/render.tsx)
 /api/gone               410 handler behind the retired legacy URLs
