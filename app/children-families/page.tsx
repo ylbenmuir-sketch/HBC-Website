@@ -5,19 +5,20 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { pageMetadata } from "@/lib/pages";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/children-families");
 
 export default function ChildrenFamiliesPage() {
+  const trail = [
+    { label: "What We Help With", href: "/what-we-help-with" },
+    { label: "Children & families" },
+  ];
   return (
     <>
-      <Breadcrumbs
-        trail={[
-          { label: "What We Help With", href: "/what-we-help-with" },
-          { label: "Children & families" },
-        ]}
-      />
+      <PageSchema path="/children-families" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

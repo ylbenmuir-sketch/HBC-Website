@@ -46,6 +46,7 @@ import {
   verifiedOr,
 } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/");
@@ -301,6 +302,8 @@ export default function HomePage() {
 
   return (
     <div className="home">
+      {/* No breadcrumb on the homepage — it is the root of every trail. */}
+      <PageSchema path="/" />
       <section className="hero wrap">
         <div className="hero-grid">
           <div className="rv hero-copy">

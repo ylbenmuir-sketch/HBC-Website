@@ -7,7 +7,7 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ReadMore from "@/components/ReadMore";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
-import JsonLd from "@/components/JsonLd";
+import PageSchema from "@/components/PageSchema";
 import { articleSchema } from "@/lib/schema";
 import {
   resources,
@@ -68,16 +68,27 @@ export default async function ArticlePage({
   const article = getResource((await params).slug);
   if (!article) notFound();
   if (!SHOW_DRAFT_CONTENT && !isPublishable(article)) notFound();
+  const trail = [
+    { label: "Resources", href: "/resources" },
+    { label: article.crumbLabel },
+  ];
 
   return (
     <>
-      <JsonLd data={articleSchema(article)} />
-      <Breadcrumbs
-        trail={[
-          { label: "Resources", href: "/resources" },
-          { label: article.crumbLabel },
-        ]}
+      <PageSchema
+        path={`/resources/${article.slug}`}
+        breadcrumb={trail}
+        page={{
+          type: "WebPage",
+          name: article.metaTitle,
+          description: article.metaDescription,
+          datePublished: article.datePublished,
+          dateModified: lastChanged(article),
+          ...(article.image ? { image: article.image.src } : {}),
+        }}
+        nodes={[articleSchema(article)]}
       />
+      <Breadcrumbs trail={trail} />
       <section className="sec-tight">
         <div className="wrap article">
           {/* `above-fold`: the article template has no `.page-hero`, so the

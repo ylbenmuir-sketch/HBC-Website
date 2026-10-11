@@ -4,7 +4,9 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/how-lens-works");
@@ -41,8 +43,11 @@ const lensIsNot = [
 ];
 
 export default function HowLensWorksPage() {
+  const trail = hubTrail("/how-lens-works");
   return (
     <>
+      <PageSchema path="/how-lens-works" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">How LENS works</div>

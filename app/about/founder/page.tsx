@@ -4,8 +4,8 @@ import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
-import JsonLd from "@/components/JsonLd";
-import { founderSchema } from "@/lib/schema";
+import PageSchema from "@/components/PageSchema";
+import { founderRef, founderSchema } from "@/lib/schema";
 import { FOUNDER_DISPLAY_NAME, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
 
@@ -13,14 +13,20 @@ import { pageMetadata } from "@/lib/pages";
 export const metadata: Metadata = pageMetadata("/about/founder");
 
 export default function FounderPage() {
+  const trail = [{ label: "About", href: "/about" }, { label: "Our founder" }];
   return (
     <>
       {/* The one page that is about a person gets that person as an entity.
           Everything in it is already on the page — see founderSchema(). */}
-      <JsonLd data={founderSchema()} />
-      <Breadcrumbs
-        trail={[{ label: "About", href: "/about" }, { label: "Our founder" }]}
+      {/* A ProfilePage (lib/pages.ts) whose main entity is the founder's
+          Person node — the same @id the Organization's `founder` carries. */}
+      <PageSchema
+        path="/about/founder"
+        breadcrumb={trail}
+        mainEntity={founderRef()}
+        nodes={[founderSchema()]}
       />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

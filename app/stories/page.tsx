@@ -11,12 +11,15 @@ import {
   REVIEWS,
   VERIFIED_TESTIMONIALS,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/stories");
 
 export default function StoriesPage() {
+  const trail = hubTrail("/stories");
   // Gated on there being a count to print — see the same pair on the homepage.
   const reviewCount = combinedReviewCount();
   const showReviewBand = reviewCount !== null;
@@ -29,6 +32,8 @@ export default function StoriesPage() {
   const stories = VERIFIED_TESTIMONIALS;
   return (
     <>
+      <PageSchema path="/stories" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Client stories</div>

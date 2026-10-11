@@ -25,7 +25,13 @@
  * surface follows.
  */
 
-import { FOUNDER_BIO, FOUNDER_DISPLAY_NAME, verifiedOr } from "./site-config";
+import {
+  FOUNDER_BIO,
+  FOUNDER_DISPLAY_NAME,
+  SHOW_DRAFT_CONTENT,
+  isDraftText,
+  verifiedOr,
+} from "./site-config";
 
 /** The two open centers. Franklin joins when it has anyone to assign. */
 export type CenterSlug = "nashville" | "murfreesboro";
@@ -67,6 +73,15 @@ export type TeamMember = {
   plateSpec?: string;
   /** "founder" links the card to /about/founder instead of a profile page. */
   founder?: boolean;
+  /**
+   * Credentials the person's published bio states, verbatim — the only
+   * source the Person node's `hasCredential` may draw on (lib/schema.ts rule
+   * 1: markup never asserts more than the page does). One entry today: Gwen
+   * Minton's bio says "A Licensed Master Social Worker". Practitioner LENS
+   * certification is NOT listed per person — TRAINING_CLAIM states it once
+   * for the whole roster, and the markup follows the page.
+   */
+  credentials?: string[];
   /**
    * Profile-page data for /about/team/[slug]. Nobody carries one today: the
    * placeholder profiles this file used to hold were seeded before the real
@@ -139,6 +154,7 @@ export const team: TeamMember[] = [
     name: "Gwen Minton",
     role: "LENS Practitioner",
     bio: "A Licensed Master Social Worker with more than fifteen years in practice, and a certified life coach — she has spent her career listening to people in hard seasons.",
+    credentials: ["Licensed Master Social Worker"],
     plateSpec: "Practitioner portrait — natural light, ivory backdrop",
   },
   {
@@ -214,6 +230,19 @@ export const team: TeamMember[] = [
     plateSpec: "Franklin team portrait — hiring",
   },
 ];
+
+/**
+ * The members whose cards production renders: a name and a bio with no
+ * [placeholder] left in either. /about/team and the location pages apply
+ * this gate to decide what to show, and the Person nodes in their JSON-LD
+ * are built from the same list, so the markup can never name someone the
+ * page is still hiding.
+ */
+export function publishableMembers(members: TeamMember[]): TeamMember[] {
+  return members.filter(
+    (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
+  );
+}
 
 export function getTeamMember(slug: string): TeamMember | undefined {
   return team.find((m) => m.slug === slug);

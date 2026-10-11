@@ -6,7 +6,9 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import { team, getTeamMember } from "@/lib/team";
-import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
+import { SHOW_DRAFT_CONTENT, SITE_NAME, isDraftText } from "@/lib/site-config";
+import PageSchema from "@/components/PageSchema";
+import { personRef, personSchema } from "@/lib/schema";
 
 export function generateStaticParams() {
   // Placeholder profiles build in draft mode only.
@@ -38,16 +40,28 @@ export default async function PractitionerPage({
   if (!member || !member.profile) notFound();
   if (!SHOW_DRAFT_CONTENT && isDraftText(member.name)) notFound();
   const { profile } = member;
+  const trail = [
+    { label: "About", href: "/about" },
+    { label: "Our team", href: "/about/team" },
+    { label: member.name },
+  ];
 
   return (
     <>
-      <Breadcrumbs
-        trail={[
-          { label: "About", href: "/about" },
-          { label: "Our team", href: "/about/team" },
-          { label: member.name },
-        ]}
+      <PageSchema
+        path={`/about/team/${member.slug}`}
+        breadcrumb={trail}
+        page={{
+          type: "ProfilePage",
+          name: `${member.name} — ${member.role} — ${SITE_NAME}`,
+          description: `${member.name}, ${member.role} at Harmonized Brain Centers.`,
+          // No profile carries copy yet; this is the roster's date.
+          dateModified: "2026-09-01",
+          mainEntity: personRef(member),
+        }}
+        nodes={[personSchema(member)]}
       />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap prac-hero">
           <div className="rv">

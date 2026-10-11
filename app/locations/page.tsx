@@ -15,14 +15,19 @@ import {
   SHOW_DRAFT_CONTENT,
   isDraftText,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/locations");
 
 export default function LocationsPage() {
+  const trail = hubTrail("/locations");
   return (
     <>
+      <PageSchema path="/locations" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Locations</div>

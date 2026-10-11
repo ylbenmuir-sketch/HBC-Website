@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
-import JsonLd from "@/components/JsonLd";
-import { faqPageSchema } from "@/lib/schema";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
+import { faqQuestions } from "@/lib/schema";
 import { SITE_FAQS } from "@/lib/faq";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/faq");
@@ -47,9 +48,13 @@ const faqs: FaqItem[] = SITE_FAQS.map((faq) => ({
 }));
 
 export default function FaqPage() {
+  const trail = hubTrail("/faq");
   return (
     <>
-      <JsonLd data={faqPageSchema(faqs)} />
+      {/* The WebPage node is typed FAQPage (lib/pages.ts) and carries the
+          fourteen questions as its mainEntity — one page node, not two. */}
+      <PageSchema path="/faq" breadcrumb={trail} mainEntity={faqQuestions(faqs)} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Frequently asked questions</div>

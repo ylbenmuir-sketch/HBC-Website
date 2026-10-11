@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { concerns } from "@/lib/concerns";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/what-we-help-with");
@@ -12,8 +14,11 @@ export const metadata: Metadata = pageMetadata("/what-we-help-with");
 const INTERLUDE_AFTER = 4;
 
 export default function WhatWeHelpWithPage() {
+  const trail = hubTrail("/what-we-help-with");
   return (
     <>
+      <PageSchema path="/what-we-help-with" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap wwh-hero">
           <div className="rv">

@@ -15,7 +15,9 @@ import {
   SITE_NAME,
   verifiedOr,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/privacy-policy");
@@ -99,11 +101,14 @@ function withMailto(text: string) {
  * where it gets settled by implication.
  */
 export default function PrivacyPolicyPage() {
+  const trail = hubTrail("/privacy-policy");
   const retention = verifiedOr(PRIVACY_RETENTION);
   const accessRequests = verifiedOr(PRIVACY_ACCESS_REQUESTS);
 
   return (
     <>
+      <PageSchema path="/privacy-policy" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Privacy</div>

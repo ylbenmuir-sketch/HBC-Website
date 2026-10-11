@@ -5,9 +5,10 @@ import Quote from "@/components/Quote";
 import ProofBand from "@/components/ProofBand";
 import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
-import JsonLd from "@/components/JsonLd";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
-import { serviceSchema } from "@/lib/schema";
+import { serviceRef, serviceSchema } from "@/lib/schema";
 import { locations, hoursSummary } from "@/lib/locations";
 import {
   BRAIN_MAP_NAME,
@@ -34,7 +35,7 @@ import {
   VERIFIED_TESTIMONIALS,
   verifiedOr,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
 
 /**
  * /lens-neurofeedback — the modality page.
@@ -195,15 +196,18 @@ export default function LensNeurofeedbackPage() {
   const nashvilleHours = hoursSummary(nashville);
   const murfreesboroHours = hoursSummary(murfreesboro);
 
+  const trail = hubTrail("/lens-neurofeedback");
   return (
     <>
-      <JsonLd
-        data={serviceSchema({
-          name: "LENS Neurofeedback",
-          description: metadata.description!,
-          path: "/lens-neurofeedback",
-        })}
+      {/* The page is about the Service node, not the Organization — the
+          one page on the site whose subject is the thing offered. */}
+      <PageSchema
+        path="/lens-neurofeedback"
+        breadcrumb={trail}
+        about={serviceRef()}
+        nodes={[serviceSchema({ description: metadata.description! })]}
       />
+      <Breadcrumbs trail={trail} />
 
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>

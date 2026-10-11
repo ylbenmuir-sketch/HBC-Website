@@ -12,17 +12,22 @@ import {
   TRAINING_CLAIM,
   verifiedOr,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/about");
 
 export default function AboutPage() {
+  const trail = hubTrail("/about");
   // Interpolated, not typed — the count has one home, STAT_SESSIONS, and the
   // hero, the proof band and the meta description all read it.
   const sessionCount = verifiedOr(STAT_SESSIONS);
   return (
     <>
+      <PageSchema path="/about" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">About Harmonized Brain Centers</div>

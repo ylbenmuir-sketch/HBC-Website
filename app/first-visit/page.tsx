@@ -14,7 +14,9 @@ import {
   SESSION_LENGTH,
   SESSION_PRICE,
 } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/first-visit");
@@ -48,8 +50,11 @@ const fiveParts = [
 ];
 
 export default function FirstVisitPage() {
+  const trail = hubTrail("/first-visit");
   return (
     <>
+      <PageSchema path="/first-visit" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

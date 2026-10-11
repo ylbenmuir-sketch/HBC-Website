@@ -5,6 +5,7 @@ import ConcernCard from "@/components/ConcernCard";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { pageMetadata } from "@/lib/pages";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/adults");
@@ -65,14 +66,14 @@ const adultConcerns = [
 ];
 
 export default function AdultsPage() {
+  const trail = [
+    { label: "What We Help With", href: "/what-we-help-with" },
+    { label: "For adults" },
+  ];
   return (
     <>
-      <Breadcrumbs
-        trail={[
-          { label: "What We Help With", href: "/what-we-help-with" },
-          { label: "For adults" },
-        ]}
-      />
+      <PageSchema path="/adults" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

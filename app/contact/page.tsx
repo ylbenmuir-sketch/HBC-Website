@@ -3,12 +3,15 @@ import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locationPhone, locations } from "@/lib/locations";
 import { CONTACT_RESPONSE_TAG, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/contact");
 
 export default function ContactPage() {
+  const trail = hubTrail("/contact");
   /**
    * Both open centers' own lines, not the one sitewide number: the person on
    * this page is deciding which center to visit, and the local number is part
@@ -28,6 +31,8 @@ export default function ContactPage() {
 
   return (
     <>
+      <PageSchema path="/contact" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Talk with our team</div>

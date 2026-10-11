@@ -9,11 +9,11 @@ import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import { Btn, TalkCta } from "@/components/Buttons";
-import JsonLd from "@/components/JsonLd";
+import PageSchema from "@/components/PageSchema";
 import ReadMore from "@/components/ReadMore";
 import { concerns, getConcern } from "@/lib/concerns";
 import { articlesForConcern } from "@/lib/resources";
-import { faqPageSchema } from "@/lib/schema";
+import { faqQuestions } from "@/lib/schema";
 
 export function generateStaticParams() {
   return concerns.map((c) => ({ slug: c.slug }));
@@ -56,16 +56,31 @@ export default async function ConcernPage({
   // their own handoff blocks, so the loop cannot half-close — see
   // articlesForConcern in lib/resources.ts.
   const reading = articlesForConcern(concern.slug);
+  const trail = [
+    { label: "What We Help With", href: "/what-we-help-with" },
+    { label: concern.title },
+  ];
 
   return (
     <>
-      {concern.faqs.length > 0 && <JsonLd data={faqPageSchema(concern.faqs)} />}
-      <Breadcrumbs
-        trail={[
-          { label: "What We Help With", href: "/what-we-help-with" },
-          { label: concern.title },
-        ]}
+      {/* One page node, typed FAQPage as well when the concern carries
+          questions, with the Q&A as its mainEntity — rather than a second
+          page-typed node for the same URL. */}
+      <PageSchema
+        path={`/concerns/${concern.slug}`}
+        breadcrumb={trail}
+        page={{
+          type: concern.faqs.length > 0 ? ["WebPage", "FAQPage"] : "WebPage",
+          name: concern.metaTitle,
+          description: concern.metaDescription,
+          dateModified: concern.dateModified,
+          ...(concern.image ? { image: concern.image.src } : {}),
+          ...(concern.faqs.length > 0
+            ? { mainEntity: faqQuestions(concern.faqs) }
+            : {}),
+        }}
       />
+      <Breadcrumbs trail={trail} />
 
       {medical ? (
         /* The medical-first hero (only /concerns/concussion today).

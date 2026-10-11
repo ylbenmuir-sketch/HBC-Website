@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Crumb } from "./schema";
 import { FOUNDER_DISPLAY_NAME, STAT_SESSIONS, verifiedOr } from "./site-config";
 
 /**
@@ -221,6 +222,15 @@ export const staticPages: StaticPage[] = [
     crumb: "Privacy",
   },
 ];
+
+/**
+ * The breadcrumb for a hub or utility page one level deep: "Home / Locations".
+ * Eleven such routes rendered no crumb at all, visible or marked up — the
+ * SERP's URL slot shows a breadcrumb where one exists (SEO-AUDIT-3 §3.3).
+ */
+export function hubTrail(path: string): Crumb[] {
+  return [{ label: "Home", href: "/" }, { label: getStaticPage(path).crumb }];
+}
 
 export function getStaticPage(path: string): StaticPage {
   const page = staticPages.find((p) => p.path === path);

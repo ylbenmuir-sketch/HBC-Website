@@ -7,7 +7,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
 import { Btn, TalkCta } from "@/components/Buttons";
-import JsonLd from "@/components/JsonLd";
+import PageSchema from "@/components/PageSchema";
 import {
   locations,
   formattedHours,
@@ -19,10 +19,12 @@ import {
   saturdayLabel,
   spacePhotoCount,
 } from "@/lib/locations";
-import { localBusinessSchema } from "@/lib/schema";
+import { localBusinessRef, localBusinessSchema, personSchema } from "@/lib/schema";
+import { type CenterSlug, publishableMembers, teamForCenter } from "@/lib/team";
 import {
   PHYSICIAN_REFERRALS,
   SHOW_DRAFT_CONTENT,
+  SITE_NAME,
   isDraftText,
 } from "@/lib/site-config";
 
@@ -106,6 +108,13 @@ export default async function LocationPage({
   const team = location.team.filter(
     (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
   );
+  // The Person nodes come from the roster through the same [placeholder]
+  // gate the cards use (lib/team.ts), so the markup names exactly the people
+  // the section shows. An open center's `team` IS teamForCenter(); Franklin's
+  // is a hiring card, not people, so it contributes nothing.
+  const people = location.comingSoon
+    ? []
+    : publishableMembers(teamForCenter(location.slug as CenterSlug));
   // Written from the `hours` data in lib/locations.ts, not from copy stored
   // per page — the same call the LocalBusiness schema and the cards make.
   const hoursLines = formattedHours(location);
@@ -133,20 +142,38 @@ export default async function LocationPage({
   // photography brief stays visible.
   const showSpacePhotos = SHOW_DRAFT_CONTENT || spacePhotoCount(location) > 0;
   const spaceBody = !showSpacePhotos ? location.space.body : undefined;
+  const trail = [
+    { label: "Locations", href: "/locations" },
+    { label: location.name },
+  ];
 
   return (
     <>
-      {/* Open centers only. A coming-soon page ships no LocalBusiness —
-          representing an unopened business as operating is against Google's
-          guidance, and Franklin has no opening date yet. It comes back with
-          the launch package (SEO-AUDIT.md §6.3 item 32). */}
-      {!location.comingSoon && <JsonLd data={localBusinessSchema(location)} />}
-      <Breadcrumbs
-        trail={[
-          { label: "Locations", href: "/locations" },
-          { label: location.name },
+      {/* Open centers only get a LocalBusiness and a page `about` it. A
+          coming-soon page ships neither — representing an unopened business
+          as operating is against Google's guidance, and Franklin has no
+          opening date yet. It comes back with the launch package
+          (SEO-AUDIT.md §6.3 item 32). The team section's practitioners get
+          Person nodes from the same gated list the cards render. */}
+      <PageSchema
+        path={`/locations/${location.slug}`}
+        breadcrumb={trail}
+        page={{
+          type: "WebPage",
+          name: location.metaTitle
+            ? location.metaTitle
+            : `${location.name} — ${location.comingSoon ? "Coming Soon — " : ""}${SITE_NAME}`,
+          description: location.metaDescription,
+          dateModified: location.dateModified,
+          ...(location.image ? { image: location.image.src } : {}),
+          ...(location.comingSoon ? {} : { about: localBusinessRef(location) }),
+        }}
+        nodes={[
+          ...(location.comingSoon ? [] : [localBusinessSchema(location)]),
+          ...people.map(personSchema),
         ]}
       />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">

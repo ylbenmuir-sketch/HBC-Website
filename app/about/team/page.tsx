@@ -4,27 +4,29 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
-import { team } from "@/lib/team";
-import {
-  SHOW_DRAFT_CONTENT,
-  TRAINING_CLAIM,
-  isDraftText,
-} from "@/lib/site-config";
+import PageSchema from "@/components/PageSchema";
+import { personSchema } from "@/lib/schema";
+import { publishableMembers, team } from "@/lib/team";
+import { TRAINING_CLAIM } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/about/team");
 
 export default function TeamPage() {
-  // Placeholder roster entries render in draft mode only.
-  const members = team.filter(
-    (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
-  );
+  // Placeholder roster entries render in draft mode only — and the Person
+  // nodes below are built from this same gated list, so the markup names
+  // exactly the people the page shows (lib/schema.ts rule 1).
+  const members = publishableMembers(team);
+  const trail = [{ label: "About", href: "/about" }, { label: "Our team" }];
   return (
     <>
-      <Breadcrumbs
-        trail={[{ label: "About", href: "/about" }, { label: "Our team" }]}
+      <PageSchema
+        path="/about/team"
+        breadcrumb={trail}
+        nodes={members.filter((m) => m.kind !== "hiring").map(personSchema)}
       />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero">
         <div className="wrap rv">
           <div className="eyebrow">Our team</div>

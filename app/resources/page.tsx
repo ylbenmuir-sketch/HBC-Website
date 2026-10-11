@@ -6,16 +6,21 @@ import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import { resources, isPublishable } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
-import { pageMetadata } from "@/lib/pages";
+import { hubTrail, pageMetadata } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/resources");
 
 export default function ResourcesPage() {
+  const trail = hubTrail("/resources");
   // Draft articles render in draft mode only; production lists finished ones.
   const list = resources.filter((r) => SHOW_DRAFT_CONTENT || isPublishable(r));
   return (
     <>
+      <PageSchema path="/resources" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
       <section className="page-hero center">
         <div className="wrap rv">
           <div className="eyebrow">Resources &amp; learning center</div>

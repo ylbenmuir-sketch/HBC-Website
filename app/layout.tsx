@@ -3,11 +3,9 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
-import JsonLd from "@/components/JsonLd";
 import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
 import dynamic from "next/dynamic";
-import { organizationSchema } from "@/lib/schema";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import Analytics from "@/components/Analytics";
 import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION } from "@/lib/analytics";
@@ -165,9 +163,9 @@ export default function RootLayout({
           <a href="#main" className="skip">
             Skip to content
           </a>
-          {/* The one Organization node, sitewide. Location pages reference it
-              by @id rather than restating it — see lib/schema.ts. */}
-          <JsonLd data={organizationSchema()} />
+          {/* No JSON-LD here: every page renders its own single @graph —
+              Organization and WebSite included — through <PageSchema>, so a
+              route has exactly one block. See lib/schema.ts. */}
           <RevealOnScroll />
           <Header />
           <main id="main" tabIndex={-1}>
