@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
+import { trackEvent } from "@/lib/analytics";
 
 const HELPING_OPTIONS = ["My child", "Myself", "Someone else"];
 const CONCERN_OPTIONS = [
@@ -124,6 +125,17 @@ export default function ContactForm() {
         throw new Error(body?.error ?? "Something went wrong.");
       }
       setStatus("success");
+      // The conversion event — the coarse choices and the page, never the
+      // name, phone, email or note. A no-op until GA4 is configured.
+      trackEvent({
+        name: "generate_lead",
+        params: {
+          form: "consultation",
+          source_page: from || pathname,
+          helping_who: helpingWho,
+          preferred_center: preferredCenter,
+        },
+      });
     } catch (err) {
       setErrorMessage(
         err instanceof Error && err.message !== "Failed to fetch"

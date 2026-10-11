@@ -260,6 +260,8 @@ submission requires Supabase credentials.
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
+| `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and the form conversion events (`generate_lead`, `sign_up`) are no-ops. Build-time. See `lib/analytics.ts`. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing Webmaster "HTML tag" tokens (the `content` value). Each renders its meta tag only when set. Build-time. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
 ## Supabase setup

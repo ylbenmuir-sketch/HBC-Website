@@ -9,6 +9,8 @@ import BottomBarDock from "@/components/BottomBarDock";
 import dynamic from "next/dynamic";
 import { organizationSchema } from "@/lib/schema";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
+import Analytics from "@/components/Analytics";
+import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION } from "@/lib/analytics";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
@@ -108,6 +110,15 @@ export const metadata: Metadata = {
   // Spread, never restated. A route that declares its own `openGraph` replaces
   // this object wholesale rather than merging into it — see lib/metadata.ts.
   openGraph: { ...SHARED_OPEN_GRAPH, type: "website" },
+  // Search Console and Bing Webmaster verification, each rendered only when
+  // its token is set — see lib/analytics.ts. Nothing renders while they are
+  // empty, which they are until Ben supplies them (SEO-AUDIT-3 P3).
+  verification: {
+    ...(GOOGLE_SITE_VERIFICATION ? { google: GOOGLE_SITE_VERIFICATION } : {}),
+    ...(BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": BING_SITE_VERIFICATION } }
+      : {}),
+  },
 };
 
 export const viewport: Viewport = {
@@ -175,6 +186,8 @@ export default function RootLayout({
               exists behind the same flag as the assistant it opens — with the
               flag off this is the homepage CTA bar and nothing else. */}
           <BottomBarDock askAvailable={FEATURE_ASSISTANT} />
+          {/* GA4, inert until NEXT_PUBLIC_GA_ID is set — lib/analytics.ts. */}
+          <Analytics />
         </BottomBarProvider>
       </body>
     </html>

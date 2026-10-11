@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { trackEvent } from "@/lib/analytics";
 import {
   GUIDE_DOWNLOAD_NAME,
   GUIDE_HTML_PATH,
@@ -91,6 +92,12 @@ export default function GuideCta({
         throw new Error(body?.error ?? "Something went wrong.");
       }
       setStatus("success");
+      // The guide sign-up as a conversion — the page it came from and
+      // nothing else. A no-op until GA4 is configured (lib/analytics.ts).
+      trackEvent({
+        name: "sign_up",
+        params: { form: "guide", method: "guide", source_page: pathname },
+      });
     } catch (err) {
       setErrorMessage(
         err instanceof Error && err.message !== "Failed to fetch"
