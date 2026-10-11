@@ -960,6 +960,13 @@ export default function HomePage() {
           <Btn href="/faq" variant="ghost" arrow style={{ marginTop: 30 }}>
             All questions, answered plainly
           </Btn>
+          {/* The skepticism page, as one quiet line: the visitor it is for is
+              the one who read the first answer above and still isn't sure. */}
+          <p className="micro rv" style={{ marginTop: 18 }}>
+            Skeptical? Read{" "}
+            <Link href="/is-lens-safe">what we can and can&rsquo;t tell you</Link>
+            .
+          </p>
         </div>
       </section>
 

@@ -113,7 +113,7 @@ export const staticPages: StaticPage[] = [
     title: "LENS Neurofeedback",
     description:
       "LENS — the Low Energy Neurofeedback System — a gentle, passive wellness service at our Nashville and Murfreesboro centers. What it is, and who it's for.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "LENS neurofeedback",
   },
@@ -209,9 +209,23 @@ export const staticPages: StaticPage[] = [
     // 149 chars: the topics the fourteen answers actually cover.
     description:
       "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-11",
     type: "FAQPage",
     crumb: "FAQ",
+  },
+  {
+    path: "/is-lens-safe",
+    // The skepticism cluster's own words — safe, legit, worth it — as the
+    // question the page answers. Absolute: the brand suffix would put it
+    // past 60. 57 chars.
+    title: "Is LENS Neurofeedback Safe, Legit, or Worth It? Middle TN",
+    absoluteTitle: true,
+    // 157 chars. The four sections, in order, and the posture: disclosure.
+    description:
+      "What we can and can't tell you about LENS: what the signal is, what a session feels like, what this site refuses to claim, and where the public Google reviews are.",
+    dateModified: "2026-10-11",
+    type: "FAQPage",
+    crumb: "Is LENS safe?",
   },
   {
     path: "/contact",

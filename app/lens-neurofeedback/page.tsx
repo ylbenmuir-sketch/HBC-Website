@@ -91,20 +91,9 @@ import { hubTrail, pageMetadata } from "@/lib/pages";
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/lens-neurofeedback");
 
-/**
- * Paragraph spacing for the two single-column prose sections (§2 and §4).
- *
- * `globals.css` sets `margin-bottom` on body paragraphs in exactly one place —
- * `.split p` — so prose that sits outside a `.split` runs together with no gap
- * between paragraphs. Both sections here are deliberately single-column (a
- * photo beside the definition would put three split-with-photo sections in a
- * row and flatten the page's rhythm), so they carry the same 18px explicitly
- * rather than earning it from a layout they don't use.
- *
- * The value is `.split p`'s, not a new one. If that rule ever moves to a shared
- * prose class, this constant is what should be deleted in the same edit.
- */
-const PROSE = { marginBottom: 18 } as const;
+// Paragraph spacing for the two single-column prose sections (§2 and §4) is
+// the shared `.split-prose` class in globals.css — the same 18px `.split p`
+// gives, for prose that sits outside a .split.
 
 /**
  * The nine concern pages, focus first.
@@ -253,22 +242,22 @@ export default function LensNeurofeedbackPage() {
             <div className="eyebrow">The short version</div>
             <h2>What LENS is.</h2>
           </div>
-          <div className="rv">
-            <p style={PROSE}>
+          <div className="rv split-prose">
+            <p>
               <b>The name is literal.</b> Small sensors sit on the scalp and
               read the brain&rsquo;s electrical activity at that spot. Based on
               what it reads, the system returns a brief feedback signal &mdash;
               far weaker than the signal from the phone in your pocket, and
               lasting a fraction of a second. That is the entire exchange.
             </p>
-            <p style={PROSE}>
+            <p>
               <b>The signal carries no instruction.</b> What follows is your own
               nervous system responding to information about itself, which is
               why there is nothing to concentrate on, nothing to watch, and
               nothing to get right. Most people, including young children, feel
               nothing at all.
             </p>
-            <p style={PROSE}>
+            <p>
               <b>A session is short.</b> Regular sessions run{" "}
               {SESSION_LENGTH.value} in a comfortable chair. Many clients read
               or simply rest.
@@ -345,14 +334,14 @@ export default function LensNeurofeedbackPage() {
             <div className="eyebrow">Where LENS sits</div>
             <h2>Is LENS therapy, or medical treatment?</h2>
           </div>
-          <div className="rv">
-            <p style={PROSE}>
+          <div className="rv split-prose">
+            <p>
               LENS is offered as a wellness service, not medical treatment.
               We&rsquo;re a wellness practice: LENS doesn&rsquo;t diagnose or
               treat medical or psychiatric conditions, and it isn&rsquo;t a
               substitute for care from your doctor or therapist.
             </p>
-            <p style={PROSE}>
+            <p>
               If you&rsquo;re already seeing someone, please keep seeing them.
               LENS is routinely used alongside other care, and we&rsquo;re glad
               to coordinate with providers you already trust. We never advise on
@@ -372,6 +361,12 @@ export default function LensNeurofeedbackPage() {
             <div className="hero-ctas" style={{ marginTop: 26 }}>
               <Btn href="/faq" variant="ghost" arrow>
                 Read the FAQ
+              </Btn>
+              {/* The honest-disclosure page for "is it safe / legit / worth
+                  it" — the question this section opens belongs there in
+                  full. */}
+              <Btn href="/is-lens-safe" variant="ghost" arrow>
+                Is LENS safe, legit, or worth it?
               </Btn>
             </div>
           </div>

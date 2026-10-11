@@ -638,6 +638,11 @@ details.faq .a a { color: var(--sage-deep); }
 .split .ph, .split .plate { height: 500px; }
 .split h2 { margin: 22px 0 20px; }
 .split p { margin-bottom: 18px; }
+/* The same paragraph gap for single-column prose that sits outside a .split
+   — /lens-neurofeedback's two prose sections, /brain-map, /is-lens-safe.
+   One value, stated once; it used to be an inline constant on the one page
+   that needed it. */
+.split-prose p { margin-bottom: 18px; }
 
 /* entry rows (concern overview) */
 .entry { display: grid; grid-template-columns: 320px 1fr 1fr; gap: 66px; padding: 60px 0; border-bottom: 1px solid var(--line); }
@@ -657,6 +662,11 @@ details.faq .a a { color: var(--sage-deep); }
 .related a { display: inline-flex; align-items: center; gap: 8px; color: var(--navy); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); padding-bottom: 3px; }
 /* inline links inside a lens-seq row (location "Communities served") */
 .lens-seq p a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+/* The two review-listing links on /is-lens-safe — a sentence of links, in
+   the same treatment, at body size. */
+.review-out { font-size: 17px; line-height: 2; }
+.review-out a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
+.review-out a:hover { border-color: var(--gold); }
 
 /* Inline links inside `.article` prose, for the one page that needs them.
 

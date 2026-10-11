@@ -5,6 +5,7 @@ import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
+import { Btn } from "@/components/Buttons";
 import { faqQuestions } from "@/lib/schema";
 import { SITE_FAQS } from "@/lib/faq";
 import { hubTrail, pageMetadata } from "@/lib/pages";
@@ -68,6 +69,13 @@ export default function FaqPage() {
       <section className="sec">
         <div className="wrap" style={{ maxWidth: 900 }}>
           <FAQAccordion items={faqs} openFirst />
+          {/* The skepticism page: the two safety answers above, plus what the
+              site refuses to claim and where the public reviews are. */}
+          <div className="hero-ctas rv" style={{ marginTop: 40 }}>
+            <Btn href="/is-lens-safe" variant="ghost" arrow>
+              Still skeptical? What we can and can&rsquo;t tell you
+            </Btn>
+          </div>
         </div>
       </section>
       <FinalCTA />
