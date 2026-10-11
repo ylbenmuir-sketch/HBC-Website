@@ -3,6 +3,10 @@ import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
 const nextConfig: NextConfig = {
+  /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
+   *  scanner wants (SEO-AUDIT-3 §2.4). */
+  poweredByHeader: false,
+
   /**
    * Pin the workspace root to this directory.
    *
@@ -133,6 +137,36 @@ const nextConfig: NextConfig = {
       // cannot carry a 410, and a two-hop answer that ends in "gone" is the
       // right answer for a URL nobody should keep linking.
       { source: "/:path+/", destination: "/:path+", permanent: true },
+    ];
+  },
+
+  /**
+   * Three hygiene headers on every response (SEO-AUDIT-3 A14). Not ranking
+   * factors; the things anyone who checks expects to find. No CSP here: one
+   * written in a config file would either break the inline reveal script in
+   * app/layout.tsx and the GA4 loader or be loose enough to be decorative,
+   * and HSTS belongs to the host, which owns the certificate.
+   *
+   * - `nosniff` — browsers honour the declared content type, so a response
+   *   can never be re-read as a script.
+   * - `strict-origin-when-cross-origin` — the browser default, stated: full
+   *   referrer to our own pages, origin only to anyone else's.
+   * - Permissions-Policy — the site never asks for a camera, microphone or
+   *   location, so nothing embedded in it may either.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=()",
+          },
+        ],
+      },
     ];
   },
 
