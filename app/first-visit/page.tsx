@@ -59,8 +59,8 @@ export default function FirstVisitPage() {
             <h1>Know exactly what to expect &mdash; before you ever walk in.</h1>
             <p className="sub">
               No clipboard queue, no waiting-room limbo, no surprises.
-              Here&rsquo;s the first visit, minute by minute, for adults and
-              for children.
+              Here&rsquo;s your first neurofeedback visit, minute by minute,
+              for adults and for children.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
@@ -172,7 +172,7 @@ export default function FirstVisitPage() {
       </section>
 
       <FinalCTA
-        heading="Still have a question about the first visit? Just ask."
+        heading="Still have a question about your first neurofeedback visit? Just ask."
         sub="Call or send a note — a real person will answer it plainly."
       />
     </>

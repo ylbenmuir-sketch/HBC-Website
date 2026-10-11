@@ -153,7 +153,7 @@ export default async function ConcernPage({
             <div className="wrap" style={{ maxWidth: 860 }}>
               <div className="sec-head rv" style={{ marginBottom: 26 }}>
                 <div className="eyebrow">The pattern</div>
-                <h2>Why this looks like the rest of our work.</h2>
+                <h2>Why this looks like the rest of our neurofeedback work.</h2>
               </div>
               <p className="rv">{concern.howHelp.p1}</p>
               {concern.bodyLink && (
@@ -270,13 +270,22 @@ export default async function ConcernPage({
           emotional-regulation today. */}
       <ReadMore articles={reading} />
 
-      {/* The closing line is approved copy on the concussion page and belongs
-          with the ask, so it replaces the band's standard sub there. */}
+      {/* Both cities, named once on every concern page, here — the CTA band
+          is where a visitor is deciding whether to call, and "where are you"
+          is the question that decides it (SEO-AUDIT-3 A1). The closing line
+          is approved copy on the two medical-first pages and belongs with the
+          ask, so there it stays as the sub and the cities go in the heading
+          instead; everywhere else the standard sub carries them. */}
       <FinalCTA
+        heading={
+          medical
+            ? "Talk to us first — Nashville or Murfreesboro. No commitment."
+            : undefined
+        }
         sub={
           medical
             ? "The first call is free, and if LENS isn't the right fit, we'll tell you that on the phone before you spend anything."
-            : undefined
+            : "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything at our Nashville or Murfreesboro center."
         }
       />
       <GuideCta headingLead={`${concern.guideHeading} Read`} />

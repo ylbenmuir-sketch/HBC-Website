@@ -36,8 +36,8 @@ export default function ChildrenFamiliesPage() {
             </h1>
             <p className="sub">
               Homework battles, meltdowns, hard transitions, sensory overwhelm
-              &mdash; bright kids trying hard and still struggling. We work
-              gently, and we work with the whole family.
+              &mdash; bright kids trying hard and still struggling. LENS
+              neurofeedback is gentle, and we work with the whole family.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
@@ -76,7 +76,8 @@ export default function ChildrenFamiliesPage() {
           <div className="rv">
             <div className="eyebrow">Why kids do well here</div>
             <p style={{ margin: "26px 0 18px" }}>
-              There is nothing a child has to get right in a LENS session. No
+              There is nothing a child has to get right in a LENS neurofeedback
+              session. No
               sitting perfectly still, no concentrating, no being corrected.
               Kids read, draw, or just be kids while the session runs.
             </p>

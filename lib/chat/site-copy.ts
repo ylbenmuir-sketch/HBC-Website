@@ -457,9 +457,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "bring",
           "nervous",
         ],
-        text: "Know exactly what to expect — before you ever walk in. No clipboard queue, no waiting-room limbo, no surprises. Here’s the first visit, minute by minute, for adults and for children. Nothing to prepare or bring.",
+        text: "Know exactly what to expect — before you ever walk in. No clipboard queue, no waiting-room limbo, no surprises. Here’s your first neurofeedback visit, minute by minute, for adults and for children. Nothing to prepare or bring.",
         mirror: [
-          "Know exactly what to expect — before you ever walk in. No clipboard queue, no waiting-room limbo, no surprises. Here’s the first visit, minute by minute, for adults and for children.",
+          "Know exactly what to expect — before you ever walk in. No clipboard queue, no waiting-room limbo, no surprises. Here’s your first neurofeedback visit, minute by minute, for adults and for children.",
           "Nothing to prepare or bring",
         ],
       },

@@ -90,7 +90,8 @@ export default function AdultsPage() {
               You&rsquo;re holding the job, the family, the calendar. And
               you&rsquo;re exhausted, foggy, wired at midnight, or a shorter
               version of yourself than you&rsquo;d like to be. That&rsquo;s
-              what we work on.
+              what we work on &mdash; with gentle LENS neurofeedback, in
+              sessions that ask nothing of you.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
@@ -138,7 +139,7 @@ export default function AdultsPage() {
             <div className="eyebrow">Built for full calendars</div>
             <h2>Short sessions. Nothing to practice. No homework.</h2>
             <p>
-              Visits fit inside a lunch break, there&rsquo;s nothing to master
+              Neurofeedback visits fit inside a lunch break, there&rsquo;s nothing to master
               between sessions, and your progress review takes minutes &mdash;
               because we&rsquo;ve been tracking it all along.
             </p>

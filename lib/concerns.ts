@@ -13,6 +13,18 @@
  * on its entry. Migraines is the second concern to carry `medicalFirst`, and
  * the strictest page on the site: it describes who comes in and never what
  * happens to them. Its rules are on the entry.
+ *
+ * **"Neurofeedback" is in every heroSub and once more in every howHelp.p1**
+ * (Oct 2026, SEO-AUDIT-3 A1). The concern bodies were written in brand
+ * language — "LENS", "regulation" — and the category word people search
+ * with appeared in the <title> alone, which is the one place Google is most
+ * willing to rewrite. The first paragraph now carries "LENS neurofeedback"
+ * and the body one more; the two medical-first pages, whose hero copy is
+ * approved verbatim, carry it in their limits `note` and in the template's
+ * "The pattern" heading instead. Both cities are named once per page in the
+ * FinalCTA band (app/concerns/[slug]/page.tsx). Keep it to that — the
+ * assistant indexes every one of these strings, and a word repeated for
+ * ranking is a word made cheaper for routing.
  */
 
 import {
@@ -208,7 +220,7 @@ export const concerns: Concern[] = [
     titleAccent: "overload",
     who: "Adults & children",
     heroSub:
-      "For people whose bodies stay on alert long after the moment has passed — and who are tired of being told to just relax.",
+      "Gentle LENS neurofeedback for people whose bodies stay on alert long after the moment has passed — and who are tired of being told to just relax.",
     overview: {
       recognize:
         "A body that stays braced long after the stressful moment has passed. Racing thoughts at bedtime. Overreacting to small stressors, and unable to relax even when life is calm.",
@@ -225,7 +237,7 @@ export const concerns: Concern[] = [
       "Feeling mentally or physically stuck in high alert",
     ],
     howHelp: {
-      p1: "An anxious nervous system often feels like a system working harder than it needs to. LENS sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform — and many clients tell us they gradually feel more settled over a series of visits.",
+      p1: "An anxious nervous system often feels like a system working harder than it needs to. LENS neurofeedback sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform — and many clients tell us they gradually feel more settled over a series of visits.",
       p2: "There's nothing to perform and nothing invasive. We check how settled you actually feel — sleep, tension, reactivity — at every visit, and let your experience guide the plan.",
       note: "LENS is a wellness service, not a treatment for anxiety disorders. It works alongside — never in place of — care from your doctor or therapist. Individual experiences vary.",
     },
@@ -263,7 +275,7 @@ export const concerns: Concern[] = [
     titleAccent: "follow-through",
     who: "Adults & children",
     heroSub:
-      "For bright kids whose homework takes three hours, and adults whose projects stall at 90 percent — people who care, try hard, and still can't stay on task.",
+      "LENS neurofeedback for bright kids whose homework takes three hours, and adults whose projects stall at 90 percent — people who care, try hard, and still can't stay on task.",
     overview: {
       recognize:
         "Homework that takes three hours and ends in tears. Projects that stall at 90 percent. Losing track mid-task, and procrastinating on things you genuinely care about.",
@@ -280,7 +292,7 @@ export const concerns: Concern[] = [
       "Losing track mid-task, mid-sentence, mid-plan",
     ],
     howHelp: {
-      p1: "Struggling to focus often feels like working against your own noise. LENS asks nothing of you — nothing to practice, no screens to watch, no tasks to perform — and many clients report feeling clearer and steadier over a series of sessions.",
+      p1: "Struggling to focus often feels like working against your own noise. LENS neurofeedback asks nothing of you — nothing to practice, no screens to watch, no tasks to perform — and many clients report feeling clearer and steadier over a series of sessions.",
       p2: "Focus and follow-through are tracked at every check-in — homework, deadlines, the everyday specifics — and your plan adjusts to what's actually changing.",
       note: "LENS is a wellness service, not a treatment for ADHD or any diagnosis. It works alongside — never in place of — your doctor, therapist, or school supports. Individual experiences vary.",
     },
@@ -318,7 +330,7 @@ export const concerns: Concern[] = [
     titleAccent: "difficulties",
     who: "Adults & children",
     heroSub:
-      "For minds that won't shut off at night, 3 a.m. wakings with no reason, and eight hours that somehow feel like four.",
+      "LENS neurofeedback for minds that won't shut off at night, 3 a.m. wakings with no reason, and eight hours that somehow feel like four.",
     overview: {
       recognize:
         "A mind that won't shut off at night. Waking at 3 a.m. for no reason. Sleeping many hours and still waking exhausted.",
@@ -361,7 +373,7 @@ export const concerns: Concern[] = [
        * win bare topic words. The ending here adds no sleep vocabulary at all
        * and the sweep comes back at zero.
        */
-      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS sessions are quiet and passive — nothing to perform, and nothing to keep up with between visits.",
+      p1: "A wired, on-alert evening doesn't stand down just because the lights went out. LENS neurofeedback sessions are quiet and passive — nothing to perform, and nothing to keep up with between visits.",
       p2: "Sleep is one of the first things we ask about at every visit. Your plan adjusts to what your nights are telling us — falling asleep, staying asleep, and how mornings actually feel.",
       note: "LENS is a wellness service, not a treatment for sleep disorders. It works alongside — never in place of — care from your doctor. Individual experiences vary.",
     },
@@ -404,7 +416,7 @@ export const concerns: Concern[] = [
     titleAccent: "regulation",
     who: "Often children — and their parents",
     heroSub:
-      "For the child who becomes overwhelmed in seconds and stays upset for hours — and the parents living every meltdown alongside them.",
+      "Gentle LENS neurofeedback for the child who becomes overwhelmed in seconds and stays upset for hours — and the parents living every meltdown alongside them.",
     overview: {
       recognize:
         "Becoming overwhelmed quickly. Intense reactions that are hard to stop. Struggling with transitions, and staying upset long after the original problem has passed.",
@@ -421,7 +433,7 @@ export const concerns: Concern[] = [
       "A short fuse — and a long recovery",
     ],
     howHelp: {
-      p1: "Big reactions often come from tipping into overwhelm faster than it's possible to recover. LENS sessions are gentle and passive — nothing to get right, nothing to perform — and many families tell us the hard moments gradually get shorter and end in recovery.",
+      p1: "Big reactions often come from tipping into overwhelm faster than it's possible to recover. LENS neurofeedback sessions are gentle and passive — nothing to get right, nothing to perform — and many families tell us the hard moments gradually get shorter and end in recovery.",
       p2: "There's nothing a child has to get right in a LENS session — which matters for kids tired of being corrected. Parents join every check-in, and we track what matters at home: transitions, recoveries, and how the hard moments actually go.",
       note: "LENS is a wellness service and doesn't diagnose or treat any condition. It works alongside — never in place of — therapists, pediatricians, and school supports. Individual experiences vary.",
     },
@@ -459,7 +471,7 @@ export const concerns: Concern[] = [
     titleAccent: "fatigue",
     who: "Most often adults",
     heroSub:
-      "For thinking that feels slow or cloudy, words that vanish mid-sentence, and a mind that's exhausted by responsibilities it used to handle easily.",
+      "LENS neurofeedback for thinking that feels slow or cloudy, words that vanish mid-sentence, and a mind that's exhausted by responsibilities it used to handle easily.",
     overview: {
       recognize:
         "Thinking that feels slow or cloudy. Losing words mid-sentence. Forgetting why you entered the room, and feeling cognitively exhausted by normal responsibilities.",
@@ -476,7 +488,7 @@ export const concerns: Concern[] = [
       "Cognitively exhausted by normal responsibilities",
     ],
     howHelp: {
-      p1: "A foggy brain often feels like a tired one — energy going to noise instead of the task in front of you. LENS sessions are brief and passive, and many clients report thinking feeling clearer and less effortful over a series of visits.",
+      p1: "A foggy brain often feels like a tired one — energy going to noise instead of the task in front of you. LENS neurofeedback sessions are brief and passive, and many clients report thinking feeling clearer and less effortful over a series of visits.",
       p2: "We start with a consultation and a baseline recording of brain activity, then track clarity, recall, and mental energy across your sessions — in everyday specifics, not vague impressions.",
       note: "LENS is a wellness service and doesn't diagnose or treat any medical condition. If you're concerned about cognitive change, talk with your doctor — LENS works alongside, never in place of, that care. Individual experiences vary.",
     },
@@ -514,7 +526,7 @@ export const concerns: Concern[] = [
     titleAccent: "resilience",
     who: "Most often adults",
     heroSub:
-      "For people who are functioning — holding the job, the family, the calendar — and quietly running on empty.",
+      "LENS neurofeedback for people who are functioning — holding the job, the family, the calendar — and quietly running on empty.",
     overview: {
       recognize:
         "Functioning, but close to burnout. Rest that doesn't restore. Carrying stress physically, and unable to recover after difficult days.",
@@ -531,7 +543,7 @@ export const concerns: Concern[] = [
       "Wanting to handle normal stress normally",
     ],
     howHelp: {
-      p1: "A system that never stands down eventually wears down. LENS sessions ask nothing of you — a comfortable chair, a very low-energy feedback signal, a genuine pause — and many clients report recovering from hard days more easily over time.",
+      p1: "A system that never stands down eventually wears down. LENS neurofeedback sessions ask nothing of you — a comfortable chair, a very low-energy feedback signal, a genuine pause — and many clients report recovering from hard days more easily over time.",
       p2: "Sessions are short enough to keep in a full life, and they ask nothing of you — no practicing, no performing. For many clients, that genuine off-switch is where things begin to turn.",
       note: "LENS is a wellness service, not a medical treatment for burnout or any condition. It works alongside — never in place of — care from your doctor or therapist. Individual experiences vary.",
     },
@@ -569,7 +581,7 @@ export const concerns: Concern[] = [
     titleAccent: "transitions",
     who: "Children & teens",
     heroSub:
-      "For the bright kid who can't show what they know — morning battles, meltdowns, sensory overwhelm, and a child trying hard and still struggling.",
+      "Gentle LENS neurofeedback for the bright kid who can't show what they know — morning battles, meltdowns, sensory overwhelm, and a child trying hard and still struggling.",
     overview: {
       recognize:
         "A bright kid who can't show what they know. Morning battles, meltdowns, sensory overwhelm, low frustration tolerance — a child trying hard and still struggling.",
@@ -586,7 +598,7 @@ export const concerns: Concern[] = [
       "A child starting to say “I'm just bad at school”",
     ],
     howHelp: {
-      p1: "There is nothing a child has to get right in a LENS session. No sitting perfectly still, no concentrating, no being corrected — kids read, draw, or just be kids while the session runs.",
+      p1: "There is nothing a child has to get right in a LENS neurofeedback session. No sitting perfectly still, no concentrating, no being corrected — kids read, draw, or just be kids while the session runs.",
       p2: "A parent joins every check-in, and we track what actually matters at home: mornings, homework, sleep — and how your child talks about themselves.",
       note: "We coordinate happily with teachers, therapists, and pediatricians. LENS is a wellness service and never replaces their care. Individual experiences vary.",
     },
@@ -624,7 +636,7 @@ export const concerns: Concern[] = [
     titleAccent: "stress",
     who: "Adults & children",
     heroSub:
-      "For when the past keeps the present from feeling safe — staying vigilant in rooms where nothing is wrong, with sleep, focus, and calm carrying the weight.",
+      "Gentle LENS neurofeedback for people whose past keeps the present from feeling safe — staying vigilant in rooms where nothing is wrong, with sleep, focus, and calm carrying the weight.",
     overview: {
       recognize:
         "When the past keeps the present from feeling safe. Staying vigilant in rooms where nothing is wrong — with sleep, focus, and calm carrying the weight.",
@@ -641,7 +653,7 @@ export const concerns: Concern[] = [
       "The past keeping the present from feeling safe",
     ],
     howHelp: {
-      p1: "LENS doesn't require you to retell or relive anything. Sessions are quiet and predictable — small sensors, a comfortable chair, nothing asked of you — while the system delivers its very low-energy feedback signal. Many clients describe sessions themselves as calming.",
+      p1: "LENS neurofeedback doesn't require you to retell or relive anything. Sessions are quiet and predictable — small sensors, a comfortable chair, nothing asked of you — while the system delivers its very low-energy feedback signal. Many clients describe sessions themselves as calming.",
       p2: "Sessions pair well with the therapy or support you already trust, and we're glad to coordinate with providers you're working with. We track how settled you actually feel at every visit.",
       note: "LENS is a wellness service, not a treatment for PTSD or any condition. It works alongside — never in place of — care from your therapist or doctor. Individual experiences vary.",
     },
@@ -702,7 +714,7 @@ export const concerns: Concern[] = [
     titleAccent: "more than this.",
     who: "Executives, founders & musicians",
     heroSub:
-      "For people who used to operate at a level they can't reach now — not a crisis, just a gap you can feel between how you worked then and how the same week goes today.",
+      "LENS neurofeedback for people who used to operate at a level they can't reach now — not a crisis, just a gap you can feel between how you worked then and how the same week goes today.",
     overview: {
       recognize:
         "Brain fog where there didn't use to be any. Word recall that's become a struggle. Stress that used to be easier to handle, creative flow that used to come, and work that no longer gets finished by the deadline.",
@@ -720,7 +732,7 @@ export const concerns: Concern[] = [
       "Struggling to finish things by the deadline",
     ],
     howHelp: {
-      p1: "Operating below your own baseline is its own kind of tiring — you know exactly where the level is, because you used to work at it. LENS sessions ask nothing of you: small sensors, a very low-energy feedback signal, nothing to perform and nothing to practice between visits. A strange fit for high performers, and a deliberate one.",
+      p1: "Operating below your own baseline is its own kind of tiring — you know exactly where the level is, because you used to work at it. LENS neurofeedback sessions ask nothing of you: small sensors, a very low-energy feedback signal, nothing to perform and nothing to practice between visits. A strange fit for high performers, and a deliberate one.",
       p2: `Your first visit is ${BRAIN_MAP_NAME} — ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. It's a recording, not a test you can fail. After that, every visit tracks the specifics you named: recall, deadlines, stress recovery, how the week actually went.`,
       note: "LENS is a wellness service, not a treatment for any condition — and a marked change in memory or thinking is worth ruling out with your doctor, because the same picture can come from causes testing finds. LENS works alongside — never in place of — that care. Individual experiences vary.",
     },
@@ -837,7 +849,7 @@ export const concerns: Concern[] = [
       // LENS help with concussion?" — without it that question has no limit to
       // answer with. Worded to say less than the others, not more: no verb
       // that could be read as treating an injury.
-      note: "LENS is a wellness service. It doesn't treat concussion or brain injury of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
+      note: "LENS neurofeedback is a wellness service. It doesn't treat concussion or brain injury of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
     },
     goals: [],
     /*
@@ -997,7 +1009,7 @@ export const concerns: Concern[] = [
       p2: `The first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, a ${BRAIN_MAP_POINTS}-point recording of brain activity, and a written plan you keep. It's a recording, not a test — and not a medical assessment of your headaches.`,
       // The one limitation sentence, concussion's register: worded to say
       // less than the other concerns' notes, not more.
-      note: "LENS is a wellness service. It doesn't treat migraines or headaches of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
+      note: "LENS neurofeedback is a wellness service. It doesn't treat migraines or headaches of any kind, and it never stands in for the care of a doctor. Individual experiences vary.",
     },
     goals: [],
     faqs: [

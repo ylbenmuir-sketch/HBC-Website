@@ -27,7 +27,8 @@ export default function WhatWeHelpWithPage() {
             <p className="sub">
               You don&rsquo;t need a diagnosis to be here. These are the
               concerns that most often bring adults and children through our
-              doors, described the way real families describe them.
+              doors for LENS neurofeedback, described the way real families
+              describe them.
             </p>
           </div>
           <div
@@ -143,8 +144,8 @@ export default function WhatWeHelpWithPage() {
             <div className="eyebrow">A note on honesty</div>
             <h2>We&rsquo;d rather earn your trust than your booking.</h2>
             <p>
-              If what you&rsquo;re navigating isn&rsquo;t a fit for LENS,
-              we&rsquo;ll say so in your first conversation &mdash; and point
+              If what you&rsquo;re navigating isn&rsquo;t a fit for LENS
+              neurofeedback, we&rsquo;ll say so in your first conversation &mdash; and point
               you toward what might serve you better. We work alongside
               therapists, physicians, and schools, not in place of them.
             </p>
