@@ -24,12 +24,11 @@ import { SITE_URL } from "@/lib/site-config";
  * Google-Extended, Applebot-Extended, Amazonbot, Meta-ExternalAgent) are how
  * "neurofeedback near Nashville" gets answered in ChatGPT, Perplexity, Gemini
  * grounding and the rest; blocking them is leaving the room. The pure
- * training crawlers (GPTBot, CCBot, Bytespider, anthropic-ai) are the open
- * question: being in the model is a marketing outcome for a practice whose
- * content is marketing, and that is the default taken here (SEO-AUDIT-3
- * §5.1, A11, P8). **This is a default, not Ben's decision** — he has not
- * said yes or no to the training half. To say no, move those four names to
- * a rule of their own with `disallow: "/"`.
+ * training crawlers (GPTBot, CCBot, Bytespider, anthropic-ai) are allowed
+ * too: being in the model is a marketing outcome for a practice whose
+ * content is marketing (SEO-AUDIT-3 §5.1, A11, P8). **Confirmed by Ben,
+ * Oct 2026** — this is a decision, not a default. To reverse it, move
+ * those four names to a rule of their own with `disallow: "/"`.
  */
 const DISALLOW = ["/api/", "/guides/"];
 
@@ -46,7 +45,7 @@ const SEARCH_AND_ANSWER_AGENTS = [
   "Meta-ExternalAgent",
 ];
 
-/** Training-only crawlers. Allowed by default — see the note above. */
+/** Training-only crawlers. Allowed — Ben's decision, Oct 2026; see above. */
 const TRAINING_AGENTS = ["GPTBot", "CCBot", "Bytespider", "anthropic-ai"];
 
 export default function robots(): MetadataRoute.Robots {

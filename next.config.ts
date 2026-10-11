@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
    *
    * The row marked **default** is the one Ben has not decided (P6 in
    * SEO-AUDIT-3): `/refer-a-friend/` has no equivalent in the rebuild, so it
-   * goes to the hub until he says otherwise. (`/concierge/` was the other;
+   * goes to /contact until he says otherwise. (`/concierge/` was the other;
    * /concierge is a page as of Oct 2026.)
    *
    * The ~55 individual WordPress posts are NOT here: the audit asked for one
@@ -128,8 +128,10 @@ const nextConfig: NextConfig = {
       ...to(["/blog", "/advice-center"], "/resources"),
       // /concierge is a page again (Oct 2026), so its legacy URL needs no
       // row: the catch-all at the end turns `/concierge/` into `/concierge`.
-      // **default** — undecided (P6). No equivalent page exists.
-      ...to(["/refer-a-friend"], "/what-we-help-with"),
+      // **default** — flagged, still Ben's to confirm (P6). No equivalent
+      // page exists; /contact is where someone sent by a friend would want
+      // to end up, which is the nearest honest answer. Was the hub.
+      ...to(["/refer-a-friend"], "/contact"),
       ...to(["/phoneschedule", "/new-client-intake-form"], "/contact"),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
