@@ -127,12 +127,18 @@ export default async function ConcernPage({
               </div>
             </div>
             <div className="rv">
+              {/* The LCP element on this template (SEO-AUDIT-3 §2.5). It
+                  shipped `loading="lazy"` — a second of load delay before the
+                  request even started under Lighthouse's throttle. `priority`
+                  preloads it and sets fetchpriority=high. */}
               {concern.image ? (
                 <PhotoFrame
                   src={concern.image.src}
                   alt={concern.title}
                   position={concern.image.position}
                   height={460}
+                  sizes="(max-width: 1060px) 100vw, 47vw"
+                  priority
                 />
               ) : (
                 <PlaceholderPlate spec={concern.plateSpec ?? ""} height={460} />

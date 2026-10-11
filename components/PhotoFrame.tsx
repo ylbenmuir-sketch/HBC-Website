@@ -19,6 +19,14 @@ import type { CSSProperties } from "react";
  * definite `aspect-ratio` resolves to a definite *width*, so the frame stops
  * fitting its column and starts sizing it. `.ph-aspect` is what lets those
  * rules exclude the ratio-pinned case and keep meaning what they say.
+ *
+ * `priority` also sets `fetchPriority="high"`. next/image's `priority` only
+ * preloads and un-lazies; the fetch-priority hint is a separate prop it does
+ * not set, and Lighthouse's LCP-discovery audit (`lcp-discovery-insight`)
+ * flagged every template's LCP image for lacking it (SEO-AUDIT-3 §2.5). The
+ * two always travel together here — an image worth preloading is worth
+ * fetching ahead of the stylesheet's fonts — so a caller cannot ask for one
+ * without the other.
  */
 export default function PhotoFrame({
   src,
@@ -63,6 +71,7 @@ export default function PhotoFrame({
         fill
         sizes={sizes}
         priority={priority}
+        fetchPriority={priority ? "high" : undefined}
         style={{
           objectFit: "cover",
           // --ph-pos-active is only defined ≤760px (globals.css), where it

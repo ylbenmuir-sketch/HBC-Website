@@ -294,6 +294,8 @@ export default async function LocationPage({
                 position={location.image.position}
                 height={560}
                 className="hero-ph"
+                sizes="(max-width: 1060px) 100vw, 47vw"
+                priority
               />
             ) : (
               <PlaceholderPlate

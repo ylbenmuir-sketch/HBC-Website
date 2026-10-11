@@ -121,6 +121,7 @@ export default async function ArticlePage({
               height={420}
               className="rv above-fold"
               sizes="(max-width: 760px) 100vw, 760px"
+              priority
             />
           ) : (
             <PlaceholderPlate
