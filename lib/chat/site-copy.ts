@@ -697,10 +697,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "tennessee",
           "neurofeedback",
         ],
-        text: "Help for anxiety, focus, and sleep — without medication. Gentle LENS neurofeedback for adults and kids across Middle Tennessee.",
+        text: "Help for anxiety, focus, and sleep — without medication. Harmonized Brain Centers is a wellness practice offering gentle LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         mirror: [
           "Help for anxiety, focus, and sleep — without medication.",
-          "Gentle LENS neurofeedback for adults and kids across Middle Tennessee.",
+          "Harmonized Brain Centers is a wellness practice offering gentle LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         ],
       },
     ],

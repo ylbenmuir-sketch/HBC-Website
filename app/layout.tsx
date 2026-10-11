@@ -104,7 +104,11 @@ export const metadata: Metadata = {
   // ones, and no generateMetadata has to restate it. This is what stops
   // ?utm_… / ?gclid= variants and any apex-vs-www drift from indexing as
   // separate URLs.
-  alternates: { canonical: "./" },
+  alternates: {
+    canonical: "./",
+    // Feed discovery for the resources library — /resources/feed.xml.
+    types: { "application/rss+xml": "/resources/feed.xml" },
+  },
   // Spread, never restated. A route that declares its own `openGraph` replaces
   // this object wholesale rather than merging into it — see lib/metadata.ts.
   openGraph: { ...SHARED_OPEN_GRAPH, type: "website" },

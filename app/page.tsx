@@ -319,11 +319,14 @@ export default function HomePage() {
               Help for anxiety, focus, and sleep &mdash;{" "}
               <em className="sage">without medication.</em>
             </h1>
-            {/* No .kw spans: the concern keywords they marked are in the H1
-                now, and the sub carries category and location instead. */}
+            {/* The one declarative sentence about what the organisation is,
+                on the page every engine fetches first. It lived only on
+                /about (SEO-AUDIT-3 §5.3, A11). Mirrored in
+                lib/chat/site-copy.ts — edit both. */}
             <p className="sub">
-              Gentle LENS neurofeedback for adults and kids across Middle
-              Tennessee.
+              Harmonized Brain Centers is a wellness practice offering gentle
+              LENS neurofeedback for adults and kids across Middle Tennessee,
+              from centers in Nashville and Murfreesboro.
             </p>
             <div className="hero-ctas">
               <TalkCta />
