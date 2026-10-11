@@ -325,11 +325,14 @@ if (guideHtml !== null) {
   }
 
   // Root-relative or off-site, never our own domain spelled out: an absolute
-  // self-link works in production and silently leaves every preview.
+  // self-link works in production and silently leaves every preview. Only
+  // <a> links — the canonical below is the one href that has to be absolute.
   guideChecks += 1;
   const host = new URL(SITE_URL).host.replace(/^www\./, "");
   const absolute = [
-    ...guideHtml.matchAll(new RegExp(`href="https?://(?:www\\.)?${host}[^"]*"`, "g")),
+    ...guideHtml.matchAll(
+      new RegExp(`<a\\s[^>]*href="https?://(?:www\\.)?${host}[^"]*"`, "g")
+    ),
   ].map((m) => m[0]);
   if (absolute.length > 0) {
     failures.push(
@@ -337,6 +340,20 @@ if (guideHtml !== null) {
         absolute.map((a) => `      ${a}`).join("\n") +
         `\n    Make them root-relative (/contact, /first-visit, …). Absolute self-links\n` +
         `    resolve in production and send every preview visitor to the live site.`
+    );
+  }
+
+  // The self-canonical: absolute by necessity, and it has to name this exact
+  // file under the canonical host. Checked here because nothing else reads
+  // the static guide (SEO-AUDIT-3 A16).
+  guideChecks += 1;
+  const canonical = guideHtml.match(/<link rel="canonical" href="([^"]*)"/);
+  const expectedCanonical = `https://${host}${GUIDE_HTML_PATH}`;
+  if (!canonical) {
+    failures.push(`${guideFile}\n    has no <link rel="canonical">; expected ${expectedCanonical}`);
+  } else if (canonical[1] !== expectedCanonical) {
+    failures.push(
+      `${guideFile}\n    canonical is ${canonical[1]}\n    expected  ${expectedCanonical}`
     );
   }
 }

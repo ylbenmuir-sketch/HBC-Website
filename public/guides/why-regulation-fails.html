@@ -12,6 +12,12 @@
      the email gate exists to trade for. nofollow as well — a page that is not
      in the index has no signals worth passing. See SEO-AUDIT-2.md §2.2. -->
 <meta name="robots" content="noindex, nofollow">
+<!-- Self-canonical. The page is noindex, so this earns no ranking; it stops
+     a scraper or a share of the URL with a query string guessing at a
+     different canonical (SEO-AUDIT-3 A16). The one absolute self-URL in this
+     file — a canonical has to be — and scripts/check-content-index.mjs
+     asserts it matches NEXT_PUBLIC_SITE_URL + GUIDE_HTML_PATH. -->
+<link rel="canonical" href="https://harmonizedbraincenterstn.com/guides/why-regulation-fails.html">
 <meta property="og:title" content="Why regulation fails — and why it isn't discipline">
 <meta property="og:description" content="What's happening underneath attention problems, emotional reactivity, brain fog and poor sleep.">
 <meta property="og:type" content="article">
