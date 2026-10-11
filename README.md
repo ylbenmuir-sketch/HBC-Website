@@ -399,6 +399,20 @@ fails the same gate.
 nothing, so those copies are asserted against their source there. See "The
 guide, and how it actually reaches her" above.
 
+`npm run check:schema` (against a running `next start`, like `check:links`)
+asserts the structured data on every sitemap URL: exactly one JSON-LD
+`@graph`, with the Organization, the WebSite, a typed WebPage node for the
+URL, a BreadcrumbList on every route but `/`, and `@type` + `name` on every
+`@id` reference. Every page renders that graph itself through
+`components/PageSchema.tsx`; the layout emits no node. See `lib/schema.ts`.
+
+**Content dates.** `lastmod` in the sitemap and `dateModified` in each page's
+WebPage node come from `dateModified` on the record that owns the page —
+`lib/pages.ts` for the static pages, each concern and location record, and
+`lastChanged()` on articles. They are bumped by hand when the *copy*
+changes, never by the build. Edit a page's words, bump its date in the same
+commit.
+
 ## Content model
 
 All page copy that varies by entity is data-driven:
@@ -826,4 +840,18 @@ Also replace when assets exist:
 /contact                form → POST /api/consultation → Supabase
 /resources              learning center
 /resources/[slug]       articles (homework-battles seeded)
+/resources/feed.xml     RSS 2.0 of the published articles
+/llms.txt               entity summary + every URL with a one-line description,
+                        generated from the same modules the assistant indexes
+/robots.txt, /sitemap.xml   app/robots.ts (named AI agents, all allowed by
+                        default — see the file) and app/sitemap.ts
+/concerns/*/opengraph-image, /locations/*/opengraph-image,
+/resources/*/opengraph-image   per-route share cards (lib/og/render.tsx)
+/api/gone               410 handler behind the retired legacy URLs
 ```
+
+**Legacy WordPress URLs** redirect from `redirects()` in `next.config.ts` —
+the map from QUERY-TO-PAGE-MAP.md and SEO-AUDIT-2 §2.6, single-hop 301s with
+or without the trailing slash. The file explains why Next's own slash
+redirect is off and a catch-all rule sits last. Untestable against the live
+domain until DNS moves; the probe in the file's comment tests it locally.
