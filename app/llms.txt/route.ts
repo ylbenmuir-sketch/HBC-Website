@@ -73,13 +73,16 @@ ${DISCLAIMER}
 
 ${centers.join("\n")}
 ${line("Franklin, TN", "/locations/franklin", "Coming soon — waitlist only.")}
+${line(pageByPath("/concierge").title, "/concierge", pageByPath("/concierge").description)}
 
 ## What LENS is
 
 ${[
   pageByPath("/lens-neurofeedback"),
   pageByPath("/how-lens-works"),
+  pageByPath("/brain-map"),
   pageByPath("/first-visit"),
+  pageByPath("/is-lens-safe"),
   pageByPath("/faq"),
 ]
   .map((p) => line(p.title, p.path, p.description))
