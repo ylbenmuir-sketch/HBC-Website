@@ -189,6 +189,17 @@ export type Concern = {
    * `absolute`, so the root layout's " — Harmonized Brain Centers" template
    * does not append. The budget is therefore the full ~60 characters Google
    * renders, not 33.
+   *
+   * **Every title now ends in geography** (Oct 2026, SEO-AUDIT-3 A7): the
+   * bodies never named a city and the titles were 23–40 characters with the
+   * rest of the budget unused. The form is "… in Nashville & Murfreesboro,
+   * TN" wherever that clears 60; where the concern phrase is too long for
+   * it, the concern phrase was shortened to the term the page actually
+   * targets (anxiety, ADHD, brain fog, stress) rather than the geography
+   * dropped, and where even that would lose a word the page needs
+   * (emotional regulation, school struggles, trauma-related stress, high
+   * performers, migraines) the form is "in Middle Tennessee". Concussion
+   * keeps "& TBI" and takes ", Middle TN" to fit. None is over 60.
    */
   metaTitle: string;
   metaDescription: string;
@@ -262,7 +273,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
     related: ["sleep", "stress-resilience", "trauma"],
-    metaTitle: "Neurofeedback for Anxiety & Stress",
+    metaTitle: "Neurofeedback for Anxiety in Nashville & Murfreesboro, TN",
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
     guideHeading: "Why calm doesn't hold.",
@@ -317,7 +328,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/child-session.jpg", position: "60% 30%" },
     related: ["children-school", "brain-fog", "emotional-regulation"],
-    metaTitle: "Neurofeedback for ADHD & Focus",
+    metaTitle: "Neurofeedback for ADHD in Nashville & Murfreesboro, TN",
     metaDescription:
       "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
     guideHeading: "Why trying harder stops working.",
@@ -403,7 +414,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/recline.jpg", position: "center 55%" },
     related: ["anxiety", "brain-fog", "stress-resilience"],
-    metaTitle: "Neurofeedback for Sleep",
+    metaTitle: "Neurofeedback for Sleep in Nashville & Murfreesboro, TN",
     metaDescription:
       "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
     guideHeading: "Why eight hours isn't rest.",
@@ -458,7 +469,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/child-sensor.jpg", position: "center 42%" },
     related: ["children-school", "anxiety", "trauma"],
-    metaTitle: "Neurofeedback for Emotional Regulation",
+    metaTitle: "Neurofeedback for Emotional Regulation in Middle Tennessee",
     metaDescription:
       "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
     guideHeading: "Why it isn't discipline.",
@@ -513,7 +524,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
     related: ["sleep", "stress-resilience", "focus-adhd"],
-    metaTitle: "Neurofeedback for Brain Fog & Memory",
+    metaTitle: "Neurofeedback for Brain Fog in Nashville & Murfreesboro, TN",
     metaDescription:
       "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
     guideHeading: "Why the fog comes and goes.",
@@ -568,7 +579,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/sensors-adult.jpg", position: "62% 30%" },
     related: ["anxiety", "sleep", "brain-fog"],
-    metaTitle: "Neurofeedback for Stress & Burnout",
+    metaTitle: "Neurofeedback for Stress in Nashville & Murfreesboro, TN",
     metaDescription:
       "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
     guideHeading: "Why the same week lands differently.",
@@ -623,7 +634,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/art-wall.jpg", position: "center 45%" },
     related: ["focus-adhd", "emotional-regulation", "anxiety"],
-    metaTitle: "Neurofeedback for School Struggles",
+    metaTitle: "Neurofeedback for School Struggles in Middle Tennessee",
     metaDescription:
       "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
     guideHeading: "Why school is the hard part.",
@@ -678,7 +689,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/relax.jpg", position: "center 40%" },
     related: ["anxiety", "sleep", "emotional-regulation"],
-    metaTitle: "Neurofeedback for Trauma-Related Stress",
+    metaTitle: "Neurofeedback for Trauma-Related Stress in Middle Tennessee",
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
     guideHeading: "Why the alarm stays on.",
@@ -767,7 +778,7 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/ear-clip-adult.jpg", position: "center 40%" },
     related: ["brain-fog", "stress-resilience", "focus-adhd"],
-    metaTitle: "Neurofeedback for High Performers",
+    metaTitle: "Neurofeedback for High Performers in Middle Tennessee",
     // "peak performance" lives here, in a decline frame — the query is
     // targeted without the title or the page promising the peak. 159 chars.
     metaDescription:
@@ -915,7 +926,7 @@ export const concerns: Concern[] = [
     // characters the template was taking; dropping the suffix bought them back
     // properly, so "& TBI" comes home. `post concussion symptoms` is still the
     // target query and still leads.
-    metaTitle: "Neurofeedback for Post-Concussion Symptoms & TBI",
+    metaTitle: "Neurofeedback for Post-Concussion Symptoms & TBI, Middle TN",
     metaDescription:
       // 158 chars, down from 186. The "Physician-referred." sentence is what
       // goes: it now has four other homes (see PHYSICIAN_REFERRALS), and the
@@ -1041,7 +1052,7 @@ export const concerns: Concern[] = [
     // The one standing exception to "Neurofeedback for X" — see the note on
     // the type. A conjunction, because "for migraines" is a treatment claim
     // and a title has no room to hedge. Approved by Ben, Sept 2026.
-    metaTitle: "Migraines & LENS Neurofeedback",
+    metaTitle: "Migraines & LENS Neurofeedback in Middle Tennessee",
     // 160 chars. The boundary sentence leads so it survives truncation —
     // this page of all pages, concussion's reasoning.
     metaDescription:
