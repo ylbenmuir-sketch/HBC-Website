@@ -1,6 +1,8 @@
 # Query-to-Page Map — harmonizedbraincenterstn.com
 
 Built from: GSC 16-month export (Aug 2026) + GBP Performance, both locations (Mar–Aug 2026).
+**Updated Oct 2026** with three months of Search Console from the live WordPress site — the
+measured figures in the map below replace the earlier estimates; see *Measured, Oct 2026*.
 Purpose: define which page owns which query cluster before the Next.js rebuild locks routes.
 
 ---
@@ -52,21 +54,21 @@ Rule 6, applied the same way the location clusters were:
 
 | Cluster | Page | Primary target | Supporting terms | Demand signal | Status |
 |---|---|---|---|---|---|
-| LENS modality | `/lens-neurofeedback/` | `lens therapy` | lens therapy near me, lens neurofeedback, low energy neurofeedback system, what is lens therapy | **10,900+ web impr, pos 13.9–17.1** · 999 GBP searches | **Missing — P0** |
-| Category generic | `/` (homepage) | `neurofeedback therapy` | neurofeedback, neurotherapy, biofeedback therapy, biofeedback | 551 + 351 + 139 + 101 GBP searches | Exists, untargeted |
+| LENS modality | `/lens-neurofeedback/` | `lens therapy` | lens therapy near me, lens neurofeedback, lens treatment, low energy neurofeedback system, what is lens therapy | **lens therapy / lens treatment: 1,101 impr, 13 clicks, pos 32** · lens neurofeedback: 1,479 impr, 2 clicks, pos 51 · `/what-is-lens/` is the live site's #2 page: 3,712 impr, 47 clicks (3 mo, Oct 2026) · 999 GBP searches | **Built** — the redirect target for `/what-is-lens/` and `/lens-therapy/`; see the terminology decision below |
+| Category generic | `/` (homepage) | `neurofeedback therapy` | neurofeedback, neurotherapy, biofeedback therapy, biofeedback | **neurofeedback (without LENS): 1,656 impr, 1 click, pos 44** (3 mo, Oct 2026) · 551 + 351 + 139 + 101 GBP searches | Titled for the head term; body says "neurofeedback" twice (SEO-AUDIT-3 §2.2) |
 | Nashville local | `/locations/nashville/` | `neurofeedback nashville` | lens therapy nashville, biofeedback nashville, brain mapping nashville, neurofeedback near me | 2,930 impr pos 10.2 · 193 GBP | **Rewritten** — see decision above |
 | Murfreesboro local | `/locations/murfreesboro/` | `neurofeedback murfreesboro` | lens therapy murfreesboro, neurofeedback rutherford county, smyrna / christiana / la vergne | 325 impr **pos 3.5, 0 clicks** | **Rewritten** — see decision above |
-| Brain mapping | `/brain-map/` | `brain mapping therapy` | brain map, qeeg nashville, brain mapping near me | 819 impr pos 8.2 · 22 GBP | Section only, no page |
-| ADHD / focus | `/concerns/focus-adhd/` | `adhd help without medication` | neurofeedback for adhd, adhd focus support nashville, non-medication adhd support | 6,277 impr, **0 clicks**, pos 58.8 | `/add-adhd/` — rewrite |
-| Anxiety | `/concerns/anxiety/` | `neurofeedback for anxiety` | anxiety help nashville, drug-free anxiety support, calm nervous system | 7,017 impr, **0 clicks**, pos 50.1 | `/stressanxiety/` — rewrite |
-| Sleep | `/concerns/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | 2,702 impr, 0 clicks, pos 60.2 | `/sleepproblems/` — rewrite |
-| Mood | **none** | ~~`neurofeedback for depression`~~ | — | 3,472 impr, 1 click, pos 49.1 | **Unassigned — see the decision below** |
-| Concussion / TBI | `/concerns/concussion/` | `post concussion symptoms` | post-concussion support, post concussion syndrome nashville, tbi support middle tennessee, still not right after concussion | 3,331 impr, 1 click · 487 impr pos 12.8 | **Built** — see decision above |
+| Brain mapping | `/brain-map/` | `brain mapping therapy` | brain map, qeeg, eeg, qeeg nashville, brain mapping near me | brain mapping / qEEG / EEG: 432 impr, pos 22 (3 mo, Oct 2026) · 22 GBP | Section only, no page — see SEO-AUDIT-3 batch report §17b |
+| ADHD / focus | `/concerns/focus-adhd/` | `adhd help without medication` | neurofeedback for adhd, adhd focus support nashville, non-medication adhd support | ADHD: 169 impr (3 mo, Oct 2026) | Built; `/add-adhd/` redirects here |
+| Anxiety | `/concerns/anxiety/` | `neurofeedback for anxiety` | anxiety help nashville, drug-free anxiety support, calm nervous system | anxiety / stress: 337 impr (3 mo, Oct 2026) | Built; `/stressanxiety/` redirects here |
+| Sleep | `/concerns/sleep/` | `neurofeedback for sleep` | can't sleep racing thoughts, insomnia help nashville | sleep: 63 impr (3 mo, Oct 2026) | Built; `/sleepproblems/` redirects here |
+| Mood | **none** | ~~`neurofeedback for depression`~~ | — | depression / mood: **387 impr, pos 27** (3 mo, Oct 2026) | **Unassigned — see the decision below**, and the cost stated in the Oct 2026 batch report §17c |
+| Concussion / TBI | `/concerns/concussion/` | `post concussion symptoms` | post-concussion support, post concussion syndrome nashville, tbi support middle tennessee, still not right after concussion | concussion / TBI: 238 impr (3 mo, Oct 2026) | **Built** — see decision above |
 | Peak performance | `/concerns/performance/` | `neurofeedback for high performers` | peak performance neurofeedback, executive brain fog, performance decline, can't focus like I used to | `/peakperformance/` legacy cluster | **Built, Sept 2026** — see decision below |
-| Migraines | `/concerns/migraines/` | `post concussion headaches` | migraines after concussion, chronic migraine support nashville, tried everything for migraines | `/migrainesandpain/` legacy cluster | **Built, Sept 2026** — see decision below |
+| Migraines | `/concerns/migraines/` | `post concussion headaches` | migraines after concussion, chronic migraine support nashville, tried everything for migraines | migraine: 47 impr (3 mo, Oct 2026) · `/migrainesandpain/` legacy cluster | **Built, Sept 2026** — see decision below |
 | Children | `/for-children/` | `neurofeedback for children` | neurofeedback for kids, help for my child's focus, child emotional regulation | **157 impr, 0 clicks** — near-zero surface | **Missing — P1** |
 | Cost / access | `/pricing/` | `neurofeedback cost` | how much does neurofeedback cost, is neurofeedback covered by insurance, hsa fsa | Present in tail, no page | **Missing — P2** |
-| Trust / safety | `/is-lens-safe/` | `is neurofeedback safe` | neurofeedback side effects, does neurofeedback work, neurofeedback reviews | Present in tail, no page | **Missing — P2** |
+| Trust / safety | `/is-lens-safe/` | `is neurofeedback safe` | is lens therapy legit, lens therapy reviews, lens neurofeedback side effects, can neurofeedback be dangerous, does neurofeedback work | **skepticism cluster: 489 impr, pos 34, 0 clicks** (3 mo, Oct 2026) | **Missing — P2.** Proposed shape in the Oct 2026 batch report §17a |
 | Comparison | `/compare/` | `neurofeedback vs [alternative]` | amen clinic tennessee, exomind nashville, lens vs traditional neurofeedback | exomind 26 · amen clinic + vanderbilt + christiana in tail | **Missing — P3** |
 | Vibroacoustic | `/vibroacoustic-therapy/` | (retain only) | — | 3,446 impr — **purchase intent, not clinical** | Keep, do not expand |
 | Celebrity / social proof | `/trisha-yearwood/` | (retain) | — | Best CTR on site, pos 2.7 | Keep as-is |
@@ -254,3 +256,72 @@ Recorded Aug 2026, pre-rebuild:
 - GBP Murfreesboro: 2,869 views → 179 calls + 219 website clicks
 
 Re-pull at 90 days post-launch. The number that matters is non-branded clicks, not total clicks.
+
+**Re-measured Oct 2026, three months of GSC, still the WordPress site:**
+
+- Clicks: **230**, of which **207 branded** (90%)
+- Non-branded CTR: **0.31%** (was 0.5% on the 16-month window)
+- Mobile average position **11.5**; desktop **36**
+- `/what-is-lens/` is the #2 page: 3,712 impressions, 47 clicks
+
+---
+
+## Measured, Oct 2026 — three months of Search Console, live WordPress site
+
+Pulled by Ben, October 2026. These are the figures the map above now carries;
+the earlier column held a 16-month export (Aug 2026), which is a different
+window and not directly comparable. Both are kept here so the next person can
+see which is which.
+
+| Cluster | Oct 2026 (3 mo) | Aug 2026 (16 mo, for comparison) |
+|---|---|---|
+| "lens therapy" / "lens treatment" | 1,101 impr, 13 clicks, pos 32 | part of the 10,900+ LENS cluster, pos 13.9–17.1 |
+| "lens neurofeedback" | 1,479 impr, 2 clicks, pos 51 | part of the same cluster |
+| "neurofeedback" without LENS | 1,656 impr, 1 click, pos 44 | not broken out |
+| Skepticism (legit / reviews / side effects / dangerous / does it work) | 489 impr, pos 34, 0 clicks | "present in tail" |
+| Brain mapping / qEEG / EEG | 432 impr, pos 22 | 819 impr, pos 8.2 |
+| Depression / mood | 387 impr, pos 27 | 3,472 impr, 1 click, pos 49.1 |
+| Anxiety / stress | 337 impr | 7,017 impr, pos 50.1 |
+| Concussion / TBI | 238 impr | 3,331 impr |
+| ADHD | 169 impr | 6,277 impr, pos 58.8 |
+| Sleep | 63 impr | 2,702 impr, pos 60.2 |
+| Migraine | 47 impr | — |
+
+Two things the three-month window says that the sixteen-month one did not:
+
+- **The modality terms are where the clicks are.** 13 of the 23 non-branded
+  clicks on the whole site came from "lens therapy" / "lens treatment", at
+  position 32. Nothing else non-branded earned more than two.
+- **Mobile ranks three times better than desktop** (11.5 vs 36). Whatever the
+  rebuild does to mobile LCP and layout is being measured where the rankings
+  already are.
+
+---
+
+## Decision: "neurofeedback" is the discovery term; "LENS therapy" is the conversion term. Both, not either.
+
+Recorded Oct 2026, from the measured data above, so the next copy edit does
+not trade one for the other:
+
+- **"Neurofeedback" is the word people discover the category with** — 1,656
+  impressions on the bare term, plus the "neurofeedback for X" shape every
+  concern cluster takes. It belongs in the **H1 or first paragraph** of every
+  page that targets a category query, and then once or twice more in the body,
+  naturally. SEO-AUDIT-3 §2.2 found it in zero of the eleven concern pages'
+  bodies; the Oct 2026 batch put it there.
+- **"LENS therapy" is the phrase that converts** — the only non-branded query
+  earning clicks in volume, and the phrase on the live site's second most
+  valuable URL. It must survive in body copy wherever it already appears, and
+  the destination of the `/what-is-lens/` and `/lens-therapy/` redirects
+  (`/lens-neurofeedback`) must keep saying "LENS therapy" in its body. That
+  page holds the phrase as a *question it answers* ("Is LENS therapy, or
+  medical treatment?"), never as a self-description — which is the form that
+  lets the page rank for the phrase and the FAQ answer "LENS is offered as a
+  wellness service, not medical treatment" stay true on the same site.
+- **The homepage title keeps "Neurofeedback Therapy"** (Ben, Oct 2026): it is
+  the head term and describes the modality, not the practice. The FAQ answer
+  was reworded away from the flat "Neither." so the two no longer contradict.
+
+Neither word replaces the other. A rewrite that drops "LENS" for the category
+word gives up the clicks; one that drops "neurofeedback" for the brand word
+gives up the discovery. The rule is both.
