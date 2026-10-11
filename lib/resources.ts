@@ -475,8 +475,9 @@ export const resources: Resource[] = [
     finalHeading: "The next step is a conversation, not a commitment.",
     finalSub: STANDARD_FINAL_SUB,
     metaTitle: "Tired After 8 Hours’ Sleep: Why Quantity Isn’t Quality",
+    // 139 chars, up from 94 (SEO-AUDIT-3 A13).
     metaDescription:
-      "Sleep quantity isn't sleep quality. A plain-language look at a wired-but-tired nervous system.",
+      "Sleep quantity isn't sleep quality. A plain-language look at a wired-but-tired nervous system — and why eight hours can still leave you exhausted.",
   },
   {
     slug: "the-3am-waking",
@@ -899,8 +900,9 @@ export const resources: Resource[] = [
     finalSub:
       "Tell us what’s going on, including what you’re already doing. We’ll answer honestly and say plainly if LENS isn’t the right fit — before you book anything.",
     metaTitle: "Can You Do LENS Neurofeedback While on Medication?",
+    // 142 chars, up from 108 (SEO-AUDIT-3 A13).
     metaDescription:
-      "Yes — LENS is routinely used alongside other care. What we do and don’t do about medication, stated plainly.",
+      "Yes — LENS neurofeedback is routinely used alongside other care, including medication. What we do and don’t do about prescriptions, stated plainly.",
   },
   {
     slug: "told-to-just-relax",

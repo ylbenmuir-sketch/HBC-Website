@@ -10,7 +10,9 @@ import { SITE_FAQS } from "@/lib/faq";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Every question about LENS neurofeedback, answered plainly — including the ones people are hesitant to ask.",
+    // 149 chars, up from 106 (SEO-AUDIT-3 A13): the topics the fourteen
+    // answers actually cover, so the snippet says what is on the page.
+    "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
 };
 
 /**
