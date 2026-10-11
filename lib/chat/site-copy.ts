@@ -604,7 +604,16 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "family",
           "serve",
         ],
-        text: "Harmonized Brain Centers is a team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers, and well over a hundred thousand sessions of experience.",
+        // No session count here: it is a Verifiable (rule 1 above) and the
+        // page interpolates it from STAT_SESSIONS. The assistant already
+        // states the figure as a standing fact (lib/chat/answer.ts), so the
+        // passage says what the practice is and leaves the number to the
+        // one place that owns it.
+        text: "Harmonized Brain Centers is a team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers.",
+        // Up to the gated clause; the page's full stop sits after it.
+        mirror: [
+          "Harmonized Brain Centers is a team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers",
+        ],
       },
       {
         id: "page:about:why",

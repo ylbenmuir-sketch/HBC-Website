@@ -38,11 +38,19 @@ export default function AboutPage() {
             Large enough to trust. Personal enough to{" "}
             <em className="sage">care.</em>
           </h1>
+          {/* The session count interpolates from STAT_SESSIONS, like the
+              band and the meta description on this same page. It read "well
+              over a hundred thousand" here while both of those said
+              "140,000+", which is two numbers for one fact — and the one
+              thing a model quoting this page would have got wrong
+              (SEO-AUDIT-3 §5.3, A12). Gated: production drops the clause
+              rather than the sentence if the figure is ever unverified. */}
           <p className="sub" style={{ maxWidth: "66ch" }}>
             Harmonized Brain Centers is a team of trained LENS practitioners
             serving adults, children, and families across Middle Tennessee
-            &mdash; one care model, multiple centers, and well over a hundred
-            thousand sessions of experience.
+            &mdash; one care model, multiple centers
+            {sessionCount && <>, and {sessionCount} sessions of experience</>}
+            .
           </p>
         </div>
       </section>
