@@ -64,11 +64,12 @@ export function TalkCta({
 
 /**
  * Secondary CTA — the priced first visit, for visitors who arrive already sold.
- * Appears in exactly four places: the homepage hero, /brain-map, /first-visit,
- * and /how-lens-works. (The homepage Brain Map section held the second slot
- * until /brain-map took the copy, Oct 2026.) It never appears without TalkCta
- * beside it, and never replaces it: the free call stays the primary ask
- * everywhere.
+ * Appears in exactly five places: the homepage hero, /lens-neurofeedback,
+ * /brain-map, /first-visit, and /how-lens-works. (The homepage Brain Map
+ * section held a slot until /brain-map took the copy, Oct 2026; the
+ * /lens-neurofeedback hero had one since that page shipped, which the old
+ * "four" never counted.) It never appears without TalkCta beside it, and
+ * never replaces it: the free call stays the primary ask everywhere.
  *
  * Destination is /contact, same as the primary — there is no booking system
  * yet, so this names the priced step rather than competing for a different

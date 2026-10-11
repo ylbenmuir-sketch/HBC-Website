@@ -779,9 +779,12 @@ Also replace when assets exist:
   (`TalkCta` in `components/Buttons.tsx`). Don't introduce competing CTAs.
 - One secondary CTA exists: **"Book Your Brain Map — $150"** (`BrainMapCta`),
   the priced first visit, for visitors who arrive already sold. It appears in
-  exactly four places — the homepage hero, `/brain-map`, `/first-visit`, and
-  `/how-lens-works` — always beside `TalkCta`, never instead of it, and it
-  points at the same `/contact` destination. Don't add a fifth.
+  exactly five places — the homepage hero, `/lens-neurofeedback`,
+  `/brain-map`, `/first-visit`, and `/how-lens-works` — always beside
+  `TalkCta`, never instead of it, and it points at the same `/contact`
+  destination. (The count was "four" until Oct 2026, which had been untrue
+  since `/lens-neurofeedback` shipped with one in its hero; the homepage
+  Brain Map section gave its slot to `/brain-map`.) Don't add a sixth.
 - One transitional CTA exists: `components/GuideCta.tsx` ("Not ready to
   call?"), an email capture for visitors who aren't calling today. It sits
   below the `FinalCTA` band on `/`, `/resources`, and `/concerns/[slug]`,
