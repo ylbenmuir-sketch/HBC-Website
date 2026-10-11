@@ -159,11 +159,19 @@
      breaking the second (CONTRAST-OPTIONS.md, option B). So the token is
      split: `--gold` stays for everything on navy and for rules, marks and
      borders; `--gold-ink` is the darkened value for text on ivory, ivory-2
-     or white — 4.92 / 4.52 / 5.22. Applied Oct 2026 to the wordmark
-     subtitle and the location-hero fact labels (SEO-AUDIT-3 A9); every
-     other gold-on-light text rule still reads `--gold` and still measures
-     under 4.5 — see the contrast sweep in the batch report. */
+     or white — 4.92 / 4.52 / 5.22. Every gold *text* rule on a light
+     ground reads it: the wordmark subtitle, the location-hero fact labels,
+     the concern `.who` lines, the step numerals, team roles, quote themes,
+     location-card city lines, resource tags and the menu column labels.
+     `--gold` is still the colour of rules, marks, borders and the footer
+     wordmark (which sits on navy-deep, where it measures 4.69). */
   --gold-ink: #856831;
+  /* Gold as *text on navy*. `--gold` is 4.20 on --navy — under 4.5 — and
+     `--gold-ink` is worse there (2.76), so the numerals and the Trisha role
+     line, which sit on navy bands, take the token lifted the other way:
+     the same hue, 5.5% lighter per channel. Navy 4.98 · navy-deep 5.56.
+     Never use it on a light ground (2.73 on ivory). */
+  --gold-lift: #b8924a;
   --serif: var(--font-cormorant), Georgia, serif;
   --serif-italic: var(--font-cormorant-italic), Georgia, serif;
   --sans: var(--font-dm-sans), Helvetica, Arial, sans-serif;
@@ -298,7 +306,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
    and on focus leaving the wrapper, so the next hover or Tab opens it again.
    Same specificity as the rule above, so it wins on source order. */
 .nav-links > div[data-mega-dismissed] .mega { display: none; }
-.mega .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
+.mega .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin-bottom: 14px; }
 .mega a { display: block; color: var(--ink); text-decoration: none; font-size: 15px; padding: 7px 0; }
 .mega a:hover { color: var(--sage-deep); }
 .mega .col { min-width: 200px; }
@@ -316,7 +324,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
   .drawer.open { transform: none; visibility: visible; }
   .drawer a.d-top { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--navy); text-decoration: none; padding: 14px 2px; border-bottom: 1px solid var(--line); }
   .drawer .d-group { padding: 14px 2px 18px; border-bottom: 1px solid var(--line); }
-  .drawer .d-group .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 10px 0 6px; }
+  .drawer .d-group .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin: 10px 0 6px; }
   .drawer .d-group a { display: block; color: var(--ink); text-decoration: none; font-size: 16px; padding: 7px 0; }
   .drawer .d-cta { margin-top: 26px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 }
@@ -476,7 +484,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; align-items: center; }
 .lens-seq { border-top: 1px solid var(--line); }
 .lens-seq .row { display: flex; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
-.lens-seq .n { font-family: var(--serif); font-size: 22px; color: var(--gold); min-width: 34px; }
+.lens-seq .n { font-family: var(--serif); font-size: 22px; color: var(--gold-ink); min-width: 34px; }
 /* Row headings are h3 under a section h2, and h4 where the block nests one
    level deeper (the contact confirmation card). Both are styled here, and
    font-family/line-height are stated so the h3 doesn't inherit the serif face
@@ -493,12 +501,15 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    future component that sets its own `p` colour below line 162 has the same
    bug waiting for it. */
 .sec-navy .lens-seq p { color: rgba(251, 248, 241, 0.7); }
+/* The numeral beside it, for the same reason: --gold-ink is text for light
+   grounds and falls to 2.76 on navy. */
+.sec-navy .lens-seq .n { color: var(--gold-lift); }
 .wave { display: block; margin: 34px 0 8px; max-width: 100%; height: auto; }
 
 /* journey steps (5) */
 .journey { display: grid; grid-template-columns: repeat(var(--journey-cols, 5), 1fr); gap: 40px; margin-top: 76px; position: relative; }
 .journey::before { content: ""; position: absolute; top: 29px; left: 5%; right: 5%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-soft) 10%, var(--gold-soft) 90%, transparent); }
-.jstep .n { width: 58px; height: 58px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 24px; color: var(--gold); background: var(--navy); position: relative; margin-bottom: 24px; }
+.jstep .n { width: 58px; height: 58px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 24px; color: var(--gold-lift); background: var(--navy); position: relative; margin-bottom: 24px; }
 .jstep h3 { color: var(--ivory); font-size: 22px; font-weight: 500; margin-bottom: 8px; }
 .jstep p { font-size: 14.5px; color: rgba(251, 248, 241, 0.66); }
 
@@ -514,7 +525,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 /* homepage care model — numbered editorial rows, no box */
 .care-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 80px; border-top: 1px solid var(--line); }
 .care-list .care { display: flex; gap: 28px; padding: 40px 0 36px; border-bottom: 1px solid var(--line); }
-.care-list .care-n { font-family: var(--serif); font-size: 32px; line-height: 1; color: var(--gold); min-width: 50px; padding-top: 5px; }
+.care-list .care-n { font-family: var(--serif); font-size: 32px; line-height: 1; color: var(--gold-ink); min-width: 50px; padding-top: 5px; }
 .care-list h3 { font-size: 22px; }
 .founder-note { display: grid; grid-template-columns: 200px 1fr; gap: 44px; align-items: center; margin-top: 64px; padding-top: 56px; border-top: 1px solid var(--line); }
 .founder-note .ph { height: 230px; border-radius: 4px; }
@@ -526,7 +537,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
 .quote { background: var(--ivory); border: 1px solid var(--line); border-radius: 4px; padding: 44px 46px; box-shadow: 0 20px 44px -36px rgba(28, 43, 58, 0.3); }
 .sec-ivory2 .quote { background: #fff; }
-.quote .theme { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 16px; }
+.quote .theme { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin-bottom: 16px; }
 .quote p { font-family: var(--serif-italic); font-size: 23px; line-height: 1.5; color: var(--navy); font-style: italic; }
 .quote footer { margin-top: 20px; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; }
 .quote footer b { color: var(--sage-deep); }
@@ -555,7 +566,7 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    under a section heading elsewhere stays an h3. Both render identically, the
    way .ccard's two levels already do. */
 .loc-card h3, .loc-card h2 { font-size: 27px; }
-.loc-card .city { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 4px 0 16px; }
+.loc-card .city { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin: 4px 0 16px; }
 .loc-card .meta { font-size: 14.5px; color: var(--slate); line-height: 1.8; margin-bottom: 24px; }
 .loc-card .meta b { color: var(--ink); font-weight: 600; }
 .loc-card a.go { margin-top: auto; color: var(--navy); font-weight: 600; font-size: 14.5px; text-decoration: none; border-bottom: 1px solid var(--gold-soft); align-self: flex-start; padding-bottom: 2px; }
@@ -632,7 +643,7 @@ details.faq .a a { color: var(--sage-deep); }
 .entry { display: grid; grid-template-columns: 320px 1fr 1fr; gap: 66px; padding: 60px 0; border-bottom: 1px solid var(--line); }
 .entry:last-child { border: 0; }
 .entry h2 { font-size: 34px; line-height: 1.15; }
-.entry .who { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-top: 12px; }
+.entry .who { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin-top: 12px; }
 /* Column labels sit under the entry's h2, so they're h3. font-family and
    line-height are stated for the same reason as .lens-seq / .care above. */
 .entry h3 { font-family: var(--sans); font-size: 12px; line-height: 1.65; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; margin-bottom: 12px; }
@@ -668,7 +679,7 @@ details.faq .a a { color: var(--sage-deep); }
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
 .member .ph, .member .plate { height: 360px; margin-bottom: 20px; }
 .member h3, .member h2 { font-size: 25px; }
-.member .role { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 5px 0 10px; }
+.member .role { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin: 5px 0 10px; }
 .member p { color: var(--slate); font-size: 15px; }
 
 /* forms */
@@ -699,7 +710,7 @@ details.faq .a a { color: var(--sage-deep); }
 .res-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none; }
 .res-card .ph, .res-card .plate { height: 210px; border-radius: 0; }
 .res-card .body { padding: 28px 30px 32px; display: flex; flex-direction: column; flex: 1; }
-.res-card .tag { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 10px; }
+.res-card .tag { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin-bottom: 10px; }
 .res-card h3, .res-card h2 { font-size: 23px; color: var(--navy); line-height: 1.25; margin-bottom: 10px; }
 .res-card p { font-size: 14.5px; color: var(--slate); }
 .res-card span.read { margin-top: auto; padding-top: 18px; color: var(--navy); font-weight: 600; font-size: 14px; }
@@ -883,7 +894,7 @@ html.js .rv.in { opacity: 1; transform: none; }
 .celeb-band { padding: 56px 0; }
 .celeb-grid { display: grid; grid-template-columns: 1fr 220px; gap: 64px; align-items: center; }
 .celeb-name { font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: clamp(34px, 3vw, 46px); color: var(--ivory); line-height: 1.05; margin: 14px 0 8px; display: inline-block; border-bottom: 1px solid var(--gold-soft); padding-bottom: 10px; }
-.celeb-role { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 12px 0 18px; }
+.celeb-role { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-lift); font-weight: 600; margin: 12px 0 18px; }
 .celeb-quote { font-family: var(--serif-italic); font-style: italic; font-size: 19px; line-height: 1.5; color: rgba(251, 248, 241, 0.85); max-width: 56ch; border-left: 2px solid var(--gold); padding-left: 20px; }
 .celeb-video { width: min(220px, 100%); aspect-ratio: 9 / 16; border-radius: 6px; overflow: hidden; box-shadow: 0 30px 70px -36px rgba(0, 0, 0, 0.6); border: 1px solid rgba(251, 248, 241, 0.14); justify-self: end; display: flex; align-items: center; justify-content: center; text-decoration: none; position: relative; }
 .celeb-video > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
@@ -1173,7 +1184,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .celeb-video .play { width: 64px; height: 64px; }
   .celeb-id { display: flex; position: absolute; left: 24px; right: 24px; bottom: 22px; z-index: 2; flex-direction: column; gap: 3px; }
   .celeb-id-name { font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: 31px; color: var(--ivory); line-height: 1.1; }
-  .celeb-id-role { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .celeb-id-role { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-lift); font-weight: 600; }
   .celeb-cta { order: 4; margin-top: 28px !important; }
   .celeb-cta .btn-invert { width: 100%; justify-content: center; min-height: 52px; }
 
