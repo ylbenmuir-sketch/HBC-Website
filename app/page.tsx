@@ -45,30 +45,10 @@ import {
   VERIFIED_TESTIMONIALS,
   verifiedOr,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  // Category + geography first. The old title stacked "anxiety, focus, sleep"
-  // — the exact three keywords its own concern spokes target — while carrying
-  // neither "neurofeedback" nor a place name, so no page on the site targeted
-  // "neurofeedback nashville". The homepage takes the geo+category query; the
-  // concern pages keep the symptom queries.
-  //
-  // `absolute` because the brand is not appended: the title is already long,
-  // and og:site_name carries the brand in link previews. The H1 is unchanged
-  // — it's a conversion asset, and it isn't the title's job to match it.
-  //
-  // og:title and twitter:title are derived from this by Next, so they follow
-  // automatically — don't restate them here.
-  // 53 characters. It was 75 — past the ~580px Google renders, so the tail
-  // ("Focus & Sleep") was being cut off in the result anyway. What survives is
-  // what the homepage is actually competing for: the exact `neurofeedback
-  // therapy` target and both city names. The three symptom words move to the
-  // description, which has room for them, and to the concern spokes that own
-  // those queries.
-  title: {
-    absolute: "Neurofeedback Therapy in Nashville & Murfreesboro, TN",
-  },
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/");
 
 // What a concern *is* — title and destination — lives here once. Anxiety and
 // Sleep appear in both audience groups below, and this is what keeps the two

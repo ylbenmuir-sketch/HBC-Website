@@ -6,14 +6,10 @@ import FinalCTA from "@/components/FinalCTA";
 import JsonLd from "@/components/JsonLd";
 import { faqPageSchema } from "@/lib/schema";
 import { SITE_FAQS } from "@/lib/faq";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "FAQ",
-  description:
-    // 149 chars, up from 106 (SEO-AUDIT-3 A13): the topics the fourteen
-    // answers actually cover, so the snippet says what is on the page.
-    "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/faq");
 
 /**
  * The two answers that render richer than their plain text — an inline link.

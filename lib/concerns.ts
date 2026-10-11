@@ -220,6 +220,13 @@ export type Concern = {
    * than diagnostic.
    */
   guideHeading: string;
+  /**
+   * ISO date this concern's copy last changed — the sitemap's `lastmod` and
+   * the WebPage node's `dateModified`. A content date, bumped by hand when
+   * the words change, never the build date (see lib/pages.ts). All eleven
+   * read 2026-10-10 because SEO-AUDIT-3 A1/A7 rewrote every hero that day.
+   */
+  dateModified: string;
 };
 
 export const concerns: Concern[] = [
@@ -277,6 +284,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
     guideHeading: "Why calm doesn't hold.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "focus-adhd",
@@ -332,6 +340,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
     guideHeading: "Why trying harder stops working.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "sleep",
@@ -418,6 +427,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
     guideHeading: "Why eight hours isn't rest.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "emotional-regulation",
@@ -473,6 +483,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
     guideHeading: "Why it isn't discipline.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "brain-fog",
@@ -528,6 +539,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
     guideHeading: "Why the fog comes and goes.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "stress-resilience",
@@ -583,6 +595,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
     guideHeading: "Why the same week lands differently.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "children-school",
@@ -638,6 +651,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
     guideHeading: "Why school is the hard part.",
+    dateModified: "2026-10-10",
   },
   {
     slug: "trauma",
@@ -693,6 +707,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
     guideHeading: "Why the alarm stays on.",
+    dateModified: "2026-10-10",
   },
   {
     /*
@@ -784,6 +799,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for executives, founders, and musicians searching for peak performance — people who used to operate at a level they can't reach now.",
     guideHeading: "Why handling it got harder.",
+    dateModified: "2026-10-10",
   },
   {
     /*
@@ -934,6 +950,7 @@ export const concerns: Concern[] = [
       // page of all pages.
       "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. If your injury is recent, see a doctor first.",
     guideHeading: "Why these problems travel together.",
+    dateModified: "2026-10-10",
   },
   {
     /*
@@ -1058,6 +1075,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "We don't treat migraines. People come to us after they've tried a lot of other things — often under a doctor's care, often after a concussion. Middle Tennessee.",
     guideHeading: "Why the same systems keep coming up.",
+    dateModified: "2026-10-10",
   },
 ];
 

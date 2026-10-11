@@ -4,18 +4,10 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  // `absolute`, same as the concern and location templates: the title opens
-  // "Neurofeedback for …" and identifies itself, og:site_name carries the
-  // brand into link previews, and the 27-character suffix was the only thing
-  // putting this page over 60. 34 chars, down from 61.
-  title: { absolute: "Neurofeedback for Children & Teens" },
-  // 150 chars, down from 192. "children and teens" also matches the retitled
-  // page (item 6) and keeps it distinct from /concerns/children-school.
-  description:
-    "Gentle LENS neurofeedback for children and teens — homework battles, meltdowns, hard transitions, sensory overwhelm. Nothing a child has to get right.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/children-families");
 
 export default function ChildrenFamiliesPage() {
   return (

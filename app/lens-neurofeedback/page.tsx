@@ -34,6 +34,7 @@ import {
   VERIFIED_TESTIMONIALS,
   verifiedOr,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
 /**
  * /lens-neurofeedback — the modality page.
@@ -86,11 +87,8 @@ import {
  * caveat bolted onto an answer, and the count has never applied to those.
  */
 
-export const metadata: Metadata = {
-  title: "LENS Neurofeedback",
-  description:
-    "LENS — the Low Energy Neurofeedback System — a gentle, passive wellness service at our Nashville and Murfreesboro centers. What it is, and who it's for.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/lens-neurofeedback");
 
 /**
  * Paragraph spacing for the two single-column prose sections (§2 and §4).

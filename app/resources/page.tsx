@@ -6,12 +6,10 @@ import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import { resources, isPublishable } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Resources",
-  description:
-    "Plain-language guides for parents and adults — written by our practitioners, reviewed against our no-hype standard.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/resources");
 
 export default function ResourcesPage() {
   // Draft articles render in draft mode only; production lists finished ones.

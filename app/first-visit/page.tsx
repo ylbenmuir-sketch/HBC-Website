@@ -14,12 +14,10 @@ import {
   SESSION_LENGTH,
   SESSION_PRICE,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Your First Visit",
-  description:
-    "No clipboard queue, no waiting-room limbo, no surprises. The first visit at Harmonized Brain Centers, minute by minute, for adults and for children.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/first-visit");
 
 const fiveParts = [
   {

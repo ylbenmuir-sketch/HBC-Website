@@ -3,12 +3,10 @@ import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { concerns } from "@/lib/concerns";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "What We Help With",
-  description:
-    "The concerns that most often bring adults and children to Harmonized Brain Centers — described the way real families describe them. No diagnosis needed.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/what-we-help-with");
 
 /** Middle Tennessee photo interlude sits between the 4th and 5th entries, as in the mockup. */
 const INTERLUDE_AFTER = 4;

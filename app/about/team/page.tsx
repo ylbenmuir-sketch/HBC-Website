@@ -10,12 +10,10 @@ import {
   TRAINING_CLAIM,
   isDraftText,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Our Team",
-  description:
-    "Every Harmonized practitioner completes the same LENS training and works from the same care model. Here's who you'll meet.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/about/team");
 
 export default function TeamPage() {
   // Placeholder roster entries render in draft mode only.

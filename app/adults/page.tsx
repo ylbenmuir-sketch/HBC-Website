@@ -4,15 +4,10 @@ import PhotoFrame from "@/components/PhotoFrame";
 import ConcernCard from "@/components/ConcernCard";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Neurofeedback for Adults",
-  // 156 chars, down from 171. "and resilience" is what goes: the list was
-  // running past 160 and losing its last clause to truncation anyway, and
-  // /concerns/stress-resilience is the page that owns that word.
-  description:
-    "Gentle LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, and emotional regulation. Short sessions, nothing to practice, no homework.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/adults");
 
 const adultConcerns = [
   {

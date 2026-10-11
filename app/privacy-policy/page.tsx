@@ -15,12 +15,10 @@ import {
   SITE_NAME,
   verifiedOr,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Privacy",
-  description:
-    "What the Harmonized Brain Centers website collects, what happens to it, and who else sees it. Nothing you tell us goes anywhere unless you ask us to send it.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/privacy-policy");
 
 /**
  * The approved access sentence with the address inside it made tappable.

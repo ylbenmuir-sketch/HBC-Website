@@ -4,12 +4,10 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "How LENS Neurofeedback Works",
-  description:
-    "LENS stands for Low Energy Neurofeedback System. The whole idea without the jargon — and exactly what a session feels like from the chair.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/how-lens-works");
 
 const sessionSteps = [
   {

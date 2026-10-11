@@ -3,14 +3,10 @@ import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locationPhone, locations } from "@/lib/locations";
 import { CONTACT_RESPONSE_TAG, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Talk With Our Team",
-  description:
-    // 148 chars, up from 102 (SEO-AUDIT-3 A13) — the two centers and the
-    // no-referral fact fill the SERP space the old one left empty.
-    "Tell us what's going on. A free, no-pressure conversation with a real person from your nearest center — Nashville or Murfreesboro. No referral needed.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/contact");
 
 export default function ContactPage() {
   /**

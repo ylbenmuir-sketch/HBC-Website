@@ -11,12 +11,10 @@ import {
   REVIEWS,
   VERIFIED_TESTIMONIALS,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Client Stories",
-  description:
-    "No miracle stories — just the specific, daily-life changes clients report at check-in. Individual experiences vary, and we'd rather understate than oversell.",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/stories");
 
 export default function StoriesPage() {
   // Gated on there being a count to print — see the same pair on the homepage.

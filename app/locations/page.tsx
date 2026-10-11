@@ -15,12 +15,10 @@ import {
   SHOW_DRAFT_CONTENT,
   isDraftText,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-export const metadata: Metadata = {
-  title: "Locations",
-  description:
-    "Every Harmonized center runs the same care model, the same training, and the same honest policies. Nashville, Murfreesboro, and Franklin (coming soon).",
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/locations");
 
 export default function LocationsPage() {
   return (

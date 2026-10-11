@@ -12,23 +12,15 @@ import {
   TRAINING_CLAIM,
   verifiedOr,
 } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/pages";
 
-// Interpolated, not typed. This was a second hardcoded "140,000+" on the one
-// page that also renders the proof band — the same duplication that let the
-// practitioner-training card claim a different figure from the band two
-// sections below it. The count has one home now: STAT_SESSIONS.
-const sessionCount = verifiedOr(STAT_SESSIONS);
-
-export const metadata: Metadata = {
-  title: "About",
-  // 154 chars. The old one ran to 200 and truncated mid-clause; the brand
-  // name led it redundantly, since the title template already carries it.
-  description:
-    "A team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers" +
-    (sessionCount ? `, ${sessionCount} sessions.` : "."),
-};
+// Title, description and the page's content date live in lib/pages.ts.
+export const metadata: Metadata = pageMetadata("/about");
 
 export default function AboutPage() {
+  // Interpolated, not typed — the count has one home, STAT_SESSIONS, and the
+  // hero, the proof band and the meta description all read it.
+  const sessionCount = verifiedOr(STAT_SESSIONS);
   return (
     <>
       <section className="page-hero center">

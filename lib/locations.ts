@@ -323,6 +323,12 @@ export type Location = {
    */
   metaTitle?: string;
   metaDescription: string;
+  /**
+   * ISO date this center's copy last changed — the sitemap's `lastmod` and
+   * the WebPage node's `dateModified`. Bumped by hand with the words, never
+   * by the build (see lib/pages.ts). Hours, phone and address changes count.
+   */
+  dateModified: string;
 };
 
 export const locations: Location[] = [
@@ -473,6 +479,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Nashville, TN",
     metaDescription:
       "LENS neurofeedback in Nashville, TN — gentle, passive sessions Tuesday through Saturday, just off I-24 at Thompson Lane. The first call is free.",
+    dateModified: "2026-09-01",
   },
   {
     slug: "murfreesboro",
@@ -634,6 +641,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
       "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children, and families across Rutherford County. The first call is free.",
+    dateModified: "2026-09-01",
   },
   {
     slug: "franklin",
@@ -714,6 +722,7 @@ export const locations: Location[] = [
     finalHeading: "Join the Franklin waitlist — founding-client openings are limited.",
     metaDescription:
       "LENS neurofeedback is coming soon to Franklin, TN — join the waitlist for founding-client openings in Williamson County.",
+    dateModified: "2026-09-01",
   },
 ];
 
