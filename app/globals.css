@@ -198,6 +198,14 @@ em.sage { font-family: var(--serif-italic); font-style: italic; color: var(--sag
 /* gold placeholder tags ([CONFIRM] / [Insert …]) — dev/draft mode only */
 .todo-tag { color: var(--gold); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
 
+/* Skip link — the first focusable element on every page, visible only while
+   focused. 64 chrome links precede <main> (SEO-AUDIT-3 §6); this is the way
+   past them for anyone on a keyboard or a switch. Above the sticky header's
+   z-index so it cannot land underneath it. */
+.skip { position: absolute; left: 16px; top: -200px; z-index: 100; padding: 12px 18px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15px; border-radius: 4px; text-decoration: none; }
+.skip:focus { top: 16px; outline: 2px solid var(--gold); outline-offset: 3px; }
+main:focus { outline: none; }
+
 /* visible keyboard focus, sitewide */
 a:focus-visible, button:focus-visible, summary:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -280,7 +288,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
    and on focus leaving the wrapper, so the next hover or Tab opens it again.
    Same specificity as the rule above, so it wins on source order. */
 .nav-links > div[data-mega-dismissed] .mega { display: none; }
-.mega h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
+.mega .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
 .mega a { display: block; color: var(--ink); text-decoration: none; font-size: 15px; padding: 7px 0; }
 .mega a:hover { color: var(--sage-deep); }
 .mega .col { min-width: 200px; }
@@ -298,7 +306,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
   .drawer.open { transform: none; visibility: visible; }
   .drawer a.d-top { display: block; font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--navy); text-decoration: none; padding: 14px 2px; border-bottom: 1px solid var(--line); }
   .drawer .d-group { padding: 14px 2px 18px; border-bottom: 1px solid var(--line); }
-  .drawer .d-group h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 10px 0 6px; }
+  .drawer .d-group .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 10px 0 6px; }
   .drawer .d-group a { display: block; color: var(--ink); text-decoration: none; font-size: 16px; padding: 7px 0; }
   .drawer .d-cta { margin-top: 26px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 }
@@ -559,8 +567,21 @@ details.faq .a a { color: var(--sage-deep); }
 .page-hero.center h1 { margin-left: auto; margin-right: auto; }
 .page-hero.center .sub { margin-left: auto; margin-right: auto; }
 .page-hero.center .eyebrow { justify-content: center; } .page-hero.center .eyebrow::before { display: none; }
+/* Breadcrumb: <nav aria-label="Breadcrumb"><ol>, rungs separated by a slash
+   drawn here rather than typed, the current page marked aria-current. Links
+   are underlined — the sage alone was the only thing telling them apart from
+   the slate text beside them, and Lighthouse `link-in-text-block` failed on
+   three templates for it (SEO-AUDIT-3 §6). */
 .crumb { font-size: 13px; color: var(--slate); padding: 26px 0 0; }
-.crumb a { color: var(--sage-deep); text-decoration: none; }
+.crumb ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; }
+/* Each rung is a flex row of its own, so the link's mobile tap padding (the
+   13.5px rule below) grows the rung instead of hanging outside it — as an
+   inline it overlapped the rung beneath once the crumb wrapped at 320px. */
+.crumb li { display: flex; align-items: center; }
+.crumb li + li::before { content: "/"; margin: 0 9px; color: var(--slate); opacity: 0.7; }
+.crumb a { color: var(--sage-deep); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.crumb a:hover { text-decoration-color: var(--gold); }
+.crumb [aria-current="page"] { font-weight: 500; color: var(--ink); }
 
 /* medical-first block (/concerns/concussion)
    ------------------------------------------------------------------
@@ -684,8 +705,8 @@ details.faq .a a { color: var(--sage-deep); }
 /* footer */
 footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); padding: 76px 0 44px; font-size: 14px; }
 .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 56px; padding-bottom: 48px; border-bottom: 1px solid rgba(251, 248, 241, 0.12); }
-.foot-grid h5 { color: var(--ivory); font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; font-weight: 600; }
-.foot-grid h5 button { background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; cursor: default; pointer-events: none; }
+.foot-grid .h5 { color: var(--ivory); font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; font-weight: 600; }
+.foot-grid .h5 button { background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; cursor: default; pointer-events: none; }
 .fg-mark { display: none; }
 .foot-grid a { display: block; color: rgba(251, 248, 241, 0.68); text-decoration: none; padding: 5px 0; }
 .foot-grid a:hover { color: var(--ivory); }
@@ -896,7 +917,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   header.site.scrolled .drawer { top: 58px; height: calc(100vh - 58px); height: calc(100dvh - 58px); }
   .drawer.open { opacity: 1; }
   .drawer a.d-top { font-size: 29px; padding: 15px 2px; }
-  .drawer .d-group h5 { margin: 14px 0 6px; }
+  .drawer .d-group .h5 { margin: 14px 0 6px; }
   .drawer .d-group a { font-size: 16.5px; padding: 8px 0; }
   .drawer .d-nav > *, .drawer .d-cta { opacity: 0; transform: translateY(14px); transition: opacity 0.35s ease, transform 0.35s ease; }
   .drawer.open .d-nav > *, .drawer.open .d-cta { opacity: 1; transform: none; }
@@ -1187,8 +1208,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .foot-grid > div:first-child { grid-column: 1 / -1; padding-bottom: 28px; }
   /* link groups become quiet disclosure rows (FooterGroup.tsx) */
   .fgroup { border-top: 1px solid rgba(251, 248, 241, 0.12); }
-  .fgroup h5 { margin-bottom: 0; }
-  .fgroup h5 button { pointer-events: auto; cursor: pointer; padding: 17px 0; min-height: 52px; }
+  .fgroup .h5 { margin-bottom: 0; }
+  .fgroup .h5 button { pointer-events: auto; cursor: pointer; padding: 17px 0; min-height: 52px; }
   .fg-mark { display: block; color: var(--gold); font-size: 19px; font-weight: 400; line-height: 1; transition: transform 0.2s ease; }
   .fgroup.open .fg-mark { transform: rotate(45deg); }
   .fg-list { display: none; padding: 2px 0 18px; }

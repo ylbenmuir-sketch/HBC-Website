@@ -80,9 +80,12 @@ async function outboundOf(route) {
   const html = await (await fetch(`${BASE}${route}`)).text();
   let scope = html;
   if (!allLinks) {
-    const i = html.indexOf("<main>");
+    // `<main` with its attributes — it carries id="main" for the skip link
+    // now, and a literal "<main>" match read every page as empty.
+    const open = html.match(/<main\b[^>]*>/);
+    const i = open ? open.index + open[0].length : -1;
     const j = html.lastIndexOf("</main>");
-    scope = i > -1 && j > i ? html.slice(i + 6, j) : "";
+    scope = i > -1 && j > i ? html.slice(i, j) : "";
   }
   const out = new Set();
   const anchors = [];

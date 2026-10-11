@@ -6,6 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import { LogoMark, LogoName } from "./Logo";
 import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
 
+/**
+ * The column labels in the mega-menu and the drawer are `<p class="h5">`,
+ * not `<h5>`. They were headings for the design system's sake and they put
+ * four H5s ahead of every page's H1 — Lighthouse `heading-order` failed on
+ * every template (SEO-AUDIT-3 §2.3). The class keeps the styling; the
+ * element keeps the outline honest. Same change in FooterGroup.
+ */
 const megaAdults = [
   { label: "Anxiety & stress", href: "/concerns/anxiety" },
   { label: "Focus & ADHD", href: "/concerns/focus-adhd" },
@@ -139,7 +146,7 @@ export default function Header() {
             </ChromeLink>
             <div className="mega">
               <div className="col">
-                <h5>Adults</h5>
+                <p className="h5">Adults</p>
                 {megaAdults.map((l) => (
                   <ChromeLink key={l.label} href={l.href}>
                     {l.label}
@@ -148,7 +155,7 @@ export default function Header() {
                 <ChromeLink href="/adults">All adult concerns →</ChromeLink>
               </div>
               <div className="col">
-                <h5>Children &amp; families</h5>
+                <p className="h5">Children &amp; families</p>
                 {megaChildren.map((l) => (
                   <ChromeLink key={l.label} href={l.href}>
                     {l.label}
@@ -196,14 +203,14 @@ export default function Header() {
               What We Help With
             </ChromeLink>
             <div className="d-group">
-              <h5>Adults</h5>
+              <p className="h5">Adults</p>
               {megaAdults.map((l) => (
                 <ChromeLink key={l.label} href={l.href}>
                   {l.label}
                 </ChromeLink>
               ))}
               <ChromeLink href="/adults">All adult concerns →</ChromeLink>
-              <h5>Children &amp; families</h5>
+              <p className="h5">Children &amp; families</p>
               {megaChildren.map((l) => (
                 <ChromeLink key={l.label} href={l.href}>
                   {l.label}

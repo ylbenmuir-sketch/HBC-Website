@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import JsonLd from "./JsonLd";
 import { breadcrumbSchema, type Crumb } from "@/lib/schema";
@@ -15,27 +14,29 @@ import { breadcrumbSchema, type Crumb } from "@/lib/schema";
  * has always displayed, and the markup mirrors the page rather than
  * embellishing it. The last rung is the current page and carries no href,
  * which is both the existing visual treatment and valid BreadcrumbList.
+ *
+ * Markup: `<nav aria-label="Breadcrumb"><ol>` with `aria-current="page"` on
+ * the last rung, which is the pattern assistive technology announces as a
+ * breadcrumb rather than as a run of links (SEO-AUDIT-3 §6). The separator
+ * is drawn by CSS (`.crumb li + li::before`), so it is not read aloud and
+ * not part of the link text. Links are underlined — see the `.crumb` rules.
  */
-
-/**
- * The separator these crumbs were hand-written with: a space, then
- * `&nbsp;/&nbsp;`, then a space. Written as escapes so the two
- * non-breaking spaces stay visible in source and survive reformatting.
- */
-const SEPARATOR = " \u00a0/\u00a0 ";
-
 export default function Breadcrumbs({ trail }: { trail: readonly Crumb[] }) {
   return (
     <>
       <JsonLd data={breadcrumbSchema(trail)} />
-      <div className="wrap crumb">
-        {trail.map((c, i) => (
-          <Fragment key={`${i}-${c.label}`}>
-            {i > 0 && SEPARATOR}
-            {c.href ? <Link href={c.href}>{c.label}</Link> : c.label}
-          </Fragment>
-        ))}
-      </div>
+      <nav aria-label="Breadcrumb" className="wrap crumb">
+        <ol>
+          {trail.map((c, i) => {
+            const last = i === trail.length - 1;
+            return (
+              <li key={`${i}-${c.label}`} aria-current={last ? "page" : undefined}>
+                {c.href && !last ? <Link href={c.href}>{c.label}</Link> : c.label}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
     </>
   );
 }

@@ -148,12 +148,20 @@ export default function RootLayout({
             viewport — the sticky ask bar, the homepage CTA bar, and the
             assistant panel that retires both. See BottomBarContext. */}
         <BottomBarProvider askAvailable={FEATURE_ASSISTANT}>
+          {/* First focusable element in the document — see `.skip` in
+              globals.css. `tabIndex={-1}` on <main> is what makes the jump
+              move focus in every browser rather than only the scroll. */}
+          <a href="#main" className="skip">
+            Skip to content
+          </a>
           {/* The one Organization node, sitewide. Location pages reference it
               by @id rather than restating it — see lib/schema.ts. */}
           <JsonLd data={organizationSchema()} />
           <RevealOnScroll />
           <Header />
-          <main>{children}</main>
+          <main id="main" tabIndex={-1}>
+            {children}
+          </main>
           <Footer />
           {/* Site assistant — OFF. Renders only with
               NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in

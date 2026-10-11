@@ -20,7 +20,8 @@ export default function FooterGroup({
 
   return (
     <div className={`fgroup${open ? " open" : ""}`}>
-      <h5>
+      {/* A paragraph, not an h5 — see the note in Header.tsx. */}
+      <p className="h5">
         <button
           type="button"
           aria-expanded={open}
@@ -32,7 +33,7 @@ export default function FooterGroup({
             +
           </span>
         </button>
-      </h5>
+      </p>
       <div className="fg-list" id={id}>
         {children}
       </div>
