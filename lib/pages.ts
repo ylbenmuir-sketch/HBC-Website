@@ -77,7 +77,7 @@ export const staticPages: StaticPage[] = [
     title: "What We Help With",
     description:
       "The concerns that most often bring adults and children to Harmonized Brain Centers — described the way real families describe them. No diagnosis needed.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-11",
     type: "CollectionPage",
     crumb: "What We Help With",
   },
@@ -190,9 +190,24 @@ export const staticPages: StaticPage[] = [
     title: "Locations",
     description:
       "Every Harmonized center runs the same care model, the same training, and the same honest policies. Nashville, Murfreesboro, and Franklin (coming soon).",
-    dateModified: "2026-09-01",
+    // The concierge band links to /concierge now.
+    dateModified: "2026-10-11",
     type: "CollectionPage",
     crumb: "Locations",
+  },
+  {
+    path: "/concierge",
+    // The three queries the page is built to own — mobile, in-home,
+    // neurofeedback — and the service's name. Absolute; 60 chars exactly.
+    title: "Concierge LENS: In-Home & Mobile Neurofeedback, Nashville TN",
+    absoluteTitle: true,
+    // 155 chars. What it is, who it's for, and no number — every number is
+    // a Verifiable awaiting Ben.
+    description:
+      "A Harmonized practitioner brings LENS neurofeedback to your home or business — one person or the whole family in a single visit. Who it's for, and how it works.",
+    dateModified: "2026-10-11",
+    type: "WebPage",
+    crumb: "Concierge",
   },
   {
     path: "/stories",

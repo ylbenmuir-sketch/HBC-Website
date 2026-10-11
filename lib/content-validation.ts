@@ -1,6 +1,11 @@
 import { locations } from "./locations";
 import {
   BRAIN_MAP_CLAIM,
+  CONCIERGE_BRAIN_MAP,
+  CONCIERGE_MINIMUM,
+  CONCIERGE_PRACTITIONERS,
+  CONCIERGE_PRICE,
+  CONCIERGE_TRAVEL_RADIUS,
   EMAIL,
   ESTABLISHED_YEAR,
   FOUNDER_LAST_NAME,
@@ -70,6 +75,14 @@ for (const location of locations) {
 // lib/chat/unanswerable.ts.
 check("Typical session length", SESSION_LENGTH.verified);
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
+// The concierge facts (/concierge). Each hides its card in production until
+// confirmed; the page still describes the service without them. Listed one
+// by one so the build log says which fact is owed, not "concierge".
+check("Concierge pricing", CONCIERGE_PRICE.verified);
+check("Concierge travel radius / service area", CONCIERGE_TRAVEL_RADIUS.verified);
+check("Concierge practitioners", CONCIERGE_PRACTITIONERS.verified);
+check("Concierge Brain Map at home", CONCIERGE_BRAIN_MAP.verified);
+check("Concierge minimum booking", CONCIERGE_MINIMUM.verified);
 check(
   "At least one verified testimonial",
   TESTIMONIALS.some((t) => t.verified)

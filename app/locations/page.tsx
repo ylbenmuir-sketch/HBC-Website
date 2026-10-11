@@ -3,6 +3,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
+import { Btn } from "@/components/Buttons";
 import {
   locations,
   hasConfirmedAddress,
@@ -10,11 +11,7 @@ import {
   locationPhone,
   practitionerNames,
 } from "@/lib/locations";
-import {
-  CONCIERGE_TAG,
-  SHOW_DRAFT_CONTENT,
-  isDraftText,
-} from "@/lib/site-config";
+import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
@@ -146,9 +143,15 @@ export default function LocationsPage() {
               <p style={{ color: "var(--slate)", fontSize: 15.5 }}>
                 Our concierge service brings the same practitioners and the
                 same equipment to your home &mdash; helpful for packed family
-                schedules and clients who settle best in their own space.{" "}
-                <ConfirmTag>{CONCIERGE_TAG}</ConfirmTag>
+                schedules and clients who settle best in their own space.
               </p>
+              {/* The service has a page now; the facts it used to flag here
+                  (area, pricing) are Verifiables on it. */}
+              <div className="hero-ctas" style={{ marginTop: 22 }}>
+                <Btn href="/concierge" variant="ghost" arrow>
+                  About concierge sessions
+                </Btn>
+              </div>
             </div>
             <PhotoFrame
               src="/images/concierge.jpg"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
+import { Btn } from "@/components/Buttons";
 import FinalCTA from "@/components/FinalCTA";
 import { concerns } from "@/lib/concerns";
 import { hubTrail, pageMetadata } from "@/lib/pages";
@@ -138,6 +139,35 @@ export default function WhatWeHelpWithPage() {
           {concerns.slice(INTERLUDE_AFTER).map((c) => (
             <ConcernEntry key={c.slug} {...entryProps(c)} />
           ))}
+
+          {/* Concierge, as one row in the same grammar as the entries above:
+              the concern a center visit itself is, for the households it
+              doesn't fit. */}
+          <div className="entry rv">
+            <div>
+              <h2>Can&rsquo;t get to a center?</h2>
+              <div className="who">At home or on-site</div>
+            </div>
+            <div className="colB">
+              <h3>You might recognize</h3>
+              <p>
+                More than one person in the family in care. A schedule with
+                no hour to spare for the drive. Someone for whom the trip is
+                the hardest part of the appointment.
+              </p>
+            </div>
+            <div className="colA">
+              <h3>How we approach it</h3>
+              <p>
+                Concierge LENS brings a practitioner to your home or your
+                business &mdash; one person, or the whole family in a single
+                visit.
+              </p>
+              <Btn href="/concierge" variant="ghost" arrow>
+                About concierge sessions
+              </Btn>
+            </div>
+          </div>
         </div>
       </section>
 

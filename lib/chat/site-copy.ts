@@ -941,7 +941,12 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   "app/privacy-policy/page.tsx": {},
   "app/locations/page.tsx": {
     "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",
-    CONCIERGE_TAG: "not indexed — concierge sessions are in no passage",
+    // CONCIERGE_TAG was here. The service has a page (/concierge, Oct 2026)
+    // whose five facts are Verifiables with no passage behind any of them;
+    // the band links to the page and carries nothing to flag.
+  },
+  "app/concierge/page.tsx": {
+    "fact.note!": "Verifiable-gated — five concierge facts, each empty and unverified; none is in a passage",
   },
   "app/locations/[slug]/page.tsx": {
     "[Opening date — confirm]": "not indexed — location:franklin:coming-soon omits the date",

@@ -1156,7 +1156,7 @@ export const concerns: Concern[] = [
         "This page is for the long stretch. Low mood a doctor or a therapist may already know about, that has been part of life for a while:",
       // Ben's framing — build the page around this, don't soften it.
       gap:
-        "People come to us for low mood after a lot has already been tried, and usually with care already in place — a therapist, a doctor, a prescriber — that continues exactly as it is. LENS runs alongside antidepressants and alongside therapy; it isn't an alternative to either, and we'll say so on the phone. We don't treat depression, and we won't tell you what LENS would do for yours. That's what the free call is for.",
+        "People come to us for low mood after a lot has already been tried, and usually with care already underway — a therapist, a doctor, a prescriber — that continues exactly as it is. LENS runs alongside antidepressants and alongside therapy; it isn't an alternative to either, and we'll say so on the phone. We don't treat depression, and we won't tell you what LENS would do for yours. That's what the free call is for.",
     },
     overview: {
       // Who comes in — arrivals, not symptoms. This is the hub entry, and it

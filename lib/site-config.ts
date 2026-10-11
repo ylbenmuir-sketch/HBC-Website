@@ -880,8 +880,51 @@ export const BRAIN_MAP_CLAIM: Verifiable = {
 // them. Their copy is above — SESSION_PRICE and the package figures,
 // INSURANCE_POLICY, TRAINING_CLAIM, FIRST_VISIT_DURATION — and the passages
 // they were holding out of the assistant's index are back in it.
-export const CONCIERGE_TAG = "[Confirm service area & pricing]";
 export const CONTACT_RESPONSE_TAG = "[Confirm response time]";
+
+/* ------------------------------------------------------------------ */
+/* Concierge (/concierge)                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The concierge service: a LENS practitioner travels to the client's home
+ * or business and runs sessions there, for one person or a household in
+ * the same visit. It is a real service and /concierge describes it. Every
+ * *fact* about it is Ben's to supply, so each lives here as a Verifiable
+ * with an empty value: the page renders the [CONFIRM] tag in draft and
+ * hides the fact in production, and lib/content-validation.ts lists all
+ * five so `REQUIRE_VERIFIED_CONTENT=true npm run build` fails until each
+ * is confirmed. To confirm one, write the value and set `verified: true`.
+ *
+ * These replaced the single CONCIERGE_TAG that used to flag the /locations
+ * band (Oct 2026). Nothing invented in the meantime: the page states the
+ * shape of the service and sends every number to the free call.
+ */
+export const CONCIERGE_PRICE: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM concierge pricing — per visit, per person, or per session plus travel?]",
+};
+export const CONCIERGE_TRAVEL_RADIUS: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM travel radius or service area from each center]",
+};
+export const CONCIERGE_PRACTITIONERS: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM which practitioners travel]",
+};
+export const CONCIERGE_BRAIN_MAP: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM whether the first visit (the Brain Map) can happen at home]",
+};
+export const CONCIERGE_MINIMUM: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM minimum booking or household minimum]",
+};
 
 /* ------------------------------------------------------------------ */
 /* Locations                                                           */

@@ -496,7 +496,10 @@ const MEDICAL_FIRST_QUESTIONS: Record<string, string> = {
   // stops the turn first), so this question is for the visitor asking
   // *about* the line — and if a phrasing the check does not catch ever
   // lands here, the passage it retrieves is the one that says 988.
-  depression: "Where do I turn if I'm in crisis right now?",
+  //
+  // No "I'm": the tokenizer keeps it as `im`, and at question weight it
+  // made this passage the top answer to "I'm stuck" — a signs line.
+  depression: "Where do I turn in a crisis right now?",
 };
 
 function concernPassages(c: Concern): Passage[] {

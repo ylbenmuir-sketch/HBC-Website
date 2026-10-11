@@ -40,6 +40,7 @@ const groups = [
       { label: "Nashville", href: "/locations/nashville" },
       { label: "Murfreesboro", href: "/locations/murfreesboro" },
       { label: "Franklin — coming soon", href: "/locations/franklin" },
+      { label: "Concierge — at home", href: "/concierge" },
       { label: "All locations", href: "/locations" },
     ],
   },

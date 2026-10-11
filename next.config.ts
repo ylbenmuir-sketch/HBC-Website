@@ -68,9 +68,10 @@ const nextConfig: NextConfig = {
    * and `/add-adhd/` in one hop — which is the whole reason the built-in
    * slash redirect is off (see `skipTrailingSlashRedirect`).
    *
-   * Rows marked **default** are the two Ben has not decided (P6 in
-   * SEO-AUDIT-3): `/concierge/` and `/refer-a-friend/` have no equivalent in
-   * the rebuild, so both go to the hub until he says otherwise.
+   * The row marked **default** is the one Ben has not decided (P6 in
+   * SEO-AUDIT-3): `/refer-a-friend/` has no equivalent in the rebuild, so it
+   * goes to the hub until he says otherwise. (`/concierge/` was the other;
+   * /concierge is a page as of Oct 2026.)
    *
    * The ~55 individual WordPress posts are NOT here: the audit asked for one
    * pass with the GSC export open and the post list, and nobody has supplied
@@ -125,8 +126,10 @@ const nextConfig: NextConfig = {
       ...to(["/trisha-yearwood", "/testimonials", "/testimonials1"], "/stories"),
       ...to(["/faqs"], "/faq"),
       ...to(["/blog", "/advice-center"], "/resources"),
-      // **default** — undecided (P6). No equivalent page exists for either.
-      ...to(["/concierge", "/refer-a-friend"], "/what-we-help-with"),
+      // /concierge is a page again (Oct 2026), so its legacy URL needs no
+      // row: the catch-all at the end turns `/concierge/` into `/concierge`.
+      // **default** — undecided (P6). No equivalent page exists.
+      ...to(["/refer-a-friend"], "/what-we-help-with"),
       ...to(["/phoneschedule", "/new-client-intake-form"], "/contact"),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
