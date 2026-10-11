@@ -647,7 +647,9 @@ function HeroFact({
           fontSize: 11.5,
           letterSpacing: ".18em",
           textTransform: "uppercase",
-          color: "var(--gold)",
+          // Gold as text on ivory — the darkened token, 4.92:1. The plain
+          // --gold measured 3.23 here on both open centers' pages.
+          color: "var(--gold-ink)",
           marginBottom: 6,
         }}
       >

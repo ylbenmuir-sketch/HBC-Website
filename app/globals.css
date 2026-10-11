@@ -154,6 +154,16 @@
   --sage-deep: #596e5b;
   --gold: #a9853f;
   --gold-soft: rgba(169, 133, 63, 0.35);
+  /* Gold as *text on a light ground*. `--gold` is 3.24:1 on ivory and
+     4.69:1 on navy, and darkening it globally would fix the first by
+     breaking the second (CONTRAST-OPTIONS.md, option B). So the token is
+     split: `--gold` stays for everything on navy and for rules, marks and
+     borders; `--gold-ink` is the darkened value for text on ivory, ivory-2
+     or white — 4.92 / 4.52 / 5.22. Applied Oct 2026 to the wordmark
+     subtitle and the location-hero fact labels (SEO-AUDIT-3 A9); every
+     other gold-on-light text rule still reads `--gold` and still measures
+     under 4.5 — see the contrast sweep in the batch report. */
+  --gold-ink: #856831;
   --serif: var(--font-cormorant), Georgia, serif;
   --serif-italic: var(--font-cormorant-italic), Georgia, serif;
   --sans: var(--font-dm-sans), Helvetica, Arial, sans-serif;
@@ -246,7 +256,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
 .nav { max-width: 1360px; margin: 0 auto; padding: 0 44px; height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 30px; }
 .logo { display: flex; align-items: center; gap: 14px; text-decoration: none; flex: none; }
 .logo-name { font-family: var(--serif); font-size: 21px; color: var(--navy); font-weight: 600; letter-spacing: 0.01em; line-height: 1.05; }
-.logo-name span { display: block; font-family: var(--sans); font-weight: 500; font-size: 10.5px; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-top: 3px; }
+.logo-name span { display: block; font-family: var(--sans); font-weight: 500; font-size: 10.5px; letter-spacing: 0.3em; color: var(--gold-ink); text-transform: uppercase; margin-top: 3px; }
 .nav-links { display: flex; gap: 34px; align-items: center; }
 .nav-links > div { position: relative; }
 .nav-links a.top { font-size: 15px; font-weight: 500; color: var(--ink); text-decoration: none; padding: 34px 0; display: inline-block; }
@@ -520,7 +530,9 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .quote p { font-family: var(--serif-italic); font-size: 23px; line-height: 1.5; color: var(--navy); font-style: italic; }
 .quote footer { margin-top: 20px; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; }
 .quote footer b { color: var(--sage-deep); }
-.sample-note { font-size: 11.5px; color: var(--slate); opacity: 0.8; margin-top: 20px; letter-spacing: 0.04em; }
+/* No opacity: slate at 0.8 over ivory-2 composited to 3.33:1; at full
+   strength it is 4.92 on ivory-2 and 5.36 on ivory (SEO-AUDIT-3 A9). */
+.sample-note { font-size: 12px; color: var(--slate); margin-top: 20px; letter-spacing: 0.04em; }
 .review-band { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; margin-top: 34px; background: #fff; }
 .review-band > div { flex: 1; padding: 30px 36px; border-right: 1px solid var(--line); }
 .review-band > div:last-child { border-right: 0; }
@@ -705,6 +717,10 @@ details.faq .a a { color: var(--sage-deep); }
 /* footer */
 footer.site { background: var(--navy-deep); color: rgba(251, 248, 241, 0.68); padding: 76px 0 44px; font-size: 14px; }
 .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 56px; padding-bottom: 48px; border-bottom: 1px solid rgba(251, 248, 241, 0.12); }
+/* The footer wordmark sits on navy, where the darkened --gold-ink falls to
+   3.08:1; the original gold is 4.69 there. The token split exists for
+   exactly this pairing (CONTRAST-OPTIONS.md). */
+footer.site .logo-name span { color: var(--gold); }
 .foot-grid .h5 { color: var(--ivory); font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; font-weight: 600; }
 .foot-grid .h5 button { background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; cursor: default; pointer-events: none; }
 .fg-mark { display: none; }
@@ -903,7 +919,10 @@ html.js .rv.in { opacity: 1; transform: none; }
   .logo { gap: 11px; }
   .logo svg { width: 33px; height: 33px; }
   .logo-name { font-size: 17.5px; }
-  .logo-name span { font-size: 9px; letter-spacing: 0.26em; margin-top: 2px; }
+  /* 10.5px, not the 9px it was: the smallest text on the site sat in the
+     header of all 40 pages (SEO-AUDIT-3 §6). The tighter tracking keeps the
+     block inside the compact header's logo slot at 320px. */
+  .logo-name span { font-size: 10.5px; letter-spacing: 0.22em; margin-top: 2px; }
   .nav > .nav-cta { padding: 10px 16px; font-size: 13.5px; }
   /* borderless two-line menu mark with a full 44px hit area */
   .nav-burger { border: 0; background: none; padding: 12px 10px; margin-right: -10px; min-width: 44px; min-height: 44px; }
