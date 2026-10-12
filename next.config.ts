@@ -39,6 +39,20 @@ const nextConfig: NextConfig = {
      * per size — and it is paid once at build for a static site.
      */
     formats: ["image/avif", "image/webp"],
+    /**
+     * How long a browser (and Vercel's edge) may keep an optimized image
+     * before asking again. Next's default is 60 seconds: every photo on the
+     * site came back with `Cache-Control: public, max-age=60`, so a visitor
+     * who read two pages a minute apart re-fetched the header-to-footer set
+     * of images on the second one, and Lighthouse's `uses-long-cache-ttl`
+     * listed all of them. Thirty-one days, not a year: the source files in
+     * public/images are replaced in place occasionally, and a month is the
+     * longest a stale copy may outlive its replacement. (Next's own advice
+     * is to change the filename when an image changes; do that and the TTL
+     * is moot.) Fonts and JS are content-hashed and already immutable; this
+     * only touches /_next/image.
+     */
+    minimumCacheTTL: 2678400,
   },
 
   /**
