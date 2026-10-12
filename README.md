@@ -190,6 +190,35 @@ lands. Nothing in the repository could see it: `check:layout` measures a page
 whose fonts have loaded, and `check:cwv` saw it as a spread it was already
 printing under the table.
 
+### Where the time goes, and what is left to decide
+
+Measured October 2026 across all 44 routes with `check:cwv`, Lighthouse 12
+mobile on every template, and a CDP trace of each route's JavaScript. The
+short version, so the next pass does not re-measure it:
+
+- **Real LCP is at the floor.** On the throttled phone profile every template
+  paints its LCP element in 680–880 ms. Pages whose LCP is text sit at two
+  round trips plus the stylesheet's transfer; pages whose LCP is a preloaded
+  hero image land about 100 ms behind them. No JavaScript is on that path —
+  every script is `async`, and hydration lands at 1.5–1.9 s, which is when the
+  burger and the ask bar start answering presses. Lighthouse reports
+  2.4–3.1 s with a 2 s "render delay" on *text* LCP elements: that is Lantern
+  simulating paint through the JS graph, and a change that moves it without
+  moving `check:cwv` has not helped anyone.
+- **The assistant's chunk was not a chunk.** Under Turbopack, `next/dynamic`
+  from the server layout folded SiteAssistant into the layout bundle every
+  page hydrates, flag on or off. `components/AssistantLoader.tsx` imports it
+  with a client-side `import()` at idle instead; the layout chunk lost 2.2 kB
+  gzipped and the panel's code now arrives after the page is interactive.
+- **The remaining levers all change something a visitor sees**, and each is
+  documented with its measured cost in the pass report rather than applied:
+  dropping the two font preloads (LCP −120–200 ms, but body copy swaps late
+  and the homepage's CLS goes to 0.12); turning viewport prefetch off for
+  in-content links (saves 118–168 kB per fully scrolled page view, costs
+  220–390 ms on a cold tap against 25–44 ms prefetched); building with
+  webpack instead of Turbopack (−10–14 kB gzipped JS per route, hydration
+  ~30 ms earlier). "As fast as it needs to be" is the finding for the rest.
+
 ### `npm run check:layout`
 
 ```bash
@@ -490,6 +519,7 @@ everything below exists to keep that true.
 | `lib/chat/answer.ts` | §2 — the system prompt and the **only** model call |
 | `lib/chat/rate-limit.ts`, `logging.ts` | §6 |
 | `components/SiteAssistant.tsx` | §6 — the panel (and the retired launcher pill, behind `SHOW_LEGACY_LAUNCHER`) |
+| `components/AssistantLoader.tsx` | Imports the panel's chunk when the browser is idle, or at once when the ask bar asks — never at hydration (§6's "loads after the page is interactive") |
 | `components/StickyAskBar.tsx` | The way in — the sticky field that opens the panel |
 | `components/BottomBarContext.tsx` | Which bottom bar is on screen, for everything that is bottom-anchored |
 | `components/BottomBarDock.tsx` | The one fixed footprint both bars share |
