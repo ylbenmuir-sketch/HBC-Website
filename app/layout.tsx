@@ -5,21 +5,15 @@ import Footer from "@/components/Footer";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
-import dynamic from "next/dynamic";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import Analytics from "@/components/Analytics";
+import AssistantLoader from "@/components/AssistantLoader";
 import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION } from "@/lib/analytics";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
 import "./globals.css";
 
-/**
- * Split into its own chunk so the widget is not in the bundle every page
- * downloads. §6: it "must not block or degrade LCP". While
- * FEATURE_ASSISTANT is false the chunk is never requested at all.
- */
-const SiteAssistant = dynamic(() => import("@/components/SiteAssistant"));
 
 /**
  * Cormorant upright. `adjustFontFallback: false`, with the fallback family
@@ -181,8 +175,14 @@ export default function RootLayout({
               .env.example, not in draft mode, not in dev. Wired in so Ben can
               audit it by flipping one variable in one environment, and so the
               flag is the only thing between it and a visitor. See
-              phase-8-chatbot.md §6 and README → Site assistant. */}
-          {FEATURE_ASSISTANT && <SiteAssistant />}
+              phase-8-chatbot.md §6 and README → Site assistant.
+
+              With the flag on, the widget's code is a separate chunk that
+              AssistantLoader imports once the browser is idle — not at
+              hydration, where a `next/dynamic` component rendered on the
+              server still lands. With the flag off the chunk is never
+              emitted into the page at all. */}
+          {FEATURE_ASSISTANT && <AssistantLoader />}
           {/* Last in the body so the dock's fixed layers sit above the page
               without needing to outbid anything on z-index. The ask bar only
               exists behind the same flag as the assistant it opens — with the
