@@ -956,16 +956,20 @@ export const CONCIERGE_PRACTITIONERS: Verifiable = {
 
 /** The Brain Map at home — confirmed by Ben: yes, no center visit needed to start. */
 export const CONCIERGE_BRAIN_MAP: Verifiable = {
+  // Not "your first visit": the phrase is what "how much is the first
+  // visit" routes on, and it pulled this passage into that question's four.
   value:
-    "Yes. The Brain Map — your first visit — can be recorded at your home or " +
-    "office, so no center visit is needed to start.",
+    "Yes. The Brain Map can be recorded at your home or office; no center " +
+    "visit is required to start.",
   verified: true,
   note: "[CONFIRM whether the first visit (the Brain Map) can happen at home]",
 };
 
 /** Minimums — confirmed by Ben: none, of either kind. */
 export const CONCIERGE_MINIMUM: Verifiable = {
-  value: "No minimum — not a minimum number of sessions, and not a minimum number of people.",
+  // Ben's words. Not "minimum number of": "number" is the phone passage's
+  // key, and it pulled this one into "what's your phone number".
+  value: "No minimum. No minimum sessions, no minimum people.",
   verified: true,
   note: "[CONFIRM minimum booking or household minimum]",
 };

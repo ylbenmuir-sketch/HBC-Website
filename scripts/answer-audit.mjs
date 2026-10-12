@@ -750,6 +750,52 @@ const PAGE_ROUTING = [
   ["What does it cost?", "policy:"],
   ["Does insurance cover it?", "page:first-visit:insurance"],
   ["Where are you located?", "location:"],
+  // Two price lists as of Oct 2026. The concierge questions land on the
+  // concierge page; the center-pricing questions stay where they were. The
+  // second direction is also held by CENTER_PRICING below, which forbids a
+  // concierge passage anywhere in the four.
+  ["How much does a concierge visit cost?", "page:concierge:"],
+  ["How much to come to my house?", "page:concierge:"],
+  ["Do you come to my home?", "page:concierge:"],
+  ["How far will you come for concierge?", "page:concierge:details"],
+  ["What does it cost for a family of three?", "page:concierge:"],
+  ["How much does a session cost?", "policy:"],
+  ["What's the price?", "faq:12"],
+  ["How much is the first visit?", "page:first-visit:"],
+];
+
+/**
+ * Center-pricing questions that must never retrieve the concierge rates.
+ *
+ * PAGE_ROUTING pins the top passage; this pins the other three. A model
+ * handed the center rates first and the concierge rates fourth will answer
+ * "how much is a session" with both lists, and the prompt's rule about
+ * answering from one list is a prompt — this is the check. "How much is a
+ * session" itself tops page:how-lens-works:session (pre-existing: the
+ * session passage carries "session" at title weight), with policy:pricing
+ * third; it is held here rather than in PAGE_ROUTING for that reason.
+ */
+/**
+ * Concierge-pricing questions must hand the model the concierge rates. The
+ * three concierge passages retrieve together and the page prefix above
+ * pins the top; this pins the one with the numbers into the four.
+ */
+const CONCIERGE_PRICING = [
+  "How much does a concierge visit cost?",
+  "How much to come to my house?",
+  "What does it cost for a family of three?",
+  "What are the concierge rates?",
+];
+
+const CENTER_PRICING = [
+  "How much is a session?",
+  "How much does a session cost?",
+  "What does a session cost?",
+  "What does it cost?",
+  "What's the price?",
+  "How much is the first visit?",
+  "How much is the Brain Map?",
+  "Do we have to commit to a package?",
 ];
 
 /**
@@ -1145,6 +1191,11 @@ function runBooking({
  * week to retrieve and the answer is assembled from data instead.
  */
 const MUST_BE_PRE_ANSWERED = [
+  // The one concierge fact Ben has not answered: the package. Fixed copy
+  // until CONCIERGE_PACKAGE is confirmed; see lib/chat/unanswerable.ts.
+  ["Does the 12-session package apply to concierge visits?", "concierge-package"],
+  ["Can I use the package for home visits?", "concierge-package"],
+  ["Is the package price the same if you come to my house?", "concierge-package"],
   ["When are you open?", "hours"],
   ["What are your hours?", "hours"],
   ["Are you open Saturday?", "hours"],
@@ -1185,6 +1236,11 @@ const HOURS_NO_DAY = [
 
 /** A day *word* is not a day question. These must fall through. */
 const MUST_NOT_BE_PRE_ANSWERED = [
+  // A package word without a concierge word is faq:7's question, and a
+  // concierge word without a package word is the concierge page's.
+  "Do we have to commit to a package?",
+  "How many sessions are in the package?",
+  "Do you come to my home?",
   "She melts down every Saturday morning",
   "Weekends are the worst",
   "He cries for hours every Saturday",
@@ -1506,6 +1562,32 @@ function guardrails() {
     }
   }
   console.log(`  page routing    ${PAGE_ROUTING.length} sitewide questions`);
+
+  for (const question of CENTER_PRICING) {
+    const result = retrieve(question);
+    if (result.status !== "grounded") {
+      failures.push(`no-match (${result.reason}) on a center-pricing question: ${question}`);
+      continue;
+    }
+    const leaked = result.passages.find((p) => p.passage.id.startsWith("page:concierge:"));
+    if (leaked) {
+      failures.push(`concierge rates retrieved for a center-pricing question (${leaked.passage.id}): ${question}`);
+    }
+  }
+  console.log(`  center pricing  ${CENTER_PRICING.length} questions kept off the concierge rates`);
+
+  for (const question of CONCIERGE_PRICING) {
+    const result = retrieve(question);
+    if (result.status !== "grounded") {
+      failures.push(`no-match (${result.reason}) on a concierge-pricing question: ${question}`);
+      continue;
+    }
+    const ids = result.passages.map((p) => p.passage.id);
+    if (!ids.includes("page:concierge:pricing") && !ids.includes("page:concierge:details")) {
+      failures.push(`concierge rates not retrieved (${ids.join(", ")}): ${question}`);
+    }
+  }
+  console.log(`  concierge price ${CONCIERGE_PRICING.length} questions handed the concierge rates`);
 
   const DUPLICATE_THRESHOLD = 0.6;
   const questioned = CONTENT_INDEX.filter((p) => p.question);

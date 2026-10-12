@@ -57,6 +57,11 @@ export const COPY_TOKENS = [
   "PACKAGE_NOTE",
   "INSURANCE_POLICY",
   "TRAINING_CLAIM",
+  // /concierge (Oct 2026): the founder's name and the three derived rates.
+  "FOUNDER_DISPLAY_NAME",
+  "CONCIERGE_SURCHARGE",
+  "CONCIERGE_FIRST_VISIT",
+  "CONCIERGE_SESSION",
 ] as const;
 export type CopyToken = (typeof COPY_TOKENS)[number];
 
@@ -508,6 +513,102 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "What the written plan actually contains.",
           "What the recording shows, set against what you described. We walk you through the map point by point rather than handing you a report.",
           "Sleep, mood, focus, energy — asked about at every visit, so the plan follows what you actually report rather than the map alone.",
+        ],
+      },
+    ],
+  },
+  {
+    /**
+     * /concierge (Oct 2026) — the second price list in the corpus, and the
+     * one addition that was deferred until it could ship with its own
+     * before/after sweep against the pricing passages.
+     *
+     * Two passages from the page's prose; the four confirmed facts (service
+     * area, who comes, the Brain Map at home, no minimum) are Verifiables
+     * and are composed in content-index.ts through confirmed(), the way
+     * every gated fact is. The open fact — whether the package applies — is
+     * in no passage; ./unanswerable.ts answers that question itself until
+     * CONCIERGE_PACKAGE is confirmed.
+     *
+     * **The center rates are deliberately not in the pricing passage.** The
+     * page prints "$150 at a center, plus $100" beside each concierge rate;
+     * the mirror stops before that clause. A visitor asking about concierge
+     * should hear the concierge numbers and that the founder comes, not a
+     * comparison she did not ask for — and the only way to hold the model to
+     * that is for the center figures not to be in the passage it answers
+     * from. "How does that compare" retrieves policy:pricing as well, which
+     * is where the comparison belongs.
+     */
+    sourceFile: "app/concierge/page.tsx",
+    href: "/concierge",
+    passages: [
+      {
+        id: "page:concierge:what",
+        title: "Concierge LENS — at home or on-site",
+        question: "Do you come to my home?",
+        // No "visit", "travel", "office" or "drive": all four are location
+        // keys, and a question about getting to a center must keep landing
+        // on the center. "home" is here on purpose — nothing else on the
+        // site is filed under it.
+        keywords: [
+          "concierge",
+          "home",
+          "house",
+          "mobile",
+          "come",
+          "family",
+          "household",
+          "employer",
+          "workplace",
+          "business",
+          "premium",
+        ],
+        text: "Mobile neurofeedback that comes to you. {FOUNDER_DISPLAY_NAME}, our founder, travels to your home or your business and runs LENS sessions there — for one person, or for the whole family in a single visit. The same equipment, the same check-in, and our center rates plus {CONCIERGE_SURCHARGE} per person, per session. Built for the households a center visit doesn’t fit: families with more than one person in care; someone who can’t easily travel; a schedule a center visit doesn’t fit; an employer bringing it on-site.",
+        mirror: [
+          "Mobile neurofeedback that comes to you.",
+          ", our founder, travels to your home or your business and runs LENS sessions there — for one person, or for the whole family in a single visit. The same equipment, the same check-in, and our center rates plus per person, per session.",
+          "Built for the households a center visit doesn’t fit.",
+          "Families with more than one person in care",
+          "Someone who can't easily travel",
+          "A schedule a center visit doesn't fit",
+          "An employer bringing it on-site",
+        ],
+      },
+      {
+        id: "page:concierge:pricing",
+        // "Concierge rates", not "What a concierge visit costs": the title
+        // is weighted, and "costs" in it kept this passage in the four for
+        // every bare cost question. The text below carries no "cost" at all
+        // for the same reason — the page's "What it costs" heading and its
+        // premium paragraph ("what the same visit costs at a center") are
+        // not mirrored.
+        title: "Concierge rates",
+        // No "cost", "price" or "much" in the question or the keys — tried,
+        // and this passage took "What does it cost?" outright (shorter than
+        // policy:pricing, with the same words at question weight). It is
+        // filed under the concierge words only; the prose still says
+        // "costs" and "price" once each, which is what lets "how much does
+        // a concierge visit cost" reach it through "concierge" at keyword
+        // weight. The audit pins both directions (PAGE_ROUTING,
+        // CENTER_PRICING).
+        question: "What are the concierge rates?",
+        keywords: [
+          "concierge",
+          "home",
+          "house",
+          "surcharge",
+          "founder",
+          "family",
+          "person",
+          "premium",
+          "rates",
+        ],
+        text: "Center rates plus {CONCIERGE_SURCHARGE} per person, per session. Same price per person whether it’s one of you or the whole family. No minimum sessions, no minimum people. First visit — {CONCIERGE_FIRST_VISIT} per person: {BRAIN_MAP_NAME} and the full consultation, recorded at your home or office. Each session after — {CONCIERGE_SESSION} per person: a regular LENS session, {SESSION_LENGTH}. A modest surcharge for the founder’s time and the drive, not a luxury markup.",
+        mirror: [
+          "Center rates plus per person, per session. Same price per person whether it’s one of you or the whole family. No minimum sessions, no minimum people.",
+          "and the full consultation, recorded at your home or office.",
+          "A regular LENS session, .",
+          "a modest surcharge for the founder’s time and the drive, not a luxury markup.",
         ],
       },
     ],

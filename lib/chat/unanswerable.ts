@@ -1,4 +1,4 @@
-import { SESSION_LENGTH } from "../site-config";
+import { CONCIERGE_PACKAGE, PACKAGE_SESSIONS, SESSION_LENGTH } from "../site-config";
 import {
   formattedHours,
   locationHours,
@@ -312,6 +312,34 @@ export const PRE_RETRIEVAL_TOPICS: PreRetrievalTopic[] = [
     ],
   },
 ];
+
+/**
+ * Whether the package applies to concierge visits — the one concierge fact
+ * Ben has not answered (CONCIERGE_PACKAGE). The page says nothing either
+ * way, and neither may the assistant: retrieval would hand it policy:pricing
+ * and the concierge rates together and leave the model to infer. So the
+ * question is answered here, with the one true sentence, and sent to the
+ * call. Retires itself the day the Verifiable is confirmed.
+ *
+ * Both halves are required — a package word AND a concierge word — so
+ * "do we have to commit to a package?" keeps its answer from faq:7.
+ */
+PRE_RETRIEVAL_TOPICS.push({
+  topic: "concierge-package",
+  respond: () =>
+    CONCIERGE_PACKAGE.verified
+      ? null
+      : {
+          body: `Whether the ${PACKAGE_SESSIONS}-session package applies to concierge visits isn’t something the site has settled yet, so I’d rather not guess.`,
+          offer: "It’s worth covering on the free call. Want me to set one up?",
+        },
+  patterns: [
+    new RegExp(
+      String.raw`(?=[\s\S]*\b(package|${PACKAGE_SESSIONS}[- ]sessions?|twelve[- ]sessions?|bundle)\b)(?=[\s\S]*\b(concierge|at[- ]home|in[- ]home|my (house|home|office)|our (house|home|office)|home visits?|mobile|come to (me|us))\b)`,
+      "i"
+    ),
+  ],
+});
 
 export type PreRetrievalAnswer = {
   topic: string;

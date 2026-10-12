@@ -10,9 +10,15 @@ import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
+  CONCIERGE_BRAIN_MAP,
+  CONCIERGE_MINIMUM,
+  CONCIERGE_PRACTITIONERS,
+  CONCIERGE_PRICE,
+  CONCIERGE_TRAVEL_RADIUS,
   DISCLAIMER,
   ESTABLISHED_YEAR,
   FIRST_VISIT_DURATION,
+  FOUNDER_DISPLAY_NAME,
   INFORMATION_SHARING,
   INSURANCE_POLICY,
   PACKAGE_NOTE,
@@ -27,6 +33,7 @@ import {
   STAT_SESSIONS,
   SITE_NAME,
   TRAINING_CLAIM,
+  usd,
   type Verifiable,
 } from "../site-config";
 import { practitionerBandStat } from "../team";
@@ -748,6 +755,10 @@ function pagePassages(): Passage[] {
     PACKAGE_NOTE,
     INSURANCE_POLICY,
     TRAINING_CLAIM,
+    FOUNDER_DISPLAY_NAME,
+    CONCIERGE_SURCHARGE: usd(CONCIERGE_PRICE.value.surchargeUsd),
+    CONCIERGE_FIRST_VISIT: usd(CONCIERGE_PRICE.value.firstVisitUsd),
+    CONCIERGE_SESSION: usd(CONCIERGE_PRICE.value.sessionUsd),
   };
   return MIRRORED_PAGES.flatMap((page) =>
     // `mirror` is dropped: it exists for the drift check, not for retrieval.
@@ -769,6 +780,61 @@ function pagePassages(): Passage[] {
       })
     )
   );
+}
+
+/**
+ * The confirmed concierge facts, from their Verifiables — the service area,
+ * who comes, the Brain Map at home, and no minimum — in one passage, through
+ * confirmed() like every gated fact. The prices are mirrored from the page
+ * (./site-copy.ts) and are not restated here; the open package question is
+ * in no passage at all and is answered by ./unanswerable.ts.
+ *
+ * The family rows the page works out are composed here from the same
+ * derived rates, because a passage that gives only per-person figures hands
+ * the model a multiplication it is forbidden to do: "what does it cost for a
+ * family of three" must find a published total.
+ */
+function conciergePassages(): Passage[] {
+  const facts = [
+    confirmed(CONCIERGE_TRAVEL_RADIUS),
+    confirmed(CONCIERGE_PRACTITIONERS),
+    confirmed(CONCIERGE_BRAIN_MAP),
+    confirmed(CONCIERGE_MINIMUM),
+  ].filter((f): f is string => f !== null);
+  if (facts.length === 0) return [];
+
+  const price = confirmed(CONCIERGE_PRICE);
+  const family = price
+    ? [3, 4].map(
+        (n) =>
+          `A family of ${n === 3 ? "three" : "four"}: first visit ${usd(price.firstVisitUsd * n)} — ${n} Brain Maps and consultations in one trip. Each session after: ${usd(price.sessionUsd * n)} for all ${n}, back to back.`
+      )
+    : [];
+
+  return [
+    {
+      id: "page:concierge:details",
+      kind: "page",
+      // No "who" in the title or the lead-in: at title weight it put this
+      // passage into the four for "Who will I see?", which is the team's
+      // question.
+      title: "Concierge — where we come and how to start",
+      href: "/concierge",
+      // No "visit" in the question: at question weight it took "how much
+      // does a concierge visit cost" off the pricing passage.
+      question: "How far will you come for concierge?",
+      // "far", "radius", "hour", "minimum" are new to the corpus and belong
+      // here; "three" and "four" are the family rows, which are the answer
+      // to "what does it cost for a family of three". NOT "travel", "area"
+      // or "drive": the centers' area and directions passages own them, and
+      // "do you serve Smyrna?" must keep landing on Murfreesboro.
+      keywords: [
+        "concierge", "home", "house", "far", "radius", "distance", "hour",
+        "minimum", "founder", "sheri", "rowney", "family", "three", "four",
+      ],
+      text: [`Concierge — where we come and how to start.`, ...facts, ...family].join(" "),
+    },
+  ];
 }
 
 function policyPassages(): Passage[] {
@@ -979,6 +1045,7 @@ const ALL_PASSAGES: Passage[] = [
   allCentersPassage(),
   ...locations.flatMap(locationPassages),
   ...pagePassages(),
+  ...conciergePassages(),
   ...policyPassages(),
 ];
 

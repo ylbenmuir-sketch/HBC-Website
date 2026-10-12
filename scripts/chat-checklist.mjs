@@ -301,6 +301,13 @@ for (const question of [
   "Is it safe?",
   "Do you take insurance?",
   "Do you sell CBD oil?",
+  // Two price lists (Oct 2026). Read these three together: the concierge
+  // answer gives the concierge numbers and names the founder without the
+  // center rates; the center answer never mentions concierge; the package
+  // question gets the fixed "worth covering on the call" copy.
+  "How much does a concierge visit cost?",
+  "What does it cost for a family of three if you come to us?",
+  "Does the 12-session package apply to concierge visits?",
 ]) await single(question);
 
 console.log(`\n${"=".repeat(72)}`);
