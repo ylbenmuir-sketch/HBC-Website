@@ -925,6 +925,13 @@ html.js .rv.in { opacity: 1; transform: none; }
 
 /* -- pieces that exist at all widths but only show on phones -- */
 .m-only { display: none; }
+/* A line break that exists only at wide desktop widths — see
+   `titleAccentWideBreak` in lib/locations.ts. `display: none` on a <br>
+   removes the break; `inline` restores it. 1349px is where the Franklin H1's
+   real italic stops fitting its column ("Williamson County." is 7.01em; at
+   5.4vw that passes the 511px column at 1349px — measured, not derived). */
+.br-wide { display: none; }
+@media (min-width: 1349px) { .br-wide { display: inline; } }
 .hero-scrim { display: none; }
 .cta-bar { display: none; }
 

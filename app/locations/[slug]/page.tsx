@@ -180,7 +180,17 @@ export default async function LocationPage({
             <div className="eyebrow">{location.hero.eyebrow}</div>
             <h1>
               {location.hero.titleLead}
-              <em className="sage">{location.hero.titleAccent}</em>
+              <em className="sage">
+                {location.hero.titleAccentWideBreak
+                  ? location.hero.titleAccent.split(" ").map((word, i) => (
+                      <span key={word}>
+                        {i > 0 && <br className="br-wide" />}
+                        {i > 0 && " "}
+                        {word}
+                      </span>
+                    ))
+                  : location.hero.titleAccent}
+              </em>
               {location.hero.titleTail}
             </h1>
             <p className="sub">{location.hero.sub}</p>

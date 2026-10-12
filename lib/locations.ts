@@ -197,6 +197,16 @@ export type Location = {
     eyebrow: string;
     titleLead: string;
     titleAccent: string; // italic sage word ("" for none)
+    /**
+     * Break the accent after its first word at wide desktop widths. Franklin
+     * only: at ≥1349px its H1 wraps "Williamson" / "County." in the real
+     * italic (516px needs more than the 511px column) and keeps "Williamson
+     * County." on one line in the narrower tuned fallback — three lines
+     * against four, an 84px jump at the swap, desktop CLS 0.083. A `<br>`
+     * that exists only where the real face already breaks makes the fallback
+     * take the same four lines, and changes nothing a visitor sees.
+     */
+    titleAccentWideBreak?: boolean;
     titleTail: string;
     sub: string;
     arrivalLines: string[];
@@ -676,6 +686,7 @@ export const locations: Location[] = [
       eyebrow: "Franklin, Tennessee — coming soon",
       titleLead: "The same gentle care is coming to ",
       titleAccent: "Williamson County",
+      titleAccentWideBreak: true,
       titleTail: ".",
       sub: "Opening soon. Practitioners for our Franklin center complete the same Harmonized training before opening day — and founding-client openings are limited.",
       arrivalLines: ["Join the waitlist for", "founding-client openings"],
