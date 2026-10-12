@@ -1590,6 +1590,7 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
    Full-bleed cream with a hairline above it, so it reads as the page's own
    bottom edge rather than as a floating widget parked on top of the page. */
 .askbar-layer {
+  position: relative; /* the decoy below is positioned against this box */
   justify-content: center;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: var(--ivory-2);
@@ -1607,8 +1608,9 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
   box-shadow: 0 1px 2px rgba(28, 43, 58, 0.05);
   /* It is a field and it should say so before it is touched. */
   cursor: text;
-  transition: width 0.2s var(--bb-ease), min-height 0.2s var(--bb-ease),
-              box-shadow 0.2s ease, border-color 0.2s ease;
+  /* No width or min-height here any more: the real bar changes layout in one
+     hidden frame and a decoy plays the motion (StickyAskBar, `Geometry`). */
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .askbar-mark { flex: none; line-height: 0; color: var(--sage-deep); }
 .askbar-input {
@@ -1635,7 +1637,6 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
   flex: none; width: 38px; height: 38px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
   background: var(--sage-soft); color: var(--sage-deep);
-  transition: width 0.2s var(--bb-ease), height 0.2s var(--bb-ease);
 }
 /* The focus ring belongs on the pill, not on the borderless input inside it:
    an outline around the input alone traces a rectangle with no visible edges.
@@ -1649,29 +1650,91 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
 
 /* -- collapsed: the visitor is reading down the page ---------------------
    The strip dissolves and leaves a pill. The reserved height does not move —
-   .bottombar-inner's min-height is a constant and the pill sits inside it. */
-.bottombar.is-compact .askbar-layer {
-  justify-content: flex-end;
+   .bottombar-inner's min-height is a constant and the pill sits inside it.
+
+   Two classes on the layer, both StickyAskBar's: `is-collapsing` is the
+   paint-only half (the strip fading) and goes on the moment the collapse
+   starts; `is-compact` is the layout half and goes on in the one hidden frame
+   at the end of the morph. On the way back up both come off at the start. */
+.askbar-layer.is-collapsing,
+.askbar-layer.is-compact {
   background: transparent; border-top-color: transparent; box-shadow: none;
   /* Full-bleed is what makes "tap anywhere on the bar" true; once it is a
      pill, only the pill may take taps, or the transparent remainder would go
      on swallowing clicks on the body copy behind it. */
   pointer-events: none;
 }
-.bottombar.is-compact .askbar-layer[data-on="true"] .askbar { pointer-events: auto; }
-.bottombar.is-compact .askbar {
+.askbar-layer.is-compact { justify-content: flex-end; }
+.askbar-layer.is-collapsing[data-on="true"] .askbar,
+.askbar-layer.is-compact[data-on="true"] .askbar { pointer-events: auto; }
+.askbar-layer.is-compact .askbar {
   width: 272px; min-height: 44px; padding-left: 14px;
   box-shadow: 0 1px 2px rgba(28, 43, 58, 0.06), 0 14px 28px -16px rgba(21, 34, 48, 0.42);
 }
 /* The mark is the first thing to go: at 272px the placeholder needs the room
    more than the identity does. */
-.bottombar.is-compact .askbar-mark { display: none; }
-.bottombar.is-compact .askbar-go { width: 32px; height: 32px; }
+.askbar-layer.is-compact .askbar-mark { display: none; }
+.askbar-layer.is-compact .askbar-go { width: 32px; height: 32px; }
 
 @media (max-width: 360px) {
   .askbar { padding-left: 14px; gap: 8px; }
-  .bottombar.is-compact .askbar { width: 240px; }
+  .askbar-layer.is-compact .askbar { width: 240px; }
 }
+
+/* -- the decoy: the 200ms between the two layouts ------------------------
+   Paint only. An SVG rect for the capsule (its geometry properties animate
+   and SVG children are outside the layout-shift tracker entirely), a span
+   for the words, a circle for the arrow, the wave mark — each at its full-bar
+   position in layout, each moved by `transform` alone. Every value is a
+   custom property StickyAskBar measures from the real bar at the moment the
+   morph starts, so this never has to know what 272px or 44px are. */
+.askbar-decoy {
+  position: absolute; inset: 0; display: none; pointer-events: none;
+  font-family: var(--sans);
+}
+.askbar-decoy.is-live { display: block; }
+.askbar-decoy-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.askbar-decoy-rect {
+  fill: var(--ivory); stroke: var(--line); stroke-width: 1;
+  transition: x 0.2s var(--bb-ease), y 0.2s var(--bb-ease),
+              width 0.2s var(--bb-ease), height 0.2s var(--bb-ease),
+              rx 0.2s var(--bb-ease), filter 0.2s ease;
+}
+.askbar-decoy[data-to="bar"] .askbar-decoy-rect {
+  x: var(--rb-x); y: var(--rb-y); width: var(--rb-w); height: var(--rb-h); rx: var(--rb-r);
+  filter: drop-shadow(0 1px 1px rgba(28, 43, 58, 0.05));
+}
+.askbar-decoy[data-to="pill"] .askbar-decoy-rect {
+  x: var(--rp-x); y: var(--rp-y); width: var(--rp-w); height: var(--rp-h); rx: var(--rp-r);
+  /* box-shadow 0 14px 28px -16px, without the spread: shorter and lighter. */
+  filter: drop-shadow(0 7px 9px rgba(21, 34, 48, 0.2));
+}
+.askbar-decoy-text {
+  position: absolute; left: var(--t-x); top: var(--t-y);
+  width: var(--t-w); height: var(--t-h); line-height: var(--t-h);
+  font-size: 16px; color: var(--slate);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: transform 0.2s var(--bb-ease);
+}
+.askbar-decoy-text.is-value { color: var(--ink); }
+.askbar-decoy[data-to="pill"] .askbar-decoy-text { transform: translateX(var(--t-dx)); }
+.askbar-decoy-go {
+  position: absolute; left: var(--g-x); top: var(--g-y);
+  width: var(--g-w); height: var(--g-w); border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--sage-soft); color: var(--sage-deep);
+  transition: transform 0.2s var(--bb-ease);
+}
+.askbar-decoy-go svg { transition: transform 0.2s var(--bb-ease); }
+.askbar-decoy[data-to="pill"] .askbar-decoy-go { transform: translateX(var(--g-dx)) scale(var(--g-s)); }
+/* The arrow holds its 16px while the circle around it shrinks, as the real one does. */
+.askbar-decoy[data-to="pill"] .askbar-decoy-go svg { transform: scale(var(--g-si)); }
+.askbar-decoy-mark {
+  position: absolute; left: var(--m-x); top: var(--m-y);
+  line-height: 0; color: var(--sage-deep); visibility: hidden;
+}
+.askbar-decoy.has-mark[data-to="bar"] .askbar-decoy-mark { visibility: visible; }
+.askbar-decoy.no-anim * { transition: none !important; }
 
 /* -- the reserve ---------------------------------------------------------
    A fixed bar covers the bottom of the viewport by definition; what it must
@@ -1694,7 +1757,7 @@ body[data-bottombar] footer.site {
 @media (prefers-reduced-motion: reduce) {
   /* Instant swap. No crossfade, no collapse animation, and StickyAskBar stops
      rotating the placeholder and shows the first prompt only. */
-  .bottombar-layer, .askbar-layer, .askbar, .askbar-go { transition: none; }
+  .bottombar-layer, .askbar-layer, .askbar, .askbar-go, .askbar-decoy * { transition: none; }
 }
 
 /* The proof band's "Nine practitioners" cell overflowed a 320px viewport by

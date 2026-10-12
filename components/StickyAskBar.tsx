@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useBottomBar } from "./BottomBarContext";
 
 /**
@@ -50,6 +50,52 @@ const PROMPTS = [
 const ROTATE_MS = 4000;
 
 /**
+ * How long the collapse/expand morph runs — the same 0.2s the CSS used when
+ * `width` and `min-height` were the animated properties. The end-switch
+ * below fires a beat after it, so the decoy has finished before the real
+ * bar is shown in its new layout.
+ */
+const MORPH_MS = 200;
+const MORPH_SETTLE_MS = 40;
+
+/**
+ * The compact pill, with no layout shift.
+ *
+ * The collapse used to be a `width` / `min-height` transition on the real
+ * bar: forty frames of layout, each one a layout shift of the input and the
+ * arrow, 0.020 CLS on every route with the assistant on. Chrome's layout
+ * instability tracker counts moves in *layout* coordinates and does not
+ * forgive them when a transform puts the element back where it was — that
+ * was measured, both directions, before this was written. What it does not
+ * track is a box whose `visibility` is `hidden`, and a transform or SVG
+ * geometry change never counts at all.
+ *
+ * So the real bar never animates its layout. While the morph runs it keeps
+ * whatever layout it had, at opacity 0, still taking taps and keyboard
+ * focus; a decoy with the same ink — an SVG capsule for the pill, a span
+ * for the placeholder, a circle for the arrow — plays the 200ms with
+ * `rx`/`width`/`height` on the rect and `transform` on the rest. At the end
+ * the real bar switches to its new layout inside a single frame in which it
+ * is `visibility: hidden` (the decoy still shows the final pill in that
+ * frame, so nothing blinks), and is shown again in the next. The resting
+ * states are untouched: the pill a visitor reads at the bottom of a page is
+ * the same CSS it always was.
+ *
+ * What is approximated, for 200ms only: the pill's drop shadow (SVG
+ * `drop-shadow` has no spread, so the box-shadow's −16px spread is faked
+ * with a shorter offset and a lighter colour), and the placeholder truncates
+ * at the start of the collapse rather than at the moment the shrinking edge
+ * reaches it.
+ */
+type Geometry = {
+  form: Box;
+  input: Box;
+  go: Box;
+  mark: Box | null;
+};
+type Box = { x: number; y: number; w: number; h: number };
+
+/**
  * "Is the thing pressing this bar a finger?"
  *
  * Asked as a pointer question, never as a width one — a 1280px touchscreen
@@ -92,7 +138,7 @@ function AskWave() {
 }
 
 export default function StickyAskBar({ active }: { active: boolean }) {
-  const { openAssistant, assistantOpen } = useBottomBar();
+  const { openAssistant, assistantOpen, compact } = useBottomBar();
   const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState("");
   /** One-way. Once the visitor has typed, the placeholder stops moving for good. */
@@ -101,6 +147,18 @@ export default function StickyAskBar({ active }: { active: boolean }) {
   const [focused, setFocused] = useState(false);
   const [reduced, setReduced] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const markRef = useRef<HTMLSpanElement>(null);
+  const goRef = useRef<HTMLSpanElement>(null);
+  const decoyRef = useRef<HTMLDivElement>(null);
+  const decoyTextRef = useRef<HTMLSpanElement>(null);
+  /** The layout the real bar currently has — `is-compact` on the layer or not. */
+  const restRef = useRef<"full" | "compact">("full");
+  /** Non-null while the decoy is mid-morph: where it is heading. */
+  const morphRef = useRef<"pill" | "bar" | null>(null);
+  const morphTimer = useRef<number | null>(null);
+  const morphFrame = useRef<number | null>(null);
   /**
    * Whether the open that is currently in flight came from the keyboard. Only
    * a keyboard open gets focus handed back when the panel closes — doing it
@@ -155,6 +213,183 @@ export default function StickyAskBar({ active }: { active: boolean }) {
     );
     return () => window.clearInterval(id);
   }, [reduced, typed, hovered, focused, active]);
+
+  /**
+   * The collapse and the expand — see the note above `Geometry`.
+   *
+   * A layout effect so the switch frames are arranged before the browser
+   * paints the render that changed `compact`; a passive effect would let one
+   * frame through with the old arrangement.
+   */
+  useLayoutEffect(() => {
+    const layer = layerRef.current;
+    const form = formRef.current;
+    const decoy = decoyRef.current;
+    const input = inputRef.current;
+    const go = goRef.current;
+    if (!layer || !form || !decoy || !input || !go) return;
+
+    const wantCompact = compact;
+    if (morphTimer.current) {
+      window.clearTimeout(morphTimer.current);
+      morphTimer.current = null;
+    }
+    if (morphFrame.current) {
+      window.cancelAnimationFrame(morphFrame.current);
+      morphFrame.current = null;
+    }
+
+    const setLayout = (c: boolean) => {
+      layer.classList.toggle("is-compact", c);
+      restRef.current = c ? "compact" : "full";
+    };
+    /** The layer's own strip (cream, hairline, shadow) fades on the same clock as before. */
+    const setStrip = (c: boolean) => layer.classList.toggle("is-collapsing", c);
+
+    const nextFrame = (fn: () => void) => {
+      morphFrame.current = window.requestAnimationFrame(() => {
+        morphFrame.current = null;
+        fn();
+      });
+    };
+
+    /**
+     * Move the real bar to a layout in a frame where the tracker is not
+     * looking at it. `visibility: hidden` for exactly one rendered frame.
+     */
+    const switchHidden = (c: boolean, then?: () => void) => {
+      form.style.visibility = "hidden";
+      setLayout(c);
+      nextFrame(() => {
+        form.style.visibility = "";
+        then?.();
+      });
+    };
+
+    const finishMorph = () => {
+      morphRef.current = null;
+      form.style.opacity = "";
+      decoy.classList.remove("is-live");
+    };
+
+    /** Geometry of the real bar in the layer's coordinate space. */
+    const measure = (): Geometry => {
+      const L = layer.getBoundingClientRect();
+      const box = (el: Element): Box => {
+        const r = el.getBoundingClientRect();
+        return { x: r.left - L.left, y: r.top - L.top, w: r.width, h: r.height };
+      };
+      const mark = markRef.current;
+      return {
+        form: box(form),
+        input: box(input),
+        go: box(go),
+        mark: mark && getComputedStyle(mark).display !== "none" ? box(mark) : null,
+      };
+    };
+
+    const px = (n: number) => `${Math.round(n * 100) / 100}px`;
+    /** Both end states of the morph, written onto the decoy as custom properties. */
+    const arm = (bar: Geometry, pill: Geometry, textWidth: number) => {
+      const v = (name: string, value: string) => decoy.style.setProperty(name, value);
+      // The SVG stroke is centred on the path; half a pixel in keeps it
+      // inside the box the way a CSS border is.
+      v("--rb-x", px(bar.form.x + 0.5)); v("--rb-y", px(bar.form.y + 0.5));
+      v("--rb-w", px(bar.form.w - 1)); v("--rb-h", px(bar.form.h - 1)); v("--rb-r", px((bar.form.h - 1) / 2));
+      v("--rp-x", px(pill.form.x + 0.5)); v("--rp-y", px(pill.form.y + 0.5));
+      v("--rp-w", px(pill.form.w - 1)); v("--rp-h", px(pill.form.h - 1)); v("--rp-r", px((pill.form.h - 1) / 2));
+      v("--t-x", px(bar.input.x)); v("--t-y", px(bar.input.y)); v("--t-h", px(bar.input.h));
+      v("--t-w", px(textWidth));
+      v("--t-dx", px(pill.input.x - bar.input.x));
+      v("--g-x", px(bar.go.x)); v("--g-y", px(bar.go.y)); v("--g-w", px(bar.go.w));
+      const gs = pill.go.w / bar.go.w;
+      v("--g-dx", px(pill.go.x + pill.go.w / 2 - (bar.go.x + bar.go.w / 2)));
+      v("--g-s", String(gs)); v("--g-si", String(1 / gs));
+      if (bar.mark) { v("--m-x", px(bar.mark.x)); v("--m-y", px(bar.mark.y)); }
+      decoy.classList.toggle("has-mark", bar.mark !== null);
+      const text = decoyTextRef.current;
+      if (text) {
+        text.textContent = input.value || input.placeholder;
+        text.classList.toggle("is-value", input.value.length > 0);
+      }
+    };
+
+    // Mid-morph: just retarget. The real bar is in the full layout, unseen.
+    if (morphRef.current !== null) {
+      morphRef.current = wantCompact ? "pill" : "bar";
+      decoy.dataset.to = morphRef.current;
+      morphTimer.current = window.setTimeout(() => {
+        morphTimer.current = null;
+        if (morphRef.current === "pill") switchHidden(true, finishMorph);
+        else finishMorph();
+      }, MORPH_MS + MORPH_SETTLE_MS);
+      return;
+    }
+
+    const isCompact = restRef.current === "compact";
+    if (isCompact === wantCompact) return;
+
+    // Nothing to see: the call bar has the footprint, or motion is off. One
+    // hidden frame and done — no shift either way.
+    if (!active || reduced) {
+      setStrip(wantCompact);
+      switchHidden(wantCompact);
+      return;
+    }
+
+    if (wantCompact) {
+      // Collapse. Measure both layouts without a frame in between, then let
+      // the decoy carry the bar down to the pill while the real one waits.
+      const bar = measure();
+      layer.classList.add("is-compact");
+      const pill = measure();
+      layer.classList.remove("is-compact");
+      arm(bar, pill, pill.input.w);
+      decoy.classList.add("no-anim", "is-live");
+      decoy.dataset.to = "bar";
+      form.style.opacity = "0";
+      void decoy.offsetWidth; // commit the start state before the target
+      decoy.classList.remove("no-anim");
+      decoy.dataset.to = "pill";
+      morphRef.current = "pill";
+      setStrip(true);
+      morphTimer.current = window.setTimeout(() => {
+        morphTimer.current = null;
+        switchHidden(true, finishMorph);
+      }, MORPH_MS + MORPH_SETTLE_MS);
+    } else {
+      // Expand. The real bar moves to the full layout first, hidden, with the
+      // decoy showing the pill it is leaving; then the decoy grows.
+      const pill = measure();
+      form.style.visibility = "hidden";
+      setLayout(false);
+      const bar = measure();
+      arm(bar, pill, bar.input.w);
+      decoy.classList.add("no-anim", "is-live");
+      decoy.dataset.to = "pill";
+      morphRef.current = "bar";
+      setStrip(false);
+      nextFrame(() => {
+        form.style.visibility = "";
+        form.style.opacity = "0";
+        void decoy.offsetWidth;
+        decoy.classList.remove("no-anim");
+        decoy.dataset.to = "bar";
+        morphTimer.current = window.setTimeout(() => {
+          morphTimer.current = null;
+          finishMorph();
+        }, MORPH_MS + MORPH_SETTLE_MS);
+      });
+    }
+  }, [compact, active, reduced]);
+
+  useEffect(
+    () => () => {
+      if (morphTimer.current) window.clearTimeout(morphTimer.current);
+      if (morphFrame.current) window.cancelAnimationFrame(morphFrame.current);
+    },
+    []
+  );
 
   /**
    * Focus comes home after a keyboard-initiated conversation ends. The
@@ -236,20 +471,44 @@ export default function StickyAskBar({ active }: { active: boolean }) {
 
   return (
     <div
+      ref={layerRef}
       className="bottombar-layer askbar-layer"
       data-on={active}
       onPointerDown={onPress}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* The decoy — see the note above `Geometry`. Inert and unlabelled: it
+          is paint, not interface, and it exists for 200ms at a time. */}
+      <div ref={decoyRef} className="askbar-decoy" aria-hidden="true" data-to="bar">
+        <svg className="askbar-decoy-svg">
+          <rect className="askbar-decoy-rect" />
+        </svg>
+        <span className="askbar-decoy-mark">
+          <AskWave />
+        </span>
+        <span ref={decoyTextRef} className="askbar-decoy-text" />
+        <span className="askbar-decoy-go">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 12h13M12 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </div>
       <form
+        ref={formRef}
         className="askbar"
         onSubmit={(e) => {
           e.preventDefault();
           open(true);
         }}
       >
-        <span className="askbar-mark" aria-hidden="true">
+        <span ref={markRef} className="askbar-mark" aria-hidden="true">
           <AskWave />
         </span>
         <input
@@ -279,7 +538,7 @@ export default function StickyAskBar({ active }: { active: boolean }) {
             would add a control without adding a capability. onPress gives it
             its click back for mouse users, who are the only ones who would
             aim at it. */}
-        <span className="askbar-go" aria-hidden="true">
+        <span ref={goRef} className="askbar-go" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path
               d="M5 12h13M12 6l6 6-6 6"

@@ -15,6 +15,11 @@ import StickyAskBar from "./StickyAskBar";
  * and neither does the page: globals.css reserves that height at the foot of
  * the document off `body[data-bottombar]`.
  *
+ * The ask bar's collapse is the ask bar's own business now: StickyAskBar
+ * reads `compact` from the controller and puts `is-compact` on its own layer
+ * at the one moment that costs no layout shift (see its `Geometry` note).
+ * This element carries no state class.
+ *
  * The CTA bar's markup is not rendered here. MobileCtaBar still owns it, and
  * still mounts on the homepage only — it portals into the slot below, so the
  * bar keeps its own scroll logic and its own route scope while giving up the
@@ -25,7 +30,7 @@ export default function BottomBarDock({
 }: {
   askAvailable: boolean;
 }) {
-  const { active, compact, docked, setSlot } = useBottomBar();
+  const { active, docked, setSlot } = useBottomBar();
 
   // Nothing to dock on this route: no assistant behind the flag and no CTA
   // bar mounted. Render nothing rather than an empty fixed element, so the
@@ -33,7 +38,7 @@ export default function BottomBarDock({
   if (!docked) return null;
 
   return (
-    <div className={`bottombar${compact ? " is-compact" : ""}`}>
+    <div className="bottombar">
       <div className="bottombar-inner">
         {askAvailable && <StickyAskBar active={active === "ask"} />}
         <div
