@@ -473,16 +473,23 @@ export const SESSION_LENGTH: Verifiable = {
  * Pricing — confirmed by Ben.
  *
  * One source for the CTA label, the `/first-visit` cost card, FAQ 12, the
- * assistant's pricing passage, and the §3 refusal that quotes the published
- * prices back at a discount request. Written as display strings because that
- * is the only form anything here uses; the arithmetic behind PACKAGE_SAVING is
- * checked in the comment rather than computed, so a change to one figure and
- * not the others is visible in review.
+ * assistant's pricing passage, the §3 refusal that quotes the published
+ * prices back at a discount request — and, since Oct 2026, the concierge
+ * rates, which are these two figures plus a surcharge (CONCIERGE_PRICE
+ * below). That is why the two center rates are numbers first and display
+ * strings second: the concierge page adds to them, and a string cannot be
+ * added to. Every other reader still uses the `$`-formatted export it
+ * always did. The package figures stay display strings; the arithmetic
+ * behind PACKAGE_SAVING is checked in the comment rather than computed, so
+ * a change to one figure and not the others is visible in review.
  *
  * 12 × $125 = $1,500, less $1,300 = $200 saved.
  */
-export const BRAIN_MAP_PRICE = "$150";
-export const SESSION_PRICE = "$125";
+export const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+export const BRAIN_MAP_PRICE_USD = 150;
+export const SESSION_PRICE_USD = 125;
+export const BRAIN_MAP_PRICE = usd(BRAIN_MAP_PRICE_USD);
+export const SESSION_PRICE = usd(SESSION_PRICE_USD);
 export const PACKAGE_SESSIONS = 12;
 export const PACKAGE_PRICE = "$1,300";
 export const PACKAGE_SAVING = "$200";
@@ -887,44 +894,96 @@ export const CONTACT_RESPONSE_TAG = "[Confirm response time]";
 /* ------------------------------------------------------------------ */
 
 /**
- * The concierge service: a LENS practitioner travels to the client's home
- * or business and runs sessions there, for one person or a household in
- * the same visit. It is a real service and /concierge describes it. Every
- * *fact* about it is Ben's to supply, so each lives here as a Verifiable
- * with an empty value: the page renders the [CONFIRM] tag in draft and
- * hides the fact in production, and lib/content-validation.ts lists all
- * five so `REQUIRE_VERIFIED_CONTENT=true npm run build` fails until each
- * is confirmed. To confirm one, write the value and set `verified: true`.
+ * The concierge service: the founder travels to the client's home or
+ * business and runs LENS there, for one person or a household in the same
+ * visit. Five facts confirmed by Ben (Oct 2026); one still open.
  *
- * These replaced the single CONCIERGE_TAG that used to flag the /locations
- * band (Oct 2026). Nothing invented in the meantime: the page states the
- * shape of the service and sends every number to the free call.
+ * Each stays a `Verifiable` even now that it is verified, for the reason the
+ * hours and the session length do: /concierge reads `verified`, so a fact
+ * that ever needs re-confirming comes off the page with one flag, and
+ * lib/content-validation.ts lists every one by name on the launch gate.
  */
-export const CONCIERGE_PRICE: Verifiable = {
-  value: "",
-  verified: false,
-  note: "[CONFIRM concierge pricing — per visit, per person, or per session plus travel?]",
+
+/**
+ * Concierge pricing — confirmed by Ben: the center rates plus a surcharge
+ * per person, per session, the same whether one person or the whole family
+ * is seen. **Derived from BRAIN_MAP_PRICE_USD and SESSION_PRICE_USD**, never
+ * typed: a change to a center rate moves the concierge rate with it, and
+ * the two cannot drift. Today: $150 + $100 = $250 for the first visit (the
+ * Brain Map and consultation), $125 + $100 = $225 for each session after.
+ *
+ * The surcharge is a modest one for the founder's time and the drive — the
+ * page frames it that way, not as a luxury markup. Do not add a family
+ * discount or a travel fee here without Ben confirming it exists.
+ */
+export const CONCIERGE_SURCHARGE_USD = 100;
+export const CONCIERGE_PRICE: Verifiable<{
+  surchargeUsd: number;
+  firstVisitUsd: number;
+  sessionUsd: number;
+}> = {
+  value: {
+    surchargeUsd: CONCIERGE_SURCHARGE_USD,
+    firstVisitUsd: BRAIN_MAP_PRICE_USD + CONCIERGE_SURCHARGE_USD,
+    sessionUsd: SESSION_PRICE_USD + CONCIERGE_SURCHARGE_USD,
+  },
+  verified: true,
+  note: "[CONFIRM concierge pricing]",
 };
+
+/** Service area — confirmed by Ben, verbatim. */
 export const CONCIERGE_TRAVEL_RADIUS: Verifiable = {
-  value: "",
-  verified: false,
+  value:
+    "Middle Tennessee — generally within about an hour of our Nashville or " +
+    "Murfreesboro centers. Farther by arrangement.",
+  verified: true,
   note: "[CONFIRM travel radius or service area from each center]",
 };
+
+/**
+ * Who comes — confirmed by Ben: the founder herself. Positioning, not a
+ * limitation — it is the reason the tier costs more — so the sentence says
+ * who and why, and nothing about how soon. Do not add "usually within the
+ * week" or any availability claim; none is confirmed.
+ */
 export const CONCIERGE_PRACTITIONERS: Verifiable = {
-  value: "",
-  verified: false,
+  value:
+    `${FOUNDER_DISPLAY_NAME}, our founder and Clinical Director, is the ` +
+    `practitioner for every concierge visit.`,
+  verified: true,
   note: "[CONFIRM which practitioners travel]",
 };
+
+/** The Brain Map at home — confirmed by Ben: yes, no center visit needed to start. */
 export const CONCIERGE_BRAIN_MAP: Verifiable = {
-  value: "",
-  verified: false,
+  value:
+    "Yes. The Brain Map — your first visit — can be recorded at your home or " +
+    "office, so no center visit is needed to start.",
+  verified: true,
   note: "[CONFIRM whether the first visit (the Brain Map) can happen at home]",
 };
+
+/** Minimums — confirmed by Ben: none, of either kind. */
 export const CONCIERGE_MINIMUM: Verifiable = {
-  value: "",
-  verified: false,
+  value: "No minimum — not a minimum number of sessions, and not a minimum number of people.",
+  verified: true,
   note: "[CONFIRM minimum booking or household minimum]",
 };
+
+/**
+ * Whether the 12-session package applies to concierge visits — undecided
+ * (Oct 2026). Until it is, /concierge says nothing about the package in
+ * either direction: not "the package applies", not "the package is
+ * center-only". Draft renders the tag; production renders nothing.
+ */
+export const CONCIERGE_PACKAGE: Verifiable = {
+  value: "",
+  verified: false,
+  note: "[CONFIRM whether the 12-session package applies to concierge visits]",
+};
+
+/** The practice's YouTube channel — supplied by Ben, Oct 2026. In the Organization's `sameAs`. */
+export const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@HarmonizedBrainCentersTN";
 
 /* ------------------------------------------------------------------ */
 /* Locations                                                           */

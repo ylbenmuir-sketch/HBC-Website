@@ -144,14 +144,17 @@ Production currently shows a two-sentence stand-in; the full page needs:
       proof band. `STAT_SESSIONS` is unchanged at 140,000+ and is the single
       source — `/about`'s meta description and the build-log label now
       interpolate it instead of repeating it.
-- [ ] Concierge — five facts on `/concierge`, each a `Verifiable` with an empty
-      value (hidden in production, `[CONFIRM]` in draft, and each on the
-      `REQUIRE_VERIFIED_CONTENT` gate by name): pricing (`CONCIERGE_PRICE`),
-      travel radius / service area (`CONCIERGE_TRAVEL_RADIUS`), which
-      practitioners travel (`CONCIERGE_PRACTITIONERS`), whether the first
-      visit / Brain Map can happen at home (`CONCIERGE_BRAIN_MAP`), and any
-      minimum booking or household minimum (`CONCIERGE_MINIMUM`). Replaced
-      `CONCIERGE_TAG` in Oct 2026.
+- [x] Concierge — confirmed by Ben, Oct 2026: pricing is the center rates plus
+      $100 per person, per session, derived in code from the center-rate
+      numbers (`CONCIERGE_PRICE`); service area is Middle Tennessee, about an
+      hour from either center, farther by arrangement
+      (`CONCIERGE_TRAVEL_RADIUS`); the founder is the practitioner for every
+      visit (`CONCIERGE_PRACTITIONERS` — positioning, never an availability
+      claim); the Brain Map can be recorded at home (`CONCIERGE_BRAIN_MAP`);
+      no minimum of any kind (`CONCIERGE_MINIMUM`).
+- [ ] Concierge — whether the 12-session package applies to concierge visits
+      (`CONCIERGE_PACKAGE`). The page says nothing either way until this is
+      answered.
 - [ ] Community lists per center (`planning.communitiesTag` in `lib/locations.ts`
       — Nashville and Murfreesboro). Also drives schema `areaServed`, and is
       the only thing the assistant's `confirmTag` gate still excludes.

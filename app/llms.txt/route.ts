@@ -11,6 +11,8 @@ import { liveResources } from "@/lib/resources";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_PRICE,
+  CONCIERGE_PRICE,
+  CONCIERGE_SURCHARGE_USD,
   DISCLAIMER,
   ESTABLISHED_YEAR,
   FIRST_VISIT_DURATION,
@@ -22,6 +24,7 @@ import {
   SESSION_PRICE,
   SITE_NAME,
   SITE_URL,
+  usd,
   verifiedOr,
 } from "@/lib/site-config";
 
@@ -67,6 +70,7 @@ ${DISCLAIMER}
 - The first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, ${BRAIN_MAP_PRICE}, a baseline recording of brain activity and a written plan.
 - Regular sessions are ${SESSION_LENGTH.value} and ${SESSION_PRICE}; a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE}. ${PACKAGE_NOTE}
 - ${INSURANCE_POLICY}
+- Concierge visits (the founder comes to your home or business): center rates plus ${usd(CONCIERGE_SURCHARGE_USD)} per person, per session — ${usd(CONCIERGE_PRICE.value.firstVisitUsd)} for the first visit, ${usd(CONCIERGE_PRICE.value.sessionUsd)} per session after. No minimum.
 - The first phone call is free and no referral is needed.
 
 ## Centers

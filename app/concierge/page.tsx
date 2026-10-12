@@ -7,20 +7,26 @@ import ConfirmTag from "@/components/ConfirmTag";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import {
+  BRAIN_MAP_NAME,
+  BRAIN_MAP_PRICE,
   CONCIERGE_BRAIN_MAP,
   CONCIERGE_MINIMUM,
+  CONCIERGE_PACKAGE,
   CONCIERGE_PRACTITIONERS,
   CONCIERGE_PRICE,
   CONCIERGE_TRAVEL_RADIUS,
+  FOUNDER_DISPLAY_NAME,
   SESSION_LENGTH,
+  SESSION_PRICE,
   type Verifiable,
+  usd,
   verifiedOr,
 } from "@/lib/site-config";
 
 /**
- * /concierge — the premium tier: a LENS practitioner travels to the
- * client's home or business and runs sessions there, for one person or the
- * whole family in the same visit.
+ * /concierge — the premium tier: the founder travels to the client's home
+ * or business and runs LENS there, for one person or the whole family in
+ * the same visit.
  *
  * ## What it owns
  *
@@ -31,24 +37,25 @@ import {
  *
  * ## The posture
  *
- * Lead with who it is for. It is more expensive than a center visit and
- * the page does not apologise for that: it is priced for the practitioner's
- * time and the travel, and for some households it is the only version of
- * LENS that fits. The page says what a center visit is for too, which is
- * the guide's job, not a discount.
+ * Lead with who it is for. The prices are published plainly — never
+ * "contact us for pricing" — and the family math is the strongest thing on
+ * the page, so it is worked out for the visitor rather than left as
+ * arithmetic. The surcharge is framed as what it is: a modest amount for
+ * the founder coming to you, not a luxury-tier markup. The page says what a
+ * center visit is for too, which is the guide's job, not a discount.
  *
- * ## What it does not know
+ * ## Every number is derived
  *
- * Every number — the price, the travel radius, who travels, whether the
- * Brain Map can happen at home, the minimum booking — is a Verifiable in
- * lib/site-config.ts with an empty value. Draft renders the [CONFIRM] tag
- * where the fact will go; production hides the card. Nothing on the page
- * guesses at any of them: each is sent to the free call.
+ * CONCIERGE_PRICE in lib/site-config.ts is the center rates plus the
+ * surcharge, computed from the same numbers the rest of the site prints, so
+ * nothing here can disagree with /first-visit. The family rows multiply
+ * those. The one open fact — whether the package applies — is a Verifiable
+ * with an empty value, and the page says nothing about the package in
+ * either direction until it is answered.
  *
- * Not in the assistant's index: four of its five facts are unconfirmed and
- * the fifth is a description. A visitor asking "do you come to the house?"
- * gets "I don't have that on the site" until the facts land, which is the
- * honest answer while they haven't.
+ * Not in the assistant's index yet: the concierge rates are a second price
+ * list, and adding one to the corpus wants its own before/after sweep
+ * against the pricing passages (policy:pricing, faq:12) before it ships.
  */
 
 // Title, description and the page's content date live in lib/pages.ts.
@@ -81,8 +88,8 @@ const visitSteps = [
   },
   {
     n: "2",
-    h: "A practitioner at your door",
-    p: "The same certified practitioners and the same LENS equipment you'd see at a center, set up in whichever room is quietest.",
+    h: "The founder at your door",
+    p: `${CONCIERGE_PRACTITIONERS.value} The same LENS equipment you'd see at a center, set up in whichever room is quietest.`,
   },
   {
     n: "3",
@@ -97,20 +104,32 @@ const visitSteps = [
 ];
 
 /**
- * The five facts, each a Verifiable. A card renders in draft (tag in place
- * of the value) and in production only once confirmed; the closing line
- * under the grid is always true and does not depend on any of them.
+ * The four non-price facts, each a Verifiable. A verified fact renders its
+ * value; an unverified one renders its tag in draft and nothing in
+ * production. The package question is the unverified one today.
  */
 const facts: Array<{ h: string; lead: string; fact: Verifiable }> = [
-  { h: "What it costs", lead: "Concierge pricing", fact: CONCIERGE_PRICE },
   { h: "How far we travel", lead: "Service area", fact: CONCIERGE_TRAVEL_RADIUS },
-  { h: "Who comes to you", lead: "Practitioners", fact: CONCIERGE_PRACTITIONERS },
+  { h: "Who comes to you", lead: "Practitioner", fact: CONCIERGE_PRACTITIONERS },
   { h: "Where the first visit happens", lead: "The Brain Map", fact: CONCIERGE_BRAIN_MAP },
   { h: "Minimum booking", lead: "Minimums", fact: CONCIERGE_MINIMUM },
+  { h: "The 12-session package", lead: "Package", fact: CONCIERGE_PACKAGE },
+];
+
+/** Household sizes for the worked example. Totals multiply the per-person rates. */
+const HOUSEHOLDS = [
+  { n: 1, label: "One person" },
+  { n: 2, label: "Two of you" },
+  { n: 3, label: "A family of three" },
+  { n: 4, label: "A family of four" },
 ];
 
 export default function ConciergePage() {
   const trail = hubTrail("/concierge");
+  const price = CONCIERGE_PRICE.value;
+  const surcharge = usd(price.surchargeUsd);
+  const firstVisit = usd(price.firstVisitUsd);
+  const session = usd(price.sessionUsd);
   const shown = facts.filter(({ fact }) => verifiedOr(fact) !== null);
 
   return (
@@ -127,10 +146,11 @@ export default function ConciergePage() {
               <em className="sage">comes to you.</em>
             </h1>
             <p className="sub">
-              A Harmonized practitioner travels to your home or your business
-              and runs LENS sessions there &mdash; for one person, or for the
-              whole family in a single visit. The same practitioners, the same
-              equipment, the same check-in.
+              {FOUNDER_DISPLAY_NAME}, our founder, travels to your home or your
+              business and runs LENS sessions there &mdash; for one person, or
+              for the whole family in a single visit. The same equipment, the
+              same check-in, and our center rates plus {surcharge} per person,
+              per session.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
@@ -139,8 +159,8 @@ export default function ConciergePage() {
               </Btn>
             </div>
             <p className="micro">
-              Our premium tier &middot; Priced for the practitioner&rsquo;s
-              time and the travel
+              First visit {firstVisit} per person &middot; Each session after{" "}
+              {session} per person &middot; No minimum
             </p>
           </div>
           <div className="rv">
@@ -156,8 +176,8 @@ export default function ConciergePage() {
       </section>
 
       {/* Who it's for, first — the page leads with the visitor, not the
-          price. The positioning paragraph under the grid is the one place
-          the cost is framed, and it frames it rather than excusing it. */}
+          price. The paragraph under the grid frames the surcharge once,
+          as what it is. */}
       <section className="sec">
         <div className="wrap">
           <div className="sec-head rv">
@@ -173,11 +193,12 @@ export default function ConciergePage() {
             ))}
           </div>
           <p className="rv" style={{ marginTop: 34, maxWidth: "66ch" }}>
-            This is our premium tier. It&rsquo;s priced for the
-            practitioner&rsquo;s time and the travel, and for some households
-            it&rsquo;s the only version of LENS that actually fits. If a center
-            visit works for you, the centers are the simpler option &mdash; and
-            we&rsquo;ll say so on the phone.
+            This is our premium tier, and the premium is {surcharge} per
+            person, per session on top of what the same visit costs at a
+            center &mdash; a modest surcharge for the founder&rsquo;s time and
+            the drive, not a luxury markup. If a center visit works for you,
+            the centers are the simpler option, and we&rsquo;ll say so on the
+            phone.
           </p>
         </div>
       </section>
@@ -205,14 +226,75 @@ export default function ConciergePage() {
         </div>
       </section>
 
-      {/* The details. Each card is a Verifiable: draft shows the tag where
-          the value will go, production shows the card only once confirmed.
-          The closing line is the one thing here that is true today. */}
+      {/* The prices, plainly. Per person first, then the family math worked
+          out — a visitor should see what three or four people pay without
+          doing arithmetic. Every figure multiplies the derived rates. */}
       <section className="sec">
         <div className="wrap">
           <div className="sec-head rv">
+            <div className="eyebrow">What it costs</div>
+            <h2>Center rates plus {surcharge} per person, per session.</h2>
+            <p className="sub">
+              Same price per person whether it&rsquo;s one of you or the whole
+              family. No minimum sessions, no minimum people.
+            </p>
+          </div>
+          <div className="care-grid rv">
+            <div className="care">
+              <h3>First visit &mdash; {firstVisit} per person</h3>
+              <p>
+                {BRAIN_MAP_NAME} and the full consultation, recorded at your
+                home or office. {BRAIN_MAP_PRICE} at a center, plus{" "}
+                {surcharge}.
+              </p>
+            </div>
+            <div className="care">
+              <h3>Each session after &mdash; {session} per person</h3>
+              <p>
+                A regular LENS session, {SESSION_LENGTH.value}. {SESSION_PRICE}{" "}
+                at a center, plus {surcharge}.
+              </p>
+            </div>
+          </div>
+
+          <div className="sec-head rv" style={{ marginTop: 60 }}>
+            <div className="eyebrow">The family math, worked out</div>
+            <h2>What one visit costs for everyone in it.</h2>
+          </div>
+          <div
+            className="lens-seq rv"
+            style={{ borderTop: "1px solid var(--line)" }}
+          >
+            {HOUSEHOLDS.map(({ n, label }) => (
+              <div className="row" key={n}>
+                <div className="n">{n}</div>
+                <div>
+                  <h3>{label}</h3>
+                  <p>
+                    First visit {usd(price.firstVisitUsd * n)} &mdash;{" "}
+                    {n === 1 ? "one Brain Map and consultation" : `${n} Brain Maps and consultations`}{" "}
+                    in one trip. Each session after: {usd(price.sessionUsd * n)}{" "}
+                    {n === 1 ? "." : `for all ${n}, back to back.`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="micro rv" style={{ marginTop: 22 }}>
+            The {surcharge} is per person, per session, and that is the whole
+            of the difference from a center visit.
+          </p>
+        </div>
+      </section>
+
+      {/* The details. Each card is a Verifiable: a confirmed fact renders its
+          value, the open one renders its tag in draft and nothing in
+          production. */}
+      <section className="sec sec-ivory2">
+        <div className="wrap">
+          <div className="sec-head rv">
             <div className="eyebrow">The details</div>
-            <h2>What to ask about on the call.</h2>
+            <h2>Where we come, who comes, and what you need to start.</h2>
           </div>
           {shown.length > 0 && (
             <div className="care-grid rv">
@@ -233,9 +315,7 @@ export default function ConciergePage() {
             </div>
           )}
           <p className="rv" style={{ marginTop: 34, maxWidth: "66ch" }}>
-            Pricing, the travel area, who comes, whether the first visit can
-            happen at home, and any minimum booking are quoted on the free call
-            &mdash; tell us where you are and who the visit is for. On the
+            To start, tell us where you are and who the visit is for. On the
             contact form, choose &ldquo;Concierge / at home&rdquo; as your
             preferred center.
           </p>

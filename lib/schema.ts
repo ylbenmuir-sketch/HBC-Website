@@ -51,6 +51,7 @@ import {
   SITE_NAME,
   SITE_URL,
   verifiedOr,
+  YOUTUBE_CHANNEL_URL,
 } from "./site-config";
 
 /** Absolute URL for a site-root-relative path. Schema requires absolute. */
@@ -143,13 +144,18 @@ export function serviceRef() {
  * lib/locations.ts). SEO-AUDIT-3 §3.3 is right that `sameAs` is meant for
  * identity pages and that Google reconciles a Business Profile through NAP
  * and the listing's website field rather than through this array; the CIDs
- * are harmless and stay. Social profiles, when they exist, belong here too.
+ * are harmless and stay. The YouTube channel is the one social profile the
+ * practice has confirmed (Oct 2026), and it is the kind of identity page
+ * `sameAs` is actually for.
  */
 export function organizationSchema() {
   const foundingYear = verifiedOr(ESTABLISHED_YEAR);
-  const profiles = locations
-    .map((l) => l.reviewReadUrl)
-    .filter((url): url is string => url !== null);
+  const profiles = [
+    ...locations
+      .map((l) => l.reviewReadUrl)
+      .filter((url): url is string => url !== null),
+    YOUTUBE_CHANNEL_URL,
+  ];
   const openCenters = locations.filter((l) => !l.comingSoon);
   return {
     "@type": "Organization",

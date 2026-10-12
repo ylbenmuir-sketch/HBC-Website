@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import type { Crumb } from "./schema";
-import { FOUNDER_DISPLAY_NAME, STAT_SESSIONS, verifiedOr } from "./site-config";
+import {
+  CONCIERGE_SURCHARGE_USD,
+  FOUNDER_DISPLAY_NAME,
+  STAT_SESSIONS,
+  usd,
+  verifiedOr,
+} from "./site-config";
 
 /**
  * The static pages, as records — the way lib/concerns.ts, lib/locations.ts
@@ -201,10 +207,9 @@ export const staticPages: StaticPage[] = [
     // neurofeedback — and the service's name. Absolute; 60 chars exactly.
     title: "Concierge LENS: In-Home & Mobile Neurofeedback, Nashville TN",
     absoluteTitle: true,
-    // 155 chars. What it is, who it's for, and no number — every number is
-    // a Verifiable awaiting Ben.
-    description:
-      "A Harmonized practitioner brings LENS neurofeedback to your home or business — one person or the whole family in a single visit. Who it's for, and how it works.",
+    // The founder, the price rule, the family framing. Interpolates the
+    // surcharge so the description cannot disagree with the page.
+    description: `Our founder brings LENS neurofeedback to your home or business — center rates plus ${usd(CONCIERGE_SURCHARGE_USD)} per person, per session, for one person or the whole family in one visit.`,
     dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "Concierge",
