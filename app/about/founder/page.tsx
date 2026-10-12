@@ -39,11 +39,17 @@ export default function FounderPage() {
             </p>
           </div>
           <div className="rv">
+            {/* The LCP element at phone widths — the portrait sits in the first
+                viewport there, and it was the one hero on the site still
+                shipping `loading="lazy"`. check:cwv had it at 1,584 ms against
+                ~700 ms for every other template; `priority` preloads it and
+                sets fetchpriority=high, as on the home and concern heroes. */}
             <PhotoFrame
               src="/images/founder.jpg"
               alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
               position="center 20%"
               height={480}
+              priority
             />
           </div>
         </div>
