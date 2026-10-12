@@ -359,3 +359,141 @@ The full 44-route before/after and the per-template hydration and Lighthouse tab
 | /resources/homework-battles | 96 → 96 | 96 → 96 | 2755 → 2751 | 2758 → 2757 | 0 → 0 | 0.000 → 0.000 |
 | /stories | 97 → 98 | 96 → 96 | 2621 → 2332 | 2677 → 2675 | 7 → 0 | 0.000 → 0.000 |
 | /what-we-help-with | 95 → 95 | 95 → 95 | 2840 → 2900 | 2905 → 2917 | 3 → 0 | 0.000 → 0.000 |
+
+## 9. Bucket B, round one — 2026-10-12
+
+Ben took three items from §4. Two shipped; one was built, measured on all 44 routes, and reverted. `perf/js-pass` was merged to `main` first (08f9204); this round is on top of it.
+
+### 9.1 Franklin H1 — shipped
+
+At 1440 px the real italic needs 533 px for "Williamson County." in a 511 px column, so the H1 wraps "Williamson" / "County." in the real face and holds the phrase on one line in the narrower tuned fallback: four lines against three, an 84 px jump at the swap, desktop CLS 0.083. The crossover is 1349 px, measured by bisection, not derived. From that width up a `<br class="br-wide">` inside the accent forces the break the real face already took, so the fallback takes it too. Wording, order and the `<em>` are untouched; below 1349 px nothing changes; above it the real face renders exactly as before.
+
+- desktop CLS on `/locations/franklin`: 0.0832 → **0.0003** (flag off), 0.1245 → **0.0003** (flag on — the baseline there carried the ask bar's residue on top of the font reflow); LCP unchanged
+- `check:fonts` at 1440: Franklin no longer listed; the only desktop reflow left is the documented `/adults` exception
+
+### 9.2 Ask bar collapse without layout shift — shipped
+
+The collapse was a `width` / `min-height` transition on the real bar, and Chrome counted every frame of it: 0.020 CLS on every route with the assistant on. Before writing anything, Chrome's rule was tested on a scratch page: a layout move compensated by the element's own transform in the same frame still counts (0.015), in both directions; a pure transform or SVG-geometry animation never counts; and a box that is `visibility: hidden` for the frame in which it moves is not tracked at all (`LayoutShiftTracker::NeedsToTrack`).
+
+So the real bar no longer animates its layout. During the 200 ms it keeps its old layout at opacity 0, still taking taps and focus; a decoy — an SVG rect for the capsule (`x`/`y`/`width`/`height`/`rx` transitions), a span for the words, a circle for the arrow, the wave mark — plays the motion with transforms only, from geometry measured off the real bar at that moment. At the end the real bar switches to its new layout inside one `visibility: hidden` frame while the decoy still shows the final pill, and is shown again the next frame. Resting states are the same CSS as before. The 200 ms itself differs in two ways: the pill's shadow is an SVG `drop-shadow` approximation of the box-shadow's −16 px spread, and a long placeholder truncates at the start of the collapse rather than when the shrinking edge reaches it. Frame captures at 30/80/130/180/260 ms, both widths, old against new, are in the session scratchpad; the two sets match within a frame of timing jitter, and the resting and keyboard-focus states are pixel-identical.
+
+- flag on, all 44 routes, check:cwv mobile: CLS **0.0197 on every route → 0 on 40 routes**, and on the other four the values the flag-off baseline already had (`/lens-neurofeedback` 0.0037, `/locations/franklin` 0.0014, `/is-lens-safe` 0.0008, `/locations/nashville` 0.0005 — all font-swap residue, none from the bar)
+- LCP, TBT, Lighthouse scores: unchanged within noise (table below)
+- `check:layout` 176 combinations: clean, flag on
+
+### 9.3 Serif preload — built, measured, reverted
+
+`preload: false` on Cormorant upright, DM Sans untouched. On the throttled phone it moved real LCP by about −80 ms on every template (e.g. `/` 848 → 716, `/about` 684 → 604). But the face then lands ~350 ms after first paint on that line, and the tuned fallback holds only the headings: the proof band's serif numerals, the step numbers and the pull-quote marks moved in the first viewport. Lighthouse, which does not scroll, attributes every one of these to "Web font loaded …01e4147…": `/brain-map` 0.011, `/locations` 0.002, `/about`, `/how-lens-works`, `/privacy-policy`, `/resources` 0.0014–0.0015, `/concierge`, `/is-lens-safe` 0.0007 — eight of 23 templates — and `check:cwv` saw the same values at load with the flag on. Lighthouse's simulation also serialised the font behind the stylesheet for a uniform +300 ms of FCP on every template (1206 → 1512 ms; Lantern, not real paint, but it is what a Lighthouse report would show). Your acceptance criterion was CLS staying at 0 flag-off; it does not, so the preload is back and the two tags are in the HTML again. My §2.5 figure for this ("−10–30 ms, no CLS") came from five routes and understated both the gain and the cost; this is the 44-route answer.
+
+### 9.4 A note on measurement
+
+The first verification runs of this round were taken while the machine was in use (load average 9, a foreground browser, four dev servers): 180 s evaluate timeouts, TBT of 350–390 ms on pages that measure 0, LCP spreads of 300 ms, CLS of 0.10–0.14 on two concern pages that read 0 before and after. None of it reproduced on an idle machine. The numbers below come from a chain that waits for the one-minute load average to sit under 3.0 for two minutes before each timing phase. Everything in PERF-PASS.md §1–§8 was measured overnight on an idle machine.
+
+### 9.5 Verification (final code: Franklin break + ask bar decoy; preload restored)
+
+| check | flag on | flag off |
+|---|---|---|
+| `npx tsc --noEmit`, `npm run lint` | clean | clean |
+| `npm run build` | ok | ok |
+| `check:cwv`, 44 routes | every route inside budget; CLS 0 on 40, pre-existing residue on 4 | every route inside budget; CLS identical to main on all 44 (0 on 40, the same four residues); LCP median −4 ms |
+| `check:fonts` | no first-viewport heading reflows at any mobile width; desktop: only `/adults` | same: no first-viewport heading reflows at any mobile width; desktop only `/adults` |
+| Lighthouse 12 mobile, 22 templates + Franklin | perf 94–98, a11y/bp/seo 100; unchanged within noise | perf 94–98, a11y/bp/seo 100; unchanged within Lantern noise (a few "before" values from the overnight run read 300–500 ms under those routes' usual figures and are back at them) |
+| `check:layout` | 176 combinations clean | 176 combinations clean |
+
+Not run: `check:chat` (writes consultation rows; needs the assistant live with a key) and the model half of `check:answers`; neither path changed.
+
+
+### 9.6 Before / after for the two shipped changes
+
+### Ask bar collapse (flag on) — CLS and LCP, all 44 routes, check:cwv mobile, before → after
+
+| route | CLS before → after | LCP before → after | TBT before → after |
+|---|---|---|---|
+| / | 0.0197 → 0 | 848 → 816 (-32) | 42 → 28 |
+| /what-we-help-with | 0.0197 → 0 | 688 → 680 (-8) | 0 → 0 |
+| /adults | 0.0197 → 0 | 684 → 680 (-4) | 0 → 0 |
+| /children-families | 0.0197 → 0 | 684 → 692 (+8) | 3 → 0 |
+| /lens-neurofeedback | 0.0234 → 0.0037 | 684 → 684 (+0) | 0 → 7 |
+| /how-lens-works | 0.0197 → 0 | 688 → 680 (-8) | 0 → 1 |
+| /brain-map | 0.0197 → 0 | 748 → 752 (+4) | 0 → 0 |
+| /first-visit | 0.0197 → 0 | 688 → 688 (+0) | 0 → 5 |
+| /about | 0.0197 → 0 | 684 → 696 (+12) | 0 → 15 |
+| /about/founder | 0.0197 → 0 | 756 → 772 (+16) | 0 → 0 |
+| /about/team | 0.0197 → 0 | 680 → 688 (+8) | 0 → 0 |
+| /locations | 0.0197 → 0 | 684 → 688 (+4) | 0 → 0 |
+| /concierge | 0.0197 → 0 | 772 → 760 (-12) | 0 → 0 |
+| /stories | 0.0197 → 0 | 692 → 684 (-8) | 10 → 12 |
+| /faq | 0.0197 → 0 | 688 → 684 (-4) | 0 → 0 |
+| /is-lens-safe | 0.0204 → 0.0008 | 684 → 688 (+4) | 0 → 0 |
+| /contact | 0.0197 → 0 | 684 → 684 (+0) | 0 → 0 |
+| /resources | 0.0197 → 0 | 688 → 684 (-4) | 0 → 0 |
+| /privacy-policy | 0.0197 → 0 | 680 → 680 (+0) | 0 → 0 |
+| /concerns/anxiety | 0.0197 → 0 | 732 → 732 (+0) | 0 → 0 |
+| /concerns/focus-adhd | 0.0197 → 0 | 744 → 748 (+4) | 0 → 1 |
+| /concerns/sleep | 0.0197 → 0 | 744 → 748 (+4) | 0 → 1 |
+| /concerns/emotional-regulation | 0.0197 → 0 | 728 → 732 (+4) | 0 → 2 |
+| /concerns/brain-fog | 0.0197 → 0 | 796 → 808 (+12) | 0 → 0 |
+| /concerns/stress-resilience | 0.0197 → 0 | 752 → 752 (+0) | 0 → 0 |
+| /concerns/children-school | 0.0197 → 0 | 876 → 896 (+20) | 0 → 0 |
+| /concerns/trauma | 0.0197 → 0 | 736 → 744 (+8) | 0 → 0 |
+| /concerns/performance | 0.0197 → 0 | 740 → 744 (+4) | 0 → 0 |
+| /concerns/concussion | 0.0197 → 0 | 688 → 688 (+0) | 0 → 0 |
+| /concerns/migraines | 0.0197 → 0 | 684 → 688 (+4) | 0 → 0 |
+| /concerns/depression | 0.0197 → 0 | 688 → 680 (-8) | 0 → 0 |
+| /locations/nashville | 0.0202 → 0.0005 | 760 → 760 (+0) | 0 → 0 |
+| /locations/murfreesboro | 0.0197 → 0 | 684 → 684 (+0) | 0 → 0 |
+| /locations/franklin | 0.0211 → 0.0014 | 688 → 688 (+0) | 0 → 0 |
+| /resources/homework-battles | 0.0197 → 0 | 744 → 748 (+4) | 0 → 0 |
+| /resources/exhausted-after-eight-hours | 0.0197 → 0 | 736 → 732 (-4) | 0 → 0 |
+| /resources/the-3am-waking | 0.0197 → 0 | 736 → 740 (+4) | 0 → 2 |
+| /resources/when-sleep-hygiene-isnt-it | 0.0197 → 0 | 680 → 680 (+0) | 0 → 0 |
+| /resources/bad-at-school | 0.0197 → 0 | 680 → 688 (+8) | 0 → 0 |
+| /resources/the-last-ten-percent | 0.0197 → 0 | 748 → 748 (+0) | 0 → 0 |
+| /resources/lens-and-medication | 0.0197 → 0 | 756 → 760 (+4) | 0 → 0 |
+| /resources/told-to-just-relax | 0.0197 → 0 | 768 → 764 (-4) | 0 → 0 |
+| /resources/braced-for-something | 0.0197 → 0 | 740 → 740 (+0) | 0 → 0 |
+| /resources/alongside-therapy | 0.0197 → 0 | 760 → 776 (+16) | 0 → 0 |
+
+Median CLS 0.0197 → 0; max 0.0234 → 0.0037; routes at exactly 0: 0 → 40 of 44.
+
+### Franklin H1 (desktop 1440) — check:cwv desktop, before → after
+
+- flag off: CLS 0.0832 → 0.0003, LCP 164 → 156 ms
+- flag on: CLS 0.1245 → 0.0003, LCP 168 → 160 ms
+
+### Flag off — CLS stays 0 with the serif preload restored (all 44, mobile)
+
+- /lens-neurofeedback: 0.0037
+- /is-lens-safe: 0.0008
+- /locations/nashville: 0.0005
+- /locations/franklin: 0.0014
+- routes over the mobile LCP budget: 0
+
+### Lighthouse 12 mobile, templates — before → after (flag on | flag off)
+
+| route | perf on | LCP on | CLS on | perf off | LCP off | CLS off |
+|---|---|---|---|---|---|---|
+| / | 94 → 94 | 3074 → 3090 | 0.000 → 0.000 | 94 → 94 | 3062 → 3056 | 0.000 → 0.000 |
+| /about | 96 → 96 | 2749 → 2755 | 0.000 → 0.000 | 96 → 96 | 2749 → 2788 | 0.000 → 0.000 |
+| /about/founder | 97 → 97 | 2678 → 2686 | 0.000 → 0.000 | 97 → 96 | 2682 → 2696 | 0.000 → 0.000 |
+| /about/team | 97 → 97 | 2528 → 2541 | 0.000 → 0.000 | 97 → 97 | 2527 → 2526 | 0.000 → 0.000 |
+| /adults | 96 → 96 | 2704 → 2680 | 0.000 → 0.000 | 96 → 96 | 2673 → 2675 | 0.000 → 0.000 |
+| /brain-map | 96 → 96 | 2755 → 2756 | 0.000 → 0.000 | 96 → 96 | 2753 → 2752 | 0.000 → 0.000 |
+| /children-families | 97 → 97 | 2528 → 2530 | 0.000 → 0.000 | 97 → 97 | 2527 → 2526 | 0.000 → 0.000 |
+| /concerns/sleep | 96 → 96 | 2754 → 2757 | 0.000 → 0.000 | 96 → 96 | 2754 → 2754 | 0.000 → 0.000 |
+| /concierge | 96 → 96 | 2755 → 2763 | 0.000 → 0.000 | 96 → 96 | 2754 → 2752 | 0.000 → 0.000 |
+| /contact | 98 → 98 | 2450 → 2347 | 0.000 → 0.000 | 99 → 98 | 1954 → 2452 | 0.000 → 0.000 |
+| /faq | 98 → 98 | 2448 → 2452 | 0.000 → 0.000 | 98 → 98 | 2449 → 2461 | 0.000 → 0.000 |
+| /first-visit | 97 → 97 | 2525 → 2536 | 0.000 → 0.000 | 97 → 97 | 2524 → 2560 | 0.000 → 0.000 |
+| /how-lens-works | 96 → 96 | 2763 → 2755 | 0.000 → 0.000 | 96 → 96 | 2746 → 2753 | 0.000 → 0.000 |
+| /is-lens-safe | 97 → 97 | 2613 → 2604 | 0.001 → 0.001 | 97 → 98 | 2599 → 2459 | 0.001 → 0.001 |
+| /lens-neurofeedback | 94 → 95 | 3053 → 2828 | 0.004 → 0.004 | 95 → 95 | 2824 → 2827 | 0.004 → 0.004 |
+| /locations | 97 → 97 | 2531 → 2528 | 0.000 → 0.000 | 99 → 97 | 2031 → 2527 | 0.000 → 0.000 |
+| /locations/franklin | — → 97 | — → 2605 | — → 0.001 | — → 97 | — → 2602 | — → 0.001 |
+| /locations/nashville | 94 → 94 | 3051 → 3059 | 0.001 → 0.001 | 94 → 94 | 3052 → 3053 | 0.001 → 0.001 |
+| /privacy-policy | 98 → 98 | 2450 → 2454 | 0.000 → 0.000 | 98 → 98 | 2447 → 2453 | 0.000 → 0.000 |
+| /resources | 96 → 96 | 2754 → 2755 | 0.000 → 0.000 | 98 → 97 | 2348 → 2487 | 0.000 → 0.000 |
+| /resources/homework-battles | 96 → 96 | 2757 → 2757 | 0.000 → 0.000 | 96 → 96 | 2751 → 2754 | 0.000 → 0.000 |
+| /stories | 96 → 96 | 2675 → 2678 | 0.000 → 0.000 | 98 → 96 | 2332 → 2692 | 0.000 → 0.000 |
+| /what-we-help-with | 95 → 95 | 2917 → 2902 | 0.000 → 0.000 | 95 → 95 | 2900 → 2903 | 0.000 → 0.000 |
+

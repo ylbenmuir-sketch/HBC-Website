@@ -40,6 +40,16 @@ const cormorant = Cormorant_Garamond({
   style: ["normal"],
   variable: "--font-cormorant",
   display: "swap",
+  /**
+   * Preloaded, and measured to stay that way (October 2026). Dropping this
+   * preload alone moved real LCP by about −80 ms on the throttled phone,
+   * but the face then arrives after first paint, and the tuned fallback
+   * below holds only the headings still: the proof band's serif numerals,
+   * the step numbers and the pull-quote marks swapped in the first viewport
+   * on 8 of 23 templates, CLS 0.001–0.011, and Lighthouse's simulation
+   * serialised the font behind the stylesheet for +300 ms of FCP on every
+   * template. A five-route sample had missed it. PERF-PASS.md §9.
+   */
   adjustFontFallback: false,
   fallback: ["Cormorant Tuned Fallback"],
 });

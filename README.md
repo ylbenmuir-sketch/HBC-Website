@@ -211,13 +211,23 @@ short version, so the next pass does not re-measure it:
   with a client-side `import()` at idle instead; the layout chunk lost 2.2 kB
   gzipped and the panel's code now arrives after the page is interactive.
 - **The remaining levers all change something a visitor sees**, and each is
-  documented with its measured cost in the pass report rather than applied:
-  dropping the two font preloads (LCP −120–200 ms, but body copy swaps late
-  and the homepage's CLS goes to 0.12); turning viewport prefetch off for
-  in-content links (saves 118–168 kB per fully scrolled page view, costs
-  220–390 ms on a cold tap against 25–44 ms prefetched); building with
-  webpack instead of Turbopack (−10–14 kB gzipped JS per route, hydration
-  ~30 ms earlier). "As fast as it needs to be" is the finding for the rest.
+  documented with its measured cost in the pass report. Ben took two: the
+  Franklin H1 breaks after "Williamson" from 1349px up, where the real italic
+  already wrapped and the fallback did not; and the ask bar's collapse is a
+  transform-and-SVG decoy with the real bar switching layout in one hidden
+  frame (StickyAskBar's `Geometry` note), so the assistant-on CLS of 0.020
+  on every route is 0. A third — dropping only the serif preload — was
+  built, measured across all 44 routes, and reverted: −80 ms LCP, but the
+  late serif shifted numerals and quote marks in the first viewport on eight
+  templates (CLS 0.001–0.011) and Lighthouse's FCP read +300 ms. Declined,
+  and still documented with numbers: dropping the font preloads (LCP
+  −120–200 ms, but the homepage's CLS goes to 0.12); turning viewport
+  prefetch off for in-content links (saves
+  118–168 kB per fully scrolled page view, costs 220–390 ms on a cold tap
+  against 25–44 ms prefetched); building with webpack instead of Turbopack
+  (−10–14 kB gzipped JS per route, hydration ~30 ms earlier); loading the
+  assistant only on first interaction. "As fast as it needs to be" is the
+  finding for the rest.
 
 ### `npm run check:layout`
 
