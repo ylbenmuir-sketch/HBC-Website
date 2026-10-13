@@ -169,7 +169,7 @@ export function organizationSchema() {
       height: 512,
     },
     description:
-      "Gentle LENS neurofeedback for adults, children, and families across Middle Tennessee.",
+      "LENS neurofeedback for adults, children, and families across Middle Tennessee.",
     ...(SHOW_PHONE ? { telephone: PHONE_TEL } : {}),
     ...(foundingYear ? { foundingDate: String(foundingYear) } : {}),
     ...(profiles.length > 0 ? { sameAs: profiles } : {}),

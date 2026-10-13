@@ -66,7 +66,7 @@ export default function Footer() {
           <div>
             <LogoName color="#FBF8F1" />
             <p style={{ marginTop: 18, maxWidth: "34ch" }}>
-              Gentle LENS neurofeedback for adults, children, and families
+              LENS neurofeedback for adults, children, and families
               across Middle Tennessee.
             </p>
           </div>

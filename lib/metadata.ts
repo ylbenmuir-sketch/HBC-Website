@@ -55,7 +55,7 @@ export const SHARED_OPEN_GRAPH = {
       url: "/images/og-default.jpg",
       width: 1200,
       height: 630,
-      alt: "Harmonized Brain Centers — gentle LENS neurofeedback for adults, children, and families in Nashville and Murfreesboro",
+      alt: "Harmonized Brain Centers — LENS neurofeedback for adults, children, and families in Nashville and Murfreesboro",
     },
   ],
 };
