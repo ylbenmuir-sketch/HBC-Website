@@ -4,20 +4,24 @@
  *
  *   npm run build
  *   MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
+ *     MOCK_SMS_LOG=/tmp/sms.jsonl \
  *     NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
  *     RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
+ *     DIALPAD_API_KEY=test DIALPAD_SMS_FROM=+16155550100 \
  *     INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
  *     npx next start -p 3123
  *   CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
- *     MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
+ *     MOCK_PLATFORM_LOG=/tmp/platform.jsonl MOCK_SMS_LOG=/tmp/sms.jsonl \
+ *     DIALPAD_SMS_FROM=+16155550100 \
  *     CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
  *
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
  * 768px and 1440px:
  *
  *   save   step one → step two → "Save these details" → the video
- *   skip   step one → step two → "Skip" → the video
- *   leave  step one → close the tab (once, at 390px)
+ *   skip   step one → step two → "Skip for now" → the video
+ *   leave  step one → close the tab (once, at 390px), after first trying
+ *          to submit without an email and with a malformed one
  *
  * and, without a browser, the chat's write path (the exact body
  * lib/chat/booking.ts submits, with the center declined) and the PATCH
@@ -26,7 +30,13 @@
  *   - exactly ONE row in consultation_requests, with the right columns —
  *     `helping_who` null and `concerns` empty unless step two saved them;
  *   - exactly ONE lead email (read from MOCK_RESEND_LOG), sent at step one,
- *     naming the row;
+ *     naming the row and carrying the (now required) email;
+ *   - exactly ONE confirmation text (read from MOCK_SMS_LOG) in Ben's words,
+ *     greeting by the FIRST word of the two-word test name, ending with the
+ *     STOP sentence, from the chosen center's line;
+ *   - the step-two headline and the step-three thank-you greet by the first
+ *     word too, step two has no "optional" panel and no "(optional)" on the
+ *     note, and the "Skip for now" exit is there and works;
  *   - the platform forward (read from MOCK_PLATFORM_LOG): one post at step
  *     one for every path — the skip and leave paths included — with the
  *     who-for stand-in and its flag line, and on the save path a second,
@@ -35,11 +45,13 @@
  *     reveal gate, components/RevealOnScroll.tsx;
  *   - on the desktop save path, that the play button loads the
  *     youtube-nocookie player and the player fetches media, with no
- *     Permissions-Policy violation in the console.
+ *     Permissions-Policy violation in the console for any feature the site
+ *     denies or the embed delegates (see POLICY_FEATURES).
  *
  * ## It writes to the database
  *
- * Seven rows, named `E2E-<run>-<path>-<width>`, phone 0000000000. The same
+ * Seven rows, named `E2E-<run>-<path>-<width> Tester` (the chat's, which
+ * asks a first name, has no surname), phone 0000000000. The same
  * preflight as scripts/chat-checklist.mjs: CHECK_CONTACT_ALLOW_PROJECT must
  * name the exact project ref in SUPABASE_URL, which cannot be satisfied
  * without looking at which project that is. The rows this run created are
@@ -75,6 +87,7 @@ const SUPABASE_URL = env.SUPABASE_URL;
 const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const MOCK_LOG = env.MOCK_RESEND_LOG;
 const PLATFORM_LOG = env.MOCK_PLATFORM_LOG;
+const SMS_LOG = env.MOCK_SMS_LOG;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set (.env.local or the environment).");
@@ -87,10 +100,14 @@ if (!ref || env.CHECK_CONTACT_ALLOW_PROJECT !== ref) {
   );
   process.exit(1);
 }
-if (!MOCK_LOG || !PLATFORM_LOG) {
-  console.error("MOCK_RESEND_LOG and MOCK_PLATFORM_LOG must be set — the server must be started with scripts/contact-flow/mock-resend.mjs preloaded (see the header).");
+if (!MOCK_LOG || !PLATFORM_LOG || !SMS_LOG) {
+  console.error("MOCK_RESEND_LOG, MOCK_PLATFORM_LOG and MOCK_SMS_LOG must be set — the server must be started with scripts/contact-flow/mock-resend.mjs preloaded (see the header).");
   process.exit(1);
 }
+
+/** "E2E-x-save-320 Tester" → "E2E-x-save-320": what every greeting must use (lib/first-name.ts). */
+const firstWord = (name) => name.trim().split(/\s+/)[0];
+const emailFor = (name) => `${firstWord(name).toLowerCase()}@example.test`;
 
 /* ── Supabase REST (service role) ──────────────────────────────────────── */
 
@@ -130,6 +147,16 @@ const forwards = () =>
     : [];
 const forwardsNaming = (name) => forwards().filter((f) => f.body?.firstName === name);
 
+/* ── the mock Dialpad line ─────────────────────────────────────────────── */
+
+const SMS_OPENING = (first) => `Hi ${first}, this is Harmonized Brain Centers. We got your request and we'll reach out soon!`;
+const SMS_CLOSING = "Reply STOP to opt out.";
+const texts = () =>
+  existsSync(SMS_LOG)
+    ? readFileSync(SMS_LOG, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
+    : [];
+const textsNaming = (name) => texts().filter((t) => String(t.body?.text ?? "").startsWith(`Hi ${firstWord(name)},`));
+
 /* ── assertions ────────────────────────────────────────────────────────── */
 
 const failures = [];
@@ -146,7 +173,7 @@ function expect(label, ok, detail = "") {
 }
 
 /** The row for a submission: exactly one, with the columns step one wrote. */
-async function expectRow(name, { center, helpingWho, concerns, note, email = null, source = "form", bestTime = "Any time", sourcePage = "/contact" }) {
+async function expectRow(name, { center, helpingWho, concerns, note, email = emailFor(name), source = "form", bestTime = "Any time", sourcePage = "/contact" }) {
   const rows = await rowsNamed(name);
   expect(`${name}: exactly one row`, rows.length === 1, `${rows.length} row(s)`);
   const r = rows[0];
@@ -176,6 +203,25 @@ function expectEmail(name, row, { center, source = "the contact form", inbox = e
   expect(`${name}: email body carries the phone`, text.includes("Phone:     0000000000"));
   if (row) expect(`${name}: email points at the saved row`, text.includes(`Saved request: ${row.id}`));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
+  expect(`${name}: email body carries the name whole`, text.includes(`Name:      ${name}`), JSON.stringify(text.split("\n").find((l) => l.startsWith("Name:"))));
+}
+
+/**
+ * The confirmation text: one per lead, in Ben's words, greeting by the first
+ * word only, STOP last, from the chosen center's line (lib/center-routing.ts
+ * — a center with no line of its own falls back to DIALPAD_SMS_FROM).
+ */
+function expectText(name, { from = env.DIALPAD_SMS_FROM ?? "+16155550100" }) {
+  const list = textsNaming(name);
+  expect(`${name}: exactly one confirmation text`, list.length === 1, `${list.length} text(s)`);
+  const t = list[0];
+  if (!t) return;
+  const body = String(t.body.text ?? "");
+  expect(`${name}: text opens in Ben's words, first word of the name only`, body.startsWith(SMS_OPENING(firstWord(name))) && !body.includes("Tester"), JSON.stringify(body));
+  expect(`${name}: text ends with the STOP sentence`, body.endsWith(SMS_CLOSING), JSON.stringify(body));
+  expect(`${name}: text is GSM-7 (no em dash, no curly quote)`, !/[\u2014\u2013\u2018\u2019\u201c\u201d]/.test(body), JSON.stringify(body));
+  expect(`${name}: text goes to the number given`, JSON.stringify(t.body.to_numbers) === JSON.stringify(["+10000000000"]), JSON.stringify(t.body.to_numbers));
+  expect(`${name}: text comes from ${from}`, t.body.from_number === from, String(t.body.from_number));
 }
 
 /**
@@ -230,53 +276,83 @@ const clickText = (text, tag = "button") => `(() => {
   return "ok";
 })()`;
 
-/** Wait for a panel whose heading starts with `heading`, then report its reveal. */
+/** Wait for a panel whose heading contains `heading`, then report its reveal and its text. */
 async function waitPanel(page, heading, timeout = 8000) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeout) {
     const state = await page.eval(`(() => {
-      const h = [...document.querySelectorAll(".form-step h2")].find((x) => x.textContent.trim().startsWith(${JSON.stringify(heading)}));
+      const h = [...document.querySelectorAll(".form-step h2")].find((x) => x.textContent.trim().includes(${JSON.stringify(heading)}));
       if (!h) return null;
       const panel = h.closest(".form-step");
       const cs = getComputedStyle(panel);
-      return { opacity: Number(cs.opacity), hasIn: panel.classList.contains("in"), transform: cs.transform, top: panel.getBoundingClientRect().top, focused: document.activeElement === h };
+      return { opacity: Number(cs.opacity), hasIn: panel.classList.contains("in"), transform: cs.transform, top: panel.getBoundingClientRect().top, focused: document.activeElement === h, text: h.textContent.trim() };
     })()`);
     if (state && state.opacity === 1 && state.hasIn) return state;
     await sleep(120);
   }
   return await page.eval(`(() => {
-    const h = [...document.querySelectorAll(".form-step h2")].find((x) => x.textContent.trim().startsWith(${JSON.stringify(heading)}));
+    const h = [...document.querySelectorAll(".form-step h2")].find((x) => x.textContent.trim().includes(${JSON.stringify(heading)}));
     if (!h) return { missing: true };
     const panel = h.closest(".form-step"); const cs = getComputedStyle(panel);
-    return { opacity: Number(cs.opacity), hasIn: panel.classList.contains("in"), transform: cs.transform, top: panel.getBoundingClientRect().top };
+    return { opacity: Number(cs.opacity), hasIn: panel.classList.contains("in"), transform: cs.transform, top: panel.getBoundingClientRect().top, text: h.textContent.trim() };
   })()`);
 }
 
-async function stepOne(page, width, name, { email = null, center = "Not sure yet" } = {}) {
+/** Step two as the visitor sees it: greeting, no reassurance panel, the exit. */
+async function expectStepTwo(page, name, two) {
+  expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
+  expect(`${name}: step two headline greets by the first word only`, two?.text?.startsWith(`Hi ${firstWord(name)}, your call is requested.`) && !two.text.includes("Tester"), JSON.stringify(two?.text));
+  const look = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const panel = document.querySelector(".form-step");
+    const skip = panel.querySelector(".form-skip");
+    const noteLabel = panel.querySelector('label[for="note"]');
+    return {
+      sage: panel.querySelectorAll(".note-sage").length,
+      optionalWords: (panel.textContent.match(/optional/gi) ?? []).length,
+      noteLabel: noteLabel?.textContent.trim() ?? null,
+      skip: skip ? { text: skip.textContent.trim(), size: parseFloat(getComputedStyle(skip).fontSize), color: getComputedStyle(skip).color, visible: skip.getBoundingClientRect().height > 0 } : null,
+    };
+  })())`));
+  expect(`${name}: step two has no reassurance panel and never says "optional"`, look.sage === 0 && look.optionalWords === 0, JSON.stringify(look));
+  expect(`${name}: note label is "In your own words", nothing after it`, look.noteLabel === "In your own words", JSON.stringify(look.noteLabel));
+  expect(`${name}: "Skip for now" is there, small and quiet`, look.skip?.text === "Skip for now" && look.skip.visible && look.skip.size <= 14, JSON.stringify(look.skip));
+}
+
+/** The thank-you on step three greets by the first word too. */
+async function expectThankYou(page, name) {
+  const h3 = await page.eval(`(() => [...document.querySelectorAll(".form-step h3")].map((h) => h.textContent.trim()).find((t) => t.startsWith("Thank you")) ?? null)()`);
+  expect(`${name}: step three thank-you greets by the first word only`, h3 === `Thank you, ${firstWord(name)}. Here’s what happens next.`, JSON.stringify(h3));
+  const ready = await page.eval(`(() => { const p = document.querySelector(".form-step"); return p.textContent.includes("Helpful to have ready (not required):") && p.textContent.includes("What a typical hard day looks like") && document.querySelectorAll("h2.eyebrow").length === 0; })()`);
+  expect(`${name}: "Helpful to have ready" sits in the card, and the second column is gone`, ready === true);
+}
+
+async function stepOne(page, width, name, { email = emailFor(name), center = "Not sure yet" } = {}) {
   await page.setViewport(width, width <= 400 ? 700 : 900);
   await page.goto(`${BASE}/contact`, { settle: 400 });
   // goto() stamps `in` on every .rv that exists at load; the panels this
   // check cares about do not exist yet, so the reveal gate is still real.
-  for (const [sel, val] of [["#first-name", name], ["#phone", "0000000000"], ["#preferred-center", center]]) {
+  for (const [sel, val] of [["#name", name], ["#phone", "0000000000"], ["#email", email], ["#preferred-center", center]]) {
     const r = await page.eval(setValue(sel, val));
     if (r !== "ok") throw new Error(r);
-  }
-  if (email) {
-    const r = await page.eval(clickText("+ Add an email address"));
-    if (r !== "ok") throw new Error(r);
-    await sleep(50);
-    await page.eval(setValue("#email", email));
   }
   const r = await page.eval(clickText("Request my free call"));
   if (r !== "ok") throw new Error(r);
 }
 
+/** Submit, then read the form's own error line (role=alert), if any. */
+async function submitAndReadAlert(page) {
+  const r = await page.eval(clickText("Request my free call"));
+  if (r !== "ok") throw new Error(r);
+  await sleep(150);
+  return page.eval(`(() => document.querySelector('form [role="alert"]')?.textContent.trim() ?? null)()`);
+}
+
 async function pathSave(page, width) {
-  const name = `E2E-${RUN}-save-${width}`;
+  const name = `E2E-${RUN}-save-${width} Tester`;
   console.log(`\n▸ save path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { email: `${name.toLowerCase()}@example.test`, center: "Murfreesboro" });
-  const two = await waitPanel(page, "Your call is requested");
-  expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
+  await stepOne(page, width, name, { center: "Murfreesboro" });
+  const two = await waitPanel(page, "call is requested");
+  await expectStepTwo(page, name, two);
   expect(`${name}: step two heading took focus`, two?.focused === true);
   // Nothing pre-selected.
   const pre = await page.eval(`JSON.stringify({ radios: [...document.querySelectorAll('[role=radio][aria-checked=true]')].length, pressed: [...document.querySelectorAll('[aria-pressed=true]')].length })`);
@@ -304,47 +380,78 @@ async function pathSave(page, width) {
   expect(`${name}: play button present, labelled, no iframe before click`, v.button && /Play video: What to Expect/.test(v.label ?? "") && v.iframes === 0, video);
   expect(`${name}: poster served from this origin and decoded`, v.poster?.startsWith(`${BASE}/`) && v.posterLoaded, v.poster);
   expect(`${name}: both center numbers visible below the video`, v.phones === 2, `${v.phones} tel link(s)`);
+  await expectThankYou(page, name);
   await sleep(300);
-  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part.", email: `${name.toLowerCase()}@example.test` });
+  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part." });
   // Per-center routing (lib/center-routing.ts): a Murfreesboro lead goes to
-  // LEADS_NOTIFY_EMAIL_MURFREESBORO when the server has it, else the default.
-  // Pass the server's value to this check so it can say which it expects.
+  // LEADS_NOTIFY_EMAIL_MURFREESBORO when the server has it, else the default,
+  // and its text comes from DIALPAD_SMS_FROM_MURFREESBORO the same way. Pass
+  // the server's values to this check so it can say which it expects.
   expectEmail(name, row, { center: "Murfreesboro", inbox: env.LEADS_NOTIFY_EMAIL_MURFREESBORO ?? env.LEADS_NOTIFY_EMAIL ?? "office@example.test" });
   expect(`${name}: still exactly one email after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
+  expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
+  expect(`${name}: still exactly one text after step two`, textsNaming(name).length === 1, `${textsNaming(name).length}`);
   expectForward(name, { center: "Murfreesboro", updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part." } });
   return { name, row };
 }
 
 async function pathSkip(page, width) {
-  const name = `E2E-${RUN}-skip-${width}`;
+  const name = `E2E-${RUN}-skip-${width} Tester`;
   console.log(`\n▸ skip path @ ${width}px — ${name}`);
   await stepOne(page, width, name, { center: "Nashville" });
-  const two = await waitPanel(page, "Your call is requested");
-  expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
-  await page.eval(clickText("Skip"));
+  const two = await waitPanel(page, "call is requested");
+  await expectStepTwo(page, name, two);
+  // The quiet exit: the .form-skip link, not a button labelled anything else.
+  const skipped = await page.eval(`(() => { const b = document.querySelector(".form-step .form-skip"); if (!b) return "missing .form-skip"; b.click(); return "ok"; })()`);
+  expect(`${name}: the "Skip for now" link is clickable`, skipped === "ok", skipped);
   const three = await waitPanel(page, "While you wait for our call");
   expect(`${name}: video panel mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
+  await expectThankYou(page, name);
   await sleep(300);
   const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null });
   expectEmail(name, row, { center: "Nashville" });
   // The skip path reaches the platform: step one is the lead.
   expectForward(name, { center: "Nashville" });
+  expectText(name, { from: env.DIALPAD_SMS_FROM_NASHVILLE ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
   return { name, row };
 }
 
 async function pathLeave(chrome, width) {
-  const name = `E2E-${RUN}-leave-${width}`;
+  const name = `E2E-${RUN}-leave-${width} Tester`;
   console.log(`\n▸ leave path @ ${width}px — ${name}`);
   const page = await chrome.newPage();
   await page.init();
+  // First the form's own refusals, in the browser: no email, then a bad one.
+  // Neither may reach the server — the row count at the end says so.
+  await page.setViewport(width, 700);
+  await page.goto(`${BASE}/contact`, { settle: 400 });
+  for (const [sel, val] of [["#name", name], ["#phone", "0000000000"], ["#preferred-center", "Not sure yet"]]) {
+    const r = await page.eval(setValue(sel, val));
+    if (r !== "ok") throw new Error(r);
+  }
+  const look = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const email = document.querySelector("#email");
+    const label = document.querySelector('label[for="email"]');
+    const form = email?.closest("form");
+    return { required: email?.required ?? null, type: email?.type ?? null, label: label?.textContent.trim() ?? null, mentionsOptionalEmail: /add an email address|email\s*\(optional\)/i.test(form?.textContent ?? ""), disclosure: !!document.querySelector(".form-disclose"), inRowWithPhone: email?.parentElement?.parentElement === document.querySelector("#phone")?.parentElement?.parentElement };
+  })())`));
+  expect(`${name}: email is a required, visible field beside phone, and nothing calls it optional`, look.required === true && look.type === "email" && look.label === "Email" && !look.mentionsOptionalEmail && !look.disclosure && look.inRowWithPhone, JSON.stringify(look));
+  const noEmail = await submitAndReadAlert(page);
+  expect(`${name}: submitting without an email is refused in the browser`, /email/i.test(noEmail ?? ""), JSON.stringify(noEmail));
+  await page.eval(setValue("#email", "not-an-address"));
+  const badEmail = await submitAndReadAlert(page);
+  expect(`${name}: a malformed email is refused in the browser`, /doesn.t look right/i.test(badEmail ?? ""), JSON.stringify(badEmail));
+  expect(`${name}: the refusals wrote nothing`, (await rowsNamed(name)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0);
+  // Then the real thing.
   await stepOne(page, width, name);
-  const two = await waitPanel(page, "Your call is requested");
+  const two = await waitPanel(page, "call is requested");
   expect(`${name}: step two shown (then the tab closes)`, two?.opacity === 1, JSON.stringify(two));
   await page.close();
   await sleep(500);
   const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null });
   expectEmail(name, row, { center: "Not sure yet" });
   expectForward(name, { center: "Not sure yet" });
+  expectText(name, {});
 }
 
 /**
@@ -356,6 +463,17 @@ async function pathLeave(chrome, width) {
  * frames as they appear; each gets Network.enable and its events are counted
  * alongside the page's.
  */
+/**
+ * A Permissions-Policy line that matters: one about a feature the site denies
+ * (next.config.ts) or the embed delegates (the iframe's `allow`). The player
+ * also probes features nobody gave it and it does not need to play —
+ * compute-pressure, from Oct 2026 — and logs a violation for each; those are
+ * noise, and counting them would fail the check for a header that is right.
+ */
+const POLICY_FEATURES = ["camera", "microphone", "geolocation", "payment", "autoplay", "encrypted-media", "picture-in-picture", "fullscreen"];
+const isPolicyViolation = (text) =>
+  /permissions?[- ]policy|feature policy/i.test(text) && POLICY_FEATURES.some((f) => text.includes(f));
+
 async function playVideo(chrome, page, name) {
   console.log(`\n▸ the video plays — ${name}`);
   const seen = { media: 0, embed: 0, violations: [], frames: 0 };
@@ -378,12 +496,12 @@ async function playVideo(chrome, page, name) {
       if (/youtube-nocookie\.com\/embed\//.test(u)) seen.embed += 1;
       if (/googlevideo\.com\/videoplayback|\/videoplayback\?/.test(u)) seen.media += 1;
     }
-    if (msg.method === "Log.entryAdded" && /permissions?[- ]policy|feature policy/i.test(msg.params.entry.text)) {
+    if (msg.method === "Log.entryAdded" && isPolicyViolation(msg.params.entry.text)) {
       seen.violations.push(msg.params.entry.text);
     }
     if (msg.method === "Runtime.consoleAPICalled") {
       const text = msg.params.args.map((a) => a.value ?? a.description ?? "").join(" ");
-      if (/permissions?[- ]policy|feature policy/i.test(text)) seen.violations.push(text);
+      if (isPolicyViolation(text)) seen.violations.push(text);
     }
   });
   const box = await page.eval(`JSON.stringify((() => { const b = document.querySelector(".video-play"); b.scrollIntoView({ block: "center" }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })())`);
@@ -426,10 +544,26 @@ async function chatWritePath() {
   const body = await res.json().catch(() => null);
   expect(`${name}: chat POST answers 201 with an id`, res.status === 201 && typeof body?.id === "string", `${res.status} ${JSON.stringify(body)}`);
   await sleep(300);
-  const row = await expectRow(name, { center: "Not sure yet", helpingWho: "Myself", concerns: [], note: "chat note", source: "chat", bestTime: null, sourcePage: "/" });
+  // No email: the chat does not ask for one, and the route does not hold it
+  // to the form's rule.
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: "Myself", concerns: [], note: "chat note", email: null, source: "chat", bestTime: null, sourcePage: "/" });
   expectEmail(name, row, { center: "Not sure yet", source: "the site assistant (chat)" });
   expectForward(name, { center: "Not sure yet", whoFor: "myself" });
+  expectText(name, {});
   return row;
+}
+
+/** The route's own email rule, without a browser: the form must send one. */
+async function postRefusals() {
+  console.log(`\n▸ POST refusals`);
+  const name = `E2E-${RUN}-refused-0 Tester`;
+  const post = (payload) => fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", ...payload }) }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
+  const missing = await post({});
+  expect("POST from the form without an email is refused (400), and says so", missing.status === 400 && /email/i.test(missing.body?.error ?? ""), JSON.stringify(missing));
+  const bad = await post({ email: "not-an-address" });
+  expect("POST with a malformed email is refused (400)", bad.status === 400 && /doesn't look right/.test(bad.body?.error ?? ""), JSON.stringify(bad));
+  await sleep(200);
+  expect("refused POSTs wrote no row, sent no email, no post, no text", (await rowsNamed(name)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0 && textsNaming(name).length === 0);
 }
 
 async function patchRefusals(row) {
@@ -482,6 +616,7 @@ try {
   }
   await pathLeave(chrome, 390);
   const chatRow = await chatWritePath();
+  await postRefusals();
   if (saveRows[0]?.row) await patchRefusals(saveRows[0].row);
   if (chatRow) await patchChatRowRefused(chatRow);
 } catch (error) {
@@ -502,10 +637,10 @@ if (!KEEP && created.length > 0) {
 }
 
 const total = emails().length;
-console.log(`\n${passes} check(s) passed, ${failures.length} failed; ${total} email(s) in ${MOCK_LOG}, ${forwards().length} platform post(s) in ${PLATFORM_LOG} this server session`);
+console.log(`\n${passes} check(s) passed, ${failures.length} failed; ${total} email(s) in ${MOCK_LOG}, ${forwards().length} platform post(s) in ${PLATFORM_LOG}, ${texts().length} text(s) in ${SMS_LOG} this server session`);
 if (failures.length > 0) {
   console.log("\n❌  contact flow:\n");
   for (const f of failures) console.log(`  • ${f}`);
   process.exit(1);
 }
-console.log("✓ contact flow: three paths, one row, one email and one lead post each, every late panel revealed, the video plays.");
+console.log("✓ contact flow: three paths, one row, one email, one lead post and one text each, first-word greetings, the quiet skip, every late panel revealed, the video plays.");

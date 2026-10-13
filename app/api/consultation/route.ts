@@ -159,8 +159,8 @@ async function notifyOffice(
 }
 
 /**
- * POST — a new request. For the contact form this is **step one**: first
- * name, phone, preferred center, best time, optional email. The row is saved
+ * POST — a new request. For the contact form this is **step one**: name,
+ * phone, email, preferred center, best time. The row is saved
  * and the lead email sent here, before the form shows anything else; the
  * optional second step (who the call is for, concerns, a note) PATCHes the
  * row whose id this returns. The chat sends everything in one POST, with
@@ -185,6 +185,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
+  // The form sends first and last in one field under this key — the column
+  // is older than the field — and every consumer stores it whole; only the
+  // greetings use the first word (lib/first-name.ts). The chat still sends a
+  // first name.
   const firstName = str(body.first_name, 100);
   const phone = str(body.phone, 40);
   const helpingWho = str(body.helping_who, 40);
@@ -207,7 +211,14 @@ export async function POST(request: Request) {
     }
   } else if (!firstName || !phone) {
     return NextResponse.json(
-      { error: "Please add your first name and a phone number so we can call you." },
+      { error: "Please add your name and a phone number so we can call you." },
+      { status: 400 }
+    );
+  } else if (source === "form" && !email) {
+    // Required on the form since 2026-10-13 (Ben). The chat does not ask
+    // for an address and is not held to it.
+    return NextResponse.json(
+      { error: "Please add your email address so we can reach you." },
       { status: 400 }
     );
   }
@@ -344,7 +355,7 @@ export async function POST(request: Request) {
   // serverless reason the fan-out is.
   if (lead && firstName && phone) {
     await sendConfirmationText({
-      firstName,
+      name: firstName,
       phone,
       preferredCenter,
       honeypot,

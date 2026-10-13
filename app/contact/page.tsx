@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
+import ContactForm from "@/components/ContactForm";
 import { getVideo } from "@/lib/videos";
 import { locationPhone, locations } from "@/lib/locations";
 import { hubTrail, pageMetadata } from "@/lib/pages";
@@ -55,55 +55,22 @@ export default function ContactPage() {
       </section>
 
       <section className="sec sec-form">
-        <div className="wrap duo-form">
+        {/* One centered column (Ben, 2026-10-13). The "What happens next"
+            column that used to sit beside the form repeated step three's
+            three steps and its phone box; the one line it had that nothing
+            else did — what is helpful to have ready — moved into step three
+            (components/ContactForm.tsx). */}
+        <div className="wrap form-solo">
           {/* Server-side reads: BOOKING_CALENDAR_URL is not a secret but is
               not inlined into the client bundle either, so changing it in
-              Vercel needs only a redeploy. The center lines come from the same
-              gated reader the right-hand column uses, so step three can never
-              print a number this page would not. */}
+              Vercel needs only a redeploy. The center lines come from the
+              gated reader in lib/locations.ts, so step three can never
+              print a number a location page would not. */}
           <ContactForm
             bookingUrl={process.env.BOOKING_CALENDAR_URL?.trim() || null}
             centerPhones={centerPhones}
             video={FIRST_VISIT_VIDEO}
           />
-          <div className="rv">
-            {/* A real H2: /contact went H1 -> H4 with nothing in between.
-                The .eyebrow class carries the styling, so this renders
-                exactly as the div it replaces. */}
-            <h2 className="eyebrow">What happens next</h2>
-            <WhatHappensNext />
-            {centerPhones.length > 0 && (
-              <div className="note-sage" style={{ marginTop: 34 }}>
-                Prefer to talk now? Call the center closer to you &mdash; a
-                real person answers during business hours.
-                <div style={{ marginTop: 8 }}>
-                  {centerPhones.map(({ name, phone }) => (
-                    <div key={name}>
-                      {name} &mdash;{" "}
-                      <a href={`tel:${phone.tel}`}>
-                        <b>{phone.display}</b>
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div
-              style={{
-                marginTop: 26,
-                fontSize: 14,
-                color: "var(--slate)",
-                lineHeight: 1.8,
-              }}
-            >
-              <b style={{ color: "var(--ink)" }}>
-                Helpful to have ready (not required):
-              </b>
-              <br />
-              What a typical hard day looks like &middot; what you&rsquo;ve
-              already tried &middot; your schedule for a first visit
-            </div>
-          </div>
         </div>
       </section>
     </>

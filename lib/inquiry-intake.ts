@@ -98,6 +98,9 @@ export type InquiryForward = {
   /** Null when the form has not asked yet — see WHO_FOR_STAND_IN. */
   helpingWho: string | null;
   concerns: string[];
+  /** The contract's key. Carries the whole name as the form collected it
+   *  (first and last, one field) — the platform stores it; nothing here
+   *  splits it. */
   firstName: string;
   phone: string;
   email: string | null;

@@ -166,6 +166,8 @@ export type LeadDetails = {
    *  after this email has gone. The chat asks it before submitting. */
   helpingWho: string | null;
   concerns: string[];
+  /** As given: first and last from the form (one field), first only from
+   *  the chat. The email prints it whole — the office is not greeting her. */
   firstName: string | null;
   phone: string | null;
   email: string | null;

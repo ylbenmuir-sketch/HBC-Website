@@ -5,29 +5,42 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
+import { firstName } from "@/lib/first-name";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
 
 /**
  * The contact form, in three steps.
  *
- *   1. **Request your free call** — first name, phone, preferred center,
- *      best time, and an email behind a disclosure. Submit saves the row and
- *      sends the lead email at once. That email is the lead; nothing after
- *      this step is needed for the office to make the call.
- *   2. **Optional context** — who the call is for, what's bringing them in,
- *      a note. PATCHes the row step one created (one lead, one record). Two
- *      exits, save or skip, and both land on step three.
+ *   1. **Request your free call** — name (first and last, one field), phone,
+ *      email, preferred center, best time. All but the time are required.
+ *      Submit saves the row and sends the lead email at once. That email is
+ *      the lead; nothing after this step is needed for the office to make
+ *      the call.
+ *   2. **Context** — who the call is for, what's bringing them in, a note.
+ *      PATCHes the row step one created (one lead, one record). Presented
+ *      as part of the process, not as something skippable: no "these are
+ *      optional" panel, no ghost button. The exit is a quiet "Skip for now"
+ *      text link under the save button — someone who will not answer must
+ *      still be able to leave, they are just not invited to (Ben,
+ *      2026-10-13). Both exits land on step three.
  *   3. **The video** — "while you wait for our call, here's what a first
- *      visit looks like", with the confirmation and both centers' numbers
- *      beneath it.
+ *      visit looks like", with the confirmation, the what-happens-next
+ *      steps, what is helpful to have ready, and both centers' numbers
+ *      beneath it. The page has no second column; this card is the page.
  *
  * The order is the point. The old single form asked "who are we helping?"
  * and "what's bringing you in?" before it asked for a phone number, so a
  * parent who got as far as the chips and stopped left nothing behind. Now
  * the ask is first and short, and everything else is asked of someone whose
- * call is already requested — which is also what the copy on step two says,
- * in those words, so leaving is not a failure.
+ * call is already requested.
+ *
+ * ## The name
+ *
+ * One field, first and last, stored whole (the `first_name` column and wire
+ * key predate the change and still carry it). Every greeting — the step-two
+ * headline, the step-three thank-you, the confirmation text — uses the first
+ * word only (lib/first-name.ts): "Hi Ben," not "Hi Ben Muir,".
  *
  * ## Step two never shows before the row exists
  *
@@ -104,15 +117,14 @@ const OPTIONAL_STYLE = {
 } as const;
 
 /**
- * The "what happens next" steps (contact.html) — also the confirmation state.
- *
- * The step heading level is a prop because the block appears at two different
- * depths: on /contact it sits under the page's "What happens next" H2, and in
- * the confirmation card it sits under that card's H3. Hard-coding either one
- * produces a heading skip in the other place.
+ * The "what happens next" steps (contact.html), under the thank-you on step
+ * three. The page used to repeat them in a second column beside the form;
+ * that column is gone (Ben, 2026-10-13), so this is now the one place they
+ * appear, under step three's H3 — hence the H4 default. The prop stays so a
+ * future caller at a different depth does not produce a heading skip.
  */
 function WhatHappensNext({
-  headingLevel: H = "h3",
+  headingLevel: H = "h4",
 }: {
   headingLevel?: "h3" | "h4";
 }) {
@@ -157,10 +169,9 @@ function WhatHappensNext({
  * heading, so a keyboard or screen-reader user lands on the new step and a
  * sighted one is not left looking at the space below where the form was.
  *
- * The heading is an H2: the card sits directly under the page's H1, beside
- * the "What happens next" H2 in the other column, and an H3 here was a
- * heading-order skip (axe, Lighthouse). Sized to the H3 scale by hand so the
- * card does not shout.
+ * The heading is an H2: the card sits directly under the page's H1, and an
+ * H3 here was a heading-order skip (axe, Lighthouse). Sized to the H3 scale
+ * by hand so the card does not shout.
  */
 function StepPanel({
   eyebrow,
@@ -215,12 +226,11 @@ export default function ContactForm({
   const pathname = usePathname();
 
   // Step one.
-  const [firstName, setFirstName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [email, setEmail] = useState("");
   // The honeypot. Real visitors never see this field and so always submit it
   // empty; scripted spam fills every input it finds. The value is passed
   // straight through to the platform, which classifies it — nothing on the
@@ -241,8 +251,6 @@ export default function ContactForm({
   // requested either way, and that is the sentence that matters.
   const [detailsFailed, setDetailsFailed] = useState(false);
 
-  const emailField = useRef<HTMLInputElement>(null);
-
   // Read on mount (not via useSearchParams) so the form still prerenders.
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search)
@@ -253,10 +261,6 @@ export default function ContactForm({
     if (match) setPreferredCenter(match);
   }, []);
 
-  useEffect(() => {
-    if (emailOpen) emailField.current?.focus();
-  }, [emailOpen]);
-
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) =>
       prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
@@ -265,8 +269,14 @@ export default function ContactForm({
   /* ── Step one: save the callback, send the lead ─────────────────────── */
   async function requestCall(e: React.FormEvent) {
     e.preventDefault();
-    if (!firstName.trim() || !phone.trim()) {
-      setErrorMessage("Please add your first name and phone number so we can reach you.");
+    if (!fullName.trim() || !phone.trim() || !email.trim()) {
+      setErrorMessage("Please add your name, phone number and email so we can reach you.");
+      setStatus("error");
+      return;
+    }
+    // The same loose shape the route checks — a sanity check, not RFC 5322.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErrorMessage("That email address doesn't look right — please check it.");
       setStatus("error");
       return;
     }
@@ -279,7 +289,9 @@ export default function ContactForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: firstName.trim(),
+          // The whole name. The key is the column's name, from before the
+          // field asked for first and last together.
+          first_name: fullName.trim(),
           phone: phone.trim(),
           email: email.trim(),
           preferred_center: preferredCenter,
@@ -354,7 +366,8 @@ export default function ContactForm({
     setStep("three");
   }
 
-  const name = firstName.trim();
+  // For greetings only — "Hi Ben," never "Hi Ben Muir,".
+  const name = firstName(fullName);
 
   /* ── Step three ─────────────────────────────────────────────────────── */
   if (step === "three") {
@@ -384,6 +397,24 @@ export default function ContactForm({
             </p>
           )}
           <WhatHappensNext headingLevel="h4" />
+          {/* Not a duplicate of the steps: the one thing the old second
+              column said that nothing else on the page did. It makes the
+              call better, so it stays (Ben, 2026-10-13). */}
+          <div
+            style={{
+              marginTop: 26,
+              fontSize: 14,
+              color: "var(--slate)",
+              lineHeight: 1.8,
+            }}
+          >
+            <b style={{ color: "var(--ink)" }}>
+              Helpful to have ready (not required):
+            </b>
+            <br />
+            What a typical hard day looks like &middot; what you&rsquo;ve
+            already tried &middot; your schedule for a first visit
+          </div>
         </div>
 
         {bookingUrl && (
@@ -433,16 +464,15 @@ export default function ContactForm({
         eyebrow="Request received"
         heading={
           <>
-            Your call is requested{name ? `, ${name}` : ""}. A few optional
-            questions help us prepare.
+            {name ? `Hi ${name}, your` : "Your"} call is requested. A few
+            questions help us prepare for it.
           </>
         }
       >
-        <div className="note-sage" style={{ marginTop: 14 }}>
-          Your call request is saved. These questions are optional &mdash; if
-          you leave now, we&rsquo;ll still call you.
-        </div>
-
+        {/* No "these questions are optional" panel here, on purpose: the
+            lead is already saved and delivered before this renders, but the
+            questions should read as part of the process. The exit is the
+            quiet link under the button, not an invitation. */}
         <form className="form" onSubmit={saveDetails} noValidate>
           <label id="helping-label">Who are we helping?</label>
           <div className="chips" role="radiogroup" aria-labelledby="helping-label">
@@ -478,9 +508,7 @@ export default function ContactForm({
             ))}
           </div>
 
-          <label htmlFor="note">
-            In your own words <span style={OPTIONAL_STYLE}>(optional)</span>
-          </label>
+          <label htmlFor="note">In your own words</label>
           <textarea
             id="note"
             placeholder="Mornings are hard, homework is a battle, and he's starting to say he's 'just bad at school'…"
@@ -500,13 +528,15 @@ export default function ContactForm({
             >
               {status === "submitting" ? "Saving…" : "Save these details"}
             </button>
+            {/* The exit. Small and low-contrast by design — present for
+                the person who will not answer, not offered to everyone. */}
             <button
-              className="btn btn-ghost"
+              className="form-skip"
               type="button"
               onClick={() => setStep("three")}
               disabled={status === "submitting"}
             >
-              Skip &mdash; my call is already requested.
+              Skip for now
             </button>
           </div>
         </form>
@@ -524,19 +554,20 @@ export default function ContactForm({
     >
       <div className="eyebrow">Request your free call</div>
 
+      {/* One name field, first and last, on its own row: a full name needs
+          the width, and phone and email pair naturally beneath it. */}
+      <label htmlFor="name">Your name</label>
+      <input
+        id="name"
+        name="name"
+        placeholder="Sarah Mitchell"
+        autoComplete="name"
+        value={fullName}
+        onChange={(e) => setFullName(e.target.value)}
+        required
+      />
+
       <div className="two">
-        <div>
-          <label htmlFor="first-name">Your first name</label>
-          <input
-            id="first-name"
-            name="firstName"
-            placeholder="Sarah"
-            autoComplete="given-name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-          />
-        </div>
         <div>
           <label htmlFor="phone">Phone</label>
           <input
@@ -547,6 +578,19 @@ export default function ContactForm({
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="sarah@example.com"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -580,37 +624,6 @@ export default function ContactForm({
           </select>
         </div>
       </div>
-
-      {/* The email is optional and most visitors skip it, so it does not
-          lengthen the form until asked for. A disclosure, not a hidden input:
-          the button says what it opens, and once open the field is focused. */}
-      {emailOpen ? (
-        <>
-          <label htmlFor="email">
-            Email <span style={OPTIONAL_STYLE}>(optional)</span>
-          </label>
-          <input
-            ref={emailField}
-            id="email"
-            name="email"
-            type="email"
-            placeholder="sarah@example.com"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </>
-      ) : (
-        <button
-          type="button"
-          className="form-disclose"
-          aria-expanded={false}
-          aria-controls="email"
-          onClick={() => setEmailOpen(true)}
-        >
-          + Add an email address (optional)
-        </button>
-      )}
 
       {/*
         Hidden from real users three ways, because one is not reliable:
@@ -653,7 +666,7 @@ export default function ContactForm({
 
       <button
         className="btn btn-primary"
-        style={{ width: "100%", marginTop: 20 }}
+        style={{ width: "100%", marginTop: 16 }}
         type="submit"
         disabled={status === "submitting"}
       >

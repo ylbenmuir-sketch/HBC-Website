@@ -42,7 +42,8 @@
 // Nothing here is a destination: a failed text never fails the form and is
 // not counted toward whether the request "landed".
 
-import { centerLabel, settingForCenter } from "./center-routing";
+import { settingForCenter } from "./center-routing";
+import { firstName } from "./first-name";
 import { SITE_NAME } from "./site-config";
 
 const DIALPAD_SMS_ENDPOINT = "https://dialpad.com/api/v2/sms";
@@ -52,7 +53,9 @@ const DIALPAD_SMS_ENDPOINT = "https://dialpad.com/api/v2/sms";
 const SEND_TIMEOUT_MS = 5000;
 
 export type ConfirmationLead = {
-  firstName: string;
+  /** The name as given — first and last from the form, first only from the
+   *  chat. The text greets by the first word either way (lib/first-name.ts). */
+  name: string;
   phone: string;
   preferredCenter: string | null;
   /** The honeypot, verbatim. Non-empty means a bot; we do not text bots. */
@@ -73,17 +76,20 @@ export function toE164US(raw: string): string | null {
 }
 
 /**
- * The message. Plain words, and only GSM-7 characters: one curly quote or em
- * dash switches the whole text to UCS-2, which halves the per-segment limit
- * and doubles what Dialpad bills. At ~225 characters this is two segments.
+ * The message — Ben's words (2026-10-13), warmer than the first draft and
+ * naming no center: the center is the line it comes FROM (settingForCenter
+ * below), which is what "right here" means. The STOP sentence is required
+ * for business SMS compliance and carrier deliverability; it stays, last.
+ *
+ * Plain words, and only GSM-7 characters: one curly quote or em dash
+ * switches the whole text to UCS-2, which halves the per-segment limit and
+ * doubles what Dialpad bills — so the dash in Ben's copy is a hyphen here.
+ * At ~170 characters this is two segments.
  */
-export function confirmationText(firstName: string, preferredCenter: string | null): string {
-  const center = centerLabel(preferredCenter);
-  const who = center ? `our ${center} office` : "our team";
-  const reach = center ? `our ${center} office` : "our office";
+export function confirmationText(name: string): string {
   return (
-    `Hi ${firstName}, this is ${SITE_NAME}. We got your request and someone from ${who} ` +
-    `will call you soon. Want to talk sooner? Just call or text this number to reach ${reach}. ` +
+    `Hi ${firstName(name)}, this is ${SITE_NAME}. We got your request and we'll reach out soon! ` +
+    `Feel free to call or text us right here anytime - talk soon. ` +
     `Reply STOP to opt out.`
   );
 }
@@ -124,7 +130,7 @@ export async function sendConfirmationText(lead: ConfirmationLead): Promise<bool
       body: JSON.stringify({
         to_numbers: [to],
         from_number: from,
-        text: confirmationText(lead.firstName, lead.preferredCenter),
+        text: confirmationText(lead.name),
         infer_country_code: false,
       }),
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS),

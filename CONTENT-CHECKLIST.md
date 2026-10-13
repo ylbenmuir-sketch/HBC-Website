@@ -123,7 +123,8 @@ Production currently shows a two-sentence stand-in; the full page needs:
       falls back to "A real person calls you back."
 - [ ] "Most new clients start within a week" (`START_TIMING`)
 - [x] **First-visit video running time** (`VIDEO_APPOINTMENT_ONE_DURATION`)
-      — 49 seconds. Confirmed by Ben from YouTube Studio, 2026-10-13.
+      — 48 seconds. Confirmed by Ben from YouTube Studio, 2026-10-13; the
+      player reports 0:48, and the Studio figure (49) rounds up.
       "What to Expect: Appointment #1", YouTube `FCUyUqzE3Dk`, shown on
       `/contact` after a call is requested. Unverifying it drops the
       duration from the caption and `duration` from the `VideoObject`.

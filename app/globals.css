@@ -783,7 +783,6 @@ html.js .rv.in { opacity: 1; transform: none; }
 /* responsive layout classes for sections the mockups sized with inline
    styles (desktop values identical to the mockups; they collapse below) */
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; }
-.duo-form { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 90px; align-items: start; }
 .wwh-hero { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 70px; align-items: end; }
 .prac-hero { display: grid; grid-template-columns: 380px 1fr; gap: 80px; align-items: center; }
 .trio-photos { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 26px; }
@@ -802,7 +801,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .nav > .nav-tel { display: none; }
   .hero { padding-left: 44px; padding-right: 44px; }
   .hero-grid, .split, .lens-grid, .goals-grid { grid-template-columns: 1fr; gap: 48px; }
-  .duo, .duo-form, .wwh-hero, .prac-hero { grid-template-columns: 1fr; gap: 48px; }
+  .duo, .wwh-hero, .prac-hero { grid-template-columns: 1fr; gap: 48px; }
   /* A `1fr` track is `minmax(auto, 1fr)`, and a grid item's default
      `min-width: auto` makes that floor the item's min-content width. Once
      these collapse to one column every child shares one track, so a single
@@ -814,7 +813,7 @@ html.js .rv.in { opacity: 1; transform: none; }
      Declared for every grid that collapses here, not just the ones that have
      needed it: the guard is free, and the failure is silent. */
   .hero-grid > *, .split > *, .lens-grid > *, .goals-grid > *,
-  .duo > *, .duo-form > *, .wwh-hero > *, .prac-hero > * { min-width: 0; }
+  .duo > *, .wwh-hero > *, .prac-hero > * { min-width: 0; }
   .trio-quotes { grid-template-columns: 1fr; }
   .half-row { grid-template-columns: 1fr; }
   .steps4 { grid-template-columns: 1fr 1fr; }
@@ -1810,24 +1809,37 @@ body[data-bottombar] footer.site {
    /contact alone runs a tighter hero and section, and the card's own
    rhythm is a notch closer than .form's default.
    ============================================================ */
-.page-hero.compact { padding: 36px 0 28px; }
+/* The budget is a 1366×768 laptop: header 89 + breadcrumbs 47 + this hero +
+   the section's top padding + the card down to its submit button must come
+   in under 768. Step one grew a row when the email became required (Ben,
+   2026-10-13), and every value below was re-cut for that — measured, not
+   guessed: the button's bottom edge sits at 760px on that viewport. Below
+   640px the phone rule further down restores the roomier rhythm, where the
+   fold is not the constraint. */
+.page-hero.compact { padding: 28px 0 20px; }
 /* One line at desktop: the two-sentence H1 at the site's clamp() size wrapped
    to two lines of 76px, which alone was a third of a 900px viewport. The
    default clamp() still applies below 1061px, where the column is narrow and
    the fold is not the constraint. */
-.page-hero.compact h1 { margin: 16px auto 12px; }
+.page-hero.compact h1 { margin: 12px auto 10px; }
 @media (min-width: 1061px) { .page-hero.compact h1 { font-size: 46px; max-width: none; } }
-.sec.sec-form { padding-top: 36px; }
-.form-compact label { margin: 14px 0 7px; }
-.form-compact input, .form-compact select { padding: 14px 16px; }
+.sec.sec-form { padding-top: 28px; }
+.form-compact label { margin: 11px 0 6px; }
+.form-compact input, .form-compact select { padding: 12px 16px; }
 .form-compact .micro { margin-top: 10px; }
-/* "+ Add an email address (optional)" — a disclosure, styled as the quiet
-   gold-ruled link the site uses for secondary actions, not as a button. */
-.form-disclose { display: inline-block; background: none; border: 0; border-bottom: 1px solid var(--gold-soft); border-radius: 0; padding: 2px 0; margin-top: 18px; font-family: var(--sans); font-size: 14.5px; color: var(--sage-deep); cursor: pointer; line-height: 1.5; }
-.form-disclose:hover { border-color: var(--gold); }
-/* Step two's two exits: the primary stacked over the ghost, centred. */
-.form-exits { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin-top: 26px; }
-.form-exits .btn-ghost { align-self: center; }
+/* The one column. The form card was 1.1fr of a two-column grid (~560px at
+   the 1200px wrap) with "What happens next" beside it; that column is gone,
+   so the card is centred at a touch more than its old width rather than
+   stretched across the wrap, where the inputs would be twice as wide as a
+   line of typing wants to be. */
+.form-solo { max-width: 640px; }
+/* Step two's exits: the primary, and under it the quiet way out. Small and
+   low-contrast on purpose (still ≥ 4.5:1 on the card — --slate on white is
+   5.3:1): it is there for someone who will not answer, not an invitation. */
+.form-exits { display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin-top: 26px; }
+.form-skip { align-self: center; background: none; border: 0; padding: 4px 2px; font-family: var(--sans); font-size: 13.5px; color: var(--slate); cursor: pointer; line-height: 1.5; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.form-skip:hover { color: var(--ink); text-decoration-color: currentColor; }
+.form-skip:disabled { opacity: 0.5; cursor: default; }
 /* Step panels mount after a submit and may land with the viewport scrolled
    past their top; scrollIntoView() targets this margin so the sticky header
    does not cover the heading it scrolls to. */

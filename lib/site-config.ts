@@ -1003,7 +1003,9 @@ export const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@HarmonizedBrainCent
  * (lib/schema.ts rule 1).
  */
 export const VIDEO_APPOINTMENT_ONE_DURATION: Verifiable<number | null> = {
-  value: 49,
+  // 48, not 49: YouTube Studio rounds up, the player reports 0:48, and the
+  // caption and the VideoObject should match the file (Ben, 2026-10-13).
+  value: 48,
   verified: true,
   note: "[Confirm video running time, in seconds]",
 };

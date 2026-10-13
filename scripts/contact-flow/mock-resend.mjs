@@ -20,6 +20,12 @@
  * to be set — the route checks them before it sends — and may hold any
  * value; nothing leaves the process.
  *
+ * And for Dialpad: with MOCK_SMS_LOG set, every POST lib/sms-confirmation.ts
+ * makes to dialpad.com/api/v2/sms is appended there — the exact body, so the
+ * check can read the text and the from-number — and answered 200. The route
+ * only sends when DIALPAD_API_KEY and DIALPAD_SMS_FROM are set; give them
+ * any value.
+ *
  * Does nothing unless a log path is set, and is not imported by anything in
  * the app, so it cannot be left on by accident.
  */
@@ -27,14 +33,29 @@ import { appendFileSync } from "node:fs";
 
 const LOG = process.env.MOCK_RESEND_LOG;
 const PLATFORM_LOG = process.env.MOCK_PLATFORM_LOG;
+const SMS_LOG = process.env.MOCK_SMS_LOG;
+const SMS_URL = "https://dialpad.com/api/v2/sms";
 const PLATFORM_URL = process.env.INQUIRY_API_BASE
   ? `${process.env.INQUIRY_API_BASE.replace(/\/+$/, "")}/api/public/inquiries`
   : null;
-if (LOG || PLATFORM_LOG) {
+if (LOG || PLATFORM_LOG || SMS_LOG) {
   const real = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url =
       typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (SMS_LOG && url === SMS_URL) {
+      let body = null;
+      try {
+        body = init?.body ? JSON.parse(String(init.body)) : null;
+      } catch {
+        body = { unparsed: String(init?.body) };
+      }
+      appendFileSync(SMS_LOG, `${JSON.stringify({ at: new Date().toISOString(), url, body })}\n`);
+      return new Response(JSON.stringify({ id: `mock-sms-${Date.now()}` }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     if (PLATFORM_LOG && PLATFORM_URL && url === PLATFORM_URL) {
       let body = null;
       try {
@@ -69,4 +90,5 @@ if (LOG || PLATFORM_LOG) {
   };
   if (LOG) console.log(`[mock-resend] intercepting api.resend.com → ${LOG}`);
   if (PLATFORM_LOG) console.log(`[mock-platform] intercepting ${PLATFORM_URL ?? "(INQUIRY_API_BASE unset — nothing to intercept)"} → ${PLATFORM_LOG}`);
+  if (SMS_LOG) console.log(`[mock-dialpad] intercepting ${SMS_URL} → ${SMS_LOG}`);
 }

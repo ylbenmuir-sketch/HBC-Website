@@ -363,24 +363,36 @@ the same string.
 call was for and what was bringing them in *before* it asked for a phone
 number, so anyone who stopped at the chips left nothing behind. Now:
 
-1. **Request your free call** — first name, phone, preferred center, best
-   time (defaults "Any time"), and an email behind "+ Add an email address".
-   Submit `POST`s `/api/consultation`, which saves the row and sends the lead
-   email at once. **That email is the lead.** The response carries the row's
-   id.
-2. **Optional context** — who we're helping, what's bringing you in, a note.
-   Nothing is pre-selected. "Save these details" `PATCH`es
-   `/api/consultation/<id>` — the same row, never a second one — and the
-   endpoint accepts *only* `helping_who`, `concerns` and `note`; any other
-   key (a name, a phone, a center, a time) is refused with a 400, and only
-   form-sourced consultation rows can be patched. "Skip" sends nothing. This
-   step is never shown unless step one returned an id: if the row failed to
-   save but the email or the platform took the lead, the visitor goes
-   straight to step three.
+1. **Request your free call** — name (first and last, one field), phone,
+   email, preferred center, best time (defaults "Any time"). Everything but
+   the time is required; the email format is checked on both sides. Submit
+   `POST`s `/api/consultation`, which saves the row and sends the lead email
+   at once. **That email is the lead.** The response carries the row's id.
+   The name is stored whole (the `first_name` column and wire key predate
+   the field); every greeting — the step-two headline, the step-three
+   thank-you, the confirmation text — uses the first word only
+   (`lib/first-name.ts`): "Hi Ben," not "Hi Ben Muir,".
+2. **Context** — who we're helping, what's bringing you in, a note.
+   Nothing is pre-selected. Presented as part of the process, not as
+   something skippable: there is no "these are optional" panel and no
+   "(optional)" on the note (Ben, 2026-10-13). The exit is a small,
+   low-contrast "Skip for now" text link under the save button — someone
+   who will not answer can still leave, they just aren't invited to.
+   "Save these details" `PATCH`es `/api/consultation/<id>` — the same row,
+   never a second one — and the endpoint accepts *only* `helping_who`,
+   `concerns` and `note`; any other key (a name, a phone, a center, a time)
+   is refused with a 400, and only form-sourced consultation rows can be
+   patched. "Skip for now" sends nothing. This step is never shown unless
+   step one returned an id: if the row failed to save but the email or the
+   platform took the lead, the visitor goes straight to step three.
 3. **The video** — "While you wait for our call — here's what a first visit
    actually looks like" (`lib/videos.ts`, `components/VideoEmbed.tsx`), with
-   the what-happens-next steps and both centers' numbers beneath it. Both
-   exits from step two land here.
+   the thank-you, the what-happens-next steps, "Helpful to have ready (not
+   required)" and both centers' numbers beneath it. Both exits from step two
+   land here. The page is one centered column (`.form-solo`): the
+   "What happens next" column that used to sit beside the form repeated
+   this card's steps and phone box, and its one line that nothing else said
+   moved in here.
 
 There is deliberately **no second email** when step two saves: the step-one
 email says those answers may follow and points at the saved request.
@@ -407,27 +419,35 @@ Drives the whole flow in a headless Chrome against a production build and
 the real Supabase project — save, skip and close-the-tab at three widths,
 the chat's write path, the PATCH refusals, and the video actually playing —
 and asserts one row, one email and one platform post per submission (plus
-the labelled update post on the save path), then deletes the rows it
-created, by id. The email provider and the platform door are stand-ins
-preloaded into the server (`scripts/contact-flow/mock-resend.mjs`) that
-record every send instead of delivering it:
+the labelled update post on the save path) and one confirmation text, then
+deletes the rows it created, by id. It also proves the greetings use the
+first word of a two-word test name, that step two carries no "optional"
+panel and still has its "Skip for now" exit, and that the form and the route
+both refuse a missing or malformed email. The email provider, the platform
+door and Dialpad are stand-ins preloaded into the server
+(`scripts/contact-flow/mock-resend.mjs`) that record every send instead of
+delivering it:
 
 ```bash
 npm run build
 MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
+  MOCK_SMS_LOG=/tmp/sms.jsonl \
   NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
   RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
   LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  DIALPAD_API_KEY=test DIALPAD_SMS_FROM=+16155550100 \
+  DIALPAD_SMS_FROM_MURFREESBORO=+16155550200 \
   INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
   npx next start -p 3123
 CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
-  MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
+  MOCK_PLATFORM_LOG=/tmp/platform.jsonl MOCK_SMS_LOG=/tmp/sms.jsonl \
   LEADS_NOTIFY_EMAIL=office@example.test \
   LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  DIALPAD_SMS_FROM=+16155550100 DIALPAD_SMS_FROM_MURFREESBORO=+16155550200 \
   CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
 ```
 
-It writes seven rows named `E2E-…` and refuses to run unless
+It writes eight rows named `E2E-…` and refuses to run unless
 `CHECK_CONTACT_ALLOW_PROJECT` names the project in `SUPABASE_URL`, for the
 same reason `check:chat` refuses a non-empty table. Pass `--keep` to leave
 the rows for inspection.
@@ -448,7 +468,8 @@ policy violation in the console.
 
 The running time and upload date are Verifiables (`VIDEO_APPOINTMENT_ONE_*`
 in `lib/site-config.ts`), both confirmed by Ben from YouTube Studio
-(2026-10-13): 49 seconds, published 2025-04-30. Flip either back to
+(2026-10-13): 48 seconds (the player reports 0:48; Studio rounds up to 49),
+published 2025-04-30. Flip either back to
 unverified and the caption drops the duration, the schema omits the field,
 and `check:schema` says so every run — Google needs `uploadDate` for the
 video rich result. The schema's `name` is the video's own YouTube title;
@@ -538,6 +559,18 @@ is not a ten-digit US number, and for guide signups. Dialpad needs the
 company's A2P 10DLC registration approved before carriers will deliver
 business texts; the API answers 200 either way, so test with a real handset.
 Both the form and the chat's read-back tell the visitor the text is coming.
+
+The message (Ben, 2026-10-13), greeting by the first word of the name:
+
+> Hi Ben, this is Harmonized Brain Centers. We got your request and we'll
+> reach out soon! Feel free to call or text us right here anytime - talk
+> soon. Reply STOP to opt out.
+
+The STOP sentence is required for business SMS compliance and carrier
+deliverability; it stays, last. The dash is a hyphen because one em dash
+would switch the text to UCS-2 and double the segment count. `check:contact`
+reads every text the server sends (a Dialpad stand-in, `MOCK_SMS_LOG`) and
+asserts the greeting, the closing sentence and the per-center from-number.
 
 **The link** (`BOOKING_CALENDAR_URL`) renders as "Pick a time for your call"
 on the confirmation card so she can lock a callback slot herself. A Google
