@@ -1062,8 +1062,10 @@ request. Caption: "A sample recording — 21 sites, measured in microvolts. Not
 a diagnosis." The chart always fits its container and never scrolls; below
 920px the 21 site labels (grouped as `.bmc-sites`) are hidden — the axis,
 range band, legend and aria-label stay. Beneath it the heat map
-(`/images/brain-map-heat.png`) is a coming-soon block: smaller, the image at
-reduced opacity, eyebrow "COMING SOON", line "Your brain in full color — the
+(`/images/brain-map-heat.png`) is a coming-soon block: the render at 40% of
+the content width beside the copy (full width above it on phones), at full
+opacity — Ben, 2026-10-13: the eyebrow says "not yet", dimming it only made
+it look worse — eyebrow "COMING SOON", line "Your brain in full color — the
 same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` — confirmed
 by Ben on 2026-10-13 as "The only LENS practice in the country to show it
 this way." and rendering in production (flip `verified` back to false and

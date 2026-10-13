@@ -1870,16 +1870,16 @@ body[data-bottombar] footer.site {
 .bmc-box { border: 1px solid var(--line); border-radius: 4px; background: #fbf8f1; }
 .bmc-svg { display: block; width: 100%; height: auto; aspect-ratio: 1400 / 530; }
 @media (max-width: 919px) { .bmc-sites { display: none; } }
-.bm-soon { display: flex; gap: 28px; align-items: center; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
-.bm-soon-img { flex: none; width: 200px; opacity: 0.55; }
-.bm-soon-copy p { font-size: 15px; color: var(--slate); margin: 10px 0 0; max-width: 56ch; }
-@media (max-width: 640px) {
-  .bm-soon { gap: 18px; align-items: flex-start; }
-  .bm-soon-img { width: 120px; }
-}
-/* At 320px the copy column beside a 120px preview is ~160px and the eyebrow
-   wraps ("COMING / SOON"); stack the preview over the copy instead. */
-@media (max-width: 359px) {
-  .bm-soon { flex-direction: column; }
-  .bm-soon-img { width: 150px; }
+/* The preview is 40% of the content width on desktop (Ben, 2026-10-13: big
+   enough that the head shape, the gradient and the legend read), at full
+   opacity — the eyebrow and the copy say "not yet"; dimming the render only
+   made it look worse than it is. It stays narrower than the full-width
+   chart above it, which is the primary visual. On phones (≤760px, the
+   site's phone breakpoint) it stacks over the copy at container width. */
+.bm-soon { display: flex; gap: 40px; align-items: center; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
+.bm-soon-img { flex: none; width: 40%; }
+.bm-soon-copy p { font-size: 15.5px; color: var(--slate); margin: 12px 0 0; max-width: 48ch; }
+@media (max-width: 760px) {
+  .bm-soon { flex-direction: column; align-items: stretch; gap: 22px; }
+  .bm-soon-img { width: 100%; }
 }

@@ -17,8 +17,8 @@ import {
  * The bar chart is the image, because it is what a client receives today:
  * amplitude at every one of the BRAIN_MAP_POINTS sites, read site by site.
  * The head-shaped heat map is not yet something a client is handed, so it
- * renders beneath the chart as a coming-soon preview — smaller, at reduced
- * opacity, under a "Coming soon" eyebrow — and never as part of the current
+ * renders beneath the chart as a coming-soon preview — 40% of the column,
+ * full opacity, under a "Coming soon" eyebrow — and never as part of the current
  * deliverable. The copy around it (the headline, the recording-and-plan
  * paragraph, the free-call CTA) is the page's own and sits above; nothing in
  * this block competes with it or suggests today's map is the lesser one.
@@ -89,12 +89,16 @@ export default function BrainMapFigure({
       </figure>
       <aside className="bm-soon" aria-label="Coming soon">
         <div className="bm-soon-img" aria-hidden="true">
+          {/* 40% of the content column on desktop, the whole column on
+              phones — the `sizes` must say so or next/image serves a
+              variant the box then scales up. The 1184px source covers the
+              largest case (≈445 CSS px × 2 DPR) without upscaling. */}
           <PhotoFrame
             src="/images/brain-map-heat.png"
             alt=""
             aspect="1184 / 860"
             style={{ height: "auto" }}
-            sizes="220px"
+            sizes="(max-width: 760px) 100vw, (max-width: 1200px) 40vw, 450px"
           />
         </div>
         <div className="bm-soon-copy">
