@@ -195,7 +195,7 @@ export default async function LocationPage({
             </h1>
             <p className="sub">{location.hero.sub}</p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
-              <TalkCta />
+              <TalkCta href={`/contact?center=${location.slug}`} />
               {phone && (
                 <Btn href={`tel:${phone.tel}`} variant="ghost">
                   Call {phone.display}
@@ -664,7 +664,11 @@ export default async function LocationPage({
         </div>
       </section>
 
-      <FinalCTA heading={location.finalHeading} sub={location.finalSub} />
+      <FinalCTA
+        heading={location.finalHeading}
+        sub={location.finalSub}
+        href={`/contact?center=${location.slug}`}
+      />
     </>
   );
 }

@@ -1,3 +1,4 @@
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { SafetyStop } from "./safety";
 
 /**
@@ -18,23 +19,20 @@ import type { SafetyStop } from "./safety";
  * visitor who told us they were fourteen, and that is not a failure mode worth
  * the convenience.
  *
- * ## Known limitation — flag before this ships
+ * ## Where it lives
  *
- * The store is in-process. On a single long-lived server that is exactly
- * right; on serverless (the site deploys to Vercel) instances are not shared
- * and are recycled, so a conversation can land on an instance that has never
- * seen it and lose its state mid-flow. Consequences, worst first:
- *
- * - A booking in progress loses its answers and starts over. That is a lost
- *   lead, and it is the reason this needs deciding rather than discovering.
- * - A minor's `blockedFromContact` flag is lost, and a visitor who disclosed
- *   their age earlier could be asked for a phone number later without
- *   re-disclosing. The per-message check still fires on any new disclosure.
- *
- * The fix is a shared store, which is the same decision as conversation
- * retention (§6, "Ben's call"): both need somewhere durable to live, and
- * neither should be chosen by whoever writes the code. `SessionStore` below is
- * the whole surface a Redis or Supabase-backed implementation has to satisfy.
+ * On Vercel, requests in one conversation can land on different instances and
+ * an instance can be recycled mid-flow, so an in-process Map loses a booking
+ * halfway through — a lost lead — and loses a minor's `blockedFromContact`
+ * flag with it. The store is therefore Supabase-backed (`chat_sessions`, see
+ * supabase/migrations/0003_chat_sessions.sql) whenever the service-role
+ * credentials are present, with the in-process Map kept as the fallback for
+ * local runs without credentials and for the minutes a Supabase outage lasts.
+ * A fallback turn behaves exactly as the whole thing did before: fine on one
+ * warm instance, lossy across several. Rows are swept an hour after their
+ * last turn, so a draft's name and number live in the table only as long as
+ * the conversation does; a completed booking is on consultation_requests by
+ * then.
  */
 
 /** §5 — the booking questions, in the order they are asked. */
@@ -88,10 +86,9 @@ export type ChatSession = {
 };
 
 export interface SessionStore {
-  get(id: string): ChatSession | undefined;
-  /** Returns the existing session, or a fresh one. */
-  open(id: string): ChatSession;
-  save(session: ChatSession): void;
+  /** Returns the existing session (bumping `turns`), or a fresh one. */
+  open(id: string): Promise<ChatSession>;
+  save(session: ChatSession): Promise<void>;
 }
 
 /** Conversations idle longer than this are dropped. */
@@ -114,7 +111,9 @@ function freshSession(id: string, now: number): ChatSession {
   };
 }
 
-class InMemorySessionStore implements SessionStore {
+/** The in-process store. Also the read-through cache and fallback for the
+ *  Supabase store below, which is why its methods stay synchronous. */
+class InMemorySessionStore {
   private sessions = new Map<string, ChatSession>();
 
   private sweep(now: number) {
@@ -163,12 +162,108 @@ class InMemorySessionStore implements SessionStore {
   }
 }
 
+/** One save in this many runs the sweep of rows past SESSION_TTL_MS —
+ *  cheap, and traffic is low. */
+const SWEEP_EVERY = 25;
+
+class SupabaseSessionStore implements SessionStore {
+  private client: SupabaseClient;
+  private memory = new InMemorySessionStore();
+  private saves = 0;
+
+  constructor(url: string, serviceRoleKey: string) {
+    this.client = createClient(url, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+  }
+
+  async open(id: string): Promise<ChatSession> {
+    const now = Date.now();
+    try {
+      const { data, error } = await this.client
+        .from("chat_sessions")
+        .select("session")
+        .eq("id", id)
+        .gt("last_seen_at", new Date(now - SESSION_TTL_MS).toISOString())
+        .maybeSingle();
+      if (error) throw error;
+
+      if (data?.session) {
+        const session = data.session as ChatSession;
+        session.lastSeenAt = now;
+        session.turns += 1;
+        this.memory.save(session);
+        return session;
+      }
+      const session = freshSession(id, now);
+      session.turns = 1;
+      this.memory.save(session);
+      return session;
+    } catch (error) {
+      // Shape only — a session id is opaque, but the draft is not, and
+      // Supabase's `details` can echo values.
+      console.error(
+        "[chat] session read failed, using in-process store:",
+        error instanceof Error ? error.message : "unknown error"
+      );
+      return this.memory.open(id);
+    }
+  }
+
+  async save(session: ChatSession): Promise<void> {
+    this.memory.save(session);
+    try {
+      const { error } = await this.client.from("chat_sessions").upsert({
+        id: session.id,
+        session,
+        last_seen_at: new Date(session.lastSeenAt).toISOString(),
+      });
+      if (error) throw error;
+
+      if (++this.saves % SWEEP_EVERY === 0) {
+        const cutoff = new Date(Date.now() - SESSION_TTL_MS).toISOString();
+        const { error: sweepError } = await this.client
+          .from("chat_sessions")
+          .delete()
+          .lt("last_seen_at", cutoff);
+        if (sweepError) throw sweepError;
+      }
+    } catch (error) {
+      console.error(
+        "[chat] session write failed, kept in-process only:",
+        error instanceof Error ? error.message : "unknown error"
+      );
+    }
+  }
+}
+
+/** The in-process store behind the async interface — local runs without
+ *  Supabase credentials. */
+class LocalSessionStore implements SessionStore {
+  private memory = new InMemorySessionStore();
+  async open(id: string): Promise<ChatSession> {
+    return this.memory.open(id);
+  }
+  async save(session: ChatSession): Promise<void> {
+    this.memory.save(session);
+  }
+}
+
+function createSessionStore(): SessionStore {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && key) return new SupabaseSessionStore(url, key);
+  console.warn(
+    "[chat] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY unset — conversation state is in-process only."
+  );
+  return new LocalSessionStore();
+}
+
 /**
  * Module-scope singleton. Next.js keeps this alive across requests within one
- * server instance — see the limitation note above for what that does and
- * doesn't guarantee.
+ * server instance; the Supabase table is what makes it shared across them.
  */
-export const sessionStore: SessionStore = new InMemorySessionStore();
+export const sessionStore: SessionStore = createSessionStore();
 
 /**
  * Apply a §4 stop to the session.

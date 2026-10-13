@@ -41,7 +41,7 @@ export default function LocationCard({
    * The waitlist label was already descriptive and is unchanged.
    */
   const go = location.comingSoon
-    ? { href: "/contact", label: "Join the Franklin waitlist →" }
+    ? { href: `/contact?center=${location.slug}`, label: "Join the Franklin waitlist →" }
     : {
         href: `/locations/${location.slug}`,
         label: `About the ${location.name} center →`,

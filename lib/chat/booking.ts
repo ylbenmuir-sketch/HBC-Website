@@ -601,9 +601,11 @@ export function advanceBooking(
   }
 }
 
-/** §5: read the name and number back and wait for a yes. */
+/** §5: read the name and number back and wait for a yes. The confirmation
+ *  text (lib/sms-confirmation.ts) goes to this number, so this is where she
+ *  is told — a statement, not a second question. */
 function readBack(draft: BookingDraft): string {
-  return `Let me read that back: ${draft.firstName}, ${draft.phone}. Have I got that right?`;
+  return `Let me read that back: ${draft.firstName}, ${draft.phone}. We’ll text that number once to confirm. Have I got that right?`;
 }
 
 /** Sent after /api/consultation accepts the row. */

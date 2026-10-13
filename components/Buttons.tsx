@@ -47,16 +47,22 @@ export function Btn({
   );
 }
 
-/** Primary CTA — the only booking CTA sitewide. Always "Get a Free Call Today" → /contact. */
+/**
+ * Primary CTA — the only booking CTA sitewide. Always "Get a Free Call Today"
+ * → /contact. `href` exists for one reason: a location page passes
+ * `/contact?center=<slug>` so its own center is preselected on the form.
+ */
 export function TalkCta({
   variant = "primary",
   style,
+  href = "/contact",
 }: {
   variant?: BtnVariant;
   style?: CSSProperties;
+  href?: string;
 }) {
   return (
-    <Btn href="/contact" variant={variant} style={style}>
+    <Btn href={href} variant={variant} style={style}>
       Get a Free Call Today
     </Btn>
   );

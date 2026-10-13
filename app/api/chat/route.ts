@@ -131,21 +131,21 @@ export async function POST(request: Request) {
     typeof body.sessionId === "string" && body.sessionId.length <= 64
       ? body.sessionId
       : newSessionId();
-  const session = sessionStore.open(sessionId);
+  const session = await sessionStore.open(sessionId);
 
   // §4.4 — recorded, never acted on. The turn continues exactly as it would
   // have. The defence is the delimited <message> block in lib/chat/answer.ts.
   const injection = detectInjection(message);
   if (injection) session.injectionAttempts += 1;
 
-  const finish = (
+  const finish = async (
     text: string,
     outcome: TurnOutcome,
     detail?: string,
     passages?: string[]
   ) => {
     session.bookingOffered = offersCall(text);
-    sessionStore.save(session);
+    await sessionStore.save(session);
     logTurn({
       sessionId,
       turn: session.turns,

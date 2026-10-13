@@ -16,9 +16,12 @@ const DEFAULT_SUB =
 export default function FinalCTA({
   heading = DEFAULT_HEADING,
   sub = DEFAULT_SUB,
+  href = "/contact",
 }: {
   heading?: string;
   sub?: string;
+  /** Location pages pass `/contact?center=<slug>` to preselect their center. */
+  href?: string;
 }) {
   // The same-day promise replaces the older response-time wording here; both
   // describe the callback, and the two would contradict each other side by
@@ -31,7 +34,7 @@ export default function FinalCTA({
         <h2>{heading}</h2>
         <p className="sub">{sub}</p>
         <div className="row">
-          <Link className="btn btn-invert" href="/contact">
+          <Link className="btn btn-invert" href={href}>
             Get a Free Call Today
           </Link>
           {SHOW_PHONE && (
