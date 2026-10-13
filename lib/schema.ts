@@ -44,6 +44,13 @@ import {
 import { type Resource, lastChanged } from "./resources";
 import { type TeamMember } from "./team";
 import {
+  type Video,
+  embedUrl,
+  isoDuration,
+  videoDuration,
+  videoUploadDate,
+} from "./videos";
+import {
   ESTABLISHED_YEAR,
   FOUNDER_DISPLAY_NAME,
   PHONE_TEL,
@@ -225,6 +232,8 @@ export type WebPageInput = {
   about?: object;
   /** The page's main entity, typed — a Person on a profile, a Q&A list. */
   mainEntity?: object | object[];
+  /** A typed reference to a VideoObject the page embeds — `videoRef()`. */
+  video?: object;
 };
 
 /**
@@ -252,6 +261,7 @@ export function webPageSchema(p: WebPageInput) {
       ? { breadcrumb: { "@type": "BreadcrumbList", "@id": `${url}#breadcrumb` } }
       : {}),
     ...(p.mainEntity ? { mainEntity: p.mainEntity } : {}),
+    ...(p.video ? { video: p.video } : {}),
   };
 }
 
@@ -536,6 +546,49 @@ export function faqQuestions(faqs: ReadonlyArray<{ q: string; a: string }>) {
     name: f.q,
     acceptedAnswer: { "@type": "Answer", text: f.a },
   }));
+}
+
+/**
+ * Stable @id for a video on the page that embeds it. Anchored to the page,
+ * not to YouTube: the same recording embedded on two pages is two placements
+ * of one video, and `embedUrl` is what says they are the same recording.
+ */
+export function videoId(path: string, video: Video): string {
+  return `${abs(path)}#video-${video.id}`;
+}
+
+export function videoRef(path: string, video: Video) {
+  return { "@type": "VideoObject", "@id": videoId(path, video), name: video.title };
+}
+
+/**
+ * VideoObject for a video embedded through components/VideoEmbed.tsx.
+ *
+ * Every field mirrors something the page has or renders: `name` is the
+ * caption's title, `thumbnailUrl` is the committed poster the facade shows
+ * (`npm run fetch:posters`), `embedUrl` is the privacy-enhanced player the
+ * click loads. **`uploadDate` and `duration` appear only once verified** —
+ * both are Verifiables in lib/site-config.ts, and rule 1 means an unconfirmed
+ * date is omitted, not guessed. Google requires `uploadDate` for the video
+ * rich result, so until Ben confirms it this node describes the video
+ * without qualifying for that treatment; that is the right trade.
+ *
+ * No `contentUrl`: the site does not host the media file. `publisher` is the
+ * one Organization, typed, which is what the channel it was published on is.
+ */
+export function videoObjectSchema(path: string, video: Video) {
+  const seconds = videoDuration(video);
+  const uploadDate = videoUploadDate(video);
+  return {
+    ...videoRef(path, video),
+    description: video.description,
+    thumbnailUrl: [abs(video.posterPath)],
+    embedUrl: embedUrl(video),
+    inLanguage: "en-US",
+    publisher: orgRef(),
+    ...(uploadDate ? { uploadDate } : {}),
+    ...(seconds ? { duration: isoDuration(seconds) } : {}),
+  };
 }
 
 /** One rung of a breadcrumb trail. `href` is omitted for the current page. */

@@ -4,8 +4,11 @@ import {
   type WebPageInput,
   breadcrumbSchema,
   pageGraph,
+  videoObjectSchema,
+  videoRef,
   webPageSchema,
 } from "@/lib/schema";
+import type { Video } from "@/lib/videos";
 import { getStaticPage, renderedTitle } from "@/lib/pages";
 import { SITE_NAME } from "@/lib/site-config";
 
@@ -25,6 +28,12 @@ type Props = {
   mainEntity?: object | object[];
   /** Further nodes: LocalBusiness, Article, Service, Person … */
   nodes?: object[];
+  /**
+   * A video the page embeds (components/VideoEmbed.tsx). Adds its
+   * VideoObject node and points the page node's `video` at it, so the two
+   * are built from one record and cannot name different videos.
+   */
+  video?: Video;
 };
 
 /**
@@ -41,15 +50,18 @@ export default function PageSchema({
   about,
   mainEntity,
   nodes = [],
+  video,
 }: Props) {
   const input: WebPageInput = page
     ? { ...page, path, breadcrumb: Boolean(breadcrumb) }
     : fromRegistry(path, Boolean(breadcrumb));
   if (about) input.about = about;
   if (mainEntity) input.mainEntity = mainEntity;
+  if (video) input.video = videoRef(path, video);
   const graph = [
     webPageSchema(input),
     ...(breadcrumb ? [breadcrumbSchema(breadcrumb, path)] : []),
+    ...(video ? [videoObjectSchema(path, video)] : []),
     ...nodes,
   ];
   return <JsonLd data={pageGraph(graph)} />;

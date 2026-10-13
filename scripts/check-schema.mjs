@@ -21,6 +21,15 @@
  * 5. Every route except `/` carries a BreadcrumbList, and the page node's
  *    `breadcrumb` points at it.
  * 6. No `@context` on any node — it is declared once, on the graph.
+ * 7. Every VideoObject (components/VideoEmbed.tsx → lib/schema.ts) has a
+ *    `name`, a `description`, an `embedUrl` on the privacy-enhanced host,
+ *    and a `thumbnailUrl` that is a same-origin image the server actually
+ *    serves (the committed poster — `npm run fetch:posters`). `uploadDate`
+ *    and `duration`, when present, are ISO 8601; when absent — they are
+ *    Verifiables nobody has confirmed — the run says so, because Google
+ *    needs `uploadDate` for the video rich result and silence here is how
+ *    that stays unnoticed. No field may be an empty string. A page node
+ *    that carries `video` must point at a VideoObject in its own graph.
  *
  * It does not validate against schema.org's vocabulary; the Rich Results
  * Test and the Schema Markup Validator do that on a live URL (SEO-AUDIT-3
@@ -48,7 +57,18 @@ if (urls.length === 0) throw new Error("sitemap listed no URLs");
 const origin = new URL(urls[0]).origin;
 
 const failures = [];
+const notes = [];
 let checked = 0;
+
+/** `fetch` for a same-origin asset the markup claims exists — the poster. */
+async function assetStatus(url) {
+  try {
+    const res = await fetch(url.replace(origin, BASE), { method: "GET", redirect: "manual" });
+    return { status: res.status, type: res.headers.get("content-type") ?? "" };
+  } catch (e) {
+    return { status: 0, type: String(e.message) };
+  }
+}
 for (const canonical of urls) {
   const route = canonical.replace(origin, "") || "/";
   const html = await text(`${BASE}${route}`);
@@ -94,6 +114,42 @@ for (const canonical of urls) {
     if (!crumb) fail("no BreadcrumbList");
     else if (pageNode && pageNode.breadcrumb?.["@id"] !== crumb["@id"]) fail("page node breadcrumb does not point at the BreadcrumbList");
   }
+  // Rule 7 — videos.
+  for (const node of graph.filter((n) => n["@type"] === "VideoObject")) {
+    const where = `VideoObject ${node["@id"] ?? "(no @id)"}`;
+    for (const field of ["@id", "name", "description", "embedUrl", "thumbnailUrl"]) {
+      if (!node[field] || (Array.isArray(node[field]) && node[field].length === 0)) fail(`${where} has no ${field}`);
+    }
+    for (const [k, v] of Object.entries(node)) {
+      if (v === "" || (Array.isArray(v) && v.some((x) => x === ""))) fail(`${where}: ${k} is an empty string`);
+    }
+    if (node.embedUrl && !/^https:\/\/www\.youtube-nocookie\.com\/embed\/[A-Za-z0-9_-]{11}(\?|$)/.test(node.embedUrl)) {
+      fail(`${where}: embedUrl ${node.embedUrl} is not a youtube-nocookie.com embed`);
+    }
+    if (node.uploadDate !== undefined && !/^\d{4}-\d{2}-\d{2}(T[\d:.+Z-]+)?$/.test(String(node.uploadDate))) {
+      fail(`${where}: uploadDate ${JSON.stringify(node.uploadDate)} is not an ISO 8601 date`);
+    }
+    if (node.duration !== undefined && !/^PT(?=\d)(\d+H)?(\d+M)?(\d+S)?$/.test(String(node.duration))) {
+      fail(`${where}: duration ${JSON.stringify(node.duration)} is not an ISO 8601 duration`);
+    }
+    if (node.uploadDate === undefined) notes.push(`${route}: ${where} carries no uploadDate (unverified in lib/site-config.ts) — Google needs it for the video rich result`);
+    if (node.duration === undefined) notes.push(`${route}: ${where} carries no duration (unverified in lib/site-config.ts)`);
+    if (node.contentUrl !== undefined) fail(`${where}: contentUrl is set, but the site hosts no media file`);
+    for (const thumb of [].concat(node.thumbnailUrl ?? [])) {
+      if (!String(thumb).startsWith(`${origin}/`)) {
+        fail(`${where}: thumbnailUrl ${thumb} is not on this origin — posters are committed, never fetched from a third party`);
+        continue;
+      }
+      const asset = await assetStatus(thumb);
+      if (asset.status !== 200 || !asset.type.startsWith("image/")) {
+        fail(`${where}: thumbnailUrl ${thumb} → HTTP ${asset.status} ${asset.type}; the poster is not being served`);
+      }
+    }
+  }
+  if (pageNode?.video) {
+    const target = graph.find((n) => n["@type"] === "VideoObject" && n["@id"] === pageNode.video["@id"]);
+    if (!target) fail(`page node's video points at ${pageNode.video["@id"]}, which is not a VideoObject in this graph`);
+  }
   walk(graph, (node, path) => {
     if (node["@context"]) fail(`@context on a node at ${path}; it belongs on the graph only`);
     // A top-level node is `$[n]`; anything deeper that carries an @id is a
@@ -113,4 +169,5 @@ if (failures.length > 0) {
   for (const f of failures) console.log(`  • ${f}`);
   process.exit(1);
 }
+for (const n of notes) console.log(`  note  ${n}`);
 console.log(`✓ structured data: ${checked} route(s), one @graph each, anchored, typed, every reference named.`);

@@ -990,6 +990,31 @@ export const CONCIERGE_PACKAGE: Verifiable = {
 export const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@HarmonizedBrainCentersTN";
 
 /* ------------------------------------------------------------------ */
+/* Videos (lib/videos.ts)                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * "What to Expect: Appointment #1" (YouTube FCUyUqzE3Dk) — the video shown
+ * after a contact-form submission. Its running time and upload date are
+ * facts the schema would publish (VideoObject `duration` / `uploadDate`),
+ * and nobody has supplied them, so both are unverified: draft renders the
+ * tag beside the video, production renders no duration and the schema
+ * omits both fields rather than guessing (lib/schema.ts rule 1). Ben reads
+ * them off YouTube Studio — duration in whole seconds, upload date as the
+ * ISO day the video was published.
+ */
+export const VIDEO_APPOINTMENT_ONE_DURATION: Verifiable<number | null> = {
+  value: null,
+  verified: false,
+  note: "[Confirm video running time, in seconds]",
+};
+export const VIDEO_APPOINTMENT_ONE_UPLOAD_DATE: Verifiable<string | null> = {
+  value: null,
+  verified: false,
+  note: "[Confirm video upload date, YYYY-MM-DD]",
+};
+
+/* ------------------------------------------------------------------ */
 /* Locations                                                           */
 /* ------------------------------------------------------------------ */
 

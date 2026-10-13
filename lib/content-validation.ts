@@ -21,6 +21,8 @@ import {
   START_TIMING,
   STAT_SESSIONS,
   TESTIMONIALS,
+  VIDEO_APPOINTMENT_ONE_DURATION,
+  VIDEO_APPOINTMENT_ONE_UPLOAD_DATE,
 } from "./site-config";
 
 /**
@@ -90,6 +92,12 @@ check(
   "At least one verified testimonial",
   TESTIMONIALS.some((t) => t.verified)
 );
+// The first-visit video (lib/videos.ts). Neither fact gates the video itself
+// — the poster and the play button ship regardless — but both are fields the
+// VideoObject markup would carry, and the schema omits them until they are
+// real. Named per fact so the build log says which number Ben owes.
+check("First-visit video running time", VIDEO_APPOINTMENT_ONE_DURATION.verified);
+check("First-visit video upload date", VIDEO_APPOINTMENT_ONE_UPLOAD_DATE.verified);
 
 
 if (unresolved.length > 0) {
