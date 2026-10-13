@@ -369,10 +369,18 @@ number, so anyone who stopped at the chips left nothing behind. Now:
    exits from step two land here.
 
 There is deliberately **no second email** when step two saves: the step-one
-email says those answers may follow and points at the saved request. The
-platform forward (`lib/inquiry-intake.ts`) needs who-we're-helping, so a form
-lead is forwarded from the PATCH when that answer arrives, and not at all if
-the visitor skips — see "What Ben has to decide" for the open question.
+email says those answers may follow and points at the saved request.
+
+The platform forward (`lib/inquiry-intake.ts`) also goes at step one, for
+every lead, skippers included. The contract's `whoFor` is a strict
+three-value enum with no "not given" member, so a form lead carries the
+stand-in `someone_else` and a first message line saying who-for was not
+given and will be asked on the call (Ben, 2026-10-13: forward anyway and
+flag the field). The contract has no update door either, so step two
+re-posts the enriched inquiry with an "UPDATE — not a new lead" first line:
+two cards on the Follow-ups screen per enriched lead until the platform
+grows a `not_given` token and a PATCH. Both constants sit at the top of
+`lib/inquiry-intake.ts`.
 
 Steps two and three mount after the reveal observer ran for the route;
 `components/RevealOnScroll.tsx` watches the DOM for exactly that, and
@@ -384,19 +392,22 @@ Steps two and three mount after the reveal observer ran for the route;
 Drives the whole flow in a headless Chrome against a production build and
 the real Supabase project — save, skip and close-the-tab at three widths,
 the chat's write path, the PATCH refusals, and the video actually playing —
-and asserts one row and one email per submission, then deletes the rows it
-created, by id. The email provider is a stand-in preloaded into the server
-(`scripts/contact-flow/mock-resend.mjs`) that records every send instead of
-delivering it:
+and asserts one row, one email and one platform post per submission (plus
+the labelled update post on the save path), then deletes the rows it
+created, by id. The email provider and the platform door are stand-ins
+preloaded into the server (`scripts/contact-flow/mock-resend.mjs`) that
+record every send instead of delivering it:
 
 ```bash
 npm run build
-MOCK_RESEND_LOG=/tmp/resend.jsonl \
+MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
   NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
   RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
   LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
   npx next start -p 3123
 CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
+  MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
   LEADS_NOTIFY_EMAIL=office@example.test \
   LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
   CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
@@ -422,10 +433,13 @@ production build by `check:contact` watching the player fetch media with no
 policy violation in the console.
 
 The running time and upload date are Verifiables (`VIDEO_APPOINTMENT_ONE_*`
-in `lib/site-config.ts`): draft mode shows the gold tags beside the caption,
-production shows no duration, and the schema omits `duration` and
-`uploadDate` until Ben confirms them. `check:schema` notes both every run
-until then — Google needs `uploadDate` for the video rich result.
+in `lib/site-config.ts`), both confirmed by Ben from YouTube Studio
+(2026-10-13): 49 seconds, published 2025-04-30. Flip either back to
+unverified and the caption drops the duration, the schema omits the field,
+and `check:schema` says so every run — Google needs `uploadDate` for the
+video rich result. The schema's `name` is the video's own YouTube title;
+the caption shows the shorter site label (`title` vs `sourceTitle` on the
+record).
 
 The two remain separate messages: a guide signup is deliberately *not* shaped
 like a callback, so nobody phones someone who only wanted a PDF.

@@ -3,9 +3,13 @@
  * build and the real Supabase project.
  *
  *   npm run build
- *   MOCK_RESEND_LOG=/tmp/resend.jsonl NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
- *     RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test npx next start -p 3123
+ *   MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
+ *     NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
+ *     RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
+ *     INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
+ *     npx next start -p 3123
  *   CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
+ *     MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
  *     CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
  *
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
@@ -23,6 +27,10 @@
  *     `helping_who` null and `concerns` empty unless step two saved them;
  *   - exactly ONE lead email (read from MOCK_RESEND_LOG), sent at step one,
  *     naming the row;
+ *   - the platform forward (read from MOCK_PLATFORM_LOG): one post at step
+ *     one for every path — the skip and leave paths included — with the
+ *     who-for stand-in and its flag line, and on the save path a second,
+ *     labelled update post carrying the answers;
  *   - every late-mounting panel (step two, the video) is at opacity 1 — the
  *     reveal gate, components/RevealOnScroll.tsx;
  *   - on the desktop save path, that the play button loads the
@@ -66,6 +74,7 @@ const env = { ...dotenv(), ...process.env };
 const SUPABASE_URL = env.SUPABASE_URL;
 const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 const MOCK_LOG = env.MOCK_RESEND_LOG;
+const PLATFORM_LOG = env.MOCK_PLATFORM_LOG;
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set (.env.local or the environment).");
@@ -78,8 +87,8 @@ if (!ref || env.CHECK_CONTACT_ALLOW_PROJECT !== ref) {
   );
   process.exit(1);
 }
-if (!MOCK_LOG) {
-  console.error("MOCK_RESEND_LOG not set — the server must be started with scripts/contact-flow/mock-resend.mjs preloaded (see the header).");
+if (!MOCK_LOG || !PLATFORM_LOG) {
+  console.error("MOCK_RESEND_LOG and MOCK_PLATFORM_LOG must be set — the server must be started with scripts/contact-flow/mock-resend.mjs preloaded (see the header).");
   process.exit(1);
 }
 
@@ -109,6 +118,17 @@ const emails = () =>
     ? readFileSync(MOCK_LOG, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
     : [];
 const emailsNaming = (name) => emails().filter((e) => (e.body?.text ?? "").includes(`Name:      ${name}`) || (e.body?.subject ?? "").includes(name));
+
+/* ── the mock platform door ────────────────────────────────────────────── */
+
+const WHO_FOR_STAND_IN = "someone_else";
+const NOT_GIVEN_LINE = "[Who the call is for: NOT GIVEN on the form";
+const UPDATE_LINE = "[UPDATE — not a new lead.";
+const forwards = () =>
+  existsSync(PLATFORM_LOG)
+    ? readFileSync(PLATFORM_LOG, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
+    : [];
+const forwardsNaming = (name) => forwards().filter((f) => f.body?.firstName === name);
 
 /* ── assertions ────────────────────────────────────────────────────────── */
 
@@ -156,6 +176,40 @@ function expectEmail(name, row, { center, source = "the contact form", inbox = e
   expect(`${name}: email body carries the phone`, text.includes("Phone:     0000000000"));
   if (row) expect(`${name}: email points at the saved row`, text.includes(`Saved request: ${row.id}`));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
+}
+
+/**
+ * The platform forward. Every consultation posts once at step one — with the
+ * who-for stand-in and the flag line when the form has not asked yet — and
+ * the save path posts a second time, labelled as an update, with the answers.
+ */
+function expectForward(name, { center, whoFor = null, updated = null }) {
+  const list = forwardsNaming(name);
+  const want = updated ? 2 : 1;
+  expect(`${name}: ${want} platform post(s)`, list.length === want, `${list.length} post(s)`);
+  const first = list[0];
+  if (!first) return;
+  expect(`${name}: platform post carries the secret header`, first.secretPresent === true);
+  expect(`${name}: platform post phone/center`, first.body.phone === "0000000000" && first.body.preferredCenter === center, JSON.stringify([first.body.phone, first.body.preferredCenter]));
+  expect(`${name}: platform post honeypot present and empty`, first.body.website === "", JSON.stringify(first.body.website));
+  if (whoFor === null) {
+    expect(`${name}: step-one post uses the who-for stand-in`, first.body.whoFor === WHO_FOR_STAND_IN, first.body.whoFor);
+    expect(`${name}: step-one post flags who-for as not given, first line`, String(first.body.message ?? "").startsWith(NOT_GIVEN_LINE), JSON.stringify(first.body.message));
+    expect(`${name}: step-one post is not labelled an update`, !String(first.body.message ?? "").includes(UPDATE_LINE));
+  } else {
+    expect(`${name}: post whoFor = ${whoFor}`, first.body.whoFor === whoFor, first.body.whoFor);
+    expect(`${name}: post carries no not-given flag`, !String(first.body.message ?? "").includes(NOT_GIVEN_LINE), JSON.stringify(first.body.message));
+  }
+  if (updated) {
+    const second = list[1];
+    if (!second) return;
+    expect(`${name}: update post is labelled, first line`, String(second.body.message ?? "").startsWith(UPDATE_LINE), JSON.stringify(second.body.message));
+    expect(`${name}: update post whoFor = ${updated.whoFor}`, second.body.whoFor === updated.whoFor, second.body.whoFor);
+    expect(`${name}: update post concerns = ${JSON.stringify(updated.concerns)}`, JSON.stringify(second.body.concerns) === JSON.stringify(updated.concerns), JSON.stringify(second.body.concerns));
+    expect(`${name}: update post carries the note`, String(second.body.message ?? "").endsWith(updated.note), JSON.stringify(second.body.message));
+    expect(`${name}: update post carries no not-given flag`, !String(second.body.message ?? "").includes(NOT_GIVEN_LINE));
+    expect(`${name}: update post keeps name/phone/center/time`, second.body.firstName === name && second.body.phone === "0000000000" && second.body.preferredCenter === center && second.body.bestTimeToCall === first.body.bestTimeToCall, JSON.stringify(second.body));
+  }
 }
 
 /* ── browser helpers ───────────────────────────────────────────────────── */
@@ -232,6 +286,7 @@ async function pathSave(page, width) {
   expect(`${name}: row saved before step two was shown`, rowsNow.length === 1, `${rowsNow.length} row(s)`);
   const emailsNow = emailsNaming(name);
   expect(`${name}: lead email sent before step two was shown`, emailsNow.length === 1, `${emailsNow.length} email(s)`);
+  expect(`${name}: platform forwarded before step two was shown`, forwardsNaming(name).length === 1, `${forwardsNaming(name).length} post(s)`);
 
   for (const t of ["My child"]) await page.eval(clickText(t));
   for (const t of ["Sleep", "Focus & ADHD"]) await page.eval(clickText(t));
@@ -256,6 +311,7 @@ async function pathSave(page, width) {
   // Pass the server's value to this check so it can say which it expects.
   expectEmail(name, row, { center: "Murfreesboro", inbox: env.LEADS_NOTIFY_EMAIL_MURFREESBORO ?? env.LEADS_NOTIFY_EMAIL ?? "office@example.test" });
   expect(`${name}: still exactly one email after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
+  expectForward(name, { center: "Murfreesboro", updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part." } });
   return { name, row };
 }
 
@@ -271,6 +327,8 @@ async function pathSkip(page, width) {
   await sleep(300);
   const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null });
   expectEmail(name, row, { center: "Nashville" });
+  // The skip path reaches the platform: step one is the lead.
+  expectForward(name, { center: "Nashville" });
   return { name, row };
 }
 
@@ -286,6 +344,7 @@ async function pathLeave(chrome, width) {
   await sleep(500);
   const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null });
   expectEmail(name, row, { center: "Not sure yet" });
+  expectForward(name, { center: "Not sure yet" });
 }
 
 /**
@@ -346,7 +405,7 @@ async function playVideo(chrome, page, name) {
   const frame = await page.eval(`JSON.stringify((() => { const f = document.querySelector(".video-stage iframe"); return { present: !!f, src: f?.src ?? null, allow: f?.getAttribute("allow"), title: f?.title, focused: document.activeElement === f, buttonGone: !document.querySelector(".video-play") }; })())`);
   const f = JSON.parse(frame);
   expect(`${name}: click swaps the poster for the youtube-nocookie iframe`, f.present && /^https:\/\/www\.youtube-nocookie\.com\/embed\/FCUyUqzE3Dk\?/.test(f.src ?? "") && f.src.includes("autoplay=1") && f.buttonGone, frame);
-  expect(`${name}: iframe is titled and focused`, f.title === "What to Expect: Appointment #1" && f.focused, frame);
+  expect(`${name}: iframe is titled and focused`, f.title === "Your First Appointment at Harmonized Brain Centers: What to Expect" && f.focused, frame);
   expect(`${name}: the embed document was requested`, seen.embed >= 1, `${seen.embed}`);
   expect(`${name}: the player fetched media (playback started)`, seen.media >= 1, `${seen.media} videoplayback request(s) in 15s across ${seen.frames} attached frame(s)`);
   expect(`${name}: no Permissions-Policy violation logged`, seen.violations.length === 0, seen.violations.join(" | "));
@@ -369,6 +428,7 @@ async function chatWritePath() {
   await sleep(300);
   const row = await expectRow(name, { center: "Not sure yet", helpingWho: "Myself", concerns: [], note: "chat note", source: "chat", bestTime: null, sourcePage: "/" });
   expectEmail(name, row, { center: "Not sure yet", source: "the site assistant (chat)" });
+  expectForward(name, { center: "Not sure yet", whoFor: "myself" });
   return row;
 }
 
@@ -385,6 +445,7 @@ async function patchRefusals(row) {
   expect("PATCH to a non-uuid answers 404", (await patch("not-a-uuid", { note: "x" })) === 404);
   const [after] = await rest(`consultation_requests?id=eq.${row.id}&select=phone,first_name,preferred_center,best_time`);
   expect("refused PATCHes changed nothing", after.phone === "0000000000" && after.first_name === row.first_name && after.preferred_center === row.preferred_center && after.best_time === row.best_time, JSON.stringify(after));
+  expect("refused PATCHes posted nothing to the platform", forwardsNaming(row.first_name).length === 2, `${forwardsNaming(row.first_name).length} post(s)`);
 }
 
 async function patchChatRowRefused(chatRow) {
@@ -441,10 +502,10 @@ if (!KEEP && created.length > 0) {
 }
 
 const total = emails().length;
-console.log(`\n${passes} check(s) passed, ${failures.length} failed; ${total} email(s) in ${MOCK_LOG} this server session`);
+console.log(`\n${passes} check(s) passed, ${failures.length} failed; ${total} email(s) in ${MOCK_LOG}, ${forwards().length} platform post(s) in ${PLATFORM_LOG} this server session`);
 if (failures.length > 0) {
   console.log("\n❌  contact flow:\n");
   for (const f of failures) console.log(`  • ${f}`);
   process.exit(1);
 }
-console.log("✓ contact flow: three paths, one row and one email each, every late panel revealed, the video plays.");
+console.log("✓ contact flow: three paths, one row, one email and one lead post each, every late panel revealed, the video plays.");

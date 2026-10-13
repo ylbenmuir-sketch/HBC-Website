@@ -249,13 +249,13 @@ export async function POST(request: Request) {
     source_page: sourcePage,
   };
 
-  // The platform contract requires who-we're-helping (lib/inquiry-intake.ts),
-  // and a form lead does not have it yet: the form asks in step two and
-  // forwards from there (app/api/consultation/[id]/route.ts) once it is
-  // answered. A chat lead has it here and is forwarded now. A guide signup is
-  // not an inquiry at all. Built as a value so the three fields narrow.
+  // Every consultation is forwarded here, at the lead. A form lead has no
+  // who-for yet — the form asks in step two — and goes with the stand-in
+  // token and a flag line (lib/inquiry-intake.ts); step two re-posts it as a
+  // labelled update. A guide signup is not an inquiry at all. Built as a
+  // value so the two required fields narrow.
   const inquiry =
-    !isGuide && firstName && phone && helpingWho
+    !isGuide && firstName && phone
       ? {
           helpingWho,
           concerns,

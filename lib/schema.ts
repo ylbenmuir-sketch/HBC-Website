@@ -558,14 +558,16 @@ export function videoId(path: string, video: Video): string {
 }
 
 export function videoRef(path: string, video: Video) {
-  return { "@type": "VideoObject", "@id": videoId(path, video), name: video.title };
+  return { "@type": "VideoObject", "@id": videoId(path, video), name: video.sourceTitle };
 }
 
 /**
  * VideoObject for a video embedded through components/VideoEmbed.tsx.
  *
  * Every field mirrors something the page has or renders: `name` is the
- * caption's title, `thumbnailUrl` is the committed poster the facade shows
+ * video's own YouTube title (the player iframe is titled the same; the
+ * caption shows the shorter site label), `thumbnailUrl` is the committed
+ * poster the facade shows
  * (`npm run fetch:posters`), `embedUrl` is the privacy-enhanced player the
  * click loads. **`uploadDate` and `duration` appear only once verified** —
  * both are Verifiables in lib/site-config.ts, and rule 1 means an unconfirmed

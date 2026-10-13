@@ -36,7 +36,11 @@ import {
 export type Video = {
   /** The YouTube video id — `youtube.com/watch?v=<id>`. */
   id: string;
+  /** The label the page shows — the caption, the play button's name. */
   title: string;
+  /** The video's title on YouTube, verbatim. The schema's `name` and the
+   *  player iframe's `title`, so the markup matches its source. */
+  sourceTitle: string;
   /** One or two plain sentences: what the video shows. Also the schema's
    *  `description`, so it must describe the video and not sell anything. */
   description: string;
@@ -51,10 +55,10 @@ export type Video = {
 export const videos: Video[] = [
   {
     id: "FCUyUqzE3Dk",
-    // Ben's title for the site (Oct 2026). The channel's own title is
-    // "Your First Appointment at Harmonized Brain Centers: What to Expect";
-    // the schema `name` carries the title the page renders, which is this one.
+    // Ben's label for the site (Oct 2026); the schema carries the channel's
+    // own title (Ben, 2026-10-13: the markup should match the source).
     title: "What to Expect: Appointment #1",
+    sourceTitle: "Your First Appointment at Harmonized Brain Centers: What to Expect",
     description:
       "A walk through a first appointment at Harmonized Brain Centers, from the practice's own channel — what the visit looks like before anyone decides anything.",
     durationSeconds: VIDEO_APPOINTMENT_ONE_DURATION,

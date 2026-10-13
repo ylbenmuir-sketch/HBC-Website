@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
 import { getVideo } from "@/lib/videos";
-import ConfirmTag from "@/components/ConfirmTag";
 import { locationPhone, locations } from "@/lib/locations";
-import { CONTACT_RESPONSE_TAG, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
@@ -44,13 +42,14 @@ export default function ContactPage() {
       <section className="page-hero center compact">
         <div className="wrap rv">
           <div className="eyebrow">Talk with our team</div>
-          <h1>Tell us what&rsquo;s going on. We&rsquo;ll take it from there.</h1>
-          <p className="sub" style={{ maxWidth: "56ch" }}>
-            A free, no-pressure conversation with a real person from your
-            nearest center
-            {SHOW_DRAFT_CONTENT && <> &mdash; usually within one business day</>}
-            .{" "}
-            <ConfirmTag>{CONTACT_RESPONSE_TAG}</ConfirmTag>
+          {/* The form's first step asks only where to reach her; "what's
+              going on" is step two's question now, so the H1 asks for the
+              call and nothing else (Ben, 2026-10-13). */}
+          <h1>Start with a free call.</h1>
+          <p className="sub" style={{ maxWidth: "60ch" }}>
+            Tell us where to reach you. We&rsquo;ll call, answer your
+            questions, and tell you honestly whether LENS is a fit &mdash; you
+            decide what comes next.
           </p>
         </div>
       </section>

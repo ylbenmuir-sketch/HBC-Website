@@ -66,7 +66,7 @@ export default function VideoEmbed({
           <iframe
             ref={player}
             src={embedUrl(video, { autoplay: true })}
-            title={video.title}
+            title={video.sourceTitle}
             // Only what a player needs. The site-wide Permissions-Policy
             // (next.config.ts) denies camera, microphone, geolocation and
             // payment to every frame, and a video player asks for none of

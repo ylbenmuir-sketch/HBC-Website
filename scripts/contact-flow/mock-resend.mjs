@@ -1,5 +1,6 @@
 /**
- * Stand-in for Resend, for scripts/check-contact.mjs.
+ * Stand-ins for Resend and for the platform's inquiry door, for
+ * scripts/check-contact.mjs.
  *
  * Preloaded into the production server, never into a deploy:
  *
@@ -12,18 +13,46 @@
  * can count and read the emails without a provider, a verified domain, or a
  * real inbox receiving test leads. Every other fetch passes straight through.
  *
- * Does nothing unless MOCK_RESEND_LOG is set, and is not imported by anything
- * in the app, so it cannot be left on by accident.
+ * The same for the platform: with MOCK_PLATFORM_LOG set, every POST
+ * lib/inquiry-intake.ts makes to `${INQUIRY_API_BASE}/api/public/inquiries`
+ * is appended there and answered 201 `{ received: true }`, the contract's
+ * own success body. INQUIRY_API_BASE and INQUIRY_INTAKE_SECRET still have
+ * to be set — the route checks them before it sends — and may hold any
+ * value; nothing leaves the process.
+ *
+ * Does nothing unless a log path is set, and is not imported by anything in
+ * the app, so it cannot be left on by accident.
  */
 import { appendFileSync } from "node:fs";
 
 const LOG = process.env.MOCK_RESEND_LOG;
-if (LOG) {
+const PLATFORM_LOG = process.env.MOCK_PLATFORM_LOG;
+const PLATFORM_URL = process.env.INQUIRY_API_BASE
+  ? `${process.env.INQUIRY_API_BASE.replace(/\/+$/, "")}/api/public/inquiries`
+  : null;
+if (LOG || PLATFORM_LOG) {
   const real = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url =
       typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    if (url.startsWith("https://api.resend.com/")) {
+    if (PLATFORM_LOG && PLATFORM_URL && url === PLATFORM_URL) {
+      let body = null;
+      try {
+        body = init?.body ? JSON.parse(String(init.body)) : null;
+      } catch {
+        body = { unparsed: String(init?.body) };
+      }
+      const secret = init?.headers?.["x-hbc-inquiry-secret"] ?? null;
+      appendFileSync(
+        PLATFORM_LOG,
+        `${JSON.stringify({ at: new Date().toISOString(), url, secretPresent: Boolean(secret), body })}\n`
+      );
+      return new Response(JSON.stringify({ received: true }), {
+        status: 201,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    if (LOG && url.startsWith("https://api.resend.com/")) {
       let body = null;
       try {
         body = init?.body ? JSON.parse(String(init.body)) : null;
@@ -38,5 +67,6 @@ if (LOG) {
     }
     return real(input, init);
   };
-  console.log(`[mock-resend] intercepting api.resend.com → ${LOG}`);
+  if (LOG) console.log(`[mock-resend] intercepting api.resend.com → ${LOG}`);
+  if (PLATFORM_LOG) console.log(`[mock-platform] intercepting ${PLATFORM_URL ?? "(INQUIRY_API_BASE unset — nothing to intercept)"} → ${PLATFORM_LOG}`);
 }

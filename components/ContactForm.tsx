@@ -93,7 +93,7 @@ const CARD_STYLE = {
   background: "#fff",
   border: "1px solid var(--line)",
   borderRadius: 4,
-  padding: "34px 40px",
+  padding: "30px 40px",
 } as const;
 
 const OPTIONAL_STYLE = {

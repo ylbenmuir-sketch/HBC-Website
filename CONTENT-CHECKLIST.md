@@ -122,14 +122,14 @@ Production currently shows a two-sentence stand-in; the full page needs:
       use and is still open. Unverifying it drops the timeframe and the copy
       falls back to "A real person calls you back."
 - [ ] "Most new clients start within a week" (`START_TIMING`)
-- [ ] **First-visit video running time** (`VIDEO_APPOINTMENT_ONE_DURATION`,
-      whole seconds) — "What to Expect: Appointment #1", YouTube
-      `FCUyUqzE3Dk`, shown on `/contact` after a call is requested. Read it
-      off the video page or YouTube Studio. Until verified the caption shows
-      no duration and the `VideoObject` markup omits `duration`.
-- [ ] **First-visit video upload date** (`VIDEO_APPOINTMENT_ONE_UPLOAD_DATE`,
-      `YYYY-MM-DD`) — the day it was published on the channel, from YouTube
-      Studio. Until verified the markup omits `uploadDate`, which Google
+- [x] **First-visit video running time** (`VIDEO_APPOINTMENT_ONE_DURATION`)
+      — 49 seconds. Confirmed by Ben from YouTube Studio, 2026-10-13.
+      "What to Expect: Appointment #1", YouTube `FCUyUqzE3Dk`, shown on
+      `/contact` after a call is requested. Unverifying it drops the
+      duration from the caption and `duration` from the `VideoObject`.
+- [x] **First-visit video upload date** (`VIDEO_APPOINTMENT_ONE_UPLOAD_DATE`)
+      — 2025-04-30. Confirmed by Ben from YouTube Studio, 2026-10-13.
+      Unverifying it drops `uploadDate` from the markup, which Google
       requires for the video rich result.
 - [x] First-visit duration (`FIRST_VISIT_DURATION`) — 60 minutes. Confirmed by Ben.
 - [x] Typical session length (`SESSION_LENGTH`) — 30 minutes. Confirmed by Ben.

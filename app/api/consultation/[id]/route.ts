@@ -20,13 +20,13 @@ export const runtime = "nodejs";
  * touched: a chat row has these answers already and no browser was ever
  * handed its id.
  *
- * ## No second email
+ * ## No second email; a second platform post
  *
  * The email went at step one and is the lead (lib/lead-notification.ts); it
- * says these answers may follow and where to read them. This route forwards
- * the inquiry to the platform when `helping_who` arrives, because the
- * platform contract requires it and the POST could not satisfy that for a
- * form lead — see the `inquiry` note in ../route.ts.
+ * says these answers may follow and where to read them. The platform was
+ * also told at step one; it has no update door, so this route posts the
+ * enriched inquiry again with an "UPDATE — not a new lead" first line
+ * (UPDATE_LINE in lib/inquiry-intake.ts).
  *
  * ## The id is the authority
  *
@@ -167,10 +167,11 @@ export async function PATCH(
       .join(", ")}`
   );
 
-  // The platform now has what its contract needs. Awaited, never thrown;
-  // forwardInquiry logs its own outcome. No honeypot at this step — the bot
-  // field lives on step one, which a bot that got this far already passed.
-  if (row.helping_who && row.first_name && row.phone) {
+  // The enriched inquiry, re-posted as a labelled update. Awaited, never
+  // thrown; forwardInquiry logs its own outcome. No honeypot at this step —
+  // the bot field lives on step one, which a bot that got this far already
+  // passed.
+  if (row.first_name && row.phone) {
     await forwardInquiry({
       helpingWho: row.helping_who,
       concerns: row.concerns ?? [],
@@ -181,6 +182,7 @@ export async function PATCH(
       bestTime: row.best_time,
       note: row.note,
       website: "",
+      update: true,
     });
   }
 

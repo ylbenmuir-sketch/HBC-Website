@@ -1810,15 +1810,15 @@ body[data-bottombar] footer.site {
    /contact alone runs a tighter hero and section, and the card's own
    rhythm is a notch closer than .form's default.
    ============================================================ */
-.page-hero.compact { padding: 44px 0 32px; }
+.page-hero.compact { padding: 36px 0 28px; }
 /* One line at desktop: the two-sentence H1 at the site's clamp() size wrapped
    to two lines of 76px, which alone was a third of a 900px viewport. The
    default clamp() still applies below 1061px, where the column is narrow and
    the fold is not the constraint. */
 .page-hero.compact h1 { margin: 16px auto 12px; }
 @media (min-width: 1061px) { .page-hero.compact h1 { font-size: 46px; max-width: none; } }
-.sec.sec-form { padding-top: 44px; }
-.form-compact label { margin: 16px 0 7px; }
+.sec.sec-form { padding-top: 36px; }
+.form-compact label { margin: 14px 0 7px; }
 .form-compact input, .form-compact select { padding: 14px 16px; }
 .form-compact .micro { margin-top: 10px; }
 /* "+ Add an email address (optional)" — a disclosure, styled as the quiet
@@ -1835,6 +1835,6 @@ body[data-bottombar] footer.site {
 .form-step h2:focus { outline: none; }
 .video-lead { margin: 0 0 22px; }
 @media (max-width: 640px) {
-  .page-hero.compact { padding: 44px 0 32px; }
+  .page-hero.compact { padding: 36px 0 28px; }
   .sec.sec-form { padding-top: 40px; }
 }

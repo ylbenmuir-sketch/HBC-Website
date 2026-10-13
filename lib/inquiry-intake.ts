@@ -61,8 +61,42 @@ const CONCERN_TOKENS: Record<string, string> = {
 const CENTER_UNSPECIFIED = "Not sure yet";
 const TIME_UNSPECIFIED = "Not specified";
 
+/**
+ * ── WHO-FOR, WHEN IT HAS NOT BEEN ASKED YET ──────────────────────────────
+ * The contact form saves and forwards the lead at its first step, before it
+ * asks who the call is for (components/ContactForm.tsx). The contract's
+ * `whoFor` is a strict three-value enum with no "not given" member and an
+ * unknown value is a 400 — nothing stored — so a form lead cannot wait on
+ * that answer and cannot send the honest token either. Ben's call
+ * (2026-10-13): forward on step one anyway and flag the field. So the
+ * forward carries this stand-in token and the first line of `message` says,
+ * in words, that who-for was not given and will be asked on the call. The
+ * honest fix is platform-side — a `not_given` member on INQUIRY_WHO_FOR
+ * (additions are allowed there) — and the day it exists this constant is
+ * the only thing to change.
+ *
+ * `someone_else` rather than `myself`: a card that says "someone else"
+ * prompts the desk to ask; one that says "myself" presumes.
+ */
+export const WHO_FOR_STAND_IN = "someone_else";
+export const WHO_FOR_NOT_GIVEN_LINE =
+  "[Who the call is for: NOT GIVEN on the form — asked after the callback is saved. Confirm on the call.]";
+
+/**
+ * ── STEP TWO IS A SECOND POST, LABELLED ──────────────────────────────────
+ * The contract has no update endpoint and the 201 carries no id, so what
+ * the visitor adds in the form's optional second step cannot be patched
+ * onto the inquiry already filed. It is posted again with this as the first
+ * line of `message`, so the Follow-ups screen shows a second card that says
+ * what it is. Two cards per enriched lead is the platform's limitation,
+ * not a reason to drop the answers; an update door is the fix.
+ */
+export const UPDATE_LINE =
+  "[UPDATE — not a new lead. The same person added who the call is for, concerns or a note after requesting the call.]";
+
 export type InquiryForward = {
-  helpingWho: string;
+  /** Null when the form has not asked yet — see WHO_FOR_STAND_IN. */
+  helpingWho: string | null;
   concerns: string[];
   firstName: string;
   phone: string;
@@ -74,6 +108,9 @@ export type InquiryForward = {
    *  non-empty one flagged as spam and still answers 201, so a bot learns
    *  nothing from the response. Never used to reject anything here. */
   website: string | null;
+  /** True when this is the form's second step re-posting an inquiry already
+   *  filed — see UPDATE_LINE. */
+  update?: boolean;
 };
 
 export type InquiryForwardResult =
@@ -87,10 +124,12 @@ function cap(value: string, max: number): string {
 /**
  * Build the wire body. Returns null only when the submission cannot satisfy
  * the contract's required fields at all (a guide signup, or a `helping_who`
- * outside the governed three) — those are not inquiries and must not be sent.
+ * that is given but outside the governed three) — those are not inquiries
+ * and must not be sent. A missing `helping_who` is not that case: it is the
+ * form's first step, and it forwards with the stand-in (see above).
  */
 function buildBody(input: InquiryForward): Record<string, unknown> | null {
-  const whoFor = WHO_FOR_TOKENS[input.helpingWho];
+  const whoFor = input.helpingWho === null ? WHO_FOR_STAND_IN : WHO_FOR_TOKENS[input.helpingWho];
   if (!whoFor) return null;
 
   const firstName = input.firstName.trim();
@@ -122,7 +161,17 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
   // and types these as string-or-absent.
   const email = input.email?.trim();
   if (email) body.email = cap(email, 200);
-  const message = input.note?.trim();
+
+  // The flag lines come first, then her words. Capped as a whole at the
+  // contract's limit; the lines are short enough that her note is what gets
+  // cut, and only in the last few dozen characters of a 2,000-character one.
+  const message = [
+    input.update ? UPDATE_LINE : null,
+    input.helpingWho === null ? WHO_FOR_NOT_GIVEN_LINE : null,
+    input.note?.trim() || null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n\n");
   if (message) body.message = cap(message, 2000);
 
   return body;
