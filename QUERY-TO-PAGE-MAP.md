@@ -187,6 +187,7 @@ the inherited surface on day one rather than carrying it over.
 |---|---|---|
 | `/add-adhd/` | `/concerns/focus-adhd/` | ✅ |
 | `/stressanxiety/` | `/concerns/anxiety/` | ✅ |
+| `/stress/` | `/concerns/stress-resilience/` | ✅ — was `/concerns/anxiety/` until Oct 2026, a default from before the page existed; Ben's list (Oct 13 2026) moved it |
 | `/sleepproblems/` | `/concerns/sleep/` | ✅ |
 | `/concussion-and-tbi/` | `/concerns/concussion/` | ✅ |
 | `/depression/` | `/concerns/depression/` | ✅ — the hub until Oct 2026 (approved, Ben, Aug 2026, when no page offered the answer); the page exists now and the redirect follows it |
@@ -242,6 +243,44 @@ gate is for, and the equity is not worth doing it a day early.
 closest honest answer to what that visitor came for. **Revisit the day the
 permissions land:** at that point the right move is a real page at the original
 URL and this line comes out.
+
+### The legacy posts (Ben, Oct 13 2026)
+
+The old site's post sitemap holds 56 URLs: 22 with a real slug and 34
+WordPress numeric auto-slugs (`/6105-2/` … `/6340-2/`). Ben supplied the list
+with a destination per row; it is in `next.config.ts` and proved by
+`npm run check:redirects` against a built server (every row, both slash
+forms, one hop, destination answers 200). The 34 numeric slugs answer 410
+by pattern, as before. Two rows differ from Ben's list and are marked.
+
+| Legacy post | Destination |
+|---|---|
+| `/5-ways-neurofeedback-reduces-stress-and-anxiety/` | `/concerns/anxiety/` |
+| `/why-choose-lens-neurofeedback-for-anxiety-relief-in-nashville-and-murfreesboro/` | `/concerns/anxiety/` |
+| `/suffering-from-anxiety-depression/` | `/concerns/anxiety/` |
+| `/types-of-adhd/` | `/concerns/focus-adhd/` |
+| `/boost-focus-and-productivity-with-lens-neurofeedback-in-nashville-and-murfreesboro/` | `/concerns/focus-adhd/` |
+| `/how-lens-neurofeedback-helps-manage-add-adhd-in-nashville-and-murfreesboro/` | `/concerns/focus-adhd/` |
+| `/adhdadd-cant-be-cured-but-it-can-be-controlled/` | `/concerns/focus-adhd/` |
+| `/how-lens-neurofeedback-supports-better-sleep-in-nashville-and-murfreesboro/` | `/concerns/sleep/` |
+| `/overcoming-depression-with-lens-neurofeedback-in-nashville-and-murfreesboro/` | `/concerns/depression/` |
+| `/last-non-drug-treatment-pmt-menopause-depression/` | `/concerns/depression/` — **changed** from Ben's `/adults/`: the post is about depression, and a destination is read as an answer; `/adults/` is a menu of concerns that never names menopause |
+| `/achieving-peak-performance-with-lens/` | `/concerns/performance/` |
+| `/concussion-do-you-know-the-symptoms/` | `/concerns/concussion/` |
+| `/10-ways-to-look-forward-to-monday-mornings/` | `/concerns/stress-resilience/` |
+| `/suffering-migraines-non-drug-treatment-can-help/` | `/concerns/migraines/` |
+| `/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out/` | `/lens-neurofeedback/` — not `/resources/lens-vs-traditional-neurofeedback/`, the exact subject, because that article is still placeholder text; move it when it is written |
+| `/new-nashville-lens-neurofeedback-90-success-rate-adhd-anxiety-depression/` | `/lens-neurofeedback/` |
+| `/how-low-energy-neurofeedback-works-a-simple-explanation/` | `/how-lens-works/` |
+| `/chemical-vs-brainwaves-two-paths-to-brain-health/` | `/resources/lens-and-medication/` |
+| `/is-america-addicted-to-prescription-drugs/` | `/resources/lens-and-medication/` |
+| `/sheri-rowney-being-interviewed-by-don-miller/` | `/about/founder/` |
+| `/children-adhd-alternative-drugs/` | `/children-families/` |
+| `/positive-outcomes-from-vibro-acoustic-therapy-research/` | **410 Gone** — with `/vibro-acoustic-chair/`, same reasoning |
+
+The 410 rows now answer in one hop with the trailing slash too: the
+trailing-slash catch-all steps around them (`GONE_PATTERN` in
+`next.config.ts`), where before it was a 308 and then the 410.
 
 ---
 

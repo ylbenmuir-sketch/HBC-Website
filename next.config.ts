@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
+/**
+ * The legacy paths that answer 410 Gone, as one regex alternation, written
+ * once: `rewrites()` sends them to app/api/gone/route.ts, and the trailing-
+ * slash catch-all at the end of `redirects()` steps around them so the slash
+ * form reaches the rewrite in one hop. Literal slugs first, then WordPress's
+ * numeric auto-slugs (`6200-2`, and `6200` for good measure).
+ */
+const GONE_PATTERN =
+  "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|\\d+(?:-\\d+)?)";
+
 const nextConfig: NextConfig = {
   /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
    *  scanner wants (SEO-AUDIT-3 §2.4). */
@@ -87,26 +97,26 @@ const nextConfig: NextConfig = {
    * goes to /contact until he says otherwise. (`/concierge/` was the other;
    * /concierge is a page as of Oct 2026.)
    *
-   * The ~55 individual WordPress posts are NOT here: the audit asked for one
-   * pass with the GSC export open and the post list, and nobody has supplied
-   * the list. The numeric auto-slugs (`/6200-2/` and the like) are retired
-   * by pattern below; everything else under /post-sitemap falls through to
-   * the 404, which is a routing page (app/not-found.tsx).
+   * The individual WordPress posts are here too, as of 2026-10-13: Ben pulled
+   * the list from the old site's sitemaps (56 URLs under /post-sitemap). The
+   * 22 with a real slug each have a row below, grouped by destination; the
+   * 34 numeric auto-slugs (`/6200-2/` and the like) are retired by pattern
+   * in `rewrites()`. Two rows differ from the list Ben sent (`/stress/` and
+   * the menopause post) and each says why in place. Anything in neither list
+   * falls through to the 404, which is a routing page (app/not-found.tsx).
    *
    * 410s are rewrites to app/api/gone/route.ts, because a redirect cannot
    * carry that status.
    *
-   * Probe (any local server, after `npm run build && npx next start`):
-   *
-   *   for p in /add-adhd/ /add-adhd /what-is-lens/ /about/ /concerns/ \
-   *            /category/x/ /vibro-acoustic-chair/ /6200-2/; do
-   *     curl -s -o /dev/null -w "%{http_code} $p -> %{redirect_url}\n" \
-   *       "http://127.0.0.1:3123$p"; done
+   * Probe: `npm run check:redirects` against a built server
+   * (scripts/check-redirects.mjs). It requests every legacy URL in both slash
+   * forms and fails on anything but one hop to the expected destination, a
+   * destination that does not answer 200, or a source this file lists twice.
    *
    * Every legacy row answers 301 straight to its final destination, with or
    * without the slash; `/about/` answers 308 to `/about`; the 410 rows answer
-   * 410 bare and 308-then-410 with the slash. Verified 2026-10-10 against
-   * `next dev`.
+   * 410 in one hop in both forms (see the catch-all). Verified 2026-10-13
+   * against `next start`.
    */
   async redirects() {
     // 301, not `permanent: true` — Next spells that as a 308. Both are
@@ -124,7 +134,11 @@ const nextConfig: NextConfig = {
       ...to(["/what-is-lens", "/lens-therapy"], "/lens-neurofeedback"),
       ...to(["/nashville_neurofeedback_therapy"], "/locations/nashville"),
       ...to(["/add-adhd", "/adhd", "/add-adhd-landing-page"], "/concerns/focus-adhd"),
-      ...to(["/stressanxiety", "/stress"], "/concerns/anxiety"),
+      ...to(["/stressanxiety"], "/concerns/anxiety"),
+      // Was /concerns/anxiety until Oct 2026, a default written before the
+      // stress page existed. Ben's list (2026-10-13) points it at the page
+      // whose subject it is.
+      ...to(["/stress"], "/concerns/stress-resilience"),
       ...to(["/sleepproblems", "/sleep-disorder"], "/concerns/sleep"),
       ...to(["/concussion-and-tbi", "/concussion-tbi1"], "/concerns/concussion"),
       ...to(["/emotional-balance", "/emotional-balance22"], "/concerns/emotional-regulation"),
@@ -152,12 +166,83 @@ const nextConfig: NextConfig = {
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),
       // The parent of eleven live URLs 404'd (SEO-AUDIT-3 §2.4).
       ...to(["/concerns"], "/what-we-help-with"),
+
+      // The 22 WordPress posts with a real slug (Ben, 2026-10-13, from the
+      // old site's sitemaps). Each goes to the page that answers what the
+      // post was about, grouped by destination. One row differs from Ben's
+      // list and says why. The 23rd post on that list,
+      // /positive-outcomes-from-vibro-acoustic-therapy-research/, is a 410
+      // in `rewrites()` beside /vibro-acoustic-chair, for the same reason.
+      ...to(
+        [
+          "/5-ways-neurofeedback-reduces-stress-and-anxiety",
+          "/why-choose-lens-neurofeedback-for-anxiety-relief-in-nashville-and-murfreesboro",
+          "/suffering-from-anxiety-depression",
+        ],
+        "/concerns/anxiety"
+      ),
+      ...to(
+        [
+          "/types-of-adhd",
+          "/boost-focus-and-productivity-with-lens-neurofeedback-in-nashville-and-murfreesboro",
+          "/how-lens-neurofeedback-helps-manage-add-adhd-in-nashville-and-murfreesboro",
+          "/adhdadd-cant-be-cured-but-it-can-be-controlled",
+        ],
+        "/concerns/focus-adhd"
+      ),
+      ...to(
+        ["/how-lens-neurofeedback-supports-better-sleep-in-nashville-and-murfreesboro"],
+        "/concerns/sleep"
+      ),
+      // Changed from Ben's list, which sent the menopause post to /adults.
+      // The post is about depression (PMT, menopause); /concerns/depression
+      // is the page that answers it, and /adults is a menu of concerns that
+      // never names menopause. Same rule as the /depression/ row above: a
+      // destination is read as an answer.
+      ...to(
+        [
+          "/overcoming-depression-with-lens-neurofeedback-in-nashville-and-murfreesboro",
+          "/last-non-drug-treatment-pmt-menopause-depression",
+        ],
+        "/concerns/depression"
+      ),
+      ...to(["/achieving-peak-performance-with-lens"], "/concerns/performance"),
+      ...to(["/concussion-do-you-know-the-symptoms"], "/concerns/concussion"),
+      ...to(["/10-ways-to-look-forward-to-monday-mornings"], "/concerns/stress-resilience"),
+      ...to(["/suffering-migraines-non-drug-treatment-can-help"], "/concerns/migraines"),
+      // /lens-neurofeedback, not /resources/lens-vs-traditional-neurofeedback:
+      // that article is the exact subject of the first post, but as of Oct
+      // 2026 its body is still placeholder text. Move it when the article is
+      // written.
+      ...to(
+        [
+          "/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out",
+          "/new-nashville-lens-neurofeedback-90-success-rate-adhd-anxiety-depression",
+        ],
+        "/lens-neurofeedback"
+      ),
+      ...to(["/how-low-energy-neurofeedback-works-a-simple-explanation"], "/how-lens-works"),
+      ...to(
+        [
+          "/chemical-vs-brainwaves-two-paths-to-brain-health",
+          "/is-america-addicted-to-prescription-drugs",
+        ],
+        "/resources/lens-and-medication"
+      ),
+      ...to(["/sheri-rowney-being-interviewed-by-don-miller"], "/about/founder"),
+      ...to(["/children-adhd-alternative-drugs"], "/children-families"),
+
       // Last: the trailing-slash normalisation Next used to do first, at the
-      // 308 it used. The two 410 rows below reach their handler through this
-      // rule when requested with the slash (308, then 410) — a redirect
-      // cannot carry a 410, and a two-hop answer that ends in "gone" is the
-      // right answer for a URL nobody should keep linking.
-      { source: "/:path+/", destination: "/:path+", permanent: true },
+      // 308 it used. The lookahead steps around the 410 paths: redirects run
+      // before rewrites, so without it `/vibro-acoustic-chair/` was a 308 to
+      // the bare path and only then a 410. Rewrite sources match the slash
+      // optionally, the same as redirect sources, so the carved-out paths
+      // answer 410 in one hop in both forms. GONE_PATTERN is the one list.
+      {
+        source: `/:path((?!${GONE_PATTERN}/$).+)/`,
+        destination: "/:path",
+        permanent: true,
+      },
     ];
   },
 
@@ -193,13 +278,15 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
-      // 410 Gone — approved, Ben, Aug 2026. Furniture-shopping traffic the
-      // practice cannot use; see the decision in QUERY-TO-PAGE-MAP.md.
-      { source: "/vibro-acoustic-chair", destination: "/api/gone" },
-      // WordPress's numeric auto-slugs (`/6200-2/`): ~30 of the ~55 posts.
-      // Nothing to carry over, so they are retired by pattern.
-      { source: "/:n(\\d+)-:m(\\d+)", destination: "/api/gone" },
-      { source: "/:n(\\d+)", destination: "/api/gone" },
+      // 410 Gone, one rule, the paths in GONE_PATTERN:
+      // - /vibro-acoustic-chair — approved, Ben, Aug 2026. Furniture-shopping
+      //   traffic the practice cannot use; the decision is in
+      //   QUERY-TO-PAGE-MAP.md.
+      // - /positive-outcomes-from-vibro-acoustic-therapy-research — the one
+      //   post on the same subject (Ben, 2026-10-13), retired with it.
+      // - WordPress's numeric auto-slugs (`/6200-2/`): 34 of the 56 posts.
+      //   Nothing to carry over, so they are retired by pattern.
+      { source: `/:gone(${GONE_PATTERN})`, destination: "/api/gone" },
     ];
   },
 };

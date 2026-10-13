@@ -60,6 +60,7 @@ npm run check:layout         # clipped text / overlap / overflow, every route
 npm run check:cwv            # LCP / CLS / TBT per template — production build only
 npm run check:fonts          # what the font swap moves — production build only
 npm run check:links          # inbound links, depth, PageRank — production build only
+npm run check:redirects      # every legacy URL, both slash forms, one hop — production build only
 ```
 
 ### Never edit source, or start a second server, while a check is running
@@ -82,6 +83,19 @@ check, they just make its result describe nothing:
 The general shape: these two mistakes invalidate results rather than failing
 loudly, so nothing tells you afterwards. Sequence the work instead — finish
 editing, then verify.
+
+### `npm run check:redirects`
+
+The legacy redirect map in `next.config.ts`, requested row by row against a
+production build served by `next start` (same setup as `check:links` below).
+Every legacy WordPress URL is requested with and without its trailing slash
+and must answer in one hop: a 301 to the expected destination, or a 410 for
+the retired rows. Every destination is then fetched and must answer 200, and
+every source string in the config must appear exactly once. The expectation
+table is the script's own, written from the decisions in
+`QUERY-TO-PAGE-MAP.md`, so a wrong edit to the config fails here rather than
+being read back as correct. Run it after any change to `redirects()` or
+`rewrites()`, and after renaming or removing any page a row points at.
 
 ### `npm run check:cwv` and `npm run check:links`
 
