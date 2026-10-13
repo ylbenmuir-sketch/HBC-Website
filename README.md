@@ -465,6 +465,28 @@ All page copy that varies by entity is data-driven:
 | `lib/team.ts` | `/about/team` grid + `/about/team/[slug]` profiles |
 | `lib/resources.ts` | `/resources` cards + `/resources/[slug]` articles (homework-battles seeded) |
 
+### Voice: lead with the service (Ben, Oct 2026)
+
+Copy leads with what Harmonized does, stated plainly, and the boundary
+statement goes where a visitor is actually asking the boundary question. The
+homepage hero reads "Harmonized Brain Centers offers LENS neurofeedback…",
+never "is a wellness practice offering gentle LENS neurofeedback…": a
+qualifier in a hero, an H1, a first paragraph or the first sentence of an
+answer is the practice apologising for its service before describing it. The
+wellness-service boundary has its homes — the footer disclaimer (verbatim,
+always), /faq answer 10 and the matching paragraphs on `/` and
+`/lens-neurofeedback` (where it is the *second* sentence, after what we
+offer), `/is-lens-safe`, the limits `note` at the foot of every concern
+page, the note under every article — and it is said once, there, without
+flinching. "Gentle" stays where it describes a session ("gentle and
+noninvasive — nothing enters the body"; "the same gentle format at every
+age") and goes where it was softening a description of the service. The
+assistant follows the same rule: a limitation sentence belongs on a question
+about limits, safety, claims or medication, and on nothing else
+(`lib/chat/answer.ts`, "The limit, and where it goes"). None of this is a
+safety change — `lib/chat/safety.ts`, `refusals.ts` and the 988 block on
+`/concerns/depression` are untouched by it.
+
 ## The bottom of the screen
 
 Two things want to be anchored to the bottom of the viewport — the homepage's
@@ -639,8 +661,12 @@ over. Phase 11d added the count that made "one limit rather than three" mean
 anything: limitation sentences are counted across the whole answer rather than
 looked for in adjacent pairs, and every row prints its count whether it passes
 or not. A boundary question is exempt, because there the limit *is* the answer.
-It also fails an answer that carries process detail — how a visit opens, what
-the check-in covers — on a question that isn't about sessions or visits.
+Since Oct 2026 the count also has a floor of zero on the factual subset of the
+visitor questions (`FACTUAL` in the script — cost, parking, hours, who you'll
+see, whether we work with kids): a caveat on a question that never asked for
+one fails, because that is the practice apologising for its service. It also
+fails an answer that carries process detail — how a visit opens, what the
+check-in covers — on a question that isn't about sessions or visits.
 
 The §3 refusal list, the off-topic gate probes, the unanswerable topics and the
 medication-substitution phrasings run in the same command, because framing
