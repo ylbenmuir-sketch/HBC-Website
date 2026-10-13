@@ -219,9 +219,13 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         //
         // Nor "Can an EEG diagnose anything?", which was the first fix: the ×3
         // question weight took "diagnose" and "Can you diagnose me?" off
-        // faq:10, and faq:10 ("LENS is offered as a wellness service…") is the
-        // boundary answer that should surface for anything reducing to that
-        // word. Both questions are refused before retrieval, so nothing was
+        // faq:10, and faq:10 (the wellness-service boundary answer — it opens
+        // on what we offer and carries "LENS is offered as a wellness service,
+        // not medical treatment" second, since Oct 2026) is the boundary
+        // answer that should surface for anything reducing to that word;
+        // policy:disclaimer now outranks it for the bare forms ("Is this
+        // medical?", "Do you diagnose?"), which is the same boundary in the
+        // footer's words. Both questions are refused before retrieval, so nothing was
         // broken — but the same rule was applied to "medical" below and
         // applying it to one word and not the other would be arbitrary.
         question: "What are the limits of an EEG?",
@@ -233,8 +237,8 @@ export const MIRRORED_PAGES: MirroredPage[] = [
         id: "guide:medical-first",
         title: "Some of this is medical",
         question: "Could this be something medical instead?",
-        // No bare "medical": faq:10 is the site's boundary answer ("LENS is
-        // offered as a wellness service…") and is what should surface for anything
+        // No bare "medical": faq:10 is the site's boundary answer (with
+        // policy:disclaimer beside it) and is what should surface for anything
         // that reduces to that one word. The ×2 keyword boost took it off
         // faq:10 in the sweep; the word is still in the text, so this passage
         // stays reachable for the questions it is actually about.
@@ -870,10 +874,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "tennessee",
           "neurofeedback",
         ],
-        text: "Help for anxiety, focus, and sleep — without medication. Harmonized Brain Centers is a wellness practice offering gentle LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+        text: "Help for anxiety, focus, and sleep — without medication. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         mirror: [
           "Help for anxiety, focus, and sleep — without medication.",
-          "Harmonized Brain Centers is a wellness practice offering gentle LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+          "Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         ],
       },
     ],

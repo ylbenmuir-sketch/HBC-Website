@@ -403,7 +403,7 @@ export const locations: Location[] = [
       titleLead: "LENS neurofeedback in ",
       titleAccent: "Nashville",
       titleTail: " — Tuesday through Saturday.",
-      sub: "Gentle, passive sessions for adults, children, and families across Davidson County and the towns around it — in a calm center just off I-24, with Saturday mornings on the schedule.",
+      sub: "Passive, brief sessions for adults, children, and families across Davidson County and the towns around it — in a calm center just off I-24, with Saturday mornings on the schedule.",
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
     image: { src: "/images/session-room.jpg", position: "center 55%" },
@@ -489,7 +489,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Nashville, TN",
     metaDescription:
       "LENS neurofeedback in Nashville, TN — gentle, passive sessions Tuesday through Saturday, just off I-24 at Thompson Lane. The first call is free.",
-    dateModified: "2026-09-01",
+    dateModified: "2026-10-12",
   },
   {
     slug: "murfreesboro",
@@ -560,7 +560,7 @@ export const locations: Location[] = [
       titleLead: "LENS neurofeedback for ",
       titleAccent: "Rutherford County",
       titleTail: " — in downtown Murfreesboro.",
-      sub: "Gentle, passive sessions for adults, children, and families from Smyrna to Shelbyville — in a calm center a few minutes off I-24, near Broad Street.",
+      sub: "Passive, brief sessions for adults, children, and families from Smyrna to Shelbyville — in a calm center a few minutes off I-24, near Broad Street.",
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
     plateSpec: "Murfreesboro — reception or session room, natural light",
@@ -651,7 +651,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
       "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children, and families across Rutherford County. The first call is free.",
-    dateModified: "2026-09-01",
+    dateModified: "2026-10-12",
   },
   {
     slug: "franklin",

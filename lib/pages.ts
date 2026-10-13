@@ -74,7 +74,7 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "Help for anxiety, focus, and sleep without medication — gentle LENS neurofeedback for adults and kids across Middle Tennessee.",
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-12",
     type: "WebPage",
     crumb: "Home",
   },
@@ -93,8 +93,8 @@ export const staticPages: StaticPage[] = [
     // 156 chars. "and resilience" is what went: the list was running past
     // 160, and /concerns/stress-resilience is the page that owns that word.
     description:
-      "Gentle LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, and emotional regulation. Short sessions, nothing to practice, no homework.",
-    dateModified: "2026-10-10",
+      "LENS neurofeedback for adults — anxiety and stress, focus, sleep, brain fog, and emotional regulation. Short sessions, nothing to practice, no homework.",
+    dateModified: "2026-10-12",
     type: "CollectionPage",
     crumb: "For adults",
   },
@@ -109,8 +109,8 @@ export const staticPages: StaticPage[] = [
     // 150 chars. "children and teens" keeps it distinct from
     // /concerns/children-school.
     description:
-      "Gentle LENS neurofeedback for children and teens — homework battles, meltdowns, hard transitions, sensory overwhelm. Nothing a child has to get right.",
-    dateModified: "2026-10-10",
+      "LENS neurofeedback for children and teens — homework battles, meltdowns, hard transitions, sensory overwhelm. Nothing a child has to get right.",
+    dateModified: "2026-10-12",
     type: "CollectionPage",
     crumb: "Children & families",
   },
@@ -118,8 +118,8 @@ export const staticPages: StaticPage[] = [
     path: "/lens-neurofeedback",
     title: "LENS Neurofeedback",
     description:
-      "LENS — the Low Energy Neurofeedback System — a gentle, passive wellness service at our Nashville and Murfreesboro centers. What it is, and who it's for.",
-    dateModified: "2026-10-11",
+      "LENS — the Low Energy Neurofeedback System — passive, brief sessions with nothing to practice, at our Nashville and Murfreesboro centers. What it is, and who it's for.",
+    dateModified: "2026-10-12",
     type: "WebPage",
     crumb: "LENS neurofeedback",
   },
@@ -229,7 +229,7 @@ export const staticPages: StaticPage[] = [
     // 149 chars: the topics the fourteen answers actually cover.
     description:
       "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-12",
     type: "FAQPage",
     crumb: "FAQ",
   },

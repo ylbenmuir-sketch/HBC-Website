@@ -263,7 +263,7 @@ export const concerns: Concern[] = [
     titleAccent: "overload",
     who: "Adults & children",
     heroSub:
-      "Gentle LENS neurofeedback for people whose bodies stay on alert long after the moment has passed — and who are tired of being told to just relax.",
+      "LENS neurofeedback for people whose bodies stay on alert long after the moment has passed — and who are tired of being told to just relax.",
     overview: {
       recognize:
         "A body that stays braced long after the stressful moment has passed. Racing thoughts at bedtime. Overreacting to small stressors, and unable to relax even when life is calm.",
@@ -307,9 +307,9 @@ export const concerns: Concern[] = [
     related: ["sleep", "stress-resilience", "trauma"],
     metaTitle: "Neurofeedback for Anxiety in Nashville & Murfreesboro, TN",
     metaDescription:
-      "Gentle LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
+      "LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
     guideHeading: "Why calm doesn't hold.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-12",
   },
   {
     slug: "focus-adhd",
@@ -363,7 +363,7 @@ export const concerns: Concern[] = [
     related: ["children-school", "brain-fog", "emotional-regulation"],
     metaTitle: "Neurofeedback for ADHD in Nashville & Murfreesboro, TN",
     metaDescription:
-      "Gentle LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
+      "LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
     guideHeading: "Why trying harder stops working.",
     dateModified: "2026-10-10",
   },
@@ -450,7 +450,7 @@ export const concerns: Concern[] = [
     related: ["anxiety", "brain-fog", "stress-resilience"],
     metaTitle: "Neurofeedback for Sleep in Nashville & Murfreesboro, TN",
     metaDescription:
-      "Gentle LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
+      "LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
     guideHeading: "Why eight hours isn't rest.",
     dateModified: "2026-10-10",
   },
@@ -462,7 +462,7 @@ export const concerns: Concern[] = [
     titleAccent: "regulation",
     who: "Often children — and their parents",
     heroSub:
-      "Gentle LENS neurofeedback for the child who becomes overwhelmed in seconds and stays upset for hours — and the parents living every meltdown alongside them.",
+      "LENS neurofeedback for the child who becomes overwhelmed in seconds and stays upset for hours — and the parents living every meltdown alongside them.",
     overview: {
       recognize:
         "Becoming overwhelmed quickly. Intense reactions that are hard to stop. Struggling with transitions, and staying upset long after the original problem has passed.",
@@ -506,9 +506,9 @@ export const concerns: Concern[] = [
     related: ["children-school", "anxiety", "trauma"],
     metaTitle: "Neurofeedback for Emotional Regulation in Middle Tennessee",
     metaDescription:
-      "Gentle LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
+      "LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
     guideHeading: "Why it isn't discipline.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-12",
   },
   {
     slug: "brain-fog",
@@ -562,7 +562,7 @@ export const concerns: Concern[] = [
     related: ["sleep", "stress-resilience", "focus-adhd"],
     metaTitle: "Neurofeedback for Brain Fog in Nashville & Murfreesboro, TN",
     metaDescription:
-      "Gentle LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
+      "LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
     guideHeading: "Why the fog comes and goes.",
     dateModified: "2026-10-10",
   },
@@ -618,7 +618,7 @@ export const concerns: Concern[] = [
     related: ["anxiety", "sleep", "brain-fog"],
     metaTitle: "Neurofeedback for Stress in Nashville & Murfreesboro, TN",
     metaDescription:
-      "Gentle LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
+      "LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
     guideHeading: "Why the same week lands differently.",
     dateModified: "2026-10-10",
   },
@@ -630,7 +630,7 @@ export const concerns: Concern[] = [
     titleAccent: "transitions",
     who: "Children & teens",
     heroSub:
-      "Gentle LENS neurofeedback for the bright kid who can't show what they know — morning battles, meltdowns, sensory overwhelm, and a child trying hard and still struggling.",
+      "LENS neurofeedback for the bright kid who can't show what they know — morning battles, meltdowns, sensory overwhelm, and a child trying hard and still struggling.",
     overview: {
       recognize:
         "A bright kid who can't show what they know. Morning battles, meltdowns, sensory overwhelm, low frustration tolerance — a child trying hard and still struggling.",
@@ -674,9 +674,9 @@ export const concerns: Concern[] = [
     related: ["focus-adhd", "emotional-regulation", "anxiety"],
     metaTitle: "Neurofeedback for School Struggles in Middle Tennessee",
     metaDescription:
-      "Gentle LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
+      "LENS neurofeedback support for children and school struggles — for bright kids who are trying hard and still struggling.",
     guideHeading: "Why school is the hard part.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-12",
   },
   {
     slug: "trauma",
@@ -686,7 +686,7 @@ export const concerns: Concern[] = [
     titleAccent: "stress",
     who: "Adults & children",
     heroSub:
-      "Gentle LENS neurofeedback for people whose past keeps the present from feeling safe — staying vigilant in rooms where nothing is wrong, with sleep, focus, and calm carrying the weight.",
+      "LENS neurofeedback for people whose past keeps the present from feeling safe — staying vigilant in rooms where nothing is wrong, with sleep, focus, and calm carrying the weight.",
     overview: {
       recognize:
         "When the past keeps the present from feeling safe. Staying vigilant in rooms where nothing is wrong — with sleep, focus, and calm carrying the weight.",
@@ -730,9 +730,9 @@ export const concerns: Concern[] = [
     related: ["anxiety", "sleep", "emotional-regulation"],
     metaTitle: "Neurofeedback for Trauma-Related Stress in Middle Tennessee",
     metaDescription:
-      "Gentle LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
+      "LENS neurofeedback support for trauma-related stress — quiet, predictable sessions that never ask you to retell or relive anything.",
     guideHeading: "Why the alarm stays on.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-12",
   },
   {
     /*

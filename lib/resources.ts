@@ -325,7 +325,7 @@ export const resources: Resource[] = [
     slug: "homework-battles",
     cluster: "focus",
     datePublished: "2026-07-13",
-    dateModified: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "For parents",
     title: "Homework battles: what's really happening in a stuck brain",
     crumbLabel: "Homework battles",
@@ -376,7 +376,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is one gentle option among several, and it belongs after the paragraphs above rather than instead of them. It’s a wellness service — small sensors, a very low-energy feedback signal, and nothing asked of the person in the chair. There’s nothing a child has to get right in a session: no sitting perfectly still, no concentrating, no being corrected. Kids read, draw, or just be kids while it runs, and a parent stays for the whole thing.",
+        text: "A LENS session is small sensors, a very low-energy feedback signal, and nothing asked of the person in the chair. There’s nothing a child has to get right: no sitting perfectly still, no concentrating, no being corrected. Kids read, draw, or just be kids while it runs, and a parent stays for the whole thing. It belongs after the paragraphs above rather than instead of them.",
       },
       {
         type: "p",
@@ -403,6 +403,7 @@ export const resources: Resource[] = [
     slug: "exhausted-after-eight-hours",
     cluster: "sleep",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "Sleep",
     title: "Why you're exhausted after eight hours of sleep",
     crumbLabel: "Exhausted after eight hours",
@@ -456,7 +457,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service, not a treatment for sleep disorders, and it belongs after the rule-out above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits.",
+        text: "Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits. LENS isn’t a treatment for sleep disorders, and it belongs after the rule-out above rather than instead of it.",
       },
       {
         type: "p",
@@ -483,6 +484,7 @@ export const resources: Resource[] = [
     slug: "the-3am-waking",
     cluster: "sleep",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "Sleep",
     title: "The 3 a.m. waking, and why it isn’t random",
     crumbLabel: "The 3 a.m. waking",
@@ -540,7 +542,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service, not a treatment for sleep disorders, and it belongs after the paragraph above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home.",
+        text: "Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home. LENS isn’t a treatment for sleep disorders, and it belongs after the paragraph above rather than instead of it.",
       },
       {
         type: "p",
@@ -567,6 +569,7 @@ export const resources: Resource[] = [
     slug: "when-sleep-hygiene-isnt-it",
     cluster: "sleep",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "Sleep",
     title: "When sleep hygiene isn’t the problem",
     crumbLabel: "When sleep hygiene isn’t it",
@@ -614,7 +617,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "After both of those, rather than instead of either. LENS is a wellness service and not a treatment for sleep disorders. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform, and nothing to keep up with at home, which is worth saying plainly to somebody who has just spent six weeks keeping something up.",
+        text: "Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform, and nothing to keep up with at home, which is worth saying plainly to somebody who has just spent six weeks keeping something up. LENS isn’t a treatment for sleep disorders, and it belongs after both of those rather than instead of either.",
       },
       {
         type: "p",
@@ -669,6 +672,7 @@ export const resources: Resource[] = [
     slug: "bad-at-school",
     cluster: "focus",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "For parents",
     title: "When a bright kid starts saying “I'm just bad at school”",
     crumbLabel: "“Bad at school”",
@@ -720,7 +724,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service and one gentle option among several. There’s nothing a child has to get right in a session — no sitting perfectly still, no concentrating, no being corrected — which matters more here than it may sound, because a child who has already concluded they’re bad at things does not need one more room where they can fail.",
+        text: "There’s nothing a child has to get right in a LENS session — no sitting perfectly still, no concentrating, no being corrected — which matters more here than it may sound, because a child who has already concluded they’re bad at things does not need one more room where they can fail.",
       },
       {
         type: "p",
@@ -748,6 +752,7 @@ export const resources: Resource[] = [
     slug: "the-last-ten-percent",
     cluster: "focus",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "For adults",
     title: "The last ten percent: why finishing is a different job from starting",
     crumbLabel: "The last ten percent",
@@ -803,7 +808,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service — small sensors, a very low-energy feedback signal, and nothing to practise between visits. There’s nothing to perform in a session and no homework to keep up with, which is worth stating plainly to an audience whose whole difficulty is that the last thing they need is one more system to maintain.",
+        text: "A LENS session is small sensors, a very low-energy feedback signal, and nothing to practise between visits. There’s nothing to perform and no homework to keep up with, which is worth stating plainly to an audience whose whole difficulty is that the last thing they need is one more system to maintain.",
       },
       {
         type: "p",
@@ -908,6 +913,7 @@ export const resources: Resource[] = [
     slug: "told-to-just-relax",
     cluster: "anxiety",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "For adults",
     title: "Why you can’t relax when there’s nothing to relax about",
     crumbLabel: "“Just relax”",
@@ -968,7 +974,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service and one gentle option among several. An anxious nervous system often feels like a system working harder than it needs to, and a session asks nothing of it — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits. Most people, including young children, feel nothing at all.",
+        text: "An anxious nervous system often feels like a system working harder than it needs to, and a LENS session asks nothing of it — small sensors, a very low-energy feedback signal, nothing to perform and nothing to practise between visits. Most people, including young children, feel nothing at all.",
       },
       {
         type: "p",
@@ -998,6 +1004,7 @@ export const resources: Resource[] = [
     slug: "braced-for-something",
     cluster: "anxiety",
     datePublished: "2026-08-23",
+    dateModified: "2026-10-12",
     tag: "For adults",
     title: "Why your body stays braced when nothing is happening",
     crumbLabel: "A body that stays braced",
@@ -1050,7 +1057,7 @@ export const resources: Resource[] = [
       { type: "h2", text: "Where LENS fits" },
       {
         type: "p",
-        text: "LENS is a wellness service, not a treatment for anything, and it belongs after the paragraph above rather than instead of it. Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home.",
+        text: "Sessions are quiet and passive — small sensors, a very low-energy feedback signal, nothing to perform and nothing to keep up with at home. LENS isn’t a treatment for anything, and it belongs after the paragraph above rather than instead of it.",
       },
       {
         type: "p",

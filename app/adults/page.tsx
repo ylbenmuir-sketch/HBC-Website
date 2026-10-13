@@ -93,8 +93,8 @@ export default function AdultsPage() {
               You&rsquo;re holding the job, the family, the calendar. And
               you&rsquo;re exhausted, foggy, wired at midnight, or a shorter
               version of yourself than you&rsquo;d like to be. That&rsquo;s
-              what we work on &mdash; with gentle LENS neurofeedback, in
-              sessions that ask nothing of you.
+              what we work on &mdash; with LENS neurofeedback, in sessions
+              that ask nothing of you.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />

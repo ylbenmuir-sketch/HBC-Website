@@ -30,7 +30,8 @@ export default function ChildrenFamiliesPage() {
             <p className="sub">
               Homework battles, meltdowns, hard transitions, sensory overwhelm
               &mdash; bright kids trying hard and still struggling. LENS
-              neurofeedback is gentle, and we work with the whole family.
+              neurofeedback asks nothing of your child, and we work with the
+              whole family.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
