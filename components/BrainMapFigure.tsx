@@ -36,12 +36,14 @@ import {
  * this way.") is a Verifiable: [CONFIRM] in draft, absent in production until
  * verified. The coming-soon line is written to stand without it.
  *
- * ## The chart at phone widths
+ * ## The chart at narrow widths
  *
- * The figure scrolls sideways rather than shrinking the chart past
- * legibility — see `.bmc` in globals.css and the note in BrainMapChart.tsx.
- * The scroller is a labelled, focusable region so a keyboard can reach it
- * where it scrolls; on a wide screen it is simply the chart's box.
+ * Between 600px and 920px the figure scrolls sideways rather than shrinking
+ * the chart past legibility; below 600px the whole chart fits the container
+ * and the site-label group is hidden (Ben, 2026-10-13) — see `.bmc` in
+ * globals.css and the note in BrainMapChart.tsx. The scroller is a
+ * labelled, focusable region so a keyboard can reach it where it scrolls;
+ * elsewhere it is simply the chart's box.
  */
 export default function BrainMapFigure({
   priority = false,
@@ -82,7 +84,7 @@ export default function BrainMapFigure({
         <div
           className="bmc-scroll"
           role="region"
-          aria-label="Sample recording chart — scrolls sideways on a narrow screen"
+          aria-label="Sample recording chart"
           tabIndex={0}
         >
           <BrainMapChart />

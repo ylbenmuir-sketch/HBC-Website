@@ -1855,10 +1855,13 @@ body[data-bottombar] footer.site {
    The bar chart a client receives today, full width, with the heat map as a
    coming-soon preview beneath it. Full width because the chart is drawn at
    1400 units across: in the half-width column the heat map used to sit in it
-   would scale its labels to ~5px. Below 920px of container width the figure
-   scrolls sideways rather than shrinking further — the SVG holds its minimum
-   width and the box clips. check:layout ignores a region that scrolls on
-   purpose; the SVG's own aria-label describes the chart regardless.
+   would scale its labels to ~5px. Between 600px and 920px of container width
+   the figure scrolls sideways rather than shrinking further — the SVG holds
+   its minimum width and the box clips (check:layout ignores a region that
+   scrolls on purpose). Below 600px (Ben, 2026-10-13) the whole chart shows
+   at container width, no scroll, with the 21 site labels hidden: they
+   collide at that scale. The µV axis, the range band and the legend stay,
+   and the SVG's own aria-label names the sites regardless.
    Only the preview *image* is faded: the eyebrow and line beside it keep
    their full contrast (the sweep's 4.5:1 floor). */
 .bm-figure { margin-top: 48px; }
@@ -1869,6 +1872,11 @@ body[data-bottombar] footer.site {
 .bmc-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 4px; background: #fbf8f1; }
 .bmc-scroll:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
 .bmc-svg { display: block; width: 100%; min-width: 920px; height: auto; aspect-ratio: 1400 / 530; }
+@media (max-width: 599px) {
+  .bmc-scroll { overflow-x: visible; }
+  .bmc-svg { min-width: 0; }
+  .bmc-sites { display: none; }
+}
 .bm-soon { display: flex; gap: 28px; align-items: center; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
 .bm-soon-img { flex: none; width: 200px; opacity: 0.55; }
 .bm-soon-copy p { font-size: 15px; color: var(--slate); margin: 10px 0 0; max-width: 56ch; }

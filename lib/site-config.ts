@@ -930,17 +930,19 @@ export const BRAIN_MAP_CLAIM: Verifiable = {
 export const BRAIN_MAP_HEATMAP_LIVE = false;
 
 /**
- * The coming-soon line's claim. Unverified, and gated harder than
- * BRAIN_MAP_CLAIM above because it is the bare superlative that note warns
- * against: it renders [CONFIRM] in draft and not at all in production until
- * Ben verifies the basis for it. The line it follows ("Your brain in full
- * color — the same recording, mapped.") reads complete without it. Only
- * rendered while BRAIN_MAP_HEATMAP_LIVE is false — the block it sits in is
- * the coming-soon preview.
+ * The coming-soon line's claim. Confirmed by Ben (2026-10-13) in this exact
+ * wording — "the only", not "the first" — so it ships in production. It
+ * stays a `Verifiable` so that flipping `verified` back to false takes the
+ * sentence off both pages and fails the REQUIRE_VERIFIED_CONTENT build in
+ * one move; the line it follows ("Your brain in full color — the same
+ * recording, mapped.") reads complete without it. Only rendered while
+ * BRAIN_MAP_HEATMAP_LIVE is false — the block it sits in is the coming-soon
+ * preview. Still the one superlative on the site that BRAIN_MAP_CLAIM's
+ * note warns against: approved wording, do not tighten or extend it.
  */
 export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
-  value: "The first LENS practice in the country to show it this way.",
-  verified: false,
+  value: "The only LENS practice in the country to show it this way.",
+  verified: true,
   note: "[Confirm basis for the claim]",
 };
 

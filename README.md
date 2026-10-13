@@ -1059,13 +1059,18 @@ receives: `public/images/brain-map-chart.svg` as Ben supplied it, inlined as
 `components/BrainMapChart.tsx` (viewBox kept, fixed size dropped,
 `preserveAspectRatio="xMidYMid meet"`) so it inherits DM Sans and costs no
 request. Caption: "A sample recording — 21 sites, measured in microvolts. Not
-a diagnosis." Below 920px of container width the figure scrolls sideways
-instead of shrinking the chart past legibility. Beneath it the heat map
+a diagnosis." Between 600px and 920px of container width the figure scrolls
+sideways instead of shrinking the chart past legibility; below 600px the
+whole chart fits the container and the 21 site labels (grouped as
+`.bmc-sites`) are hidden — the axis, range band, legend and aria-label stay.
+Beneath it the heat map
 (`/images/brain-map-heat.png`) is a coming-soon block: smaller, the image at
 reduced opacity, eyebrow "COMING SOON", line "Your brain in full color — the
-same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` only when
-verified (`[CONFIRM]` in draft, absent in production; the build's
-`REQUIRE_VERIFIED_CONTENT` check asks for it while the block renders).
+same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` — confirmed
+by Ben on 2026-10-13 as "The only LENS practice in the country to show it
+this way." and rendering in production (flip `verified` back to false and
+it goes `[CONFIRM]` in draft, absent in production, and the build's
+`REQUIRE_VERIFIED_CONTENT` check asks for it again while the block renders).
 The section headline, the recording-and-plan copy and the free-call CTA sit
 above and are unchanged; the block never competes with them.
 

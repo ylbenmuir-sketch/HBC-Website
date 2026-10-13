@@ -279,9 +279,9 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
       `components/BrainMapChart.tsx`), which is what a client receives today.
       `BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts` swaps them back when
       the software ships — README → "The Brain Map imagery".
-- [ ] **`BRAIN_MAP_HEATMAP_CLAIM`** — "The first LENS practice in the country
-      to show it this way." in the coming-soon block; `[CONFIRM]` in draft,
-      hidden in production until the basis for it is verified.
+- [x] **`BRAIN_MAP_HEATMAP_CLAIM`** — "The only LENS practice in the country
+      to show it this way." in the coming-soon block. Confirmed by Ben
+      (2026-10-13) in that wording; renders in production.
 - [ ] **Brain lobe function diagram** (`/how-lens-works`) — still a
       `PlaceholderPlate`. Fix the F3/F8 mislabel, the empty Frontal Lobe
       bullet, and the diagnostic electrode labels first — see Phase 7.5.
