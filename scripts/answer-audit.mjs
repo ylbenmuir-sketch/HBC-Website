@@ -197,6 +197,41 @@ const DEMAND = [
   "Does LENS help with depression?",
 ];
 
+/**
+ * The factual subset of VISITOR (Oct 2026): questions that ask nothing about
+ * limits, where the right number of limitation sentences is zero.
+ *
+ * The 11d count was a ceiling of one, and a ceiling of one on "what does it
+ * cost?" let the old website habit through — the practice qualifying its
+ * service on a question that never asked. Ben's voice brief moved that
+ * qualifier out of the homepage hero and the FAQ openings, and the prompt's
+ * limit section now says where a limit belongs at all. This set is what makes
+ * that checkable: any of these carrying a caveat fails.
+ *
+ * Deliberately not here: "Is it safe?", "Does it hurt?" and "Is this safe for
+ * kids?" (safety is a limits question), "Can I keep seeing my therapist?" and
+ * "Is this therapy or medical treatment?" (boundary questions, exempt the
+ * other way), "What is the Brain Map?" and "How many sessions will I need?"
+ * (their honest answers carry "not a test" / "varies" by design), and
+ * "What if I'm not sure it's right for us?" (the risk reversal is the answer).
+ */
+const FACTUAL = new Set([
+  "What happens at a first visit?",
+  "What does it cost?",
+  "Do you take insurance?",
+  "Can I use my HSA?",
+  "Where are you located?",
+  "Is there parking?",
+  "Do you have a center in Franklin?",
+  "Do I have to do anything during the session?",
+  "Can my child come?",
+  "Who will I see?",
+  "What's your phone number?",
+  "How are your practitioners trained?",
+  "Do you work with adults?",
+  "What happens on the free call?",
+]);
+
 /* ------------------------------------------------------------------ */
 /* The checks                                                          */
 /* ------------------------------------------------------------------ */
@@ -420,7 +455,7 @@ function wrap(text, indent = 6) {
   return out.map((l) => pad + l).join("\n");
 }
 
-async function audit(label, questions, { proof = false, limitFloor = 0 } = {}) {
+async function audit(label, questions, { proof = false, limitFloor = 0, factual = new Set() } = {}) {
   console.log(`\n${"=".repeat(78)}\n${label}\n${"=".repeat(78)}`);
   const rows = [];
 
@@ -467,7 +502,15 @@ async function audit(label, questions, { proof = false, limitFloor = 0 } = {}) {
     const limits = parts.filter((s) => LIMITATION.test(s)).length;
     const boundary = BOUNDARY_QUESTION.test(question);
     if (!boundary) {
-      if (limits > 1) failures.push(`${limits} limitation sentences (max 1)`);
+      // A factual question carries none; anything else carries at most one.
+      const ceiling = factual.has(question) ? 0 : 1;
+      if (limits > ceiling) {
+        failures.push(
+          `${limits} limitation sentence${limits === 1 ? "" : "s"} (max ${ceiling}${
+            ceiling === 0 ? " — a factual question carries none" : ""
+          })`
+        );
+      }
       // And on the demand set, not none. "Does it help with ADHD?" is a yes/no
       // question the answer does not say no to; strip the boundary out of it
       // entirely and what is left reads as a yes. One is the number, from both
@@ -1639,7 +1682,7 @@ if (process.argv.includes("--retrieval")) {
   process.exit(guardrailFailures.length === 0 ? 0 : 1);
 }
 
-const visitor = await audit("25 VISITOR QUESTIONS", VISITOR);
+const visitor = await audit("25 VISITOR QUESTIONS", VISITOR, { factual: FACTUAL });
 const demand = await audit("THE DEMAND SET", DEMAND, { proof: true, limitFloor: 1 });
 const concerns = await audit("THE CONCERN SET", CONCERNS, { proof: true });
 const all = [...visitor, ...demand, ...concerns];
