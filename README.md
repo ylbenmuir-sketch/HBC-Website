@@ -293,9 +293,13 @@ submission requires Supabase credentials.
 | `SUPABASE_URL` | Supabase project URL (Settings → API). Server-side only. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key used by `app/api/consultation/route.ts` to insert form submissions. **Never expose to the browser; never commit.** |
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for canonical tags, `og:url`, `sitemap.xml`, `robots.txt`, and JSON-LD. Apex form, no trailing slash — `https://harmonizedbraincenterstn.com`. Defaults to that value; set it explicitly in the deploy environment. |
-| `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to announce each new consultation request. The email carries no lead content — it says one arrived and links to the row. Server-side only. Unset = leads save but nobody is notified. |
-| `LEADS_NOTIFY_EMAIL` | Inbox that receives new consultation requests. Required alongside `RESEND_API_KEY`. |
+| `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new lead to the clinic — name, phone, email, concerns, center, best time, and note, with reply-to set to the visitor. Server-side only. Unset = leads save but nobody is notified. |
+| `LEADS_NOTIFY_EMAIL` | Default inbox for new leads. Required alongside `RESEND_API_KEY`. Accepts several addresses separated by commas. |
+| `LEADS_NOTIFY_EMAIL_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | Optional per-center inboxes. A lead goes to the inbox for its `preferred_center`; a center with none set falls back to `LEADS_NOTIFY_EMAIL`. Guide signups and Concierge always use the default. Edit in Vercel, then redeploy. |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
+| `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
+| `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
+| `BOOKING_CALENDAR_URL` | Optional. Self-scheduling link (e.g. a Google Calendar appointment schedule) shown as "Pick a time for your call" on the contact form's confirmation card. Read server-side on `/contact`. |
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
@@ -306,8 +310,11 @@ submission requires Supabase credentials.
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run the migration in `supabase/migrations/0001_consultation_requests.sql`
-   (SQL Editor → paste → run, or `supabase db push` with the CLI).
+2. Run the migrations in `supabase/migrations/` in order — `0001` creates
+   the table, `0002` adds `source`, `0003` adds `chat_sessions`, `0004`
+   relaxes the consultation shape for the two-step form (SQL Editor → paste →
+   run, or `supabase db push` with the CLI). All four are applied to the
+   live project as of 2026-10-12.
 3. Copy the project URL and service-role key into `.env.local`.
 
 Submissions land in `public.consultation_requests`
@@ -320,17 +327,105 @@ One table holds two row shapes, told apart by `type`:
 
 | `type` | Written by | Required |
 | --- | --- | --- |
-| `consultation` | `components/ContactForm.tsx` | `helping_who`, `first_name`, `phone` (`email` optional) |
+| `consultation` | `components/ContactForm.tsx` (and the chat) | `first_name`, `phone`, `preferred_center`; `helping_who`, `concerns`, `note`, `email`, `best_time` optional |
 | `guide` | `components/GuideCta.tsx` | `email` only |
 
 A check constraint enforces each shape, so the nullable columns can't be
-abused. Both kinds notify `LEADS_NOTIFY_EMAIL` (`lib/lead-notification.ts`),
-and **neither email carries any of what was collected.** Each says which kind
-of request arrived and links to the Supabase row; the name, phone, concerns,
-free-text note, and email address all stay in the table. The table is already
-the source of truth, so copying any of it into an inbox would spread it
-without adding anything. The link is derived from `SUPABASE_URL`, so there is
-no extra variable to set.
+abused. Both kinds are emailed (`lib/lead-notification.ts`): a consultation
+goes to the inbox for the center the visitor chose, carrying the lead so the
+office can call from a phone without opening Supabase; a guide signup goes to
+the default inbox with the address. The table stays the record of what was
+submitted. See "Environment variables" above for the per-center routing.
+
+`preferred_center` is required because the inbox and the Dialpad line are
+both chosen by it. The form always sends one ("Not sure yet" by default);
+the chat records null when a visitor declines the question, and the route
+writes "Not sure yet" in its place, so both channels mean the same thing by
+the same string.
+
+### The contact form, in three steps
+
+`components/ContactForm.tsx` (Oct 2026). The old single form asked who the
+call was for and what was bringing them in *before* it asked for a phone
+number, so anyone who stopped at the chips left nothing behind. Now:
+
+1. **Request your free call** — first name, phone, preferred center, best
+   time (defaults "Any time"), and an email behind "+ Add an email address".
+   Submit `POST`s `/api/consultation`, which saves the row and sends the lead
+   email at once. **That email is the lead.** The response carries the row's
+   id.
+2. **Optional context** — who we're helping, what's bringing you in, a note.
+   Nothing is pre-selected. "Save these details" `PATCH`es
+   `/api/consultation/<id>` — the same row, never a second one — and the
+   endpoint accepts *only* `helping_who`, `concerns` and `note`; any other
+   key (a name, a phone, a center, a time) is refused with a 400, and only
+   form-sourced consultation rows can be patched. "Skip" sends nothing. This
+   step is never shown unless step one returned an id: if the row failed to
+   save but the email or the platform took the lead, the visitor goes
+   straight to step three.
+3. **The video** — "While you wait for our call — here's what a first visit
+   actually looks like" (`lib/videos.ts`, `components/VideoEmbed.tsx`), with
+   the what-happens-next steps and both centers' numbers beneath it. Both
+   exits from step two land here.
+
+There is deliberately **no second email** when step two saves: the step-one
+email says those answers may follow and points at the saved request. The
+platform forward (`lib/inquiry-intake.ts`) needs who-we're-helping, so a form
+lead is forwarded from the PATCH when that answer arrives, and not at all if
+the visitor skips — see "What Ben has to decide" for the open question.
+
+Steps two and three mount after the reveal observer ran for the route;
+`components/RevealOnScroll.tsx` watches the DOM for exactly that, and
+`npm run check:contact` proves both panels reach opacity 1 at 320, 768 and
+1440px on every path.
+
+#### `npm run check:contact`
+
+Drives the whole flow in a headless Chrome against a production build and
+the real Supabase project — save, skip and close-the-tab at three widths,
+the chat's write path, the PATCH refusals, and the video actually playing —
+and asserts one row and one email per submission, then deletes the rows it
+created, by id. The email provider is a stand-in preloaded into the server
+(`scripts/contact-flow/mock-resend.mjs`) that records every send instead of
+delivering it:
+
+```bash
+npm run build
+MOCK_RESEND_LOG=/tmp/resend.jsonl \
+  NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
+  RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
+  LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  npx next start -p 3123
+CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
+  LEADS_NOTIFY_EMAIL=office@example.test \
+  LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
+```
+
+It writes seven rows named `E2E-…` and refuses to run unless
+`CHECK_CONTACT_ALLOW_PROJECT` names the project in `SUPABASE_URL`, for the
+same reason `check:chat` refuses a non-empty table. Pass `--keep` to leave
+the rows for inspection.
+
+### The first-visit video
+
+One record in `lib/videos.ts` feeds the facade on step three and the
+`VideoObject` node in `/contact`'s schema graph. The page never loads
+YouTube's player on arrival: `components/VideoEmbed.tsx` renders the
+committed poster (`public/images/videos/<id>.jpg`, fetched once and
+optimized by `npm run fetch:posters`) and a real `<button>`; the click
+creates the `youtube-nocookie.com` iframe with `autoplay=1`. No autoplay on
+arrival, no third-party request before the click, and the site-wide
+`Permissions-Policy` header needs no change — it denies camera, microphone,
+geolocation and payment, none of which a player asks for; verified in a
+production build by `check:contact` watching the player fetch media with no
+policy violation in the console.
+
+The running time and upload date are Verifiables (`VIDEO_APPOINTMENT_ONE_*`
+in `lib/site-config.ts`): draft mode shows the gold tags beside the caption,
+production shows no duration, and the schema omits `duration` and
+`uploadDate` until Ben confirms them. `check:schema` notes both every run
+until then — Google needs `uploadDate` for the video rich result.
 
 The two remain separate messages: a guide signup is deliberately *not* shaped
 like a callback, so nobody phones someone who only wanted a PDF.
@@ -399,6 +494,27 @@ the form would have promised it. Emailing her a copy needs the sending domain
 verified in Resend (SPF, DKIM, DMARC published and green) and
 `LEADS_NOTIFY_FROM` moved onto it. Until then, don't add that send, and don't
 write copy that promises one.
+
+### Confirmation text and the pick-a-time link
+
+Two optional pieces sit after a consultation request has landed, and neither
+is a destination: if either fails, the form still succeeds and nothing is
+logged about the visitor.
+
+**The text** (`lib/sms-confirmation.ts`) goes to the number she gave, from the
+Dialpad line of the center she chose (`DIALPAD_SMS_FROM_<CENTER>`, falling back
+to `DIALPAD_SMS_FROM`). Because it says "we got your request", it is sent only
+after at least one of the three destinations accepted the submission, never in
+parallel with them. It is skipped when the honeypot was filled, when the number
+is not a ten-digit US number, and for guide signups. Dialpad needs the
+company's A2P 10DLC registration approved before carriers will deliver
+business texts; the API answers 200 either way, so test with a real handset.
+Both the form and the chat's read-back tell the visitor the text is coming.
+
+**The link** (`BOOKING_CALENDAR_URL`) renders as "Pick a time for your call"
+on the confirmation card so she can lock a callback slot herself. A Google
+Calendar appointment schedule is the simplest source: create one on the
+clinic's calendar, copy its booking-page link, set the variable, redeploy.
 
 ## Content verification & draft mode
 
@@ -910,7 +1026,9 @@ Also replace when assets exist:
 /locations/[slug]       nashville · murfreesboro · franklin (JSON-LD on each)
 /stories                client stories (sample copy)
 /faq                    full FAQ
-/contact                form → POST /api/consultation → Supabase
+/contact                three-step form → POST /api/consultation (saves the
+                        lead, sends the email) → PATCH /api/consultation/[id]
+                        (optional context, same row) → the first-visit video
 /resources              learning center
 /resources/[slug]       articles (homework-battles seeded)
 /resources/feed.xml     RSS 2.0 of the published articles
