@@ -76,7 +76,7 @@ ${DISCLAIMER}
 ## Centers
 
 ${centers.join("\n")}
-${line("Franklin, TN", "/locations/franklin", "Coming soon — waitlist only.")}
+${line("Franklin, TN", "/locations/franklin", "Coming soon — not yet booking. Nashville and Murfreesboro are open now; plans transfer when Franklin opens.")}
 ${line(pageByPath("/concierge").title, "/concierge", pageByPath("/concierge").description)}
 
 ## What LENS is

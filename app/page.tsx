@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
+import BrainMapFigure from "@/components/BrainMapFigure";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
 import ConcernRail from "@/components/ConcernRail";
@@ -752,10 +753,18 @@ export default function HomePage() {
           supports the page instead of competing with it. The claim sentence
           is gated like every other unverified fact. BrainMapCta left with
           the copy: it has four homes (components/Buttons.tsx), and the fourth
-          is /brain-map now. */}
+          is /brain-map now.
+
+          The image is BrainMapFigure's decision (Oct 2026, temporary): the
+          bar chart a client receives today, full width under the copy, with
+          the heat map as a coming-soon preview beneath it. The copy, the
+          CTAs and their order are unchanged; the section stopped being a
+          .split because the chart is drawn 1400 units wide and is not
+          legible in half a column. BRAIN_MAP_HEATMAP_LIVE in
+          lib/site-config.ts puts the heat map back. */}
       <section className="sec home-brain-map">
-        <div className="wrap split">
-          <div className="rv">
+        <div className="wrap">
+          <div className="sec-head rv" style={{ marginBottom: 0 }}>
             <div className="eyebrow">What you walk away with</div>
             <h2>A written plan &mdash; and the recording it&rsquo;s built from.</h2>
             <p>
@@ -778,20 +787,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="rv">
-            {/* Pinned to the render's own 1184×860 ratio (height auto overrides
-                the .split 500px) so `cover` fills the frame without cropping —
-                a cropped diagram loses electrode labels and the legend. */}
-            <PhotoFrame
-              src="/images/brain-map-heat.png"
-              alt={`A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at ${BRAIN_MAP_POINTS} points across the brain`}
-              aspect="1184 / 860"
-              style={{ height: "auto" }}
-            />
-            {/* Not gated: the framing has to travel with the image, whether the
-                image is the real render or the plate standing in for it. */}
-            <p className="micro">
-              A picture of electrical activity &mdash; not a diagnosis.
-            </p>
+            <BrainMapFigure />
           </div>
         </div>
       </section>
@@ -948,7 +944,8 @@ export default function HomePage() {
                     <ConfirmTag>{FRANKLIN_OPENING.note!}</ConfirmTag>
                   </b>
                   <br />
-                  Join the waitlist for founding-client openings.
+                  Start at Nashville or Murfreesboro now and transfer when we
+                  open.
                 </>
               }
             />

@@ -60,10 +60,10 @@ export default function LocationsPage() {
                       <br />
                       {(SHOW_DRAFT_CONTENT || !isDraftText(loc.cardExtra)) &&
                         loc.cardExtra}
-                      {loc.waitlistLine && (
+                      {loc.untilOpenLine && (
                         <>
                           <br />
-                          {loc.waitlistLine}
+                          {loc.untilOpenLine}
                         </>
                       )}
                     </>

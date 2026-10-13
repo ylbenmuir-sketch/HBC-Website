@@ -118,6 +118,15 @@ export default async function LocationPage({
   // Written from the `hours` data in lib/locations.ts, not from copy stored
   // per page — the same call the LocalBusiness schema and the cards make.
   const hoursLines = formattedHours(location);
+  // Where this page's two call CTAs (hero, final band) send people. An open
+  // center preselects itself on the form. A coming-soon center sends people
+  // to the form with nothing preselected: there is no Franklin option on it
+  // (no waitlist, by decision — see CENTER_OPTIONS in
+  // components/ContactForm.tsx), and `?center=franklin` would be a key the
+  // form no longer knows.
+  const contactHref = location.comingSoon
+    ? "/contact"
+    : `/contact?center=${location.slug}`;
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
@@ -195,7 +204,7 @@ export default async function LocationPage({
             </h1>
             <p className="sub">{location.hero.sub}</p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
-              <TalkCta href={`/contact?center=${location.slug}`} />
+              <TalkCta href={contactHref} />
               {phone && (
                 <Btn href={`tel:${phone.tel}`} variant="ghost">
                   Call {phone.display}
@@ -311,7 +320,7 @@ export default async function LocationPage({
                 <HeroFact label="Saturdays">{saturday}</HeroFact>
               ) : (
                 arrivalLines.length > 0 && (
-                  <HeroFact label={location.comingSoon ? "Waitlist" : "Arrival"}>
+                  <HeroFact label={location.comingSoon ? "Until then" : "Arrival"}>
                     {arrivalLines.map((l, i) => (
                       <span key={l}>
                         {i > 0 && <br />}
@@ -667,7 +676,7 @@ export default async function LocationPage({
       <FinalCTA
         heading={location.finalHeading}
         sub={location.finalSub}
-        href={`/contact?center=${location.slug}`}
+        href={contactHref}
       />
     </>
   );

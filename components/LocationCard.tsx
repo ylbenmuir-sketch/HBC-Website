@@ -38,10 +38,17 @@ export default function LocationCard({
    * identical anchors for three different URLs is also the shape a crawler
    * reads as one repeated link rather than three destinations.
    *
-   * The waitlist label was already descriptive and is unchanged.
+   * A coming-soon center's card used to point at the contact form with its
+   * center preselected ("Join the Franklin waitlist →"). There is no waitlist
+   * now (Ben, 2026-10-13: a Franklin option costs a booking today), so the
+   * card goes to the page, which says what is coming and sends people to the
+   * two open centers.
    */
   const go = location.comingSoon
-    ? { href: `/contact?center=${location.slug}`, label: "Join the Franklin waitlist →" }
+    ? {
+        href: `/locations/${location.slug}`,
+        label: `What's coming to ${location.name} →`,
+      }
     : {
         href: `/locations/${location.slug}`,
         label: `About the ${location.name} center →`,

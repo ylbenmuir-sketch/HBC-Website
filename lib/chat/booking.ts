@@ -281,8 +281,8 @@ function matchOption<T extends string>(
  * accept it and ask the next question, and nothing is stored. She believes she
  * told us; the person calling her back has an empty field.
  *
- * It was never only the obvious variants either — "franklin" alone missed
- * "Franklin waitlist" by the same rule.
+ * It was never only the obvious variants either — while the third option was
+ * the "Franklin waitlist", "franklin" alone missed it by the same rule.
  *
  * So: normalize what can be normalized, and keep the rest verbatim. A null in
  * either column now means one thing only — she was asked and declined to say.
@@ -300,9 +300,14 @@ const CENTER_ALIASES: Array<{ canonical: string; pattern: RegExp }> = [
     pattern: /\b(murfreesboro|murfreesburo|murfreesbro|murfeesboro|murf|boro|rutherford)\b/,
   },
   { canonical: "Nashville", pattern: /\b(nashville|nash|davidson|metro)\b/ },
-  // Not one of the visitor's words but one of ours: the third option is a
-  // waitlist, and "franklin" on its own used to miss it entirely.
-  { canonical: "Franklin waitlist", pattern: /\b(franklin|williamson|waitlist)\b/ },
+  // No Franklin entry. The third alias used to be the "Franklin waitlist";
+  // there is no waitlist now (Ben, 2026-10-13: someone interested in Franklin
+  // should book Nashville or Murfreesboro today, not wait), so the assistant
+  // offers the two open centers and nothing else. "franklin" typed anyway is
+  // kept verbatim by resolveCenter — the person calling her back reads it
+  // and offers whichever open center is nearer. It routes to the default
+  // inbox and line unless LEADS_NOTIFY_EMAIL_FRANKLIN / DIALPAD_SMS_FROM_FRANKLIN
+  // are set (lib/center-routing.ts matches by substring).
 ];
 
 /**
@@ -398,8 +403,7 @@ const ASK = {
   note: "And in your own words, what’s going on? (A sentence is plenty — or say skip.)",
   bestTime:
     "When’s the best time to call — mornings, afternoons, or evenings? (Or skip.)",
-  preferredCenter:
-    "Last one: Nashville, Murfreesboro, or the Franklin waitlist? (Or skip.)",
+  preferredCenter: "Last one: Nashville or Murfreesboro? (Or skip.)",
 };
 
 const CONTACT_PAGE_EXIT =

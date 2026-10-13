@@ -191,8 +191,13 @@ export type Location = {
    * after her surname was confirmed.
    */
   practitioners: string[];
-  /** Coming-soon centers show this instead of a practitioner list. */
-  waitlistLine?: string;
+  /**
+   * Coming-soon centers show this instead of a practitioner list: what to do
+   * until the doors open (book one of the open centers). It replaced a
+   * waitlist line — there is no Franklin waitlist, by decision (Ben,
+   * 2026-10-13); see CENTER_OPTIONS in components/ContactForm.tsx.
+   */
+  untilOpenLine?: string;
   hero: {
     eyebrow: string;
     titleLead: string;
@@ -233,7 +238,7 @@ export type Location = {
    * Optional, and absent on Franklin: "who comes to this center" is a
    * paragraph a center with no clients cannot write, and the two sentences of
    * LENS definition are not worth publishing on their own on a page whose
-   * whole job is a waitlist.
+   * whole job is to say what is coming and send people to the open centers.
    */
   intro?: {
     eyebrow: string;
@@ -312,9 +317,9 @@ export type Location = {
    * lib/chat/answer.ts). Per center so the two bands don't read identically;
    * both carry the same limitation and differ only in what the call is for.
    *
-   * Omitted on Franklin, which falls back to FinalCTA's default: the band
-   * there is a waitlist ask, and a sentence scoping how much LENS helps
-   * belongs on a page that can actually book you.
+   * Franklin's names the two open centers instead: the band there books you
+   * into Nashville or Murfreesboro today, which is the whole point of the
+   * page while the doors are shut.
    */
   finalSub?: string;
   /**
@@ -681,15 +686,23 @@ export const locations: Location[] = [
     phone: { value: PHONE.value, verified: PHONE.verified },
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
     practitioners: [],
-    waitlistLine: "Founding-client openings are limited",
+    untilOpenLine: "Nashville and Murfreesboro are open now",
+    /**
+     * No waitlist, no "notify me", no email capture — anywhere on this page
+     * (Ben, 2026-10-13). Someone interested in Franklin should book Nashville
+     * or Murfreesboro now, not wait; every line below that used to ask for a
+     * name now points at the two open centers instead. The page keeps its
+     * content and its SEO; only the capture went. FRANKLIN_OPENING stays the
+     * gate on the date.
+     */
     hero: {
       eyebrow: "Franklin, Tennessee — coming soon",
       titleLead: "The same gentle care is coming to ",
       titleAccent: "Williamson County",
       titleAccentWideBreak: true,
       titleTail: ".",
-      sub: "Opening soon. Practitioners for our Franklin center complete the same Harmonized training before opening day — and founding-client openings are limited.",
-      arrivalLines: ["Join the waitlist for", "founding-client openings"],
+      sub: "Opening soon. Practitioners for our Franklin center complete the same Harmonized training before opening day. Until then, Nashville and Murfreesboro are open now — start there, and your plan transfers when we open.",
+      arrivalLines: ["Start at Nashville or", "Murfreesboro today"],
     },
     plateSpec: "Franklin — exterior storefront, golden hour",
     space: {
@@ -730,10 +743,12 @@ export const locations: Location[] = [
       alsoNearby:
         "Nashville & Murfreesboro centers are open now — start there and transfer anytime; your plan travels with you.",
     },
-    finalHeading: "Join the Franklin waitlist — founding-client openings are limited.",
+    finalHeading: "Franklin is coming. Start at Nashville or Murfreesboro now.",
+    finalSub:
+      "Both centers are open and welcoming new clients. Tell us what's going on and we'll tell you plainly whether LENS is a fit, and which center is easier for you to reach — your plan transfers to Franklin when it opens.",
     metaDescription:
-      "LENS neurofeedback is coming soon to Franklin, TN — join the waitlist for founding-client openings in Williamson County.",
-    dateModified: "2026-09-01",
+      "LENS neurofeedback is coming soon to Franklin, TN. Until the Williamson County center opens, start at Nashville or Murfreesboro — the first call is free.",
+    dateModified: "2026-10-13",
   },
 ];
 

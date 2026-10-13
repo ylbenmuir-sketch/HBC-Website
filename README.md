@@ -32,9 +32,10 @@ compositions), so desktop rendering is untouched. Key pieces:
   report their state to it. See "The bottom of the screen" below.
   - **Sticky CTA** — `components/MobileCtaBar.tsx` (homepage, ≤760px only);
     same "Get a Free Call Today" → `/contact` ask, retiring near the final CTA band.
-  - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route, every
-    width, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a field that opens the
-    site assistant with whatever was typed into it.
+  - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route but
+    `/contact`, every width, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a field
+    that opens the site assistant with whatever was typed into it. See
+    `ASSISTANT_SUPPRESSED_ROUTES` under "The bottom of the screen".
 - Motion (drawer stagger, sticky-bar entrance, reveals) is gated behind
   `prefers-reduced-motion` like everything else.
 
@@ -309,7 +310,7 @@ submission requires Supabase credentials.
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for canonical tags, `og:url`, `sitemap.xml`, `robots.txt`, and JSON-LD. Apex form, no trailing slash — `https://harmonizedbraincenterstn.com`. Defaults to that value; set it explicitly in the deploy environment. |
 | `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new lead to the clinic — name, phone, email, concerns, center, best time, and note, with reply-to set to the visitor. Server-side only. Unset = leads save but nobody is notified. |
 | `LEADS_NOTIFY_EMAIL` | Default inbox for new leads. Required alongside `RESEND_API_KEY`. Accepts several addresses separated by commas. |
-| `LEADS_NOTIFY_EMAIL_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | Optional per-center inboxes. A lead goes to the inbox for its `preferred_center`; a center with none set falls back to `LEADS_NOTIFY_EMAIL`. Guide signups and Concierge always use the default. Edit in Vercel, then redeploy. |
+| `LEADS_NOTIFY_EMAIL_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | Optional per-center inboxes. A lead goes to the inbox for its `preferred_center`; a center with none set falls back to `LEADS_NOTIFY_EMAIL`. Guide signups and Concierge always use the default. Edit in Vercel, then redeploy. `_FRANKLIN` is for the day that center opens — nothing offers Franklin today (see "No Franklin booking" below). |
 | `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
 | `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
 | `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
@@ -577,6 +578,26 @@ on the confirmation card so she can lock a callback slot herself. A Google
 Calendar appointment schedule is the simplest source: create one on the
 clinic's calendar, copy its booking-page link, set the variable, redeploy.
 
+## No Franklin booking
+
+There is no way to book, request, or join a list for Franklin anywhere on the
+site (Ben, 2026-10-13): someone interested in Franklin should book Nashville
+or Murfreesboro now, not wait, and a Franklin option cost a booking today.
+What went: the "Franklin waitlist" option on the contact form and its
+`?center=franklin` preselect (`components/ContactForm.tsx`), the chat's
+Franklin alias and its mention in the center question (`lib/chat/booking.ts`),
+the "Join the Franklin waitlist →" card links on `/` and `/locations`, and the
+waitlist copy in the Franklin hero, hero fact, CTA band, meta description,
+OG image and `llms.txt`.
+
+`/locations/franklin` stays a coming-soon page with its content and SEO
+intact. Its cards link to it, its CTA band is the ordinary free-call band
+pointing at a plain `/contact`, and every line that used to ask for a name
+now names the two open centers. Do not add an email capture or a "notify
+me" in the waitlist's place. `FRANKLIN_OPENING` still gates the date.
+`LEADS_NOTIFY_EMAIL_FRANKLIN` / `DIALPAD_SMS_FROM_FRANKLIN` remain for the
+day it opens; they only fire on a center someone typed into the chat.
+
 ## Content verification & draft mode
 
 Every unverified fact is centralized and **cannot ship to production**:
@@ -700,6 +721,21 @@ If the CTA bar's breakpoint moves, move it in both places: `CALL_BAR_QUERY` in
 `MobileCtaBar.tsx` and the `@media (max-width: 760px)` block in `globals.css`
 that gives `.cta-bar` its `display: flex`. The two disagreeing is an invisible
 bug, not a visual one — the ask bar simply stops existing on the homepage.
+
+### Routes the assistant stays off
+
+`ASSISTANT_SUPPRESSED_ROUTES` in `lib/site-config.ts` — `/contact` today
+(Ben, 2026-10-13). With the flag on, the ask bar loads at full height and
+only collapses on scroll, so on a 1366×768 desktop it sat over the form's
+submit row. The bar was not shrunk and the form was not squeezed again; the
+page whose job is the call request simply has no assistant. The provider
+reads the pathname (`usePathname`) and derives `askAvailable` = flag minus
+suppressed routes; `BottomBarDock` and `AssistantLoader` read that from
+context, so a suppressed route gets no ask bar, no assistant chunk and no
+footer reserve. The root layout still writes `data-bottombar` into the
+server HTML whenever the flag is on (it cannot see the route); the provider
+clears it at hydration, which on `/contact` is below the fold. Everywhere
+else the bar is unchanged. Add a route by adding a path prefix to the list.
 
 ## Site assistant
 
@@ -991,7 +1027,7 @@ or work through the files below:
 
 | File | Placeholders to replace |
 | --- | --- |
-| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, the five concierge facts (`CONCIERGE_*`) |
+| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, the five concierge facts (`CONCIERGE_*`), the two Brain Map claims (`BRAIN_MAP_CLAIM`, `BRAIN_MAP_HEATMAP_CLAIM`) |
 | `lib/locations.ts` | Franklin street address + ZIP (Nashville and Murfreesboro are confirmed; a confirmed address also unlocks `geo` and `hasMap` in the LocalBusiness JSON-LD, so add `geo` coordinates when Franklin's lands), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
 | `lib/team.ts` | Practitioner names, bios, certifications, focus areas, schedules; coordinator name; Franklin opening date |
 | `lib/resources.ts` | Article bylines (`[Practitioner name]`, `[Month Year]`) and the `[Draft…]`/`[Body copy…]` article bodies (homework-battles included) |
@@ -1011,6 +1047,33 @@ Also replace when assets exist:
   is verified.
 - **Location map** — the sage map placeholder on `/locations/[slug]` awaits an
   embedded map (muted sage style) once addresses are confirmed.
+
+## The Brain Map imagery (temporary swap)
+
+The "what you walk away with" block on `/` and the `/brain-map` hero render
+through one component, `components/BrainMapFigure.tsx`, whose only input is
+`BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts`.
+
+**Today (`false`).** The primary image is the bar chart a client actually
+receives: `public/images/brain-map-chart.svg` as Ben supplied it, inlined as
+`components/BrainMapChart.tsx` (viewBox kept, fixed size dropped,
+`preserveAspectRatio="xMidYMid meet"`) so it inherits DM Sans and costs no
+request. Caption: "A sample recording — 21 sites, measured in microvolts. Not
+a diagnosis." Below 920px of container width the figure scrolls sideways
+instead of shrinking the chart past legibility. Beneath it the heat map
+(`/images/brain-map-heat.png`) is a coming-soon block: smaller, the image at
+reduced opacity, eyebrow "COMING SOON", line "Your brain in full color — the
+same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` only when
+verified (`[CONFIRM]` in draft, absent in production; the build's
+`REQUIRE_VERIFIED_CONTENT` check asks for it while the block renders).
+The section headline, the recording-and-plan copy and the free-call CTA sit
+above and are unchanged; the block never competes with them.
+
+**When the software ships.** Set `BRAIN_MAP_HEATMAP_LIVE = true`. The heat
+map returns as the primary image on both pages (preloaded on `/brain-map`
+again), the coming-soon block and its claim disappear, the chart leaves with
+them, and the build stops asking for the claim. Then re-run `check:cwv` on
+`/` and `/brain-map` — the heat map is an LCP image, the inline chart is not.
 
 ## Compliance guardrails
 

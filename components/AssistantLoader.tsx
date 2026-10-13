@@ -37,12 +37,14 @@ import { useBottomBar } from "./BottomBarContext";
  * page is interactive." This is that sentence, made literal.
  */
 export default function AssistantLoader() {
-  const { assistantRequest } = useBottomBar();
+  const { askAvailable, assistantRequest } = useBottomBar();
   const [Assistant, setAssistant] = useState<ComponentType | null>(null);
   const requested = assistantRequest !== null;
 
   useEffect(() => {
-    if (Assistant) return;
+    // A route the assistant is suppressed on (ASSISTANT_SUPPRESSED_ROUTES)
+    // has no ask bar to open it from, so the chunk is not fetched either.
+    if (Assistant || !askAvailable) return;
     let cancelled = false;
     const load = () => {
       import("./SiteAssistant").then((m) => {
@@ -66,7 +68,7 @@ export default function AssistantLoader() {
       if (hasIdle) window.cancelIdleCallback(handle);
       else window.clearTimeout(handle);
     };
-  }, [requested, Assistant]);
+  }, [requested, Assistant, askAvailable]);
 
-  return Assistant ? <Assistant /> : null;
+  return Assistant && askAvailable ? <Assistant /> : null;
 }

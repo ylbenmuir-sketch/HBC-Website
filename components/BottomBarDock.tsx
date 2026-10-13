@@ -24,13 +24,13 @@ import StickyAskBar from "./StickyAskBar";
  * still mounts on the homepage only — it portals into the slot below, so the
  * bar keeps its own scroll logic and its own route scope while giving up the
  * decision about whether it is on screen. That decision is BottomBarContext's.
+ *
+ * Whether an ask bar exists on this route is the controller's too
+ * (`askAvailable`: the flag, minus the routes in ASSISTANT_SUPPRESSED_ROUTES).
+ * It used to arrive as a prop from the layout, which only knows the flag.
  */
-export default function BottomBarDock({
-  askAvailable,
-}: {
-  askAvailable: boolean;
-}) {
-  const { active, docked, setSlot } = useBottomBar();
+export default function BottomBarDock() {
+  const { active, askAvailable, docked, setSlot } = useBottomBar();
 
   // Nothing to dock on this route: no assistant behind the flag and no CTA
   // bar mounted. Render nothing rather than an empty fixed element, so the

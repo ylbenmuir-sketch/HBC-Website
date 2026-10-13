@@ -18,7 +18,10 @@
 //   LEADS_NOTIFY_EMAIL               default — everything not matched below
 //   LEADS_NOTIFY_EMAIL_NASHVILLE     leads that chose Nashville
 //   LEADS_NOTIFY_EMAIL_MURFREESBORO  leads that chose Murfreesboro
-//   LEADS_NOTIFY_EMAIL_FRANKLIN      leads that chose the Franklin waitlist
+//   LEADS_NOTIFY_EMAIL_FRANKLIN      leads whose typed center names Franklin
+//                                    (nothing offers Franklin today — the
+//                                    waitlist went in Oct 2026; this is for
+//                                    the day it opens)
 //
 // Each may hold several addresses separated by commas. Unset a center's
 // variable and its leads fall back to the default, so "everything to one

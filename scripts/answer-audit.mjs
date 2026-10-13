@@ -1137,7 +1137,9 @@ const BOOKING_CENTER = [
   ["we're in Rutherford county", "Murfreesboro"],
   ["nashville", "Nashville"],
   ["Nash", "Nashville"],
-  ["franklin", "Franklin waitlist"],
+  // No Franklin alias since the waitlist went (Oct 2026): her word is kept,
+  // not mapped to a center the form no longer offers.
+  ["franklin", "franklin"],
   // Unrecognizable, and round-tripped as raw text rather than dropped.
   ["whichever one is off Old Hickory Blvd", "whichever one is off Old Hickory Blvd"],
   ["closest to Smyrna", "closest to Smyrna"],

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import PhotoFrame from "@/components/PhotoFrame";
+import BrainMapFigure from "@/components/BrainMapFigure";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -27,9 +27,15 @@ import {
  * The brain-mapping cluster (432 impressions at position 22 in the Oct 2026
  * pull — QUERY-TO-PAGE-MAP.md) was landing on a homepage *section*, and a
  * section cannot rank for a term a page owns. So the section's copy, the
- * four-site "where we look" passage from /how-lens-works, and the heat-map
- * render all moved here; the homepage keeps a two-sentence handoff and
- * /how-lens-works a one-paragraph one. One cluster, one page — rule 1.
+ * four-site "where we look" passage from /how-lens-works, and the render all
+ * moved here; the homepage keeps a two-sentence handoff and /how-lens-works
+ * a one-paragraph one. One cluster, one page — rule 1.
+ *
+ * The render itself is components/BrainMapFigure.tsx's decision (Oct 2026,
+ * temporary): the bar chart a client receives today, with the heat map as a
+ * coming-soon preview under it, until BRAIN_MAP_HEATMAP_LIVE flips. The hero
+ * stacks the copy over the full-width chart for the reason the homepage
+ * section does — the chart is not legible in half a column.
  *
  * ## The rule this page is written under
  *
@@ -63,7 +69,10 @@ const recordingSteps = [
   {
     n: "3",
     h: "Your map, point by point",
-    p: "We turn the readings into a head-shaped map and walk you through it — where activity is running hot, where it's running quiet, and how that lines up with what you came in describing.",
+    // "A chart you can read, site by site" — what a client is handed today.
+    // The head-shaped render is the coming-soon preview in the hero, and the
+    // step does not promise it (Oct 2026; see BrainMapFigure).
+    p: "We turn the readings into a chart you can read, site by site, and walk you through it — where activity is running high, where it's running quiet, and how that lines up with what you came in describing.",
   },
   {
     n: "4",
@@ -80,8 +89,8 @@ export default function BrainMapPage() {
       <Breadcrumbs trail={trail} />
 
       <section className="page-hero">
-        <div className="wrap split" style={{ alignItems: "center" }}>
-          <div className="rv">
+        <div className="wrap">
+          <div className="rv" style={{ maxWidth: 760 }}>
             <div className="eyebrow">{BRAIN_MAP_NAME}</div>
             <h1>
               A recording of your brain&rsquo;s activity &mdash;{" "}
@@ -104,20 +113,11 @@ export default function BrainMapPage() {
             </p>
           </div>
           <div className="rv">
-            {/* The corrected heat-map render (see GRAPHICS CORRECTIONS in
-                lib/site-config.ts). Pinned to its own ratio so `cover` fills
-                the frame without cropping an electrode label or the legend.
-                The LCP element of this template, so it preloads. */}
-            <PhotoFrame
-              src="/images/brain-map-heat.png"
-              alt={`A sample Harmonized Brain Map — a head-shaped heat map showing electrical amplitude at ${BRAIN_MAP_POINTS} points across the brain`}
-              aspect="1184 / 860"
-              style={{ height: "auto" }}
-              priority
-            />
-            <p className="micro">
-              A picture of electrical activity &mdash; not a diagnosis.
-            </p>
+            {/* The render (see GRAPHICS CORRECTIONS in lib/site-config.ts).
+                `priority` only matters while the heat map is primary — it was
+                this template's LCP image then; the inline chart is not an LCP
+                candidate, so the H1 is. */}
+            <BrainMapFigure priority />
           </div>
         </div>
       </section>
@@ -300,7 +300,8 @@ export default function BrainMapPage() {
               looking for the same thing: a recording of the brain&rsquo;s
               electrical activity, shown as a map. That is what{" "}
               {BRAIN_MAP_NAME} is &mdash; {BRAIN_MAP_POINTS} points of
-              electrical amplitude, displayed as a head-shaped heat map.
+              electrical amplitude, shown site by site in a chart you can
+              read.
             </p>
             <p>
               What it isn&rsquo;t is a medical test. It isn&rsquo;t ordered by

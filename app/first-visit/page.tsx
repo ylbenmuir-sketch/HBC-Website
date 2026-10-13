@@ -26,7 +26,11 @@ const fiveParts = [
   {
     n: "1",
     h: "You're greeted by name",
-    p: "Someone is expecting you. Coffee, water, a comfortable seat — and a parent stays with a child the whole time.",
+    // Hot tea and hot chocolate are what the centers actually offer (Ben,
+    // 2026-10-13) — this line used to say coffee, which they don't serve.
+    // The candy is on the "Bringing a child" card below, where a parent reads.
+    // Mirrored as page:first-visit:five-parts; both copies move together.
+    p: "Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time.",
   },
   {
     n: "2",
@@ -142,9 +146,13 @@ export default function FirstVisitPage() {
             </div>
             <div className="care">
               <h3>Bringing a child</h3>
+              {/* The candy is the hospitality detail that matters to a child;
+                  the tea is in part 1 above. Mirrored as
+                  page:first-visit:child. */}
               <p>
                 A parent joins everything. Kids can bring a book, a tablet, or
-                a stuffed animal &mdash; comfort beats stillness here.
+                a stuffed animal &mdash; and there&rsquo;s candy at the desk.
+                Comfort beats stillness here.
               </p>
             </div>
             <div className="care">

@@ -75,11 +75,17 @@ const CONCERN_OPTIONS = [
 // question is not silently filed under Nashville — unsure leads go to the
 // default inbox and text from the default line (lib/center-routing.ts).
 // Location pages override the default via ?center= (see CENTER_BY_SLUG).
+//
+// No Franklin option (Ben, 2026-10-13). There was a "Franklin waitlist" entry;
+// it is gone because someone interested in Franklin should book Nashville or
+// Murfreesboro now, not wait — a Franklin line here cost a booking today. The
+// Franklin page says the same and sends its visitors to this form with no
+// center preselected. Do not add it back as a waitlist, a "notify me", or an
+// email capture; it returns as a plain center the day the doors open.
 const CENTER_OPTIONS = [
   "Not sure yet",
   "Nashville",
   "Murfreesboro",
-  "Franklin waitlist",
   "Concierge / at home",
 ];
 // "Any time" first and default: the question is optional, and an answer that
@@ -96,7 +102,6 @@ const TIME_OPTIONS = ["Any time", "Mornings", "Afternoons", "Evenings"];
 const CENTER_BY_SLUG: Record<string, string> = {
   nashville: "Nashville",
   murfreesboro: "Murfreesboro",
-  franklin: "Franklin waitlist",
   concierge: "Concierge / at home",
 };
 

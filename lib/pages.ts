@@ -74,7 +74,7 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "Help for anxiety, focus, and sleep without medication — LENS neurofeedback for adults and kids in Nashville and Murfreesboro. The first call is free.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-13",
     type: "WebPage",
     crumb: "Home",
   },
@@ -148,7 +148,7 @@ export const staticPages: StaticPage[] = [
     // truncation.
     description:
       "The Harmonized Brain Map is a 21-point recording of brain activity — a recording that guides a plan, not a test. What it involves, what it costs, and what it can't tell you.",
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-13",
     type: "WebPage",
     crumb: "The Brain Map",
   },
@@ -157,7 +157,7 @@ export const staticPages: StaticPage[] = [
     title: "Your First Visit",
     description:
       "No clipboard queue, no waiting-room limbo, no surprises. The first visit at Harmonized Brain Centers, minute by minute, for adults and for children.",
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-13",
     type: "WebPage",
     crumb: "Your first visit",
   },
@@ -197,7 +197,7 @@ export const staticPages: StaticPage[] = [
     description:
       "Every Harmonized center runs the same care model, the same training, and the same honest policies. Nashville, Murfreesboro, and Franklin (coming soon).",
     // The concierge band links to /concierge now.
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-13",
     type: "CollectionPage",
     crumb: "Locations",
   },

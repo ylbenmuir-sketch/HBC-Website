@@ -1,6 +1,8 @@
 import { locations } from "./locations";
 import {
   BRAIN_MAP_CLAIM,
+  BRAIN_MAP_HEATMAP_CLAIM,
+  BRAIN_MAP_HEATMAP_LIVE,
   CONCIERGE_BRAIN_MAP,
   CONCIERGE_MINIMUM,
   CONCIERGE_PACKAGE,
@@ -78,6 +80,12 @@ for (const location of locations) {
 // lib/chat/unanswerable.ts.
 check("Typical session length", SESSION_LENGTH.verified);
 check("Brain Map differentiator claim", BRAIN_MAP_CLAIM.verified);
+// The coming-soon block's claim (components/BrainMapFigure.tsx). Asked for
+// only while that block renders: the day the heat map goes live the block is
+// gone, and a build should not fail on a sentence nothing shows.
+if (!BRAIN_MAP_HEATMAP_LIVE) {
+  check("Brain Map heat-map claim (coming-soon block)", BRAIN_MAP_HEATMAP_CLAIM.verified);
+}
 // The concierge facts (/concierge). Five confirmed Oct 2026 and kept on the
 // list the way the hours are, so a flag flipped back takes the fact off the
 // page and fails this build; the package question is still open. Listed one

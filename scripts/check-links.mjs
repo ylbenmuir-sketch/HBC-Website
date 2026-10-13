@@ -197,9 +197,9 @@ const ACCEPTED = {
   "/privacy-policy":
     "linked from the footer, which is where people look for it — a privacy " +
     "notice earns its inbound links from chrome rather than from prose",
-  "/locations/franklin":
-    "coming-soon card points at the waitlist (/contact), not at the page — " +
-    "deliberate; the route is still chrome-linked and in the sitemap",
+  // "/locations/franklin" was here while its cards pointed at the waitlist
+  // on /contact. The waitlist went (Oct 2026) and both cards link to the page
+  // now, so it earns its inbound links like any other route.
 };
 
 /**

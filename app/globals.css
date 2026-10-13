@@ -1850,3 +1850,35 @@ body[data-bottombar] footer.site {
   .page-hero.compact { padding: 36px 0 28px; }
   .sec.sec-form { padding-top: 40px; }
 }
+
+/* ── The Brain Map figure (components/BrainMapFigure.tsx) ──────────────────
+   The bar chart a client receives today, full width, with the heat map as a
+   coming-soon preview beneath it. Full width because the chart is drawn at
+   1400 units across: in the half-width column the heat map used to sit in it
+   would scale its labels to ~5px. Below 920px of container width the figure
+   scrolls sideways rather than shrinking further — the SVG holds its minimum
+   width and the box clips. check:layout ignores a region that scrolls on
+   purpose; the SVG's own aria-label describes the chart regardless.
+   Only the preview *image* is faded: the eyebrow and line beside it keep
+   their full contrast (the sweep's 4.5:1 floor). */
+.bm-figure { margin-top: 48px; }
+.bmc { margin: 0; }
+/* The caption is the ordinary `.micro` line the heat map carried, not the
+   sitewide small-caps photo credit `figcaption` is styled as (line ~364). */
+.bmc figcaption { font-size: 13.5px; letter-spacing: 0; text-transform: none; font-weight: 400; margin-top: 12px; }
+.bmc-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 4px; background: #fbf8f1; }
+.bmc-scroll:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+.bmc-svg { display: block; width: 100%; min-width: 920px; height: auto; aspect-ratio: 1400 / 530; }
+.bm-soon { display: flex; gap: 28px; align-items: center; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+.bm-soon-img { flex: none; width: 200px; opacity: 0.55; }
+.bm-soon-copy p { font-size: 15px; color: var(--slate); margin: 10px 0 0; max-width: 56ch; }
+@media (max-width: 640px) {
+  .bm-soon { gap: 18px; align-items: flex-start; }
+  .bm-soon-img { width: 120px; }
+}
+/* At 320px the copy column beside a 120px preview is ~160px and the eyebrow
+   wraps ("COMING / SOON"); stack the preview over the copy instead. */
+@media (max-width: 359px) {
+  .bm-soon { flex-direction: column; }
+  .bm-soon-img { width: 150px; }
+}

@@ -620,7 +620,10 @@ function locationPassages(loc: Location): Passage[] {
       title: `${loc.name} — coming soon`,
       href,
       question: `Do you have a center in ${loc.name}?`,
-      keywords: [...keywords, "open", "opening", "soon", "waitlist", "new"],
+      // "waitlist" was a keyword here while the page had one. It has none now
+      // (Ben, 2026-10-13), and the hero sub this passage carries sends the
+      // visitor to the two open centers instead.
+      keywords: [...keywords, "open", "opening", "soon", "new"],
       // No opening date: FRANKLIN_OPENING is unverified, so "opening soon" —
       // which is where the page's own hero copy starts — is the whole of what
       // the site claims.

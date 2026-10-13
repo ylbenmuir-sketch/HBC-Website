@@ -2,10 +2,13 @@
 // confirmation text (which Dialpad line), so the two can never disagree about
 // which center a lead belongs to.
 //
-// Matched by substring, case-insensitive, so the form's "Franklin waitlist",
-// the chat's canonical "Franklin", and a visitor who typed "franklin tn" all
-// resolve the same way. Anything that matches nothing — "Not sure yet",
-// "Concierge / at home", null — resolves to the default setting.
+// Matched by substring, case-insensitive, so "Murfreesboro" from the form's
+// select, the chat's canonical "Murfreesboro", and a visitor who typed "the
+// boro, Murfreesboro" all resolve the same way. Anything that matches nothing —
+// "Not sure yet", "Concierge / at home", null — resolves to the default
+// setting. FRANKLIN stays a key for the day the center opens; nothing offers
+// it today (the form's waitlist option and the chat's alias went, Oct 2026),
+// so it only fires on a center someone typed into the chat verbatim.
 
 export type CenterKey = "NASHVILLE" | "MURFREESBORO" | "FRANKLIN";
 

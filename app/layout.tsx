@@ -161,7 +161,10 @@ export default function RootLayout({
           one route and is not known here — but when the assistant flag is on
           the dock is docked from the first frame, and the footer's reserve
           should be there from the first frame too. Applied at hydration it
-          moved the end of every page. See the reserve block in globals.css. */}
+          moved the end of every page. See the reserve block in globals.css.
+          A route in ASSISTANT_SUPPRESSED_ROUTES (/contact) still gets it
+          here — this layout cannot see the route — and the provider clears
+          it at hydration, below the fold. */}
       <body data-bottombar={FEATURE_ASSISTANT ? "on" : undefined}>
         {/* One controller for everything anchored to the bottom of the
             viewport — the sticky ask bar, the homepage CTA bar, and the
@@ -198,8 +201,10 @@ export default function RootLayout({
           {/* Last in the body so the dock's fixed layers sit above the page
               without needing to outbid anything on z-index. The ask bar only
               exists behind the same flag as the assistant it opens — with the
-              flag off this is the homepage CTA bar and nothing else. */}
-          <BottomBarDock askAvailable={FEATURE_ASSISTANT} />
+              flag off this is the homepage CTA bar and nothing else. Whether
+              the bar exists on *this* route is the provider's call (the flag
+              minus ASSISTANT_SUPPRESSED_ROUTES), read from context. */}
+          <BottomBarDock />
           {/* GA4, inert until NEXT_PUBLIC_GA_ID is set — lib/analytics.ts. */}
           <Analytics />
         </BottomBarProvider>

@@ -655,10 +655,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "pressure",
           "decide",
         ],
-        text: "The first appointment, in five parts. You're greeted by name: Someone is expecting you. Coffee, water, a comfortable seat — and a parent stays with a child the whole time. We talk first: What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose. A gentle baseline recording: Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan. Your plan, explained plainly: What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered. You decide — without pressure: Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
+        text: "The first appointment, in five parts. You're greeted by name: Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time. We talk first: What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose. A gentle baseline recording: Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan. Your plan, explained plainly: What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered. You decide — without pressure: Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
         mirror: [
           "The first appointment, in five parts.",
-          "Someone is expecting you. Coffee, water, a comfortable seat — and a parent stays with a child the whole time.",
+          "Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time.",
           "What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose.",
           "Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan.",
           "What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered.",
@@ -729,9 +729,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "tablet",
           "book",
         ],
-        text: "Bringing a child: A parent joins everything. Kids can bring a book, a tablet, or a stuffed animal — comfort beats stillness here.",
+        text: "Bringing a child: A parent joins everything. Kids can bring a book, a tablet, or a stuffed animal — and there’s candy at the desk. Comfort beats stillness here.",
         mirror:
-          "A parent joins everything. Kids can bring a book, a tablet, or a stuffed animal — comfort beats stillness here.",
+          "A parent joins everything. Kids can bring a book, a tablet, or a stuffed animal — and there’s candy at the desk. Comfort beats stillness here.",
       },
       {
         id: "page:first-visit:after",
@@ -1012,8 +1012,15 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // page:first-visit:insurance is back in the index.
   "app/first-visit/page.tsx": {},
   // /brain-map (Oct 2026). BRAIN_MAP_CLAIM and its tag stayed on the
-  // homepage; this page renders none.
+  // homepage; this page renders none. The coming-soon block's tag is in the
+  // shared figure component, listed below.
   "app/brain-map/page.tsx": {},
+  // components/BrainMapFigure.tsx (Oct 2026) renders the heat-map preview's
+  // claim on both the homepage and /brain-map. No passage carries it: the
+  // coming-soon line is a preview of software, not a fact about the service.
+  "components/BrainMapFigure.tsx": {
+    "BRAIN_MAP_HEATMAP_CLAIM.note!": "not indexed — the coming-soon claim is in no passage",
+  },
   // Ben confirmed the training and review process; page:about:training carries
   // his approved wording and is back in the index.
   "app/about/page.tsx": {},

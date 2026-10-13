@@ -9,6 +9,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
+import { assistantSuppressedOn } from "@/lib/site-config";
 
 /**
  * The one place that decides which bottom bar is on screen.
@@ -44,6 +46,13 @@ type AssistantRequest = { text: string; nonce: number };
 
 type BottomBarValue = {
   active: Active;
+  /**
+   * Whether an ask bar may exist on the current route: the feature flag, and
+   * the route not being one the assistant is suppressed on. The dock and the
+   * assistant loader read this rather than the flag, so a route that opts
+   * out loses the bar, the chunk and the footer reserve together.
+   */
+  askAvailable: boolean;
   /** True while the visitor is reading down the page: the ask bar collapses. */
   compact: boolean;
   assistantOpen: boolean;
@@ -93,7 +102,7 @@ const COMPACT_AFTER_PX = 160;
 const DIRECTION_THRESHOLD_PX = 24;
 
 export function BottomBarProvider({
-  askAvailable,
+  askAvailable: askEnabled,
   children,
 }: {
   /**
@@ -105,6 +114,16 @@ export function BottomBarProvider({
   askAvailable: boolean;
   children: React.ReactNode;
 }) {
+  /**
+   * The flag, minus the routes that opt out (ASSISTANT_SUPPRESSED_ROUTES in
+   * lib/site-config.ts — /contact today). Decided here, from the pathname,
+   * because the root layout is a server component that does not know which
+   * route it is wrapping; the provider is the one client-side thing that
+   * sees every route and already owns what is at the bottom of the screen.
+   * Client navigation onto and off a suppressed route flips this live.
+   */
+  const pathname = usePathname();
+  const askAvailable = askEnabled && !assistantSuppressedOn(pathname);
   const [callBars, setCallBars] = useState(0);
   const [callBarActive, setCallBarActive] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
@@ -147,7 +166,16 @@ export function BottomBarProvider({
    * bar to reserve for — globals.css hangs the footer padding off it.
    */
   useEffect(() => {
-    if (!docked) return;
+    if (!docked) {
+      // The layout writes the attribute into the server HTML whenever the
+      // flag is on (it cannot see the route), so a suppressed route arrives
+      // with a reserve it has no bar for. Clear it rather than leave it: the
+      // footer is the only thing that reads it, and on /contact the footer
+      // is well below the first viewport, so the padding change at hydration
+      // is not a visible shift.
+      delete document.body.dataset.bottombar;
+      return;
+    }
     document.body.dataset.bottombar = "on";
     return () => {
       delete document.body.dataset.bottombar;
@@ -202,6 +230,7 @@ export function BottomBarProvider({
   const value = useMemo<BottomBarValue>(
     () => ({
       active,
+      askAvailable,
       compact,
       assistantOpen,
       assistantRequest,
@@ -215,6 +244,7 @@ export function BottomBarProvider({
     }),
     [
       active,
+      askAvailable,
       compact,
       assistantOpen,
       assistantRequest,

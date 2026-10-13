@@ -120,6 +120,31 @@ export const FEATURE_CELEBRITY =
 export const FEATURE_ASSISTANT =
   process.env.NEXT_PUBLIC_FEATURE_ASSISTANT === "true";
 
+/**
+ * Routes the assistant stays off, even with the flag on.
+ *
+ * /contact (Ben, 2026-10-13): the sticky ask bar loads at full height and
+ * only collapses on scroll, so on a 1366×768 desktop it sat over the form's
+ * submit row. The fix is not a shorter bar or a tighter form — the bar is
+ * unchanged everywhere else, and the form's fold budget has been re-cut
+ * enough — it is that a page whose whole job is the call request does not
+ * also offer a chat field under it. Nothing docks on this route: no ask bar,
+ * no assistant chunk, no footer reserve.
+ *
+ * Path prefixes, matched the way the layout audit matches them: the route
+ * itself and anything beneath it. Read by components/BottomBarContext.tsx,
+ * which is the one place that decides what is at the bottom of the screen.
+ */
+export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact"] as const;
+
+/** True when the assistant must not render on this pathname. */
+export function assistantSuppressedOn(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return ASSISTANT_SUPPRESSED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
 /** Embedding is disabled for this video — always link out, never iframe. */
 export const TRISHA_VIDEO_URL = "https://www.youtube.com/shorts/fhmoa68_uHY";
 export const TRISHA_QUOTE = "I feel like I am in my thirties again.";
@@ -860,13 +885,16 @@ export const TRAINING_CLAIM =
  *    "impulse control", "emotional regulation", "sensory sensitivity". Label
  *    the graphic in those words and it agrees with the page it sits on.
  *
- * The corrected heat map ships on /brain-map and the homepage
- * (/images/brain-map-heat.png). /brain-map renders the PlaceholderPlate for
- * the lobe graphic beside the four-site section (moved there from
- * /how-lens-works, Oct 2026): items 3 and 4 above are unfixed because that
- * asset has not been supplied. The bar graph (/images/brain-map-bars.png) is
- * in the repo but not placed on any page. See CONTENT-CHECKLIST.md →
- * Photography.
+ * Where the renders sit (Oct 2026): the bar chart Ben supplied
+ * (public/images/brain-map-chart.svg, inlined as components/BrainMapChart.tsx)
+ * is the primary image on /brain-map and the homepage, because it is what a
+ * client receives today; the corrected heat map (/images/brain-map-heat.png)
+ * renders beneath it as a coming-soon preview. BRAIN_MAP_HEATMAP_LIVE below
+ * swaps them back. /brain-map renders the PlaceholderPlate for the lobe
+ * graphic beside the four-site section (moved there from /how-lens-works,
+ * Oct 2026): items 3 and 4 above are unfixed because that asset has not been
+ * supplied. The older bar graph (/images/brain-map-bars.png) is in the repo
+ * but not placed on any page. See CONTENT-CHECKLIST.md → Photography.
  */
 
 /**
@@ -878,6 +906,40 @@ export const TRAINING_CLAIM =
 export const BRAIN_MAP_CLAIM: Verifiable = {
   value:
     "As far as we know, no other LENS practice in the country puts it in your hands.",
+  verified: false,
+  note: "[Confirm basis for the claim]",
+};
+
+/**
+ * BRAIN MAP IMAGERY — the temporary swap (Ben, 2026-10-13).
+ *
+ * What a client receives today is the bar chart: amplitude at each of the
+ * BRAIN_MAP_POINTS sites. The head-shaped heat map is the software that is
+ * still coming. So the chart is the primary image in the "what you walk away
+ * with" block on the homepage and /brain-map, and the heat map is a
+ * coming-soon preview beneath it — one component decides this,
+ * components/BrainMapFigure.tsx, and this constant is its only input.
+ *
+ * **When the heat-map software ships, set this to `true`.** The heat map
+ * returns as the primary image on both pages, the coming-soon block (and
+ * BRAIN_MAP_HEATMAP_CLAIM with it) disappears, and the chart goes with it.
+ * Nothing else needs touching; the build-time check below stops asking for
+ * the claim the same moment. README → "The Brain Map imagery" has the
+ * procedure.
+ */
+export const BRAIN_MAP_HEATMAP_LIVE = false;
+
+/**
+ * The coming-soon line's claim. Unverified, and gated harder than
+ * BRAIN_MAP_CLAIM above because it is the bare superlative that note warns
+ * against: it renders [CONFIRM] in draft and not at all in production until
+ * Ben verifies the basis for it. The line it follows ("Your brain in full
+ * color — the same recording, mapped.") reads complete without it. Only
+ * rendered while BRAIN_MAP_HEATMAP_LIVE is false — the block it sits in is
+ * the coming-soon preview.
+ */
+export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
+  value: "The first LENS practice in the country to show it this way.",
   verified: false,
   note: "[Confirm basis for the claim]",
 };

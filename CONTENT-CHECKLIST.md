@@ -233,7 +233,9 @@ Production currently shows a two-sentence stand-in; the full page needs:
 - [x] Murfreesboro street address & ZIP — 206 W Chestnut St, Murfreesboro, TN
       37130. Confirmed by Ben. Same rendering and schema as Nashville.
 - [ ] Franklin street address & ZIP — still `[placeholders]`; the page stays a
-      coming-soon waitlist and ships no LocalBusiness until it opens
+      coming-soon page (no waitlist or capture of any kind, by decision — it
+      sends people to the two open centers) and ships no LocalBusiness until
+      it opens
 - [ ] Murfreesboro parking note
 - [ ] Franklin opening date (`FRANKLIN_OPENING`) — shows "Coming soon" until verified
 - [ ] Communities-served lists per location
@@ -269,9 +271,17 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] Murfreesboro: exterior · waiting room · session room
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
-- [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section)
-      — `/images/brain-map-heat.png`, shipped with the corrected Phase 7.5
-      legend ("Lower amplitude / Typical range / Higher amplitude")
+- [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section
+      and `/brain-map`) — `/images/brain-map-heat.png`, shipped with the
+      corrected Phase 7.5 legend ("Lower amplitude / Typical range / Higher
+      amplitude"). Since Oct 2026 it renders as a **coming-soon preview**
+      under the bar chart (`/images/brain-map-chart.svg`, inlined as
+      `components/BrainMapChart.tsx`), which is what a client receives today.
+      `BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts` swaps them back when
+      the software ships — README → "The Brain Map imagery".
+- [ ] **`BRAIN_MAP_HEATMAP_CLAIM`** — "The first LENS practice in the country
+      to show it this way." in the coming-soon block; `[CONFIRM]` in draft,
+      hidden in production until the basis for it is verified.
 - [ ] **Brain lobe function diagram** (`/how-lens-works`) — still a
       `PlaceholderPlate`. Fix the F3/F8 mislabel, the empty Frontal Lobe
       bullet, and the diagnostic electrode labels first — see Phase 7.5.

@@ -22,7 +22,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   return renderOgCard({
     eyebrow: location.hero.eyebrow,
     headline: `${location.hero.titleLead}${location.hero.titleAccent}${location.hero.titleTail}`,
-    sub: location.comingSoon ? "Opening soon — join the waitlist." : hours.join("  ·  "),
+    sub: location.comingSoon
+      ? "Opening soon — Nashville and Murfreesboro are open now."
+      : hours.join("  ·  "),
     foot: location.comingSoon
       ? `${location.name}, Tennessee`
       : `${location.address.addressLocality}, ${location.address.addressRegion}`,
