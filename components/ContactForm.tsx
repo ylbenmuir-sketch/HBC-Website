@@ -1,12 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
+import type { Video } from "@/lib/videos";
+import VideoEmbed from "./VideoEmbed";
 
-const HELPING_OPTIONS = ["My child", "Myself", "Someone else"];
+/**
+ * The contact form, in three steps.
+ *
+ *   1. **Request your free call** — first name, phone, preferred center,
+ *      best time, and an email behind a disclosure. Submit saves the row and
+ *      sends the lead email at once. That email is the lead; nothing after
+ *      this step is needed for the office to make the call.
+ *   2. **Optional context** — who the call is for, what's bringing them in,
+ *      a note. PATCHes the row step one created (one lead, one record). Two
+ *      exits, save or skip, and both land on step three.
+ *   3. **The video** — "while you wait for our call, here's what a first
+ *      visit looks like", with the confirmation and both centers' numbers
+ *      beneath it.
+ *
+ * The order is the point. The old single form asked "who are we helping?"
+ * and "what's bringing you in?" before it asked for a phone number, so a
+ * parent who got as far as the chips and stopped left nothing behind. Now
+ * the ask is first and short, and everything else is asked of someone whose
+ * call is already requested — which is also what the copy on step two says,
+ * in those words, so leaving is not a failure.
+ *
+ * ## Step two never shows before the row exists
+ *
+ * Step one's response carries the row id. Without one — the row failed to
+ * save but the email or the platform took the lead, so the visitor still
+ * hears "received" — there is no row to add to, and the form goes straight
+ * to step three. The context questions are not worth a second insert.
+ *
+ * ## The reveal gate
+ *
+ * Steps two and three mount after the observer that reveals `.rv` elements
+ * ran for this route. components/RevealOnScroll.tsx watches the DOM for
+ * exactly this (the MutationObserver there), so a late-mounting panel is
+ * observed when it arrives rather than staying at opacity 0 — the bug that
+ * once made the guide form's success state invisible. Each panel also
+ * scrolls itself into view and takes focus on its heading: the viewport may
+ * be sitting at the bottom of the form that just vanished, and a screen
+ * reader needs to be told where the page went.
+ */
+
+const HELPING_OPTIONS = ["Myself", "My child", "Someone else"];
 const CONCERN_OPTIONS = [
   "Focus & ADHD",
   "Anxiety & stress",
@@ -16,13 +58,50 @@ const CONCERN_OPTIONS = [
   "Brain fog",
   "Something else",
 ];
+// "Not sure yet" leads the list and is the default, so a visitor who skips the
+// question is not silently filed under Nashville — unsure leads go to the
+// default inbox and text from the default line (lib/center-routing.ts).
+// Location pages override the default via ?center= (see CENTER_BY_SLUG).
 const CENTER_OPTIONS = [
+  "Not sure yet",
   "Nashville",
   "Murfreesboro",
   "Franklin waitlist",
   "Concierge / at home",
 ];
-const TIME_OPTIONS = ["Mornings", "Afternoons", "Evenings"];
+// "Any time" first and default: the question is optional, and an answer that
+// says so is better than a window the visitor did not actually choose.
+const TIME_OPTIONS = ["Any time", "Mornings", "Afternoons", "Evenings"];
+
+/**
+ * `?center=<slug>` → the matching option. Location pages link here with their
+ * own slug so a visitor who came from /locations/murfreesboro sees
+ * Murfreesboro preselected instead of "Not sure yet" — and the lead then
+ * routes to the Murfreesboro inbox (lib/lead-notification.ts). Unknown or
+ * absent values leave the default alone.
+ */
+const CENTER_BY_SLUG: Record<string, string> = {
+  nashville: "Nashville",
+  murfreesboro: "Murfreesboro",
+  franklin: "Franklin waitlist",
+  concierge: "Concierge / at home",
+};
+
+export type CenterPhone = { name: string; phone: { display: string; tel: string } };
+
+const CARD_STYLE = {
+  background: "#fff",
+  border: "1px solid var(--line)",
+  borderRadius: 4,
+  padding: "34px 40px",
+} as const;
+
+const OPTIONAL_STYLE = {
+  color: "var(--slate)",
+  textTransform: "none",
+  letterSpacing: 0,
+  fontWeight: 400,
+} as const;
 
 /**
  * The "what happens next" steps (contact.html) — also the confirmation state.
@@ -72,28 +151,119 @@ function WhatHappensNext({
   );
 }
 
-export default function ContactForm() {
+/**
+ * A step panel that announces itself. Mounts, scrolls to its own top (under
+ * the sticky header — see `.form-step` in globals.css) and moves focus to its
+ * heading, so a keyboard or screen-reader user lands on the new step and a
+ * sighted one is not left looking at the space below where the form was.
+ *
+ * The heading is an H2: the card sits directly under the page's H1, beside
+ * the "What happens next" H2 in the other column, and an H3 here was a
+ * heading-order skip (axe, Lighthouse). Sized to the H3 scale by hand so the
+ * card does not shout.
+ */
+function StepPanel({
+  eyebrow,
+  heading,
+  children,
+  className = "",
+}: {
+  eyebrow: string;
+  heading: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const panel = useRef<HTMLDivElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    panel.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+    title.current?.focus({ preventScroll: true });
+  }, []);
+  return (
+    <div ref={panel} className={`rv form-card form-step ${className}`.trim()} style={CARD_STYLE}>
+      <div className="eyebrow">{eyebrow}</div>
+      <h2
+        ref={title}
+        tabIndex={-1}
+        style={{ margin: "18px 0 10px", fontSize: 26, fontWeight: 600, lineHeight: 1.2 }}
+      >
+        {heading}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+export default function ContactForm({
+  bookingUrl = null,
+  centerPhones = [],
+  video,
+}: {
+  /**
+   * A self-scheduling page (Google Calendar appointment schedule) where she
+   * can pick her own callback slot. Shown on step three only; the form itself
+   * stays the one ask. Comes from the server page, which reads
+   * BOOKING_CALENDAR_URL — unset means the link does not render.
+   */
+  bookingUrl?: string | null;
+  /** Both open centers' own lines, from the server page (lib/locations.ts). */
+  centerPhones?: CenterPhone[];
+  /** The first-visit video for step three (lib/videos.ts). */
+  video: Video;
+}) {
   const pathname = usePathname();
 
-  const [helpingWho, setHelpingWho] = useState("My child");
-  const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
+  // Step one.
   const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  // The honeypot. Real visitors never see this field and so always submit it
+  // empty; scripted spam fills every input it finds. The value is passed
+  // straight through to the platform, which classifies it — nothing on the
+  // site rejects a submission because of it.
+  const [website, setWebsite] = useState("");
+
+  // Step two. Nothing pre-selected: an answer the visitor did not give is not
+  // an answer, and "My child" as a default was filing adults under it.
+  const [helpingWho, setHelpingWho] = useState<string | null>(null);
+  const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [note, setNote] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "submitting" | "success" | "error"
-  >("idle");
+
+  const [step, setStep] = useState<"one" | "two" | "three">("one");
+  const [rowId, setRowId] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  // Step two failed to save: said once on step three, quietly — the call is
+  // requested either way, and that is the sentence that matters.
+  const [detailsFailed, setDetailsFailed] = useState(false);
+
+  const emailField = useRef<HTMLInputElement>(null);
+
+  // Read on mount (not via useSearchParams) so the form still prerenders.
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search)
+      .get("center")
+      ?.trim()
+      .toLowerCase();
+    const match = slug ? CENTER_BY_SLUG[slug] : undefined;
+    if (match) setPreferredCenter(match);
+  }, []);
+
+  useEffect(() => {
+    if (emailOpen) emailField.current?.focus();
+  }, [emailOpen]);
 
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) =>
       prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
     );
 
-  async function handleSubmit(e: React.FormEvent) {
+  /* ── Step one: save the callback, send the lead ─────────────────────── */
+  async function requestCall(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim() || !phone.trim()) {
       setErrorMessage("Please add your first name and phone number so we can reach you.");
@@ -102,40 +272,49 @@ export default function ContactForm() {
     }
     setStatus("submitting");
     setErrorMessage("");
+    // Read at submit time (not via useSearchParams) so the form prerenders.
+    const from = new URLSearchParams(window.location.search).get("from");
     try {
-      // read at submit time (not via useSearchParams) so the form prerenders
-      const from = new URLSearchParams(window.location.search).get("from");
       const res = await fetch("/api/consultation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          helping_who: helpingWho,
-          concerns: selectedConcerns,
           first_name: firstName.trim(),
           phone: phone.trim(),
           email: email.trim(),
           preferred_center: preferredCenter,
           best_time: bestTime,
-          note: note.trim(),
+          website,
           source_page: from || pathname,
         }),
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Something went wrong.");
-      }
-      setStatus("success");
+      const data = (await res.json().catch(() => null)) as
+        | { ok?: boolean; id?: string | null; error?: string }
+        | null;
+      if (!res.ok) throw new Error(data?.error ?? "Something went wrong.");
+
       // The conversion event — the coarse choices and the page, never the
-      // name, phone, email or note. A no-op until GA4 is configured.
+      // name, phone or email. A no-op until GA4 is configured. Fires here,
+      // when the lead exists, not after the optional step.
       trackEvent({
         name: "generate_lead",
         params: {
           form: "consultation",
           source_page: from || pathname,
-          helping_who: helpingWho,
           preferred_center: preferredCenter,
         },
       });
+
+      setStatus("idle");
+      // The lead landed. Step two needs a row to add to; without an id (the
+      // row did not save but another destination took the request) there is
+      // nothing to PATCH, and she goes straight to the video.
+      if (typeof data?.id === "string" && data.id) {
+        setRowId(data.id);
+        setStep("two");
+      } else {
+        setStep("three");
+      }
     } catch (err) {
       setErrorMessage(
         err instanceof Error && err.message !== "Failed to fetch"
@@ -146,86 +325,204 @@ export default function ContactForm() {
     }
   }
 
-  if (status === "success") {
+  /* ── Step two: add to the saved row, or don't ──────────────────────── */
+  async function saveDetails(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmedNote = note.trim();
+    const nothingToSave = !helpingWho && selectedConcerns.length === 0 && !trimmedNote;
+    if (nothingToSave || !rowId) {
+      setStep("three");
+      return;
+    }
+    setStatus("submitting");
+    try {
+      const res = await fetch(`/api/consultation/${rowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(helpingWho ? { helping_who: helpingWho } : {}),
+          ...(selectedConcerns.length > 0 ? { concerns: selectedConcerns } : {}),
+          ...(trimmedNote ? { note: trimmedNote } : {}),
+        }),
+      });
+      if (!res.ok) setDetailsFailed(true);
+    } catch {
+      setDetailsFailed(true);
+    }
+    // Either way: the call is requested, and the next thing she sees says so.
+    setStatus("idle");
+    setStep("three");
+  }
+
+  const name = firstName.trim();
+
+  /* ── Step three ─────────────────────────────────────────────────────── */
+  if (step === "three") {
     return (
-      <div
-        className="rv form-card"
-        style={{
-          background: "#fff",
-          border: "1px solid var(--line)",
-          borderRadius: 4,
-          padding: "48px 52px",
-        }}
+      <StepPanel
+        eyebrow="Your call is requested"
+        heading={
+          <>
+            While you wait for our call — here&rsquo;s what a first visit
+            actually looks like.
+          </>
+        }
       >
-        <div className="eyebrow">Request received</div>
-        <h3 style={{ margin: "18px 0 10px" }}>
-          Thank you, {firstName.trim()}. Here&rsquo;s what happens next.
-        </h3>
-        <WhatHappensNext headingLevel="h4" />
-        <div className="note-sage" style={{ marginTop: 34 }}>
-          Prefer to talk sooner? Call <b>{PHONE_DISPLAY}</b> — a real person
-          answers during business hours.
+        <p className="video-lead" style={{ color: "var(--slate)", fontSize: 15.5 }}>
+          Nothing to decide yet. This is the visit itself, as it happens.
+        </p>
+        <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
+
+        <div style={{ marginTop: 34 }}>
+          <h3 style={{ margin: "0 0 6px", fontFamily: "var(--sans)", fontSize: 16.5, fontWeight: 600, lineHeight: 1.65, color: "var(--navy)" }}>
+            Thank you{name ? `, ${name}` : ""}. Here&rsquo;s what happens next.
+          </h3>
+          {detailsFailed && (
+            <p className="micro" style={{ marginTop: 4 }}>
+              We couldn&rsquo;t save the extra details just now, but your call
+              is already requested — we&rsquo;ll ask when we talk.
+            </p>
+          )}
+          <WhatHappensNext headingLevel="h4" />
         </div>
-      </div>
+
+        {bookingUrl && (
+          <div style={{ marginTop: 30 }}>
+            <a
+              className="btn btn-primary"
+              href={bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ width: "100%" }}
+            >
+              Pick a time for your call
+            </a>
+            <p className="micro" style={{ textAlign: "center" }}>
+              Optional — choose the slot that suits you and we&rsquo;ll call
+              then. Otherwise we&rsquo;ll reach out at the time you picked.
+            </p>
+          </div>
+        )}
+
+        <div className="note-sage" style={{ marginTop: 30 }}>
+          Prefer to talk sooner? Call the center closer to you &mdash; a real
+          person answers during business hours.
+          <div style={{ marginTop: 8 }}>
+            {centerPhones.length > 0 ? (
+              centerPhones.map(({ name: center, phone: line }) => (
+                <div key={center}>
+                  {center} &mdash;{" "}
+                  <a href={`tel:${line.tel}`}>
+                    <b>{line.display}</b>
+                  </a>
+                </div>
+              ))
+            ) : (
+              <b>{PHONE_DISPLAY}</b>
+            )}
+          </div>
+        </div>
+      </StepPanel>
     );
   }
 
+  /* ── Step two ───────────────────────────────────────────────────────── */
+  if (step === "two") {
+    return (
+      <StepPanel
+        eyebrow="Request received"
+        heading={
+          <>
+            Your call is requested{name ? `, ${name}` : ""}. A few optional
+            questions help us prepare.
+          </>
+        }
+      >
+        <div className="note-sage" style={{ marginTop: 14 }}>
+          Your call request is saved. These questions are optional &mdash; if
+          you leave now, we&rsquo;ll still call you.
+        </div>
+
+        <form className="form" onSubmit={saveDetails} noValidate>
+          <label id="helping-label">Who are we helping?</label>
+          <div className="chips" role="radiogroup" aria-labelledby="helping-label">
+            {HELPING_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                role="radio"
+                aria-checked={helpingWho === opt}
+                className={`chip${helpingWho === opt ? " on" : ""}`}
+                onClick={() => setHelpingWho(opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          <label id="concerns-label">
+            What&rsquo;s bringing you in?{" "}
+            <span style={OPTIONAL_STYLE}>(choose any)</span>
+          </label>
+          <div className="chips" aria-labelledby="concerns-label">
+            {CONCERN_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                aria-pressed={selectedConcerns.includes(opt)}
+                className={`chip${selectedConcerns.includes(opt) ? " on" : ""}`}
+                onClick={() => toggleConcern(opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          <label htmlFor="note">
+            In your own words <span style={OPTIONAL_STYLE}>(optional)</span>
+          </label>
+          <textarea
+            id="note"
+            placeholder="Mornings are hard, homework is a battle, and he's starting to say he's 'just bad at school'…"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            aria-describedby="note-hint"
+          />
+          <p id="note-hint" className="micro" style={{ marginTop: 8 }}>
+            Please avoid sharing detailed medical information here.
+          </p>
+
+          <div className="form-exits">
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={status === "submitting"}
+            >
+              {status === "submitting" ? "Saving…" : "Save these details"}
+            </button>
+            <button
+              className="btn btn-ghost"
+              type="button"
+              onClick={() => setStep("three")}
+              disabled={status === "submitting"}
+            >
+              Skip &mdash; my call is already requested.
+            </button>
+          </div>
+        </form>
+      </StepPanel>
+    );
+  }
+
+  /* ── Step one ───────────────────────────────────────────────────────── */
   return (
     <form
-      className="form rv form-card"
-      style={{
-        background: "#fff",
-        border: "1px solid var(--line)",
-        borderRadius: 4,
-        padding: "48px 52px",
-      }}
-      onSubmit={handleSubmit}
+      className="form form-compact rv form-card"
+      style={CARD_STYLE}
+      onSubmit={requestCall}
       noValidate
     >
-      <div className="eyebrow">Request a conversation</div>
-
-      <label id="helping-label">Who are we helping?</label>
-      <div className="chips" role="radiogroup" aria-labelledby="helping-label">
-        {HELPING_OPTIONS.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            role="radio"
-            aria-checked={helpingWho === opt}
-            className={`chip${helpingWho === opt ? " on" : ""}`}
-            onClick={() => setHelpingWho(opt)}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-
-      <label id="concerns-label">
-        What&rsquo;s bringing you in?{" "}
-        <span
-          style={{
-            color: "var(--slate)",
-            textTransform: "none",
-            letterSpacing: 0,
-            fontWeight: 400,
-          }}
-        >
-          (choose any)
-        </span>
-      </label>
-      <div className="chips" aria-labelledby="concerns-label">
-        {CONCERN_OPTIONS.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            aria-pressed={selectedConcerns.includes(opt)}
-            className={`chip${selectedConcerns.includes(opt) ? " on" : ""}`}
-            onClick={() => toggleConcern(opt)}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
+      <div className="eyebrow">Request your free call</div>
 
       <div className="two">
         <div>
@@ -255,29 +552,6 @@ export default function ContactForm() {
         </div>
       </div>
 
-      <label htmlFor="email">
-        Email{" "}
-        <span
-          style={{
-            color: "var(--slate)",
-            textTransform: "none",
-            letterSpacing: 0,
-            fontWeight: 400,
-          }}
-        >
-          (optional)
-        </span>
-      </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="sarah@example.com"
-        autoComplete="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
       <div className="two">
         <div>
           <label htmlFor="preferred-center">Preferred center</label>
@@ -292,7 +566,9 @@ export default function ContactForm() {
           </select>
         </div>
         <div>
-          <label htmlFor="best-time">Best time to call</label>
+          <label htmlFor="best-time">
+            Best time to call <span style={OPTIONAL_STYLE}>(optional)</span>
+          </label>
           <select
             id="best-time"
             value={bestTime}
@@ -305,25 +581,66 @@ export default function ContactForm() {
         </div>
       </div>
 
-      <label htmlFor="note">
-        In your own words{" "}
-        <span
-          style={{
-            color: "var(--slate)",
-            textTransform: "none",
-            letterSpacing: 0,
-            fontWeight: 400,
-          }}
+      {/* The email is optional and most visitors skip it, so it does not
+          lengthen the form until asked for. A disclosure, not a hidden input:
+          the button says what it opens, and once open the field is focused. */}
+      {emailOpen ? (
+        <>
+          <label htmlFor="email">
+            Email <span style={OPTIONAL_STYLE}>(optional)</span>
+          </label>
+          <input
+            ref={emailField}
+            id="email"
+            name="email"
+            type="email"
+            placeholder="sarah@example.com"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </>
+      ) : (
+        <button
+          type="button"
+          className="form-disclose"
+          aria-expanded={false}
+          aria-controls="email"
+          onClick={() => setEmailOpen(true)}
         >
-          (optional)
-        </span>
-      </label>
-      <textarea
-        id="note"
-        placeholder="Mornings are hard, homework is a battle, and he's starting to say he's 'just bad at school'…"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-      />
+          + Add an email address (optional)
+        </button>
+      )}
+
+      {/*
+        Hidden from real users three ways, because one is not reliable:
+        off-screen (not display:none, which some bots skip), out of the tab
+        order, and hidden from assistive tech. Left in the DOM and left
+        submitting, because a honeypot only works if a bot can find it.
+      */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+      </div>
 
       {status === "error" && (
         <p
@@ -336,22 +653,24 @@ export default function ContactForm() {
 
       <button
         className="btn btn-primary"
-        style={{ width: "100%", marginTop: 28 }}
+        style={{ width: "100%", marginTop: 20 }}
         type="submit"
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending…" : "Request my conversation"}
+        {status === "submitting" ? "Sending…" : "Request my free call"}
       </button>
       {/* The privacy link sits here, on the sentence that is already about
           what happens to what she sends us, rather than in a separate line of
-          fine print. This is the one form on the site that collects a name, a
-          phone number and a free-text note, so it is the one place a person
-          might reasonably want to check before pressing the button — and the
-          footer is a long way from a submit button. */}
+          fine print. This is the one form on the site that collects a name
+          and a phone number, so it is the one place a person might reasonably
+          want to check before pressing the button — and the footer is a long
+          way from a submit button. */}
       <p className="micro" style={{ textAlign: "center" }}>
         No payment details, no intake forms today. We never share your
         information, and there&rsquo;s no obligation after we talk.{" "}
         <Link href="/privacy-policy">What happens to what you tell us</Link>.
+        We&rsquo;ll text this number once to confirm we got your request;
+        reply STOP to opt out.
       </p>
     </form>
   );

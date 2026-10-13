@@ -56,7 +56,9 @@ export type SiteEvent =
       params: {
         form: "consultation";
         source_page: string;
-        helping_who: string;
+        /** Collected in the form's optional second step, so absent on the
+         *  event — which fires when the callback is saved, not after. */
+        helping_who?: string;
         preferred_center: string;
       };
     }

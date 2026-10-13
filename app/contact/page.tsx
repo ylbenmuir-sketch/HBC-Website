@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm, { WhatHappensNext } from "@/components/ContactForm";
+import { getVideo } from "@/lib/videos";
 import ConfirmTag from "@/components/ConfirmTag";
 import { locationPhone, locations } from "@/lib/locations";
 import { CONTACT_RESPONSE_TAG, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
@@ -9,6 +10,10 @@ import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/contact");
+
+/** The first-visit video the form shows once the call is requested — step
+ *  three of components/ContactForm.tsx — and the page's VideoObject. */
+const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
 
 export default function ContactPage() {
   const trail = hubTrail("/contact");
@@ -31,9 +36,12 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageSchema path="/contact" breadcrumb={trail} />
+      <PageSchema path="/contact" breadcrumb={trail} video={FIRST_VISIT_VIDEO} />
       <Breadcrumbs trail={trail} />
-      <section className="page-hero center">
+      {/* `compact`: the form's first step has to sit above the fold on a
+          desktop, so this hero and the section below it run tighter than the
+          site default — see the contact block in globals.css. */}
+      <section className="page-hero center compact">
         <div className="wrap rv">
           <div className="eyebrow">Talk with our team</div>
           <h1>Tell us what&rsquo;s going on. We&rsquo;ll take it from there.</h1>
@@ -47,9 +55,18 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="sec">
+      <section className="sec sec-form">
         <div className="wrap duo-form">
-          <ContactForm />
+          {/* Server-side reads: BOOKING_CALENDAR_URL is not a secret but is
+              not inlined into the client bundle either, so changing it in
+              Vercel needs only a redeploy. The center lines come from the same
+              gated reader the right-hand column uses, so step three can never
+              print a number this page would not. */}
+          <ContactForm
+            bookingUrl={process.env.BOOKING_CALENDAR_URL?.trim() || null}
+            centerPhones={centerPhones}
+            video={FIRST_VISIT_VIDEO}
+          />
           <div className="rv">
             {/* A real H2: /contact went H1 -> H4 with nothing in between.
                 The .eyebrow class carries the styling, so this renders
