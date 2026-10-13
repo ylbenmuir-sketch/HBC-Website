@@ -207,9 +207,8 @@ export default function LensNeurofeedbackPage() {
               <em className="sage">who it&rsquo;s for.</em>
             </h1>
             <p className="sub">
-              LENS stands for Low Energy Neurofeedback System. It&rsquo;s a
-              wellness service &mdash; passive, brief, and with nothing to
-              practice between visits.
+              LENS stands for Low Energy Neurofeedback System &mdash; passive,
+              brief, and with nothing to practice between visits.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
@@ -336,10 +335,13 @@ export default function LensNeurofeedbackPage() {
           </div>
           <div className="rv split-prose">
             <p>
-              LENS is offered as a wellness service, not medical treatment.
-              We&rsquo;re a wellness practice: LENS doesn&rsquo;t diagnose or
-              treat medical or psychiatric conditions, and it isn&rsquo;t a
-              substitute for care from your doctor or therapist.
+              What we offer is neurofeedback: small sensors read the
+              brain&rsquo;s electrical activity and return a brief, very
+              low-energy feedback signal, with nothing to perform. LENS is
+              offered as a wellness service, not medical treatment. It
+              doesn&rsquo;t diagnose or treat medical or psychiatric
+              conditions, and it isn&rsquo;t a substitute for care from your
+              doctor or therapist.
             </p>
             <p>
               If you&rsquo;re already seeing someone, please keep seeing them.

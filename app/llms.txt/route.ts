@@ -61,7 +61,7 @@ export function GET() {
 
   const text = `# ${SITE_NAME}
 
-> ${SITE_NAME} is a wellness practice${founded ? ` founded in ${founded}` : ""}, offering gentle LENS (Low Energy Neurofeedback System) neurofeedback for adults, children and families at centers in ${open.map((l) => l.name).join(" and ")}, Tennessee. It is not a medical clinic: LENS is offered as a wellness service, not medical treatment, and it does not diagnose, treat, cure or prevent any condition.
+> ${SITE_NAME} offers LENS (Low Energy Neurofeedback System) neurofeedback for adults, children and families at centers in ${open.map((l) => l.name).join(" and ")}, Tennessee${founded ? `, and has since ${founded}` : ""}.
 
 ${DISCLAIMER}
 

@@ -54,7 +54,7 @@ export type SiteFaq = {
 export const SITE_FAQS: SiteFaq[] = [
   {
     q: "What is LENS neurofeedback?",
-    a: "LENS — the Low Energy Neurofeedback System — uses small sensors to observe the brain's electrical activity and returns a brief, very low-energy feedback signal, far weaker than the everyday signals already around you. There's nothing to perform, and it's offered as a wellness service — not a medical treatment.",
+    a: "LENS — the Low Energy Neurofeedback System — uses small sensors to observe the brain's electrical activity and returns a brief, very low-energy feedback signal, far weaker than the everyday signals already around you. There's nothing to perform.",
   },
   {
     q: "Is it safe?",
@@ -108,11 +108,15 @@ export const SITE_FAQS: SiteFaq[] = [
     // says "Neurofeedback Therapy" because that is the head term and names the
     // modality; a flat "Neither" on the same site read as a contradiction to
     // anyone quoting both. The boundary is unchanged: a wellness service, not
-    // medical treatment. The same sentence leads the homepage's version of
-    // this answer and the §4 paragraph on /lens-neurofeedback — edit all three
-    // together.
+    // medical treatment — but it is the second sentence, not the first (Ben's
+    // voice brief, Oct 2026). The answer opens on what Harmonized offers and
+    // the boundary follows, instead of the practice qualifying its service
+    // before describing it. Answer 1 used to close on the same boundary and
+    // no longer does: one accordion, one home for it, and this is the home.
+    // The same three sentences open the homepage's version of this answer
+    // and the §4 paragraph on /lens-neurofeedback — edit all three together.
     q: "Is this therapy or medical treatment?",
-    a: "LENS is offered as a wellness service, not medical treatment. We're a wellness practice: LENS doesn't diagnose or treat medical or psychiatric conditions, and it isn't a substitute for care from your doctor or therapist.",
+    a: "What we offer is neurofeedback: small sensors read the brain's electrical activity and return a brief, very low-energy feedback signal, with nothing to perform. LENS is offered as a wellness service, not medical treatment. It doesn't diagnose or treat medical or psychiatric conditions, and it isn't a substitute for care from your doctor or therapist.",
   },
   {
     q: "Can I continue seeing my doctor or therapist?",

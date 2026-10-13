@@ -260,10 +260,10 @@ const homeFaqs = [
     a: "LENS is gentle and noninvasive — nothing enters the body, and the feedback signal is far weaker than the everyday signals already around you. Most people, including young children, feel nothing at all during a session.",
   },
   {
-    // Leads with the same sentence as lib/faq.ts answer 10 — see the note
-    // there for why it no longer opens "Neither."
+    // Same three sentences as lib/faq.ts answer 10 — see the note there for
+    // why it neither opens "Neither." nor opens on the boundary sentence.
     q: "Is this therapy or medical treatment?",
-    a: "LENS is offered as a wellness service, not medical treatment. We're a wellness practice: LENS doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
+    a: "What we offer is neurofeedback: small sensors read the brain's electrical activity and return a brief, very low-energy feedback signal, with nothing to perform. LENS is offered as a wellness service, not medical treatment. It doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
   },
   {
     // Shortened for the homepage — the taper's full cadence and the pricing
@@ -322,12 +322,18 @@ export default function HomePage() {
             </h1>
             {/* The one declarative sentence about what the organisation is,
                 on the page every engine fetches first. It lived only on
-                /about (SEO-AUDIT-3 §5.3, A11). Mirrored in
+                /about (SEO-AUDIT-3 §5.3, A11). It leads with the service, not
+                with the category (Ben's voice brief, Oct 2026): "is a wellness
+                practice offering gentle…" had the practice qualifying its
+                service before describing it. The wellness-service boundary
+                has three homes on this page already — the three-question
+                block, the footer disclaimer, and /faq a click away — and it
+                belongs there, not in the opening clause. Mirrored in
                 lib/chat/site-copy.ts — edit both. */}
             <p className="sub">
-              Harmonized Brain Centers is a wellness practice offering gentle
-              LENS neurofeedback for adults and kids across Middle Tennessee,
-              from centers in Nashville and Murfreesboro.
+              Harmonized Brain Centers offers LENS neurofeedback for adults and
+              kids across Middle Tennessee, from centers in Nashville and
+              Murfreesboro.
             </p>
             <div className="hero-ctas">
               <TalkCta />
