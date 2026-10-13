@@ -1059,11 +1059,9 @@ receives: `public/images/brain-map-chart.svg` as Ben supplied it, inlined as
 `components/BrainMapChart.tsx` (viewBox kept, fixed size dropped,
 `preserveAspectRatio="xMidYMid meet"`) so it inherits DM Sans and costs no
 request. Caption: "A sample recording — 21 sites, measured in microvolts. Not
-a diagnosis." Between 600px and 920px of container width the figure scrolls
-sideways instead of shrinking the chart past legibility; below 600px the
-whole chart fits the container and the 21 site labels (grouped as
-`.bmc-sites`) are hidden — the axis, range band, legend and aria-label stay.
-Beneath it the heat map
+a diagnosis." The chart always fits its container and never scrolls; below
+920px the 21 site labels (grouped as `.bmc-sites`) are hidden — the axis,
+range band, legend and aria-label stay. Beneath it the heat map
 (`/images/brain-map-heat.png`) is a coming-soon block: smaller, the image at
 reduced opacity, eyebrow "COMING SOON", line "Your brain in full color — the
 same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` — confirmed

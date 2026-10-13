@@ -15,11 +15,11 @@
  * at y="509") in `<g className="bmc-sites">`.
  *
  * It fills whatever box it is given (globals.css `.bmc-svg`: width 100%,
- * height from the viewBox ratio). Below 600px the whole chart shows at
- * container width and the site-label group is hidden (Ben, 2026-10-13) —
- * at that scale the 21 labels collide; the µV axis, the typical-range band
- * and the legend stay, and the SVG's own aria-label still names the 21
- * sites. See components/BrainMapFigure.tsx.
+ * height from the viewBox ratio) and never scrolls. Below 920px the
+ * site-label group is hidden (Ben, 2026-10-13) — at that scale the 21
+ * labels collide; the µV axis, the typical-range band and the legend stay,
+ * and the SVG's own aria-label still names the 21 sites. See
+ * components/BrainMapFigure.tsx.
  */
 export default function BrainMapChart() {
   return (

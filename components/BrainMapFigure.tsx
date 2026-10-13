@@ -38,12 +38,10 @@ import {
  *
  * ## The chart at narrow widths
  *
- * Between 600px and 920px the figure scrolls sideways rather than shrinking
- * the chart past legibility; below 600px the whole chart fits the container
- * and the site-label group is hidden (Ben, 2026-10-13) — see `.bmc` in
- * globals.css and the note in BrainMapChart.tsx. The scroller is a
- * labelled, focusable region so a keyboard can reach it where it scrolls;
- * elsewhere it is simply the chart's box.
+ * The chart always fits its container; nothing scrolls. Below 920px the
+ * site-label group is hidden (Ben, 2026-10-13) — see `.bmc` in globals.css
+ * and the note in BrainMapChart.tsx. A sideways-scrolling figure was tried
+ * first and retired: visitors saw six of twenty-one bars and did not scroll.
  */
 export default function BrainMapFigure({
   priority = false,
@@ -81,12 +79,7 @@ export default function BrainMapFigure({
   return (
     <div className="bm-figure">
       <figure className="bmc">
-        <div
-          className="bmc-scroll"
-          role="region"
-          aria-label="Sample recording chart"
-          tabIndex={0}
-        >
+        <div className="bmc-box">
           <BrainMapChart />
         </div>
         <figcaption className="micro">
