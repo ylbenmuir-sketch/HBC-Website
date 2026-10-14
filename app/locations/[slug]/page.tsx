@@ -155,6 +155,9 @@ export default async function LocationPage({
     { label: "Locations", href: "/locations" },
     { label: location.name },
   ];
+  // The page's primary image: the hero photo, or failing that the street
+  // view — a real photograph either way, never a plate.
+  const primaryImage = location.image?.src ?? location.arrivalPhoto?.src;
 
   return (
     <>
@@ -174,7 +177,7 @@ export default async function LocationPage({
             : `${location.name} — ${location.comingSoon ? "Coming Soon — " : ""}${SITE_NAME}`,
           description: location.metaDescription,
           dateModified: location.dateModified,
-          ...(location.image ? { image: location.image.src } : {}),
+          ...(primaryImage ? { image: primaryImage } : {}),
           ...(location.comingSoon ? {} : { about: localBusinessRef(location) }),
         }}
         nodes={[
@@ -570,6 +573,23 @@ export default async function LocationPage({
 
       <section className="sec">
         <div className="wrap split">
+          {/* The building from the street, where a center has that photo —
+              beside "Getting here", because recognizing the place is part of
+              getting there. Alt and caption both say what to look for. The
+              sage map placeholder keeps the slot everywhere else until an
+              embedded map exists. */}
+          {location.arrivalPhoto ? (
+            <figure className="rv arrival-photo">
+              <PhotoFrame
+                src={location.arrivalPhoto.src}
+                alt={location.arrivalPhoto.alt}
+                position={location.arrivalPhoto.position}
+                height={440}
+                sizes="(max-width: 1060px) 100vw, 47vw"
+              />
+              <figcaption>{location.arrivalPhoto.caption}</figcaption>
+            </figure>
+          ) : (
           <div
             className="rv"
             style={{
@@ -610,6 +630,7 @@ export default async function LocationPage({
               </div>
             )}
           </div>
+          )}
           <div className="rv">
             <div className="eyebrow">Planning your visit</div>
             <h2>{location.planning.reachHeading}</h2>

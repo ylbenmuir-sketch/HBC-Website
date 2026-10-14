@@ -240,7 +240,9 @@ Production currently shows a two-sentence stand-in; the full page needs:
 - [ ] Franklin opening date (`FRANKLIN_OPENING`) — shows "Coming soon" until verified
 - [ ] Communities-served lists per location
 - [ ] Directions / arrival details per location
-- [ ] Embedded maps (currently a styled placeholder, dev-labeled only)
+- [ ] Embedded maps (currently a styled placeholder, dev-labeled only, on
+      Nashville and Franklin; Murfreesboro shows its exterior photo in that
+      slot instead)
 
 ## Testimonials & celebrity
 
@@ -268,7 +270,9 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] Founder candid · team collaboration
 - [ ] Nashville: exterior · waiting room · session room (current room photo
       should be reshot professionally)
-- [ ] Murfreesboro: exterior · waiting room · session room
+- [ ] Murfreesboro: waiting room · session room — the **exterior is done**
+      (2026-10-14, `/images/murfreesboro-exterior.jpg`, shown beside
+      "Getting here" on `/locations/murfreesboro` as `arrivalPhoto`)
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
 - [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section

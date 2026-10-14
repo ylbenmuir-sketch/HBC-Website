@@ -219,6 +219,18 @@ export type Location = {
   image?: { src: string; position: string };
   plateSpec?: string;
   /**
+   * The center seen from the street, for the "Planning your visit" split.
+   *
+   * Not the hero and not decoration: its one job is letting a first-time
+   * visitor recognize the building when they pull up, so it sits beside
+   * "Getting here" and its alt and caption say what to look for in plain
+   * words. Where it is set it replaces the sage map placeholder in that slot
+   * (app/locations/[slug]/page.tsx); where it is not, the placeholder stays.
+   * It also joins `locationPhotos()`, so the LocalBusiness node carries a
+   * real photograph of the premises.
+   */
+  arrivalPhoto?: { src: string; position: string; alt: string; caption: string };
+  /**
    * The substance section, between the hero and the space.
    *
    * It exists because "neurofeedback" and "LENS" appeared zero times in the
@@ -569,6 +581,18 @@ export const locations: Location[] = [
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
     plateSpec: "Murfreesboro — reception or session room, natural light",
+    /**
+     * Supplied by Ben, 2026-10-14. The building from the street — the one
+     * photograph a visitor needs before the interior set arrives. Kept out of
+     * the hero on purpose (Ben: its job is recognition, not atmosphere).
+     */
+    arrivalPhoto: {
+      src: "/images/murfreesboro-exterior.jpg",
+      position: "center 58%",
+      alt: "The Murfreesboro center seen from the street: a white cottage with striped awnings, the brain logo in the front window.",
+      caption:
+        "Look for the white cottage with striped awnings — our brain logo is in the front window.",
+    },
     intro: {
       eyebrow: "Why people come here",
       heading: "What LENS is — and who comes to Chestnut Street.",
@@ -589,7 +613,8 @@ export const locations: Location[] = [
       photos: [
         { kind: "plate", spec: "Murfreesboro interior — reception, natural light" },
         { kind: "plate", spec: "Murfreesboro session room — comfortable chair" },
-        { kind: "plate", spec: "Murfreesboro exterior — entrance signage" },
+        // The exterior shot is in hand — `arrivalPhoto` above — so it is no
+        // longer on the brief; this grid is the interior set.
       ],
       body: [
         `The rooms are quiet and the chairs are comfortable, and nobody is moved through on a clock. A session runs ${SESSION_LENGTH.value}, and most people read or simply rest through it.`,
@@ -656,7 +681,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
       "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children, and families across Rutherford County. The first call is free.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-14",
   },
   {
     slug: "franklin",
@@ -901,13 +926,14 @@ export function hoursSummary(location: Location): string | null {
 
 /**
  * Real photographs for this center, site-root-relative — hero first, then the
- * space grid. Placeholder plates are not photos and are skipped, so a center
- * that has none (Murfreesboro, Franklin) returns an empty array and the
- * caller omits the field rather than shipping a stand-in.
+ * street view, then the space grid. Placeholder plates are not photos and are
+ * skipped, so a center that has none (Franklin) returns an empty array and
+ * the caller omits the field rather than shipping a stand-in.
  */
 export function locationPhotos(location: Location): string[] {
   return [
     ...(location.image ? [location.image.src] : []),
+    ...(location.arrivalPhoto ? [location.arrivalPhoto.src] : []),
     ...location.space.photos
       .filter((p) => p.kind === "photo")
       .map((p) => p.src),

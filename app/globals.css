@@ -1867,6 +1867,13 @@ body[data-bottombar] footer.site {
 /* The caption is the ordinary `.micro` line the heat map carried, not the
    sitewide small-caps photo credit `figcaption` is styled as (line ~364). */
 .bmc figcaption { font-size: 13.5px; letter-spacing: 0; text-transform: none; font-weight: 400; margin-top: 12px; }
+/* The street-view photo on /locations/[slug] (`arrivalPhoto`). Its caption is
+   a sentence a visitor reads to recognize the building, not a photo credit, so
+   it takes the same override as `.bmc figcaption`. `margin: 0` because the
+   figure is a `.split` grid cell and the UA's figure margins would inset it
+   from the column the plate it replaced filled. */
+.arrival-photo { margin: 0; }
+.arrival-photo figcaption { font-size: 13.5px; letter-spacing: 0; text-transform: none; font-weight: 400; margin-top: 12px; color: var(--slate); }
 .bmc-box { border: 1px solid var(--line); border-radius: 4px; background: #fbf8f1; }
 .bmc-svg { display: block; width: 100%; height: auto; aspect-ratio: 1400 / 530; }
 @media (max-width: 919px) { .bmc-sites { display: none; } }
