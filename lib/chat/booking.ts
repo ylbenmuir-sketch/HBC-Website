@@ -311,9 +311,10 @@ const CENTER_ALIASES: Array<{ canonical: string; pattern: RegExp }> = [
   // should book Nashville or Murfreesboro today, not wait), so the assistant
   // offers the two open centers and nothing else. "franklin" typed anyway is
   // kept verbatim by resolveCenter — the person calling her back reads it
-  // and offers whichever open center is nearer. Every chat lead emails
-  // LEADS_FALLBACK (lib/lead-routing.ts); it texts from the default line
-  // unless DIALPAD_SMS_FROM_FRANKLIN is set (lib/center-routing.ts).
+  // and offers whichever open center is nearer. It emails LEADS_FALLBACK
+  // (lib/lead-routing.ts routes chat leads by center, like the form's) and
+  // texts from the default line unless DIALPAD_SMS_FROM_FRANKLIN is set
+  // (lib/center-routing.ts).
 ];
 
 /**

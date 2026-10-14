@@ -1,6 +1,6 @@
 // Center → per-center setting: which Dialpad line the confirmation text comes
 // from. (Which inbox the lead EMAIL goes to is lib/lead-routing.ts, by its
-// own rules — chat leads and Concierge route differently there.)
+// own rules — Concierge, guide and more-info leads route differently there.)
 //
 // Matched by substring, case-insensitive, so "Murfreesboro" from the form's
 // select, the chat's canonical "Murfreesboro", and a visitor who typed "the

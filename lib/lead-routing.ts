@@ -6,13 +6,16 @@
 // First match wins:
 //
 //   guide download                              → LEADS_GUIDE
-//   chat assistant lead (any center)            → LEADS_FALLBACK
 //   "more information" (not ready to book)      → LEADS_MORE_INFO
 //   ready to book, Concierge / at home          → LEADS_CONCIERGE
 //   ready to book, Nashville                    → LEADS_NASHVILLE
 //   ready to book, Murfreesboro                 → LEADS_MURFREESBORO
 //   anything else — Franklin, "Not sure yet",
 //   no center, a center typed that matches none → LEADS_FALLBACK
+//
+// Form and chat assistant leads follow the same center rules (Ben,
+// 2026-10-14; chat leads all went to LEADS_FALLBACK before that). The row
+// keeps source = chat, and the subject says "(via chat)".
 //
 // Each variable holds a comma-separated list: the FIRST address is the To,
 // the rest are CC.
@@ -70,10 +73,11 @@ export type LeadForRouting = {
 /** Which rule a lead falls under. Pure — reads no environment. */
 export function routeFor(lead: LeadForRouting): RouteName {
   if (lead.type === "guide") return "guide";
-  if (lead.source === "chat") return "fallback";
   if (lead.intent === "more_info") return "more_info";
   const center = lead.preferredCenter ?? "";
-  if (/concierge/i.test(center)) return "concierge";
+  // "at home" / "in home" too: the chat keeps a center it doesn't recognise
+  // in the visitor's own words (lib/chat/booking.ts → resolveCenter).
+  if (/concierge|\b(at|in)[- ]home\b/i.test(center)) return "concierge";
   if (/nashville/i.test(center)) return "nashville";
   if (/murfreesboro/i.test(center)) return "murfreesboro";
   return "fallback";
@@ -175,8 +179,9 @@ const FORM_LABEL: Record<RouteName, string> = {
 };
 
 /**
- * "New free call request — Nashville — Jane Doe". The form, the center, the
- * person, so the inbox can be triaged without opening anything. A name that
+ * "New free call request — Nashville — Jane Doe" ("free call request (via
+ * chat)" for the assistant). The form, the center, the person, so the inbox
+ * can be triaged without opening anything. A name that
  * starts with "TEST" (case as typed) puts "TEST — " in front, so a test
  * submission can never be mistaken for a parent. A guide signup has no name
  * or center; its address stands in for the name.
@@ -190,7 +195,7 @@ export function notificationSubject(input: {
 }): string {
   const form =
     input.source === "chat" && input.route !== "guide"
-      ? "chat assistant call request"
+      ? `${FORM_LABEL[input.route]} (via chat)`
       : FORM_LABEL[input.route];
   const center =
     input.route === "guide" ? "No center" : input.preferredCenter?.trim() || "No center chosen";
