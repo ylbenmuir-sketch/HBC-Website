@@ -1,4 +1,5 @@
 import { SHOW_DRAFT_CONTENT } from "./site-config";
+import { ROUTE_ENV } from "./lead-routing";
 
 /**
  * Build-time configuration validation.
@@ -25,17 +26,24 @@ function require_(label: string, ok: boolean) {
 }
 
 // Lead notification (lib/lead-notification.ts). Both are needed before a
-// single lead reaches a human; LEADS_NOTIFY_FROM is optional and falls back to
-// Resend's shared test sender, so it is not checked here.
+// single lead reaches a human. Any route variable left unset falls back to
+// LEADS_FALLBACK, then LEADS_NOTIFY_EMAIL (lib/lead-routing.ts), so one of
+// those two is the floor; the per-route variables are optional and warn at
+// runtime, on each lead, when they fall back.
 require_(
   "RESEND_API_KEY (lead notification email provider)",
   Boolean(process.env.RESEND_API_KEY)
 );
 require_(
-  "LEADS_NOTIFY_EMAIL (where new consultation requests are sent)",
-  Boolean(process.env.LEADS_NOTIFY_EMAIL)
+  "LEADS_FALLBACK or LEADS_NOTIFY_EMAIL (where unrouted leads are sent)",
+  Boolean(process.env.LEADS_FALLBACK?.trim() || process.env.LEADS_NOTIFY_EMAIL?.trim())
 );
-
+const unsetRoutes = Object.values(ROUTE_ENV).filter((name) => !process.env[name]?.trim());
+if (unsetRoutes.length > 0 && !SHOW_DRAFT_CONTENT) {
+  console.warn(
+    `[config] lead routes falling back: ${unsetRoutes.join(", ")} not set — those leads go to LEADS_FALLBACK (lib/lead-routing.ts).`
+  );
+}
 
 if (misconfigured.length > 0) {
   const summary = `[config] ${misconfigured.length} missing setting(s): ${misconfigured.join(

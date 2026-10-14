@@ -9,6 +9,7 @@ import type { BookingDraft, ChatSession } from "./session";
 import { contactCollectionAllowed } from "./session";
 import { normalize } from "./refusals";
 import { CHAT_CONSENT_QUESTION } from "../sms-consent";
+import { PHONE_DISPLAY } from "../site-config";
 
 /**
  * The callback request (phase-8-chatbot.md §5).
@@ -310,9 +311,9 @@ const CENTER_ALIASES: Array<{ canonical: string; pattern: RegExp }> = [
   // should book Nashville or Murfreesboro today, not wait), so the assistant
   // offers the two open centers and nothing else. "franklin" typed anyway is
   // kept verbatim by resolveCenter — the person calling her back reads it
-  // and offers whichever open center is nearer. It routes to the default
-  // inbox and line unless LEADS_NOTIFY_EMAIL_FRANKLIN / DIALPAD_SMS_FROM_FRANKLIN
-  // are set (lib/center-routing.ts matches by substring).
+  // and offers whichever open center is nearer. Every chat lead emails
+  // LEADS_FALLBACK (lib/lead-routing.ts); it texts from the default line
+  // unless DIALPAD_SMS_FROM_FRANKLIN is set (lib/center-routing.ts).
 ];
 
 /**
@@ -654,6 +655,8 @@ export function bookingSuccessReply(name: string, now: Date = new Date()): strin
   return `You’re all set, ${name}. ${callbackExpectation(now)}`;
 }
 
-/** Sent when /api/consultation fails. §5: be honest, point at the contact page. */
+/** Sent when /api/consultation did not save the request. §5: be honest. The
+ *  phone number leads, because when the save is failing the contact page,
+ *  which saves the same way, may fail with it (Ben, 2026-10-14). */
 export const BOOKING_FAILURE_REPLY =
-  "Something went wrong on our end and your request didn’t save — I’d rather tell you than leave you waiting on a call that isn’t coming. The contact page will get it to us: /contact";
+  `Something went wrong on our end and your request didn’t save — I’d rather tell you than leave you waiting on a call that isn’t coming. Please call us at ${PHONE_DISPLAY} and we’ll take it down over the phone, or try the contact page: /contact`;

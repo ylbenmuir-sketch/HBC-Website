@@ -64,6 +64,9 @@ export type ConfirmationLead = {
   preferredCenter: string | null;
   /** The honeypot, verbatim. Non-empty means a bot; we do not text bots. */
   honeypot: string;
+  /** The saved row's id — every log line names it, so a text that did not
+   *  go can be traced to its lead. */
+  leadId: string;
 };
 
 /**
@@ -113,21 +116,23 @@ export async function sendConfirmationText(lead: ConfirmationLead): Promise<bool
   const apiKey = process.env.DIALPAD_API_KEY;
   const from = settingForCenter("DIALPAD_SMS_FROM", lead.preferredCenter);
 
+  const where = `lead=${lead.leadId}`;
+
   if (!apiKey || !from) {
     console.warn(
-      "[sms] not sent — set DIALPAD_API_KEY and DIALPAD_SMS_FROM to enable confirmation texts."
+      `[sms] not sent ${where} — set DIALPAD_API_KEY and DIALPAD_SMS_FROM to enable confirmation texts.`
     );
     return false;
   }
 
   if (lead.honeypot.trim().length > 0) {
-    console.warn("[sms] not sent — honeypot filled (likely bot).");
+    console.warn(`[sms] not sent ${where} — honeypot filled (likely bot).`);
     return false;
   }
 
   const to = toE164US(lead.phone);
   if (!to) {
-    console.warn("[sms] not sent — phone is not a 10-digit US number.");
+    console.warn(`[sms] not sent ${where} — phone is not a 10-digit US number.`);
     return false;
   }
 
@@ -150,13 +155,14 @@ export async function sendConfirmationText(lead: ConfirmationLead): Promise<bool
     if (!response.ok) {
       // Dialpad's error bodies name the field at fault and are safe to log;
       // status alone is usually enough to diagnose.
-      console.error(`[sms] Dialpad answered ${response.status} ${response.statusText}`);
+      console.error(`[sms] NOT sent ${where} — Dialpad answered ${response.status} ${response.statusText}`);
       return false;
     }
+    console.log(`[sms] sent ${where}`);
     return true;
   } catch (error) {
     console.error(
-      "[sms] send failed:",
+      `[sms] NOT sent ${where} — send failed:`,
       error instanceof Error ? error.message : error
     );
     return false;

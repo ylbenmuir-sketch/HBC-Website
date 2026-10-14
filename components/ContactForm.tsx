@@ -106,7 +106,7 @@ const TIME_OPTIONS = ["Any time", "Mornings", "Afternoons", "Evenings"];
  * `?center=<slug>` → the matching option. Location pages link here with their
  * own slug so a visitor who came from /locations/murfreesboro sees
  * Murfreesboro preselected instead of "Not sure yet" — and the lead then
- * routes to the Murfreesboro inbox (lib/lead-notification.ts). Unknown or
+ * routes to the Murfreesboro inbox (lib/lead-routing.ts). Unknown or
  * absent values leave the default alone.
  */
 const CENTER_BY_SLUG: Record<string, string> = {

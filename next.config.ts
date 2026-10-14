@@ -161,6 +161,13 @@ const nextConfig: NextConfig = {
       // to end up, which is the nearest honest answer. Was the hub.
       ...to(["/refer-a-friend"], "/contact"),
       ...to(["/phoneschedule", "/new-client-intake-form"], "/contact"),
+      // Guessed booking URLs (Ben, 2026-10-14). None of these was ever a page
+      // on the WordPress site — each answered 404 there on 2026-10-14, and
+      // its sitemap's only contact/booking pages are the four above plus
+      // /contact/ itself (the catch-all) — but they are what people type and
+      // what old bookmarks and directory listings guess, so they land on the
+      // form rather than the 404.
+      ...to(["/contact-us", "/schedule", "/book", "/free-consultation"], "/contact"),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),

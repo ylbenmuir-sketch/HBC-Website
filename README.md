@@ -309,9 +309,12 @@ submission requires Supabase credentials.
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key used by `app/api/consultation/route.ts` to insert form submissions. **Never expose to the browser; never commit.** |
 | `NEXT_PUBLIC_SITE_URL` | Canonical site URL for canonical tags, `og:url`, `sitemap.xml`, `robots.txt`, and JSON-LD. Apex form, no trailing slash — `https://harmonizedbraincenterstn.com`. Defaults to that value; set it explicitly in the deploy environment. |
 | `RESEND_API_KEY` | Resend key used by `lib/lead-notification.ts` to email each new lead to the clinic — name, phone, email, concerns, center, best time, and note, with reply-to set to the visitor. Server-side only. Unset = leads save but nobody is notified. |
-| `LEADS_NOTIFY_EMAIL` | Default inbox for new leads. Required alongside `RESEND_API_KEY`. Accepts several addresses separated by commas. |
-| `LEADS_NOTIFY_EMAIL_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | Optional per-center inboxes. A lead goes to the inbox for its `preferred_center`; a center with none set falls back to `LEADS_NOTIFY_EMAIL`. Guide signups and Concierge always use the default. Edit in Vercel, then redeploy. `_FRANKLIN` is for the day that center opens — nothing offers Franklin today (see "No Franklin booking" below). |
-| `LEADS_NOTIFY_FROM` | Optional sender address; must be on a domain verified in Resend. Defaults to Resend's shared test sender, which only delivers to the account owner. |
+| `LEADS_NASHVILLE` / `LEADS_MURFREESBORO` / `LEADS_CONCIERGE` | Ready-to-book form leads for that center (Concierge = the "Concierge / at home" option). Comma-separated: first address is To, the rest CC. Unset → `LEADS_FALLBACK`. Rules live in `lib/lead-routing.ts` (unit test: `npm test`). |
+| `LEADS_MORE_INFO` | Leads that say they want more information, not a booking (`intent: "more_info"` on the POST). No page sends this yet. Unset → `LEADS_FALLBACK`. |
+| `LEADS_GUIDE` | Guide download signups. Unset → `LEADS_FALLBACK`. |
+| `LEADS_FALLBACK` | Everything else: chat assistant leads, Franklin, "Not sure yet", no center, anything unmatched — and every route above whose variable is unset. Unset → `LEADS_NOTIFY_EMAIL`. |
+| `LEADS_NOTIFY_EMAIL` | The old single inbox; now only the last fallback. One of `LEADS_FALLBACK` / `LEADS_NOTIFY_EMAIL` is required alongside `RESEND_API_KEY`. Every fallback step logs a warning naming the missing variable. |
+| `LEADS_NOTIFY_FROM` | Optional sender. Must be on `harmonizedbraincenterstn.com` (verified in Resend); anything else is ignored with a warning. Defaults to `leads@harmonizedbraincenterstn.com`. |
 | `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
 | `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
 | `BOOKING_CALENDAR_URL` | Optional. Self-scheduling link (e.g. a Google Calendar appointment schedule) shown as "Pick a time for your call" on the contact form's confirmation card. Read server-side on `/contact`. |
@@ -442,7 +445,7 @@ MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
   MOCK_SMS_LOG=/tmp/sms.jsonl \
   NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
   RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
-  LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  LEADS_MURFREESBORO=murfreesboro@example.test \
   DIALPAD_API_KEY=test DIALPAD_SMS_FROM=+16155550100 \
   DIALPAD_SMS_FROM_MURFREESBORO=+16155550200 \
   INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
@@ -450,7 +453,7 @@ MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
 CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
   MOCK_PLATFORM_LOG=/tmp/platform.jsonl MOCK_SMS_LOG=/tmp/sms.jsonl \
   LEADS_NOTIFY_EMAIL=office@example.test \
-  LEADS_NOTIFY_EMAIL_MURFREESBORO=murfreesboro@example.test \
+  LEADS_MURFREESBORO=murfreesboro@example.test \
   DIALPAD_SMS_FROM=+16155550100 DIALPAD_SMS_FROM_MURFREESBORO=+16155550200 \
   CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
 ```
@@ -610,8 +613,9 @@ intact. Its cards link to it, its CTA band is the ordinary free-call band
 pointing at a plain `/contact`, and every line that used to ask for a name
 now names the two open centers. Do not add an email capture or a "notify
 me" in the waitlist's place. `FRANKLIN_OPENING` still gates the date.
-`LEADS_NOTIFY_EMAIL_FRANKLIN` / `DIALPAD_SMS_FROM_FRANKLIN` remain for the
-day it opens; they only fire on a center someone typed into the chat.
+`DIALPAD_SMS_FROM_FRANKLIN` remains for the day it opens; it only fires on
+a center someone typed into the chat. Franklin leads email `LEADS_FALLBACK`
+(lib/lead-routing.ts) until a route is added for it.
 
 ## Content verification & draft mode
 

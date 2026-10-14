@@ -81,6 +81,15 @@ if (LOG || PLATFORM_LOG || SMS_LOG) {
         body = { unparsed: String(init?.body) };
       }
       appendFileSync(LOG, `${JSON.stringify({ at: new Date().toISOString(), url, body })}\n`);
+      // MOCK_RESEND_STATUS=500 (or any non-2xx) answers as Resend does when it
+      // refuses a send, to drive the "email failed, lead kept" path.
+      const failStatus = Number(process.env.MOCK_RESEND_STATUS || 0);
+      if (failStatus >= 300) {
+        return new Response(
+          JSON.stringify({ name: "mock_failure", message: "MOCK_RESEND_STATUS forced a refusal" }),
+          { status: failStatus, headers: { "content-type": "application/json" } }
+        );
+      }
       return new Response(JSON.stringify({ id: `mock-${Date.now()}` }), {
         status: 200,
         headers: { "content-type": "application/json" },

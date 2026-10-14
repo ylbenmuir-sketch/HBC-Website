@@ -72,7 +72,8 @@ already has a Vercel project deploying Production on every push to `main`
    login-walled the moment DNS moves. Check this before DNS; verify after
    (§4 step 9).
 2. **Nobody is told about a lead.** The build warns: `RESEND_API_KEY` and
-   `LEADS_NOTIFY_EMAIL` are unset in the environment that built. Leads save
+   `LEADS_FALLBACK` / `LEADS_NOTIFY_EMAIL` are unset in the environment that
+   built (routing: `lib/lead-routing.ts`; per-route variables in README). Leads save
    to Supabase either way, but until those two are set in Vercel →
    Production (and the sending domain is verified in Resend), a form
    submission notifies no one. The email is the lead while the platform is
@@ -133,18 +134,19 @@ siteground.net`); apex and `www` both A → `35.212.22.77` (SiteGround);
    Production. Required: `NEXT_PUBLIC_SITE_URL=https://harmonizedbraincenterstn.com`
    (the fallback is the same value, but set it so a preview-scope override
    can never leak into production), `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `LEADS_NOTIFY_EMAIL`
-   (and `LEADS_NOTIFY_FROM` on a Resend-verified domain),
+   `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `LEADS_FALLBACK` plus
+   `LEADS_NASHVILLE`, `LEADS_MURFREESBORO`, `LEADS_CONCIERGE`,
+   `LEADS_MORE_INFO`, `LEADS_GUIDE` (and `LEADS_NOTIFY_FROM` on
+   `harmonizedbraincenterstn.com`, or leave it unset),
    `NEXT_PUBLIC_FEATURE_CELEBRITY=true`. **Leave unset:**
    `NEXT_PUBLIC_FEATURE_ASSISTANT`, `NEXT_PUBLIC_SHOW_DRAFT_CONTENT`,
    `REQUIRE_VERIFIED_CONTENT`. Optional now or later: `NEXT_PUBLIC_GA_ID`,
    `DIALPAD_*`, `BOOKING_CALENDAR_URL`, `INQUIRY_API_BASE` +
    `INQUIRY_INTAKE_SECRET`. `NEXT_PUBLIC_*` is inlined at build time —
    after setting any of them, **Redeploy** (Deployments → ⋯ → Redeploy).
-3. Resend: verify `harmonizedbraincenterstn.com` (or whichever domain
-   `LEADS_NOTIFY_FROM` uses) — DKIM/SPF records at SiteGround's DNS. Until
-   this is done the sender is Resend's test address, which only delivers to
-   the Resend account owner.
+3. Resend: `harmonizedbraincenterstn.com` is verified (Ben, 2026-10-14).
+   Every notification is sent from it; the code refuses any other sender
+   domain. Keep its DKIM/SPF records when DNS moves off SiteGround.
 4. Vercel → Settings → **Deployment Protection**: confirm Vercel
    Authentication is *Standard Protection* or *Only Preview Deployments* —
    not *All Deployments* (§3 item 1).

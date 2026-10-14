@@ -197,6 +197,9 @@ the inherited surface on day one rather than carrying it over.
 | `/self-development/` | `/concerns/performance/` | ✅ — direct, no chain through `/peakperformance/` — **approved, Ben, Sept 2026** |
 | `/migrainesandpain/` | `/concerns/migraines/` | ✅ — **approved, Ben, Sept 2026** |
 | `/migraines-and-fibromyalgia/` | `/concerns/migraines/` | ✅ — direct, no chain through `/migrainesandpain/` — **approved, Ben, Sept 2026** |
+| `/contact/` | `/contact` | ✅ — the trailing-slash catch-all (308), one hop |
+| `/phoneschedule/`, `/new-client-intake-form/`, `/refer-a-friend/` | `/contact/` | ✅ — the old site's booking/intake pages (`/refer-a-friend/` is the P6 default) |
+| `/contact-us/`, `/schedule/`, `/book/`, `/free-consultation/` | `/contact/` | ✅ — **Ben, Oct 14 2026.** Never pages on the old site (404 there); guessed URLs people and directories type |
 
 ### The three decisions, and the reasoning behind each
 

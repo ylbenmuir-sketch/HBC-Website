@@ -10,7 +10,9 @@ import {
   sendGuideNotification,
   sendLeadNotification,
   type LeadDetails,
+  type SendResult,
 } from "@/lib/lead-notification";
+import { notificationSubject, routeLead, type Recipients } from "@/lib/lead-routing";
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
@@ -33,9 +35,18 @@ const SUBMISSION_TYPES = new Set(["consultation", "guide"]);
  */
 const SUBMISSION_SOURCES = new Set(["form", "chat"]);
 
+/**
+ * Whether the visitor is ready to book. Absent means "book" — every caller
+ * today. "more_info" routes to LEADS_MORE_INFO (lib/lead-routing.ts); no page
+ * sends it yet, so adding a "just want more information" path to a form is
+ * this one key and nothing else.
+ */
+const SUBMISSION_INTENTS = new Set(["book", "more_info"]);
+
 type Payload = {
   type?: unknown;
   source?: unknown;
+  intent?: unknown;
   helping_who?: unknown;
   concerns?: unknown;
   first_name?: unknown;
@@ -63,25 +74,27 @@ function looksLikeEmail(value: string): boolean {
 /* The destinations                                                    */
 /* ------------------------------------------------------------------ */
 /**
- * A submission fans out to three places, and NONE may take the others down
- * with it:
+ * In order, and the order is the guarantee (Ben, 2026-10-14):
  *
- *   supabase — the row of record. Its id is returned to the form so the
- *              optional second step can add to the same row
- *              (app/api/consultation/[id]/route.ts).
- *   email    — the lead itself, routed to the chosen center's inbox. While the
- *              platform is in testing this is the one the office works from.
- *   platform — the inquiry on the front desk's Follow-ups screen.
+ *   1. supabase — the row of record, written FIRST. Nothing is emailed or
+ *                 texted before this has answered.
+ *   2. email    — the lead itself, to the inbox lib/lead-routing.ts names.
+ *      platform — the inquiry on the front desk's Follow-ups screen.
+ *                 These two run side by side.
+ *   3. the row is stamped with where the email went (notify_* columns), so
+ *      every lead can be audited against its route later.
+ *   4. the confirmation text, only on a saved row and only with consent.
  *
- * This used to be a chain: the insert ran first and returned 500 on failure,
- * so the day the Supabase project paused, a parent who filled in the form saw
- * an error and the platform never heard about her — though the platform was up
- * and would have taken it. Independence is the fix.
+ * What the visitor is told follows the row alone. Saved → success, whatever
+ * the email or the text did; their failures are logged against the row's id
+ * and stamped on it. NOT saved → a clear error with the phone number, never
+ * a success: the record does not exist. The email is still sent in that
+ * case, marked as the only copy, so the lead is not lost while she decides
+ * whether to call.
  *
- * Each function below NEVER throws, so the handler can run all three and count
- * what worked. Each logs its own failure under its destination name, and no
- * log line carries a submitted value: what a visitor types here is health
- * information about a real person, usually a child.
+ * Each function below NEVER throws. Log lines carry the route, the row id
+ * and the error — never a submitted value: what a visitor types here is
+ * health information about a real person, usually a child.
  */
 
 /** The row of record. Owns its own config check — a missing env var is this
@@ -126,40 +139,83 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
 }
 
 /**
- * The office notification (lib/lead-notification.ts). A consultation goes to
- * the inbox for the center the visitor chose, with the lead in the body; a
- * guide signup goes to the default inbox with the address. The two stay
- * separate messages because a guide signup is not a callback and must not
- * read like one.
+ * The office notification (lib/lead-notification.ts), already routed. A
+ * consultation carries the lead in the body; a guide signup carries the
+ * address. Separate messages, because a guide signup is not a callback and
+ * must not read like one.
  *
  * The guide itself is not sent from here. The visitor gets it in the success
  * state of components/GuideCta.tsx — static files, so delivery has no provider
  * to fail and no key to be missing.
  */
 async function notifyOffice(
-  guide: { email: string; sourcePage: string | null } | null,
-  lead: LeadDetails | null
-): Promise<boolean> {
+  guide: { email: string; sourcePage: string | null; rowId: string | null } | null,
+  lead: LeadDetails | null,
+  recipients: Recipients,
+  subject: string
+): Promise<SendResult> {
+  const leadId = (guide ?? lead)?.rowId ?? "NOT-SAVED";
+  let result: SendResult;
   try {
-    const sent = guide
-      ? await sendGuideNotification(guide.email, guide.sourcePage)
+    result = guide
+      ? await sendGuideNotification(guide, recipients, subject)
       : lead
-        ? await sendLeadNotification(lead)
-        : false;
-    if (!sent) {
-      // lead-notification.ts has already said which env var is missing or what
-      // the provider answered. This line names the destination so all three
-      // are countable in one log.
-      console.error("[destination: email] notification not sent.");
+        ? await sendLeadNotification(lead, recipients, subject)
+        : { status: "not_configured", messageId: null, error: "nothing to send" };
+  } catch (err) {
+    result = {
+      status: "failed",
+      messageId: null,
+      error: `threw: ${err instanceof Error ? err.name : "unknown error"}`,
+    };
+  }
+  const where = `route=${recipients.route} env=${recipients.envVar ?? "none"} lead=${leadId}`;
+  if (result.status === "sent") {
+    console.log(`[destination: email] sent ${where} resend_id=${result.messageId ?? "?"}`);
+  } else {
+    console.error(`[destination: email] NOT sent (${result.status}) ${where} error="${result.error}"`);
+  }
+  return result;
+}
+
+/**
+ * Step 3: stamp the row with where its notification went. A separate update
+ * rather than part of the insert, so these audit columns can never be the
+ * reason a lead fails to save. A failure here is logged and nothing more.
+ */
+async function recordRouting(
+  rowId: string,
+  recipients: Recipients,
+  result: SendResult
+): Promise<void> {
+  const supabase = supabaseAdmin();
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from("consultation_requests")
+      .update({
+        notify_route: recipients.route,
+        notify_env: recipients.envVar,
+        notify_to: recipients.to,
+        notify_cc: recipients.cc,
+        notify_status: result.status,
+        notify_message_id: result.messageId,
+        notify_error: result.error,
+      })
+      .eq("id", rowId);
+    if (error) {
+      console.error(
+        `[routing record] lead=${rowId} not stamped: ${error.message}${
+          error.code ? ` (code ${error.code})` : ""
+        }`
+      );
     }
-    return sent;
   } catch (err) {
     console.error(
-      `[destination: email] notification threw: ${
-        err instanceof Error ? err.name : "unknown error"
+      `[routing record] lead=${rowId} not stamped: ${
+        err instanceof Error ? `${err.name}: ${err.message}` : "unknown error"
       }`
     );
-    return false;
   }
 }
 
@@ -187,6 +243,11 @@ export async function POST(request: Request) {
 
   const source = str(body.source, 20) ?? "form";
   if (!SUBMISSION_SOURCES.has(source)) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const intent = str(body.intent, 20) ?? "book";
+  if (!SUBMISSION_INTENTS.has(intent)) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
@@ -298,24 +359,34 @@ export async function POST(request: Request) {
         }
       : null;
 
-  // ── Fan out ────────────────────────────────────────────────────────────
-  // All destinations at once: they are independent, and the visitor waits on
-  // the slowest rather than on the sum. None throws, so Promise.all cannot
-  // reject and no failure can escape into the response.
-  //
-  // The email does not wait for the row: it carries the lead, and the row id
-  // is only a pointer in its footer. If the insert fails, the email still goes
-  // and simply has no row to point at.
-  //
-  // Awaited rather than fired and forgotten: a serverless runtime may kill the
+  // ── 1. The row of record, before anything is sent ─────────────────────
+  // Awaited, like everything below: a serverless runtime may kill the
   // process the moment the response is returned, which would silently drop
   // whichever delivery had not finished.
   const savedRowId = await saveRow(row);
+
+  // ── 2. Route, then email and platform side by side ─────────────────────
+  // Sent whether or not the row saved: when it did not, the email is the
+  // rescue copy (it says so at the top) and the visitor is told to call.
+  const recipients = routeLead({
+    type: isGuide ? "guide" : "consultation",
+    source: source as "form" | "chat",
+    intent: intent as "book" | "more_info",
+    preferredCenter,
+  });
+  const subject = notificationSubject({
+    route: recipients.route,
+    source: source as "form" | "chat",
+    preferredCenter,
+    name: firstName,
+    email,
+  });
 
   const lead: LeadDetails | null = isGuide
     ? null
     : {
         source: source as LeadDetails["source"],
+        intent: intent as LeadDetails["intent"],
         rowId: savedRowId,
         helpingWho,
         concerns,
@@ -327,23 +398,27 @@ export async function POST(request: Request) {
         note,
         sourcePage,
         smsConsent,
+        honeypotFilled: honeypot.trim().length > 0,
       };
 
   const [notified, forwarded] = await Promise.all([
-    notifyOffice(isGuide && email ? { email, sourcePage } : null, lead),
+    notifyOffice(
+      isGuide && email ? { email, sourcePage, rowId: savedRowId } : null,
+      lead,
+      recipients,
+      subject
+    ),
     inquiry ? forwardInquiry(inquiry).then((r) => r.ok) : Promise.resolve(false),
   ]);
-  const savedRow = savedRowId !== null;
 
-  // ── What the visitor is told ───────────────────────────────────────────
-  // She hears "received" if ANY destination took it. Filling the form in again
-  // cannot help with an outage on our side, and telling her to try again when
-  // the request did land would be a lie.
-  if (!savedRow && !notified && !forwarded) {
+  // ── Not saved: say so, with the number ─────────────────────────────────
+  // Never a success the record cannot back up. Whatever else went out is
+  // named in the log so the lead can be found.
+  if (savedRowId === null) {
     console.error(
-      `[submission] EVERY destination failed (supabase, email${
-        inquiry ? ", platform" : ""
-      }) — nothing was stored or delivered.`
+      `[submission] Supabase row NOT saved — visitor shown the error. Rescue copies: email ${
+        notified.status === "sent" ? `sent (resend_id=${notified.messageId ?? "?"}, route=${recipients.route})` : `NOT sent (${notified.error})`
+      }${inquiry ? `, platform ${forwarded ? "accepted" : "NOT accepted"}` : ""}. Check the Supabase project (paused?).`
     );
     return NextResponse.json(
       {
@@ -353,34 +428,23 @@ export async function POST(request: Request) {
     );
   }
 
-  // The row of record did not save but the lead did reach someone (the email
-  // and the platform both carry the submission). Not the visitor's problem —
-  // hers landed — but Supabase being down is worth a loud line. The form also
-  // gets no id back, so it skips its optional second step: there is no row to
-  // add to.
-  if (!savedRow) {
-    console.error(
-      "[submission] Supabase row NOT saved — the request was delivered by " +
-        `${[notified && "email", forwarded && "platform"]
-          .filter(Boolean)
-          .join(" and ")} only. Check the Supabase project (paused?).`
-    );
-  }
+  // ── 3. Stamp the row with where the email went ─────────────────────────
+  await recordRouting(savedRowId, recipients, notified);
 
-  // ── Tell her it landed ─────────────────────────────────────────────────
+  // ── 4. Tell her it landed ──────────────────────────────────────────────
   // Only if she agreed to texts. Without consent there is no text at all —
   // not even this one; the call is how she hears from us.
   //
-  // After the fan-out, not alongside it: the text says "we got your request",
-  // which is only true once something above accepted it. Not a destination —
-  // a failed text changes nothing about the response. Awaited for the same
-  // serverless reason the fan-out is.
+  // Last, after the row exists: the text says "we got your request", which
+  // is only true once the record does. A failed text changes nothing about
+  // the response.
   if (lead && firstName && phone && smsConsent) {
     await sendConfirmationText({
       name: firstName,
       phone,
       preferredCenter,
       honeypot,
+      leadId: savedRowId,
     });
   }
 

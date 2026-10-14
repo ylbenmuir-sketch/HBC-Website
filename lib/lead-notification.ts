@@ -1,5 +1,5 @@
-// Lead notification email — the lead itself, delivered to the inbox for the
-// center the visitor chose. Called by app/api/consultation/route.ts.
+// Lead notification email — the lead itself, delivered to the inbox its route
+// names (lib/lead-routing.ts). Called by app/api/consultation/route.ts.
 //
 // ── WHAT THIS IS FOR ───────────────────────────────────────────────────────
 // The clinic platform (lib/inquiry-intake.ts) is still in testing, so while
@@ -11,88 +11,50 @@
 // row remains the record of what was submitted; this is the working copy.
 //
 // ── ROUTING ────────────────────────────────────────────────────────────────
-// Which inbox gets it is decided by `preferred_center`, which every lead
-// already carries (a select on the form, a question in the chat), against
-// four environment variables. All optional except the first:
-//
-//   LEADS_NOTIFY_EMAIL               default — everything not matched below
-//   LEADS_NOTIFY_EMAIL_NASHVILLE     leads that chose Nashville
-//   LEADS_NOTIFY_EMAIL_MURFREESBORO  leads that chose Murfreesboro
-//   LEADS_NOTIFY_EMAIL_FRANKLIN      leads whose typed center names Franklin
-//                                    (nothing offers Franklin today — the
-//                                    waitlist went in Oct 2026; this is for
-//                                    the day it opens)
-//
-// Each may hold several addresses separated by commas. Unset a center's
-// variable and its leads fall back to the default, so "everything to one
-// person" is just the default on its own, and splitting a center off later is
-// one new line in the Vercel dashboard plus a redeploy. Guide signups and the
-// "Concierge / at home" option always go to the default. No admin page, no
-// table, nothing new to maintain.
+// Who gets it, who is copied, the subject and the From header are decided in
+// lib/lead-routing.ts — the one place the rules live (Ben, 2026-10-14):
+// LEADS_NASHVILLE, LEADS_MURFREESBORO, LEADS_CONCIERGE, LEADS_MORE_INFO,
+// LEADS_GUIDE, LEADS_FALLBACK, then LEADS_NOTIFY_EMAIL as the last resort.
+// The caller routes (app/api/consultation/route.ts) and passes the result in,
+// so the route that was used can be written onto the lead's row.
 //
 // ── TURNING IT ON ──────────────────────────────────────────────────────────
 //   1. Create an API key at resend.com/api-keys.
-//   2. Verify the sending domain in Resend (DNS records). Until then Resend's
-//      shared test sender only delivers to the Resend account owner.
-//   3. Set RESEND_API_KEY, LEADS_NOTIFY_EMAIL, and LEADS_NOTIFY_FROM.
-// Until RESEND_API_KEY and LEADS_NOTIFY_EMAIL are both set this no-ops with a
-// warning in the server log, and the form still succeeds via the other
-// destinations.
+//   2. The sending domain, harmonizedbraincenterstn.com, is verified in
+//      Resend. Every notification is sent from it (senderAddress).
+//   3. Set RESEND_API_KEY and at least LEADS_FALLBACK (or the older
+//      LEADS_NOTIFY_EMAIL), then the per-route variables as wanted.
+// Until a key and a recipient are both set this sends nothing and says so in
+// the server log; the lead is still saved.
 //
-// Everything here sends INWARD, to the clinic. Nothing emails a visitor: on
-// the shared test sender a send to a parent's address would be accepted by the
-// API and never arrive, and a promised email that doesn't come is worse than
-// none. The lead's address is set as reply-to, so the office can answer her
-// from their own mail client — that is the office sending, not the website.
+// Everything here sends INWARD, to the clinic. Nothing emails a visitor. The
+// lead's address is set as reply-to, so the office can answer her from their
+// own mail client — that is the office sending, not the website.
 //
 // Resend's REST API over fetch, deliberately without the `resend` SDK: one
 // POST does not justify a dependency. Swapping in Postmark or SendGrid means
 // changing only the endpoint, headers, and body keys in deliver().
 
-import { settingForCenter } from "./center-routing";
+import { senderAddress, type Recipients } from "./lead-routing";
 import { GUIDE_TITLE } from "./site-config";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 // The visitor is waiting on this request, so a hung provider must not hold the
-// form open. The other destinations are independent and still run.
+// form open. The lead is already saved by the time this runs.
 const SEND_TIMEOUT_MS = 5000;
-
-// Resend's shared test sender. It only delivers to the Resend account owner,
-// which is enough to prove the wiring works but is not a launch value.
-const DEFAULT_FROM = "Harmonized Website <onboarding@resend.dev>";
-
-/* ------------------------------------------------------------------ */
-/* Routing                                                             */
-/* ------------------------------------------------------------------ */
-
-/** "a@x.com, b@y.com" → ["a@x.com", "b@y.com"]. Tolerates semicolons and
- *  stray whitespace, because the value is typed by hand into a dashboard. */
-function parseAddresses(value: string | undefined): string[] {
-  return (value ?? "")
-    .split(/[,;\s]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
-/**
- * The inbox(es) for a lead that chose `center` — the center's own variable
- * when set, LEADS_NOTIFY_EMAIL otherwise (lib/center-routing.ts). Exported so
- * it can be checked without sending anything; `env` is injectable for that.
- */
-export function recipientsFor(
-  center: string | null | undefined,
-  env: NodeJS.ProcessEnv = process.env
-): string[] {
-  return parseAddresses(settingForCenter("LEADS_NOTIFY_EMAIL", center, env));
-}
 
 /* ------------------------------------------------------------------ */
 /* Delivery                                                            */
 /* ------------------------------------------------------------------ */
 
+/** What happened to one notification — written onto the lead's row. */
+export type SendResult =
+  | { status: "sent"; messageId: string | null; error: null }
+  | { status: "failed" | "not_configured"; messageId: null; error: string };
+
 type Outbound = {
-  to: string[];
+  recipients: Recipients;
   subject: string;
   text: string;
   /** The lead's own address, when she gave one, so "Reply" just works. */
@@ -100,25 +62,22 @@ type Outbound = {
 };
 
 /**
- * Shared delivery. Never throws and never rejects: every failure path is
- * logged (shape only — no submitted value reaches a log line) and swallowed.
- * Returns true only when the provider accepted the message.
+ * Shared delivery. Never throws and never rejects: every failure comes back as
+ * a SendResult for the caller to log against the lead's id and store. No
+ * submitted value is put in an error string.
  */
-async function deliver({ to, subject, text, replyTo }: Outbound): Promise<boolean> {
+async function deliver({ recipients, subject, text, replyTo }: Outbound): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.LEADS_NOTIFY_FROM || DEFAULT_FROM;
-
-  if (!apiKey || to.length === 0) {
-    // Expected until the provider key is issued — see the note at the top.
-    console.warn(
-      "Lead NOT emailed: set RESEND_API_KEY and LEADS_NOTIFY_EMAIL to enable notifications."
-    );
-    return false;
+  if (!apiKey) {
+    return { status: "not_configured", messageId: null, error: "RESEND_API_KEY is not set" };
   }
-
-  // Collapse whitespace: a newline in a subject is a header-injection vector,
-  // and the subject now contains a visitor-typed first name.
-  const safeSubject = subject.replace(/\s+/g, " ").trim().slice(0, 150);
+  if (!recipients.to) {
+    return {
+      status: "not_configured",
+      messageId: null,
+      error: `no recipient: ${recipients.warnings.length ? "every variable in the chain is empty" : "unrouted"}`,
+    };
+  }
 
   try {
     const response = await fetch(RESEND_ENDPOINT, {
@@ -128,30 +87,39 @@ async function deliver({ to, subject, text, replyTo }: Outbound): Promise<boolea
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from,
-        to,
-        subject: safeSubject,
+        from: senderAddress(),
+        to: [recipients.to],
+        ...(recipients.cc.length ? { cc: recipients.cc } : {}),
+        subject,
         text,
         ...(replyTo ? { reply_to: replyTo } : {}),
       }),
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });
 
+    const body = (await response.json().catch(() => null)) as
+      | { id?: unknown; name?: unknown; message?: unknown }
+      | null;
+
     if (!response.ok) {
-      // Status alone is usually enough. Deliberately not logging the lead.
-      console.error(
-        `Lead notification failed: ${response.status} ${response.statusText}`
-      );
-      return false;
+      // Resend's own error name and message (e.g. "validation_error: The
+      // harmonizedbraincenterstn.com domain is not verified"), capped.
+      const detail = [body?.name, body?.message].filter((v) => typeof v === "string").join(": ");
+      return {
+        status: "failed",
+        messageId: null,
+        error: `Resend ${response.status}${detail ? ` ${detail}` : ` ${response.statusText}`}`.slice(0, 300),
+      };
     }
 
-    return true;
+    return { status: "sent", messageId: typeof body?.id === "string" ? body.id : null, error: null };
   } catch (error) {
-    console.error(
-      "Lead notification failed:",
-      error instanceof Error ? error.message : error
-    );
-    return false;
+    // Timeout, DNS, TLS, connection refused.
+    return {
+      status: "failed",
+      messageId: null,
+      error: (error instanceof Error ? `${error.name}: ${error.message}` : "unknown error").slice(0, 300),
+    };
   }
 }
 
@@ -162,8 +130,10 @@ async function deliver({ to, subject, text, replyTo }: Outbound): Promise<boolea
 export type LeadDetails = {
   /** Which channel it came through — the form or the site assistant. */
   source: "form" | "chat";
-  /** The saved row's id, when the row saved — so the office can find what
-   *  the visitor adds in the form's optional second step. */
+  /** "more_info" when the visitor said she is not ready to book. */
+  intent: "book" | "more_info";
+  /** The saved row's id. Null only for the rescue copy sent when the row
+   *  did NOT save — the email then says so at the top. */
   rowId: string | null;
   /** Null for a form lead: the form asks this in its optional second step,
    *  after this email has gone. The chat asks it before submitting. */
@@ -181,6 +151,8 @@ export type LeadDetails = {
   /** Whether she agreed to texts (lib/sms-consent.ts). The office texts from
    *  the same Dialpad lines, so the email says it plainly either way. */
   smsConsent: boolean;
+  /** The hidden spam-trap field was filled in — almost certainly a bot. */
+  honeypotFilled: boolean;
 };
 
 /** Right-aligned label column so the block reads as a form on a phone. */
@@ -193,6 +165,15 @@ const SOURCE_LABEL: Record<LeadDetails["source"], string> = {
   form: "the contact form",
   chat: "the site assistant (chat)",
 };
+
+/** Said first when the row of record failed to save: the email is then the
+ *  only copy, and the visitor was shown an error with the phone number. */
+const NOT_SAVED_BANNER = [
+  "!! NOT SAVED IN SUPABASE — this email is the only copy of this lead.",
+  "!! The visitor was shown an error and asked to call. They may call or",
+  "!! submit again; please reach out either way.",
+  "",
+];
 
 /**
  * Where the saved request lives. Derived from SUPABASE_URL rather than a
@@ -210,18 +191,25 @@ function whereToRead(rowId: string | null): string | null {
   return `Saved request: ${rowId}\n${place}`;
 }
 
+/** The last lines of every notification: where it came from and why it
+ *  reached this inbox, so a misrouted lead can be traced from the email. */
+function footer(sourcePage: string | null, recipients: Recipients): string[] {
+  return [
+    `Page they came from: ${sourcePage ?? "(not recorded)"}`,
+    `Received: ${new Date().toISOString()}`,
+    `Routed by: ${recipients.envVar ?? "(nothing set)"} (rule: ${recipients.route})`,
+  ];
+}
+
 /**
- * Tells the chosen center's inbox that someone is waiting for a call, and
- * gives them everything they need to make it.
+ * Tells the routed inbox that someone is waiting for a call, and gives them
+ * everything they need to make it.
  */
-export async function sendLeadNotification(lead: LeadDetails): Promise<boolean> {
-  const center = lead.preferredCenter ?? "Not specified";
-  const name = lead.firstName ?? "Unknown";
-
-  const subject = `Call request — ${name} · ${center}${
-    lead.bestTime ? ` · ${lead.bestTime}` : ""
-  }`;
-
+export async function sendLeadNotification(
+  lead: LeadDetails,
+  recipients: Recipients,
+  subject: string
+): Promise<SendResult> {
   // The form sends this email the moment the callback is saved — before it
   // asks who the call is for, what's bringing them in, or for a note. Those
   // three are optional and arrive, when they arrive, on the saved request;
@@ -229,12 +217,18 @@ export async function sendLeadNotification(lead: LeadDetails): Promise<boolean> 
   // The chat asks everything first, so a chat lead has them all here.
   const laterStep = lead.source === "form";
   const text = [
-    `New call request via ${SOURCE_LABEL[lead.source]}.`,
+    ...(lead.rowId ? [] : NOT_SAVED_BANNER),
+    lead.intent === "more_info"
+      ? `New request for more information via ${SOURCE_LABEL[lead.source]} (not ready to book).`
+      : `New call request via ${SOURCE_LABEL[lead.source]}.`,
+    lead.honeypotFilled
+      ? "Spam check: the hidden field was filled in — probably a bot."
+      : null,
     "",
     line("Name:", lead.firstName),
     line("Phone:", lead.phone),
     line("Email:", lead.email ?? "(not given)"),
-    line("Center:", center),
+    line("Center:", lead.preferredCenter ?? "(not given)"),
     line("Best time:", lead.bestTime ?? "(not given)"),
     line(
       "Texts:",
@@ -255,7 +249,7 @@ export async function sendLeadNotification(lead: LeadDetails): Promise<boolean> 
     "In their own words:",
     lead.note ?? (laterStep ? "(nothing added yet)" : "(nothing added)"),
     "",
-    laterStep
+    laterStep && lead.rowId
       ? "The form asks who the call is for, what's bringing them in, and for a note AFTER this email is sent, and those answers are optional. Anything they add is on the saved request below — there is no second email."
       : null,
     whereToRead(lead.rowId),
@@ -263,45 +257,40 @@ export async function sendLeadNotification(lead: LeadDetails): Promise<boolean> 
     lead.email
       ? "Reply to this email to reach them directly."
       : "No email was given — phone is the only way to reach them.",
-    lead.sourcePage ? `Submitted from: ${lead.sourcePage}` : null,
+    ...footer(lead.sourcePage, recipients),
   ]
     .filter((l): l is string => l !== null)
     .join("\n");
 
-  return deliver({
-    to: recipientsFor(lead.preferredCenter),
-    subject,
-    text,
-    replyTo: lead.email,
-  });
+  return deliver({ recipients, subject, text, replyTo: lead.email });
 }
 
 /**
- * Tells the default inbox that someone asked for the guide. Deliberately not
+ * Tells the guide inbox that someone asked for the guide. Deliberately not
  * shaped like a callback: nobody phones someone who only wanted a PDF, and the
- * subject line keeps saying so. The address is included so it can be added to
- * a follow-up list without a trip to Supabase.
+ * body keeps saying so. The address is included so it can be added to a
+ * follow-up list without a trip to Supabase.
  */
 export async function sendGuideNotification(
-  email: string,
-  sourcePage: string | null
-): Promise<boolean> {
+  guide: { email: string; sourcePage: string | null; rowId: string | null },
+  recipients: Recipients,
+  subject: string
+): Promise<SendResult> {
   const text = [
-    "Someone asked for the guide.",
+    ...(guide.rowId ? [] : NOT_SAVED_BANNER),
+    `Someone asked for the guide, ${GUIDE_TITLE}.`,
     "",
     "This is a download request, not a callback — no name or phone was",
     "collected, and nobody is expecting a call.",
     "",
-    line("Email:", email),
-    sourcePage ? line("From page:", sourcePage) : null,
+    line("Email:", guide.email),
+    "",
+    whereToRead(guide.rowId),
+    "Reply to this email to reach them directly.",
+    ...footer(guide.sourcePage, recipients),
   ]
     .filter((l): l is string => l !== null)
     .join("\n");
 
-  return deliver({
-    to: recipientsFor(null),
-    subject: `Guide signup — ${GUIDE_TITLE}`,
-    text,
-    replyTo: email,
-  });
+  return deliver({ recipients, subject, text, replyTo: guide.email });
 }

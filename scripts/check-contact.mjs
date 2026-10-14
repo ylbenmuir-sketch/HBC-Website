@@ -6,13 +6,15 @@
  *   MOCK_RESEND_LOG=/tmp/resend.jsonl MOCK_PLATFORM_LOG=/tmp/platform.jsonl \
  *     MOCK_SMS_LOG=/tmp/sms.jsonl \
  *     NODE_OPTIONS="--import ./scripts/contact-flow/mock-resend.mjs" \
- *     RESEND_API_KEY=re_test LEADS_NOTIFY_EMAIL=office@example.test \
+ *     RESEND_API_KEY=re_test LEADS_FALLBACK=office@example.test \
+ *     LEADS_NASHVILLE=nash@example.test LEADS_MURFREESBORO=boro@example.test \
  *     DIALPAD_API_KEY=test DIALPAD_SMS_FROM=+16155550100 \
  *     INQUIRY_API_BASE=http://platform.test INQUIRY_INTAKE_SECRET=test \
  *     npx next start -p 3123
  *   CHECK_BASE=http://127.0.0.1:3123 MOCK_RESEND_LOG=/tmp/resend.jsonl \
  *     MOCK_PLATFORM_LOG=/tmp/platform.jsonl MOCK_SMS_LOG=/tmp/sms.jsonl \
- *     DIALPAD_SMS_FROM=+16155550100 \
+ *     DIALPAD_SMS_FROM=+16155550100 LEADS_FALLBACK=office@example.test \
+ *     LEADS_NASHVILLE=nash@example.test LEADS_MURFREESBORO=boro@example.test \
  *     CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
  *
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
@@ -86,6 +88,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { launch } from "./layout/cdp.mjs";
+// The app's own routing rules, so the expected inbox can never drift from
+// what the route does. Node runs the .ts directly (types stripped).
+import { routeLead } from "../lib/lead-routing.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = (process.env.CHECK_BASE ?? "http://127.0.0.1:3123").replace(/\/$/, "");
@@ -243,7 +248,15 @@ async function expectRow(name, { center, helpingWho, concerns, note, email = ema
 }
 
 /** Exactly one email, carrying the lead and pointing at the row. */
-function expectEmail(name, row, { center, consent, source = "the contact form", inbox = env.LEADS_NOTIFY_EMAIL ?? "office@example.test" }) {
+function expectEmail(name, row, { center, consent, source = "the contact form" }) {
+  // Pass the server's LEADS_* values to this check so it expects the same
+  // To the route resolves (lib/lead-routing.ts).
+  const inbox =
+    routeLead(
+      { type: "consultation", source: source === "the contact form" ? "form" : "chat", preferredCenter: center },
+      env,
+      () => {}
+    ).to ?? "office@example.test";
   const list = emailsNaming(name);
   expect(`${name}: exactly one notification email`, list.length === 1, `${list.length} email(s)`);
   const e = list[0];
@@ -479,11 +492,12 @@ async function pathSave(page, width) {
   await expectThankYou(page, name);
   await sleep(300);
   const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part.", consent: true });
-  // Per-center routing (lib/center-routing.ts): a Murfreesboro lead goes to
-  // LEADS_NOTIFY_EMAIL_MURFREESBORO when the server has it, else the default,
-  // and its text comes from DIALPAD_SMS_FROM_MURFREESBORO the same way. Pass
-  // the server's values to this check so it can say which it expects.
-  expectEmail(name, row, { center: "Murfreesboro", consent: true, inbox: env.LEADS_NOTIFY_EMAIL_MURFREESBORO ?? env.LEADS_NOTIFY_EMAIL ?? "office@example.test" });
+  // Routing (lib/lead-routing.ts): a Murfreesboro lead goes to
+  // LEADS_MURFREESBORO, falling back to LEADS_FALLBACK then
+  // LEADS_NOTIFY_EMAIL; its text comes from DIALPAD_SMS_FROM_MURFREESBORO
+  // (lib/center-routing.ts). Pass the server's values to this check so it
+  // can say which it expects.
+  expectEmail(name, row, { center: "Murfreesboro", consent: true });
   expect(`${name}: still exactly one email after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
   expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
   expect(`${name}: still exactly one text after step two`, textsNaming(name).length === 1, `${textsNaming(name).length}`);

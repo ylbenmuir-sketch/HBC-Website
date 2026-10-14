@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { POST as submitConsultation } from "@/app/api/consultation/route";
 import { answerFromSite } from "@/lib/chat/answer";
 import {
   BOOKING_FAILURE_REPLY,
@@ -229,16 +230,28 @@ export async function POST(request: Request) {
     if (turn.submit) {
       const name = turn.submit.first_name;
       try {
-        // The request's own origin, never SITE_URL: that constant defaults to
-        // the production domain, so a booking tested locally would have
-        // POSTed a fake lead into the live Supabase table.
-        const origin = new URL(request.url).origin;
-        const response = await fetch(`${origin}/api/consultation`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(turn.submit),
-        });
-        if (!response.ok) throw new Error(`consultation route: ${response.status}`);
+        // The consultation handler called in-process, not fetched over HTTP.
+        // A fetch to our own origin went through the deployment's front door:
+        // on a *.vercel.app URL behind Vercel Authentication it was answered
+        // by the login page — a 200 after the redirect — and the chat told
+        // her "you're all set" with nothing saved. In-process there is no
+        // door, and nothing can stand in for the handler's own answer. The
+        // URL is only a label; never SITE_URL, so a local test can't look
+        // like production in a log.
+        const response = await submitConsultation(
+          new Request(new URL("/api/consultation", request.url), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(turn.submit),
+          })
+        );
+        const result = (await response.json().catch(() => null)) as
+          | { ok?: boolean; id?: string | null }
+          | null;
+        // Success only on the handler's own "saved" — 201 with a row id.
+        if (!response.ok || result?.ok !== true || !result.id) {
+          throw new Error(`consultation route: ${response.status}`);
+        }
         return finish(bookingSuccessReply(name), "booking-submitted");
       } catch (error) {
         console.error(
