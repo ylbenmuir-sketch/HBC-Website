@@ -60,6 +60,7 @@ import {
   verifiedOr,
   YOUTUBE_CHANNEL_URL,
 } from "./site-config";
+import { LEGAL_ENTITY, REGISTERED_ADDRESS } from "./sms-identity";
 
 /** Absolute URL for a site-root-relative path. Schema requires absolute. */
 export function abs(path: string): string {
@@ -168,6 +169,21 @@ export function organizationSchema() {
     "@type": "Organization",
     "@id": ORGANIZATION_ID,
     name: SITE_NAME,
+    // The registered entity behind the brand, and its address — what lets a
+    // carrier reviewer (A2P 10DLC, CR2020) connect "Harmonized Brain Centers"
+    // to the company on the texting registration. The address is Nashville's
+    // own record, Suite S included (lib/sms-identity.ts), and is not gated on
+    // hasConfirmedAddress: it is fixed there, and the identity line in every
+    // page's footer already prints it.
+    legalName: LEGAL_ENTITY,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: REGISTERED_ADDRESS.street,
+      addressLocality: REGISTERED_ADDRESS.locality,
+      addressRegion: REGISTERED_ADDRESS.region,
+      postalCode: REGISTERED_ADDRESS.postalCode,
+      addressCountry: "US",
+    },
     url: SITE_URL,
     logo: {
       "@type": "ImageObject",

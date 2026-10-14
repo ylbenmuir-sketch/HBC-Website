@@ -271,9 +271,22 @@ export const staticPages: StaticPage[] = [
     title: "Privacy",
     description:
       "What the Harmonized Brain Centers website collects, what happens to it, and who else sees it. Nothing you tell us goes anywhere unless you ask us to send it.",
-    dateModified: "2026-08-24",
+    // 2026-10-14: the "Text messages" section (A2P 10DLC resubmission).
+    dateModified: "2026-10-14",
     type: "WebPage",
     crumb: "Privacy",
+  },
+  {
+    // The text-message program's terms — what a carrier reviewer follows from
+    // every opt-in (lib/sms-consent.ts). Indexed and in the sitemap on
+    // purpose: a reviewer with no account has to be able to find it.
+    path: "/sms-terms",
+    title: "Text Message Terms",
+    description:
+      "How Harmonized Brain Centers texts you about your call and appointments: what the messages are, how often, what they cost, and how to get help or stop them.",
+    dateModified: "2026-10-14",
+    type: "WebPage",
+    crumb: "Text message terms",
   },
 ];
 

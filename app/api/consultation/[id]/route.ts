@@ -50,6 +50,8 @@ type UpdatedRow = {
   preferred_center: string | null;
   best_time: string | null;
   note: string | null;
+  /** Read, never written here — carried to the re-post (NO_TEXT_CONSENT_LINE). */
+  sms_consent: boolean | null;
 };
 
 export async function PATCH(
@@ -129,7 +131,7 @@ export async function PATCH(
       .eq("type", "consultation")
       .eq("source", "form")
       .select(
-        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note"
+        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, sms_consent"
       );
     if (error) {
       // `message` and `code` only — never `details`, where Postgres echoes values.
@@ -183,6 +185,7 @@ export async function PATCH(
       note: row.note,
       website: "",
       update: true,
+      smsConsent: row.sms_consent === true,
     });
   }
 

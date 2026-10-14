@@ -23,17 +23,32 @@
  *   leave  step one → close the tab (once, at 390px), after first trying
  *          to submit without an email and with a malformed one
  *
- * and, without a browser, the chat's write path (the exact body
- * lib/chat/booking.ts submits, with the center declined) and the PATCH
- * route's refusals. For every submission it asserts:
+ * and, without a browser, two real conversations with the assistant's
+ * booking flow over /api/chat (needs a build with
+ * NEXT_PUBLIC_FEATURE_ASSISTANT=true) — one answering yes to the texts
+ * question, one answering no — plus a POST that claims consent without the
+ * wording (must not count) and the PATCH route's refusals.
+ *
+ * ## Text consent (lib/sms-consent.ts, A2P 10DLC)
+ *
+ * The save paths and the leave path tick the consent box; the skip paths
+ * leave it unticked. Every lead is checked both ways: the box is present
+ * under the phone row, unchecked on load, its label is the exact wording;
+ * the row records consent, the wording shown and (only on a yes) the time;
+ * the email's "Texts:" line and the platform's no-consent line agree with it;
+ * and a text goes out only on a yes — an unticked box, a "no" in the chat or
+ * a forged `sms_consent: true` send NOTHING.
+ *
+ * For every submission it asserts:
  *
  *   - exactly ONE row in consultation_requests, with the right columns —
  *     `helping_who` null and `concerns` empty unless step two saved them;
  *   - exactly ONE lead email (read from MOCK_RESEND_LOG), sent at step one,
  *     naming the row and carrying the (now required) email;
- *   - exactly ONE confirmation text (read from MOCK_SMS_LOG) in Ben's words,
- *     greeting by the FIRST word of the two-word test name, ending with the
- *     STOP sentence, from the chosen center's line;
+ *   - with consent, exactly ONE confirmation text (read from MOCK_SMS_LOG),
+ *     byte-for-byte Ben's words with the HELP/STOP sentence, greeting by the
+ *     FIRST word of the two-word test name, GSM-7 and two segments, from the
+ *     chosen center's line; without consent, NO text;
  *   - the step-two headline and the step-three thank-you greet by the first
  *     word too, step two has no "optional" panel and no "(optional)" on the
  *     note, and the "Skip for now" exit is there and works;
@@ -50,15 +65,23 @@
  *
  * ## It writes to the database
  *
- * Seven rows, named `E2E-<run>-<path>-<width> Tester` (the chat's, which
- * asks a first name, has no surname), phone 0000000000. The same
- * preflight as scripts/chat-checklist.mjs: CHECK_CONTACT_ALLOW_PROJECT must
- * name the exact project ref in SUPABASE_URL, which cannot be satisfied
- * without looking at which project that is. The rows this run created are
- * deleted at the end, by id, unless `--keep` is passed. Nothing else in the
- * table is read beyond the rows this run named.
+ * Ten rows, named `E2E-<run>-<path>-<width> Tester` (the chat's, which
+ * asks a first name, has no surname), phone 0000000000, and two
+ * chat_sessions rows. The same preflight as scripts/chat-checklist.mjs:
+ * CHECK_CONTACT_ALLOW_PROJECT must name the exact project ref in
+ * SUPABASE_URL, which cannot be satisfied without looking at which project
+ * that is. At the end, unless `--keep` is passed, the run deletes the rows it
+ * created by id, then sweeps any `E2E-<this run>-` row an aborted path left
+ * behind (this run's own prefix, never another run's), and deletes its chat
+ * sessions by id.
+ *
+ * The table holds real leads. Before anything is written, every row that is
+ * not this run's is fingerprinted (a hash of the row — nothing is printed
+ * or kept); after cleanup the same rows must exist with the same hash. That
+ * is the "8 real rows survive untouched" check, made mechanical.
  */
 
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -149,8 +172,28 @@ const forwardsNaming = (name) => forwards().filter((f) => f.body?.firstName === 
 
 /* ── the mock Dialpad line ─────────────────────────────────────────────── */
 
-const SMS_OPENING = (first) => `Hi ${first}, this is Harmonized Brain Centers. We got your request and we'll reach out soon!`;
-const SMS_CLOSING = "Reply STOP to opt out.";
+// Ben's words exactly, hyphen not em dash (lib/sms-confirmation.ts). Spelled
+// out here rather than imported so a change to the text has to be made twice
+// on purpose — this is the copy the registration's sample message quotes.
+const SMS_EXACT = (first) => `Hi ${first}, this is Harmonized Brain Centers. We got your request and we'll reach out soon! Feel free to call or text us right here anytime - talk soon. Reply HELP for help, STOP to cancel.`;
+const GSM7 = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
+const GSM7_EXT = "^{}\\[~]|€\f";
+/** { gsm7, units, segments } — 160 in one segment, 153 per segment beyond. */
+function segments(text) {
+  let units = 0;
+  for (const c of text) {
+    if (GSM7.includes(c)) units += 1;
+    else if (GSM7_EXT.includes(c)) units += 2;
+    else return { gsm7: false, units: [...text].length, segments: Math.ceil([...text].length / 67) };
+  }
+  return { gsm7: true, units, segments: units <= 160 ? 1 : Math.ceil(units / 153) };
+}
+
+/* ── the consent wording (lib/sms-consent.ts), as a reader sees it ─────── */
+
+const FORM_CONSENT_TEXT = "Yes, text me appointment and inquiry updates from Harmonized Brain Centers at this number. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we’ll call you either way. SMS Terms · Privacy Policy";
+const CHAT_CONSENT_QUESTION = "Last one: can Harmonized Brain Centers text you appointment and inquiry updates at that number? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Terms: /sms-terms · Privacy: /privacy-policy. Yes or no is fine — we’ll call you either way.";
+const NO_TEXT_CONSENT_LINE = "[Texts: NO consent to text this number. Call or email only.]";
 const texts = () =>
   existsSync(SMS_LOG)
     ? readFileSync(SMS_LOG, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
@@ -173,7 +216,7 @@ function expect(label, ok, detail = "") {
 }
 
 /** The row for a submission: exactly one, with the columns step one wrote. */
-async function expectRow(name, { center, helpingWho, concerns, note, email = emailFor(name), source = "form", bestTime = "Any time", sourcePage = "/contact" }) {
+async function expectRow(name, { center, helpingWho, concerns, note, email = emailFor(name), source = "form", bestTime = "Any time", sourcePage = "/contact", consent, consentText = FORM_CONSENT_TEXT }) {
   const rows = await rowsNamed(name);
   expect(`${name}: exactly one row`, rows.length === 1, `${rows.length} row(s)`);
   const r = rows[0];
@@ -188,11 +231,19 @@ async function expectRow(name, { center, helpingWho, concerns, note, email = ema
   expect(`${name}: helping_who = ${JSON.stringify(helpingWho)}`, r.helping_who === helpingWho, String(r.helping_who));
   expect(`${name}: concerns = ${JSON.stringify(concerns)}`, JSON.stringify(r.concerns) === JSON.stringify(concerns), JSON.stringify(r.concerns));
   expect(`${name}: note = ${JSON.stringify(note)}`, r.note === note, String(r.note));
+  expect(`${name}: sms_consent = ${consent}`, r.sms_consent === consent, String(r.sms_consent));
+  expect(`${name}: sms_consent_text is the exact wording shown`, r.sms_consent_text === consentText, JSON.stringify(r.sms_consent_text));
+  const at = r.sms_consent_at ? Date.parse(r.sms_consent_at) : null;
+  expect(
+    `${name}: sms_consent_at ${consent ? "stamped within the last 10 minutes" : "null"}`,
+    consent ? at !== null && Date.now() - at < 10 * 60_000 && Date.now() - at > -60_000 : at === null,
+    String(r.sms_consent_at)
+  );
   return r;
 }
 
 /** Exactly one email, carrying the lead and pointing at the row. */
-function expectEmail(name, row, { center, source = "the contact form", inbox = env.LEADS_NOTIFY_EMAIL ?? "office@example.test" }) {
+function expectEmail(name, row, { center, consent, source = "the contact form", inbox = env.LEADS_NOTIFY_EMAIL ?? "office@example.test" }) {
   const list = emailsNaming(name);
   expect(`${name}: exactly one notification email`, list.length === 1, `${list.length} email(s)`);
   const e = list[0];
@@ -204,6 +255,8 @@ function expectEmail(name, row, { center, source = "the contact form", inbox = e
   if (row) expect(`${name}: email points at the saved row`, text.includes(`Saved request: ${row.id}`));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
   expect(`${name}: email body carries the name whole`, text.includes(`Name:      ${name}`), JSON.stringify(text.split("\n").find((l) => l.startsWith("Name:"))));
+  const textsLine = text.split("\n").find((l) => l.startsWith("Texts:")) ?? null;
+  expect(`${name}: email says ${consent ? "OK to text" : "NO consent to text"}`, consent ? textsLine?.includes("OK to text") : textsLine?.includes("NO consent to text"), JSON.stringify(textsLine));
 }
 
 /**
@@ -217,11 +270,17 @@ function expectText(name, { from = env.DIALPAD_SMS_FROM ?? "+16155550100" }) {
   const t = list[0];
   if (!t) return;
   const body = String(t.body.text ?? "");
-  expect(`${name}: text opens in Ben's words, first word of the name only`, body.startsWith(SMS_OPENING(firstWord(name))) && !body.includes("Tester"), JSON.stringify(body));
-  expect(`${name}: text ends with the STOP sentence`, body.endsWith(SMS_CLOSING), JSON.stringify(body));
-  expect(`${name}: text is GSM-7 (no em dash, no curly quote)`, !/[\u2014\u2013\u2018\u2019\u201c\u201d]/.test(body), JSON.stringify(body));
+  expect(`${name}: text is exactly Ben's words with HELP/STOP, first word of the name only`, body === SMS_EXACT(firstWord(name)) && !body.includes("Tester"), JSON.stringify(body));
+  const seg = segments(body);
+  expect(`${name}: text is GSM-7, two segments (${seg.units} units)`, seg.gsm7 && seg.segments === 2, JSON.stringify(seg));
   expect(`${name}: text goes to the number given`, JSON.stringify(t.body.to_numbers) === JSON.stringify(["+10000000000"]), JSON.stringify(t.body.to_numbers));
   expect(`${name}: text comes from ${from}`, t.body.from_number === from, String(t.body.from_number));
+}
+
+/** No consent, no text — not even the confirmation. */
+function expectNoText(name, why) {
+  const list = textsNaming(name);
+  expect(`${name}: ${why} sends NO text`, list.length === 0, `${list.length} text(s): ${JSON.stringify(list.map((t) => t.body?.text))}`);
 }
 
 /**
@@ -229,7 +288,7 @@ function expectText(name, { from = env.DIALPAD_SMS_FROM ?? "+16155550100" }) {
  * who-for stand-in and the flag line when the form has not asked yet — and
  * the save path posts a second time, labelled as an update, with the answers.
  */
-function expectForward(name, { center, whoFor = null, updated = null }) {
+function expectForward(name, { center, consent, whoFor = null, updated = null }) {
   const list = forwardsNaming(name);
   const want = updated ? 2 : 1;
   expect(`${name}: ${want} platform post(s)`, list.length === want, `${list.length} post(s)`);
@@ -238,6 +297,11 @@ function expectForward(name, { center, whoFor = null, updated = null }) {
   expect(`${name}: platform post carries the secret header`, first.secretPresent === true);
   expect(`${name}: platform post phone/center`, first.body.phone === "0000000000" && first.body.preferredCenter === center, JSON.stringify([first.body.phone, first.body.preferredCenter]));
   expect(`${name}: platform post honeypot present and empty`, first.body.website === "", JSON.stringify(first.body.website));
+  expect(
+    `${name}: platform post ${consent ? "carries no" : "carries the"} no-consent line`,
+    consent ? !String(first.body.message ?? "").includes(NO_TEXT_CONSENT_LINE) : String(first.body.message ?? "").includes(NO_TEXT_CONSENT_LINE),
+    JSON.stringify(first.body.message)
+  );
   if (whoFor === null) {
     expect(`${name}: step-one post uses the who-for stand-in`, first.body.whoFor === WHO_FOR_STAND_IN, first.body.whoFor);
     expect(`${name}: step-one post flags who-for as not given, first line`, String(first.body.message ?? "").startsWith(NOT_GIVEN_LINE), JSON.stringify(first.body.message));
@@ -254,6 +318,7 @@ function expectForward(name, { center, whoFor = null, updated = null }) {
     expect(`${name}: update post concerns = ${JSON.stringify(updated.concerns)}`, JSON.stringify(second.body.concerns) === JSON.stringify(updated.concerns), JSON.stringify(second.body.concerns));
     expect(`${name}: update post carries the note`, String(second.body.message ?? "").endsWith(updated.note), JSON.stringify(second.body.message));
     expect(`${name}: update post carries no not-given flag`, !String(second.body.message ?? "").includes(NOT_GIVEN_LINE));
+    expect(`${name}: update post keeps the consent answer`, consent === !String(second.body.message ?? "").includes(NO_TEXT_CONSENT_LINE), JSON.stringify(second.body.message));
     expect(`${name}: update post keeps name/phone/center/time`, second.body.firstName === name && second.body.phone === "0000000000" && second.body.preferredCenter === center && second.body.bestTimeToCall === first.body.bestTimeToCall, JSON.stringify(second.body));
   }
 }
@@ -326,9 +391,40 @@ async function expectThankYou(page, name) {
   expect(`${name}: "Helpful to have ready" sits in the card, and the second column is gone`, ready === true);
 }
 
-async function stepOne(page, width, name, { email = emailFor(name), center = "Not sure yet" } = {}) {
+/**
+ * The consent box as the visitor finds it: under the phone row, unchecked,
+ * the exact wording in its label, links to both pages. Then tick it or not.
+ */
+async function consentBox(page, name, tick) {
+  const look = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const box = document.querySelector("#sms-consent");
+    const wrap = box?.closest(".sms-consent");
+    const label = document.querySelector('label[for="sms-consent"]');
+    const prev = wrap?.previousElementSibling;
+    return {
+      present: !!box,
+      type: box?.type ?? null,
+      checked: box?.checked ?? null,
+      required: box?.required ?? null,
+      label: label?.textContent ?? null,
+      hrefs: [...(label?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href")),
+      underPhone: !!prev?.querySelector("#phone"),
+    };
+  })())`));
+  expect(`${name}: consent box present, a checkbox, unchecked on load, not required`, look.present && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
+  expect(`${name}: consent label is the exact wording`, look.label === FORM_CONSENT_TEXT, JSON.stringify(look.label));
+  expect(`${name}: consent label links /sms-terms and /privacy-policy`, JSON.stringify(look.hrefs) === JSON.stringify(["/sms-terms", "/privacy-policy"]), JSON.stringify(look.hrefs));
+  expect(`${name}: consent box sits directly under the phone row`, look.underPhone, JSON.stringify(look));
+  if (tick) {
+    const r = await page.eval(`(() => { const b = document.querySelector("#sms-consent"); b.click(); return b.checked ? "ok" : "click did not check it"; })()`);
+    if (r !== "ok") throw new Error(r);
+  }
+}
+
+async function stepOne(page, width, name, { email = emailFor(name), center = "Not sure yet", consent = false } = {}) {
   await page.setViewport(width, width <= 400 ? 700 : 900);
   await page.goto(`${BASE}/contact`, { settle: 400 });
+  await consentBox(page, name, consent);
   // goto() stamps `in` on every .rv that exists at load; the panels this
   // check cares about do not exist yet, so the reveal gate is still real.
   for (const [sel, val] of [["#name", name], ["#phone", "0000000000"], ["#email", email], ["#preferred-center", center]]) {
@@ -350,7 +446,7 @@ async function submitAndReadAlert(page) {
 async function pathSave(page, width) {
   const name = `E2E-${RUN}-save-${width} Tester`;
   console.log(`\n▸ save path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { center: "Murfreesboro" });
+  await stepOne(page, width, name, { center: "Murfreesboro", consent: true });
   const two = await waitPanel(page, "call is requested");
   await expectStepTwo(page, name, two);
   expect(`${name}: step two heading took focus`, two?.focused === true);
@@ -382,23 +478,23 @@ async function pathSave(page, width) {
   expect(`${name}: both center numbers visible below the video`, v.phones === 2, `${v.phones} tel link(s)`);
   await expectThankYou(page, name);
   await sleep(300);
-  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part." });
+  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part.", consent: true });
   // Per-center routing (lib/center-routing.ts): a Murfreesboro lead goes to
   // LEADS_NOTIFY_EMAIL_MURFREESBORO when the server has it, else the default,
   // and its text comes from DIALPAD_SMS_FROM_MURFREESBORO the same way. Pass
   // the server's values to this check so it can say which it expects.
-  expectEmail(name, row, { center: "Murfreesboro", inbox: env.LEADS_NOTIFY_EMAIL_MURFREESBORO ?? env.LEADS_NOTIFY_EMAIL ?? "office@example.test" });
+  expectEmail(name, row, { center: "Murfreesboro", consent: true, inbox: env.LEADS_NOTIFY_EMAIL_MURFREESBORO ?? env.LEADS_NOTIFY_EMAIL ?? "office@example.test" });
   expect(`${name}: still exactly one email after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
   expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
   expect(`${name}: still exactly one text after step two`, textsNaming(name).length === 1, `${textsNaming(name).length}`);
-  expectForward(name, { center: "Murfreesboro", updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part." } });
+  expectForward(name, { center: "Murfreesboro", consent: true, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part." } });
   return { name, row };
 }
 
 async function pathSkip(page, width) {
   const name = `E2E-${RUN}-skip-${width} Tester`;
   console.log(`\n▸ skip path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { center: "Nashville" });
+  await stepOne(page, width, name, { center: "Nashville", consent: false });
   const two = await waitPanel(page, "call is requested");
   await expectStepTwo(page, name, two);
   // The quiet exit: the .form-skip link, not a button labelled anything else.
@@ -408,11 +504,12 @@ async function pathSkip(page, width) {
   expect(`${name}: video panel mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
   await expectThankYou(page, name);
   await sleep(300);
-  const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null });
-  expectEmail(name, row, { center: "Nashville" });
+  const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null, consent: false });
+  expectEmail(name, row, { center: "Nashville", consent: false });
   // The skip path reaches the platform: step one is the lead.
-  expectForward(name, { center: "Nashville" });
-  expectText(name, { from: env.DIALPAD_SMS_FROM_NASHVILLE ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
+  expectForward(name, { center: "Nashville", consent: false });
+  // The box was left unticked: the lead lands everywhere else, and no text.
+  expectNoText(name, "an unticked consent box");
   return { name, row };
 }
 
@@ -442,15 +539,15 @@ async function pathLeave(chrome, width) {
   const badEmail = await submitAndReadAlert(page);
   expect(`${name}: a malformed email is refused in the browser`, /doesn.t look right/i.test(badEmail ?? ""), JSON.stringify(badEmail));
   expect(`${name}: the refusals wrote nothing`, (await rowsNamed(name)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0);
-  // Then the real thing.
-  await stepOne(page, width, name);
+  // Then the real thing, with the box ticked.
+  await stepOne(page, width, name, { consent: true });
   const two = await waitPanel(page, "call is requested");
   expect(`${name}: step two shown (then the tab closes)`, two?.opacity === 1, JSON.stringify(two));
   await page.close();
   await sleep(500);
-  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null });
-  expectEmail(name, row, { center: "Not sure yet" });
-  expectForward(name, { center: "Not sure yet" });
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, consent: true });
+  expectEmail(name, row, { center: "Not sure yet", consent: true });
+  expectForward(name, { center: "Not sure yet", consent: true });
   expectText(name, {});
 }
 
@@ -531,26 +628,75 @@ async function playVideo(chrome, page, name) {
 
 /* ── the chat's write path, and the PATCH route's refusals ──────────────── */
 
-async function chatWritePath() {
-  const name = `E2E-${RUN}-chat-0`;
-  console.log(`\n▸ chat write path — ${name}`);
-  // Exactly the BookingSubmission lib/chat/booking.ts builds, with the center
-  // and time declined (null) — the shape migration 0004 had to keep working.
+const chatSessions = [];
+
+/**
+ * One whole booking conversation through /api/chat — the real state machine
+ * (lib/chat/booking.ts), not a replay of its POST body. Each conversation
+ * comes from its own made-up client address so the route's per-minute limit
+ * (12) is never what a run trips over. The center and time are declined, the
+ * shape migration 0004 had to keep working.
+ */
+async function chatConversation(answer, consent, n) {
+  const name = `E2E-${RUN}-chat${consent ? "yes" : "no"}`;
+  console.log(`\n▸ chat booking, texts answered ${JSON.stringify(answer)} — ${name}`);
+  let sessionId;
+  const say = async (message) => {
+    const res = await fetch(`${BASE}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": `10.99.${n}.${RUN.slice(-2) % 250}` },
+      body: JSON.stringify({ message, page: "/", ...(sessionId ? { sessionId } : {}) }),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.status === 404) throw new Error("/api/chat answered 404 — the server was built with NEXT_PUBLIC_FEATURE_ASSISTANT off; check:contact needs it on");
+    if (!res.ok) throw new Error(`/api/chat → ${res.status} ${JSON.stringify(body)}`);
+    sessionId = body.sessionId;
+    return String(body.reply ?? "");
+  };
+  await say("I'd like to book a call");
+  await say("Myself");
+  await say(name);
+  await say("0000000000");
+  await say("chat note");
+  await say("skip");
+  const asked = await say("skip");
+  chatSessions.push(sessionId);
+  expect(`${name}: the consent question is asked, exactly, after the center`, asked === CHAT_CONSENT_QUESTION, JSON.stringify(asked));
+  const readBack = await say(answer);
+  expect(
+    `${name}: read-back ${consent ? "mentions" : "does not mention"} a text`,
+    readBack.startsWith(`Let me read that back: ${name}, 0000000000.`) && readBack.includes("We’ll text that number") === consent,
+    JSON.stringify(readBack)
+  );
+  const done = await say("yes");
+  expect(`${name}: booking submitted`, done.startsWith(`You’re all set, ${name}.`), JSON.stringify(done));
+  await sleep(300);
+  // No email: the chat does not ask for one, and the route does not hold it
+  // to the form's rule. The wording stored is the question as asked, for a
+  // yes and a no alike.
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: "Myself", concerns: [], note: "chat note", email: null, source: "chat", bestTime: null, sourcePage: "/", consent, consentText: CHAT_CONSENT_QUESTION });
+  expectEmail(name, row, { center: "Not sure yet", consent, source: "the site assistant (chat)" });
+  expectForward(name, { center: "Not sure yet", consent, whoFor: "myself" });
+  if (consent) expectText(name, {});
+  else expectNoText(name, `a ${JSON.stringify(answer)} to the chat's consent question`);
+  return row;
+}
+
+/** `sms_consent: true` without the wording is not consent — no text. */
+async function forgedConsent() {
+  const name = `E2E-${RUN}-forged-0 Tester`;
+  console.log(`\n▸ consent claimed without the wording — ${name}`);
   const res = await fetch(`${BASE}/api/consultation`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "consultation", source: "chat", helping_who: "Myself", first_name: name, phone: "0000000000", note: "chat note", best_time: null, preferred_center: null, source_page: "/" }),
+    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: true }),
   });
-  const body = await res.json().catch(() => null);
-  expect(`${name}: chat POST answers 201 with an id`, res.status === 201 && typeof body?.id === "string", `${res.status} ${JSON.stringify(body)}`);
+  expect(`${name}: still accepted (201) — consent is never a condition`, res.status === 201, String(res.status));
   await sleep(300);
-  // No email: the chat does not ask for one, and the route does not hold it
-  // to the form's rule.
-  const row = await expectRow(name, { center: "Not sure yet", helpingWho: "Myself", concerns: [], note: "chat note", email: null, source: "chat", bestTime: null, sourcePage: "/" });
-  expectEmail(name, row, { center: "Not sure yet", source: "the site assistant (chat)" });
-  expectForward(name, { center: "Not sure yet", whoFor: "myself" });
-  expectText(name, {});
-  return row;
+  const rows = await rowsNamed(name);
+  if (rows[0]) created.push(rows[0].id);
+  expect(`${name}: recorded as NO consent, no wording, no time`, rows.length === 1 && rows[0].sms_consent === false && rows[0].sms_consent_text === null && rows[0].sms_consent_at === null, JSON.stringify(rows.map((r) => [r.sms_consent, r.sms_consent_text, r.sms_consent_at])));
+  expectNoText(name, "a consent flag sent without the wording");
 }
 
 /** The route's own email rule, without a browser: the form must send one. */
@@ -596,6 +742,19 @@ if (health !== 200) {
   process.exit(1);
 }
 
+/** Every row that is not this run's: id → hash. Nothing is printed or kept. */
+async function fingerprintOthers() {
+  const rows = await rest(`consultation_requests?select=*&order=id`);
+  const out = new Map();
+  for (const r of rows) {
+    if (String(r.first_name ?? "").startsWith(`E2E-${RUN}-`)) continue;
+    out.set(r.id, createHash("sha256").update(JSON.stringify(r)).digest("hex"));
+  }
+  return out;
+}
+const before = await fingerprintOthers();
+console.log(`fingerprinted ${before.size} existing row(s) — they must be untouched at the end`);
+
 let chrome;
 try {
   chrome = await launch();
@@ -615,7 +774,9 @@ try {
     await pathSkip(page, width);
   }
   await pathLeave(chrome, 390);
-  const chatRow = await chatWritePath();
+  await chatConversation("yes please", true, 1);
+  const chatRow = await chatConversation("no thanks", false, 2);
+  await forgedConsent();
   await postRefusals();
   if (saveRows[0]?.row) await patchRefusals(saveRows[0].row);
   if (chatRow) await patchChatRowRefused(chatRow);
@@ -626,15 +787,33 @@ try {
   await chrome.close();
 }
 
-// Only ids this run created, by exact id — never by pattern.
-if (!KEEP && created.length > 0) {
-  const ids = created.join(",");
-  const deleted = await rest(`consultation_requests?id=in.(${ids})`, { method: "DELETE" });
-  console.log(`\ncleaned up ${deleted.length} of ${created.length} test row(s)`);
-  if (deleted.length !== created.length) failures.push(`cleanup removed ${deleted.length} of ${created.length} rows`);
+// The ids this run created, by exact id; then a sweep of THIS run's prefix
+// for anything an aborted path wrote before it could be counted; then the
+// chat sessions by id. Never another run's rows, never a looser pattern.
+if (!KEEP) {
+  if (created.length > 0) {
+    const deleted = await rest(`consultation_requests?id=in.(${created.join(",")})`, { method: "DELETE" });
+    console.log(`\ncleaned up ${deleted.length} of ${created.length} test row(s)`);
+    if (deleted.length !== created.length) failures.push(`cleanup removed ${deleted.length} of ${created.length} rows`);
+  }
+  const stray = await rest(`consultation_requests?first_name=like.${encodeURIComponent(`E2E-${RUN}-*`)}`, { method: "DELETE" });
+  if (stray.length > 0) {
+    console.log(`swept ${stray.length} uncounted row(s) from this run`);
+    failures.push(`${stray.length} test row(s) were written but never asserted`);
+  }
+  if (chatSessions.length > 0) {
+    const gone = await rest(`chat_sessions?id=in.(${chatSessions.map((id) => `"${id}"`).join(",")})`, { method: "DELETE" });
+    console.log(`deleted ${gone.length} of ${chatSessions.length} chat session(s)`);
+  }
+  const left = await rest(`consultation_requests?first_name=like.${encodeURIComponent(`E2E-${RUN}-*`)}&select=id`);
+  expect("no row from this run is left in the table", left.length === 0, `${left.length} left`);
 } else if (created.length > 0) {
   console.log(`\nkept ${created.length} test row(s): ${created.join(", ")}`);
 }
+
+const after = await fingerprintOthers();
+const changed = [...before].filter(([id, hash]) => after.get(id) !== hash).length;
+expect(`all ${before.size} pre-existing row(s) still present and byte-identical`, changed === 0, `${changed} missing or changed`);
 
 const total = emails().length;
 console.log(`\n${passes} check(s) passed, ${failures.length} failed; ${total} email(s) in ${MOCK_LOG}, ${forwards().length} platform post(s) in ${PLATFORM_LOG}, ${texts().length} text(s) in ${SMS_LOG} this server session`);
@@ -643,4 +822,4 @@ if (failures.length > 0) {
   for (const f of failures) console.log(`  • ${f}`);
   process.exit(1);
 }
-console.log("✓ contact flow: three paths, one row, one email, one lead post and one text each, first-word greetings, the quiet skip, every late panel revealed, the video plays.");
+console.log("✓ contact flow: three form paths and two chat bookings, one row, one email and one lead post each; a text only where the box was ticked or the chat said yes, none otherwise; first-word greetings, the quiet skip, every late panel revealed, the video plays; existing rows untouched.");

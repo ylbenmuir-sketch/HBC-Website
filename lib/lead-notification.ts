@@ -178,6 +178,9 @@ export type LeadDetails = {
   bestTime: string | null;
   note: string | null;
   sourcePage: string | null;
+  /** Whether she agreed to texts (lib/sms-consent.ts). The office texts from
+   *  the same Dialpad lines, so the email says it plainly either way. */
+  smsConsent: boolean;
 };
 
 /** Right-aligned label column so the block reads as a form on a phone. */
@@ -233,6 +236,12 @@ export async function sendLeadNotification(lead: LeadDetails): Promise<boolean> 
     line("Email:", lead.email ?? "(not given)"),
     line("Center:", center),
     line("Best time:", lead.bestTime ?? "(not given)"),
+    line(
+      "Texts:",
+      lead.smsConsent
+        ? "OK to text (consent recorded on the saved request)"
+        : "NO consent to text — call or email only"
+    ),
     line("For:", lead.helpingWho ?? (laterStep ? "(not yet given)" : "(not given)")),
     line(
       "Concerns:",

@@ -186,8 +186,8 @@ siteground.net`); apex and `www` both A → `35.212.22.77` (SiteGround);
    vercel.com/sso-api`, protection is on *All Deployments* — change it
    (step 4), no redeploy needed.
 10. Open the site on a phone off wifi (real DNS), submit the form once
-    more, confirm the lead email and the confirmation text (if Dialpad is
-    set).
+    more with the texts box ticked, confirm the lead email and the
+    confirmation text (if Dialpad is set and A2P 10DLC is approved).
 
 **Search Console and Bing — same day**
 

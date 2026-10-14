@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
+import { FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
+import ScannerText from "./ScannerText";
 
 /**
  * The contact form, in three steps.
@@ -41,6 +43,14 @@ import VideoEmbed from "./VideoEmbed";
  * key predate the change and still carry it). Every greeting — the step-two
  * headline, the step-three thank-you, the confirmation text — uses the first
  * word only (lib/first-name.ts): "Hi Ben," not "Hi Ben Muir,".
+ *
+ * ## Texts are opt-in
+ *
+ * Step one carries the one consent point for texts on the form: a checkbox
+ * under the phone and email row, unchecked, with every disclosure the carriers require in its own label
+ * (lib/sms-consent.ts) and the request going through whether or not it is
+ * ticked. Unticked means no text at all — not even the confirmation. The
+ * route records the wording shown and, on a yes, the time.
  *
  * ## Step two never shows before the row exists
  *
@@ -236,6 +246,8 @@ export default function ContactForm({
   const [email, setEmail] = useState("");
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
+  // Unchecked by default, and never required (lib/sms-consent.ts).
+  const [smsConsent, setSmsConsent] = useState(false);
   // The honeypot. Real visitors never see this field and so always submit it
   // empty; scripted spam fills every input it finds. The value is passed
   // straight through to the platform, which classifies it — nothing on the
@@ -303,6 +315,10 @@ export default function ContactForm({
           best_time: bestTime,
           website,
           source_page: from || pathname,
+          sms_consent: smsConsent,
+          // The wording beside the box, sent ticked or not — the row keeps
+          // what she was offered, not only what she said.
+          sms_consent_text: FORM_CONSENT_TEXT,
         }),
       });
       const data = (await res.json().catch(() => null)) as
@@ -601,6 +617,37 @@ export default function ContactForm({
         </div>
       </div>
 
+      {/* Text-message consent, directly under the phone number it is about —
+          compliance scanners weight how close the consent sits to the number
+          input, and a reader should not have to connect the two across the
+          center and time row. Everything a carrier reviewer looks for is in
+          the label itself; the links are to the full terms, not to the
+          disclosures. They open a new tab so a half-filled form is not lost
+          to reading them. Server-rendered with the rest of step one, so it is
+          in the raw HTML a scanner fetches. */}
+      <div className="sms-consent">
+        <input
+          id="sms-consent"
+          name="sms_consent"
+          type="checkbox"
+          checked={smsConsent}
+          onChange={(e) => setSmsConsent(e.target.checked)}
+        />
+        <label htmlFor="sms-consent">
+          {FORM_CONSENT_PARTS.map((part, i) =>
+            // ScannerText: the "&" in "Msg & data rates" reaches the raw
+            // HTML as itself, for scanners that match bytes.
+            typeof part === "string" ? (
+              <ScannerText key={i} text={part} />
+            ) : (
+              <a key={i} href={part.href} target="_blank" rel="noopener">
+                {part.label}
+              </a>
+            )
+          )}
+        </label>
+      </div>
+
       <div className="two">
         <div>
           <label htmlFor="preferred-center">Preferred center</label>
@@ -687,8 +734,6 @@ export default function ContactForm({
         No payment details, no intake forms today. We never share your
         information, and there&rsquo;s no obligation after we talk.{" "}
         <Link href="/privacy-policy">What happens to what you tell us</Link>.
-        We&rsquo;ll text this number once to confirm we got your request;
-        reply STOP to opt out.
       </p>
     </form>
   );

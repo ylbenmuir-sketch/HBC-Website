@@ -2,6 +2,12 @@ import ChromeLink from "./ChromeLink";
 import { LogoName } from "./Logo";
 import FooterGroup from "./FooterGroup";
 import { DISCLAIMER } from "@/lib/site-config";
+import { PRIVACY_PATH, SMS_TERMS_PATH } from "@/lib/sms-consent";
+import {
+  DBA_SENTENCE,
+  REGISTERED_ADDRESS_LINE,
+  SUPPORT_PHONE,
+} from "@/lib/sms-identity";
 
 const groups = [
   {
@@ -54,6 +60,7 @@ const groups = [
       // The footer is where people look for this one, and until now there was
       // nowhere on the site to look. See app/privacy-policy/page.tsx.
       { label: "Privacy", href: "/privacy-policy" },
+      { label: "Text message terms", href: SMS_TERMS_PATH },
     ],
   },
 ];
@@ -80,6 +87,21 @@ export default function Footer() {
             </FooterGroup>
           ))}
         </div>
+        {/* The registered identity (lib/sms-consent.ts), on every page and
+            outside the link groups — those collapse behind a button on
+            phones, and a carrier reviewer matching "Harmonized Brain
+            Centers" to the texting registration must find it, and the
+            terms, without opening anything. Suite S included — the site's
+            address is the record (lib/sms-identity.ts). */}
+        <p className="foot-identity">
+          {DBA_SENTENCE}
+          <br />
+          {REGISTERED_ADDRESS_LINE} &middot;{" "}
+          <a href={`tel:${SUPPORT_PHONE.tel}`}>{SUPPORT_PHONE.display}</a>
+          <br />
+          <ChromeLink href={PRIVACY_PATH}>Privacy Policy</ChromeLink> &middot;{" "}
+          <ChromeLink href={SMS_TERMS_PATH}>SMS Terms</ChromeLink>
+        </p>
         <p className="disclaimer">
           {DISCLAIMER} &copy; {new Date().getFullYear()} Harmonized Brain
           Centers &middot; Nashville &middot; Murfreesboro &middot; Franklin

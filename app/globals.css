@@ -684,6 +684,11 @@ details.faq .a a { color: var(--sage-deep); }
    backstop for a column too narrow even for "harmonizedbraincenterstn.com",
    and it is the same reasoning as the overflow-wrap on the headings above. */
 .policy p a[href^="mailto:"] { overflow-wrap: break-word; }
+/* /sms-terms' registered identity — the block a carrier reviewer matches
+   against the texting registration, so it is set apart and read as an
+   address, not italicised the way <address> is by default. */
+.policy .sms-identity { font-style: normal; margin: 0 0 18px; padding: 18px 22px; border-left: 3px solid var(--sage-deep); background: var(--sage-soft); font-size: 16px; line-height: 1.7; color: var(--ink); }
+.policy .sms-identity a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 
 /* team */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
@@ -747,6 +752,15 @@ footer.site .logo-name span { color: var(--gold); }
 .fg-mark { display: none; }
 .foot-grid a { display: block; color: rgba(251, 248, 241, 0.68); text-decoration: none; padding: 5px 0; }
 .foot-grid a:hover { color: var(--ivory); }
+/* The registered texting identity (Footer.tsx). Footer body colour, not the
+   disclaimer's fainter one: it is a fact someone is looking for. Links are
+   underlined because they sit inside a sentence, where colour alone would
+   not mark them. */
+.foot-identity { padding-top: 28px; font-size: 13.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.68); }
+.foot-identity a { color: rgba(251, 248, 241, 0.86); text-decoration: underline; text-decoration-color: rgba(251, 248, 241, 0.35); text-underline-offset: 3px; }
+.foot-identity a:hover { color: var(--ivory); text-decoration-color: currentColor; }
+/* A phone number is one thing: never "(615)" on one line and the rest on the next. */
+.foot-identity a[href^="tel:"] { white-space: nowrap; }
 .disclaimer { padding-top: 28px; font-size: 12.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.55); max-width: 112ch; }
 
 /* reveal motion
@@ -1839,6 +1853,17 @@ body[data-bottombar] footer.site {
 .form-exits { display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin-top: 26px; }
 .form-skip { align-self: center; background: none; border: 0; padding: 4px 2px; font-family: var(--sans); font-size: 13.5px; color: var(--slate); cursor: pointer; line-height: 1.5; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .form-skip:hover { color: var(--ink); text-decoration-color: currentColor; }
+
+/* Text-message consent (components/ContactForm.tsx, lib/sms-consent.ts). The
+   checkbox opts out of `.form input` (full width, field padding); the label
+   opts out of `.form label` (the uppercase field caption), because this one
+   is a sentence a person has to be able to read, not a caption. Slate on
+   white is 5.69:1. The label is the hit area, so the 20px box is not the
+   whole target. */
+.form .sms-consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; }
+.form .sms-consent input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
+.form .sms-consent label { display: block; margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); cursor: pointer; }
+.form .sms-consent a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .form-skip:disabled { opacity: 0.5; cursor: default; }
 /* Step panels mount after a submit and may land with the viewport scrolled
    past their top; scrollIntoView() targets this margin so the sticky header

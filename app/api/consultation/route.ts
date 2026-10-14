@@ -14,6 +14,7 @@ import {
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
+import { CONSENT_TEXT_MAX } from "@/lib/sms-consent";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,10 @@ type Payload = {
   best_time?: unknown;
   note?: unknown;
   source_page?: unknown;
+  /** True only when she ticked the box (form) or said yes (chat). */
+  sms_consent?: unknown;
+  /** The consent wording exactly as it was shown to her, ticked or not. */
+  sms_consent_text?: unknown;
   /** The honeypot (see the read in the handler) — hidden from real visitors. */
   website?: unknown;
 };
@@ -237,6 +242,15 @@ export async function POST(request: Request) {
   const note = str(body.note, 2000);
   const sourcePage = str(body.source_page, 200);
 
+  // Text-message consent (lib/sms-consent.ts). Opt-in, never assumed: only
+  // a literal `true` that arrives WITH the wording she was shown counts, so
+  // an old cached form, a script, or a guide signup is a no. The wording is
+  // stored whether or not she ticked it — what she was offered is part of
+  // the record — and the time is the server's, at the moment the request
+  // that carried her answer arrived, never a time the browser sent.
+  const smsConsentText = isGuide ? null : str(body.sms_consent_text, CONSENT_TEXT_MAX);
+  const smsConsent = !isGuide && body.sms_consent === true && smsConsentText !== null;
+
   // The honeypot, read raw rather than through str(): empty is the normal
   // human answer, and str() maps empty to null. It is never used to reject
   // anything here — classification is the platform's job (a non-empty value is
@@ -258,6 +272,9 @@ export async function POST(request: Request) {
     best_time: isGuide ? null : bestTime,
     note: isGuide ? null : note,
     source_page: sourcePage,
+    sms_consent: smsConsent,
+    sms_consent_text: smsConsentText,
+    sms_consent_at: smsConsent ? new Date().toISOString() : null,
   };
 
   // Every consultation is forwarded here, at the lead. A form lead has no
@@ -277,6 +294,7 @@ export async function POST(request: Request) {
           bestTime,
           note,
           website: honeypot,
+          smsConsent,
         }
       : null;
 
@@ -308,6 +326,7 @@ export async function POST(request: Request) {
         bestTime,
         note,
         sourcePage,
+        smsConsent,
       };
 
   const [notified, forwarded] = await Promise.all([
@@ -349,11 +368,14 @@ export async function POST(request: Request) {
   }
 
   // ── Tell her it landed ─────────────────────────────────────────────────
+  // Only if she agreed to texts. Without consent there is no text at all —
+  // not even this one; the call is how she hears from us.
+  //
   // After the fan-out, not alongside it: the text says "we got your request",
   // which is only true once something above accepted it. Not a destination —
   // a failed text changes nothing about the response. Awaited for the same
   // serverless reason the fan-out is.
-  if (lead && firstName && phone) {
+  if (lead && firstName && phone && smsConsent) {
     await sendConfirmationText({
       name: firstName,
       phone,

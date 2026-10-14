@@ -418,10 +418,17 @@ Steps two and three mount after the reveal observer ran for the route;
 
 Drives the whole flow in a headless Chrome against a production build and
 the real Supabase project — save, skip and close-the-tab at three widths,
-the chat's write path, the PATCH refusals, and the video actually playing —
-and asserts one row, one email and one platform post per submission (plus
-the labelled update post on the save path) and one confirmation text, then
-deletes the rows it created, by id. It also proves the greetings use the
+two real chat bookings over `/api/chat` (one answering yes to texts, one
+no; needs a build with the assistant flag on), a forged-consent POST, the
+PATCH refusals, and the video actually playing — and asserts one row, one
+email and one platform post per submission (plus the labelled update post on
+the save path). The save and leave paths tick the text-consent box and the
+skip paths leave it unticked: a text goes out only on a tick or a chat yes,
+exactly Ben's words with HELP/STOP, and an unticked box, a chat "no" or a
+forged flag sends nothing. It fingerprints every row that is not its own
+before writing, deletes its rows by id (then sweeps its own run prefix) and
+its chat sessions, and fails unless every pre-existing row is still there
+and byte-identical. It also proves the greetings use the
 first word of a two-word test name, that step two carries no "optional"
 panel and still has its "Skip for now" exit, and that the form and the route
 both refuse a missing or malformed email. The email provider, the platform
@@ -556,22 +563,30 @@ Dialpad line of the center she chose (`DIALPAD_SMS_FROM_<CENTER>`, falling back
 to `DIALPAD_SMS_FROM`). Because it says "we got your request", it is sent only
 after at least one of the three destinations accepted the submission, never in
 parallel with them. It is skipped when the honeypot was filled, when the number
-is not a ten-digit US number, and for guide signups. Dialpad needs the
-company's A2P 10DLC registration approved before carriers will deliver
-business texts; the API answers 200 either way, so test with a real handset.
-Both the form and the chat's read-back tell the visitor the text is coming.
+is not a ten-digit US number, for guide signups — and **whenever she did not
+opt in**. Texts are opt-in (A2P 10DLC, Oct 2026): a checkbox under the phone
+row on the form, unchecked by default, and a yes/no question as the chat's
+last booking step; the request goes through either way. The wording
+(`lib/sms-consent.ts`) carries every carrier disclosure and links
+`/sms-terms` and the privacy policy; the row records `sms_consent`, the
+wording shown and, on a yes, the time (migration 0005). The lead email's
+"Texts:" line and the platform's no-consent line tell the office not to text
+someone who said no. Dialpad needs the company's A2P 10DLC registration
+approved before carriers will deliver business texts; the API answers 200
+either way, so test with a real handset.
 
-The message (Ben, 2026-10-13), greeting by the first word of the name:
+The message (Ben, 2026-10-13; HELP added 2026-10-14), greeting by the first
+word of the name — 185 characters with "Ben", GSM-7, two segments:
 
 > Hi Ben, this is Harmonized Brain Centers. We got your request and we'll
 > reach out soon! Feel free to call or text us right here anytime - talk
-> soon. Reply STOP to opt out.
+> soon. Reply HELP for help, STOP to cancel.
 
-The STOP sentence is required for business SMS compliance and carrier
-deliverability; it stays, last. The dash is a hyphen because one em dash
-would switch the text to UCS-2 and double the segment count. `check:contact`
-reads every text the server sends (a Dialpad stand-in, `MOCK_SMS_LOG`) and
-asserts the greeting, the closing sentence and the per-center from-number.
+The HELP/STOP sentence is the opt-in's own (`SMS_HELP_STOP`) and stays last.
+The dash is a hyphen because one em dash would switch the text to UCS-2 and
+take it from two segments to three. `check:contact` reads every text the
+server sends (a Dialpad stand-in, `MOCK_SMS_LOG`) and asserts the exact text,
+GSM-7, two segments and the per-center from-number.
 
 **The link** (`BOOKING_CALENDAR_URL`) renders as "Pick a time for your call"
 on the confirmation card so she can lock a callback slot herself. A Google

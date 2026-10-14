@@ -29,6 +29,9 @@
 //     asked to hear from us.
 //   · The number is not a 10-digit US number we can put in E.164 form.
 //   · Guide signups — no phone is collected.
+//   · The visitor did not consent to texts. The route decides that
+//     (sms_consent on the row) and does not call this at all; see
+//     lib/sms-consent.ts for the wording she agreed to.
 // Every miss is logged by reason, never with the number.
 //
 // ── DIALPAD ────────────────────────────────────────────────────────────────
@@ -45,6 +48,7 @@
 import { settingForCenter } from "./center-routing";
 import { firstName } from "./first-name";
 import { SITE_NAME } from "./site-config";
+import { SMS_HELP_STOP } from "./sms-consent";
 
 const DIALPAD_SMS_ENDPOINT = "https://dialpad.com/api/v2/sms";
 
@@ -78,19 +82,26 @@ export function toE164US(raw: string): string | null {
 /**
  * The message — Ben's words (2026-10-13), warmer than the first draft and
  * naming no center: the center is the line it comes FROM (settingForCenter
- * below), which is what "right here" means. The STOP sentence is required
- * for business SMS compliance and carrier deliverability; it stays, last.
+ * below), which is what "right here" means.
+ *
+ * The last sentence is the opt-out, and it is the opt-in's own sentence
+ * (SMS_HELP_STOP), so the first text a number receives says HELP and STOP
+ * in the words she agreed to. HELP was added 2026-10-14 for the A2P 10DLC
+ * resubmission (CR4003); STOP was always there. It stays last.
  *
  * Plain words, and only GSM-7 characters: one curly quote or em dash
- * switches the whole text to UCS-2, which halves the per-segment limit and
- * doubles what Dialpad bills — so the dash in Ben's copy is a hyphen here.
- * At ~170 characters this is two segments.
+ * switches the whole text to UCS-2, which cuts a segment from 153 characters
+ * to 67 and turns two segments into three — so the dash in Ben's copy is a
+ * hyphen here. 185 characters with "Ben", 182 + the first name in general:
+ * two segments (≤306) for any first name up to 124 characters. A name typed
+ * with a character outside GSM-7 (a curly apostrophe in "D’Angelo") makes
+ * that one text UCS-2 and three segments; it still sends.
  */
 export function confirmationText(name: string): string {
   return (
     `Hi ${firstName(name)}, this is ${SITE_NAME}. We got your request and we'll reach out soon! ` +
     `Feel free to call or text us right here anytime - talk soon. ` +
-    `Reply STOP to opt out.`
+    SMS_HELP_STOP
   );
 }
 

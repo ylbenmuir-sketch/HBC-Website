@@ -745,7 +745,7 @@ export const PHYSICIAN_REFERRALS =
  *
  * Bump it when the notice itself changes — not when the site does.
  */
-export const PRIVACY_EFFECTIVE_DATE = "2026-08-23";
+export const PRIVACY_EFFECTIVE_DATE = "2026-10-14";
 
 /**
  * How long a form submission is kept before it is deleted — confirmed by Ben.

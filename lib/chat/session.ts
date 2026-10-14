@@ -44,6 +44,8 @@ export type BookingStep =
   | "note"
   | "bestTime"
   | "preferredCenter"
+  /** Texts: the checkbox, asked as a question (lib/sms-consent.ts). */
+  | "smsConsent"
   | "confirm"
   /** Re-asking the number after a failed read-back — never re-asks the note. */
   | "confirmPhone"
@@ -58,6 +60,8 @@ export type BookingDraft = {
   note?: string;
   bestTime?: string;
   preferredCenter?: string;
+  /** True only after a clear yes to CHAT_CONSENT_QUESTION. */
+  smsConsent?: boolean;
 };
 
 export type ChatSession = {

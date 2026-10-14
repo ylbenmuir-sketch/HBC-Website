@@ -16,6 +16,7 @@ import {
   verifiedOr,
 } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
+import { SMS_TERMS_PATH } from "@/lib/sms-consent";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
 
@@ -205,15 +206,34 @@ export default function PrivacyPolicyPage() {
               we send out later takes your say-so first.
             </p>
 
+            {/* Read off the code like the rest: the consent columns are
+                supabase/migrations/0005_sms_consent.sql, the sender is
+                lib/sms-confirmation.ts. The "never shared for marketing"
+                sentence is the one carriers look for in a privacy policy
+                linked from an opt-in; it restates INFORMATION_SHARING for
+                the phone number specifically, it does not extend it. */}
+            <h2>Text messages</h2>
+            <p>
+              We text you only if you agree to it &mdash; a box on the contact
+              form, or a yes in the assistant &mdash; and we keep that yes, the
+              exact wording you agreed to, and when you agreed. Texts are sent
+              through Dialpad, the phone service our centers use. Your phone
+              number and your consent to texts are never sold, and never shared
+              with anyone for their own marketing. Reply STOP to any text to
+              cancel, or HELP for help; the rest is in our{" "}
+              <Link href={SMS_TERMS_PATH}>text message terms</Link>.
+            </p>
+
             <h2>Who else sees it</h2>
             <p>
               The people at Harmonized who would be calling you, and the
               services this website runs on. Submissions are stored in a
               database hosted by Supabase that only our own server can read,
               and an alert that a request has arrived may be sent to us by
-              email. That alert carries no details &mdash; not your name, your
-              phone number, your concerns or your note &mdash; only that
-              something came in and where to look at it.
+              email. When you submit a form, we email the information you gave
+              us &mdash; your name, your contact details, which center you
+              chose, and anything you chose to tell us &mdash; to our team so
+              they can call you back.
             </p>
             <p>
               Those services hold the information in order to run; they are not

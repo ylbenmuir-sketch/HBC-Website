@@ -94,6 +94,16 @@ export const WHO_FOR_NOT_GIVEN_LINE =
 export const UPDATE_LINE =
   "[UPDATE — not a new lead. The same person added who the call is for, concerns or a note after requesting the call.]";
 
+/**
+ * ── TEXT CONSENT ─────────────────────────────────────────────────────────
+ * The contract has no field for it, and the front desk can text from the
+ * platform. So a lead who did NOT agree to texts carries this line, ahead of
+ * her own words; one who agreed carries nothing extra (texting is then
+ * allowed, and the consent itself is on the saved request).
+ */
+export const NO_TEXT_CONSENT_LINE =
+  "[Texts: NO consent to text this number. Call or email only.]";
+
 export type InquiryForward = {
   /** Null when the form has not asked yet — see WHO_FOR_STAND_IN. */
   helpingWho: string | null;
@@ -114,6 +124,8 @@ export type InquiryForward = {
   /** True when this is the form's second step re-posting an inquiry already
    *  filed — see UPDATE_LINE. */
   update?: boolean;
+  /** Whether she agreed to texts — see NO_TEXT_CONSENT_LINE. */
+  smsConsent: boolean;
 };
 
 export type InquiryForwardResult =
@@ -171,6 +183,7 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
   const message = [
     input.update ? UPDATE_LINE : null,
     input.helpingWho === null ? WHO_FOR_NOT_GIVEN_LINE : null,
+    input.smsConsent ? null : NO_TEXT_CONSENT_LINE,
     input.note?.trim() || null,
   ]
     .filter((line): line is string => line !== null)

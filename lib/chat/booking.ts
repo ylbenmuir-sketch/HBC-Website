@@ -8,6 +8,7 @@ import {
 import type { BookingDraft, ChatSession } from "./session";
 import { contactCollectionAllowed } from "./session";
 import { normalize } from "./refusals";
+import { CHAT_CONSENT_QUESTION } from "../sms-consent";
 
 /**
  * The callback request (phase-8-chatbot.md §5).
@@ -49,6 +50,10 @@ export type BookingSubmission = {
   best_time: string | null;
   preferred_center: string | null;
   source_page: string | null;
+  /** True only after a clear yes to the consent question. */
+  sms_consent: boolean;
+  /** The consent question exactly as asked, yes or no. */
+  sms_consent_text: string;
 };
 
 export type BookingTurn = {
@@ -403,7 +408,10 @@ const ASK = {
   note: "And in your own words, what’s going on? (A sentence is plenty — or say skip.)",
   bestTime:
     "When’s the best time to call — mornings, afternoons, or evenings? (Or skip.)",
-  preferredCenter: "Last one: Nashville or Murfreesboro? (Or skip.)",
+  preferredCenter: "And which center suits you — Nashville or Murfreesboro? (Or skip.)",
+  // The form's checkbox, as a question. Last, so it is asked of someone who
+  // has already given everything the call needs, and a no costs nothing.
+  smsConsent: CHAT_CONSENT_QUESTION,
 };
 
 const CONTACT_PAGE_EXIT =
@@ -443,6 +451,8 @@ export function pendingQuestion(session: ChatSession): string | null {
       return ASK.bestTime;
     case "preferredCenter":
       return ASK.preferredCenter;
+    case "smsConsent":
+      return ASK.smsConsent;
     case "confirmPhone":
       return "What’s the right number?";
     case "confirm":
@@ -476,7 +486,15 @@ export function advanceBooking(
   const draft: BookingDraft = session.draft;
 
   // §5: let them leave. Applies at every required step, and at the read-back.
-  if (DECLINE.test(text) && session.step !== "note" && session.step !== "bestTime" && session.step !== "preferredCenter") {
+  // Not at the consent question: "no thanks" there means no texts, not "stop
+  // the booking" — consent is never a condition of the call.
+  if (
+    DECLINE.test(text) &&
+    session.step !== "note" &&
+    session.step !== "bestTime" &&
+    session.step !== "preferredCenter" &&
+    session.step !== "smsConsent"
+  ) {
     session.step = "declined";
     session.draft = {};
     return { reply: CONTACT_PAGE_EXIT };
@@ -540,6 +558,21 @@ export function advanceBooking(
     case "preferredCenter": {
       const center = resolveCenter(message);
       if (center) draft.preferredCenter = center;
+      session.step = "smsConsent";
+      return { reply: ASK.smsConsent };
+    }
+
+    case "smsConsent": {
+      // The unchecked box: only a clear yes opts in. A no, a "stop", a
+      // shrug, or anything unclear is a no, and the flow moves on either
+      // way — it never re-asks, because asking twice is pressing. Any
+      // negation vetoes the yes: YES matches "right" inside "not right now"
+      // and "ok" inside "ok but don't text me", and a doubtful yes is a no.
+      draft.smsConsent =
+        YES.test(text) &&
+        !NO.test(text) &&
+        !DECLINE.test(text) &&
+        !/\b(stop|not|don'?t|never)\b/.test(text);
       session.step = "confirm";
       return { reply: readBack(draft) };
     }
@@ -596,6 +629,8 @@ export function advanceBooking(
           best_time: draft.bestTime ?? null,
           preferred_center: draft.preferredCenter ?? null,
           source_page: sourcePage,
+          sms_consent: draft.smsConsent === true,
+          sms_consent_text: CHAT_CONSENT_QUESTION,
         },
       };
     }
@@ -605,11 +640,13 @@ export function advanceBooking(
   }
 }
 
-/** §5: read the name and number back and wait for a yes. The confirmation
- *  text (lib/sms-confirmation.ts) goes to this number, so this is where she
- *  is told — a statement, not a second question. */
+/** §5: read the name and number back and wait for a yes. When she agreed to
+ *  texts, the confirmation text (lib/sms-confirmation.ts) goes to this
+ *  number, so this is where she is told — a statement, not a second
+ *  question. When she did not, nothing is texted and nothing is said. */
 function readBack(draft: BookingDraft): string {
-  return `Let me read that back: ${draft.firstName}, ${draft.phone}. We’ll text that number once to confirm. Have I got that right?`;
+  const text = draft.smsConsent ? " We’ll text that number to confirm." : "";
+  return `Let me read that back: ${draft.firstName}, ${draft.phone}.${text} Have I got that right?`;
 }
 
 /** Sent after /api/consultation accepts the row. */
