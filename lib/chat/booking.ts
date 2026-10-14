@@ -1,57 +1,79 @@
-import {
-  locationHours,
-  locations,
-  type DayHours,
-  type Location,
-  type WeeklyHours,
-} from "../locations";
-import type { BookingDraft, ChatSession } from "./session";
+import type { BookingDraft, BookingStep, ChatSession } from "./session";
 import { contactCollectionAllowed } from "./session";
 import { normalize } from "./refusals";
+import {
+  CENTER_BUTTONS,
+  CONFIRM_BUTTONS,
+  FIX_BUTTONS,
+  TIME_BUTTONS,
+  extractEmail,
+  extractName,
+  extractPhone,
+  formatPhone,
+  isFullName,
+  matchBestTime,
+  matchCenter,
+  matchConfirm,
+  matchFixField,
+  mentionsFranklin,
+  type CenterValue,
+} from "./booking-parse";
 import { CHAT_CONSENT_QUESTION } from "../sms-consent";
 import { PHONE_DISPLAY } from "../site-config";
+import { firstName } from "../first-name";
+import { capitalizeName } from "../name-case";
 
 /**
- * The callback request (phase-8-chatbot.md §5).
+ * The callback request (phase-8-chatbot.md §5), rebuilt to six steps (Ben,
+ * 2026-10-14):
+ *
+ *   1. "What's your name and the best number to reach you?" — both from one
+ *      reply; whichever is missing is asked for alone. First AND last name.
+ *   2. "What email should we send your confirmation to?" — required; an
+ *      invalid one is asked again with an example.
+ *   3. "Which center?" — buttons: Nashville · Murfreesboro · Come to me ·
+ *      Not sure, stored as Nashville / Murfreesboro / Concierge / Not sure.
+ *      A typed answer is matched to the closest (typos too), or the buttons
+ *      come back. Free-typed center text is never stored.
+ *   4. "Who's this for, and what's going on? A sentence is plenty." — into
+ *      the same columns the form's step two uses (helping_who, note).
+ *   5. "Best time to call?" — buttons: Morning · Afternoon · Any time.
+ *   6. The read-back and the text-consent question in ONE message — buttons:
+ *      Yes, text me · No, just call · Fix something. "Fix something" asks
+ *      what to change, changes it, and shows step 6 again.
  *
  * A state machine, and deliberately not a model. The model's job is answering
  * from site content; collecting a name and a phone number is a form, and a
- * form that a model improvises is a form that will one day ask a fifth
+ * form that a model improvises is a form that will one day ask a seventh
  * question, skip the read-back, or invent a callback time. Every question, its
  * order, and the confirmation step are fixed here in code.
  *
  * `advanceBooking()` is pure: it takes a session and a message and returns the
  * reply plus, when the flow is ready, the payload to submit. It performs no
- * network call — app/api/chat/route.ts does the POST to /api/consultation, so
- * the flow can be run end-to-end in a test without a Supabase project.
- */
-
-/**
- * The one question with a fixed answer set, and the only one still matched
- * against a list — because a mismatch here re-asks rather than moving on, so
- * nothing can be lost to it.
+ * network call — app/api/chat/route.ts calls the consultation handler, and
+ * only says "you're all set" when that handler returns a saved row id.
+ * The buttons are a function of the step (`bookingButtons()`), so a re-asked
+ * question after a refusal or an hours answer carries its buttons too.
  *
- * The form's other two <select>s — Mornings/Afternoons/Evenings and the three
- * centers — used to be mirrored here as `TIME_OPTIONS` and `CENTER_OPTIONS`
- * and matched the same way. A typed conversation is not a dropdown, and those
- * lists are what dropped "murf" and "anytime" on the floor. Both are gone;
- * see `resolveCenter()` and `resolveBestTime()` below. The canonical center
- * strings live in `CENTER_ALIASES`, next to the words visitors actually type
- * for them.
+ * The reading of answers — names, numbers, emails, centers, times, the
+ * read-back's yes/no/fix — is lib/chat/booking-parse.ts, import-free and
+ * unit-tested (lib/chat-booking-parse.test.mjs).
  */
-const HELPING_OPTIONS = ["My child", "Myself", "Someone else"] as const;
 
 export type BookingSubmission = {
   type: "consultation";
   source: "chat";
-  helping_who: string;
+  /** Null when step 4's answer named nobody we could place. */
+  helping_who: string | null;
+  /** The full name, first and last. The route capitalizes it on save. */
   first_name: string;
   phone: string;
+  email: string;
   note: string | null;
-  best_time: string | null;
-  preferred_center: string | null;
+  best_time: string;
+  preferred_center: CenterValue;
   source_page: string | null;
-  /** True only after a clear yes to the consent question. */
+  /** True only after "Yes, text me" (or a typed yes) at step 6. */
   sms_consent: boolean;
   /** The consent question exactly as asked, yes or no. */
   sms_consent_text: string;
@@ -59,322 +81,45 @@ export type BookingSubmission = {
 
 export type BookingTurn = {
   reply: string;
-  /** Present only when the visitor has confirmed the read-back. */
+  /** Present only when the visitor has answered the read-back. */
   submit?: BookingSubmission;
 };
-
-/* ------------------------------------------------------------------ */
-/* §5.1 — callback expectations                                        */
-/* ------------------------------------------------------------------ */
-
-const WEEKDAY_INDEX: Record<string, number> = {
-  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
-};
-
-const WEEKDAY_NAME = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-];
-
-function minutesOf(hhmm: string): number {
-  const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + m;
-}
-
-/** Weekday index and minutes-since-midnight in the hours' own time zone. */
-function localNow(now: Date, timeZone: string): { day: number; minutes: number } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(now);
-
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  // "24" appears for midnight under hour12:false in some ICU versions.
-  const hour = Number(get("hour")) % 24;
-  return {
-    day: WEEKDAY_INDEX[get("weekday")] ?? 0,
-    minutes: hour * 60 + Number(get("minute")),
-  };
-}
-
-/**
- * The week the *practice* answers the phone, pooled across its centers.
- *
- * There is no single business week here — Nashville runs Tuesday to Saturday,
- * Murfreesboro Tuesday to Thursday — and that difference is real enough that
- * the location pages print both. But a visitor at this point in the booking
- * flow has not chosen a center yet, and often does not know there are two, so
- * the promise she is given has to be one the practice as a whole can keep.
- *
- * The union is the honest shape: a day is a day somebody answers if *any*
- * center is open on it, and the window runs from the earliest opening to the
- * latest closing across the centers open that day. Unverified hours are absent
- * (`locationHours` gates them), so a center whose week is not confirmed
- * contributes nothing rather than a guess.
- */
-function practiceWeek(centers: Location[]): WeeklyHours | null {
-  const weeks = centers.map(locationHours).filter((w): w is WeeklyHours => w !== null);
-  if (weeks.length === 0) return null;
-
-  const week = Array.from({ length: 7 }, (_, day): DayHours => {
-    const open = weeks.map((w) => w.week[day]).filter((d): d is NonNullable<DayHours> => d !== null);
-    if (open.length === 0) return null;
-    return {
-      opens: open.reduce((a, b) => (minutesOf(a.opens) <= minutesOf(b.opens) ? a : b)).opens,
-      closes: open.reduce((a, b) => (minutesOf(a.closes) >= minutesOf(b.closes) ? a : b)).closes,
-    };
-  }) as WeeklyHours["week"];
-
-  // Every center on this site keeps one time zone. If that ever stops being
-  // true, a pooled week is the wrong abstraction and this has to be told which
-  // center the visitor picked — which the flow does eventually know.
-  return { timeZone: weeks[0].timeZone, week };
-}
-
-/** "Tuesday through Saturday", from the pooled week. Never typed as a range. */
-function openDaysPhrase(week: WeeklyHours["week"]): string | null {
-  const open = week.map((d, i) => (d ? i : -1)).filter((i) => i >= 0);
-  if (open.length === 0) return null;
-  if (open.length === 1) return WEEKDAY_NAME[open[0]];
-  const contiguous = open.every((d, i) => i === 0 || d === open[i - 1] + 1);
-  if (!contiguous) return open.map((d) => WEEKDAY_NAME[d]).join(", ");
-  return `${WEEKDAY_NAME[open[0]]} through ${WEEKDAY_NAME[open[open.length - 1]]}`;
-}
-
-/**
- * What the assistant may say about when someone will be called back.
- *
- * §5.1's three branches, now that the hours behind them are confirmed. This is
- * the only place in the assistant allowed to say anything about callback
- * timing, and it reads the centers' own weeks and nothing else — in particular
- * not SAME_DAY_CALLBACK, whose "today" promise is the homepage's.
- *
- * It speaks for the practice rather than for a center, because at the end of
- * the booking flow the visitor may have skipped the center question entirely.
- * Naming the window ("Tuesday through Saturday") rather than only the day is
- * what stops "we'll call you Tuesday" reading as a delay she wasn't warned
- * about — a promise she can check is worth more than a promise that sounds
- * fast.
- *
- * `centers` is a parameter so the branches can be exercised without editing
- * lib/locations.ts.
- */
-export function callbackExpectation(
-  now: Date = new Date(),
-  centers: Location[] = locations
-): string {
-  const pooled = practiceWeek(centers);
-  // No confirmed week anywhere: no timing claim at all, exactly as before.
-  if (!pooled) return "Someone from the team will call you back.";
-
-  const { timeZone, week } = pooled;
-  const { day, minutes } = localNow(now, timeZone);
-  const days = openDaysPhrase(week);
-  const window = days ? ` The team answers ${days}.` : "";
-
-  const today = week[day];
-  if (today && minutes >= minutesOf(today.opens) && minutes < minutesOf(today.closes)) {
-    return "Someone will call you back today.";
-  }
-  if (today && minutes < minutesOf(today.opens)) {
-    return `The team will call you first thing this morning.${window}`;
-  }
-
-  for (let ahead = 1; ahead <= 7; ahead += 1) {
-    const next = week[(day + ahead) % 7];
-    if (!next) continue;
-    const when = ahead === 1 ? "tomorrow" : WEEKDAY_NAME[(day + ahead) % 7];
-    return `The team will call you back ${when}, the next day they're open.${window}`;
-  }
-
-  // Confirmed as never open. Nonsense, but not worth a wrong promise.
-  return "Someone from the team will call you back.";
-}
 
 /* ------------------------------------------------------------------ */
 /* Reading the visitor                                                 */
 /* ------------------------------------------------------------------ */
 
 const YES = /\b(yes|yep|yeah|yup|correct|right|that'?s right|sure|ok|okay|sounds good|please do|go ahead|do it|confirmed?)\b/;
-const NO = /\b(no|nope|nah|wrong|incorrect|that'?s wrong|not right)\b/;
 
 /**
- * "I'd rather not." §5: let them leave. Kept separate from a plain "no",
- * because "no" at the read-back means the number is wrong, not that the
- * visitor wants out.
+ * "I'd rather not." §5: let them leave — at the steps that ask for contact
+ * details. Not at the read-back, where "no thanks" means "no texts", and not
+ * at the steps that have a "not sure" or "any time" to fall back on.
  */
 const DECLINE =
   /\b(rather not|prefer not|don'?t want to|do not want to|not comfortable|no thanks|no thank you|not right now|maybe later|i'?ll pass|skip it|stop asking|leave me alone)\b/;
 
-/**
- * An answer that declines to answer — and *only* that.
- *
- * The previous version of this also held `whatever`, `any`, `either`,
- * `doesn't matter`, `no preference`, `not sure` and read all of them as "no
- * answer given", which is how "call me any time" became an empty column and
- * how a note reading "he gets overwhelmed by any transition" became no note at
- * all: `\bany\b` matched inside a sentence that was plainly an answer.
- *
- * A person is going to read these fields before picking up the phone, and
- * "doesn't matter" tells them something an empty field does not. So the test
- * is now narrow on purpose: skip, pass, n/a, none. Everything else the visitor
- * types is an answer and is stored as she typed it.
- */
+/** An answer that declines to answer — and only that. */
 const EXPLICIT_SKIP = /\b(skip|pass|n\/a|none)\b/;
 
-/**
- * Pull the phone-shaped run out of the message, not the message itself.
- *
- * People answer the read-back with "actually it's (615) 555-4321", and storing
- * that whole sentence in the `phone` column produces a lead nobody can dial —
- * which is the exact failure §5's read-back exists to catch, reintroduced one
- * step later. Formatting inside the run stays the visitor's.
- */
-function extractPhone(message: string): string | null {
-  // The leading "(" is part of the number as people write it — dropping it
-  // leaves "615) 555-4321" in the notification email.
-  const candidates = message.match(/\+?\(?\d[\d\s().+-]{7,}\d/g);
-  if (!candidates) return null;
-  for (const candidate of candidates) {
-    const trimmed = candidate.trim();
-    const digits = trimmed.replace(/\D/g, "");
-    if (digits.length >= 10 && digits.length <= 15) return trimmed.slice(0, 40);
-  }
-  return null;
-}
-
-/** First name only — the form asks for one, so the assistant does too. */
-function extractFirstName(message: string): string | null {
-  const cleaned = message
-    .trim()
-    .replace(/^(my name'?s?|my name is|i'?m|im|it'?s|this is|call me)\s+/i, "")
-    .replace(/[.!,]+$/, "")
-    .trim();
-  if (cleaned.length === 0 || cleaned.length > 60) return null;
-  // A sentence is not a name; take the first word of one.
-  const first = cleaned.split(/\s+/)[0];
-  return first.length > 0 && first.length <= 40 ? first : null;
-}
-
-function matchOption<T extends string>(
-  message: string,
-  options: readonly T[]
-): T | null {
+/** Step 4: who the call is for, when the sentence says. Child first ("my son
+ *  and I…" is about the son), then someone else, then the visitor. */
+function matchHelpingWho(message: string): string | null {
   const text = normalize(message);
-  for (const option of options) {
-    if (text.includes(normalize(option))) return option;
+  if (/\b(my (child|kid|kids|son|daughter|boy|girl|teen|teenager|toddler|grandson|granddaughter)|child|kid|kids|son|daughter|teen|teenager|grandson|granddaughter)\b/.test(text)) {
+    return "My child";
   }
+  if (/\b(someone else|my (wife|husband|partner|spouse|mom|mother|dad|father|friend|parent|parents|brother|sister|grandma|grandmother|grandpa|grandfather|aunt|uncle|fiance|fiancee|boyfriend|girlfriend)|a friend|for a friend)\b/.test(text)) {
+    return "Someone else";
+  }
+  if (/\b(myself|me|i|i'?m|i'?ve|i am|i have|my own)\b/.test(text)) return "Myself";
   return null;
 }
 
-/* ------------------------------------------------------------------ */
-/* The two optional fields, and why they are not matched against a list */
-/* ------------------------------------------------------------------ */
-
-/**
- * A booking arrived with `preferred_center`, `best_time` and `concerns` all
- * empty from a visitor who had answered "murf" and "anytime".
- *
- * `matchOption()` is a containment test: it asks whether the normalized
- * message *contains* a whole canonical option. "murf" does not contain
- * "murfreesboro", so it returned null — and both call sites assigned
- * conditionally (`if (center) draft.preferredCenter = center`) and then
- * advanced the step anyway. Three things had to line up, and they did: an
- * exact-match test, an assignment that only fires on a match, and a flow that
- * moves on regardless. The visitor is asked, answers, watches the assistant
- * accept it and ask the next question, and nothing is stored. She believes she
- * told us; the person calling her back has an empty field.
- *
- * It was never only the obvious variants either — while the third option was
- * the "Franklin waitlist", "franklin" alone missed it by the same rule.
- *
- * So: normalize what can be normalized, and keep the rest verbatim. A null in
- * either column now means one thing only — she was asked and declined to say.
- */
-
-/**
- * The centers, and the words people actually type for them. Word-boundary
- * anchored, which is also what makes it punctuation-insensitive: "Murf." and
- * "murf," both match, and "boro" inside "murfreesboro" does not match on its
- * own.
- */
-const CENTER_ALIASES: Array<{ canonical: string; pattern: RegExp }> = [
-  {
-    canonical: "Murfreesboro",
-    pattern: /\b(murfreesboro|murfreesburo|murfreesbro|murfeesboro|murf|boro|rutherford)\b/,
-  },
-  { canonical: "Nashville", pattern: /\b(nashville|nash|davidson|metro)\b/ },
-  // No Franklin entry. The third alias used to be the "Franklin waitlist";
-  // there is no waitlist now (Ben, 2026-10-13: someone interested in Franklin
-  // should book Nashville or Murfreesboro today, not wait), so the assistant
-  // offers the two open centers and nothing else. "franklin" typed anyway is
-  // kept verbatim by resolveCenter — the person calling her back reads it
-  // and offers whichever open center is nearer. It emails LEADS_FALLBACK
-  // (lib/lead-routing.ts routes chat leads by center, like the form's) and
-  // texts from the default line unless DIALPAD_SMS_FROM_FRANKLIN is set
-  // (lib/center-routing.ts).
-];
-
-/**
- * Collapse whitespace; keep her capitalization and her punctuation. Trimmed
- * again after the cap, so a value clipped at a space doesn't arrive with a
- * trailing one.
- */
+/** Collapse whitespace; keep her capitalization and her punctuation. */
 function verbatim(message: string, maxLength: number): string | null {
   const raw = message.trim().replace(/\s+/g, " ").slice(0, maxLength).trim();
   return raw.length > 0 ? raw : null;
-}
-
-/**
- * Canonical center where the answer is recognizable, her own words where it
- * isn't, null only where she declined.
- *
- * Capped at 60 to match `str(body.preferred_center, 60)` in
- * app/api/consultation/route.ts — that helper returns **null** for anything
- * longer, so a cap wider than the route's would reintroduce the same silent
- * drop one layer further along.
- */
-function resolveCenter(message: string): string | null {
-  const text = normalize(message);
-  if (EXPLICIT_SKIP.test(text) || DECLINE.test(text)) return null;
-  for (const { canonical, pattern } of CENTER_ALIASES) {
-    if (pattern.test(text)) return canonical;
-  }
-  return verbatim(message, 60);
-}
-
-/**
- * Her words, always.
- *
- * "anytime", "after 3", "weekday mornings", "once the kids are at school" —
- * every one of those tells the person dialling more than an empty field does,
- * and none of them fits a three-option list. So there is no list here: the
- * answer is stored as typed, capped at 40 to match
- * `str(body.best_time, 40)` in the consultation route.
- *
- * The trade, stated plainly: a chat row now reads "mornings" where a form row
- * reads "Mornings", because the form's fixed <select> and this free text share
- * one column. Nothing queries that column — a human reads it — and losing the
- * answers that don't fit the list costs far more than the inconsistent casing.
- */
-function resolveBestTime(message: string): string | null {
-  const text = normalize(message);
-  if (EXPLICIT_SKIP.test(text) || DECLINE.test(text)) return null;
-  return verbatim(message, 40);
-}
-
-function matchHelpingWho(message: string): string | null {
-  const text = normalize(message);
-  if (/\b(my (child|kid|son|daughter)|my kids|for my (child|kid|son|daughter)|child|kid|son|daughter)\b/.test(text)) {
-    return "My child";
-  }
-  if (/\b(myself|me|for me|i am|i'?m the one)\b/.test(text)) return "Myself";
-  if (/\b(someone else|my (wife|husband|partner|mom|mother|dad|father|friend|parent)|a friend)\b/.test(text)) {
-    return "Someone else";
-  }
-  return matchOption(message, HELPING_OPTIONS);
 }
 
 /** Does this message ask to start the callback flow? */
@@ -395,29 +140,57 @@ export function wantsBooking(message: string, offered: boolean): boolean {
 /* Copy                                                                */
 /* ------------------------------------------------------------------ */
 
+/** "Ben" from whatever she typed, capitalized the way the row will be. */
+function greet(draft: BookingDraft): string {
+  return firstName(capitalizeName(draft.fullName ?? ""));
+}
+
 /**
- * One question per turn — §5, and the reason each of these is a single
- * sentence ending in one question mark. Do not stack a second ask into any of
- * them.
+ * One question per turn — §5. The six questions are Ben's words; the
+ * re-asks around them are the shortest way to get the missing piece.
  */
 const ASK = {
-  helpingWho:
-    "Happy to set that up. First — who are we helping: your child, yourself, or someone else?",
-  firstName: "Got it. What’s your first name?",
-  phone: (name: string) =>
-    `Thanks, ${name}. What’s the best phone number to reach you on?`,
-  // §4.3 — asked once, in their own words, and never followed up on.
-  note: "And in your own words, what’s going on? (A sentence is plenty — or say skip.)",
-  bestTime:
-    "When’s the best time to call — mornings, afternoons, or evenings? (Or skip.)",
-  preferredCenter: "And which center suits you — Nashville or Murfreesboro? (Or skip.)",
-  // The form's checkbox, as a question. Last, so it is asked of someone who
-  // has already given everything the call needs, and a no costs nothing.
-  smsConsent: CHAT_CONSENT_QUESTION,
+  contact: "What’s your name and the best number to reach you?",
+  contactAgain:
+    "Sorry, I didn’t catch that — what’s your full name and the best number to reach you?",
+  phoneOnly: (name: string) =>
+    `Thanks${name ? `, ${name}` : ""}. What’s the best number to reach you?`,
+  phoneShort: "That number looks short — could you type all ten digits?",
+  nameOnly: "Got it. And your full name — first and last?",
+  lastName: (name: string) => `Thanks, ${name} — and your last name?`,
+  email: "What email should we send your confirmation to?",
+  emailAgain:
+    "That doesn’t look like an email address — could you type it again, like name@gmail.com?",
+  center: "Which center?",
+  centerAgain: "Sorry, I didn’t catch that — which center? Tap one below.",
+  centerFranklin:
+    "Our Franklin center isn’t open yet — Nashville and Murfreesboro are open now, or we can come to you. Which center?",
+  note: "Who’s this for, and what’s going on? A sentence is plenty.",
+  bestTime: "Best time to call?",
+  bestTimeAgain: "Sorry — morning, afternoon, or any time? Tap one below.",
+  fix: "No problem — what would you like to change?",
+  fixAgain: "Which part — your name, phone, email, center, or best time?",
+  fixName: "What’s your full name — first and last?",
+  fixNameAgain: "Could you give me your first and last name?",
+  fixPhone: "What’s the right number?",
+  fixPhoneAgain: "Sorry — could you type the number again, all ten digits?",
+  fixEmail: "What’s the right email?",
+  fixCenter: "Which center?",
+  fixTime: "Best time to call?",
 };
 
 const CONTACT_PAGE_EXIT =
   "That’s completely fine — I won’t ask again. If you’d rather reach out in your own time, the contact page has the form and the phone number: /contact";
+
+/**
+ * Step 6: the read-back and the consent question, one message (Ben). The
+ * phone is shown formatted, "(615) 555-1234", whatever she typed.
+ */
+function readBack(draft: BookingDraft): string {
+  const name = capitalizeName(draft.fullName ?? "");
+  const phone = formatPhone(draft.phone ?? "");
+  return `Here’s what I have: ${name}, ${phone}, ${draft.email}, ${draft.preferredCenter}, ${draft.bestTime}. ${CHAT_CONSENT_QUESTION}`;
+}
 
 /* ------------------------------------------------------------------ */
 /* The flow                                                            */
@@ -432,6 +205,24 @@ export function bookingActive(session: ChatSession): boolean {
   );
 }
 
+/** The tappable answers for the step she is on, or none. */
+export function bookingButtons(step: BookingStep): string[] | undefined {
+  switch (step) {
+    case "center":
+    case "fixCenter":
+      return [...CENTER_BUTTONS];
+    case "bestTime":
+    case "fixTime":
+      return [...TIME_BUTTONS];
+    case "confirm":
+      return [...CONFIRM_BUTTONS];
+    case "fix":
+      return [...FIX_BUTTONS];
+    default:
+      return undefined;
+  }
+}
+
 /**
  * The question the visitor still owes an answer to.
  *
@@ -440,25 +231,35 @@ export function bookingActive(session: ChatSession): boolean {
  * isn't left guessing what the assistant is waiting for.
  */
 export function pendingQuestion(session: ChatSession): string | null {
+  const draft = session.draft;
   switch (session.step) {
-    case "helpingWho":
-      return ASK.helpingWho;
-    case "firstName":
-      return ASK.firstName;
-    case "phone":
-      return ASK.phone(session.draft.firstName ?? "");
+    case "contact":
+      if (draft.fullName && !draft.phone) return ASK.phoneOnly(greet(draft));
+      if (draft.phone && !draft.fullName) return ASK.nameOnly;
+      if (draft.fullName && !isFullName(draft.fullName)) return ASK.lastName(greet(draft));
+      return ASK.contact;
+    case "email":
+      return ASK.email;
+    case "center":
+      return ASK.center;
     case "note":
       return ASK.note;
     case "bestTime":
       return ASK.bestTime;
-    case "preferredCenter":
-      return ASK.preferredCenter;
-    case "smsConsent":
-      return ASK.smsConsent;
-    case "confirmPhone":
-      return "What’s the right number?";
     case "confirm":
-      return readBack(session.draft);
+      return readBack(draft);
+    case "fix":
+      return ASK.fixAgain;
+    case "fixName":
+      return ASK.fixName;
+    case "fixPhone":
+      return ASK.fixPhone;
+    case "fixEmail":
+      return ASK.fixEmail;
+    case "fixCenter":
+      return ASK.fixCenter;
+    case "fixTime":
+      return ASK.fixTime;
     default:
       return null;
   }
@@ -467,9 +268,49 @@ export function pendingQuestion(session: ChatSession): string | null {
 /** Opens the flow. Returns null when §4.2 forbids collecting contact details. */
 export function startBooking(session: ChatSession): BookingTurn | null {
   if (!contactCollectionAllowed(session)) return null;
-  session.step = "helpingWho";
+  session.step = "contact";
   session.draft = {};
-  return { reply: ASK.helpingWho };
+  return { reply: ASK.contact };
+}
+
+/** Back to step 6 after a fix. */
+function backToConfirm(session: ChatSession): BookingTurn {
+  session.step = "confirm";
+  return { reply: readBack(session.draft) };
+}
+
+/**
+ * Step 1, any turn of it: take whatever this message adds, then ask for
+ * exactly what is still missing.
+ */
+function collectContact(session: ChatSession, message: string): BookingTurn {
+  const draft = session.draft;
+  const phone = extractPhone(message);
+  const name = extractName(message);
+
+  if (phone) draft.phone = phone;
+  if (name) {
+    // "Ben" then, asked for a last name, "Muir": one name, not a new one.
+    draft.fullName =
+      draft.askedLastName && draft.fullName && !isFullName(name) && !isFullName(draft.fullName)
+        ? `${draft.fullName} ${name}`
+        : name;
+  }
+
+  if (!draft.phone) {
+    const digits = message.replace(/\D/g, "").length;
+    if (digits >= 5) return { reply: ASK.phoneShort };
+    if (draft.fullName) return { reply: ASK.phoneOnly(greet(draft)) };
+    return { reply: ASK.contactAgain };
+  }
+  if (!draft.fullName) return { reply: ASK.nameOnly };
+  if (!isFullName(draft.fullName)) {
+    draft.askedLastName = true;
+    return { reply: ASK.lastName(greet(draft)) };
+  }
+  delete draft.askedLastName;
+  session.step = "email";
+  return { reply: ASK.email };
 }
 
 /**
@@ -487,54 +328,35 @@ export function advanceBooking(
   const text = normalize(message);
   const draft: BookingDraft = session.draft;
 
-  // §5: let them leave. Applies at every required step, and at the read-back.
-  // Not at the consent question: "no thanks" there means no texts, not "stop
-  // the booking" — consent is never a condition of the call.
-  if (
-    DECLINE.test(text) &&
-    session.step !== "note" &&
-    session.step !== "bestTime" &&
-    session.step !== "preferredCenter" &&
-    session.step !== "smsConsent"
-  ) {
+  // §5: let them leave — at the steps that ask for contact details. The
+  // other steps have a neutral answer to fall back on instead, and at the
+  // read-back "no thanks" means no texts (consent is never a condition).
+  if (DECLINE.test(text) && (session.step === "contact" || session.step === "email")) {
     session.step = "declined";
     session.draft = {};
     return { reply: CONTACT_PAGE_EXIT };
   }
 
   switch (session.step) {
-    case "helpingWho": {
-      const helping = matchHelpingWho(message);
-      if (!helping) {
-        return {
-          reply:
-            "Sorry — is this for your child, for yourself, or for someone else?",
-        };
-      }
-      draft.helpingWho = helping;
-      session.step = "firstName";
-      return { reply: ASK.firstName };
+    case "contact":
+      return collectContact(session, message);
+
+    case "email": {
+      const email = extractEmail(message);
+      if (!email) return { reply: ASK.emailAgain };
+      draft.email = email;
+      session.step = "center";
+      return { reply: ASK.center };
     }
 
-    case "firstName": {
-      const name = extractFirstName(message);
-      if (!name) {
-        return { reply: "Sorry, I missed that — what’s your first name?" };
+    case "center": {
+      const center =
+        matchCenter(message) ??
+        (EXPLICIT_SKIP.test(text) || DECLINE.test(text) ? "Not sure" : null);
+      if (!center) {
+        return { reply: mentionsFranklin(message) ? ASK.centerFranklin : ASK.centerAgain };
       }
-      draft.firstName = name;
-      session.step = "phone";
-      return { reply: ASK.phone(name) };
-    }
-
-    case "phone": {
-      const phone = extractPhone(message);
-      if (!phone) {
-        return {
-          reply:
-            "That doesn’t look like a phone number I can dial — could you type it again, digits and all?",
-        };
-      }
-      draft.phone = phone;
+      draft.preferredCenter = center;
       session.step = "note";
       return { reply: ASK.note };
     }
@@ -542,118 +364,194 @@ export function advanceBooking(
     case "note": {
       // §4.3: whatever they wrote is the note. No follow-up, no clarifying
       // question, nothing asked about symptoms, severity, or history.
-      const note = EXPLICIT_SKIP.test(text) || DECLINE.test(text)
-        ? null
-        : verbatim(message, 2000);
+      const skipped = EXPLICIT_SKIP.test(text) || DECLINE.test(text);
+      const note = skipped ? null : verbatim(message, 2000);
       if (note) draft.note = note;
+      const helping = skipped ? null : matchHelpingWho(message);
+      if (helping) draft.helpingWho = helping;
       session.step = "bestTime";
       return { reply: ASK.bestTime };
     }
 
     case "bestTime": {
-      const time = resolveBestTime(message);
-      if (time) draft.bestTime = time;
-      session.step = "preferredCenter";
-      return { reply: ASK.preferredCenter };
-    }
-
-    case "preferredCenter": {
-      const center = resolveCenter(message);
-      if (center) draft.preferredCenter = center;
-      session.step = "smsConsent";
-      return { reply: ASK.smsConsent };
-    }
-
-    case "smsConsent": {
-      // The unchecked box: only a clear yes opts in. A no, a "stop", a
-      // shrug, or anything unclear is a no, and the flow moves on either
-      // way — it never re-asks, because asking twice is pressing. Any
-      // negation vetoes the yes: YES matches "right" inside "not right now"
-      // and "ok" inside "ok but don't text me", and a doubtful yes is a no.
-      draft.smsConsent =
-        YES.test(text) &&
-        !NO.test(text) &&
-        !DECLINE.test(text) &&
-        !/\b(stop|not|don'?t|never)\b/.test(text);
-      session.step = "confirm";
-      return { reply: readBack(draft) };
-    }
-
-    // Re-asking the number after a failed read-back. A separate step from
-    // `phone` so a correction returns straight to the confirmation — routing
-    // it back through `phone` would ask "what's going on?" a second time,
-    // which §4.3 says happens exactly once.
-    case "confirmPhone": {
-      const phone = extractPhone(message);
-      if (!phone) {
-        return {
-          reply:
-            "Sorry — could you type the number again, digits and all?",
-        };
-      }
-      draft.phone = phone;
-      session.step = "confirm";
-      return { reply: readBack(draft) };
+      const time =
+        matchBestTime(message) ??
+        (EXPLICIT_SKIP.test(text) || DECLINE.test(text) ? "Any time" : null);
+      if (!time) return { reply: ASK.bestTimeAgain };
+      draft.bestTime = time;
+      return backToConfirm(session);
     }
 
     case "confirm": {
-      // A corrected number can arrive instead of a yes/no — take it, even when
-      // the message also says yes ("yes but it's 615-555-9999" must not submit
-      // the number being corrected).
-      const corrected = extractPhone(message);
-      if (corrected && corrected !== draft.phone) {
-        draft.phone = corrected;
-        return { reply: readBack(draft) };
+      // A corrected number or address typed instead of a button — take it
+      // and read back again, even when the message also says yes ("yes but
+      // it's 615-555-9999" must not submit the number being corrected).
+      const phone = extractPhone(message);
+      const email = extractEmail(message);
+      if ((phone && phone !== draft.phone) || (email && email !== draft.email)) {
+        if (phone) draft.phone = phone;
+        if (email) draft.email = email;
+        return backToConfirm(session);
       }
-      if (NO.test(text) && !YES.test(text)) {
-        session.step = "confirmPhone";
-        return { reply: "No problem — what’s the right number?" };
+      const answer = matchConfirm(message);
+      if (answer === "fix") {
+        session.step = "fix";
+        return { reply: ASK.fix };
       }
-      if (!YES.test(text)) {
-        return { reply: readBack(draft) };
+      if (answer === null) return { reply: readBack(draft) };
+      return submitDraft(session, answer === "yes", sourcePage);
+    }
+
+    case "fix": {
+      // Straight to the change when the message carries it ("my email is
+      // x@y.com", "Murfreesboro instead"); otherwise ask for the new value.
+      const phone = extractPhone(message);
+      const email = extractEmail(message);
+      if (phone || email) {
+        if (phone) draft.phone = phone;
+        if (email) draft.email = email;
+        return backToConfirm(session);
       }
-      if (!draft.helpingWho || !draft.firstName || !draft.phone) {
-        // Cannot happen from this state machine; if it ever does, the honest
-        // move is the contact page rather than a half-empty lead.
-        session.step = "declined";
-        return { reply: CONTACT_PAGE_EXIT };
+      const field = matchFixField(message);
+      if (field === "center") {
+        const center = matchCenter(message);
+        if (center) {
+          draft.preferredCenter = center;
+          return backToConfirm(session);
+        }
+        session.step = "fixCenter";
+        return { reply: ASK.fixCenter };
       }
-      session.step = "submitted";
-      return {
-        reply: "",
-        submit: {
-          type: "consultation",
-          source: "chat",
-          helping_who: draft.helpingWho,
-          first_name: draft.firstName,
-          phone: draft.phone,
-          note: draft.note ?? null,
-          best_time: draft.bestTime ?? null,
-          preferred_center: draft.preferredCenter ?? null,
-          source_page: sourcePage,
-          sms_consent: draft.smsConsent === true,
-          sms_consent_text: CHAT_CONSENT_QUESTION,
-        },
-      };
+      if (field === "bestTime") {
+        const time = matchBestTime(message);
+        if (time) {
+          draft.bestTime = time;
+          return backToConfirm(session);
+        }
+        session.step = "fixTime";
+        return { reply: ASK.fixTime };
+      }
+      if (field === "name") {
+        const name = extractName(message);
+        if (name && isFullName(name)) {
+          draft.fullName = name;
+          return backToConfirm(session);
+        }
+        session.step = "fixName";
+        return { reply: ASK.fixName };
+      }
+      if (field === "phone") {
+        session.step = "fixPhone";
+        return { reply: ASK.fixPhone };
+      }
+      if (field === "email") {
+        session.step = "fixEmail";
+        return { reply: ASK.fixEmail };
+      }
+      // "Never mind" / "it's fine" — back to the read-back.
+      if (DECLINE.test(text) || matchConfirm(message) === "yes") return backToConfirm(session);
+      return { reply: ASK.fixAgain };
+    }
+
+    case "fixName": {
+      if (DECLINE.test(text)) return backToConfirm(session);
+      const name = extractName(message);
+      if (!name || !isFullName(name)) return { reply: ASK.fixNameAgain };
+      draft.fullName = name;
+      return backToConfirm(session);
+    }
+
+    case "fixPhone": {
+      if (DECLINE.test(text)) return backToConfirm(session);
+      const phone = extractPhone(message);
+      if (!phone) return { reply: ASK.fixPhoneAgain };
+      draft.phone = phone;
+      return backToConfirm(session);
+    }
+
+    case "fixEmail": {
+      if (DECLINE.test(text)) return backToConfirm(session);
+      const email = extractEmail(message);
+      if (!email) return { reply: ASK.emailAgain };
+      draft.email = email;
+      return backToConfirm(session);
+    }
+
+    case "fixCenter": {
+      if (DECLINE.test(text)) return backToConfirm(session);
+      const center = matchCenter(message);
+      if (!center) {
+        return { reply: mentionsFranklin(message) ? ASK.centerFranklin : ASK.centerAgain };
+      }
+      draft.preferredCenter = center;
+      return backToConfirm(session);
+    }
+
+    case "fixTime": {
+      if (DECLINE.test(text)) return backToConfirm(session);
+      const time = matchBestTime(message);
+      if (!time) return { reply: ASK.bestTimeAgain };
+      draft.bestTime = time;
+      return backToConfirm(session);
     }
 
     default:
-      return { reply: CONTACT_PAGE_EXIT };
+      // A conversation saved mid-way through the flow before it was rebuilt
+      // (2026-10-14) carries a step this version does not have. Start over
+      // rather than guess what its draft means.
+      session.step = "contact";
+      session.draft = {};
+      return { reply: ASK.contact };
   }
 }
 
-/** §5: read the name and number back and wait for a yes. When she agreed to
- *  texts, the confirmation text (lib/sms-confirmation.ts) goes to this
- *  number, so this is where she is told — a statement, not a second
- *  question. When she did not, nothing is texted and nothing is said. */
-function readBack(draft: BookingDraft): string {
-  const text = draft.smsConsent ? " We’ll text that number to confirm." : "";
-  return `Let me read that back: ${draft.firstName}, ${draft.phone}.${text} Have I got that right?`;
+/** Step 6 answered: the payload, or the contact page if the draft is short. */
+function submitDraft(
+  session: ChatSession,
+  smsConsent: boolean,
+  sourcePage: string | null
+): BookingTurn {
+  const draft = session.draft;
+  if (!draft.fullName || !draft.phone || !draft.email || !draft.preferredCenter || !draft.bestTime) {
+    // Cannot happen from this state machine; if it ever does, the honest
+    // move is the contact page rather than a half-empty lead.
+    session.step = "declined";
+    return { reply: CONTACT_PAGE_EXIT };
+  }
+  draft.smsConsent = smsConsent;
+  session.step = "submitted";
+  return {
+    reply: "",
+    submit: {
+      type: "consultation",
+      source: "chat",
+      helping_who: draft.helpingWho ?? null,
+      first_name: draft.fullName,
+      phone: draft.phone,
+      email: draft.email,
+      note: draft.note ?? null,
+      best_time: draft.bestTime,
+      preferred_center: draft.preferredCenter,
+      source_page: sourcePage,
+      sms_consent: smsConsent,
+      sms_consent_text: CHAT_CONSENT_QUESTION,
+    },
+  };
 }
 
-/** Sent after /api/consultation accepts the row. */
-export function bookingSuccessReply(name: string, now: Date = new Date()): string {
-  return `You’re all set, ${name}. ${callbackExpectation(now)}`;
+/**
+ * Sent only after /api/consultation returns a saved row id. Never "today":
+ * no timing promise at all (Ben, 2026-10-14). A center she chose is named;
+ * Concierge and "Not sure" are "our team".
+ */
+export function bookingSuccessReply(submission: BookingSubmission): string {
+  const name = firstName(capitalizeName(submission.first_name));
+  const center = submission.preferred_center;
+  const who =
+    center === "Nashville" || center === "Murfreesboro"
+      ? `Someone from our ${center} center`
+      : "Someone from our team";
+  return `You’re all set, ${name}. ${who} will call you soon.`;
 }
 
 /** Sent when /api/consultation did not save the request. §5: be honest. The

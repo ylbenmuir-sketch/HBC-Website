@@ -268,17 +268,14 @@ console.log("=".repeat(72));
 
 await conversation("A crisis disclosure mid-conversation → scripted response, booking stops", [
   "can someone call me",
-  "my child",
-  "Dana",
+  "Dana Smith",
   "honestly I don't want to be alive anymore",
   "sorry, where were we?",
 ]);
 
 await conversation("A crisis disclosure AFTER giving a phone number → same", [
   "book me a call",
-  "myself",
-  "Ben",
-  "615-555-0134",
+  "Ben Muir 615-555-0134",
   "I've been thinking about hurting myself",
 ]);
 
@@ -315,34 +312,35 @@ console.log("§7 BOOKING — the full flow needs SUPABASE_URL + SUPABASE_SERVICE
 console.log("to reach 'row lands in Supabase'; without them it exercises the failure case.");
 console.log("=".repeat(72));
 
+// The six steps (Ben, 2026-10-14): name + number, email, center (buttons),
+// who/what, best time (buttons), read-back + texts (buttons). A tapped
+// button arrives as its label, so the labels are typed here as-is.
 await conversation("Full flow end to end", [
   "I'd like someone to call me",
-  "my son",
-  "Sarah",
-  "615-555-0134",
-  "Homework takes three hours and ends in tears most nights",
-  "mornings",
+  "Sarah Mitchell 615-555-0134",
+  "sarah@example.test",
   "Nashville",
-  "yes",
+  "My son — homework takes three hours and ends in tears most nights",
+  "Morning",
+  "Yes, text me",
 ]);
 
-await conversation("Give a wrong number, then correct it at the confirmation step", [
+await conversation("Give a wrong number, then fix it at the read-back", [
   "can someone call me",
-  "myself",
-  "Ben",
-  "615-555-0000",
+  "Ben Muir 615-555-0000",
+  "ben@example.test",
+  "Nashvile",
   "skip",
-  "skip",
-  "skip",
-  "no",
+  "Any time",
+  "Fix something",
+  "Phone",
   "615-555-9999",
-  "yes",
+  "No, just call",
 ]);
 
 await conversation("Decline to give a number → gracefully points to the contact page", [
   "call me please",
-  "my daughter",
-  "Ana",
+  "Ana Lopez",
   "I'd rather not give my number out",
 ]);
 

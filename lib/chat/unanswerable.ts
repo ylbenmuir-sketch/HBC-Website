@@ -49,8 +49,8 @@ import { normalize } from "./refusals";
  * `gate.verified` is read at request time, not at module load. The moment Ben
  * sets `verified: true` the check stops firing and the topic flows to retrieval
  * and the model like anything else — the same edit that unlocks the rest of
- * what the fact was blocking. For hours that is `callbackExpectation()`'s
- * open/closed branches and `openingHoursSpecification` in the JSON-LD; for
+ * what the fact was blocking. For hours that is `openingHoursSpecification`
+ * in the JSON-LD; for
  * session length it is the passages ./content-index.ts is holding back. There
  * is no second cleanup task and nothing to remember to delete, which is the
  * point: a check that has to be removed by hand is a check that outlives its

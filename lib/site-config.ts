@@ -461,9 +461,10 @@ export const SAME_DAY_CALLBACK: Verifiable = {
  * Each center now carries its own `hours: Verifiable<WeeklyHours>`, and every
  * reader goes through `locationHours()`: the location pages, the cards, the
  * `openingHoursSpecification` in each LocalBusiness, the assistant's hours
- * answer (lib/chat/unanswerable.ts) and its callback promise
- * (lib/chat/booking.ts `callbackExpectation`, which pools the centers into the
- * week the practice as a whole answers on). One fact, one home, per center.
+ * answer (lib/chat/unanswerable.ts). (The assistant's booking flow used to
+ * pool the weeks into a callback promise; since 2026-10-14 it promises no
+ * time at all — "will call you soon", never "today".) One fact, one home,
+ * per center.
  */
 /**
  * Risk reversal — the objection-killer that replaces "free". Used verbatim in

@@ -5,6 +5,7 @@ import {
   BOOKING_FAILURE_REPLY,
   advanceBooking,
   bookingActive,
+  bookingButtons,
   bookingSuccessReply,
   pendingQuestion,
   startBooking,
@@ -82,7 +83,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 type ChatRequest = { message?: unknown; sessionId?: unknown; page?: unknown };
 
 function reply(
-  body: { reply: string; sessionId: string; ended?: boolean },
+  body: { reply: string; sessionId: string; ended?: boolean; buttons?: string[] },
   status = 200
 ) {
   return NextResponse.json(body, { status });
@@ -158,7 +159,11 @@ export async function POST(request: Request) {
       message,
       reply: text,
     });
-    return reply({ reply: text, sessionId, ended: outcome === "crisis" });
+    // Tappable answers for the booking step she is now on (Ben, 2026-10-14):
+    // derived from the step, not the reply, so a question re-asked after a
+    // refusal or an hours answer brings its buttons with it.
+    const buttons = bookingActive(session) ? bookingButtons(session.step) : undefined;
+    return reply({ reply: text, sessionId, ended: outcome === "crisis", buttons });
   };
 
   // ------------------------------------------------------------------
@@ -228,7 +233,7 @@ export async function POST(request: Request) {
     const turn = advanceBooking(session, message, page);
 
     if (turn.submit) {
-      const name = turn.submit.first_name;
+      const submission = turn.submit;
       try {
         // The consultation handler called in-process, not fetched over HTTP.
         // A fetch to our own origin went through the deployment's front door:
@@ -242,7 +247,7 @@ export async function POST(request: Request) {
           new Request(new URL("/api/consultation", request.url), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(turn.submit),
+            body: JSON.stringify(submission),
           })
         );
         const result = (await response.json().catch(() => null)) as
@@ -252,7 +257,7 @@ export async function POST(request: Request) {
         if (!response.ok || result?.ok !== true || !result.id) {
           throw new Error(`consultation route: ${response.status}`);
         }
-        return finish(bookingSuccessReply(name), "booking-submitted");
+        return finish(bookingSuccessReply(submission), "booking-submitted");
       } catch (error) {
         console.error(
           "[chat] consultation submit failed:",

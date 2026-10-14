@@ -35,32 +35,46 @@ import type { SafetyStop } from "./safety";
  * then.
  */
 
-/** §5 — the booking questions, in the order they are asked. */
+/** §5 — the booking steps, in the order they are asked (Ben, 2026-10-14).
+ *  The `fix*` steps follow "Fix something" at the read-back and return to it. */
 export type BookingStep =
   | "idle"
-  | "helpingWho"
-  | "firstName"
-  | "phone"
+  /** 1. Name (first and last) and phone, from one reply or several. */
+  | "contact"
+  /** 2. Email, required. */
+  | "email"
+  /** 3. Center, by button. */
+  | "center"
+  /** 4. Who it's for and what's going on — helping_who + note. */
   | "note"
+  /** 5. Best time, by button. */
   | "bestTime"
-  | "preferredCenter"
-  /** Texts: the checkbox, asked as a question (lib/sms-consent.ts). */
-  | "smsConsent"
+  /** 6. Read-back + text consent, by button. */
   | "confirm"
-  /** Re-asking the number after a failed read-back — never re-asks the note. */
-  | "confirmPhone"
+  | "fix"
+  | "fixName"
+  | "fixPhone"
+  | "fixEmail"
+  | "fixCenter"
+  | "fixTime"
   | "submitted"
   | "declined";
 
-/** Exactly what components/ContactForm.tsx collects. Nothing more (§5). */
+/** What the flow collects — the form's two steps, minus the concern chips. */
 export type BookingDraft = {
-  helpingWho?: string;
-  firstName?: string;
+  /** First and last, as typed; capitalized on save (lib/name-case.ts). */
+  fullName?: string;
+  /** Set after asking for a last name, so a one-word reply is added to the
+   *  first name rather than replacing it. */
+  askedLastName?: boolean;
   phone?: string;
+  email?: string;
+  /** One of the four fixed values — never free text. */
+  preferredCenter?: "Nashville" | "Murfreesboro" | "Concierge" | "Not sure";
+  helpingWho?: string;
   note?: string;
   bestTime?: string;
-  preferredCenter?: string;
-  /** True only after a clear yes to CHAT_CONSENT_QUESTION. */
+  /** True only after a yes at the read-back (CHAT_CONSENT_QUESTION). */
   smsConsent?: boolean;
 };
 

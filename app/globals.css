@@ -1870,7 +1870,12 @@ body[data-bottombar] footer.site {
    does not cover the heading it scrolls to. */
 .form-step { scroll-margin-top: 104px; }
 .form-step h2:focus { outline: none; }
-.video-lead { margin: 0 0 22px; }
+/* Step three, the confirmation (Ben, 2026-10-14): headline, video, two lines.
+   Sized so the whole card sits on a 390×844 screen under the sticky header
+   with no scrolling — check:contact measures it. */
+.form-done .done-line { margin: 16px 0 0; font-size: 15.5px; line-height: 1.55; color: var(--slate); }
+.form-done .done-line + .done-line { margin-top: 8px; }
+.form-done .done-phones a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
 @media (max-width: 640px) {
   .page-hero.compact { padding: 36px 0 28px; }
   .sec.sec-form { padding-top: 40px; }

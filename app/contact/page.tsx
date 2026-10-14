@@ -61,13 +61,12 @@ export default function ContactPage() {
             else did — what is helpful to have ready — moved into step three
             (components/ContactForm.tsx). */}
         <div className="wrap form-solo">
-          {/* Server-side reads: BOOKING_CALENDAR_URL is not a secret but is
-              not inlined into the client bundle either, so changing it in
-              Vercel needs only a redeploy. The center lines come from the
-              gated reader in lib/locations.ts, so step three can never
-              print a number a location page would not. */}
+          {/* The center lines come from the gated reader in
+              lib/locations.ts, so step three can never print a number a
+              location page would not. (BOOKING_CALENDAR_URL's "Pick a time
+              for your call" link was on step three; the confirmation is now
+              four fixed things and it is gone — Ben, 2026-10-14.) */}
           <ContactForm
-            bookingUrl={process.env.BOOKING_CALENDAR_URL?.trim() || null}
             centerPhones={centerPhones}
             video={FIRST_VISIT_VIDEO}
           />

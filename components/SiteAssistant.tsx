@@ -132,7 +132,14 @@ const PLACEHOLDER_NARROW = "Ask a question…";
 const useFocusEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-type Message = { from: "assistant" | "visitor"; text: string };
+/**
+ * `buttons`: the booking flow's tappable answers for this reply (center, best
+ * time, the read-back — lib/chat/booking.ts `bookingButtons`). Shown only
+ * under the latest reply; a tap sends the label as her message, exactly as
+ * if she had typed it, so the server reads a tap and a typed answer the same
+ * way. Typing instead always works.
+ */
+type Message = { from: "assistant" | "visitor"; text: string; buttons?: string[] };
 
 /** Renders the site paths the assistant returns as real links. */
 function withLinks(text: string) {
@@ -526,7 +533,13 @@ export default function SiteAssistant() {
       }
 
       if (body.sessionId) sessionId.current = body.sessionId;
-      setMessages((prev) => [...prev, { from: "assistant", text: body.reply }]);
+      const buttons = Array.isArray(body.buttons)
+        ? body.buttons.filter((b: unknown): b is string => typeof b === "string")
+        : undefined;
+      setMessages((prev) => [
+        ...prev,
+        { from: "assistant", text: body.reply, buttons: buttons?.length ? buttons : undefined },
+      ]);
       // §4.1: the turn ends. The composer closes rather than inviting another
       // message straight after a crisis response.
       if (body.ended) setEnded(true);
@@ -594,6 +607,29 @@ export default function SiteAssistant() {
                 ))}
               </div>
             ))}
+            {/* The latest reply's quick answers. One-way like the starters:
+                once she answers — tapped or typed — the next reply brings
+                its own, or none. */}
+            {(() => {
+              const last = messages[messages.length - 1];
+              if (!last || last.from !== "assistant" || !last.buttons || sending || ended) {
+                return null;
+              }
+              return (
+                <div className="assistant-chips assistant-replies" role="group" aria-label="Quick answers">
+                  {last.buttons.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className="assistant-chip"
+                      onClick={() => submit(label)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
             {sending && (
               <div className="assistant-msg from-assistant assistant-typing" aria-label="Typing">
                 <span />

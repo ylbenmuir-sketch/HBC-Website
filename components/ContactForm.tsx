@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PHONE_DISPLAY } from "@/lib/site-config";
+import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
+import { capitalizeName } from "@/lib/name-case";
 import { FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
@@ -19,17 +20,19 @@ import ScannerText from "./ScannerText";
  *      Submit saves the row and sends the lead email at once. That email is
  *      the lead; nothing after this step is needed for the office to make
  *      the call.
- *   2. **Context** — who the call is for, what's bringing them in, a note.
- *      PATCHes the row step one created (one lead, one record). Presented
+ *   2. **Context** — who the call is for, what's bringing them in, a note,
+ *      and who referred them (optional). PATCHes the row step one created
+ *      (one lead, one record). Presented
  *      as part of the process, not as something skippable: no "these are
  *      optional" panel, no ghost button. The exit is a quiet "Skip for now"
  *      text link under the save button — someone who will not answer must
  *      still be able to leave, they are just not invited to (Ben,
  *      2026-10-13). Both exits land on step three.
- *   3. **The video** — "while you wait for our call, here's what a first
- *      visit looks like", with the confirmation, the what-happens-next
- *      steps, what is helpful to have ready, and both centers' numbers
- *      beneath it. The page has no second column; this card is the page.
+ *   3. **The confirmation** — "Thanks, Ben. We'll call you soon.", the
+ *      first-visit video, "Free call, no obligation." and both centers'
+ *      numbers, tap-to-call. Nothing else (Ben, 2026-10-14): it has to fit a
+ *      390×844 phone screen without scrolling. The page has no second
+ *      column; this card is the page.
  *
  * The order is the point. The old single form asked "who are we helping?"
  * and "what's bringing you in?" before it asked for a phone number, so a
@@ -42,7 +45,9 @@ import ScannerText from "./ScannerText";
  * One field, first and last, stored whole (the `first_name` column and wire
  * key predate the change and still carry it). Every greeting — the step-two
  * headline, the step-three thank-you, the confirmation text — uses the first
- * word only (lib/first-name.ts): "Hi Ben," not "Hi Ben Muir,".
+ * word only (lib/first-name.ts): "Hi Ben," not "Hi Ben Muir,". The route
+ * capitalizes the name on save (lib/name-case.ts), and the greetings here
+ * use the same helper, so "ben muir" is greeted as "Ben" — never lowered.
  *
  * ## Texts are opt-in
  *
@@ -132,53 +137,6 @@ const OPTIONAL_STYLE = {
 } as const;
 
 /**
- * The "what happens next" steps (contact.html), under the thank-you on step
- * three. The page used to repeat them in a second column beside the form;
- * that column is gone (Ben, 2026-10-13), so this is now the one place they
- * appear, under step three's H3 — hence the H4 default. The prop stays so a
- * future caller at a different depth does not produce a heading skip.
- */
-function WhatHappensNext({
-  headingLevel: H = "h4",
-}: {
-  headingLevel?: "h3" | "h4";
-}) {
-  return (
-    <div className="lens-seq" style={{ marginTop: 22 }}>
-      <div className="row">
-        <div className="n">1</div>
-        <div>
-          <H>We call you</H>
-          <p>
-            A real person from your nearest center, at the time you chose.
-          </p>
-        </div>
-      </div>
-      <div className="row">
-        <div className="n">2</div>
-        <div>
-          <H>We listen, then answer</H>
-          <p>
-            What&rsquo;s going on, what you&rsquo;ve tried, and every question
-            you have — including the skeptical ones.
-          </p>
-        </div>
-      </div>
-      <div className="row">
-        <div className="n">3</div>
-        <div>
-          <H>You decide</H>
-          <p>
-            Book your Brain Map, think it over, or decide it&rsquo;s not for
-            you. The call is free either way.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
  * A step panel that announces itself. Mounts, scrolls to its own top (under
  * the sticky header — see `.form-step` in globals.css) and moves focus to its
  * heading, so a keyboard or screen-reader user lands on the new step and a
@@ -194,7 +152,7 @@ function StepPanel({
   children,
   className = "",
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   heading: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -208,11 +166,16 @@ function StepPanel({
   }, []);
   return (
     <div ref={panel} className={`rv form-card form-step ${className}`.trim()} style={CARD_STYLE}>
-      <div className="eyebrow">{eyebrow}</div>
+      {eyebrow && <div className="eyebrow">{eyebrow}</div>}
       <h2
         ref={title}
         tabIndex={-1}
-        style={{ margin: "18px 0 10px", fontSize: 26, fontWeight: 600, lineHeight: 1.2 }}
+        style={{
+          margin: eyebrow ? "18px 0 10px" : "0 0 18px",
+          fontSize: 26,
+          fontWeight: 600,
+          lineHeight: 1.2,
+        }}
       >
         {heading}
       </h2>
@@ -222,17 +185,9 @@ function StepPanel({
 }
 
 export default function ContactForm({
-  bookingUrl = null,
   centerPhones = [],
   video,
 }: {
-  /**
-   * A self-scheduling page (Google Calendar appointment schedule) where she
-   * can pick her own callback slot. Shown on step three only; the form itself
-   * stays the one ask. Comes from the server page, which reads
-   * BOOKING_CALENDAR_URL — unset means the link does not render.
-   */
-  bookingUrl?: string | null;
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
   /** The first-visit video for step three (lib/videos.ts). */
@@ -259,14 +214,12 @@ export default function ContactForm({
   const [helpingWho, setHelpingWho] = useState<string | null>(null);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const [referredBy, setReferredBy] = useState("");
 
   const [step, setStep] = useState<"one" | "two" | "three">("one");
   const [rowId, setRowId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  // Step two failed to save: said once on step three, quietly — the call is
-  // requested either way, and that is the sentence that matters.
-  const [detailsFailed, setDetailsFailed] = useState(false);
 
   // Read on mount (not via useSearchParams) so the form still prerenders.
   useEffect(() => {
@@ -362,7 +315,9 @@ export default function ContactForm({
   async function saveDetails(e: React.FormEvent) {
     e.preventDefault();
     const trimmedNote = note.trim();
-    const nothingToSave = !helpingWho && selectedConcerns.length === 0 && !trimmedNote;
+    const trimmedReferral = referredBy.trim();
+    const nothingToSave =
+      !helpingWho && selectedConcerns.length === 0 && !trimmedNote && !trimmedReferral;
     if (nothingToSave || !rowId) {
       setStep("three");
       return;
@@ -376,104 +331,56 @@ export default function ContactForm({
           ...(helpingWho ? { helping_who: helpingWho } : {}),
           ...(selectedConcerns.length > 0 ? { concerns: selectedConcerns } : {}),
           ...(trimmedNote ? { note: trimmedNote } : {}),
+          ...(trimmedReferral ? { referred_by: trimmedReferral } : {}),
         }),
       });
-      if (!res.ok) setDetailsFailed(true);
+      if (!res.ok) console.warn(`[contact] step two not saved (${res.status})`);
     } catch {
-      setDetailsFailed(true);
+      console.warn("[contact] step two not saved (network)");
     }
     // Either way: the call is requested, and the next thing she sees says so.
+    // A failed step two is not mentioned there (Ben, 2026-10-14: the
+    // confirmation is exactly four things) — the answers were optional, the
+    // call is already requested, and the office asks on the phone.
     setStatus("idle");
     setStep("three");
   }
 
-  // For greetings only — "Hi Ben," never "Hi Ben Muir,".
-  const name = firstName(fullName);
+  // For greetings only — "Hi Ben," never "Hi Ben Muir,". Capitalized the way
+  // the route saves it, so "ben" is greeted as "Ben".
+  const name = firstName(capitalizeName(fullName));
 
   /* ── Step three ─────────────────────────────────────────────────────── */
+  // Exactly four things, and nothing else (Ben, 2026-10-14): the headline,
+  // the video, one line about the call, one line with both numbers. It must
+  // fit a 390×844 phone screen without scrolling — check:contact measures it.
+  // No eyebrow, no "what happens next", no "helpful to have ready".
   if (step === "three") {
+    const lines = centerPhones.length > 0
+      ? centerPhones
+      : [{ name: "", phone: { display: PHONE_DISPLAY, tel: PHONE_TEL } }];
     return (
+      // Keyed, so this mounts as a new element rather than React reusing
+      // step two's: a reused node would keep step two's scroll and focus
+      // (the effect runs on mount only) and, its className changing, lose
+      // the `in` class RevealOnScroll added — invisible at opacity 0.
       <StepPanel
-        eyebrow="Your call is requested"
-        heading={
-          <>
-            While you wait for our call — here&rsquo;s what a first visit
-            actually looks like.
-          </>
-        }
+        key="three"
+        className="form-done"
+        heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll call you soon.</>}
       >
-        <p className="video-lead" style={{ color: "var(--slate)", fontSize: 15.5 }}>
-          Nothing to decide yet. This is the visit itself, as it happens.
-        </p>
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
-
-        <div style={{ marginTop: 34 }}>
-          <h3 style={{ margin: "0 0 6px", fontFamily: "var(--sans)", fontSize: 16.5, fontWeight: 600, lineHeight: 1.65, color: "var(--navy)" }}>
-            Thank you{name ? `, ${name}` : ""}. Here&rsquo;s what happens next.
-          </h3>
-          {detailsFailed && (
-            <p className="micro" style={{ marginTop: 4 }}>
-              We couldn&rsquo;t save the extra details just now, but your call
-              is already requested — we&rsquo;ll ask when we talk.
-            </p>
-          )}
-          <WhatHappensNext headingLevel="h4" />
-          {/* Not a duplicate of the steps: the one thing the old second
-              column said that nothing else on the page did. It makes the
-              call better, so it stays (Ben, 2026-10-13). */}
-          <div
-            style={{
-              marginTop: 26,
-              fontSize: 14,
-              color: "var(--slate)",
-              lineHeight: 1.8,
-            }}
-          >
-            <b style={{ color: "var(--ink)" }}>
-              Helpful to have ready (not required):
-            </b>
-            <br />
-            What a typical hard day looks like &middot; what you&rsquo;ve
-            already tried &middot; your schedule for a first visit
-          </div>
-        </div>
-
-        {bookingUrl && (
-          <div style={{ marginTop: 30 }}>
-            <a
-              className="btn btn-primary"
-              href={bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ width: "100%" }}
-            >
-              Pick a time for your call
-            </a>
-            <p className="micro" style={{ textAlign: "center" }}>
-              Optional — choose the slot that suits you and we&rsquo;ll call
-              then. Otherwise we&rsquo;ll reach out at the time you picked.
-            </p>
-          </div>
-        )}
-
-        <div className="note-sage" style={{ marginTop: 30 }}>
-          Prefer to talk sooner? Call the center closer to you &mdash; a real
-          person answers during business hours.
-          <div style={{ marginTop: 8 }}>
-            {centerPhones.length > 0 ? (
-              centerPhones.map(({ name: center, phone: line }) => (
-                <div key={center}>
-                  {center} &mdash;{" "}
-                  <a href={`tel:${line.tel}`}>
-                    <b>{line.display}</b>
-                  </a>
-                </div>
-              ))
-            ) : (
-              <b>{PHONE_DISPLAY}</b>
-            )}
-          </div>
-        </div>
+        <p className="done-line">Free call, no obligation.</p>
+        <p className="done-line done-phones">
+          Want to talk now?{" "}
+          {lines.map(({ name: center, phone: line }, i) => (
+            <span key={center || line.tel}>
+              {i > 0 && " · "}
+              {center ? `${center} ` : ""}
+              <a href={`tel:${line.tel}`}>{line.display}</a>
+            </span>
+          ))}
+        </p>
       </StepPanel>
     );
   }
@@ -482,6 +389,7 @@ export default function ContactForm({
   if (step === "two") {
     return (
       <StepPanel
+        key="two"
         eyebrow="Request received"
         heading={
           <>
@@ -535,11 +443,20 @@ export default function ContactForm({
             placeholder="Mornings are hard, homework is a battle, and he's starting to say he's 'just bad at school'…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            aria-describedby="note-hint"
           />
-          <p id="note-hint" className="micro" style={{ marginTop: 8 }}>
-            Please avoid sharing detailed medical information here.
-          </p>
+
+          {/* Optional, like everything on this step; saved to referred_by
+              (migration 0007). Not marked "(optional)" — nothing on this
+              step is, by design (Ben, 2026-10-13). */}
+          <label htmlFor="referred-by">Who referred you?</label>
+          <input
+            id="referred-by"
+            name="referred_by"
+            autoComplete="off"
+            maxLength={200}
+            value={referredBy}
+            onChange={(e) => setReferredBy(e.target.value)}
+          />
 
           <div className="form-exits">
             <button
@@ -739,4 +656,3 @@ export default function ContactForm({
   );
 }
 
-export { WhatHappensNext };

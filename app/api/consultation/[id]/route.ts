@@ -13,8 +13,8 @@ export const runtime = "nodejs";
  *
  * ## What it can change, and what it cannot
  *
- * Exactly three columns — `helping_who`, `concerns`, `note` — and a body
- * naming any other key is refused outright, so this endpoint cannot be used
+ * Exactly four columns — `helping_who`, `concerns`, `note`, `referred_by` —
+ * and a body naming any other key is refused outright, so this endpoint cannot be used
  * to change a name, a phone number, a center or a time after the email that
  * carried them has gone. Only `type = 'consultation'` rows from the form are
  * touched: a chat row has these answers already and no browser was ever
@@ -36,7 +36,7 @@ export const runtime = "nodejs";
  * existed" from "not yours".
  */
 
-const PATCHABLE = new Set(["helping_who", "concerns", "note"]);
+const PATCHABLE = new Set(["helping_who", "concerns", "note", "referred_by"]);
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -50,6 +50,7 @@ type UpdatedRow = {
   preferred_center: string | null;
   best_time: string | null;
   note: string | null;
+  referred_by: string | null;
   /** Read, never written here — carried to the re-post (NO_TEXT_CONSENT_LINE). */
   sms_consent: boolean | null;
 };
@@ -74,14 +75,19 @@ export async function PATCH(
   }
   const fields = body as Record<string, unknown>;
 
-  // Anything that is not one of the three is a refusal, not an ignore: a
+  // Anything that is not one of the four is a refusal, not an ignore: a
   // caller sending `phone` here is either a bug to surface or an attempt.
   const keys = Object.keys(fields);
   if (keys.length === 0 || keys.some((k) => !PATCHABLE.has(k))) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const update: { helping_who?: string; concerns?: string[]; note?: string | null } = {};
+  const update: {
+    helping_who?: string;
+    concerns?: string[];
+    note?: string | null;
+    referred_by?: string | null;
+  } = {};
 
   if ("helping_who" in fields) {
     const helpingWho = str(fields.helping_who, 40);
@@ -110,6 +116,17 @@ export async function PATCH(
     }
     update.note = str(fields.note, 2000);
   }
+  if ("referred_by" in fields) {
+    // "Who referred you?" — optional, as typed. A name or a practice, so a
+    // short cap; anything longer is refused rather than clipped.
+    if (fields.referred_by !== null && typeof fields.referred_by !== "string") {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    if (typeof fields.referred_by === "string" && fields.referred_by.trim().length > 200) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    update.referred_by = str(fields.referred_by, 200);
+  }
 
   const supabase = supabaseAdmin();
   if (!supabase) {
@@ -131,7 +148,7 @@ export async function PATCH(
       .eq("type", "consultation")
       .eq("source", "form")
       .select(
-        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, sms_consent"
+        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent"
       );
     if (error) {
       // `message` and `code` only — never `details`, where Postgres echoes values.
@@ -164,6 +181,7 @@ export async function PATCH(
       "helping_who" in update && "helping_who",
       "concerns" in update && `concerns×${update.concerns?.length ?? 0}`,
       "note" in update && (update.note ? "note" : "note cleared"),
+      "referred_by" in update && (update.referred_by ? "referred_by" : "referred_by cleared"),
     ]
       .filter(Boolean)
       .join(", ")}`
@@ -183,6 +201,7 @@ export async function PATCH(
       preferredCenter: row.preferred_center,
       bestTime: row.best_time,
       note: row.note,
+      referredBy: row.referred_by,
       website: "",
       update: true,
       smsConsent: row.sms_consent === true,

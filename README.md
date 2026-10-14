@@ -317,7 +317,7 @@ submission requires Supabase credentials.
 | `LEADS_NOTIFY_FROM` | Optional sender. Must be on `harmonizedbraincenterstn.com` (verified in Resend); anything else is ignored with a warning. Defaults to `leads@harmonizedbraincenterstn.com`. |
 | `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
 | `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
-| `BOOKING_CALENDAR_URL` | Optional. Self-scheduling link (e.g. a Google Calendar appointment schedule) shown as "Pick a time for your call" on the contact form's confirmation card. Read server-side on `/contact`. |
+| `BOOKING_CALENDAR_URL` | **Not read since 2026-10-14.** It was the "Pick a time for your call" link on the contact form's confirmation card; that card is now four fixed things (Ben) and the link is gone. Safe to leave set or remove. |
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
@@ -375,8 +375,13 @@ number, so anyone who stopped at the chips left nothing behind. Now:
    The name is stored whole (the `first_name` column and wire key predate
    the field); every greeting — the step-two headline, the step-three
    thank-you, the confirmation text — uses the first word only
-   (`lib/first-name.ts`): "Hi Ben," not "Hi Ben Muir,".
-2. **Context** — who we're helping, what's bringing you in, a note.
+   (`lib/first-name.ts`): "Hi Ben," not "Hi Ben Muir,". The route
+   capitalizes the first letter of every word on save and lowers nothing
+   (`lib/name-case.ts`, Ben 2026-10-14): "ben muir" → "Ben Muir",
+   "mcDonald" → "McDonald" — form and chat alike.
+2. **Context** — who we're helping, what's bringing you in, a note, and an
+   optional "Who referred you?" box under the note (`referred_by`,
+   migration 0007).
    Nothing is pre-selected. Presented as part of the process, not as
    something skippable: there is no "these are optional" panel and no
    "(optional)" on the note (Ben, 2026-10-13). The exit is a small,
@@ -384,19 +389,18 @@ number, so anyone who stopped at the chips left nothing behind. Now:
    who will not answer can still leave, they just aren't invited to.
    "Save these details" `PATCH`es `/api/consultation/<id>` — the same row,
    never a second one — and the endpoint accepts *only* `helping_who`,
-   `concerns` and `note`; any other key (a name, a phone, a center, a time)
+   `concerns`, `note` and `referred_by`; any other key (a name, a phone, a center, a time)
    is refused with a 400, and only form-sourced consultation rows can be
    patched. "Skip for now" sends nothing. This step is never shown unless
    step one returned an id: if the row failed to save but the email or the
    platform took the lead, the visitor goes straight to step three.
-3. **The video** — "While you wait for our call — here's what a first visit
-   actually looks like" (`lib/videos.ts`, `components/VideoEmbed.tsx`), with
-   the thank-you, the what-happens-next steps, "Helpful to have ready (not
-   required)" and both centers' numbers beneath it. Both exits from step two
-   land here. The page is one centered column (`.form-solo`): the
-   "What happens next" column that used to sit beside the form repeated
-   this card's steps and phone box, and its one line that nothing else said
-   moved in here.
+3. **The confirmation** — exactly four things (Ben, 2026-10-14): "Thanks,
+   Ben. We'll call you soon.", the "What to Expect: Appointment #1" video
+   (`lib/videos.ts`, `components/VideoEmbed.tsx`), "Free call, no
+   obligation.", and "Want to talk now? Nashville (615) 331-8762 ·
+   Murfreesboro (615) 203-2650" with tel: links. It must fit a 390×844 phone
+   with no scrolling; `check:contact` measures it. Both exits from step two
+   land here. The page is one centered column (`.form-solo`).
 
 There is deliberately **no second email** when step two saves: the step-one
 email says those answers may follow and points at the saved request.
@@ -591,10 +595,10 @@ take it from two segments to three. `check:contact` reads every text the
 server sends (a Dialpad stand-in, `MOCK_SMS_LOG`) and asserts the exact text,
 GSM-7, two segments and the per-center from-number.
 
-**The link** (`BOOKING_CALENDAR_URL`) renders as "Pick a time for your call"
-on the confirmation card so she can lock a callback slot herself. A Google
-Calendar appointment schedule is the simplest source: create one on the
-clinic's calendar, copy its booking-page link, set the variable, redeploy.
+**The link** (`BOOKING_CALENDAR_URL`) used to render as "Pick a time for your
+call" on the confirmation card. Removed 2026-10-14 (Ben): the confirmation is
+now the headline, the video, "Free call, no obligation." and both centers'
+numbers, and must fit a 390×844 phone without scrolling.
 
 ## No Franklin booking
 
@@ -775,7 +779,8 @@ everything below exists to keep that true.
 | `lib/chat/safety.ts` | §4 — crisis and under-18 checks, ahead of everything |
 | `lib/chat/refusals.ts` | §3 — the out-of-scope categories and their fixed replies |
 | `lib/chat/unanswerable.ts` | Topics the site has decided not to answer yet, each gated on the `Verifiable` that blocks it |
-| `lib/chat/booking.ts` | §5 — the callback flow and the callback-timing rule |
+| `lib/chat/booking.ts` | §5 — the six-step callback flow (Ben, 2026-10-14): name + number → email → center (buttons) → who/what → best time (buttons) → read-back + texts (buttons: Yes, text me · No, just call · Fix something). No callback-timing promise: "will call you soon", never "today". |
+| `lib/chat/booking-parse.ts` | Reading the flow's answers — names, numbers, emails, centers (typos too, fixed values only), times, the read-back. Import-free; `lib/chat-booking-parse.test.mjs` |
 | `lib/chat/session.ts` | The safety ledger and booking progress, server-side |
 | `lib/chat/content-index.ts` | §2 — the whole knowledge base, ~100 passages |
 | `lib/chat/site-copy.ts` | Copy mirrored from the four pages that keep their words in JSX |

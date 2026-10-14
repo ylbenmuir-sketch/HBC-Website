@@ -1129,38 +1129,39 @@ const KNOWN_MISSES = [
  * rule that matters most — an answer nobody anticipated is kept verbatim
  * rather than thrown away.
  */
+/**
+ * The center, by button or typed (Ben, 2026-10-14): only ever one of four
+ * fixed values. Anything unrecognisable is asked again with the buttons —
+ * never stored as typed — so those rows expect no submission at all (the
+ * runner's last line, "Yes, text me", lands on the re-asked center question).
+ */
 const BOOKING_CENTER = [
   ["murf", "Murfreesboro"],
   ["Murf.", "Murfreesboro"],
   ["murfreesboro please", "Murfreesboro"],
   ["the boro", "Murfreesboro"],
   ["we're in Rutherford county", "Murfreesboro"],
+  ["Murfreesbro", "Murfreesboro"],
   ["nashville", "Nashville"],
   ["Nash", "Nashville"],
-  // No Franklin alias since the waitlist went (Oct 2026): her word is kept,
-  // not mapped to a center the form no longer offers.
-  ["franklin", "franklin"],
-  // Unrecognizable, and round-tripped as raw text rather than dropped.
-  ["whichever one is off Old Hickory Blvd", "whichever one is off Old Hickory Blvd"],
-  ["closest to Smyrna", "closest to Smyrna"],
-  ["skip", null],
+  ["Nashvile", "Nashville"],
+  ["Come to me", "Concierge"],
+  ["at home please", "Concierge"],
+  ["Not sure", "Not sure"],
+  ["skip", "Not sure"],
+  ["franklin", undefined],
+  ["closest to Smyrna", undefined],
 ];
 
+/** Best time, by button or typed: one of three, or asked again. */
 const BOOKING_BEST_TIME = [
-  ["anytime", "anytime"],
-  ["after school", "after school"],
-  ["after 3", "after 3"],
-  ["weekday mornings", "weekday mornings"],
-  ["mornings", "mornings"],
-  ["doesn't matter", "doesn't matter"],
-  ["skip", null],
-  // Capped where app/api/consultation/route.ts caps it: `str(value, 40)`
-  // returns null past 40 characters, so a longer answer stored whole would be
-  // dropped at the route instead of here.
-  [
-    "any weekday once the kids are at school and I am off the clock",
-    "any weekday once the kids are at school",
-  ],
+  ["Morning", "Morning"],
+  ["anytime", "Any time"],
+  ["mornings", "Morning"],
+  ["after 3pm", "Afternoon"],
+  ["doesn't matter", "Any time"],
+  ["skip", "Any time"],
+  ["evenings", undefined],
 ];
 
 /** A note that reads like a skip word but plainly is not one. */
@@ -1203,8 +1204,8 @@ const BOOKING_SOURCE_PAGE = [
  */
 function runBooking({
   note = "skip",
-  bestTime = "skip",
-  center = "skip",
+  bestTime = "Any time",
+  center = "Not sure",
   page = "/concerns/anxiety",
 } = {}) {
   const session = {
@@ -1221,13 +1222,12 @@ function runBooking({
   };
   startBooking(session);
   const say = (message) => advanceBooking(session, message, page);
-  say("my child");
-  say("Sarah");
-  say("615-555-0142");
+  say("Sarah Mitchell 615-555-0142");
+  say("sarah@example.test");
+  say(center);
   say(note);
   say(bestTime);
-  say(center);
-  return say("yes").submit ?? null;
+  return say("Yes, text me").submit ?? null;
 }
 
 /**
@@ -1393,6 +1393,10 @@ function guardrails() {
 
   for (const [answer, expected] of BOOKING_CENTER) {
     const row = runBooking({ center: answer });
+    if (expected === undefined) {
+      if (row) failures.push(`center "${answer}" was stored as ${JSON.stringify(row.preferred_center)} — free text must be asked again`);
+      continue;
+    }
     if (!row) {
       failures.push(`booking did not submit for center "${answer}"`);
       continue;
@@ -1405,6 +1409,10 @@ function guardrails() {
   }
   for (const [answer, expected] of BOOKING_BEST_TIME) {
     const row = runBooking({ bestTime: answer });
+    if (expected === undefined) {
+      if (row) failures.push(`best time "${answer}" was stored as ${JSON.stringify(row.best_time)} — it must be asked again`);
+      continue;
+    }
     if (!row) {
       failures.push(`booking did not submit for best time "${answer}"`);
       continue;

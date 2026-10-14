@@ -117,6 +117,10 @@ export type InquiryForward = {
   preferredCenter: string | null;
   bestTime: string | null;
   note: string | null;
+  /** "Who referred you?" (form step two). The contract has no field for it,
+   *  so it rides in the message as a labelled line — ahead of her note, so
+   *  the 2,000-character cap can only ever cut the note. */
+  referredBy?: string | null;
   /** The honeypot, verbatim. Humans leave it empty; the platform stores a
    *  non-empty one flagged as spam and still answers 201, so a bot learns
    *  nothing from the response. Never used to reject anything here. */
@@ -184,6 +188,7 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
     input.update ? UPDATE_LINE : null,
     input.helpingWho === null ? WHO_FOR_NOT_GIVEN_LINE : null,
     input.smsConsent ? null : NO_TEXT_CONSENT_LINE,
+    input.referredBy?.trim() ? `Referred by: ${input.referredBy.trim()}` : null,
     input.note?.trim() || null,
   ]
     .filter((line): line is string => line !== null)

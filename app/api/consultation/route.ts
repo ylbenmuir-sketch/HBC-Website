@@ -17,6 +17,7 @@ import { forwardInquiry } from "@/lib/inquiry-intake";
 import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 import { CONSENT_TEXT_MAX } from "@/lib/sms-consent";
+import { capitalizeName } from "@/lib/name-case";
 
 export const runtime = "nodejs";
 
@@ -251,11 +252,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // The form sends first and last in one field under this key — the column
-  // is older than the field — and every consumer stores it whole; only the
-  // greetings use the first word (lib/first-name.ts). The chat still sends a
-  // first name.
-  const firstName = str(body.first_name, 100);
+  // The form and the chat both send first and last in one field under this
+  // key — the column is older than the field — and every consumer stores it
+  // whole; only the greetings use the first word (lib/first-name.ts).
+  // Capitalized here, once, so the row, the email, the subject, the platform
+  // and the text all carry "Ben Muir" for "ben muir" (lib/name-case.ts).
+  const rawName = str(body.first_name, 100);
+  const firstName = rawName ? capitalizeName(rawName) : null;
   const phone = str(body.phone, 40);
   const helpingWho = str(body.helping_who, 40);
   const email = str(body.email, 200);

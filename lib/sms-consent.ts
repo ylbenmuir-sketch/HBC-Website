@@ -57,14 +57,27 @@ export const SMS_HELP_STOP = "Reply HELP for help, STOP to cancel.";
 export type ConsentPart = string | { href: string; label: string };
 
 /**
+ * The consent sentence, exactly as Ben wrote it for the Dialpad registration
+ * (2026-10-14) — character for character, straight apostrophe included,
+ * because the registration quotes it and a reviewer compares the two. It is
+ * the contact form's checkbox label and, minus its first clause, the chat's
+ * question. Change it here and nowhere else, and re-register when you do.
+ *
+ * One string, rendered as one text node (components/ScannerText.tsx), so it
+ * reaches the raw HTML unbroken for scanners that match bytes.
+ */
+export const CONSENT_SENTENCE =
+  `I agree to receive texts from ${DBA_NAME} at this number about my appointment and inquiry. ` +
+  `${SMS_FREQUENCY} ${SMS_RATES} ${SMS_HELP_STOP} ` +
+  `Optional — we'll call you either way.`;
+
+/**
  * The contact form's checkbox. Unchecked by default; the form submits either
  * way. Everything a reviewer looks for is in the visible label — nothing is
  * behind the links except the full terms.
  */
 export const FORM_CONSENT_PARTS: ConsentPart[] = [
-  `Yes, text me ${SMS_PROGRAM_DESCRIPTION} from ${DBA_NAME} at this number. ` +
-    `${SMS_FREQUENCY} ${SMS_RATES} ${SMS_HELP_STOP} ` +
-    `Optional — we’ll call you either way. `,
+  `${CONSENT_SENTENCE} `,
   { href: SMS_TERMS_PATH, label: "SMS Terms" },
   " · ",
   { href: PRIVACY_PATH, label: "Privacy Policy" },
@@ -79,19 +92,21 @@ export const FORM_CONSENT_TEXT = consentPlainText(FORM_CONSENT_PARTS);
 
 /**
  * The assistant's consent question (lib/chat/booking.ts). The chat cannot
- * show a checkbox, so this is the checkbox as a question: only a clear yes
- * counts, anything else is a no, and the booking goes through either way.
- * The paths are written out because the chat window turns site paths into
- * links (withLinks in components/SiteAssistant.tsx); the row stores this
- * string exactly, paths included, because that is what she read.
+ * show a checkbox, so this is the checkbox as a question, asked in the same
+ * message as the read-back with three buttons under it — "Yes, text me",
+ * "No, just call", "Fix something" (Ben, 2026-10-14). Only a yes counts; the
+ * booking goes through either way. The paths are written out because the
+ * chat window turns site paths into links (withLinks in
+ * components/SiteAssistant.tsx); the row stores this string exactly, paths
+ * included, because that is what she read.
  *
- * One question mark, per the flow's one-question-per-turn rule (§5).
+ * The disclosures are the same constants as the form's, in the same order.
  */
 export const CHAT_CONSENT_QUESTION =
-  `Last one: can ${DBA_NAME} text you ${SMS_PROGRAM_DESCRIPTION} at that number? ` +
+  `Can we also text you about your appointment and inquiry? ` +
   `${SMS_FREQUENCY} ${SMS_RATES} ${SMS_HELP_STOP} ` +
-  `Terms: ${SMS_TERMS_PATH} · Privacy: ${PRIVACY_PATH}. ` +
-  `Yes or no is fine — we’ll call you either way.`;
+  `Optional — we'll call you either way. ` +
+  `SMS Terms: ${SMS_TERMS_PATH} · Privacy Policy: ${PRIVACY_PATH}`;
 
 /** Longest consent wording the consultation route will store. */
 export const CONSENT_TEXT_MAX = 1000;
