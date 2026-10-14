@@ -18,7 +18,8 @@
     "check:contact": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-contact.mjs",
     "fetch:posters": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/fetch-video-posters.mjs",
     "check:schema": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-schema.mjs",
-    "check:redirects": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-redirects.mjs"
+    "check:redirects": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-redirects.mjs",
+    "preview:emails": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/render-email-previews.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

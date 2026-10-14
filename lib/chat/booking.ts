@@ -6,6 +6,7 @@ import {
   CONFIRM_BUTTONS,
   FIX_BUTTONS,
   TIME_BUTTONS,
+  UNCLEAR_NO_BUTTONS,
   extractEmail,
   extractName,
   extractPhone,
@@ -40,7 +41,9 @@ import { capitalizeName } from "../name-case";
  *   5. "Best time to call?" — buttons: Morning · Afternoon · Any time.
  *   6. The read-back and the text-consent question in ONE message — buttons:
  *      Yes, text me · No, just call · Fix something. "Fix something" asks
- *      what to change, changes it, and shows step 6 again.
+ *      what to change, changes it, and shows step 6 again. A bare typed
+ *      "no" is not a decline: it asks "No texts, or need to fix something?"
+ *      with No, just call · Fix something.
  *
  * A state machine, and deliberately not a model. The model's job is answering
  * from site content; collecting a name and a phone number is a form, and a
@@ -168,6 +171,7 @@ const ASK = {
   note: "Who’s this for, and what’s going on? A sentence is plenty.",
   bestTime: "Best time to call?",
   bestTimeAgain: "Sorry — morning, afternoon, or any time? Tap one below.",
+  unclearNo: "No texts, or need to fix something?",
   fix: "No problem — what would you like to change?",
   fixAgain: "Which part — your name, phone, email, center, or best time?",
   fixName: "What’s your full name — first and last?",
@@ -216,6 +220,8 @@ export function bookingButtons(step: BookingStep): string[] | undefined {
       return [...TIME_BUTTONS];
     case "confirm":
       return [...CONFIRM_BUTTONS];
+    case "confirmNo":
+      return [...UNCLEAR_NO_BUTTONS];
     case "fix":
       return [...FIX_BUTTONS];
     default:
@@ -248,6 +254,8 @@ export function pendingQuestion(session: ChatSession): string | null {
       return ASK.bestTime;
     case "confirm":
       return readBack(draft);
+    case "confirmNo":
+      return ASK.unclearNo;
     case "fix":
       return ASK.fixAgain;
     case "fixName":
@@ -398,8 +406,25 @@ export function advanceBooking(
         session.step = "fix";
         return { reply: ASK.fix };
       }
+      if (answer === "unclear-no") {
+        session.step = "confirmNo";
+        return { reply: ASK.unclearNo };
+      }
       if (answer === null) return { reply: readBack(draft) };
       return submitDraft(session, answer === "yes", sourcePage);
+    }
+
+    // After a bare "no": only a tap, a plain "no texts" / "just call", or a
+    // fix moves on. Another unclear answer asks the same thing again; a
+    // clear yes is still a yes.
+    case "confirmNo": {
+      const answer = matchConfirm(message);
+      if (answer === "fix") {
+        session.step = "fix";
+        return { reply: ASK.fix };
+      }
+      if (answer === "no" || answer === "yes") return submitDraft(session, answer === "yes", sourcePage);
+      return { reply: ASK.unclearNo };
     }
 
     case "fix": {

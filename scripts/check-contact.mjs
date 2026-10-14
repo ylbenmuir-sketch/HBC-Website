@@ -189,7 +189,17 @@ const emails = () =>
   existsSync(MOCK_LOG)
     ? readFileSync(MOCK_LOG, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
     : [];
-const emailsNaming = (name) => emails().filter((e) => (e.body?.text ?? "").includes(`Name:      ${name}`) || (e.body?.subject ?? "").includes(name));
+// Four kinds of email now (lib/lead-notification.ts). Told apart by subject:
+// the staff notification names the lead ("New … — <center> — <name>"), the
+// page-two update is the same subject with "Re: ", the visitor's
+// confirmation has a fixed subject and goes to her address.
+const VISITOR_SUBJECT = "We got your request — Harmonized Brain Centers";
+const FROM = "Harmonized Brain Centers <leads@harmonizedbraincenterstn.com>";
+const emailsNaming = (name) => emails().filter((e) => (e.body?.subject ?? "").includes(name) && !/^Re: /.test(e.body.subject));
+const updatesNaming = (name) => emails().filter((e) => /^Re: /.test(e.body?.subject ?? "") && e.body.subject.includes(name));
+const visitorEmailsTo = (address) => emails().filter((e) => e.body?.subject === VISITOR_SUBJECT && JSON.stringify(e.body.to) === JSON.stringify([address]));
+/** What the mock answers for a Resend id's Message-ID (mock-resend.mjs). */
+const mockMessageId = (resendId) => `<${resendId}@mock.resend.test>`;
 
 /* ── the mock platform door ────────────────────────────────────────────── */
 
@@ -228,7 +238,7 @@ function segments(text) {
 // Straight apostrophe in "we'll" — character for character.
 const CONSENT_SENTENCE = "I agree to receive texts from Harmonized Brain Centers at this number about my appointment and inquiry. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way.";
 const FORM_CONSENT_TEXT = `${CONSENT_SENTENCE} SMS Terms · Privacy Policy`;
-const CHAT_CONSENT_QUESTION = "Can we also text you about your appointment and inquiry? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way. SMS Terms: /sms-terms · Privacy Policy: /privacy-policy";
+const CHAT_CONSENT_QUESTION = "Can Harmonized Brain Centers also text you about your appointment and inquiry? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way. SMS Terms: /sms-terms · Privacy Policy: /privacy-policy";
 /** The carriers' required phrases, each of which must reach the raw HTML
  *  of /contact as one unbroken string. */
 const REQUIRED_PHRASES = [
@@ -288,29 +298,76 @@ async function expectRow(name, { center, helpingWho, concerns, note, referredBy 
   return r;
 }
 
-/** Exactly one email, carrying the lead and pointing at the row. */
+const inboxFor = (center, source) =>
+  routeLead({ type: "consultation", source, preferredCenter: center }, env, () => {}).to ?? "office@example.test";
+const routeOf = (center, source) => routeLead({ type: "consultation", source, preferredCenter: center }, env, () => {}).route;
+
+/**
+ * Exactly one staff notification, in the branded template (HTML + text),
+ * from "Harmonized Brain Centers", carrying the lead and pointing at the row;
+ * and the row records the Message-ID it was delivered with.
+ */
 function expectEmail(name, row, { center, consent, source = "the contact form" }) {
-  // Pass the server's LEADS_* values to this check so it expects the same
-  // To the route resolves (lib/lead-routing.ts).
-  const inbox =
-    routeLead(
-      { type: "consultation", source: source === "the contact form" ? "form" : "chat", preferredCenter: center },
-      env,
-      () => {}
-    ).to ?? "office@example.test";
+  const channel = source === "the contact form" ? "form" : "chat";
+  const inbox = inboxFor(center, channel);
   const list = emailsNaming(name);
   expect(`${name}: exactly one notification email`, list.length === 1, `${list.length} email(s)`);
   const e = list[0];
   if (!e) return;
-  const text = e.body.text;
+  const text = e.body.text ?? "";
+  const html = e.body.html ?? "";
   expect(`${name}: email subject names the lead and center`, e.body.subject.includes(name) && e.body.subject.includes(center), e.body.subject);
-  expect(`${name}: email body says the channel`, text.includes(`via ${source}.`));
-  expect(`${name}: email body carries the phone`, text.includes("Phone:     0000000000"));
+  expect(`${name}: email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
+  expect(`${name}: email has the branded HTML and a plain-text twin`, html.startsWith("<!doctype html>") && html.includes("BRAIN CENTERS") && text.length > 0);
+  expect(`${name}: email's first line says "New call request"${channel === "chat" ? " … via chat" : ""}`, text.startsWith("NEW CALL REQUEST · ") && text.split("\n")[0].includes("via chat") === (channel === "chat"), JSON.stringify(text.split("\n")[0]));
+  expect(`${name}: email carries the name whole and the phone formatted`, text.includes(`\n${name}\n`) && text.includes("(000) 000-0000"), JSON.stringify(text.slice(0, 200)));
+  expect(`${name}: email has Call (tel:) and Reply (mailto:) buttons`, /href="tel:\+10000000000"[^>]*>Call</.test(html) && /href="mailto:[^"]+"[^>]*>Reply</.test(html));
   if (row) expect(`${name}: email points at the saved row`, text.includes(`Saved request: ${row.id}`));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
-  expect(`${name}: email body carries the name whole`, text.includes(`Name:      ${name}`), JSON.stringify(text.split("\n").find((l) => l.startsWith("Name:"))));
-  const textsLine = text.split("\n").find((l) => l.startsWith("Texts:")) ?? null;
-  expect(`${name}: email says ${consent ? "OK to text" : "NO consent to text"}`, consent ? textsLine?.includes("OK to text") : textsLine?.includes("NO consent to text"), JSON.stringify(textsLine));
+  const textsLine = text.split("\n").find((l) => l.startsWith("Texts OK?:")) ?? null;
+  expect(`${name}: email says Texts OK? ${consent ? "Yes" : "No"}`, consent ? / Yes$/.test(textsLine ?? "") : / No — call or email only$/.test(textsLine ?? ""), JSON.stringify(textsLine));
+  expect(`${name}: email shows the time in CT, never ISO`, / CT$/m.test(text) && !/\d{4}-\d{2}-\d{2}T\d{2}:/.test(text + html));
+  expect(`${name}: the explanatory paragraph about the form is gone`, !text.includes("The form asks who the call is for"));
+}
+
+/** The row records the staff email's delivered Message-ID and the visitor email's outcome. */
+async function expectEmailRecords(name, rowId, { visitor, details = null }) {
+  const [r] = await rest(`consultation_requests?id=eq.${rowId}&select=notify_status,notify_message_id,notify_rfc_message_id,confirm_email_status,confirm_email_message_id,details_email_status`);
+  if (!r) return expect(`${name}: row still there for the email records`, false);
+  expect(`${name}: row stores the notification's delivered Message-ID`, r.notify_status === "sent" && r.notify_rfc_message_id === mockMessageId(r.notify_message_id), JSON.stringify(r));
+  expect(`${name}: row records the visitor email as ${visitor ?? "not sent"}`, r.confirm_email_status === visitor && (visitor === "sent") === Boolean(r.confirm_email_message_id), JSON.stringify(r));
+  expect(`${name}: row records the details email as ${details ?? "not sent"}`, r.details_email_status === details, JSON.stringify(r));
+  return r;
+}
+
+/** One "We got your request", to her, Reply-To the route's first address. */
+function expectVisitorEmail(name, address, { center, source = "form" }) {
+  const list = visitorEmailsTo(address);
+  expect(`${name}: exactly one confirmation email to the visitor`, list.length === 1, `${list.length} email(s)`);
+  const e = list[0];
+  if (!e) return;
+  const route = routeOf(center, source);
+  const line = route === "nashville" || route === "murfreesboro"
+    ? `Someone from our ${route === "nashville" ? "Nashville" : "Murfreesboro"} center will call you soon.`
+    : "Someone from our team will call you soon.";
+  const tel = route === "murfreesboro" ? "tel:+16152032650" : "tel:+16153318762";
+  expect(`${name}: visitor email says "Thanks, ${firstWord(name)}." and "${line}"`, e.body.text.startsWith(`Thanks, ${firstWord(name)}.\n${line}`), JSON.stringify(e.body.text.slice(0, 120)));
+  expect(`${name}: visitor email Reply-To is ${inboxFor(center, source)} (the route's first address)`, e.body.reply_to === inboxFor(center, source), String(e.body.reply_to));
+  expect(`${name}: visitor email has the center's tap-to-call and the video link`, e.body.html.includes(`href="${tel}"`) && e.body.html.includes("youtube.com/watch?v=FCUyUqzE3Dk"));
+  expect(`${name}: visitor email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
+}
+
+/** The page-two update: same thread, same recipients, the answers. */
+function expectUpdateEmail(name, row, { center, note, referredBy }) {
+  const list = updatesNaming(name);
+  expect(`${name}: exactly one "Details added" email`, list.length === 1, `${list.length} email(s)`);
+  const u = list[0];
+  const original = emailsNaming(name)[0];
+  if (!u || !original) return;
+  expect(`${name}: update subject is "Re: " + the original's`, u.body.subject === `Re: ${original.body.subject}`, u.body.subject);
+  expect(`${name}: update goes to the original's recipients`, JSON.stringify(u.body.to) === JSON.stringify(original.body.to) && JSON.stringify(u.body.cc ?? []) === JSON.stringify(original.body.cc ?? []), JSON.stringify([u.body.to, original.body.to]));
+  expect(`${name}: update's In-Reply-To and References name the original's Message-ID`, u.body.headers?.["In-Reply-To"] === row.notify_rfc_message_id && u.body.headers?.References === row.notify_rfc_message_id && Boolean(row.notify_rfc_message_id), JSON.stringify([u.body.headers, row.notify_rfc_message_id]));
+  expect(`${name}: update carries the answers`, u.body.text.startsWith(`DETAILS ADDED · ${center}`) && u.body.text.includes(note) && u.body.text.includes(`Referred by: ${referredBy}`), JSON.stringify(u.body.text.slice(0, 300)));
 }
 
 /**
@@ -608,7 +665,12 @@ async function pathSave(page, width) {
   // (lib/center-routing.ts). Pass the server's values to this check so it
   // can say which it expects.
   expectEmail(name, row, { center: "Murfreesboro", consent: true });
-  expect(`${name}: still exactly one email after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
+  expect(`${name}: still exactly one notification after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
+  if (row) {
+    const rec = await expectEmailRecords(name, row.id, { visitor: "sent", details: "sent" });
+    expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
+    if (rec) expectUpdateEmail(name, rec, { center: "Murfreesboro", note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith" });
+  }
   expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
   expect(`${name}: still exactly one text after step two`, textsNaming(name).length === 1, `${textsNaming(name).length}`);
   expectForward(name, { center: "Murfreesboro", consent: true, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith" } });
@@ -631,6 +693,9 @@ async function pathSkip(page, width, height) {
   await sleep(300);
   const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null, consent: false });
   expectEmail(name, row, { center: "Nashville", consent: false });
+  if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+  expectVisitorEmail(name, emailFor(name), { center: "Nashville" });
+  expect(`${name}: "Skip for now" sends no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
   // The skip path reaches the platform: step one is the lead.
   expectForward(name, { center: "Nashville", consent: false });
   // The box was left unticked: the lead lands everywhere else, and no text.
@@ -676,6 +741,8 @@ async function pathLeave(chrome, width) {
   await sleep(500);
   const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, consent: true });
   expectEmail(name, row, { center: "Not sure yet", consent: true });
+  if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+  expectVisitorEmail(name, emailFor(name), { center: "Not sure yet" });
   expectForward(name, { center: "Not sure yet", consent: true });
   expectText(name, {});
 }
@@ -845,6 +912,11 @@ async function chatConversation(consent, n) {
   // The wording stored is the question as asked, for a yes and a no alike.
   const row = await expectRow(name, { center, helpingWho: "Myself", concerns: [], note: "Myself — trouble sleeping", email: finalEmail, source: "chat", bestTime: time, sourcePage: "/", consent, consentText: CHAT_CONSENT_QUESTION });
   expectEmail(name, row, { center, consent, source: "the site assistant (chat)" });
+  if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+  expectVisitorEmail(name, finalEmail, { center, source: "chat" });
+  // The chat already has who/what: the notification shows it, no update follows.
+  const note = emailsNaming(name)[0]?.body?.text ?? "";
+  expect(`${name}: chat notification shows "What they told us"`, note.includes("What they told us") && note.includes("Myself — trouble sleeping"), JSON.stringify(note.slice(0, 300)));
   expectForward(name, { center, consent, whoFor: "myself" });
   if (consent) expectText(name, { from: env.DIALPAD_SMS_FROM_NASHVILLE ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
   else expectNoText(name, `"No, just call"`);
@@ -866,6 +938,32 @@ async function forgedConsent() {
   if (rows[0]) created.push(rows[0].id);
   expect(`${name}: recorded as NO consent, no wording, no time`, rows.length === 1 && rows[0].sms_consent === false && rows[0].sms_consent_text === null && rows[0].sms_consent_at === null, JSON.stringify(rows.map((r) => [r.sms_consent, r.sms_consent_text, r.sms_consent_at])));
   expectNoText(name, "a consent flag sent without the wording");
+}
+
+/** A guide download: one notification to the guide inbox, never a visitor email. */
+async function guideDownload() {
+  const address = `e2e-${RUN}-guide@example.test`;
+  console.log(`\n▸ guide download — ${address}`);
+  const res = await fetch(`${BASE}/api/consultation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "guide", email: address, source_page: "/resources/homework-battles", website: "" }),
+  });
+  expect(`guide: accepted (201)`, res.status === 201, String(res.status));
+  const body = await res.json().catch(() => null);
+  if (body?.id) created.push(body.id);
+  await sleep(300);
+  const list = emails().filter((e) => (e.body?.subject ?? "").includes(address));
+  const inbox = routeLead({ type: "guide", source: "form", preferredCenter: null }, env, () => {}).to ?? "office@example.test";
+  expect(`guide: exactly one notification, to ${inbox}`, list.length === 1 && JSON.stringify(list[0].body.to).includes(inbox), JSON.stringify(list.map((e) => e.body.to)));
+  const t = list[0]?.body?.text ?? "";
+  expect(`guide: "Guide download", which guide, the address, the page, the time in CT`, t.startsWith("GUIDE DOWNLOAD") && t.includes("Why regulation fails") && t.includes(address) && t.includes("/resources/homework-battles") && / CT$/m.test(t), JSON.stringify(t.slice(0, 300)));
+  expect(`guide: the address is a mailto link`, (list[0]?.body?.html ?? "").includes(`href="mailto:${address}"`));
+  expect(`guide: NO visitor confirmation email`, visitorEmailsTo(address).length === 0, `${visitorEmailsTo(address).length}`);
+  if (body?.id) {
+    const [r] = await rest(`consultation_requests?id=eq.${body.id}&select=confirm_email_status,notify_route`);
+    expect(`guide: row records no visitor email, route "guide"`, r?.confirm_email_status === null && r?.notify_route === "guide", JSON.stringify(r));
+  }
 }
 
 /** The route's own email rule, without a browser: the form must send one. */
@@ -949,6 +1047,7 @@ try {
   await chatConversation(true, 1);
   const chatRow = await chatConversation(false, 2);
   await forgedConsent();
+  await guideDownload();
   await postRefusals();
   if (saveRows[0]?.row) await patchRefusals(saveRows[0].row);
   if (chatRow) await patchChatRowRefused(chatRow);

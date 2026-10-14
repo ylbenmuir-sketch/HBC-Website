@@ -432,19 +432,11 @@ export const START_TIMING: Verifiable = {
   note: "[Confirm typical start timing]",
 };
 
-/**
- * Same-day callback. The offer copy leans on this ("a real person calls you
- * back today"), which makes it an operational promise, not a tagline — it can
- * only ship once the centers can actually keep it. Gated like every other
- * unverified fact: production drops the "today" claim and the copy falls back
- * to the promise without a timeframe. Narrower than RESPONSE_TIME above (one
- * business day), which stays the wording used on interior pages.
+/*
+ * SAME_DAY_CALLBACK ("a real person calls you back today") was retired on
+ * 2026-10-14 (Ben): the site, the assistant and the emails make no
+ * callback-timing promise — "calls you back soon", never "today".
  */
-export const SAME_DAY_CALLBACK: Verifiable = {
-  value: "Same-day callback",
-  verified: true,
-  note: "[Confirm same-day callback]",
-};
 
 /**
  * Business hours are **per center**, in lib/locations.ts, and there is no

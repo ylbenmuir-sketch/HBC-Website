@@ -51,6 +51,8 @@ export type BookingStep =
   | "bestTime"
   /** 6. Read-back + text consent, by button. */
   | "confirm"
+  /** A bare "no" at the read-back: "No texts, or need to fix something?" */
+  | "confirmNo"
   | "fix"
   | "fixName"
   | "fixPhone"

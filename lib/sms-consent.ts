@@ -100,10 +100,12 @@ export const FORM_CONSENT_TEXT = consentPlainText(FORM_CONSENT_PARTS);
  * components/SiteAssistant.tsx); the row stores this string exactly, paths
  * included, because that is what she read.
  *
- * The disclosures are the same constants as the form's, in the same order.
+ * The disclosures are the same constants as the form's, in the same order,
+ * and the brand is named in the question itself, as on the form (Ben,
+ * 2026-10-14: carriers look for the brand in the opt-in).
  */
 export const CHAT_CONSENT_QUESTION =
-  `Can we also text you about your appointment and inquiry? ` +
+  `Can ${DBA_NAME} also text you about your appointment and inquiry? ` +
   `${SMS_FREQUENCY} ${SMS_RATES} ${SMS_HELP_STOP} ` +
   `Optional — we'll call you either way. ` +
   `SMS Terms: ${SMS_TERMS_PATH} · Privacy Policy: ${PRIVACY_PATH}`;

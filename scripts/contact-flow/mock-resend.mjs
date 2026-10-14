@@ -73,6 +73,17 @@ if (LOG || PLATFORM_LOG || SMS_LOG) {
         headers: { "content-type": "application/json" },
       });
     }
+    // The Message-ID read-back (lib/lead-notification.ts → rfcMessageIdOf):
+    // answered, never logged — it is not an email. The id is derived from
+    // Resend's, so check:contact can predict what the row stores and what
+    // the page-two update's In-Reply-To must say.
+    if (LOG && url.startsWith("https://api.resend.com/emails/") && (init?.method ?? "GET") === "GET") {
+      const id = decodeURIComponent(url.slice("https://api.resend.com/emails/".length));
+      return new Response(JSON.stringify({ id, message_id: `<${id}@mock.resend.test>` }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     if (LOG && url.startsWith("https://api.resend.com/")) {
       let body = null;
       try {
@@ -90,7 +101,7 @@ if (LOG || PLATFORM_LOG || SMS_LOG) {
           { status: failStatus, headers: { "content-type": "application/json" } }
         );
       }
-      return new Response(JSON.stringify({ id: `mock-${Date.now()}` }), {
+      return new Response(JSON.stringify({ id: `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` }), {
         status: 200,
         headers: { "content-type": "application/json" },
       });

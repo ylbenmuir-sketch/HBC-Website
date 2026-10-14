@@ -35,7 +35,6 @@ import {
   FRANKLIN_OPENING,
   FULL_COURSE,
   REVIEWS,
-  SAME_DAY_CALLBACK,
   SAMPLE_QUOTES_NOTE,
   SHOW_DRAFT_CONTENT,
   START_TIMING,
@@ -341,20 +340,10 @@ export default function HomePage() {
               <BrainMapCta />
             </div>
             <p className="micro">
-              {/* "today" is an operational promise, so it ships only once
-                  SAME_DAY_CALLBACK is verified; production falls back to the
-                  same sentence without the timeframe. */}
-              {verifiedOr(SAME_DAY_CALLBACK) ? (
-                <>
-                  {/* Explicit {" "}: JSX drops whitespace that spans a line
-                      break, so without it the tag rendered hard against the
-                      full stop — "back today.[CONFIRM …]". */}
-                  A real person calls you back today.{" "}
-                  <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
-                </>
-              ) : (
-                <>A real person calls you back.</>
-              )}{" "}
+              {/* "soon", never "today" (Ben, 2026-10-14): no callback-timing
+                  promise anywhere on the site, the chat and the emails
+                  included. */}
+              A real person calls you back soon.{" "}
               Ask anything &mdash; including the skeptical questions.{" "}
               <Link href="/how-lens-works">See how LENS works &rarr;</Link>
             </p>

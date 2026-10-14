@@ -314,7 +314,8 @@ submission requires Supabase credentials.
 | `LEADS_GUIDE` | Guide download signups. Unset → `LEADS_FALLBACK`. |
 | `LEADS_FALLBACK` | Everything else: Franklin, "Not sure yet", no center, anything unmatched (form or chat — chat leads route by center like form leads) — and every route above whose variable is unset. Unset → `LEADS_NOTIFY_EMAIL`. |
 | `LEADS_NOTIFY_EMAIL` | The old single inbox; now only the last fallback. One of `LEADS_FALLBACK` / `LEADS_NOTIFY_EMAIL` is required alongside `RESEND_API_KEY`. Every fallback step logs a warning naming the missing variable. |
-| `LEADS_NOTIFY_FROM` | Optional sender. Must be on `harmonizedbraincenterstn.com` (verified in Resend); anything else is ignored with a warning. Defaults to `leads@harmonizedbraincenterstn.com`. |
+| `LEADS_NOTIFY_FROM` | Optional sender address. Must be on `harmonizedbraincenterstn.com` (verified in Resend); anything else is ignored with a warning. Defaults to `leads@harmonizedbraincenterstn.com`. Every email goes out as `Harmonized Brain Centers <that address>` — set it bare or with a name; only the address is used, so the name is never doubled. |
+| `SUPABASE_LEADS_TABLE_ID` | Optional. The `consultation_requests` table's id in the Supabase dashboard, for the emails' "Open saved request" button. Defaults to the live project's (17487). |
 | `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
 | `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
 | `BOOKING_CALENDAR_URL` | **Not read since 2026-10-14.** It was the "Pick a time for your call" link on the contact form's confirmation card; that card is now four fixed things (Ben) and the link is gone. Safe to leave set or remove. |
@@ -402,8 +403,10 @@ number, so anyone who stopped at the chips left nothing behind. Now:
    with no scrolling; `check:contact` measures it. Both exits from step two
    land here. The page is one centered column (`.form-solo`).
 
-There is deliberately **no second email** when step two saves: the step-one
-email says those answers may follow and points at the saved request.
+When step two is **saved** (never on Skip), a "Details added" email goes to
+the same recipients as the lead email, with the same subject plus "Re: " and
+In-Reply-To / References naming the lead email's Message-ID, so it lands in
+the same Gmail thread. See "Emails" below.
 
 The platform forward (`lib/inquiry-intake.ts`) also goes at step one, for
 every lead, skippers included. The contract's `whoFor` is a strict
@@ -550,14 +553,41 @@ things to settle first, in order:
    and it is hand-authored CSS outside the design system, so budget for
    fixing what the detectors find before it passes.
 
-**No email carries the guide, and none should until DNS is done.** Resend is
-still on its shared test sender (`onboarding@resend.dev`), which delivers only
-to the Resend account owner. A send to the address a parent typed would be
-accepted by the API and silently never arrive — worse than not sending, since
-the form would have promised it. Emailing her a copy needs the sending domain
-verified in Resend (SPF, DKIM, DMARC published and green) and
-`LEADS_NOTIFY_FROM` moved onto it. Until then, don't add that send, and don't
-write copy that promises one.
+**No email carries the guide.** The sending domain is verified in Resend
+(Ben, 2026-10-14), so a visitor can be emailed — and is, for a call request
+(see "Emails") — but a guide download only notifies LEADS_GUIDE; the guide
+itself is the static page the success state links to.
+
+## Emails
+
+Four emails, one branded template (`lib/email/templates.ts`, Ben
+2026-10-14): table layout, inline styles, system fonts, a text wordmark, an
+Apple Mail dark-mode block, an HTML and a plain-text version of each. Times
+are Central ("Wed Oct 14, 11:13 AM CT"), phones "(615) 555-1234" and tap-to-
+call. Sent by `lib/lead-notification.ts` as "Harmonized Brain Centers
+<LEADS_NOTIFY_FROM>".
+
+1. **Staff notification** — "New call request", a center badge, "via chat"
+   for chat leads, the name with Call / Reply buttons, Center · Best time ·
+   Texts OK? · Came from, "What they told us" when there is anything, and a
+   gray footer (Open saved request, received time, routing rule). Subject
+   format and the "TEST — " rule are lib/lead-routing.ts's.
+2. **Details added** — page two saved. Same recipients (read off the row's
+   `notify_*`), "Re: " + the same subject, threaded by In-Reply-To /
+   References. Resend assigns Message-IDs, so the lead email's is read back
+   (`GET /emails/:id`) and stored as `notify_rfc_message_id`; if it was not
+   ready at step one, the page-two route reads it then. If the lead email
+   failed, this goes on its own with the whole lead in it.
+3. **Visitor confirmation** — "We got your request — Harmonized Brain
+   Centers", to the visitor, for every saved call request with an address
+   (never a guide download, never when the spam trap was filled). Reply-To is
+   the first address of her lead's route, so a reply reaches whoever will
+   call. Recorded in `confirm_email_*`; a failure never changes the lead.
+4. **Guide download** — to LEADS_GUIDE only.
+
+`npm run preview:emails` renders all of them with sample data into
+`email-previews/` (git-ignored), screenshots each at 390 and 640 wide (and
+390 dark), and fails if any is taller than a 390×844 screen.
 
 ### Confirmation text and the pick-a-time link
 

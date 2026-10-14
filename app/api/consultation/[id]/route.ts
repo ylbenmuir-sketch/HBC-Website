@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { forwardInquiry } from "@/lib/inquiry-intake";
+import { rfcMessageIdOf, sendDetailsUpdate, type SendResult } from "@/lib/lead-notification";
+import { notificationSubject, routeLead, type RouteName } from "@/lib/lead-routing";
 import { HELPING_OPTIONS, concernList, str, supabaseAdmin } from "@/lib/consultation";
 
 export const runtime = "nodejs";
@@ -20,13 +22,17 @@ export const runtime = "nodejs";
  * touched: a chat row has these answers already and no browser was ever
  * handed its id.
  *
- * ## No second email; a second platform post
+ * ## A threaded "Details added" email; a second platform post
  *
- * The email went at step one and is the lead (lib/lead-notification.ts); it
- * says these answers may follow and where to read them. The platform was
- * also told at step one; it has no update door, so this route posts the
- * enriched inquiry again with an "UPDATE — not a new lead" first line
- * (UPDATE_LINE in lib/inquiry-intake.ts).
+ * The lead email went at step one. When page two is SAVED (Skip sends no
+ * PATCH, so nothing), this sends "Details added" to the same recipients —
+ * read off the row's notify_* columns — with the same subject plus "Re: "
+ * and In-Reply-To / References naming the original's Message-ID, so it
+ * lands in the same Gmail thread (Ben, 2026-10-14). If the original failed
+ * it goes on its own, carrying the whole lead. Recorded in details_email_*.
+ * The platform was also told at step one; it has no update door, so this
+ * route posts the enriched inquiry again with an "UPDATE — not a new lead"
+ * first line (UPDATE_LINE in lib/inquiry-intake.ts).
  *
  * ## The id is the authority
  *
@@ -53,7 +59,112 @@ type UpdatedRow = {
   referred_by: string | null;
   /** Read, never written here — carried to the re-post (NO_TEXT_CONSENT_LINE). */
   sms_consent: boolean | null;
+  source_page: string | null;
+  notify_route: string | null;
+  notify_env: string | null;
+  notify_to: string | null;
+  notify_cc: string[] | null;
+  notify_status: string | null;
+  notify_message_id: string | null;
+  notify_rfc_message_id: string | null;
 };
+
+const ROUTES = new Set<RouteName>(["guide", "more_info", "concierge", "nashville", "murfreesboro", "fallback"]);
+
+/**
+ * "Details added", to the original's recipients and threaded under it. Never
+ * throws; the outcome is logged and written to details_email_*, and the
+ * visitor's response does not depend on it.
+ */
+async function emailDetails(row: UpdatedRow, supabase: NonNullable<ReturnType<typeof supabaseAdmin>>): Promise<void> {
+  const details = {
+    helpingWho: row.helping_who,
+    concerns: row.concerns ?? [],
+    note: row.note,
+    referredBy: row.referred_by,
+  };
+  if (!details.helpingWho && !details.concerns.length && !details.note && !details.referredBy) return;
+
+  // The recipients the original went to, as recorded; recomputed only for a
+  // row from before the notify_* columns.
+  const recorded = row.notify_to && row.notify_route && ROUTES.has(row.notify_route as RouteName);
+  const recipients = recorded
+    ? {
+        route: row.notify_route as RouteName,
+        envVar: row.notify_env,
+        to: row.notify_to,
+        cc: row.notify_cc ?? [],
+      }
+    : routeLead({ type: "consultation", source: "form", preferredCenter: row.preferred_center });
+  const subject = notificationSubject({
+    route: recipients.route,
+    source: "form",
+    preferredCenter: row.preferred_center,
+    name: row.first_name,
+    email: row.email,
+  });
+
+  const originalSent = row.notify_status === "sent";
+  let originalMessageId = row.notify_rfc_message_id;
+  if (originalSent && !originalMessageId && row.notify_message_id) {
+    // Not read back at step one (Resend had not assigned it yet): read it
+    // now, and keep it.
+    originalMessageId = await rfcMessageIdOf(row.notify_message_id);
+    if (originalMessageId) {
+      await supabase
+        .from("consultation_requests")
+        .update({ notify_rfc_message_id: originalMessageId })
+        .eq("id", row.id)
+        .then(({ error }) => {
+          if (error) console.error(`[details email] lead=${row.id} message id not stored: ${error.message}`);
+        });
+    }
+  }
+
+  let result: SendResult;
+  try {
+    result = await sendDetailsUpdate({
+      lead: {
+        source: "form",
+        intent: "book",
+        rowId: row.id,
+        helpingWho: row.helping_who,
+        concerns: row.concerns ?? [],
+        firstName: row.first_name,
+        phone: row.phone,
+        email: row.email,
+        preferredCenter: row.preferred_center,
+        bestTime: row.best_time,
+        note: row.note,
+        referredBy: row.referred_by,
+        sourcePage: row.source_page,
+        smsConsent: row.sms_consent === true,
+        honeypotFilled: false,
+      },
+      recipients,
+      subject,
+      originalSent,
+      originalMessageId,
+    });
+  } catch (err) {
+    result = { status: "failed", messageId: null, error: `threw: ${err instanceof Error ? err.name : "unknown error"}` };
+  }
+  const where = `route=${recipients.route} lead=${row.id} threaded=${originalSent && originalMessageId ? "yes" : "no"}`;
+  if (result.status === "sent") {
+    console.log(`[destination: details email] sent ${where} resend_id=${result.messageId ?? "?"}`);
+  } else {
+    console.error(`[destination: details email] NOT sent (${result.status}) ${where} error="${result.error}"`);
+  }
+  const { error } = await supabase
+    .from("consultation_requests")
+    .update({
+      details_email_status: result.status,
+      details_email_message_id: result.messageId,
+      details_email_error: result.error,
+    })
+    .eq("id", row.id);
+  if (error) console.error(`[details email record] lead=${row.id} not stamped: ${error.message}`);
+}
 
 export async function PATCH(
   request: Request,
@@ -148,7 +259,7 @@ export async function PATCH(
       .eq("type", "consultation")
       .eq("source", "form")
       .select(
-        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent"
+        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent, source_page, notify_route, notify_env, notify_to, notify_cc, notify_status, notify_message_id, notify_rfc_message_id"
       );
     if (error) {
       // `message` and `code` only — never `details`, where Postgres echoes values.
@@ -186,6 +297,14 @@ export async function PATCH(
       .filter(Boolean)
       .join(", ")}`
   );
+
+  // The "Details added" email, threaded under the lead email. Awaited, never
+  // thrown — the visitor's answer below does not depend on it.
+  try {
+    await emailDetails(row, supabase);
+  } catch (err) {
+    console.error(`[details email] lead=${row.id} threw: ${err instanceof Error ? err.name : "unknown error"}`);
+  }
 
   // The enriched inquiry, re-posted as a labelled update. Awaited, never
   // thrown; forwardInquiry logs its own outcome. No honeypot at this step —

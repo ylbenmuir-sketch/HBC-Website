@@ -1,11 +1,8 @@
 import Link from "next/link";
-import ConfirmTag from "./ConfirmTag";
 import {
   PHONE_DISPLAY,
   RISK_REVERSAL,
-  SAME_DAY_CALLBACK,
   SHOW_PHONE,
-  verifiedOr,
 } from "@/lib/site-config";
 
 const DEFAULT_HEADING = "Talk to us first. No commitment.";
@@ -23,10 +20,6 @@ export default function FinalCTA({
   /** Location pages pass `/contact?center=<slug>` to preselect their center. */
   href?: string;
 }) {
-  // The same-day promise replaces the older response-time wording here; both
-  // describe the callback, and the two would contradict each other side by
-  // side. Still gated, so production drops it until it is confirmed.
-  const sameDayCallback = verifiedOr(SAME_DAY_CALLBACK);
   return (
     <section className="final">
       <div className="wrap rv">
@@ -45,14 +38,10 @@ export default function FinalCTA({
         </div>
         <p className="after">{RISK_REVERSAL}</p>
         <p className="after" style={{ marginTop: 10 }}>
-          The call is free &middot; No referral needed
-          {sameDayCallback && (
-            <>
-              {" "}
-              &middot; {sameDayCallback}{" "}
-              <ConfirmTag>{SAME_DAY_CALLBACK.note!}</ConfirmTag>
-            </>
-          )}
+          {/* "soon", never "Same-day" (Ben, 2026-10-14): no callback-timing
+              promise anywhere on the site. */}
+          The call is free &middot; No referral needed &middot; A real person
+          calls you back soon
         </p>
       </div>
     </section>

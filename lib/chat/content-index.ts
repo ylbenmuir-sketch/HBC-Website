@@ -27,7 +27,6 @@ import {
   PACKAGE_SESSIONS,
   PHONE,
   RISK_REVERSAL,
-  SAME_DAY_CALLBACK,
   SESSION_LENGTH,
   SESSION_PRICE,
   STAT_SESSIONS,
@@ -863,11 +862,8 @@ function policyPassages(): Passage[] {
       keywords: ["call", "free", "phone", "talk", "consultation", "book", "appointment", "pressure", "sales", "unsure", "skeptical", "fit"],
       text: [
         "The phone call is free.",
-        // "today" is an operational promise and rides SAME_DAY_CALLBACK, the
-        // same way the homepage hero does.
-        confirmed(SAME_DAY_CALLBACK)
-          ? "A real person calls you back today."
-          : "A real person calls you back.",
+        // "soon", never "today" — the homepage's sentence (Ben, 2026-10-14).
+        "A real person calls you back soon.",
         "Ask anything — including the skeptical questions.",
         RISK_REVERSAL,
       ].join(" "),

@@ -17,7 +17,6 @@ import {
   PHONE,
   RESPONSE_TIME,
   REVIEWS,
-  SAME_DAY_CALLBACK,
   SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   START_TIMING,
@@ -64,7 +63,6 @@ check("Founding year (2016)", ESTABLISHED_YEAR.verified);
 // already renders as nothing.
 check("Google rating", REVIEWS.verified);
 check("Response-time claim", RESPONSE_TIME.verified);
-check("Same-day callback promise", SAME_DAY_CALLBACK.verified);
 check("Start-timing claim", START_TIMING.verified);
 check("Franklin opening date", FRANKLIN_OPENING.verified);
 // Per center, and named per center: "hours unverified" on a three-center site

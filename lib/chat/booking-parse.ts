@@ -29,6 +29,9 @@ export type TimeValue = (typeof TIME_BUTTONS)[number];
 /** Step 6. */
 export const CONFIRM_BUTTONS = ["Yes, text me", "No, just call", "Fix something"] as const;
 
+/** After a bare "no" at step 6: which did she mean? */
+export const UNCLEAR_NO_BUTTONS = ["No, just call", "Fix something"] as const;
+
 /** After "Fix something". */
 export const FIX_BUTTONS = ["Name", "Phone", "Email", "Center", "Best time"] as const;
 export type FixField = "name" | "phone" | "email" | "center" | "bestTime";
@@ -271,13 +274,21 @@ export function matchBestTime(message: string): TimeValue | null {
 /* Step 6 — the read-back's answer                                     */
 /* ------------------------------------------------------------------ */
 
-export type ConfirmAnswer = "yes" | "no" | "fix" | null;
+export type ConfirmAnswer = "yes" | "no" | "fix" | "unclear-no" | null;
+
+/** Saying no to texts, plainly — the only typed answers that decline. */
+const NO_TEXTS =
+  /\b(no,? just call|just call( me)?|call only|only call|phone only|no texts?|no text messages|no texting|don'?t text|do not text|not by text|no sms|stop)\b/;
 
 /**
  * "Yes, text me" / "No, just call" / "Fix something", tapped or typed.
- * "Fix" wins over everything ("no, that's wrong" is a fix, not a no); a
- * negation anywhere vetoes a yes ("yes but don't text me" is a no) — a
- * doubtful yes to texts is a no.
+ *
+ * Only a tap or a plain "no texts" / "just call" declines texts (Ben,
+ * 2026-10-14). A bare "no" — or "nope", "not sure", "no thanks" — could mean
+ * "no texts" or "that's wrong", so it is "unclear-no" and the flow asks
+ * which. "Fix" wins over everything ("no, that's wrong" is a fix); a plain
+ * decline vetoes a yes ("yes but don't text me" is a no); any other negation
+ * makes a yes doubtful, and a doubtful yes to texts is never a yes.
  */
 export function matchConfirm(message: string): ConfirmAnswer {
   const text = simplify(message);
@@ -287,9 +298,9 @@ export function matchConfirm(message: string): ConfirmAnswer {
   if (/\b(fix|change|wrong|incorrect|edit|correction|mistake|typo|not right|isn't right|isnt right)\b/.test(text)) {
     return "fix";
   }
-  const negative =
-    /\b(no|nope|nah|don't|dont|do not|not|never|stop|just call|call only|only call|no texts?|rather not|no thanks)\b/.test(text);
-  if (negative) return "no";
+  if (NO_TEXTS.test(text)) return "no";
+  const negative = /\b(no|nope|nah|don't|dont|do not|not|never|rather not|no thanks)\b/.test(text);
+  if (negative) return "unclear-no";
   if (/\b(yes|yep|yeah|yup|sure|ok|okay|please|text me|texts? (is|are) fine|sounds good|go ahead|perfect|great|that works|all good|looks good|right|correct|y)\b/.test(text)) {
     return "yes";
   }

@@ -1025,7 +1025,6 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // his approved wording and is back in the index.
   "app/about/page.tsx": {},
   "app/page.tsx": {
-    "SAME_DAY_CALLBACK.note!": "Verifiable-gated — policy:free-call reads confirmed(SAME_DAY_CALLBACK)",
     "START_TIMING.note!": "not indexed — no passage carries the start-timing claim",
     "BRAIN_MAP_CLAIM.note!": "not indexed — the differentiator claim is in no passage",
     "FOUNDER_QUOTE.note!": "not indexed — the founder quote is in no passage",

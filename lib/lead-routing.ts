@@ -209,20 +209,28 @@ export function notificationSubject(input: {
   return flat.slice(0, 150);
 }
 
+/** The display name on every email (Ben, 2026-10-14). Same string as
+ *  FROM_NAME in lib/email/format.ts — repeated, not imported, because this
+ *  file stays import-free for its unit test. */
+const FROM_NAME = "Harmonized Brain Centers";
+
 /**
- * The From header. LEADS_NOTIFY_FROM when it is on SENDING_DOMAIN (either
- * "Name <box@domain>" or a bare address); otherwise a mailbox on that domain.
- * Anything on another domain — Resend's shared resend.dev sender included —
- * is refused with a warning, because Resend only delivers for the verified
- * domain and a lead email that bounces is a lost lead.
+ * The From header: always `Harmonized Brain Centers <address>`. The address
+ * is LEADS_NOTIFY_FROM's when it is on SENDING_DOMAIN — set either bare or as
+ * "Some Name <box@domain>"; only the address is used, so the display name is
+ * never doubled ("Harmonized Brain Centers <Harmonized Brain Centers <…>>")
+ * and never something else. Otherwise leads@SENDING_DOMAIN. Anything on
+ * another domain — Resend's shared resend.dev sender included — is refused
+ * with a warning, because Resend only delivers for the verified domain and a
+ * lead email that bounces is a lost lead.
  */
 export function senderAddress(env: Env = process.env, warn: Warn = console.warn): string {
-  const fallback = `Harmonized Brain Centers Website <leads@${SENDING_DOMAIN}>`;
+  const fallback = `${FROM_NAME} <leads@${SENDING_DOMAIN}>`;
   const configured = env.LEADS_NOTIFY_FROM?.trim();
   if (!configured) return fallback;
-  const address = /<([^>]+)>\s*$/.exec(configured)?.[1] ?? configured;
+  const address = (/<([^>]+)>\s*$/.exec(configured)?.[1] ?? configured).trim();
   const domain = address.split("@")[1]?.trim().toLowerCase();
-  if (ADDRESS.test(address) && domain === SENDING_DOMAIN) return configured;
+  if (ADDRESS.test(address) && domain === SENDING_DOMAIN) return `${FROM_NAME} <${address}>`;
   warn(
     `[lead-routing] LEADS_NOTIFY_FROM is not an address on ${SENDING_DOMAIN} — ignored; sending from leads@${SENDING_DOMAIN}.`
   );

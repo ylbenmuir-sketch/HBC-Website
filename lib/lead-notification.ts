@@ -1,64 +1,78 @@
-// Lead notification email — the lead itself, delivered to the inbox its route
-// names (lib/lead-routing.ts). Called by app/api/consultation/route.ts.
+// Every email the site sends — four of them, one design (lib/email/
+// templates.ts, Ben 2026-10-14). Called by app/api/consultation/route.ts and
+// app/api/consultation/[id]/route.ts.
 //
-// ── WHAT THIS IS FOR ───────────────────────────────────────────────────────
-// The clinic platform (lib/inquiry-intake.ts) is still in testing, so while
-// the website is live the email IS the lead. It therefore carries everything
-// the front desk needs to make the call: name, phone, who it's for, concerns,
-// center, best time, and the visitor's own note. That is a deliberate change
-// from the earlier "pointer only" design — Ben chose it (Oct 2026) so a lead
-// can be worked straight from a phone without opening Supabase. The Supabase
-// row remains the record of what was submitted; this is the working copy.
-//
-// ── ROUTING ────────────────────────────────────────────────────────────────
-// Who gets it, who is copied, the subject and the From header are decided in
-// lib/lead-routing.ts — the one place the rules live (Ben, 2026-10-14):
-// LEADS_NASHVILLE, LEADS_MURFREESBORO, LEADS_CONCIERGE, LEADS_MORE_INFO,
-// LEADS_GUIDE, LEADS_FALLBACK, then LEADS_NOTIFY_EMAIL as the last resort.
-// The caller routes (app/api/consultation/route.ts) and passes the result in,
-// so the route that was used can be written onto the lead's row.
+//   1. Staff notification — a new call request (form or chat), to the inbox
+//      its route names (lib/lead-routing.ts). While the clinic platform is in
+//      testing this email IS the lead: name, number, center, best time, text
+//      consent, and anything they told us.
+//   2. Page-two update — when a visitor SAVES the contact form's second page
+//      (never on Skip). Same recipients as #1, same subject with "Re: ", and
+//      In-Reply-To / References pointing at #1's Message-ID, so it lands in
+//      the same Gmail thread. Sent on its own when #1 failed.
+//   3. Visitor confirmation — to the visitor, the moment a call request is
+//      saved; never for a guide download (lib/email/format.ts →
+//      shouldEmailVisitor). Reply-To is the first address of her lead's
+//      route, so a reply reaches the person who will call.
+//   4. Guide download notification — to LEADS_GUIDE only.
 //
 // ── TURNING IT ON ──────────────────────────────────────────────────────────
 //   1. Create an API key at resend.com/api-keys.
 //   2. The sending domain, harmonizedbraincenterstn.com, is verified in
-//      Resend. Every notification is sent from it (senderAddress).
+//      Resend. Every email is sent from it as "Harmonized Brain Centers
+//      <LEADS_NOTIFY_FROM's address>" (lib/lead-routing.ts → senderAddress).
 //   3. Set RESEND_API_KEY and at least LEADS_FALLBACK (or the older
 //      LEADS_NOTIFY_EMAIL), then the per-route variables as wanted.
 // Until a key and a recipient are both set this sends nothing and says so in
 // the server log; the lead is still saved.
 //
-// Everything here sends INWARD, to the clinic. Nothing emails a visitor. The
-// lead's address is set as reply-to, so the office can answer her from their
-// own mail client — that is the office sending, not the website.
+// ── THREADING ──────────────────────────────────────────────────────────────
+// Resend assigns the RFC Message-ID itself and does not document honouring
+// one we set, so none is set — a refused header would cost the lead email.
+// Instead the real one is read back (GET /emails/:id → message_id) right
+// after #1 is accepted and stored on the row (notify_rfc_message_id). If it
+// is not available yet, the page-two route reads it again before sending #2.
 //
-// Resend's REST API over fetch, deliberately without the `resend` SDK: one
-// POST does not justify a dependency. Swapping in Postmark or SendGrid means
-// changing only the endpoint, headers, and body keys in deliver().
+// Resend's REST API over fetch, deliberately without the `resend` SDK.
 
 import { senderAddress, type Recipients } from "./lead-routing";
-import { GUIDE_TITLE } from "./site-config";
+import { replySubject, threadHeaders } from "./email/format";
+import {
+  detailsUpdate,
+  guideNotification,
+  staffNotification,
+  visitorConfirmation,
+  VISITOR_SUBJECT,
+  type Details,
+  type SavedLink,
+  type StaffLead,
+} from "./email/templates";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 // The visitor is waiting on this request, so a hung provider must not hold the
 // form open. The lead is already saved by the time this runs.
 const SEND_TIMEOUT_MS = 5000;
+/** Reading a Message-ID back is a nicety; it gets less time than a send. */
+const LOOKUP_TIMEOUT_MS = 2000;
 
 /* ------------------------------------------------------------------ */
 /* Delivery                                                            */
 /* ------------------------------------------------------------------ */
 
-/** What happened to one notification — written onto the lead's row. */
+/** What happened to one email — written onto the lead's row. */
 export type SendResult =
   | { status: "sent"; messageId: string | null; error: null }
   | { status: "failed" | "not_configured"; messageId: null; error: string };
 
 type Outbound = {
-  recipients: Recipients;
+  to: string | null;
+  cc?: string[];
   subject: string;
+  html: string;
   text: string;
-  /** The lead's own address, when she gave one, so "Reply" just works. */
   replyTo?: string | null;
+  headers?: Record<string, string>;
 };
 
 /**
@@ -66,17 +80,13 @@ type Outbound = {
  * a SendResult for the caller to log against the lead's id and store. No
  * submitted value is put in an error string.
  */
-async function deliver({ recipients, subject, text, replyTo }: Outbound): Promise<SendResult> {
+async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return { status: "not_configured", messageId: null, error: "RESEND_API_KEY is not set" };
   }
-  if (!recipients.to) {
-    return {
-      status: "not_configured",
-      messageId: null,
-      error: `no recipient: ${recipients.warnings.length ? "every variable in the chain is empty" : "unrouted"}`,
-    };
+  if (!to) {
+    return { status: "not_configured", messageId: null, error: "no recipient: every variable in the chain is empty" };
   }
 
   try {
@@ -88,11 +98,13 @@ async function deliver({ recipients, subject, text, replyTo }: Outbound): Promis
       },
       body: JSON.stringify({
         from: senderAddress(),
-        to: [recipients.to],
-        ...(recipients.cc.length ? { cc: recipients.cc } : {}),
+        to: [to],
+        ...(cc.length ? { cc } : {}),
         subject,
+        html,
         text,
         ...(replyTo ? { reply_to: replyTo } : {}),
+        ...(headers && Object.keys(headers).length ? { headers } : {}),
       }),
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });
@@ -102,8 +114,6 @@ async function deliver({ recipients, subject, text, replyTo }: Outbound): Promis
       | null;
 
     if (!response.ok) {
-      // Resend's own error name and message (e.g. "validation_error: The
-      // harmonizedbraincenterstn.com domain is not verified"), capped.
       const detail = [body?.name, body?.message].filter((v) => typeof v === "string").join(": ");
       return {
         status: "failed",
@@ -123,174 +133,197 @@ async function deliver({ recipients, subject, text, replyTo }: Outbound): Promis
   }
 }
 
+/**
+ * The RFC Message-ID Resend gave a sent email ("<…@…>"), or null. Never
+ * throws. One try now, one more a beat later: the id is assigned when the
+ * email is accepted for delivery, which can trail the send's 200.
+ */
+export async function rfcMessageIdOf(resendId: string | null): Promise<string | null> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || !resendId) return null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 400));
+    try {
+      const response = await fetch(`${RESEND_ENDPOINT}/${encodeURIComponent(resendId)}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
+      });
+      if (!response.ok) continue;
+      const body = (await response.json().catch(() => null)) as { message_id?: unknown } | null;
+      if (typeof body?.message_id === "string" && body.message_id.trim()) return body.message_id.trim();
+    } catch {
+      // Try again, or give up quietly — threading falls back to the subject.
+    }
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------------ */
-/* The two messages                                                    */
+/* Where the saved request lives                                       */
+/* ------------------------------------------------------------------ */
+
+/** The table's id in the Supabase dashboard, for a link that opens the row.
+ *  SUPABASE_LEADS_TABLE_ID overrides; the default is the live project's. */
+const LIVE_PROJECT = "brwyfneahhhkymytkvpx";
+const LIVE_TABLE_ID = "17487";
+
+export function savedLink(rowId: string | null): SavedLink {
+  if (!rowId) return null;
+  const ref = /^https:\/\/([a-z0-9-]+)\.supabase\.co\/?$/i.exec((process.env.SUPABASE_URL || "").trim())?.[1];
+  if (!ref) return { rowId, url: "https://supabase.com/dashboard/projects" };
+  const table = process.env.SUPABASE_LEADS_TABLE_ID?.trim() || (ref === LIVE_PROJECT ? LIVE_TABLE_ID : "");
+  const url = table
+    ? `https://supabase.com/dashboard/project/${ref}/editor/${table}?filter=${encodeURIComponent(`id:eq:${rowId}`)}`
+    : `https://supabase.com/dashboard/project/${ref}/editor`;
+  return { rowId, url };
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Staff notification                                               */
 /* ------------------------------------------------------------------ */
 
 export type LeadDetails = {
-  /** Which channel it came through — the form or the site assistant. */
   source: "form" | "chat";
-  /** "more_info" when the visitor said she is not ready to book. */
   intent: "book" | "more_info";
   /** The saved row's id. Null only for the rescue copy sent when the row
    *  did NOT save — the email then says so at the top. */
   rowId: string | null;
-  /** Null for a form lead: the form asks this in its optional second step,
-   *  after this email has gone. The chat asks it before submitting. */
+  /** Null for a form lead: the form asks this on its second page. */
   helpingWho: string | null;
   concerns: string[];
-  /** As given: first and last from the form (one field), first only from
-   *  the chat. The email prints it whole — the office is not greeting her. */
+  /** The whole name, capitalized (lib/name-case.ts). */
   firstName: string | null;
   phone: string | null;
   email: string | null;
   preferredCenter: string | null;
   bestTime: string | null;
   note: string | null;
+  referredBy?: string | null;
   sourcePage: string | null;
-  /** Whether she agreed to texts (lib/sms-consent.ts). The office texts from
-   *  the same Dialpad lines, so the email says it plainly either way. */
+  /** Whether she agreed to texts (lib/sms-consent.ts). */
   smsConsent: boolean;
   /** The hidden spam-trap field was filled in — almost certainly a bot. */
   honeypotFilled: boolean;
 };
 
-/** Right-aligned label column so the block reads as a form on a phone. */
-function line(label: string, value: string | null | undefined): string | null {
-  if (!value) return null;
-  return `${label.padEnd(11)}${value}`;
+function staffLead(lead: LeadDetails): StaffLead {
+  return {
+    source: lead.source,
+    intent: lead.intent,
+    name: lead.firstName?.trim() || "No name given",
+    phone: lead.phone,
+    email: lead.email,
+    preferredCenter: lead.preferredCenter,
+    bestTime: lead.bestTime,
+    smsConsent: lead.smsConsent,
+    sourcePage: lead.sourcePage,
+    details: {
+      helpingWho: lead.helpingWho,
+      concerns: lead.concerns,
+      note: lead.note,
+      referredBy: lead.referredBy ?? null,
+    },
+    honeypotFilled: lead.honeypotFilled,
+  };
 }
 
-const SOURCE_LABEL: Record<LeadDetails["source"], string> = {
-  form: "the contact form",
-  chat: "the site assistant (chat)",
-};
-
-/** Said first when the row of record failed to save: the email is then the
- *  only copy, and the visitor was shown an error with the phone number. */
-const NOT_SAVED_BANNER = [
-  "!! NOT SAVED IN SUPABASE — this email is the only copy of this lead.",
-  "!! The visitor was shown an error and asked to call. They may call or",
-  "!! submit again; please reach out either way.",
-  "",
-];
-
-/**
- * Where the saved request lives. Derived from SUPABASE_URL rather than a
- * further env var; falls back to naming the table when the URL is unset or
- * is not a hosted project ref.
- */
-function whereToRead(rowId: string | null): string | null {
-  if (!rowId) return null;
-  const ref = /^https:\/\/([a-z0-9-]+)\.supabase\.co\/?$/i.exec(
-    (process.env.SUPABASE_URL || "").trim()
-  )?.[1];
-  const place = ref
-    ? `https://supabase.com/dashboard/project/${ref}/editor (table consultation_requests)`
-    : "Supabase → Table Editor → consultation_requests";
-  return `Saved request: ${rowId}\n${place}`;
-}
-
-/** The last lines of every notification: where it came from and why it
- *  reached this inbox, so a misrouted lead can be traced from the email. */
-function footer(sourcePage: string | null, recipients: Recipients): string[] {
-  return [
-    `Page they came from: ${sourcePage ?? "(not recorded)"}`,
-    `Received: ${new Date().toISOString()}`,
-    `Routed by: ${recipients.envVar ?? "(nothing set)"} (rule: ${recipients.route})`,
-  ];
-}
-
-/**
- * Tells the routed inbox that someone is waiting for a call, and gives them
- * everything they need to make it.
- */
+/** The lead email, plus the RFC Message-ID it was given when it can be read
+ *  back (for the page-two update's threading). */
 export async function sendLeadNotification(
   lead: LeadDetails,
   recipients: Recipients,
-  subject: string
-): Promise<SendResult> {
-  // The form sends this email the moment the callback is saved — before it
-  // asks who the call is for, what's bringing them in, or for a note. Those
-  // three are optional and arrive, when they arrive, on the saved request;
-  // there is deliberately no second email (one lead, one message, one row).
-  // The chat asks everything first, so a chat lead has them all here.
-  const laterStep = lead.source === "form";
-  const text = [
-    ...(lead.rowId ? [] : NOT_SAVED_BANNER),
-    lead.intent === "more_info"
-      ? `New request for more information via ${SOURCE_LABEL[lead.source]} (not ready to book).`
-      : `New call request via ${SOURCE_LABEL[lead.source]}.`,
-    lead.honeypotFilled
-      ? "Spam check: the hidden field was filled in — probably a bot."
-      : null,
-    "",
-    line("Name:", lead.firstName),
-    line("Phone:", lead.phone),
-    line("Email:", lead.email ?? "(not given)"),
-    line("Center:", lead.preferredCenter ?? "(not given)"),
-    line("Best time:", lead.bestTime ?? "(not given)"),
-    line(
-      "Texts:",
-      lead.smsConsent
-        ? "OK to text (consent recorded on the saved request)"
-        : "NO consent to text — call or email only"
-    ),
-    line("For:", lead.helpingWho ?? (laterStep ? "(not yet given)" : "(not given)")),
-    line(
-      "Concerns:",
-      lead.concerns.length
-        ? lead.concerns.join(", ")
-        : laterStep
-          ? "(none chosen yet)"
-          : "(none chosen)"
-    ),
-    "",
-    "In their own words:",
-    lead.note ?? (laterStep ? "(nothing added yet)" : "(nothing added)"),
-    "",
-    laterStep && lead.rowId
-      ? "The form asks who the call is for, what's bringing them in, and for a note AFTER this email is sent, and those answers are optional. Anything they add is on the saved request below — there is no second email."
-      : null,
-    whereToRead(lead.rowId),
-    "",
-    lead.email
-      ? "Reply to this email to reach them directly."
-      : "No email was given — phone is the only way to reach them.",
-    ...footer(lead.sourcePage, recipients),
-  ]
-    .filter((l): l is string => l !== null)
-    .join("\n");
-
-  return deliver({ recipients, subject, text, replyTo: lead.email });
+  subject: string,
+  now: Date = new Date()
+): Promise<SendResult & { rfcMessageId: string | null }> {
+  const { html, text } = staffNotification({
+    lead: staffLead(lead),
+    route: recipients.route,
+    envVar: recipients.envVar,
+    saved: savedLink(lead.rowId),
+    now,
+  });
+  const result = await deliver({
+    to: recipients.to,
+    cc: recipients.cc,
+    subject,
+    html,
+    text,
+    replyTo: lead.email,
+  });
+  const rfcMessageId = result.status === "sent" ? await rfcMessageIdOf(result.messageId) : null;
+  return { ...result, rfcMessageId };
 }
+
+/* ------------------------------------------------------------------ */
+/* 2. Page-two update                                                  */
+/* ------------------------------------------------------------------ */
 
 /**
- * Tells the guide inbox that someone asked for the guide. Deliberately not
- * shaped like a callback: nobody phones someone who only wanted a PDF, and the
- * body keeps saying so. The address is included so it can be added to a
- * follow-up list without a trip to Supabase.
+ * "Details added" — to the original's recipients, threaded under it when
+ * its Message-ID is known. `originalSent` false: #1 never went, so this
+ * carries the whole lead and starts its own thread (no "Re: ").
  */
-export async function sendGuideNotification(
-  guide: { email: string; sourcePage: string | null; rowId: string | null },
-  recipients: Recipients,
-  subject: string
-): Promise<SendResult> {
-  const text = [
-    ...(guide.rowId ? [] : NOT_SAVED_BANNER),
-    `Someone asked for the guide, ${GUIDE_TITLE}.`,
-    "",
-    "This is a download request, not a callback — no name or phone was",
-    "collected, and nobody is expecting a call.",
-    "",
-    line("Email:", guide.email),
-    "",
-    whereToRead(guide.rowId),
-    "Reply to this email to reach them directly.",
-    ...footer(guide.sourcePage, recipients),
-  ]
-    .filter((l): l is string => l !== null)
-    .join("\n");
-
-  return deliver({ recipients, subject, text, replyTo: guide.email });
+export async function sendDetailsUpdate(input: {
+  lead: LeadDetails;
+  recipients: Pick<Recipients, "route" | "envVar" | "to" | "cc">;
+  subject: string;
+  originalSent: boolean;
+  originalMessageId: string | null;
+  now?: Date;
+}): Promise<SendResult> {
+  const { lead, recipients, subject, originalSent, originalMessageId, now = new Date() } = input;
+  const { html, text } = detailsUpdate({
+    lead: staffLead(lead),
+    route: recipients.route,
+    envVar: recipients.envVar,
+    saved: savedLink(lead.rowId),
+    now,
+    originalSent,
+  });
+  return deliver({
+    to: recipients.to,
+    cc: recipients.cc,
+    subject: originalSent ? replySubject(subject) : subject,
+    html,
+    text,
+    replyTo: lead.email,
+    headers: originalSent ? threadHeaders(originalMessageId) : {},
+  });
 }
+
+/* ------------------------------------------------------------------ */
+/* 3. Visitor confirmation                                             */
+/* ------------------------------------------------------------------ */
+
+export async function sendVisitorConfirmation(input: {
+  to: string;
+  replyTo: string | null;
+  content: Parameters<typeof visitorConfirmation>[0];
+}): Promise<SendResult> {
+  const { html, text } = visitorConfirmation(input.content);
+  return deliver({ to: input.to, subject: VISITOR_SUBJECT, html, text, replyTo: input.replyTo });
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Guide download                                                   */
+/* ------------------------------------------------------------------ */
+
+export async function sendGuideNotification(
+  guide: { email: string; sourcePage: string | null; rowId: string | null; guideTitle: string },
+  recipients: Recipients,
+  subject: string,
+  now: Date = new Date()
+): Promise<SendResult> {
+  const { html, text } = guideNotification({
+    email: guide.email,
+    guideTitle: guide.guideTitle,
+    sourcePage: guide.sourcePage,
+    envVar: recipients.envVar,
+    route: recipients.route,
+    saved: savedLink(guide.rowId),
+    now,
+  });
+  return deliver({ to: recipients.to, cc: recipients.cc, subject, html, text, replyTo: guide.email });
+}
+
+export type { Details };

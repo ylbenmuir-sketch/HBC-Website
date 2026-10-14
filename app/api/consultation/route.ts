@@ -9,9 +9,13 @@ import {
 import {
   sendGuideNotification,
   sendLeadNotification,
+  sendVisitorConfirmation,
   type LeadDetails,
   type SendResult,
 } from "@/lib/lead-notification";
+import { shouldEmailVisitor, visitorReplyTo } from "@/lib/email/format";
+import { visitorContent } from "@/lib/email/visitor-content";
+import { GUIDE_TITLE } from "@/lib/site-config";
 import { notificationSubject, routeLead, type Recipients } from "@/lib/lead-routing";
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { sendConfirmationText } from "@/lib/sms-confirmation";
@@ -82,9 +86,13 @@ function looksLikeEmail(value: string): boolean {
  *   2. email    — the lead itself, to the inbox lib/lead-routing.ts names.
  *      platform — the inquiry on the front desk's Follow-ups screen.
  *                 These two run side by side.
- *   3. the row is stamped with where the email went (notify_* columns), so
+ *   3. the row is stamped with where the email went (notify_* columns, and
+ *      the delivered Message-ID the page-two update threads under), so
  *      every lead can be audited against its route later.
- *   4. the confirmation text, only on a saved row and only with consent.
+ *   4. the visitor's confirmation email (lib/email/format.ts →
+ *      shouldEmailVisitor) and the confirmation text (only with consent),
+ *      side by side, only on a saved row. Each is written down on the row
+ *      and neither can change what the visitor is told.
  *
  * What the visitor is told follows the row alone. Saved → success, whatever
  * the email or the text did; their failures are logged against the row's id
@@ -154,20 +162,21 @@ async function notifyOffice(
   lead: LeadDetails | null,
   recipients: Recipients,
   subject: string
-): Promise<SendResult> {
+): Promise<SendResult & { rfcMessageId: string | null }> {
   const leadId = (guide ?? lead)?.rowId ?? "NOT-SAVED";
-  let result: SendResult;
+  let result: SendResult & { rfcMessageId: string | null };
   try {
     result = guide
-      ? await sendGuideNotification(guide, recipients, subject)
+      ? { ...(await sendGuideNotification({ ...guide, guideTitle: GUIDE_TITLE }, recipients, subject)), rfcMessageId: null }
       : lead
         ? await sendLeadNotification(lead, recipients, subject)
-        : { status: "not_configured", messageId: null, error: "nothing to send" };
+        : { status: "not_configured", messageId: null, error: "nothing to send", rfcMessageId: null };
   } catch (err) {
     result = {
       status: "failed",
       messageId: null,
       error: `threw: ${err instanceof Error ? err.name : "unknown error"}`,
+      rfcMessageId: null,
     };
   }
   const where = `route=${recipients.route} env=${recipients.envVar ?? "none"} lead=${leadId}`;
@@ -187,7 +196,7 @@ async function notifyOffice(
 async function recordRouting(
   rowId: string,
   recipients: Recipients,
-  result: SendResult
+  result: SendResult & { rfcMessageId: string | null }
 ): Promise<void> {
   const supabase = supabaseAdmin();
   if (!supabase) return;
@@ -202,6 +211,7 @@ async function recordRouting(
         notify_status: result.status,
         notify_message_id: result.messageId,
         notify_error: result.error,
+        notify_rfc_message_id: result.rfcMessageId,
       })
       .eq("id", rowId);
     if (error) {
@@ -217,6 +227,49 @@ async function recordRouting(
         err instanceof Error ? `${err.name}: ${err.message}` : "unknown error"
       }`
     );
+  }
+}
+
+/**
+ * The visitor's "We got your request" email, written down on her row like
+ * the notification. Never throws; a failure is logged and stored, and the
+ * response she gets does not change.
+ */
+async function confirmToVisitor(
+  rowId: string,
+  email: string,
+  name: string | null,
+  recipients: Recipients
+): Promise<void> {
+  let result: SendResult;
+  try {
+    result = await sendVisitorConfirmation({
+      to: email,
+      replyTo: visitorReplyTo(recipients),
+      content: visitorContent(name, recipients.route),
+    });
+  } catch (err) {
+    result = { status: "failed", messageId: null, error: `threw: ${err instanceof Error ? err.name : "unknown error"}` };
+  }
+  if (result.status === "sent") {
+    console.log(`[destination: visitor email] sent lead=${rowId} resend_id=${result.messageId ?? "?"}`);
+  } else {
+    console.error(`[destination: visitor email] NOT sent (${result.status}) lead=${rowId} error="${result.error}"`);
+  }
+  const supabase = supabaseAdmin();
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from("consultation_requests")
+      .update({
+        confirm_email_status: result.status,
+        confirm_email_message_id: result.messageId,
+        confirm_email_error: result.error,
+      })
+      .eq("id", rowId);
+    if (error) console.error(`[visitor email record] lead=${rowId} not stamped: ${error.message}`);
+  } catch (err) {
+    console.error(`[visitor email record] lead=${rowId} not stamped: ${err instanceof Error ? err.name : "unknown error"}`);
   }
 }
 
@@ -435,21 +488,33 @@ export async function POST(request: Request) {
   await recordRouting(savedRowId, recipients, notified);
 
   // ── 4. Tell her it landed ──────────────────────────────────────────────
-  // Only if she agreed to texts. Without consent there is no text at all —
-  // not even this one; the call is how she hears from us.
-  //
-  // Last, after the row exists: the text says "we got your request", which
-  // is only true once the record does. A failed text changes nothing about
-  // the response.
-  if (lead && firstName && phone && smsConsent) {
-    await sendConfirmationText({
-      name: firstName,
-      phone,
-      preferredCenter,
-      honeypot,
-      leadId: savedRowId,
-    });
-  }
+  // By email whenever she gave an address (never for a guide download), and
+  // by text only if she agreed to texts — without consent there is no text
+  // at all. Last, after the row exists: both say "we got your request",
+  // which is only true once the record does. Side by side, awaited (a
+  // serverless runtime may stop the moment the response returns), and
+  // neither can change the response.
+  await Promise.all([
+    email &&
+    shouldEmailVisitor({
+      type: isGuide ? "guide" : "consultation",
+      intent: intent as "book" | "more_info",
+      email,
+      saved: true,
+      honeypotFilled: honeypot.trim().length > 0,
+    })
+      ? confirmToVisitor(savedRowId, email, firstName, recipients)
+      : null,
+    lead && firstName && phone && smsConsent
+      ? sendConfirmationText({
+          name: firstName,
+          phone,
+          preferredCenter,
+          honeypot,
+          leadId: savedRowId,
+        })
+      : null,
+  ]);
 
   // The id is what the form's second step needs, and nothing else: an
   // unguessable uuid v4 that names one row and can change three columns of it.
