@@ -12,11 +12,13 @@
  * `/api/` is disallowed in robots.txt; that is fine — this path is never the
  * public URL, only the rewrite's internal destination.
  */
+import { SITE_NAME, SITE_URL } from "@/lib/site-config";
+
 export const dynamic = "force-static";
 
 export function GET() {
   return new Response(
-    "This page has been removed and is not coming back. Harmonized Brain Centers: https://harmonizedbraincenterstn.com/\n",
+    `This page has been removed and is not coming back. ${SITE_NAME}: ${SITE_URL}/\n`,
     {
       status: 410,
       headers: {

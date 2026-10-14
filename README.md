@@ -1045,8 +1045,11 @@ Also replace when assets exist:
 - **Sample testimonials** — every quote on `/`, `/stories`, and the location
   pages is sample copy; the "sample copy" notes must remain until each quote
   is verified.
-- **Location map** — the sage map placeholder on `/locations/[slug]` awaits an
-  embedded map (muted sage style) once addresses are confirmed.
+- **Location map** — the sage map placeholder on `/locations/nashville` and
+  `/locations/franklin` awaits an embedded map (muted sage style). Murfreesboro
+  fills that slot with the building seen from the street (`arrivalPhoto` in
+  `lib/locations.ts`, 2026-10-14) — its job is recognition, not decoration, so
+  it sits beside "Getting here" rather than in the hero.
 
 ## The Brain Map imagery (temporary swap)
 
@@ -1112,6 +1115,10 @@ them, and the build stops asking for the claim. Then re-run `check:cwv` on
   iframe.
 
 ## Deploying to Vercel
+
+The cutover itself — what was verified, what is still inert, and the DNS,
+Search Console and Bing steps in order — is `LAUNCH-CHECKLIST.md` (2026-10-14).
+The list below is the one-time project setup.
 
 1. Push the repo to GitHub/GitLab.
 2. [vercel.com/new](https://vercel.com/new) → import the repo (framework
