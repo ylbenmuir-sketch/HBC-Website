@@ -198,6 +198,9 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
   return body;
 }
 
+/** The "off" line is logged once per server instance, not once per lead. */
+let loggedUnconfigured = false;
+
 /**
  * Deliver one inquiry to the platform. NEVER throws and never rejects: every
  * caller runs after the Supabase row is committed, so the visitor's submission
@@ -210,20 +213,21 @@ export async function forwardInquiry(
   const apiBase = process.env.INQUIRY_API_BASE;
 
   if (!secret || !apiBase) {
-    // Loud on first use, by name, so a half-configured deploy is obvious in
-    // the Vercel log the first time a real parent submits. The email path
-    // below this call still runs — the inquiry is not lost, it is only late.
-    const missing = [
-      !apiBase ? "INQUIRY_API_BASE" : null,
-      !secret ? "INQUIRY_INTAKE_SECRET" : null,
-    ]
-      .filter(Boolean)
-      .join(" and ");
-    console.error(
-      `[destination: platform] NOT forwarded — ${missing} not set. ` +
-        "Set the variable(s) in Vercel to turn platform delivery on; the other " +
-        "destinations are unaffected."
-    );
+    // Switched OFF on purpose (Ben, 2026-10-15): the two variables stay
+    // unset until the HBC app is finished. Skip cleanly — no effect on the
+    // lead, the emails or the visitor — and say so once per server
+    // instance, quietly, rather than as an error on every lead. Setting both
+    // variables again turns delivery back on with no other change.
+    if (!loggedUnconfigured) {
+      loggedUnconfigured = true;
+      const missing = [
+        !apiBase ? "INQUIRY_API_BASE" : null,
+        !secret ? "INQUIRY_INTAKE_SECRET" : null,
+      ]
+        .filter(Boolean)
+        .join(" and ");
+      console.info(`[destination: platform] off — ${missing} not set; skipping.`);
+    }
     return { ok: false, reason: "unconfigured" };
   }
 

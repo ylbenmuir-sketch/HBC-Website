@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   CENTER_UNSPECIFIED,
   HELPING_OPTIONS,
@@ -22,6 +22,9 @@ import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
 import { CONSENT_TEXT_MAX } from "@/lib/sms-consent";
 import { capitalizeName } from "@/lib/name-case";
+import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notification";
+import { supabaseHeldStore } from "@/lib/held-notification-store";
+import { sweepDue } from "@/lib/release-job";
 
 export const runtime = "nodejs";
 
@@ -84,6 +87,11 @@ function looksLikeEmail(value: string): boolean {
  *   1. supabase — the row of record, written FIRST. Nothing is emailed or
  *                 texted before this has answered.
  *   2. email    — the lead itself, to the inbox lib/lead-routing.ts names.
+ *                 A contact-form lead's is HELD instead (Ben, 2026-10-15)
+ *                 and sent once, with page two in it, when she saves or
+ *                 skips page two or after two minutes — but only while
+ *                 the release job is demonstrably running; otherwise it
+ *                 goes here as before (lib/held-notification.ts).
  *      platform — the inquiry on the front desk's Follow-ups screen.
  *                 These two run side by side.
  *   3. the row is stamped with where the email went (notify_* columns, and
@@ -186,6 +194,47 @@ async function notifyOffice(
     console.error(`[destination: email] NOT sent (${result.status}) ${where} error="${result.error}"`);
   }
   return result;
+}
+
+/**
+ * Step 2a: hold a form lead's staff notification instead of sending it
+ * (lib/held-notification.ts). True only when the hold was decided AND
+ * written; false means "send it now", and the log says why. Never throws.
+ */
+async function holdNotification(
+  rowId: string,
+  lead: LeadDetails,
+  recipients: Recipients
+): Promise<boolean> {
+  if (lead.source !== "form") return false;
+  const cronSecretSet = Boolean(process.env.CRON_SECRET?.trim());
+  const env = holdEnv();
+  // The heartbeat is read only when it could matter.
+  const heartbeat = cronSecretSet && !lead.honeypotFilled
+    ? await supabaseHeldStore.heartbeat(`${RELEASE_JOB}:${env}`)
+    : null;
+  const now = new Date();
+  const decision = shouldHold({
+    type: "consultation",
+    source: lead.source,
+    saved: true,
+    honeypotFilled: lead.honeypotFilled,
+    cronSecretSet,
+    heartbeat,
+    now,
+  });
+  if (!decision.hold) {
+    console.log(`[held notification] not held lead=${rowId} — ${decision.reason}; sending at step one`);
+    return false;
+  }
+  const ok = await supabaseHeldStore.hold(rowId, {
+    until: new Date(now.getTime() + holdMs()),
+    env,
+    recipients,
+  });
+  if (ok) console.log(`[held notification] held lead=${rowId} env=${env} for ${Math.round(holdMs() / 1000)} s`);
+  else console.error(`[held notification] hold failed lead=${rowId} — sending at step one`);
+  return ok;
 }
 
 /**
@@ -457,23 +506,35 @@ export async function POST(request: Request) {
         honeypotFilled: honeypot.trim().length > 0,
       };
 
+  // The platform copy starts first and is never waited on by the hold
+  // decision below: holding the staff email must not delay or change it.
+  const forwarding = inquiry ? forwardInquiry(inquiry).then((r) => r.ok) : Promise.resolve(false);
+
+  // ── 2a. A form lead's staff email is HELD, not sent (Ben, 2026-10-15) ──
+  // It goes once, when she saves page two or skips it, or after two minutes
+  // (lib/held-notification.ts). Held only while the release job is
+  // demonstrably running; otherwise sent right here, as before.
+  const held = savedRowId !== null && lead !== null ? await holdNotification(savedRowId, lead, recipients) : false;
+
   const [notified, forwarded] = await Promise.all([
-    notifyOffice(
-      isGuide && email ? { email, sourcePage, rowId: savedRowId } : null,
-      lead,
-      recipients,
-      subject
-    ),
-    inquiry ? forwardInquiry(inquiry).then((r) => r.ok) : Promise.resolve(false),
+    held
+      ? null
+      : notifyOffice(
+          isGuide && email ? { email, sourcePage, rowId: savedRowId } : null,
+          lead,
+          recipients,
+          subject
+        ),
+    forwarding,
   ]);
 
   // ── Not saved: say so, with the number ─────────────────────────────────
   // Never a success the record cannot back up. Whatever else went out is
-  // named in the log so the lead can be found.
+  // named in the log so the lead can be found. (Never held: there is no row.)
   if (savedRowId === null) {
     console.error(
       `[submission] Supabase row NOT saved — visitor shown the error. Rescue copies: email ${
-        notified.status === "sent" ? `sent (resend_id=${notified.messageId ?? "?"}, route=${recipients.route})` : `NOT sent (${notified.error})`
+        notified?.status === "sent" ? `sent (resend_id=${notified.messageId ?? "?"}, route=${recipients.route})` : `NOT sent (${notified?.error ?? "not attempted"})`
       }${inquiry ? `, platform ${forwarded ? "accepted" : "NOT accepted"}` : ""}. Check the Supabase project (paused?).`
     );
     return NextResponse.json(
@@ -485,7 +546,8 @@ export async function POST(request: Request) {
   }
 
   // ── 3. Stamp the row with where the email went ─────────────────────────
-  await recordRouting(savedRowId, recipients, notified);
+  // (A held lead's route was stamped by the hold itself.)
+  if (notified) await recordRouting(savedRowId, recipients, notified);
 
   // ── 4. Tell her it landed ──────────────────────────────────────────────
   // By email whenever she gave an address (never for a guide download), and
@@ -515,6 +577,10 @@ export async function POST(request: Request) {
         })
       : null,
   ]);
+
+  // Anything overdue for this deployment goes out after this answers — a
+  // second chance should a cron tick run late. Never delays the response.
+  after(sweepDue);
 
   // The id is what the form's second step needs, and nothing else: an
   // unguessable uuid v4 that names one row and can change three columns of it.

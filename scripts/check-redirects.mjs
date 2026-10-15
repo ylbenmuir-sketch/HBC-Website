@@ -37,6 +37,9 @@ const ROWS = [
   // Pages (QUERY-TO-PAGE-MAP.md and SEO-AUDIT-2 §2.6).
   ["/home", "/", 301],
   ["/home-simple", "/", 301],
+  // WordPress's feed and Yoast's sitemap index (2026-10-15).
+  ["/feed", "/resources/feed.xml", 301],
+  ["/sitemap_index.xml", "/sitemap.xml", 301],
   ["/what-is-lens", "/lens-neurofeedback", 301],
   ["/lens-therapy", "/lens-neurofeedback", 301],
   ["/nashville_neurofeedback_therapy", "/locations/nashville", 301],

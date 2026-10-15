@@ -17,9 +17,10 @@ import ScannerText from "./ScannerText";
  *
  *   1. **Request your free call** — name (first and last, one field), phone,
  *      email, preferred center, best time. All but the time are required.
- *      Submit saves the row and sends the lead email at once. That email is
- *      the lead; nothing after this step is needed for the office to make
- *      the call.
+ *      Submit saves the row; nothing after this step is needed for the
+ *      office to make the call. The office's email is held (Ben,
+ *      2026-10-15) so it goes once, carrying step two: on Save, on Skip, or
+ *      after two minutes (lib/held-notification.ts).
  *   2. **Context** — who the call is for, what's bringing them in, a note,
  *      and who referred them (optional). PATCHes the row step one created
  *      (one lead, one record). Presented
@@ -319,7 +320,7 @@ export default function ContactForm({
     const nothingToSave =
       !helpingWho && selectedConcerns.length === 0 && !trimmedNote && !trimmedReferral;
     if (nothingToSave || !rowId) {
-      setStep("three");
+      skip();
       return;
     }
     setStatus("submitting");
@@ -343,6 +344,20 @@ export default function ContactForm({
     // confirmation is exactly four things) — the answers were optional, the
     // call is already requested, and the office asks on the phone.
     setStatus("idle");
+    setStep("three");
+  }
+
+  /* ── Skip: send the held staff email now, then the confirmation ────── */
+  // Step one HELD the office's email (lib/held-notification.ts) so it can
+  // carry page two. Skipping tells the server to send it now rather than at
+  // the two-minute mark. Fire-and-forget with keepalive: the visitor never
+  // waits on it, and if it never arrives the release job sends it anyway.
+  function skip() {
+    if (rowId) {
+      fetch(`/api/consultation/${rowId}/release`, { method: "POST", keepalive: true }).catch(() => {
+        console.warn("[contact] skip not reported (network) — the office is emailed at two minutes");
+      });
+    }
     setStep("three");
   }
 
@@ -390,13 +405,7 @@ export default function ContactForm({
     return (
       <StepPanel
         key="two"
-        eyebrow="Request received"
-        heading={
-          <>
-            {name ? `Hi ${name}, your` : "Your"} call is requested. A few
-            questions help us prepare for it.
-          </>
-        }
+        heading={<>Got it{name ? `, ${name}` : ""}. A few quick questions.</>}
       >
         {/* No "these questions are optional" panel here, on purpose: the
             lead is already saved and delivered before this renders, but the
@@ -471,7 +480,7 @@ export default function ContactForm({
             <button
               className="form-skip"
               type="button"
-              onClick={() => setStep("three")}
+              onClick={skip}
               disabled={status === "submitting"}
             >
               Skip for now

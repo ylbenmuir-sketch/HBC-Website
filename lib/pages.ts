@@ -271,8 +271,9 @@ export const staticPages: StaticPage[] = [
     title: "Privacy",
     description:
       "What the Harmonized Brain Centers website collects, what happens to it, and who else sees it. Nothing you tell us goes anywhere unless you ask us to send it.",
-    // 2026-10-14: the "Text messages" section (A2P 10DLC resubmission).
-    dateModified: "2026-10-14",
+    // 2026-10-15: rewritten from the code — every field, every service, the
+    // emails, the assistant's session, YouTube, the two carrier sentences.
+    dateModified: "2026-10-15",
     type: "WebPage",
     crumb: "Privacy",
   },

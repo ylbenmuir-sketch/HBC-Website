@@ -44,6 +44,18 @@ export const SMS_FREQUENCY = "Msg frequency varies.";
 export const SMS_RATES = "Msg & data rates may apply.";
 export const SMS_HELP_STOP = "Reply HELP for help, STOP to cancel.";
 
+/**
+ * The two sentences carriers look for in a privacy policy during A2P 10DLC
+ * review (Ben, 2026-10-15), verbatim. Each must reach the raw HTML of
+ * /privacy-policy as ONE unbroken string — which is why each is a single
+ * constant rendered as a single JSX expression, never split across text and
+ * markup (see components/ScannerText.tsx for the same rule on /contact).
+ */
+export const SMS_NO_SHARING_SENTENCE =
+  "No mobile information will be shared with third parties or affiliates for marketing or promotional purposes.";
+export const SMS_OPT_IN_DATA_SENTENCE =
+  "Text messaging originator opt-in data and consent will not be shared with any third parties.";
+
 /* ------------------------------------------------------------------ */
 /* The consent wording                                                 */
 /* ------------------------------------------------------------------ */

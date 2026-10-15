@@ -127,8 +127,15 @@ const emails = [
   },
 ];
 
+// The visitor email's thumbnail is an absolute URL on the live domain
+// (lib/email/visitor-content.ts), which may not serve it yet; the preview
+// loads the committed file instead, so the image is measured at its real
+// height.
+const { SITE_URL } = await import(`${ROOT}/lib/site-config.ts`);
+const localAssets = (html) => html.replaceAll(`${SITE_URL}/email/`, pathToFileURL(join(ROOT, "public/email")).href + "/");
+
 for (const e of emails) {
-  writeFileSync(join(OUT, `${e.file}.html`), e.html);
+  writeFileSync(join(OUT, `${e.file}.html`), localAssets(e.html));
   writeFileSync(join(OUT, `${e.file}.txt`), `Subject: ${e.subject}\n\n${e.text}\n`);
 }
 
@@ -141,6 +148,7 @@ for (const e of emails) {
   for (const width of [390, 640]) {
     await page.setViewport(width, 844);
     await page.goto(url, { settle: 200 });
+    await page.eval(`Promise.all([...document.images].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })))`);
     // The email's own extent — scrollHeight would report the viewport.
     const height = await page.eval(`Math.ceil(document.querySelector("table.hbc-bg").getBoundingClientRect().bottom)`);
     const overflowX = await page.eval(`document.documentElement.scrollWidth > innerWidth`);

@@ -1,15 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { rfcMessageIdOf, sendDetailsUpdate, type SendResult } from "@/lib/lead-notification";
 import { notificationSubject, routeLead, type RouteName } from "@/lib/lead-routing";
 import { HELPING_OPTIONS, concernList, str, supabaseAdmin } from "@/lib/consultation";
+import { onPageTwoSaved, type HoldState } from "@/lib/held-notification";
+import { sendHeldRow, supabaseHeldStore } from "@/lib/held-notification-store";
+import { sweepDue } from "@/lib/release-job";
 
 export const runtime = "nodejs";
 
 /**
  * PATCH /api/consultation/<id> — the contact form's optional second step.
  *
- * Step one (POST ../route.ts) saved the callback and sent the lead email;
+ * Step one (POST ../route.ts) saved the callback (and, for a form lead,
+ * usually HELD the staff email rather than sending it — see below);
  * this adds who the call is for, what's bringing them in, and a note to
  * **that same row**. One lead, one record: it never inserts.
  *
@@ -22,10 +26,13 @@ export const runtime = "nodejs";
  * touched: a chat row has these answers already and no browser was ever
  * handed its id.
  *
- * ## A threaded "Details added" email; a second platform post
+ * ## One staff email; a second platform post
  *
- * The lead email went at step one. When page two is SAVED (Skip sends no
- * PATCH, so nothing), this sends "Details added" to the same recipients —
+ * While the staff email is still HELD (lib/held-notification.ts), saving page
+ * two sends it — once, with these details in it. ("Skip for now" sends it
+ * through ./release instead.) Only when it has ALREADY gone out — sent at
+ * step one because the release job was not running, or by the job after
+ * two minutes — does a save send the update: "Details added" to the same recipients —
  * read off the row's notify_* columns — with the same subject plus "Re: "
  * and In-Reply-To / References naming the original's Message-ID, so it
  * lands in the same Gmail thread (Ben, 2026-10-14). If the original failed
@@ -68,6 +75,9 @@ type UpdatedRow = {
   notify_message_id: string | null;
   notify_rfc_message_id: string | null;
 };
+
+const ROW_COLUMNS =
+  "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent, source_page, notify_route, notify_env, notify_to, notify_cc, notify_status, notify_message_id, notify_rfc_message_id";
 
 const ROUTES = new Set<RouteName>(["guide", "more_info", "concierge", "nashville", "murfreesboro", "fallback"]);
 
@@ -259,7 +269,7 @@ export async function PATCH(
       .eq("type", "consultation")
       .eq("source", "form")
       .select(
-        "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent, source_page, notify_route, notify_env, notify_to, notify_cc, notify_status, notify_message_id, notify_rfc_message_id"
+        ROW_COLUMNS
       );
     if (error) {
       // `message` and `code` only — never `details`, where Postgres echoes values.
@@ -298,13 +308,45 @@ export async function PATCH(
       .join(", ")}`
   );
 
-  // The "Details added" email, threaded under the lead email. Awaited, never
-  // thrown — the visitor's answer below does not depend on it.
+  // The staff email (Ben, 2026-10-15: one per form lead). Still held → it
+  // goes now, ONCE, with these details in it. Already sent → the threaded
+  // "Details added" update, as before. Mid-send → wait for it, then the
+  // update. lib/held-notification.ts → onPageTwoSaved has the cases.
+  // Awaited, never thrown — the visitor's answer below does not depend on it.
+  const savedRow = row;
   try {
-    await emailDetails(row, supabase);
+    // Read on its own, after this save committed, rather than in the
+    // UPDATE's select: a database without migration 0009 answers undefined
+    // here (→ the old path) instead of failing the save. Any claim that
+    // happened before this read but after the save carries the details.
+    const holdState: HoldState | null = (await supabaseHeldStore.state(savedRow.id)) ?? null;
+    const outcome = await onPageTwoSaved(
+      supabaseHeldStore,
+      sendHeldRow,
+      savedRow.id,
+      holdState,
+      async () => {
+        // Re-read: a send that finished while this waited has changed the
+        // notify_* columns the update threads under.
+        const { data } = await supabase.from("consultation_requests").select(ROW_COLUMNS).eq("id", savedRow.id);
+        // A held email claimed in the moment between this save and the
+        // state read above already carried these details: no update.
+        if (holdState !== null) {
+          const { data: sent } = await supabase
+            .from("consultation_requests")
+            .select("notify_had_details")
+            .eq("id", savedRow.id)
+            .maybeSingle();
+          if (sent?.notify_had_details === true) return;
+        }
+        await emailDetails((data?.[0] as UpdatedRow | undefined) ?? savedRow, supabase);
+      }
+    );
+    console.log(`[details] lead=${savedRow.id} staff email: ${outcome}`);
   } catch (err) {
-    console.error(`[details email] lead=${row.id} threw: ${err instanceof Error ? err.name : "unknown error"}`);
+    console.error(`[details email] lead=${savedRow.id} threw: ${err instanceof Error ? err.name : "unknown error"}`);
   }
+  after(sweepDue);
 
   // The enriched inquiry, re-posted as a labelled update. Awaited, never
   // thrown; forwardInquiry logs its own outcome. No honeypot at this step —

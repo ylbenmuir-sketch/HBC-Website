@@ -50,6 +50,25 @@
  * and a text goes out only on a yes — an unticked box, a "no" in the chat or
  * a forged `sms_consent: true` send NOTHING.
  *
+ * ## The held staff email (Ben, 2026-10-15; lib/held-notification.ts)
+ *
+ * Two modes, chosen by whether CRON_SECRET is set for this check:
+ *
+ *   fail-safe (CRON_SECRET unset — the server's must be unset too): the
+ *          release job cannot run, so step one sends the staff email at
+ *          once, exactly as before the hold existed. Every assertion below
+ *          is this mode's.
+ *   hold   (CRON_SECRET set, the SAME value on the server, plus
+ *          LEAD_HOLD_MS=45000 there; needs migration 0009 on the project):
+ *          this check calls /api/cron/release-held-leads every 10 s as
+ *          Vercel Cron would, so the server's heartbeat is fresh and step one
+ *          HOLDS. Then: no staff email before step two; save → ONE email
+ *          carrying the details and no "Details added"; skip → ONE email at
+ *          once; leave → ONE email from the job at the hold mark; and a
+ *          late page-two save after the job sent it → the threaded
+ *          "Details added". Server rows are scoped to LEAD_HOLD_ENV (default
+ *          "local"), so the job never touches a real lead.
+ *
  * For every submission it asserts:
  *
  *   - exactly ONE row in consultation_requests, with the right columns —
@@ -142,6 +161,11 @@ if (!MOCK_LOG || !PLATFORM_LOG || !SMS_LOG) {
   console.error("MOCK_RESEND_LOG, MOCK_PLATFORM_LOG and MOCK_SMS_LOG must be set — the server must be started with scripts/contact-flow/mock-resend.mjs preloaded (see the header).");
   process.exit(1);
 }
+
+/** Hold mode (see the header): the job's secret, the same as the server's. */
+const CRON_SECRET = env.CRON_SECRET?.trim() || null;
+const HOLD = Boolean(CRON_SECRET);
+const HOLD_WAIT_MS = 45_000 + 25_000;
 
 /** "E2E-x-save-320 Tester" → "E2E-x-save-320": what every greeting must use (lib/first-name.ts). */
 const firstWord = (name) => name.trim().split(/\s+/)[0];
@@ -322,7 +346,8 @@ function expectEmail(name, row, { center, consent, source = "the contact form" }
   expect(`${name}: email's first line says "New call request"${channel === "chat" ? " … via chat" : ""}`, text.startsWith("NEW CALL REQUEST · ") && text.split("\n")[0].includes("via chat") === (channel === "chat"), JSON.stringify(text.split("\n")[0]));
   expect(`${name}: email carries the name whole and the phone formatted`, text.includes(`\n${name}\n`) && text.includes("(000) 000-0000"), JSON.stringify(text.slice(0, 200)));
   expect(`${name}: email has Call (tel:) and Reply (mailto:) buttons`, /href="tel:\+10000000000"[^>]*>Call</.test(html) && /href="mailto:[^"]+"[^>]*>Reply</.test(html));
-  if (row) expect(`${name}: email points at the saved row`, text.includes(`Saved request: ${row.id}`));
+  if (row) expect(`${name}: email points at the saved row`, /^Open saved request: \S+$/m.test(text) && text.includes(row.id));
+  expect(`${name}: footer has no routing rule and no request id line`, !/Routed by|rule:|^Request /m.test(text + html), JSON.stringify(text.slice(-200)));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
   const textsLine = text.split("\n").find((l) => l.startsWith("Texts OK?:")) ?? null;
   expect(`${name}: email says Texts OK? ${consent ? "Yes" : "No"}`, consent ? / Yes$/.test(textsLine ?? "") : / No — call or email only$/.test(textsLine ?? ""), JSON.stringify(textsLine));
@@ -348,12 +373,12 @@ function expectVisitorEmail(name, address, { center, source = "form" }) {
   if (!e) return;
   const route = routeOf(center, source);
   const line = route === "nashville" || route === "murfreesboro"
-    ? `Someone from our ${route === "nashville" ? "Nashville" : "Murfreesboro"} center will call you soon.`
-    : "Someone from our team will call you soon.";
+    ? `Someone from our ${route === "nashville" ? "Nashville" : "Murfreesboro"} center will call.`
+    : "Someone from our team will call.";
   const tel = route === "murfreesboro" ? "tel:+16152032650" : "tel:+16153318762";
-  expect(`${name}: visitor email says "Thanks, ${firstWord(name)}." and "${line}"`, e.body.text.startsWith(`Thanks, ${firstWord(name)}.\n${line}`), JSON.stringify(e.body.text.slice(0, 120)));
+  expect(`${name}: visitor email says "Thanks, ${firstWord(name)}. We’ll call you soon." and "${line}"`, e.body.text.startsWith(`Thanks, ${firstWord(name)}. We’ll call you soon.\n${line}`), JSON.stringify(e.body.text.slice(0, 120)));
   expect(`${name}: visitor email Reply-To is ${inboxFor(center, source)} (the route's first address)`, e.body.reply_to === inboxFor(center, source), String(e.body.reply_to));
-  expect(`${name}: visitor email has the center's tap-to-call and the video link`, e.body.html.includes(`href="${tel}"`) && e.body.html.includes("youtube.com/watch?v=FCUyUqzE3Dk"));
+  expect(`${name}: visitor email has the center's tap-to-call, and the video as a hosted thumbnail linked to /watch/first-visit`, e.body.html.includes(`href="${tel}"`) && /<a href="[^"]*\/watch\/first-visit"[^>]*><img src="[^"]*\/email\/first-visit\.jpg"/.test(e.body.html) && e.body.html.includes("Watch: what your first visit looks like") && !e.body.html.includes("youtube.com"));
   expect(`${name}: visitor email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
 }
 
@@ -367,7 +392,7 @@ function expectUpdateEmail(name, row, { center, note, referredBy }) {
   expect(`${name}: update subject is "Re: " + the original's`, u.body.subject === `Re: ${original.body.subject}`, u.body.subject);
   expect(`${name}: update goes to the original's recipients`, JSON.stringify(u.body.to) === JSON.stringify(original.body.to) && JSON.stringify(u.body.cc ?? []) === JSON.stringify(original.body.cc ?? []), JSON.stringify([u.body.to, original.body.to]));
   expect(`${name}: update's In-Reply-To and References name the original's Message-ID`, u.body.headers?.["In-Reply-To"] === row.notify_rfc_message_id && u.body.headers?.References === row.notify_rfc_message_id && Boolean(row.notify_rfc_message_id), JSON.stringify([u.body.headers, row.notify_rfc_message_id]));
-  expect(`${name}: update carries the answers`, u.body.text.startsWith(`DETAILS ADDED · ${center}`) && u.body.text.includes(note) && u.body.text.includes(`Referred by: ${referredBy}`), JSON.stringify(u.body.text.slice(0, 300)));
+  expect(`${name}: update carries the answers`, u.body.text.startsWith(`DETAILS ADDED · ${center}`) && u.body.text.includes(note) && (referredBy === null || u.body.text.includes(`Referred by: ${referredBy}`)), JSON.stringify(u.body.text.slice(0, 300)));
 }
 
 /**
@@ -437,6 +462,63 @@ function expectForward(name, { center, consent, whoFor = null, updated = null })
   }
 }
 
+/* ── the held staff email (hold mode only) ───────────────────────────────── */
+
+/** Poll until `fn()` is truthy or the time is up; resolves to the last value. */
+async function waitFor(fn, ms) {
+  const t0 = Date.now();
+  let v = await fn();
+  while (!v && Date.now() - t0 < ms) {
+    await sleep(500);
+    v = await fn();
+  }
+  return v;
+}
+
+/** The release job, called as Vercel Cron calls it. */
+async function tick() {
+  const res = await fetch(`${BASE}/api/cron/release-held-leads`, { headers: { authorization: `Bearer ${CRON_SECRET}` } }).catch(() => null);
+  return res?.status ?? 0;
+}
+
+/** Hold mode: the row says who sent its one email. */
+async function expectReleasedBy(name, rowId, by) {
+  const [r] = await rest(`consultation_requests?id=eq.${rowId}&select=notify_hold_state,notify_released_by,notify_had_details,notify_attempts`);
+  const want = Array.isArray(by) ? by : [by];
+  expect(`${name}: held email released by ${want.join(" or ")}`, r?.notify_hold_state === "released" && want.includes(r.notify_released_by), JSON.stringify(r));
+  return r;
+}
+
+/**
+ * Hold mode: a page-two save that arrives after the job already sent the
+ * email → the threaded "Details added", exactly as before the hold.
+ */
+async function latePageTwo() {
+  const name = `E2E-${RUN}-Late-0 Tester`;
+  console.log(`\n▸ late page-two save, after the job sent the held email — ${name}`);
+  const res = await fetch(`${BASE}/api/consultation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: false, sms_consent_text: FORM_CONSENT_TEXT }),
+  });
+  const body = await res.json().catch(() => null);
+  expect(`${name}: accepted (201)`, res.status === 201 && Boolean(body?.id), String(res.status));
+  if (!body?.id) return;
+  created.push(body.id);
+  expect(`${name}: no staff email at step one (held)`, emailsNaming(name).length === 0, `${emailsNaming(name).length}`);
+  const got = await waitFor(() => emailsNaming(name).length > 0, HOLD_WAIT_MS);
+  expect(`${name}: the job sent it at the hold mark`, Boolean(got));
+  await expectReleasedBy(name, body.id, ["cron", "sweep"]);
+  const note = "E2E late note — added after the email went.";
+  const patched = await fetch(`${BASE}/api/consultation/${body.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note }) });
+  expect(`${name}: late page-two save accepted`, patched.status === 200, String(patched.status));
+  await sleep(500);
+  const [rec] = await rest(`consultation_requests?id=eq.${body.id}&select=notify_rfc_message_id,details_email_status`);
+  expect(`${name}: still exactly one staff notification`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
+  expect(`${name}: details email recorded as sent`, rec?.details_email_status === "sent", JSON.stringify(rec));
+  if (rec) expectUpdateEmail(name, rec, { center: "Nashville", note, referredBy: null });
+}
+
 /* ── browser helpers ───────────────────────────────────────────────────── */
 
 const setValue = (selector, value) => `(() => {
@@ -480,7 +562,9 @@ async function waitPanel(page, heading, timeout = 8000) {
 /** Step two as the visitor sees it: greeting, no reassurance panel, the exit. */
 async function expectStepTwo(page, name, two) {
   expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
-  expect(`${name}: step two headline greets by the first word only`, two?.text?.startsWith(`Hi ${firstWord(name)}, your call is requested.`) && !two.text.includes("Tester"), JSON.stringify(two?.text));
+  expect(`${name}: step two headline is "Got it, ${firstWord(name)}. A few quick questions."`, two?.text === `Got it, ${firstWord(name)}. A few quick questions.`, JSON.stringify(two?.text));
+  const eyebrow = await page.eval(`document.querySelector(".form-step .eyebrow")?.textContent ?? null`);
+  expect(`${name}: step two has no "Request received" label`, eyebrow === null, JSON.stringify(eyebrow));
   const look = JSON.parse(await page.eval(`JSON.stringify((() => {
     const panel = document.querySelector(".form-step");
     const skip = panel.querySelector(".form-skip");
@@ -525,7 +609,7 @@ async function expectConfirmation(page, name) {
       lines,
       tels: [...p.querySelectorAll(".done-phones a")].map((a) => a.getAttribute("href")),
       telText: [...p.querySelectorAll(".done-phones a")].map((a) => a.textContent.trim()),
-      gone: ["Your call is requested", "While you wait", "Nothing to decide yet", "Here’s what happens next", "We call you", "Helpful to have ready", "Pick a time"].filter((t) => p.textContent.includes(t)),
+      gone: ["Your call is requested", "A few quick questions", "While you wait", "Nothing to decide yet", "Here’s what happens next", "We call you", "Helpful to have ready", "Pick a time"].filter((t) => p.textContent.includes(t)),
       steps: p.querySelectorAll(".lens-seq, h3, h4").length,
       children: [...p.children].map((c) => c.tagName.toLowerCase() + (c.className ? "." + String(c.className).split(" ")[0] : "")),
     };
@@ -626,7 +710,7 @@ async function pathSave(page, width) {
   const name = `E2E-${RUN}-Save-${width} Tester`;
   console.log(`\n▸ save path @ ${width}px — ${name}`);
   await stepOne(page, width, name, { center: "Murfreesboro", consent: true });
-  const two = await waitPanel(page, "call is requested");
+  const two = await waitPanel(page, "A few quick questions");
   await expectStepTwo(page, name, two);
   expect(`${name}: step two heading took focus`, two?.focused === true);
   // Nothing pre-selected.
@@ -636,7 +720,8 @@ async function pathSave(page, width) {
   const rowsNow = await rowsNamed(name);
   expect(`${name}: row saved before step two was shown`, rowsNow.length === 1, `${rowsNow.length} row(s)`);
   const emailsNow = emailsNaming(name);
-  expect(`${name}: lead email sent before step two was shown`, emailsNow.length === 1, `${emailsNow.length} email(s)`);
+  if (HOLD) expect(`${name}: staff email HELD — none before step two`, emailsNow.length === 0, `${emailsNow.length} email(s)`);
+  else expect(`${name}: lead email sent before step two was shown (release job not running → fail-safe)`, emailsNow.length === 1, `${emailsNow.length} email(s)`);
   expect(`${name}: platform forwarded before step two was shown`, forwardsNaming(name).length === 1, `${forwardsNaming(name).length} post(s)`);
 
   for (const t of ["My child"]) await page.eval(clickText(t));
@@ -658,6 +743,7 @@ async function pathSave(page, width) {
   expect(`${name}: both center numbers visible below the video`, v.phones === 2, `${v.phones} tel link(s)`);
   await expectConfirmation(page, name);
   await sleep(300);
+  if (HOLD) await waitFor(() => emailsNaming(name).length > 0, 10_000);
   const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith", consent: true });
   // Routing (lib/lead-routing.ts): a Murfreesboro lead goes to
   // LEADS_MURFREESBORO, falling back to LEADS_FALLBACK then
@@ -666,7 +752,15 @@ async function pathSave(page, width) {
   // can say which it expects.
   expectEmail(name, row, { center: "Murfreesboro", consent: true });
   expect(`${name}: still exactly one notification after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
-  if (row) {
+  if (row && HOLD) {
+    // One email, sent on the save, carrying page two — no "Details added".
+    await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+    expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
+    const text = emailsNaming(name)[0]?.body?.text ?? "";
+    expect(`${name}: the one email carries page two`, text.includes("What they told us") && text.includes("E2E note — bedtime is the hard part.") && text.includes("Referred by: E2E referral — Dr. Smith"), JSON.stringify(text.slice(0, 400)));
+    expect(`${name}: no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
+    await expectReleasedBy(name, row.id, "page_two");
+  } else if (row) {
     const rec = await expectEmailRecords(name, row.id, { visitor: "sent", details: "sent" });
     expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
     if (rec) expectUpdateEmail(name, rec, { center: "Murfreesboro", note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith" });
@@ -681,7 +775,7 @@ async function pathSkip(page, width, height) {
   const name = `E2E-${RUN}-Skip-${width}${height ? `x${height}` : ""} Tester`;
   console.log(`\n▸ skip path @ ${width}${height ? `×${height}` : ""}px — ${name}`);
   await stepOne(page, width, name, { center: "Nashville", consent: false, ...(height ? { height } : {}) });
-  const two = await waitPanel(page, "call is requested");
+  const two = await waitPanel(page, "A few quick questions");
   await expectStepTwo(page, name, two);
   // The quiet exit: the .form-skip link, not a button labelled anything else.
   const skipped = await page.eval(`(() => { const b = document.querySelector(".form-step .form-skip"); if (!b) return "missing .form-skip"; b.click(); return "ok"; })()`);
@@ -691,9 +785,14 @@ async function pathSkip(page, width, height) {
   await expectConfirmation(page, name);
   if (height) await expectConfirmationFits(page, name);
   await sleep(300);
+  if (HOLD) {
+    const got = await waitFor(() => emailsNaming(name).length > 0, 8_000);
+    expect(`${name}: "Skip for now" sends the held email at once`, Boolean(got));
+  }
   const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null, consent: false });
   expectEmail(name, row, { center: "Nashville", consent: false });
   if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+  if (row && HOLD) await expectReleasedBy(name, row.id, "skip");
   expectVisitorEmail(name, emailFor(name), { center: "Nashville" });
   expect(`${name}: "Skip for now" sends no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
   // The skip path reaches the platform: step one is the lead.
@@ -734,12 +833,18 @@ async function pathLeave(chrome, width) {
   expect(`${name}: the refusals wrote nothing`, (await rowsNamed(name)).length === 0 && (await rowsNamed(typed)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0);
   // Then the real thing, with the box ticked.
   await stepOne(page, width, name, { consent: true, typed, email: emailFor(name) });
-  const two = await waitPanel(page, "call is requested");
+  const two = await waitPanel(page, "A few quick questions");
   expect(`${name}: step two shown (then the tab closes)`, two?.opacity === 1, JSON.stringify(two));
-  expect(`${name}: step two greets the lower-case name capitalized`, two?.text?.startsWith(`Hi ${firstWord(name)}, your call`), JSON.stringify(two?.text));
+  expect(`${name}: step two greets the lower-case name capitalized`, two?.text?.startsWith(`Got it, ${firstWord(name)}.`), JSON.stringify(two?.text));
   await page.close();
   await sleep(500);
+  if (HOLD) {
+    expect(`${name}: tab closed on step two — nothing sent yet (held)`, emailsNaming(name).length === 0, `${emailsNaming(name).length}`);
+    const got = await waitFor(() => emailsNaming(name).length > 0, HOLD_WAIT_MS);
+    expect(`${name}: the release job sends it at the hold mark`, Boolean(got));
+  }
   const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, consent: true });
+  if (row && HOLD) await expectReleasedBy(name, row.id, ["cron", "sweep"]);
   expectEmail(name, row, { center: "Not sure yet", consent: true });
   if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
   expectVisitorEmail(name, emailFor(name), { center: "Not sure yet" });
@@ -1032,6 +1137,23 @@ try {
   process.exit(1);
 }
 
+let ticker = null;
+if (HOLD) {
+  // Two beats close together open the server's gate (lib/held-notification.ts
+  // → shouldHold); then one every 10 s, as Vercel Cron would every minute.
+  const a = await tick();
+  await sleep(1500);
+  const b = await tick();
+  console.log(`hold mode: release job answered ${a}, ${b}`);
+  if (a !== 200 || b !== 200) {
+    console.error("The release job refused — is CRON_SECRET the same on the server, and is migration 0009 applied?");
+    process.exit(1);
+  }
+  ticker = setInterval(tick, 10_000);
+} else {
+  console.log("fail-safe mode (CRON_SECRET unset): staff emails go at step one, as before the hold");
+}
+
 let saveRows = [];
 try {
   const page = await chrome.newPage();
@@ -1047,6 +1169,7 @@ try {
   await chatConversation(true, 1);
   const chatRow = await chatConversation(false, 2);
   await forgedConsent();
+  if (HOLD) await latePageTwo();
   await guideDownload();
   await postRefusals();
   if (saveRows[0]?.row) await patchRefusals(saveRows[0].row);
@@ -1055,6 +1178,7 @@ try {
   failures.push(`run aborted: ${error.message}`);
   console.error(error);
 } finally {
+  if (ticker) clearInterval(ticker);
   await chrome.close();
 }
 

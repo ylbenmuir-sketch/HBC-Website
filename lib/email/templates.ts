@@ -11,8 +11,11 @@
  * remains, for Apple Mail and iOS Mail's dark mode only (`color-scheme`
  * plus a prefers-color-scheme override); clients that strip it keep the
  * light design, and Gmail's own dark-mode inversion reads solid fills and
- * plain text well. No images: the wordmark is text, so nothing is blocked
- * and nothing needs hosting. System fonts, Georgia for the wordmark.
+ * plain text well. The wordmark is text, so nothing is blocked. The one
+ * image is the visitor email's video thumbnail, hosted on our own domain
+ * (public/email/) and linked through our own redirect; it carries alt text
+ * and the caption under it is a link too, so the email still works with
+ * images off. System fonts, Georgia for the wordmark.
  *
  * ## One phone screen
  *
@@ -193,7 +196,7 @@ function page({ title, preheader, rows }: { title: string; preheader: string; ro
     .hbc-b-concierge { background: #8a6a2f !important; color: #ffffff !important; }
     .hbc-b-not-sure { background: #3a4550 !important; color: #f1ece2 !important; }
     .hbc-b-via-chat, .hbc-b-guide-download, .hbc-b-details-added { background: #2c3843 !important; color: #e3cf9f !important; }
-    .hbc-yes, .hbc-panel-title { color: #a7c9a8 !important; }
+    .hbc-yes, .hbc-panel-title, .hbc-link { color: #a7c9a8 !important; }
     .hbc-foot div { color: #a9b2ba !important; }
     .hbc-no { color: #f2a99d !important; }
   }
@@ -245,9 +248,6 @@ export type Rendered = { html: string; text: string };
 
 /** Where the saved row lives, for the footer's button. */
 export type SavedLink = { rowId: string; url: string } | null;
-
-const ROUTED = (envVar: string | null, route: string) =>
-  `Routed by ${envVar ?? "nothing set"} (rule: ${route})`;
 
 /** The rescue copy's top line: the row did not save; this email is the lead. */
 function notSavedBanner(): string {
@@ -303,7 +303,7 @@ export function staffNotification(input: {
   saved: SavedLink;
   now: Date;
 }): Rendered {
-  const { lead, route, envVar, saved, now } = input;
+  const { lead, route, saved, now } = input;
   const center = centerBadge(route);
   const title = lead.intent === "more_info" ? "New information request" : "New call request";
   const badges: BadgeKind[] = [center, ...(lead.source === "chat" ? (["via chat"] as BadgeKind[]) : [])];
@@ -330,14 +330,10 @@ export function staffNotification(input: {
     ),
     hasDetails(lead.details) ? section(toldUs("What they told us", lead.details), "2px 20px 0") : null,
     `<tr><td style="height:14px;font-size:0;line-height:0;">&nbsp;</td></tr>`,
-    footer(
-      [
-        `Received ${esc(formatCentral(now))}`,
-        esc(ROUTED(envVar, route)),
-        saved ? `Request ${esc(saved.rowId)}` : "",
-      ],
-      saved ? ["Open saved request", saved.url] : undefined
-    ),
+    // Received time and the saved row, nothing else (Ben, 2026-10-15): the
+    // routing rule and the request id were noise to the person calling. The
+    // row records both (notify_route / notify_env, and its id).
+    footer([`Received ${esc(formatCentral(now))}`], saved ? ["Open saved request", saved.url] : undefined),
   ].filter((r): r is string => Boolean(r));
 
   const d = lead.details;
@@ -361,9 +357,8 @@ export function staffNotification(input: {
     d.note ? `In their own words:\n${d.note}` : null,
     d.referredBy ? textLabel("Referred by:", d.referredBy) : null,
     "",
-    saved ? `Saved request: ${saved.rowId}\n${saved.url}` : null,
+    saved ? `Open saved request: ${saved.url}` : null,
     `Received ${formatCentral(now)}`,
-    ROUTED(envVar, route),
   ]);
 
   return {
@@ -386,7 +381,7 @@ export function detailsUpdate(input: {
    *  the only one the office has, so it carries the whole lead too. */
   originalSent: boolean;
 }): Rendered {
-  const { lead, route, envVar, saved, now, originalSent } = input;
+  const { lead, route, saved, now, originalSent } = input;
   const center = centerBadge(route);
   const d = lead.details;
   const rows = [
@@ -413,9 +408,7 @@ export function detailsUpdate(input: {
     footer(
       [
         `Received ${esc(formatCentral(now))}`,
-        esc(ROUTED(envVar, route)),
         originalSent ? "" : "The first notification for this lead did not send — this is the only email.",
-        saved ? `Request ${esc(saved.rowId)}` : "",
       ],
       saved ? ["Open saved request", saved.url] : undefined
     ),
@@ -438,9 +431,8 @@ export function detailsUpdate(input: {
     d.note ? `In their own words:\n${d.note}` : null,
     d.referredBy ? textLabel("Referred by:", d.referredBy) : null,
     "",
-    saved ? `Saved request: ${saved.rowId}\n${saved.url}` : null,
+    saved ? `Open saved request: ${saved.url}` : null,
     `Received ${formatCentral(now)}`,
-    ROUTED(envVar, route),
     originalSent ? null : "The first notification for this lead did not send — this is the only email.",
   ]);
 
@@ -453,40 +445,64 @@ export function detailsUpdate(input: {
 
 export const VISITOR_SUBJECT = "We got your request — Harmonized Brain Centers";
 
-/** "Someone from our Nashville center will call you soon." — or "our team"
- *  for Concierge and Not sure. The same sentence the chat closes with. */
-export function callSoonLine(route: string): string {
+/**
+ * "Someone from our Nashville center will call." — the one short line under
+ * the visitor email's headline, which already says "soon" (Ben, 2026-10-15).
+ * "Our team" for Concierge and Not sure.
+ */
+export function centerCallLine(route: string): string {
   const c = centerBadge(route);
   return c === "Nashville" || c === "Murfreesboro"
-    ? `Someone from our ${c} center will call you soon.`
-    : "Someone from our team will call you soon.";
+    ? `Someone from our ${c} center will call.`
+    : "Someone from our team will call.";
 }
 
+/** The caption under the video, e.g. "Watch: what your first visit looks like · 0:48". */
+export function videoCaption(duration: string | null): string {
+  return `Watch: what your first visit looks like${duration ? ` · ${duration}` : ""}`;
+}
+
+/**
+ * The visitor's confirmation — email #1 of the sequence to come, so its
+ * pieces are the template's own (Ben, 2026-10-15). In this order, and
+ * nothing else; it fits one phone screen:
+ *
+ *   wordmark → "Thanks, Sarah. We'll call you soon." → who will call →
+ *   the video, full width, play button baked into the picture, captioned →
+ *   "Want to talk now?" and the center's call button → the footer.
+ *
+ * The picture (public/email/first-visit.jpg, npm run build:email-thumb) and
+ * both links point at OUR domain: the image is served from it, and the
+ * links go to /watch/first-visit, which redirects to YouTube — a bare
+ * youtube.com link makes Gmail add its own preview card under the email.
+ */
 export function visitorConfirmation(input: {
   firstName: string;
   route: string;
   /** The center's own line; Nashville's for Concierge and Not sure. */
   centerPhone: { label: string; display: string; tel: string };
-  video: { title: string; url: string; duration: string | null };
+  /** `watchUrl` is our redirect, `imageUrl` our hosted thumbnail (absolute). */
+  video: { watchUrl: string; imageUrl: string; duration: string | null };
   /** "Harmonized Brain Centers · 197 Thompson Ln, Suite S, Nashville, TN 37211" */
   identityLine: string;
   siteUrl: string;
 }): Rendered {
   const { firstName, route, centerPhone, video, identityLine, siteUrl } = input;
-  const greet = firstName ? `Thanks, ${firstName}.` : "Thanks.";
-  const line = callSoonLine(route);
+  const greet = `Thanks${firstName ? `, ${firstName}` : ""}. We\u2019ll call you soon.`;
+  const line = centerCallLine(route);
+  const caption = videoCaption(video.duration);
   const rows = [
     section(
       `<div class="hbc-name" style="font-family:${SANS};font-size:22px;font-weight:700;color:${C.navy};line-height:1.25;">${esc(greet)}</div><div class="hbc-text" style="font-family:${SANS};font-size:16px;color:${C.ink};line-height:1.45;padding-top:6px;">${esc(line)}</div>`,
       "18px 20px 0"
     ),
     section(
-      `<div class="hbc-muted" style="font-family:${SANS};font-size:14px;color:${C.slate};line-height:1.45;padding-bottom:8px;">Want to talk now?</div>${buttons([[`Call ${centerPhone.label} ${centerPhone.display}`, centerPhone.tel]])}`,
-      "14px 20px 0"
+      `<a href="${esc(video.watchUrl)}" style="display:block;text-decoration:none;"><img src="${esc(video.imageUrl)}" width="520" alt="Play the video: what your first visit looks like" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:6px;outline:none;text-decoration:none;"></a><div style="padding-top:8px;"><a href="${esc(video.watchUrl)}" class="hbc-link" style="font-family:${SANS};font-size:15px;font-weight:600;color:${C.sageDeep};line-height:1.4;text-decoration:none;">${esc(caption)}</a></div>`,
+      "16px 20px 0"
     ),
     section(
-      `<div class="hbc-text" style="font-family:${SANS};font-size:15px;color:${C.ink};line-height:1.45;">While you wait: <a href="${esc(video.url)}" style="color:${C.sageDeep};font-weight:600;">Watch &ldquo;${esc(video.title)}&rdquo;</a>${video.duration ? ` <span class="hbc-muted" style="color:${C.slate};">(${esc(video.duration)})</span>` : ""}</div><div class="hbc-muted" style="font-family:${SANS};font-size:14px;color:${C.slate};line-height:1.45;padding-top:6px;">Questions before we call? Just reply to this email.</div>`,
-      "16px 20px 0"
+      `<div class="hbc-muted" style="font-family:${SANS};font-size:14px;color:${C.slate};line-height:1.45;padding-bottom:8px;">Want to talk now?</div>${buttons([[`Call ${centerPhone.label} ${centerPhone.display}`, centerPhone.tel]])}`,
+      "18px 20px 0"
     ),
     `<tr><td style="height:16px;font-size:0;line-height:0;">&nbsp;</td></tr>`,
     footer([
@@ -498,17 +514,15 @@ export function visitorConfirmation(input: {
     greet,
     line,
     "",
+    caption,
+    video.watchUrl,
+    "",
     `Want to talk now? Call ${centerPhone.label}: ${centerPhone.display}`,
-    "",
-    `While you wait: "${video.title}"${video.duration ? ` (${video.duration})` : ""}`,
-    video.url,
-    "",
-    "Questions before we call? Just reply to this email.",
     "",
     identityLine,
     `You're getting this because you asked us to call you at ${siteUrl.replace(/\/$/, "")}. Free call, no obligation.`,
   ]);
-  return { html: page({ title: VISITOR_SUBJECT, preheader: line, rows }), text };
+  return { html: page({ title: VISITOR_SUBJECT, preheader: `${line} Watch what your first visit looks like.`, rows }), text };
 }
 
 /* ------------------------------------------------------------------ */
@@ -524,7 +538,7 @@ export function guideNotification(input: {
   saved: SavedLink;
   now: Date;
 }): Rendered {
-  const { email, guideTitle, sourcePage, envVar, route, saved, now } = input;
+  const { email, guideTitle, sourcePage, saved, now } = input;
   const pageShown = sourcePage?.trim() || "Not recorded";
   const rows = [
     saved ? null : notSavedBanner(),
@@ -542,7 +556,7 @@ export function guideNotification(input: {
     ),
     `<tr><td style="height:4px;font-size:0;line-height:0;">&nbsp;</td></tr>`,
     footer(
-      [`Received ${esc(formatCentral(now))}`, esc(ROUTED(envVar, route)), saved ? `Request ${esc(saved.rowId)}` : ""],
+      [`Received ${esc(formatCentral(now))}`],
       saved ? ["Open saved request", saved.url] : undefined
     ),
   ].filter((r): r is string => Boolean(r));
@@ -557,9 +571,8 @@ export function guideNotification(input: {
     textLabel("Guide:", guideTitle),
     textLabel("Came from:", pageShown),
     "",
-    saved ? `Saved request: ${saved.rowId}\n${saved.url}` : null,
+    saved ? `Open saved request: ${saved.url}` : null,
     `Received ${formatCentral(now)}`,
-    ROUTED(envVar, route),
   ]);
   return { html: page({ title: "Guide download", preheader: `${email} downloaded ${guideTitle}`, rows }), text };
 }

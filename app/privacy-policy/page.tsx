@@ -16,7 +16,12 @@ import {
   verifiedOr,
 } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
-import { SMS_TERMS_PATH } from "@/lib/sms-consent";
+import {
+  SMS_NO_SHARING_SENTENCE,
+  SMS_OPT_IN_DATA_SENTENCE,
+  SMS_TERMS_PATH,
+} from "@/lib/sms-consent";
+import { ANALYTICS_ENABLED } from "@/lib/analytics";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
 
@@ -67,15 +72,16 @@ function withMailto(text: string) {
  *
  * Two rules, and between them they decided every sentence below.
  *
- * **Everything descriptive is read off the code.** The list of fields is the
- * contact form's own inputs and the columns in
- * supabase/migrations/0001_consultation_requests.sql. The "who else sees it"
- * section names the services those rows actually pass through. The cookies
- * paragraph says there are none because there are none — no analytics tag, no
- * advertising pixel, no `document.cookie`, no `localStorage`, and the fonts
- * are self-hosted by `next/font` rather than fetched from Google. Any of that
- * changing makes this page wrong, which is the point of writing it from the
- * code rather than from a template.
+ * **Everything descriptive is read off the code** (rewritten from it
+ * 2026-10-15, for the carriers' A2P review). The list of fields is the
+ * contact form's two pages and the chat's booking steps; the emails are the
+ * four in lib/lead-notification.ts; "Who else sees it" names every service
+ * the code sends personal data to. The cookies paragraph follows the code:
+ * no `document.cookie` or browser storage of the site's own, fonts
+ * self-hosted by `next/font`, GA4 only while ANALYTICS_ENABLED, and YouTube
+ * only after a click on the facade. Any of that changing makes this page
+ * wrong, which is the point of writing it from the code rather than from a
+ * template.
  *
  * **Everything promissory is gated.** Retention and the access/deletion
  * commitment are `Verifiable` values in lib/site-config.ts. Both are confirmed
@@ -140,26 +146,38 @@ export default function PrivacyPolicyPage() {
             <h2>What we collect</h2>
             <p>
               Nothing at all until you send it. There is no account to make and
-              nothing to sign in to, and simply reading a page here leaves us
-              with nothing about you.
+              nothing to sign in to. Reading a page leaves us nothing about you
+              beyond the ordinary technical record any web host keeps (see
+              &ldquo;Who else sees it&rdquo;).
             </p>
             <p>
-              <b>If you use the contact form</b>, we receive your first name,
-              phone number, and email address if you give one, along with who
-              you&rsquo;re asking about, the concerns you tapped, which center
-              you&rsquo;d prefer, when you&rsquo;d rather be called, anything
-              you typed in the note, and which page you were on when you sent
-              it.
+              <b>If you use the contact form</b>, the first page takes your full
+              name, phone number and email address (all three required), which
+              center you&rsquo;d prefer, when you&rsquo;d rather be called,
+              whether you agree to texts &mdash; and if you do, the exact wording
+              you agreed to and when &mdash; and the page you came from. The
+              second page is up to you: who the call is for, the concerns you
+              tap, anything you write in your own words, and who referred you.
             </p>
             <p>
               <b>If you ask for the guide</b>, we receive your email address and
-              nothing else.
+              the page you were on. The guide opens right there on the page; we
+              don&rsquo;t email it to you.
             </p>
             {FEATURE_ASSISTANT && (
               <p>
-                <b>If you use the assistant</b>, what you type is sent to the
-                service that produces the answer and is used for that. We do
-                not keep a copy of the conversation.
+                <b>If you use the assistant</b> to ask for a call, it asks for
+                the same things the form does: your name, phone number, email,
+                center, who the call is for and what&rsquo;s going on, the best
+                time, and whether we may text you. While a conversation is open,
+                our server keeps its progress &mdash; your answers so far and
+                where you are in it &mdash; in our database, and deletes it
+                about an hour after your last message. A finished request is
+                saved like a form request. Questions you ask outside of booking
+                are sent to Anthropic, the company whose AI writes the
+                assistant&rsquo;s answers, together with passages from this
+                website, so it can answer them. The words of a conversation are
+                not written to our logs.
               </p>
             )}
             <p>
@@ -167,35 +185,71 @@ export default function PrivacyPolicyPage() {
               nowhere here to enter them.
             </p>
 
+            {/* Read off lib/lead-notification.ts and lib/email/templates.ts:
+                four emails, and only these. */}
+            <h2>Emails we send</h2>
+            <p>
+              <b>To you:</b> when you ask for a call and give an email address,
+              one email confirming we got it, who will call, a link to a short
+              video of what a first visit looks like, and our number. Asking
+              for the guide sends you nothing.
+            </p>
+            <p>
+              <b>To our team:</b> one email with your request, so the person who
+              will call you has it &mdash; and, if you add details on the
+              form&rsquo;s second page after that email has gone, one short
+              follow-up with those details. A guide request sends our team your
+              email address and the page you were on.
+            </p>
+
             {/* THIS SECTION IS A CLAIM ABOUT THE BUILD, AND IT IS TRUE ONLY
                 FOR AS LONG AS THE BUILD KEEPS IT TRUE.
 
-                Adding an analytics tag, a Search Console verification script,
-                an advertising pixel, a chat widget from a third party, a
-                map embed, or any font, script or image loaded from another
-                origin falsifies it. `SEO-AUDIT-2.md` §8.2 C9 asks for GA4 or a
-                privacy-friendly equivalent, so this is a change somebody is
-                going to make.
+                The analytics paragraph follows ANALYTICS_ENABLED (lib/
+                analytics.ts) — the same constant that decides whether the
+                GA4 tag renders — so the two cannot disagree. The video
+                paragraph describes components/VideoEmbed.tsx: a poster from
+                this origin, and youtube-nocookie.com only on a click.
 
-                Whoever makes it edits this section in the SAME COMMIT. Not the
-                next one, not the follow-up ticket — a privacy notice that
-                says "there are none" while a tag is live is worse than having
-                had no privacy notice at all, and the gap between the two
-                commits is exactly when it would be wrong. */}
-            <h2>Cookies, analytics and tracking</h2>
+                Adding any other tag, pixel, widget, embed, or font, script or
+                image from another origin falsifies it. Whoever does that edits
+                this section in the SAME COMMIT. */}
+            <h2>Cookies, analytics and video</h2>
             <p>
-              There are none. This site sets no cookies, stores nothing in your
-              browser, runs no analytics or advertising tags, and loads no
-              fonts, scripts or images from anybody else&rsquo;s servers. There
-              is no pixel here reporting your visit to a third party, because
-              there is no third party involved in your visit.
+              This site itself sets no cookies and stores nothing in your
+              browser. Its fonts and images are served from this site.
+            </p>
+            {ANALYTICS_ENABLED ? (
+              <p>
+                We use Google Analytics to count visits and see which pages
+                people find useful. It sets cookies, and it sends Google the
+                pages you view and general details about your browser and
+                device. It never receives what you type into a form. There are
+                no advertising tags or pixels here.
+              </p>
+            ) : (
+              <p>
+                There are no analytics or advertising tags here, and no pixel
+                reporting your visit to anyone.
+              </p>
+            )}
+            <p>
+              Pages with a video show a still picture served from this site,
+              and nothing loads from YouTube until you press play. Then the
+              player loads from youtube-nocookie.com, YouTube&rsquo;s
+              privacy-enhanced mode, and the video and its images come from
+              YouTube (Google). From that moment YouTube may set cookies and
+              note that the video was watched, under Google&rsquo;s own privacy
+              policy. &ldquo;Get directions&rdquo; links open Google Maps on
+              Google&rsquo;s own site.
             </p>
 
             <h2>What we do with it</h2>
             <p>
-              We call you back, or we send you the guide. That is the whole
-              purpose &mdash; the form exists so a person can get in touch with
-              you about the thing you asked about.
+              We call you back about what you asked. That is the whole purpose
+              &mdash; the form exists so a person can get in touch with you. A
+              guide request tells us which guide was opened, and nothing
+              follows from it.
             </p>
             <p>{INFORMATION_SHARING}</p>
             <p>
@@ -208,33 +262,70 @@ export default function PrivacyPolicyPage() {
 
             {/* Read off the code like the rest: the consent columns are
                 supabase/migrations/0005_sms_consent.sql, the sender is
-                lib/sms-confirmation.ts. The "never shared for marketing"
-                sentence is the one carriers look for in a privacy policy
-                linked from an opt-in; it restates INFORMATION_SHARING for
-                the phone number specifically, it does not extend it. */}
+                lib/sms-confirmation.ts. The two carrier sentences are single
+                constants in lib/sms-consent.ts, each rendered as ONE JSX
+                expression so each reaches the raw HTML unbroken (check:contact
+                and the no-JavaScript fetch in the build log verify it). */}
             <h2>Text messages</h2>
             <p>
               We text you only if you agree to it &mdash; a box on the contact
               form, or a yes in the assistant &mdash; and we keep that yes, the
               exact wording you agreed to, and when you agreed. Texts are sent
-              through Dialpad, the phone service our centers use. Your phone
-              number and your consent to texts are never sold, and never shared
-              with anyone for their own marketing. Reply STOP to any text to
-              cancel, or HELP for help; the rest is in our{" "}
+              through Dialpad, the phone service our centers use. Reply STOP to
+              any text to cancel, or HELP for help; the rest is in our{" "}
               <Link href={SMS_TERMS_PATH}>text message terms</Link>.
             </p>
+            <p>{SMS_NO_SHARING_SENTENCE}</p>
+            <p>{SMS_OPT_IN_DATA_SENTENCE}</p>
 
+            {/* Every service lib/ and app/api send personal data to, by name:
+                Vercel (hosting — app), Supabase (lib/consultation.ts,
+                lib/chat/session.ts), Resend (lib/lead-notification.ts),
+                Dialpad (lib/sms-confirmation.ts), Anthropic (lib/chat/
+                answer.ts, assistant on only), Google (Analytics when on;
+                YouTube on play), and the clinic's own system
+                (lib/inquiry-intake.ts, only while it is switched on). */}
             <h2>Who else sees it</h2>
             <p>
               The people at Harmonized who would be calling you, and the
-              services this website runs on. Submissions are stored in a
-              database hosted by Supabase that only our own server can read,
-              and an alert that a request has arrived may be sent to us by
-              email. When you submit a form, we email the information you gave
-              us &mdash; your name, your contact details, which center you
-              chose, and anything you chose to tell us &mdash; to our team so
-              they can call you back.
+              services this website runs on:
             </p>
+            <ul>
+              <li>
+                <b>Vercel</b> hosts the website. Every visit passes through its
+                servers, which keep a standard technical record &mdash; your IP
+                address, your browser, the page &mdash; for a limited time.
+              </li>
+              <li>
+                <b>Supabase</b> stores what you send us, in a database only our
+                own server can read.
+              </li>
+              <li>
+                <b>Resend</b> delivers the emails above &mdash; the one to you
+                and the ones to our team &mdash; so it handles what is in them.
+              </li>
+              <li>
+                <b>Dialpad</b> sends text messages, only if you agreed to them.
+              </li>
+              {FEATURE_ASSISTANT && (
+                <li>
+                  <b>Anthropic</b> receives the questions you type into the
+                  assistant, to write its answers.
+                </li>
+              )}
+              {ANALYTICS_ENABLED && (
+                <li>
+                  <b>Google</b> receives page views through Google Analytics.
+                </li>
+              )}
+              <li>
+                <b>YouTube</b> (Google), only when you play a video.
+              </li>
+              <li>
+                Our own front-desk system, when it is connected, receives a copy
+                of a call request so the team can follow up from it.
+              </li>
+            </ul>
             <p>
               Those services hold the information in order to run; they are not
               given it to use for anything of their own.

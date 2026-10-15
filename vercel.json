@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/release-held-leads", "schedule": "* * * * *" },
+    { "path": "/api/cron/lead-backstop", "schedule": "0 13 * * *" }
+  ]
+}

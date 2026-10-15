@@ -122,11 +122,27 @@ const nextConfig: NextConfig = {
     // 301, not `permanent: true` — Next spells that as a 308. Both are
     // permanent to Google; 301 is the one every tool, CDN and two-year-old
     // link checker understands, and the one QUERY-TO-PAGE-MAP.md promises.
+    //
+    // Each source is written out in BOTH slash forms. `next start` matches a
+    // redirect source with the slash optional, but Vercel compiles the
+    // sources into its own routing table without that allowance, so on
+    // Vercel `/add-adhd/` missed its row, hit the trailing-slash catch-all
+    // (308 → /add-adhd) and only then the 301 — two hops on every legacy
+    // URL (found 2026-10-14, fixed 2026-10-15). An explicit `/add-adhd/`
+    // rule is one hop on both. (Rewrites were never affected: the 410s were
+    // already one hop on Vercel.)
     const to = (sources: string[], destination: string) =>
-      sources.map((source) => ({ source, destination, statusCode: 301 }));
+      sources.flatMap((source) => [
+        { source, destination, statusCode: 301 },
+        { source: `${source}/`, destination, statusCode: 301 },
+      ]);
     return [
       // Duplicate homepages.
       ...to(["/home", "/home-simple"], "/"),
+      // WordPress's feed and Yoast's sitemap index — what feed readers and
+      // search consoles already hold for the old site (2026-10-15).
+      ...to(["/feed"], "/resources/feed.xml"),
+      ...to(["/sitemap_index.xml"], "/sitemap.xml"),
       // The 10,900-impression LENS cluster, and the live site's #2 page by
       // clicks (/what-is-lens/: 3,712 impressions, 47 clicks in the Oct 2026
       // pull). The destination's body says "LENS therapy" and must keep to —
@@ -238,6 +254,12 @@ const nextConfig: NextConfig = {
       ),
       ...to(["/sheri-rowney-being-interviewed-by-don-miller"], "/about/founder"),
       ...to(["/children-adhd-alternative-drugs"], "/children-families"),
+
+      // The visitor confirmation email's video link (lib/email/visitor-
+      // content.ts). Our own URL rather than YouTube's, so Gmail does not add
+      // a preview card of its own; temporary, so it can point at another
+      // video later without browsers having cached this one forever.
+      { source: "/watch/first-visit", destination: "https://www.youtube.com/watch?v=FCUyUqzE3Dk", permanent: false },
 
       // Last: the trailing-slash normalisation Next used to do first, at the
       // 308 it used. The lookahead steps around the 410 paths: redirects run
