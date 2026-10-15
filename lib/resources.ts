@@ -1625,6 +1625,203 @@ export const resources: Resource[] = [
       "When you’ve tried a lot for migraines, the next option deserves hard questions. Five to put to anyone new — including us — and the answers worth hearing.",
   },
   {
+    // Feeds /concerns/trauma (audience: adults). Long-tail: "hypervigilance
+    // when nothing is wrong" / "why do I always scan the room" / "always on
+    // guard even when safe". Does not target the page's own "neurofeedback
+    // for trauma-related stress", and asks the reader to recount nothing.
+    slug: "always-on-guard",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "Why you stay on guard in rooms where nothing is wrong",
+    crumbLabel: "Always on guard",
+    excerpt: "Scanning the room, startling at ordinary sounds — and why knowing you’re safe doesn’t stand it down.",
+    image: { src: "/images/session-room.jpg", position: "center 50%" },
+    readTime: "6 min read",
+    byline: HBC_BYLINE,
+    lede: "You take the seat that faces the door. You know where everyone in the room is without deciding to look. A door closes down the hall and your body answers before you do. Nothing is wrong, you know nothing is wrong, and the watch keeps going anyway. This won’t ask you what happened. It’s about the watch.",
+    body: [
+      { type: "h2", text: "Keeping watch is a state, not a choice" },
+      {
+        type: "p",
+        text: "People describe this to us in plain terms: staying vigilant in rooms where nothing is wrong, startling easily and settling slowly, a body braced long after the danger has passed. Some call it hypervigilance. Some never call it anything, because it doesn’t feel like a feeling. It feels like the way rooms are.",
+      },
+      {
+        type: "p",
+        text: "It’s worth naming as a state of the nervous system rather than a personality trait or an overreaction. Arousal regulation is a measurable property of the nervous system, and it varies — across people, and within the same person across a day. Startling fast and settling slowly is what the top of that range looks like from the inside.",
+      },
+      { type: "h2", text: "Why knowing you’re safe doesn’t stand it down" },
+      {
+        type: "p",
+        text: "The hardest part to explain to anyone else is that you already know. You can look around an ordinary room, list every reason it’s fine, and still not get your body to agree. That isn’t a failure of reasoning, and more reasoning rarely moves it. Explanation is input, and a system already on alert has little room for more.",
+      },
+      {
+        type: "blockquote",
+        text: "You already know the room is safe. Knowing was never the part that was missing.",
+      },
+      {
+        type: "p",
+        text: "Going up and coming back down are also two different jobs. A body that startles in a second and takes the rest of the afternoon to settle isn’t being dramatic about a door. It’s a system that isn’t moving between states cleanly — and the cost shows up elsewhere. Staying on guard all day draws on the same capacity that sleep, focus and calm need, which is why those so often end up carrying the weight.",
+      },
+      { type: "h2", text: "The past has its own place" },
+      {
+        type: "p",
+        text: "What happened, and what it means, is work for a therapist — one you trust, and who works with trauma. If you already have that person, keep going. If you don’t, they’re worth finding. That conversation belongs with them, not with an article, and not with us.",
+      },
+      {
+        type: "p",
+        text: "Some of the physical side deserves a doctor’s eyes too. Sleep apnea, thyroid problems, medication effects, and mood and anxiety disorders can each produce parts of this picture — the startle, the broken sleep, the body that won’t settle — and they’re identified by testing rather than by inference. We can’t do that, and neither can an article. If nobody has looked, that’s a good place to start.",
+      },
+      { type: "h2", text: "What tends to help day to day" },
+      {
+        type: "p",
+        text: "Treat the load as the intervention. Sleep, food and unbroken recovery time are the largest single lever most people have, and the first thing dropped when a week fills up. A system keeping watch all day is spending from the same account.",
+      },
+      {
+        type: "p",
+        text: "Build predictability on purpose. Something that runs without your attention beats something that needs it — the same sequence each evening, an alarm instead of an intention, a decision made in the morning about what the evening is allowed to contain.",
+      },
+      {
+        type: "p",
+        text: "Go easy on the verdict when a technique doesn’t land. Most strategies for regulation need the very capacity that’s in short supply — “notice it before it builds” requires the noticing. They work when you don’t need them and fail when you do. That says nothing about how hard you tried.",
+      },
+      {
+        type: "p",
+        text: "And don’t grade yourself on your best day. Capacity runs down and recovers, so the room that was fine on Tuesday can be hard on Thursday. Nothing about the room changed. What you had available to meet it did.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "LENS doesn’t require you to retell or relive anything. There’s nothing to talk through in the chair and nothing to perform. Sessions are quiet and predictable by design: a quiet room, a comfortable chair, small sensors, and a brief, very low-energy feedback signal. Most people feel nothing at all, and we’ll walk you through everything before anything begins. Many clients describe the sessions themselves as calming.",
+      },
+      {
+        type: "p",
+        text: `Every visit opens with a check-in — sleep, mood, focus, energy — and we track how settled you actually feel. You’re always in control of what you share. Sessions run ${SESSION_LENGTH.value}. Your first visit is ${BRAIN_MAP_NAME}: a conversation about how things are now and a baseline recording that guides your starting plan. LENS is routinely used alongside therapy, and we’re glad to coordinate with the therapist you already trust.`,
+      },
+      {
+        type: "links",
+        text: "Where to read more.",
+        items: [
+          { href: "/concerns/trauma", label: "Trauma-related stress" },
+          { href: "/resources/alongside-therapy", label: "LENS alongside therapy" },
+          { href: "/how-lens-works", label: "How LENS works" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "You don’t have to explain anything to ask a question.",
+    finalSub:
+      "Share as much or as little as you like. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Hypervigilance When You’re Safe: Why the Guard Stays Up",
+    metaDescription:
+      "Scanning every room, startling at ordinary sounds, never quite settling. Why knowing you’re safe doesn’t stand the guard down — and what tends to help.",
+  },
+  {
+    // Feeds /concerns/emotional-regulation (audience: parents — the page's
+    // `who` is "Often children — and their parents"). Long-tail: "why does my
+    // child melt down over small things" / "child meltdown over little things".
+    // Does not target the page's own "neurofeedback for emotional regulation",
+    // nor "child emotional regulation" (a /for-children supporting term).
+    slug: "meltdowns-over-small-things",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For parents",
+    title: "Why your child melts down over the small things",
+    crumbLabel: "Meltdowns over small things",
+    excerpt: "The cup was never the problem. What’s underneath, and what helps.",
+    image: { src: "/images/mother-daughter-lens-neurofeedback-nashville.jpg", position: "50% 28%" },
+    readTime: "6 min read",
+    byline: HBC_BYLINE,
+    lede: "The cup was the wrong color. The sock had a seam. Screen time ended a minute early. Forty minutes later nobody remembers the cup, your child is still on the floor, and you’re replaying the evening looking for the thing you did wrong. Here’s what’s usually going on underneath — and why the small thing is almost never the point.",
+    body: [
+      { type: "h2", text: "The small thing was the last thing" },
+      {
+        type: "p",
+        text: "Start with what you already know: on a good day, the same cup goes unnoticed. Your child can handle this. You’ve watched them do it. So when it lands like a disaster, the obvious conclusion is that today they’re choosing not to — and that’s the conclusion worth questioning first.",
+      },
+      {
+        type: "p",
+        text: "The capacity to absorb a small frustration isn’t a fixed amount. It runs down and it recovers. Short sleep, hunger, a loud day, an illness coming on, a whole day spent holding it together — each one takes something off the top before the evening even starts. By the time the cup arrives, it isn’t landing on a whole child. It’s landing on whatever is left.",
+      },
+      {
+        type: "blockquote",
+        text: "When something small sets off something huge, the small thing was the last item on a stack that was already full.",
+      },
+      {
+        type: "p",
+        text: "That’s also why arguing about the cup goes nowhere. The cup isn’t the stack. You can win the argument about the cup and still have the whole evening in front of you.",
+      },
+      { type: "h2", text: "Why it lasts so long" },
+      {
+        type: "p",
+        text: "Parents tell us the explosion is hard, but the way back is harder: a short fuse, then a long recovery. It helps to separate the two. Going up and coming back down are different jobs, and coming back down — returning to baseline after a spike — has its own cost. A child who tips into overwhelm faster than they can recover isn’t dragging it out. They’re still finding the way back.",
+      },
+      {
+        type: "p",
+        text: "It’s also why the same request goes fine on Tuesday and ends in tears on Thursday. Nothing about the request changed. What was available to meet it did. Expecting the Tuesday version every day sets a standard no nervous system can meet, and when it isn’t met, it gets read as attitude.",
+      },
+      { type: "h2", text: "Why the usual advice falls flat mid-meltdown" },
+      {
+        type: "p",
+        text: "“Take a deep breath.” “Use your words.” “Calm down and then we’ll talk.” All reasonable, and all asking for the very thing that just ran out. Most strategies for regulation work when a child doesn’t need them and fail when they do. That isn’t an argument against teaching them. It’s an argument against the conclusion that usually follows — that your child isn’t trying.",
+      },
+      {
+        type: "p",
+        text: "That conclusion has a cost. A child who keeps hearing “you could do it if you tried” has evidence that seems to back it up, because on a good day they did. Kids in the meltdown years are often tired of being corrected — and they’re rarely the only tired person in the house.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Use fewer words in the hard moment. Explanation is input, and a system at capacity can’t take in more. That holds for a nine-year-old on the floor and for an adult at the end of a long week. The talk can wait until everyone is back.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand before it fails, not after. A request postponed by fifteen minutes often goes fine; the same request pushed through a rising state usually costs the next hour.",
+      },
+      {
+        type: "p",
+        text: "Put the structure outside your child. The same sequence every night beats a decision made fresh at six o’clock, and a visible list beats a remembered one. Anything that depends on a child remembering it in the moment is competing for the thing that just ran out.",
+      },
+      {
+        type: "p",
+        text: "Treat the load as the intervention, not the background. Sleep, food and unbroken downtime aren’t the soft part of this. They’re the largest single lever most families have, and the first thing dropped when the week fills up.",
+      },
+      {
+        type: "p",
+        text: "And talk with your pediatrician, because some of this picture is medical. Sleep problems, iron, thyroid and anxiety can all produce evenings like these, and they’re found by testing rather than by inference. If nobody has looked, that comes first. We can’t do it, and neither can an article.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "There’s nothing a child has to get right in a LENS session — no sitting perfectly still, no concentrating, no being corrected. Small sensors, a brief, very low-energy feedback signal, and that’s it; most people, including young children, feel nothing at all. Kids read, draw, or just be kids while it runs. And if your child melts down at the appointment, that’s okay. Comfort beats stillness here, and a parent stays the whole time.",
+      },
+      {
+        type: "p",
+        text: `Every visit opens with a check-in, and parents join every one. We track what matters at home — transitions, recoveries, how the hard moments actually go — and the plan follows that rather than a template. Sessions run ${SESSION_LENGTH.value}. The first visit is ${BRAIN_MAP_NAME}: a real conversation and a baseline recording that guides your child’s starting plan, with a parent there for all of it.`,
+      },
+      {
+        type: "p",
+        text: "And if you’re reading this about yourself — a short fuse, a long recovery, staying upset well past the moment — plenty of adults come in for exactly this. The sessions work the same way at every age.",
+      },
+      {
+        type: "links",
+        text: "If the hard moments above sound like yours, these go further.",
+        items: [
+          { href: "/concerns/emotional-regulation", label: "Emotional regulation" },
+          { href: "/children-families", label: "Children & families" },
+          { href: "/first-visit", label: "Your first visit" },
+        ],
+      },
+      { type: "note", text: STANDARD_NOTE },
+    ],
+    finalHeading: "Tell us what the hard moments look like. We’ll be straight with you.",
+    finalSub:
+      "Including the part where you wonder what you did wrong. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Why Kids Melt Down Over Small Things (and What Helps)",
+    metaDescription:
+      "When a small thing sets off a huge meltdown, the small thing is rarely the cause. What’s underneath, why recovery takes so long, and what helps.",
+  },
+  {
     slug: "brain-fog-after-55",
     // No cluster in QUERY-TO-PAGE-MAP.md at all.
     cluster: null,
