@@ -1822,6 +1822,200 @@ export const resources: Resource[] = [
       "When a small thing sets off a huge meltdown, the small thing is rarely the cause. What’s underneath, why recovery takes so long, and what helps.",
   },
   {
+    // Feeds /concerns/brain-fog. Long-tail: `losing words mid-sentence` /
+    // word-finding that comes and goes with the week, in working adults — an
+    // item in that page's own `recognize` list, so it points there (the
+    // `bad-at-school` precedent). Not the cognitive-change-after-55 angle,
+    // which `brain-fog-after-55` holds, and not "executive brain fog" or
+    // "decision fatigue", which /concerns/performance holds.
+    slug: "losing-words-mid-sentence",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "Losing words mid-sentence, and why it’s worse on heavy days",
+    crumbLabel: "Losing words mid-sentence",
+    excerpt: "The word was right there, and then it wasn’t — more often on some days than others.",
+    image: { src: "/images/ear-clip-adult.jpg", position: "center 40%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "You’re halfway through a sentence in a meeting and the word you need is simply gone. Not a hard word — one you’ve used a thousand times. You talk around it, somebody fills it in, and the conversation moves on while you’re still catching up. It’s one of the things people describe most often when they call us about brain fog, and it’s rarely the personal failing it feels like in the moment.",
+    body: [
+      { type: "h2", text: "It’s rarely one word on its own" },
+      {
+        type: "p",
+        text: "Ask about the lost word and the rest of the picture usually comes with it. Thinking that feels slow or cloudy. Rereading the same paragraph again and again. Walking into a room and forgetting why. Feeling worn out by responsibilities you used to handle easily. People tend to file these as separate annoyances. More often they’re one experience showing up in different places.",
+      },
+      {
+        type: "p",
+        text: "And it isn’t spread evenly. The words are there on a quiet Monday morning and harder to reach by Thursday afternoon. That unevenness is the most useful thing about it, because it tells you something about what’s going on.",
+      },
+      { type: "h2", text: "A full system drops the small jobs first" },
+      {
+        type: "p",
+        text: "A foggy brain often feels like a tired one — energy going to noise instead of the task in front of you. Mental stamina depends on not burning through capacity by mid-afternoon, and that capacity isn’t fixed. It depletes and recovers. Short sleep, a skipped meal, an unresolved conflict, a noisy office and the cumulative cost of holding it together all week all take something away. The conversation didn’t get harder. What was available to meet it got smaller.",
+      },
+      {
+        type: "blockquote",
+        text: "The word didn’t go anywhere. There just wasn’t enough left over to go and get it.",
+      },
+      {
+        type: "p",
+        text: "Finding a word mid-sentence is a small, fast job, and you’re doing it while you listen, plan your next point and read the room. When there’s less to go round, it’s exactly the kind of job that slips — not because it’s hard, but because it has to happen on time.",
+      },
+      {
+        type: "p",
+        text: "It’s also why fog rarely travels alone. Attention difficulty, emotional reactivity, poor sleep and mental fatigue co-occur at rates far above chance, and it’s more useful to read that as one problem with several outputs than as four separate ones. If your nights or your fuse have been off lately too, that’s worth mentioning when you call.",
+      },
+      { type: "h2", text: "When it’s a doctor’s question first" },
+      {
+        type: "p",
+        text: "Fog that comes and goes with your week is one thing. A marked or fast change in memory, words or thinking — something you or the people around you have clearly noticed getting worse — is a different thing, and it goes to your doctor first. Anything sudden is more urgent still: trouble speaking that arrives out of nowhere, or with weakness, numbness or confusion, is an emergency. Call 911.",
+      },
+      {
+        type: "p",
+        text: "The everyday version has ordinary causes worth ruling out too. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders all produce this picture. They’re common, and they’re identified by testing rather than by inference. We can’t test for any of it, and neither can an article — if nobody has looked, that’s where to start.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Take the small jobs out of your head. A visible list, notes open during the call, names written at the top of the page before the meeting starts. Anything that runs without your attention beats anything that needs it, and it leaves more for the conversation itself.",
+      },
+      {
+        type: "p",
+        text: "Put the demanding thinking where you have the most to give it. If the words come easily at nine and not at three, the presentation goes at nine. That isn’t giving in. It’s planning around something real.",
+      },
+      {
+        type: "p",
+        text: "Cut the inputs on heavy days. Explanation is input, and a system near capacity can’t take much more of it — which is as true of the fourth meeting of the day as of anything else. One tab, one conversation, one thing at a time.",
+      },
+      {
+        type: "p",
+        text: "And look at the load underneath. Sleep, food and unbroken recovery time aren’t the soft version of this. They’re the largest single lever most people have, and a few honest weeks there tells you what’s left underneath.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "A LENS session asks nothing of a mind that already feels full. Small sensors sit on the scalp, the system returns a brief, very low-energy feedback signal, and there’s nothing to perform, practice or concentrate on. Most people feel nothing at all.",
+      },
+      {
+        type: "p",
+        text: `Sessions run ${SESSION_LENGTH.value} in a comfortable chair, and many clients read or simply rest. Every visit opens with a check-in on clarity, recall and mental energy, made specific — the meeting where the word went, the paragraph you reread, the afternoon that ran out — and your plan follows what those check-ins show rather than a template.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/brain-fog", label: "Brain fog, memory & mental fatigue" },
+          { href: "/how-lens-works", label: "How a LENS session works" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "You don’t need the right words for the call.",
+    finalSub:
+      "Tell us where the fog shows up — the meetings, the pages, the afternoons. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Losing Words Mid-Sentence? Why It’s Worse on Heavy Days",
+    metaDescription:
+      "Losing words mid-sentence, rereading the same page, a mind that’s spent by mid-afternoon — a plain look at everyday brain fog, and what to check first.",
+  },
+  {
+    // Feeds /concerns/stress-resilience. Long-tail: `time off not helping` /
+    // still running on empty after a weekend or a week away — "rest that
+    // doesn't restore", an item in that page's own `recognize` list. Not the
+    // body-bracing angle (`braced-for-something`) and not the night
+    // (`when-sleep-hygiene-isnt-it`, `exhausted-after-eight-hours`).
+    slug: "when-time-off-isnt-rest",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "When time off stops feeling like rest",
+    crumbLabel: "When time off isn’t rest",
+    excerpt: "You took the days off and did nothing on purpose. By Tuesday it was as if you’d never left.",
+    image: { src: "/images/recline.jpg", position: "center 55%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "You took the long weekend. You slept late, saw nobody you had to, and did nothing on purpose. By Tuesday lunchtime it was as though you’d never left. It’s one of the things we hear most from people who are still holding everything together — the job, the family, the calendar — and quietly running on empty.",
+    body: [
+      { type: "h2", text: "The time off worked. That’s the confusing part." },
+      {
+        type: "p",
+        text: "Nothing went wrong with the weekend. By any reasonable definition, you rested. Which leaves two conclusions on the table — that you need more of it, or that you’re somehow doing rest wrong — and neither tends to survive the next long weekend.",
+      },
+      {
+        type: "p",
+        text: "What people describe to us is a specific pattern. Functioning, but close to burnout. Rest that doesn’t restore. Hard days that cost the whole next day. And underneath all of it, one plain wish: to handle normal stress normally again.",
+      },
+      { type: "h2", text: "Stopping work isn’t the same as standing down" },
+      {
+        type: "p",
+        text: "A day off changes what’s on the calendar. It doesn’t, by itself, change what’s still running underneath. A system that never stands down eventually wears down — and standing down is work in its own right, separate from stopping work, drawing on the same capacity the week has been spending.",
+      },
+      {
+        type: "blockquote",
+        text: "Time off changes the calendar. It doesn’t automatically change what’s still running.",
+      },
+      {
+        type: "p",
+        text: "That capacity isn’t fixed. It depletes and recovers, and the things that drain it add up: short sleep, skipped meals, an unresolved conflict, noise, and the cumulative cost of holding it together all week. A couple of days off pays some of that back. When it has been building for months, a couple of days off is a payment, not a reset.",
+      },
+      { type: "h2", text: "Why the week takes it back so fast" },
+      {
+        type: "p",
+        text: "Monday arrives with the same inbox, the same people and the same list, and whatever margin the weekend built gets spent on the first ordinary problem. The trigger is rarely the cause. When something small lands hard, the small thing was the last item on an already full stack.",
+      },
+      {
+        type: "p",
+        text: "It’s also why a kind of rest that used to work can stop working. Consistency is the wrong benchmark. Holding this year’s weekend to the one that used to be enough sets a standard the system can’t meet — and the gap gets read as something about you, when it’s really about how much was on the stack.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Make recovery smaller and more frequent. The word that matters in “unbroken recovery time” is unbroken. An hour each day that nothing is allowed to interrupt does different work from a week away spent half-checking email.",
+      },
+      {
+        type: "p",
+        text: "Make the ordinary week the place this gets decided, not the break at the end of it. Sleep, food and unbroken recovery time are the largest single lever most people have, and the one most often skipped for being unglamorous.",
+      },
+      {
+        type: "p",
+        text: "Put the structure outside yourself. A routine that runs without your attention beats one that needs it — the same wind-down at the end of every workday, a calendar block other people can see, a decision made in the morning about what the evening is allowed to contain.",
+      },
+      { type: "h2", text: "Have it looked at" },
+      {
+        type: "p",
+        text: "Rest that doesn’t restore is something a doctor should hear about directly. Thyroid problems, low iron, sleep apnea, medication effects, and mood and anxiety disorders all produce this picture. They’re common, and they’re identified by testing rather than by inference. We can’t test for any of it, and neither can an article — if nobody has looked, start there.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "A LENS session asks nothing of you: a comfortable chair, a few small sensors, and a genuine pause. There’s nothing to perform and nothing to practice between visits, and most people feel nothing at all.",
+      },
+      {
+        type: "p",
+        text: "It’s calm, but it isn’t one more attempt at rest. LENS observes brain activity and returns a structured, very low-energy feedback signal, and we track how you actually feel at every visit.",
+      },
+      {
+        type: "p",
+        text: `Sessions run ${SESSION_LENGTH.value} — brief enough to fit a lunch break — with no homework, which matters to somebody whose calendar is already full. Every visit opens with a check-in on how the week actually went: how a hard day landed, what the day after it looked like, and whether rest is doing its job. Your plan follows what those check-ins show.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/stress-resilience", label: "Stress & resilience" },
+          { href: "/adults", label: "LENS for adults" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Tell us what a hard week actually costs you.",
+    finalSub:
+      "The weeks, not just the weekends. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Time Off Not Helping? Why Rest Stops Restoring You",
+    metaDescription:
+      "A long weekend or a week away, and you’re running on empty again by Tuesday. Why rest stops restoring when you’re functioning near burnout, and what helps.",
+  },
+  {
     slug: "brain-fog-after-55",
     // No cluster in QUERY-TO-PAGE-MAP.md at all.
     cluster: null,
