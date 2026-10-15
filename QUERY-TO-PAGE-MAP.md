@@ -69,7 +69,7 @@ Rule 6, applied the same way the location clusters were:
 | Children | `/for-children/` | `neurofeedback for children` | neurofeedback for kids, help for my child's focus, child emotional regulation | **157 impr, 0 clicks** — near-zero surface | **Missing — P1** |
 | Cost / access | `/pricing/` | `neurofeedback cost` | how much does neurofeedback cost, is neurofeedback covered by insurance, hsa fsa | Present in tail, no page | **Missing — P2** |
 | Trust / safety | `/is-lens-safe/` | `is neurofeedback safe` | is lens therapy legit, lens therapy reviews, lens neurofeedback side effects, can neurofeedback be dangerous, does neurofeedback work | **skepticism cluster: 489 impr, pos 34, 0 clicks** (3 mo, Oct 2026) | **Built, Oct 2026** — answers with disclosure, not claims: the signal, what people report, what the site refuses to claim, links out to both Google listings (never republished, no rating markup) |
-| Comparison | `/compare/` | `neurofeedback vs [alternative]` | amen clinic tennessee, exomind nashville, lens vs traditional neurofeedback | exomind 26 · amen clinic + vanderbilt + christiana in tail | **Missing — P3** |
+| Comparison | `/compare/` | `neurofeedback vs [alternative]` | amen clinic tennessee, exomind nashville, lens vs traditional neurofeedback | exomind 26 · amen clinic + vanderbilt + christiana in tail | **Missing — P3.** `lens vs traditional neurofeedback` is held by the article `/resources/lens-vs-traditional-neurofeedback/` (written 2026-10-15) until `/compare/` exists; `/compare/` should link to it rather than restate it |
 | Vibroacoustic | `/vibroacoustic-therapy/` | (retain only) | — | 3,446 impr — **purchase intent, not clinical** | Keep, do not expand |
 | Celebrity / social proof | `/trisha-yearwood/` | (retain) | — | Best CTR on site, pos 2.7 | Keep as-is |
 
@@ -272,7 +272,7 @@ by pattern, as before. Two rows differ from Ben's list and are marked.
 | `/concussion-do-you-know-the-symptoms/` | `/concerns/concussion/` |
 | `/10-ways-to-look-forward-to-monday-mornings/` | `/concerns/stress-resilience/` |
 | `/suffering-migraines-non-drug-treatment-can-help/` | `/concerns/migraines/` |
-| `/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out/` | `/lens-neurofeedback/` — not `/resources/lens-vs-traditional-neurofeedback/`, the exact subject, because that article is still placeholder text; move it when it is written |
+| `/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out/` | `/resources/lens-vs-traditional-neurofeedback/` — the exact subject; moved 2026-10-15 when the article was written (it pointed at `/lens-neurofeedback/` while the article was placeholder text) |
 | `/new-nashville-lens-neurofeedback-90-success-rate-adhd-anxiety-depression/` | `/lens-neurofeedback/` |
 | `/how-low-energy-neurofeedback-works-a-simple-explanation/` | `/how-lens-works/` |
 | `/chemical-vs-brainwaves-two-paths-to-brain-health/` | `/resources/lens-and-medication/` |

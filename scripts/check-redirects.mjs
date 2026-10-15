@@ -90,7 +90,8 @@ const ROWS = [
   ["/boost-focus-and-productivity-with-lens-neurofeedback-in-nashville-and-murfreesboro", "/concerns/focus-adhd", 301],
   ["/overcoming-depression-with-lens-neurofeedback-in-nashville-and-murfreesboro", "/concerns/depression", 301],
   ["/how-lens-neurofeedback-helps-manage-add-adhd-in-nashville-and-murfreesboro", "/concerns/focus-adhd", 301],
-  ["/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out", "/lens-neurofeedback", 301],
+  // Moved 2026-10-15 from /lens-neurofeedback: the article now exists.
+  ["/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out", "/resources/lens-vs-traditional-neurofeedback", 301],
   ["/achieving-peak-performance-with-lens", "/concerns/performance", 301],
   ["/how-low-energy-neurofeedback-works-a-simple-explanation", "/how-lens-works", 301],
   ["/chemical-vs-brainwaves-two-paths-to-brain-health", "/resources/lens-and-medication", 301],

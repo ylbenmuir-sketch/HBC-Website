@@ -271,15 +271,13 @@ export default function LensNeurofeedbackPage() {
       </section>
 
       {/* §3 — the differentiator, drawn entirely by describing LENS.
-          The comparison article this would otherwise draw on
-          (lib/resources.ts → lens-vs-traditional-neurofeedback) is still
-          [Draft] placeholder, so the only approved framing available is its
-          excerpt ("Active training vs. passive feedback") and the "LENS is
-          not" bullet from /how-lens-works ("A screen-based training program to
-          master"). Nothing here asserts how any other practice or approach
-          runs its sessions — there is no verified basis for it, and the closing
+          Nothing here asserts how any other practice or approach runs its
+          sessions — there is no verified basis for it, and the closing
           paragraph turns that into something honest rather than papering over
-          it. Do not add a comparison table until the article is written. */}
+          it. The full comparison is an article now
+          (lib/resources.ts → lens-vs-traditional-neurofeedback, 2026-10-15),
+          handed off with the button below rather than restated here as a
+          table: one page per question. */}
       <section className="sec sec-ivory2">
         <div className="wrap split">
           <div className="rv">
@@ -305,6 +303,11 @@ export default function LensNeurofeedbackPage() {
               practice. That varies by practice and by practitioner, and
               it&rsquo;s a fair question to put to whoever you&rsquo;re
               considering. What we can tell you plainly is what happens here.
+            </p>
+            <p style={{ marginTop: 26 }}>
+              <Btn href="/resources/lens-vs-traditional-neurofeedback" variant="ghost" arrow>
+                LENS vs. traditional neurofeedback
+              </Btn>
             </p>
           </div>
           <div className="rv">

@@ -100,6 +100,10 @@
  */
 
 import {
+  BRAIN_MAP_NAME,
+  COURSE_VARIES_NOTE,
+  FIRST_VISIT_DURATION,
+  FULL_COURSE,
   INFORMATION_SHARING,
   SESSION_LENGTH,
   SITE_NAME,
@@ -243,6 +247,9 @@ export type Resource = {
   title: string;
   crumbLabel: string;
   excerpt: string;
+  /** The photo under the lede. With neither this nor `plateSpec`, the
+   *  article renders no figure — for pieces whose first body block must
+   *  follow the lede directly (a crisis or doctor-first panel). */
   image?: { src: string; position: string };
   plateSpec?: string;
   readTime: string;
@@ -644,29 +651,93 @@ export const resources: Resource[] = [
   },
   {
     slug: "lens-vs-traditional-neurofeedback",
-    // /compare is P3 in QUERY-TO-PAGE-MAP.md and unbuilt.
+    // Written 2026-10-15 (Ben's brief). The home of the "lens vs traditional
+    // neurofeedback" term until a /compare page exists (P3 in
+    // QUERY-TO-PAGE-MAP.md), and the destination of the legacy post that
+    // ranked for it (next.config.ts). Describes traditional neurofeedback
+    // only as a method — what it asks of the person — never another
+    // practice's results, protocols or session counts; everything about LENS
+    // and HBC traces to /how-lens-works, /lens-neurofeedback, lib/faq.ts and
+    // the verified constants interpolated below.
     cluster: null,
-    datePublished: "2026-07-13",
+    datePublished: "2026-10-15",
     tag: "How it works",
     title: "LENS vs. traditional neurofeedback: an honest comparison",
     crumbLabel: "LENS vs. traditional neurofeedback",
-    excerpt: "Active training vs. passive feedback — and who tends to prefer which.",
+    excerpt: "Active training at a screen vs. passive feedback in a chair — and who tends to suit which.",
     image: { src: "/images/glass-head.jpg", position: "center 40%" },
     readTime: "6 min read",
     byline: HBC_BYLINE,
-    lede: "[Draft lede — active training vs. passive feedback, explained without jargon or salesmanship.]",
+    lede: "Read about neurofeedback for ten minutes and you’ll meet two descriptions that barely sound like the same thing. One is a video game you play with your brain. The other is a comfortable chair where almost nothing seems to happen. Both are neurofeedback. Here’s the difference, and how to tell which one fits you.",
     body: [
+      { type: "h2", text: "Same starting point, different next step" },
       {
         type: "p",
-        text: "[Draft article — an honest comparison; keep the no-hype standard and note where each approach tends to fit.]",
+        text: "Every kind of neurofeedback starts the same way: small sensors on the scalp read the brain’s electrical activity. Nothing goes in at that stage — the system is listening. What happens next is where the two approaches part, and it’s the part that decides what a session asks of you.",
+      },
+      { type: "h2", text: "Traditional neurofeedback: active training" },
+      {
+        type: "p",
+        text: "Traditional neurofeedback is a training method. You watch a screen — a game, an animation, sometimes a film — that responds to your brain activity. When your brainwaves move the way the program is looking for, you’re rewarded: the picture brightens, the game moves forward, the sound keeps playing. Repeated over many rounds, the idea is that your brain learns to produce that pattern more often.",
+      },
+      {
+        type: "p",
+        text: "That makes it active. You sit still, watch and engage, session after session; it’s a skill built by practice. How it’s run — the programs, the session length, how many visits — differs from one provider to the next, and those are fair questions to put to anyone you’re considering. We don’t publish comparisons of how other practices work. What we can tell you plainly is what happens here.",
+      },
+      { type: "h2", text: "LENS: passive feedback, nothing to perform" },
+      {
+        type: "p",
+        text: "LENS — the Low Energy Neurofeedback System — is passive. The sensors read the brain’s electrical activity at a spot, and the system answers with a brief feedback signal, far weaker than the signal from the phone in your pocket, lasting a fraction of a second. The signal carries no instruction. What follows is your own nervous system responding to information about itself.",
+      },
+      {
+        type: "p",
+        text: `So there’s no screen to watch, no game to win and nothing to concentrate on or get right. Most people, including young children, feel nothing at all. A regular session runs ${SESSION_LENGTH.value} in a comfortable chair, and many clients read or simply rest.`,
+      },
+      {
+        type: "blockquote",
+        text: "One approach asks you to learn something. The other asks you to sit down.",
+      },
+      { type: "h2", text: "Who tends to suit which" },
+      {
+        type: "p",
+        text: "If you like an active role — and a game on a screen holds your attention — training-based neurofeedback can suit you. Some people enjoy seeing their own effort show up in real time.",
+      },
+      {
+        type: "p",
+        text: "LENS tends to suit the people for whom effort is the problem. A child who can’t sit still and succeed at something on demand. An adult too depleted to take on one more task. Anyone who’s tired of being told to try harder. Nothing in a LENS session depends on how well you do, and nobody leaves with homework.",
+      },
+      { type: "h2", text: "The time it takes, here" },
+      {
+        type: "p",
+        text: `Your first visit is ${BRAIN_MAP_NAME}: ${FIRST_VISIT_DURATION}, with a full conversation, a baseline recording of brain activity and a written plan you keep. It’s a recording, not a test you can fail. After that, regular sessions are ${SESSION_LENGTH.value} each. A full course is ${FULL_COURSE.value.sessions} sessions, then maintenance. ${COURSE_VARIES_NOTE}`,
+      },
+      {
+        type: "p",
+        text: "Between visits there’s nothing to practice and nothing to keep up with at home.",
+      },
+      { type: "h2", text: "What a first visit at Harmonized looks like" },
+      {
+        type: "p",
+        text: "You sit down with a practitioner and talk through what’s actually going on — sleep, focus, mood, the shape of your week. We record a baseline of your brain activity, walk you through what we see in plain language, and you leave with a written plan. Every question gets answered before you decide anything.",
+      },
+      {
+        type: "links",
+        text: "Where to read more.",
+        items: [
+          { href: "/how-lens-works", label: "How a LENS session works" },
+          { href: "/lens-neurofeedback", label: "What LENS neurofeedback is" },
+          { href: "/first-visit", label: "Your first visit" },
+          { href: "/faq", label: "The full FAQ" },
+        ],
       },
       { type: "note", text: ADULT_NOTE },
     ],
-    finalHeading: "The next step is a conversation, not a commitment.",
-    finalSub: STANDARD_FINAL_SUB,
+    finalHeading: "Not sure which suits you? Ask on the free call.",
+    finalSub:
+      "Tell us what’s going on and what you’ve already tried. We’ll answer honestly and tell you plainly whether LENS is a fit — on the phone, before you book anything.",
     metaTitle: "LENS vs. Traditional Neurofeedback: An Honest Comparison",
     metaDescription:
-      "Active training vs. passive feedback — an honest comparison of LENS and traditional neurofeedback.",
+      "Traditional neurofeedback is active training at a screen. LENS is passive — nothing to perform. How they differ, who each suits, and the time each takes.",
   },
   {
     slug: "bad-at-school",
@@ -1145,6 +1216,217 @@ export const resources: Resource[] = [
     metaTitle: "Can You Do LENS Neurofeedback Alongside Therapy?",
     metaDescription:
       "Yes — LENS is routinely used alongside other care. Why we’d rather you kept your therapist, and what coordinating actually involves.",
+  },
+  {
+    // Feeds /concerns/depression. Long-tail: "why does everything feel like so
+    // much effort" — the `recognize` line "Getting started on anything feels
+    // heavier than it should", taken as a satellite the way `bad-at-school`
+    // takes children-school's. "Depression" is on none of the four ranking
+    // surfaces: the concern page owns `low mood` / `neurofeedback for
+    // depression`, and `depression treatment/therapy/cure` is Do-not-target.
+    // The concern page's rules apply here too: 988 first in the body, LENS
+    // alongside antidepressants and therapy and never instead, no outcome
+    // language at all (so no "clients commonly report" sentence).
+    slug: "when-everything-feels-like-effort",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "When getting started on anything feels heavier than it should",
+    crumbLabel: "When everything feels like effort",
+    excerpt: "The dishes, the email, the call back — and why effort isn’t what’s missing.",
+    // No figure (see `image`): the 988 panel follows the lede directly.
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "The call you meant to return on Monday. The dishes. The email that needs two lines. None of it is hard, and all of it feels like lifting something heavy. You’re functioning — going to work, showing up — and underneath it the days have gone flat.",
+    body: [
+      // The concern page renders its 988 block above the headline. An article
+      // has no such slot (the photo sits under the lede), so it is the first
+      // thing in the body, in the highlighted panel — the same numbers in the
+      // same order as CRISIS_REPLY and the page's `urgent`.
+      {
+        type: "note",
+        text: "If you’re thinking about ending your life, or you’re worried you might hurt yourself, call or text 988 — the Suicide & Crisis Lifeline — now, any hour, or text HOME to 741741. If you or someone with you is in immediate danger, call 911. Nothing in this article comes before that, and we’d tell you the same thing on the phone.",
+      },
+      { type: "h2", text: "It isn’t laziness, and you already suspected that" },
+      {
+        type: "p",
+        text: "The usual explanation is effort. Make a list, try harder, just start. The people who say it mean well, and the advice assumes the thing in short supply is willingness. What people describe to us is different: days that feel flat more often than not, and getting started on anything — work, a call, the dishes — feeling heavier than it should. Wanting to do the thing and being able to start it have come apart.",
+      },
+      {
+        type: "p",
+        text: "That gap is what wears people down. From the outside nothing looks wrong, so it is easy to read it as a character problem. You’re functioning. You’re also stuck. Both are true at the same time, and neither one cancels the other.",
+      },
+      { type: "h2", text: "Why it rarely arrives alone" },
+      {
+        type: "p",
+        text: "Flat days tend to bring company. The people who come to us about low mood usually describe the same cluster: sleep that doesn’t restore, attention that won’t hold, a mood that has gone flat, and a tiredness that isn’t about hours slept. We read that as a nervous system struggling to regulate. Whether it adds up to depression is a question for your doctor or your therapist, not for us.",
+      },
+      {
+        type: "p",
+        text: "Regulation is also a capacity that depletes and recovers. That is why a Tuesday that was manageable last week isn’t this week, even though nothing about Tuesday changed. What was available to meet it got smaller.",
+      },
+      {
+        type: "blockquote",
+        text: "Being told to just start is being asked to spend the thing that has already run low.",
+      },
+      {
+        type: "p",
+        text: "It is also why so much of the standard advice underperforms. Most strategies require the very capacity that is in short supply — they work when you don’t need them and fail when you do. That doesn’t make you bad at them. It makes the conclusion wrong, and the conclusion is usually that you didn’t try hard enough.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Put the structure outside yourself. Something that runs without your attention beats something that needs it — the same sequence every morning, an alarm rather than an intention, a decision made the night before about what tomorrow has to contain.",
+      },
+      {
+        type: "p",
+        text: "Protect the basics before anything else. Sleep, food and unbroken recovery time are the first things dropped when the week fills up, and the ones most worth defending when it does.",
+      },
+      {
+        type: "p",
+        text: "And tell the people already involved about the effort itself, in those words. “Everything feels heavier than it should” is useful for a therapist or a prescriber to hear, and it is easy to leave out of an appointment because it sounds too small to mention.",
+      },
+      { type: "h2", text: "Have it looked at" },
+      {
+        type: "p",
+        text: "Low mood that has been part of life for a while is something a doctor or a therapist should hear about directly. Thyroid problems, low iron, sleep apnea and medication effects can all sit underneath a flat stretch too; they are common, and they are identified by testing rather than by inference. We can’t test for any of it, and neither can an article.",
+      },
+      {
+        type: "p",
+        text: "If you haven’t seen anyone yet, you can still call us — no diagnosis and no referral is needed. If what you describe sounds like something a doctor or a therapist should hear first, we’ll tell you so plainly, and we’ll still be here alongside that care afterward.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "Alongside the care you already have — a therapist, a doctor, a prescriber — and that care continues exactly as it is. LENS runs alongside antidepressants and alongside therapy, never instead of either. We’re glad to coordinate with providers you already trust, and we never advise on medication.",
+      },
+      {
+        type: "p",
+        text: `For someone whose days already feel like effort, a session asks for none. Small sensors, a brief, very low-energy feedback signal, and nothing to perform or practice between visits. Most people feel nothing at all. Sessions run ${SESSION_LENGTH.value} in a comfortable chair, and many clients read or simply rest.`,
+      },
+      {
+        type: "p",
+        text: "Every visit opens with a structured check-in on how things are actually going — sleep, mood, focus, energy — and your plan follows that rather than a template. The first visit is the Brain Map: a real conversation, a recording of brain activity, and a written plan you keep. It’s a recording, not a test — and not an assessment of your mood.",
+      },
+      {
+        type: "links",
+        text: "The pages this one sits closest to.",
+        items: [
+          { href: "/concerns/depression", label: "Low mood & lost motivation" },
+          { href: "/how-lens-works", label: "How LENS works" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Bring the part that sounds too small to mention.",
+    finalSub:
+      "Tell us what’s going on, and who’s already involved. We won’t predict what LENS would do for you, and we’ll say plainly if it isn’t the right fit — on the phone, before you book anything.",
+    metaTitle: "Why Does Everything Feel Like So Much Effort?",
+    metaDescription:
+      "Days that feel flat, and starting anything feels heavier than it should. Why it isn’t laziness, why the usual advice misses, and what to have looked at.",
+  },
+  {
+    // Feeds /concerns/concussion. Long-tail: "good days and bad days after
+    // concussion" / "concussion symptoms that come and go" — the `recognize`
+    // line "The fog that lifts and returns", taken as a satellite. The page
+    // owns `post concussion symptoms` and `still not right after concussion`;
+    // `concussion treatment/therapy`, `tbi treatment` and `head injury
+    // treatment` are Do-not-target. The concern page's rules apply: doctor
+    // first (mirroring `urgent` and HEAD_INJURY_REPLY), for people already
+    // cleared, and no outcome claim of any kind about a brain injury.
+    slug: "good-days-bad-days-after-concussion",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "Good days and bad days, months after a concussion",
+    crumbLabel: "Good days and bad days",
+    excerpt: "The fog that lifts and returns, and why one good week doesn’t set the standard.",
+    // No figure (see `image`): the doctor-first panel follows the lede.
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "Tuesday was nearly normal. You cleared the inbox, held a conversation in a loud room, and went to bed thinking this might finally be behind you. By Thursday the fog was back, the lights in the grocery store were too much, and you snapped at someone over nothing.",
+    body: [
+      // The concern page's `urgent` block, carried into the body because an
+      // article has no slot above it. Wording from the page and from
+      // HEAD_INJURY_REPLY in lib/chat/safety.ts, which adds the 911 line.
+      // The highlighted panel, so it is the first thing read after the photo.
+      {
+        type: "note",
+        text: "If your head injury was recent, start with a doctor. Emergency care exists for a reason, and the first days after a head injury are not the time for anything else. If anyone has been knocked out, is vomiting, confused, or getting worse, call 911. And if your own symptoms are getting worse, or something new has started, that’s a call to your doctor now — not a pattern to wait out. This article is for later: weeks or months out, checked, cleared, and something still isn’t back.",
+      },
+      { type: "h2", text: "The swing is the hard part" },
+      {
+        type: "p",
+        text: "Most people expect the months after a concussion to run in one direction. What they describe instead is a swing: the fog that lifts and returns, light and noise that wear on you in a way they didn’t before, sleep that never fully recovered, and a shorter fuse than you used to have. On a good day most of it recedes. On a bad one it is all back at once, along with the sense that you’re working harder to do the same things.",
+      },
+      {
+        type: "p",
+        text: "The inconsistency is what makes it so hard to explain. The scans came back clean. You’ve been cleared. The people around you watched you manage on Tuesday, and so did you — which makes Thursday look like a choice, or like something you’re imagining. Plenty of people are told to wait it out at exactly this point.",
+      },
+      { type: "h2", text: "Why it moves as a group" },
+      {
+        type: "p",
+        text: "Post-concussion symptoms tend to cluster the same way attention, sleep, mood and mental fatigue cluster in everyone else: they’re outputs of a nervous system struggling to regulate. Read that way, a day when the fog, the noise and the short fuse all show up together is one problem with several outputs, not four separate ones.",
+      },
+      {
+        type: "p",
+        text: "Regulation is also a capacity that depletes and recovers, which is why an ordinary day can be manageable one week and not the next. Nothing about Thursday asked more than Tuesday did. What was available to meet it got smaller.",
+      },
+      {
+        type: "blockquote",
+        text: "A good Tuesday isn’t a promise about Thursday, and a bad Thursday isn’t a verdict on Tuesday.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Stop grading yourself against the best day. Consistency is the wrong benchmark, and holding yourself to your own best day sets a standard the system cannot meet. Plan the week around the capacity you usually have, not the capacity you had once.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand before it fails, not after. Leaving the loud room ten minutes early usually costs less than staying until it’s too much — the second one tends to take the evening with it.",
+      },
+      {
+        type: "p",
+        text: "Keep a plain record of the bad days — what the day before asked of you, how you slept — and take it to your doctor. A pattern on paper is easier to talk through than a feeling that something isn’t right. And if your doctor or your rehab team has told you to hold off on anything, follow them.",
+      },
+      { type: "h2", text: "Keep your doctor in it" },
+      {
+        type: "p",
+        text: "Being cleared isn’t the same as being finished with your doctor. Headaches that keep coming back, sleep that won’t settle and changes in mood are all things a doctor should hear about directly, and some of what sits underneath them is identified by testing rather than by inference. We can’t test for any of it, and neither can an article.",
+      },
+      {
+        type: "p",
+        text: "If you’re doing vestibular or vision rehab, keep doing it. Those are clinical therapies delivered by clinicians, and we don’t do either one.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "People come to us months and sometimes years after the injury. LENS is routinely used alongside other care, and we’re glad to coordinate with providers you already trust. Physicians in Middle Tennessee do refer patients to us, but you don’t need a referral to call.",
+      },
+      {
+        type: "p",
+        text: `A session asks nothing of you — no exercises, no drills, nothing to practice between visits. Small sensors sit on the scalp, the system returns a brief, very low-energy feedback signal, and most people feel nothing at all. Sessions run ${SESSION_LENGTH.value} in a comfortable chair, and many clients read or simply rest.`,
+      },
+      {
+        type: "p",
+        text: "Every visit opens with a structured check-in on how things are actually going — sleep, mood, focus, energy — so the good days and the bad days are both on the record, and the plan follows them rather than a template. The first visit is a recording of brain activity and a written plan you keep. It isn’t a medical assessment of your injury, and it isn’t a test you can fail.",
+      },
+      {
+        type: "links",
+        text: "The pages this one sits closest to.",
+        items: [
+          { href: "/concerns/concussion", label: "Post-concussion symptoms" },
+          { href: "/first-visit", label: "Your first visit" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Tell us about the bad days too. We’ll be straight with you.",
+    finalSub:
+      "Including the ones that are hard to explain. We don’t predict how it would go for anyone, and we’ll say plainly if LENS isn’t the right fit — on the phone, before you book anything.",
+    metaTitle: "Good Days and Bad Days, Months After a Concussion",
+    metaDescription:
+      "Concussion symptoms that come and go months later — the fog that lifts and returns, why one good week sets no standard, and when to call your doctor.",
   },
   {
     slug: "brain-fog-after-55",

@@ -130,7 +130,11 @@ export default async function ArticlePage({
             </div>
             <p className="lede">{article.lede}</p>
           </div>
-          {article.image ? (
+          {/* Neither an image nor a plate: no figure at all, so the body —
+              and on the depression and concussion articles, the 988 /
+              doctor-first panel that opens it — follows the lede directly,
+              the way those concern pages carry no photo (2026-10-15). */}
+          {!article.image && !article.plateSpec ? null : article.image ? (
             <PhotoFrame
               src={article.image.src}
               alt={article.title}

@@ -244,15 +244,15 @@ const nextConfig: NextConfig = {
       ...to(["/concussion-do-you-know-the-symptoms"], "/concerns/concussion"),
       ...to(["/10-ways-to-look-forward-to-monday-mornings"], "/concerns/stress-resilience"),
       ...to(["/suffering-migraines-non-drug-treatment-can-help"], "/concerns/migraines"),
-      // /lens-neurofeedback, not /resources/lens-vs-traditional-neurofeedback:
-      // that article is the exact subject of the first post, but as of Oct
-      // 2026 its body is still placeholder text. Move it when the article is
-      // written.
+      // The comparison post goes to the comparison article, written
+      // 2026-10-15 — it is the exact subject. (It went to /lens-neurofeedback
+      // while the article was placeholder text.)
       ...to(
-        [
-          "/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out",
-          "/new-nashville-lens-neurofeedback-90-success-rate-adhd-anxiety-depression",
-        ],
+        ["/traditional-neurofeedback-vs-lens-neurofeedback-why-lens-stands-out"],
+        "/resources/lens-vs-traditional-neurofeedback"
+      ),
+      ...to(
+        ["/new-nashville-lens-neurofeedback-90-success-rate-adhd-anxiety-depression"],
         "/lens-neurofeedback"
       ),
       ...to(["/how-low-energy-neurofeedback-works-a-simple-explanation"], "/how-lens-works"),
