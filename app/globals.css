@@ -1296,6 +1296,14 @@ html.js .rv.in { opacity: 1; transform: none; }
   .home .ccard { flex-basis: 88%; }
   .celeb-quote { font-size: 25px; }
 }
+/* Short, narrow phones (320×568, the iPhone SE class): the 2026-10-15
+   headline ("nothing to take, nothing to do.") runs a line longer than the
+   old one, which put the bottom of "Get a Free Call Today" 11px under the
+   ask bar. One size down and a tighter sub keep 12px clear. */
+@media (max-width: 340px) and (max-height: 640px) {
+  .hero h1 { font-size: 35px; }
+  .hero .sub { margin: 14px 0 22px; }
+}
 
 /* ============================================================
    SITE ASSISTANT — phase-8-chatbot.md §6, dressed in the design
@@ -1749,6 +1757,44 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
 .askbar-decoy.has-mark[data-to="bar"] .askbar-decoy-mark { visibility: visible; }
 .askbar-decoy.no-anim * { transition: none !important; }
 
+/* -- the launcher look (Ben, 2026-10-15) ---------------------------------
+   "Too easy to miss." The full bar now says what it is — the wave and a navy
+   "Ask us" label ahead of the rotating question, inside a sage edge — and
+   the collapsed pill is a navy "Questions? Ask us" with the wave, the brand's
+   ink rather than the page's cream. No gold: that stays the primary CTA's.
+   Geometry is untouched (heights, widths, the morph), so nothing moves. */
+/* min-width 0 on the layer (a grid item) and the bar (a flex item): each
+   one's floor was its content's width, and with the label in it the bar ran
+   32px past a 320px screen; now the input is
+   what gives (it truncates with an ellipsis), never the viewport. */
+.askbar-layer, .askbar { min-width: 0; }
+.askbar { border-color: var(--sage-deep); }
+.askbar-mark { display: inline-flex; align-items: center; gap: 7px; }
+.askbar-label { font-family: var(--sans); font-size: 15px; font-weight: 700; color: var(--navy); line-height: 1; white-space: nowrap; padding-right: 8px; border-right: 1px solid var(--line); }
+.askbar-layer.is-compact .askbar { background: var(--navy); border-color: var(--navy); cursor: pointer; }
+.askbar-layer.is-compact .askbar-mark { display: inline-flex; color: #c7d3c3; }
+.askbar-layer.is-compact .askbar-label { display: none; }
+.askbar-layer.is-compact .askbar-input { font-weight: 600; }
+.askbar-layer.is-compact .askbar-input::placeholder { color: var(--ivory); }
+.askbar-layer.is-compact .askbar-go { background: rgba(251, 248, 241, 0.14); color: var(--ivory); }
+.askbar-decoy-rect { transition: x 0.2s var(--bb-ease), y 0.2s var(--bb-ease), width 0.2s var(--bb-ease), height 0.2s var(--bb-ease), rx 0.2s var(--bb-ease), filter 0.2s ease, fill 0.2s ease, stroke 0.2s ease; }
+.askbar-decoy[data-to="pill"] .askbar-decoy-rect { fill: var(--navy); stroke: var(--navy); }
+.askbar-decoy[data-to="pill"] .askbar-decoy-text { color: var(--ivory); font-weight: 600; }
+.askbar-decoy-text { transition: transform 0.2s var(--bb-ease), color 0.2s ease; }
+@media (max-width: 360px) { .askbar-label { font-size: 14px; } }
+
+/* The one-time cue: a sage ring that swells and fades, twice. Animates
+   box-shadow on the bar only — paint, never layout. */
+@keyframes askbar-cue {
+  0% { box-shadow: 0 0 0 0 rgba(89, 110, 91, 0.55); }
+  70% { box-shadow: 0 0 0 12px rgba(89, 110, 91, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(89, 110, 91, 0); }
+}
+.askbar-layer.is-cue .askbar { animation: askbar-cue 1.3s ease-out 2; }
+@media (prefers-reduced-motion: reduce) {
+  .askbar-layer.is-cue .askbar { animation: none; }
+}
+
 /* -- the reserve ---------------------------------------------------------
    A fixed bar covers the bottom of the viewport by definition; what it must
    not do is cover the same copy permanently. Every line of the page can be
@@ -1919,4 +1965,131 @@ body[data-bottombar] footer.site {
 @media (max-width: 760px) {
   .bm-soon { flex-direction: column; align-items: stretch; gap: 22px; }
   .bm-soon-img { width: 100%; }
+}
+
+/* ── "What it takes" (components/WhatItTakes.tsx, 2026-10-15) ────────────
+   Time, money, effort — scannable, compact. Three columns from 761px; on a
+   phone three short rows, heading beside its lines, so the strip costs as
+   little scroll as it can before the next CTA. */
+.what-it-takes { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
+.what-it-takes .eyebrow { margin-bottom: 26px; }
+.wit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.wit-col { padding: 0 32px; border-left: 1px solid var(--line); }
+.wit-col:first-child { padding-left: 0; border-left: 0; }
+.wit-col h3 { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
+.wit-col ul { list-style: none; margin: 0; padding: 0; }
+.wit-col li { font-size: 16px; color: var(--ink); line-height: 1.5; padding: 3px 0; }
+.wit-note { font-size: 13.5px; color: var(--slate); line-height: 1.5; margin-top: 8px; }
+.wit-foot { margin-top: 28px; font-size: 16px; color: var(--ink); }
+.wit-foot a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
+@media (max-width: 760px) {
+  .what-it-takes { padding: 44px 0 40px; }
+  .what-it-takes .eyebrow { margin-bottom: 14px; }
+  .wit-grid { grid-template-columns: 1fr; }
+  .wit-col { display: grid; grid-template-columns: 74px 1fr; column-gap: 12px; padding: 12px 0; border-left: 0; border-top: 1px solid var(--line); }
+  .wit-col:first-child { border-top: 0; padding-top: 0; }
+  .wit-col h3 { font-size: 19px; margin: 0; line-height: 1.4; }
+  .wit-col li { font-size: 15.5px; padding: 1px 0; }
+  .wit-note { grid-column: 2; font-size: 13px; margin-top: 4px; }
+  .wit-foot { margin-top: 16px; font-size: 15.5px; }
+}
+
+/* "Who we work with" (lib/concerns.ts → audience; /concerns/performance). */
+.audience { border-bottom: 1px solid var(--line); }
+.audience-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.audience-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 24px 22px; }
+.audience-card h3 { font-size: 21px; margin-bottom: 10px; }
+.audience-card p { font-size: 15.5px; color: var(--slate); line-height: 1.55; }
+@media (max-width: 1060px) { .audience-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .audience-grid { grid-template-columns: 1fr; gap: 12px; }
+  .audience-card { padding: 18px 18px; }
+  .audience-card h3 { font-size: 19px; margin-bottom: 6px; }
+}
+
+/* ── Desktop scale (Ben, 2026-10-15) ──────────────────────────────────────
+   At 100% zoom on a laptop the site read too large; Ben preferred how it
+   felt at 90%. This is that feel built into the scale itself — no `zoom`,
+   no transform: headings, the measure and the spacing come down about ten
+   percent, body text to 16px (never below), and small print stays exactly
+   where it was (it was already at its floor). Last in the file on purpose,
+   so it wins on source order at equal specificity.
+
+   Two bands, because the header changes at 1061px: type from 1024px up;
+   the nav, the measure and the section rhythm from 1061px up, where the
+   desktop nav replaces the drawer. Nothing under 1024px changes. */
+@media (min-width: 1024px) {
+  body { font-size: 16px; }
+  h1 { font-size: clamp(40px, 4.7vw, 66px); }
+  h2 { font-size: clamp(30px, 2.95vw, 41px); }
+  h3 { font-size: 23px; }
+  .sub { font-size: 17px; }
+  .ccard h3, .ccard h4 { font-size: 23px; }
+  .concern-group-head { font-size: 29px; }
+  .family-row .fr-copy h4 { font-size: 28px; }
+  .goals-list li { font-size: 16px; }
+  .jstep h3 { font-size: 20px; }
+  .care h3 { font-size: 21px; }
+  .care-list h3 { font-size: 20px; }
+  .care-list .care-n { font-size: 28px; }
+  .founder-note blockquote { font-size: 21.5px; }
+  .quote p { font-size: 21px; }
+  .proof-grid strong { font-size: 34px; }
+  .review-band strong { font-size: 24px; }
+  .loc-card h3, .loc-card h2 { font-size: 24px; }
+  details.faq summary { font-size: 21px; padding: 22px 2px; }
+  .entry h2 { font-size: 30px; }
+  .member h3, .member h2 { font-size: 23px; }
+  .article h1 { font-size: 46px; }
+  .article .lede { font-size: 19.5px; }
+  .article p { font-size: 17px; }
+  .article h2 { font-size: 29px; margin: 42px 0 16px; }
+  .article blockquote { font-size: 23.5px; }
+  .res-card h3, .res-card h2 { font-size: 21px; }
+  .final h2 { font-size: clamp(32px, 3.2vw, 44px); }
+  .celeb-name { font-size: clamp(32px, 2.7vw, 41px); }
+  .medical-first p { font-size: 17.5px; }
+  .medical-later p { font-size: 16.5px; }
+}
+@media (min-width: 1061px) {
+  .wrap { max-width: 1100px; padding: 0 40px; }
+  .wrap-wide { max-width: 1240px; padding: 0 40px; }
+
+  /* The header: shorter, and every label on one line. */
+  .nav { max-width: 1240px; padding: 0 40px; height: 76px; gap: 22px; }
+  .logo { gap: 12px; }
+  .logo-name { font-size: 19px; }
+  .logo-name span { font-size: 9.5px; }
+  .nav-links { gap: 24px; }
+  .nav-links a.top { font-size: 14.5px; padding: 27px 0; white-space: nowrap; }
+  .nav-cta { padding: 11px 20px; font-size: 14.5px; white-space: nowrap; }
+  .nav-tel { font-size: 13.5px; white-space: nowrap; }
+  .mega { padding: 30px 36px; gap: 48px; }
+  .mega a { font-size: 14.5px; }
+
+  .sec { padding: 100px 0; }
+  .sec-tight { padding: 76px 0; }
+  .home .sec-tight { padding: 72px 0; }
+  .sec-head { margin-bottom: 52px; }
+  .sec-head h2 { margin: 18px 0 14px; }
+
+  .hero { padding: 76px 0 0; }
+  .hero-grid { gap: 64px; }
+  .hero .sub { margin: 20px 0 32px; }
+  .hero-ph { height: 540px; }
+  .page-hero { padding: 80px 0 70px; }
+  .page-hero h1 { margin: 20px 0 18px; }
+  .page-hero.compact h1 { font-size: 42px; }
+
+  .btn { padding: 16px 30px; }
+  .form label { margin: 18px 0 7px; }
+  .form input, .form select, .form textarea { padding: 14px 16px; }
+  footer.site { padding: 64px 0 40px; }
+}
+/* Between 1061px and 1240px the six labels, the number and the button only
+   just fit on one line; the number gives way first (it is in the drawer,
+   the footer and on every location page). */
+@media (min-width: 1061px) and (max-width: 1239px) {
+  .nav-tel { display: none; }
+  .nav-links { gap: 20px; }
 }

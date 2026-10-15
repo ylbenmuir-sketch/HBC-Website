@@ -12,6 +12,23 @@ import { dirname } from "node:path";
 const GONE_PATTERN =
   "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|\\d+(?:-\\d+)?)";
 
+/**
+ * The legacy redirect sources as one regex alternation, for the trailing-slash
+ * catch-all's lookahead: "/add-adhd" → "add-adhd", "/sitemap_index.xml" →
+ * "sitemap_index\.xml", and a "/:path*" tail → any further segments.
+ */
+function legacyPattern(sources: string[]): string {
+  return sources
+    .map((source) =>
+      source
+        .replace(/^\//, "")
+        .replace(/\/:path\*$/, "\u0000")
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace("\u0000", "(?:/[^/]+)*")
+    )
+    .join("|");
+}
+
 const nextConfig: NextConfig = {
   /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
    *  scanner wants (SEO-AUDIT-3 §2.4). */
@@ -123,19 +140,13 @@ const nextConfig: NextConfig = {
     // permanent to Google; 301 is the one every tool, CDN and two-year-old
     // link checker understands, and the one QUERY-TO-PAGE-MAP.md promises.
     //
-    // Each source is written out in BOTH slash forms. `next start` matches a
-    // redirect source with the slash optional, but Vercel compiles the
-    // sources into its own routing table without that allowance, so on
-    // Vercel `/add-adhd/` missed its row, hit the trailing-slash catch-all
-    // (308 → /add-adhd) and only then the 301 — two hops on every legacy
-    // URL (found 2026-10-14, fixed 2026-10-15). An explicit `/add-adhd/`
-    // rule is one hop on both. (Rewrites were never affected: the 410s were
-    // already one hop on Vercel.)
-    const to = (sources: string[], destination: string) =>
-      sources.flatMap((source) => [
-        { source, destination, statusCode: 301 },
-        { source: `${source}/`, destination, statusCode: 301 },
-      ]);
+    // Every source `to()` sees is also collected, so the trailing-slash
+    // catch-all at the end can step around it (see LEGACY below).
+    const legacy: string[] = [];
+    const to = (sources: string[], destination: string) => {
+      legacy.push(...sources);
+      return sources.map((source) => ({ source, destination, statusCode: 301 }));
+    };
     return [
       // Duplicate homepages.
       ...to(["/home", "/home-simple"], "/"),
@@ -267,8 +278,16 @@ const nextConfig: NextConfig = {
       // the bare path and only then a 410. Rewrite sources match the slash
       // optionally, the same as redirect sources, so the carved-out paths
       // answer 410 in one hop in both forms. GONE_PATTERN is the one list.
+      //
+      // It steps around every legacy source too (2026-10-15). `next start`
+      // tries the rules in order, so `/add-adhd/` met its own 301 first; on
+      // Vercel the catch-all answered first — `/add-adhd/` was a 308 to
+      // `/add-adhd` and only then a 301, two hops on every legacy URL, while
+      // the 410 paths (already excluded here) were one hop. Excluding the
+      // legacy sources the same way makes the order irrelevant: the slash
+      // form of a legacy URL can only match its own row.
       {
-        source: `/:path((?!${GONE_PATTERN}/$).+)/`,
+        source: `/:path((?!(?:${GONE_PATTERN}|${legacyPattern(legacy)})/$).+)/`,
         destination: "/:path",
         permanent: true,
       },

@@ -653,6 +653,28 @@ export const MAINTENANCE_NOTE =
   `and they aren’t part of the ${PACKAGE_SESSIONS}-session package.`;
 
 /**
+ * Two FAQ answers only Ben can give (2026-10-15). Both questions — "What if it
+ * isn't working for me?" and "Do people feel anything after a session?" —
+ * stay off /faq, the FAQPage schema, llms.txt and the assistant's index in
+ * production until these are verified (lib/faq.ts), and
+ * REQUIRE_VERIFIED_CONTENT=true names both (lib/content-validation.ts).
+ *
+ * Do not draft either. The refund policy is a promise about money; what
+ * clients report after a session is a claim about effects. Each must be
+ * Ben's own words, pasted into `value` with `verified: true`.
+ */
+export const UNUSED_SESSIONS_POLICY: Verifiable<string | null> = {
+  value: null,
+  verified: false,
+  note: "[CONFIRM: stop / refund policy for unused package sessions]",
+};
+export const AFTER_SESSION_REPORT: Verifiable<string | null> = {
+  value: null,
+  verified: false,
+  note: "[CONFIRM: what clients most commonly report after a session — founder to supply]",
+};
+
+/**
  * Insurance and payment, in Ben's words, verbatim.
  *
  * Replaces the [Confirm policy] / [Confirm HSA/FSA policy] pair. Held here

@@ -1,3 +1,5 @@
+import { HAS_STORY_VIDEOS } from "@/lib/videos";
+import WhatItTakes from "@/components/WhatItTakes";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -311,14 +313,17 @@ export default function HomePage() {
             <div className="eyebrow">
               LENS Neurofeedback &middot; Nashville &amp; Murfreesboro
             </div>
-            {/* The sage italic is back: this headline turns on the em dash,
-                and "without medication" is the differentiator it turns on —
-                the same shape as "nothing to perform." on /how-lens-works. The
-                previous plain headline had no pivot, which is why it carried
-                no accent. */}
+            {/* The headline turns on the em dash, and the sage italic carries
+                the pivot — the same shape as "nothing to perform." on
+                /how-lens-works. It said "without medication." until
+                2026-10-15 (Ben): beside /is-lens-safe's "we don't position
+                LENS as an alternative to medication" a skeptic read a
+                contradiction. "Nothing to take, nothing to do" is the same
+                difference, said about the session rather than against a
+                prescription. */}
             <h1>
               Help for anxiety, focus, and sleep &mdash;{" "}
-              <em className="sage">without medication.</em>
+              <em className="sage">nothing to take, nothing to do.</em>
             </h1>
             {/* The one declarative sentence about what the organisation is,
                 on the page every engine fetches first. It lived only on
@@ -637,13 +642,14 @@ export default function HomePage() {
                   <strong>{reviewCountLabel(reviewCount)}</strong>
                   <span>From Nashville &amp; Murfreesboro clients</span>
                 </div>
-                <div>
-                  <strong>Video stories</strong>
-                  <span>Client interviews, in their own words</span>
-                  <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                    Film 2–3 short testimonials
-                  </ConfirmTag>
-                </div>
+                {/* Only once there is a video behind it (lib/videos.ts →
+                    HAS_STORY_VIDEOS, Ben 2026-10-15). */}
+                {HAS_STORY_VIDEOS && (
+                  <div>
+                    <strong>Video stories</strong>
+                    <span>Client interviews, in their own words</span>
+                  </div>
+                )}
               </div>
             )}
             <p className="sample-note">
@@ -732,6 +738,11 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Time, money, effort — right after "How it works", the moment
+          someone has the steps and is asking whether it is worth it (Ben,
+          2026-10-15). Every figure from lib/site-config.ts. */}
+      <WhatItTakes />
 
       {/* The Harmonized Brain Map — a handoff now, not the section that owned
           it (Oct 2026). The brain-mapping cluster was landing here, on a

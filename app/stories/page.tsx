@@ -1,10 +1,10 @@
+import { HAS_STORY_VIDEOS } from "@/lib/videos";
 import { Fragment } from "react";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import Quote from "@/components/Quote";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
-import ConfirmTag from "@/components/ConfirmTag";
 import { combinedReviewCount, locations, reviewCountLabel } from "@/lib/locations";
 import {
   EXPERIENCES_DISCLAIMER,
@@ -119,13 +119,14 @@ export default function StoriesPage() {
                   ))}
                 </span>
               </div>
-              <div>
-                <strong>Video stories</strong>
-                <span>Client interviews in their own words</span>
-                <ConfirmTag style={{ display: "block", marginTop: 4 }}>
-                  Film 2–3 short testimonials
-                </ConfirmTag>
-              </div>
+              {/* Only once there is a video behind it (lib/videos.ts →
+                  HAS_STORY_VIDEOS, Ben 2026-10-15). */}
+              {HAS_STORY_VIDEOS && (
+                <div>
+                  <strong>Video stories</strong>
+                  <span>Client interviews in their own words</span>
+                </div>
+              )}
             </div>
           )}
         </div>

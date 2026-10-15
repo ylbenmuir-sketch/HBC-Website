@@ -253,7 +253,8 @@ const PATTERNS: Array<{ kind: RefusalKind; pattern: RegExp }> = [
 ];
 
 /**
- * "Help without medication" is the homepage headline, not a medication
+ * "Help without medication" is how people phrase a question about the
+ * practice (and was the homepage headline until 2026-10-15), not a medication
  * question. Removed before matching so the phrase can be said back to the
  * assistant without tripping the medication rule.
  *

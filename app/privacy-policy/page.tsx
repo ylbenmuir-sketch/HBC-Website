@@ -209,15 +209,21 @@ export default function PrivacyPolicyPage() {
                 analytics.ts) — the same constant that decides whether the
                 GA4 tag renders — so the two cannot disagree. The video
                 paragraph describes components/VideoEmbed.tsx: a poster from
-                this origin, and youtube-nocookie.com only on a click.
+                this origin, and youtube-nocookie.com only on a click. The
+                browser-storage sentence follows FEATURE_ASSISTANT: the ask
+                bar's one-time cue (components/StickyAskBar.tsx → CUE_KEY)
+                is the site's only use of localStorage.
 
                 Adding any other tag, pixel, widget, embed, or font, script or
                 image from another origin falsifies it. Whoever does that edits
                 this section in the SAME COMMIT. */}
             <h2>Cookies, analytics and video</h2>
             <p>
-              This site itself sets no cookies and stores nothing in your
-              browser. Its fonts and images are served from this site.
+              This site itself sets no cookies. Its fonts and images are served
+              from this site.
+              {FEATURE_ASSISTANT
+                ? " The one thing it stores in your browser is a note that you have already seen the “Ask us” nudge, so it is not shown again — it stays on your device and is never sent to us."
+                : " It stores nothing in your browser."}
             </p>
             {ANALYTICS_ENABLED ? (
               <p>

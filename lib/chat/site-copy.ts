@@ -868,15 +868,16 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "anxiety",
           "focus",
           "sleep",
-          "medication",
+          // "medication" left with the old headline (2026-10-15): this
+          // passage no longer mentions it, and /is-lens-safe answers it.
           "adult",
           "kid",
           "tennessee",
           "neurofeedback",
         ],
-        text: "Help for anxiety, focus, and sleep — without medication. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+        text: "Help for anxiety, focus, and sleep — nothing to take, nothing to do. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         mirror: [
-          "Help for anxiety, focus, and sleep — without medication.",
+          "Help for anxiety, focus, and sleep — nothing to take, nothing to do.",
           "Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         ],
       },
@@ -1037,12 +1038,16 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
     // for the reason testimonials aren't indexed either (content-index.ts §
     // "Testimonials and the location quotes"): proof is the page's job.
     TRISHA_APPROVAL_TAG: "not indexed — the celebrity band is in no passage",
-    "Film 2–3 short testimonials": "not indexed — a production to-do, not a claim",
   },
   // Ben confirmed session length, pricing and insurance. All three tags are
   // gone, faq:6, faq:12 and faq:13 are back in the index, and the three
   // `rendered` overrides that existed only to hold the tags went with them.
-  "app/faq/page.tsx": {},
+  "app/faq/page.tsx": {
+    // The two questions waiting on Ben (2026-10-15, lib/faq.ts → gated): in
+    // a draft build they carry SiteFaq.confirmTag, which keeps the answer out
+    // of the index; in production they are not in SITE_FAQS at all.
+    "faq.confirmTag": "not indexed — confirmTag on the SiteFaq holds it out",
+  },
   // The privacy notice. Ben confirmed retention (24 months from last contact
   // for consultation requests, 12 for guide sign-ups) and the access/deletion
   // promise, so both paragraphs render and both tags are gone. Neither claim

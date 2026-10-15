@@ -22,6 +22,8 @@ import {
   START_TIMING,
   STAT_SESSIONS,
   TESTIMONIALS,
+  AFTER_SESSION_REPORT,
+  UNUSED_SESSIONS_POLICY,
   VIDEO_APPOINTMENT_ONE_DURATION,
   VIDEO_APPOINTMENT_ONE_UPLOAD_DATE,
 } from "./site-config";
@@ -105,6 +107,10 @@ check(
 check("First-visit video running time", VIDEO_APPOINTMENT_ONE_DURATION.verified);
 check("First-visit video upload date", VIDEO_APPOINTMENT_ONE_UPLOAD_DATE.verified);
 
+// The two FAQ answers only Ben can give (lib/faq.ts → gated). Each question
+// is absent from production until its answer is verified.
+check("FAQ: \"What if it isn't working for me?\" — unused-session refund policy", UNUSED_SESSIONS_POLICY.verified);
+check("FAQ: \"Do people feel anything after a session?\" — what clients report", AFTER_SESSION_REPORT.verified);
 
 if (unresolved.length > 0) {
   const summary = `[content] ${unresolved.length} unverified fact(s): ${unresolved.join(

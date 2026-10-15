@@ -16,6 +16,16 @@ import type { ReactNode } from "react";
  */
 export type FaqItem = { q: string; a: string; rendered?: ReactNode };
 
+/** "What does it cost?" → "what-does-it-cost" — each question's anchor, so a
+ *  page can link to one answer (/faq#what-does-it-cost). */
+export function faqAnchor(q: string): string {
+  return q
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 /**
  * Native <details> accordion — keyboard and screen-reader accessible by
  * default (summary is a real disclosure button). `openFirst` expands the
@@ -33,7 +43,7 @@ export default function FAQAccordion({
   return (
     <div className={className}>
       {items.map((item, i) => (
-        <details className="faq" key={item.q} open={openFirst && i === 0}>
+        <details className="faq" id={faqAnchor(item.q)} key={item.q} open={openFirst && i === 0}>
           <summary>{item.q}</summary>
           <div className="a">{item.rendered ?? item.a}</div>
         </details>

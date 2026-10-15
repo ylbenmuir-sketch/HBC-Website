@@ -10,10 +10,25 @@ import {
   PACKAGE_PRICE,
   PACKAGE_SAVING,
   PACKAGE_SESSIONS,
+  AFTER_SESSION_REPORT,
   RISK_REVERSAL,
   SESSION_LENGTH,
   SESSION_PRICE,
+  SHOW_DRAFT_CONTENT,
+  UNUSED_SESSIONS_POLICY,
 } from "./site-config";
+
+/**
+ * A question whose answer is waiting on Ben (2026-10-15): in the list only
+ * once its fact is verified, or in a draft build, where it renders with its
+ * gold tag. A production build without the fact does not have the question
+ * at all — not on /faq, not in the FAQPage schema, not in llms.txt, not in
+ * the assistant's index.
+ */
+function gated(fact: { verified: boolean; note?: string }, faq: SiteFaq): SiteFaq[] {
+  if (fact.verified) return [faq];
+  return SHOW_DRAFT_CONTENT ? [{ ...faq, confirmTag: fact.note ?? "[CONFIRM]" }] : [];
+}
 
 /**
  * The 14 questions on /faq.
@@ -76,6 +91,11 @@ export const SITE_FAQS: SiteFaq[] = [
     q: "How long is a session?",
     a: `Regular sessions run ${SESSION_LENGTH.value} — brief enough to fit a lunch break or a school pickup. Your first visit, the Brain Map, takes ${FIRST_VISIT_DURATION}, because it includes the full conversation and the recording.`,
   },
+  // What a session leaves people with — Ben's words or nothing (no draft).
+  ...gated(AFTER_SESSION_REPORT, {
+    q: "Do people feel anything after a session?",
+    a: AFTER_SESSION_REPORT.value ?? "",
+  }),
   {
     // Ben confirmed the course and the taper, so this answer states both
     // instead of hedging. The old copy — "it genuinely varies from person to
@@ -130,6 +150,14 @@ export const SITE_FAQS: SiteFaq[] = [
     q: "Does insurance cover it?",
     a: INSURANCE_POLICY,
   },
+  // The first sentence is the practice as published (COURSE_VARIES_NOTE:
+  // "we review it with you at every visit"); the policy is Ben's to give.
+  ...gated(UNUSED_SESSIONS_POLICY, {
+    q: "What if it isn’t working for me?",
+    a: `Progress is reviewed at every visit, and you can talk it through with your practitioner at any check-in.${
+      UNUSED_SESSIONS_POLICY.value ? ` ${UNUSED_SESSIONS_POLICY.value}` : ""
+    }`,
+  }),
   {
     q: "What if I'm unsure whether it's right for me?",
     a: `That’s exactly what the free call is for. Bring the skeptical questions. ${RISK_REVERSAL}`,

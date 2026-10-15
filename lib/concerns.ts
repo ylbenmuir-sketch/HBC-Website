@@ -99,6 +99,13 @@ export type Concern = {
   heroEyebrow?: string;
   heroSub: string;
   /**
+   * "Who we work with" — short cards straight after the hero, naming the
+   * groups the page is for (Ben, 2026-10-15; /concerns/performance only). Each
+   * says what people in that group commonly come in WANTING, never what they
+   * got: no outcomes, no client names. Absent: the section does not render.
+   */
+  audience?: { heading: string; cards: { h: string; p: string }[] };
+  /**
    * The block that has to be read before anything else on the page.
    *
    * /concerns/concussion carries one, and it is the reason this field exists
@@ -763,9 +770,34 @@ export const concerns: Concern[] = [
     title: "Performance & mental sharpness",
     titleLead: "You used to be able to handle ",
     titleAccent: "more than this.",
-    who: "Executives, founders & musicians",
+    who: "Musicians, executives & athletes",
+    // Nashville named here and in the musicians card (Ben, 2026-10-15): the
+    // practice sees many musicians and executives, and this city is why.
     heroSub:
-      "LENS neurofeedback for people who used to operate at a level they can't reach now — not a crisis, just a gap you can feel between how you worked then and how the same week goes today.",
+      "LENS neurofeedback in Nashville for musicians, executives and athletes who used to operate at a level they can't reach now — not a crisis, just a gap you can feel between how you worked then and how the same week goes today.",
+    // Ben's four groups, in his order (2026-10-15). What each commonly comes
+    // in wanting — nothing about what they got, no names.
+    audience: {
+      heading: "People whose work depends on how they perform.",
+      cards: [
+        {
+          h: "Musicians & artists",
+          p: "Nashville is a music town, and musicians are among the people we see most. They come in wanting steadier nerves before a show, energy that lasts through a tour, creative flow on a deadline, and real recovery between dates.",
+        },
+        {
+          h: "Executives & founders",
+          p: "People who run things come in wanting clear decisions late in the day, focus that holds under pressure, a way to switch off when work ends, and sleep that actually restores.",
+        },
+        {
+          h: "Athletes",
+          p: "Athletes come in wanting composure when it counts, better recovery, steadier focus, and a way back into the zone after a setback.",
+        },
+        {
+          h: "Writers & creatives",
+          p: "Writers and creatives come in wanting to get past a block, hold focus long enough to finish, and clear the mental clutter that crowds out the work.",
+        },
+      ],
+    },
     overview: {
       recognize:
         "Brain fog where there didn't use to be any. Word recall that's become a struggle. Stress that used to be easier to handle, creative flow that used to come, and work that no longer gets finished by the deadline.",
@@ -818,13 +850,15 @@ export const concerns: Concern[] = [
     ],
     image: { src: "/images/ear-clip-adult.jpg", position: "center 40%" },
     related: ["brain-fog", "stress-resilience", "focus-adhd"],
-    metaTitle: "Neurofeedback for High Performers in Middle Tennessee",
+    // Names the three groups (Ben, 2026-10-15) — the queries are
+    // "neurofeedback for musicians / executives / athletes".
+    metaTitle: "Neurofeedback for Musicians, Executives & Athletes in Nashville",
     // "peak performance" lives here, in a decline frame — the query is
-    // targeted without the title or the page promising the peak. 159 chars.
+    // targeted without the title or the page promising the peak.
     metaDescription:
-      "LENS neurofeedback support for executives, founders, and musicians searching for peak performance — people who used to operate at a level they can't reach now.",
+      "LENS neurofeedback in Nashville for musicians, executives and athletes after peak performance — people who used to work at a level they can't reach now.",
     guideHeading: "Why handling it got harder.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-15",
   },
   {
     /*

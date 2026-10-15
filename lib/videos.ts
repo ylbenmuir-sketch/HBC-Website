@@ -50,6 +50,9 @@ export type Video = {
   uploadDate: Verifiable<string | null>;
   /** Site-root-relative path of the committed poster (`npm run fetch:posters`). */
   posterPath: string;
+  /** A client interview — a video story. The "Video stories" badge on the
+   *  homepage and /stories shows only while at least one record says so. */
+  story?: boolean;
 };
 
 export const videos: Video[] = [
@@ -66,6 +69,14 @@ export const videos: Video[] = [
     posterPath: "/images/videos/FCUyUqzE3Dk.jpg",
   },
 ];
+
+/**
+ * Whether there is anything behind the "Video stories — client interviews in
+ * their own words" badge (Ben, 2026-10-15: it showed with no videos). False
+ * until a record with `story: true` is added above; then the badge returns
+ * on its own, on both pages.
+ */
+export const HAS_STORY_VIDEOS = videos.some((v) => v.story === true);
 
 /** The record for an id. Throws rather than returning undefined: a page
  *  asking for a video that is not in the catalog is a build error, not a

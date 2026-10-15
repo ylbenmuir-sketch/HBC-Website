@@ -93,7 +93,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `Help for anxiety, focus, and sleep without medication — ${SITE_NAME}`,
+    default: `Help for anxiety, focus, and sleep — ${SITE_NAME}`,
     template: `%s — ${SITE_NAME}`,
   },
   // The homepage H1 and sub as one sentence, plus the free call. "Gentle" went
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
   // deliberately not here — metadata has no draft mode, and this is not a
   // place to stack proof. Same string as the "/" entry in lib/pages.ts.
   description:
-    "Help for anxiety, focus, and sleep without medication — LENS neurofeedback for adults and kids in Nashville and Murfreesboro. The first call is free.",
+    "Help for anxiety, focus, and sleep — nothing to take, nothing to do. LENS neurofeedback for adults and kids in Nashville and Murfreesboro. First call free.",
   // Self-referencing canonical on every page. "./" is relative, so Next
   // resolves it per-route against metadataBase above — one declaration here
   // covers all 25 routes, including the dynamic concern/location/team/article

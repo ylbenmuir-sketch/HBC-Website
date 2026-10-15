@@ -174,6 +174,27 @@ export default async function ConcernPage({
         </section>
       )}
 
+      {/* "Who we work with" — straight after the opening, before anything
+          else (Ben, 2026-10-15). Only where the concern has the copy. */}
+      {concern.audience && (
+        <section className="sec-tight audience">
+          <div className="wrap">
+            <div className="sec-head rv" style={{ marginBottom: 34 }}>
+              <div className="eyebrow">Who we work with</div>
+              <h2>{concern.audience.heading}</h2>
+            </div>
+            <div className="audience-grid rv">
+              {concern.audience.cards.map((c) => (
+                <div className="audience-card" key={c.h}>
+                  <h3>{c.h}</h3>
+                  <p>{c.p}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {medical ? (
         /* The body the approved copy asks for: the pattern, then who we see
            and what a first visit is. Its own headings are the copy's own bold

@@ -58,3 +58,6 @@ next-env.d.ts
 
 # Rendered email previews (npm run preview:emails) — local only.
 /email-previews/
+
+# Before/after screenshots from build sessions — local only.
+/build-screenshots/

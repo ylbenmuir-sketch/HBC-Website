@@ -50,6 +50,38 @@ const PROMPTS = [
 const ROTATE_MS = 4000;
 
 /**
+ * What the collapsed pill says (Ben, 2026-10-15: "the launcher is too easy
+ * to miss"). The pill is the launcher for anyone reading down the page, so it
+ * names itself rather than rotating a question it is too narrow to show.
+ */
+const PILL_LABEL = "Questions? Ask us";
+
+/**
+ * The one-time attention cue: a soft ring that pulses twice around the bar
+ * ~8 s into a visitor's first visit, then never again. Remembered in the
+ * browser's own storage (never sent anywhere — see /privacy-policy), every
+ * access wrapped, because storage can be blocked or throw. Opening the
+ * assistant counts as having seen it. No cue at all under reduced motion.
+ */
+const CUE_AFTER_MS = 8000;
+const CUE_RUN_MS = 2600;
+const CUE_KEY = "hbc-ask-cue-seen";
+function cueSeen(): boolean {
+  try {
+    return window.localStorage.getItem(CUE_KEY) === "1";
+  } catch {
+    return true; // storage blocked: never nag, never throw
+  }
+}
+function markCueSeen() {
+  try {
+    window.localStorage.setItem(CUE_KEY, "1");
+  } catch {
+    // Blocked or full — the cue may show again next visit; nothing breaks.
+  }
+}
+
+/**
  * How long the collapse/expand morph runs — the same 0.2s the CSS used when
  * `width` and `min-height` were the animated properties. The end-switch
  * below fires a beat after it, so the decoy has finished before the real
@@ -146,6 +178,8 @@ export default function StickyAskBar({ active }: { active: boolean }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [reduced, setReduced] = useState(false);
+  const [cue, setCue] = useState(false);
+  const mountedAt = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -469,6 +503,41 @@ export default function StickyAskBar({ active }: { active: boolean }) {
     inputRef.current?.focus();
   }
 
+  // The one-time cue (see CUE_AFTER_MS). Counted from the first mount, so a
+  // visitor who reaches the bar later in the visit (a phone, where the call
+  // bar holds the footprint while scrolling) gets it the moment the ask bar
+  // is back, not another eight seconds on.
+  useEffect(() => {
+    if (!mountedAt.current) mountedAt.current = Date.now();
+  }, []);
+  useEffect(() => {
+    if (!active || reduced || assistantOpen || cueSeen()) return;
+    const wait = Math.max(0, CUE_AFTER_MS - (Date.now() - mountedAt.current));
+    let end = 0;
+    const start = window.setTimeout(() => {
+      if (cueSeen()) return;
+      markCueSeen();
+      setCue(true);
+      end = window.setTimeout(() => setCue(false), CUE_RUN_MS);
+    }, wait);
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(end);
+    };
+  }, [active, reduced, assistantOpen]);
+  // On the layer by classList, like is-compact: the layer's className is
+  // static so React never rewrites it and wipes the classes set here.
+  useEffect(() => {
+    layerRef.current?.classList.toggle("is-cue", cue);
+  }, [cue]);
+  // Opening the assistant is engagement: the cue has done its job.
+  useEffect(() => {
+    if (assistantOpen) {
+      markCueSeen();
+      setCue(false);
+    }
+  }, [assistantOpen]);
+
   return (
     <div
       ref={layerRef}
@@ -486,6 +555,7 @@ export default function StickyAskBar({ active }: { active: boolean }) {
         </svg>
         <span className="askbar-decoy-mark">
           <AskWave />
+          <span className="askbar-label">Ask us</span>
         </span>
         <span ref={decoyTextRef} className="askbar-decoy-text" />
         <span className="askbar-decoy-go">
@@ -510,6 +580,7 @@ export default function StickyAskBar({ active }: { active: boolean }) {
       >
         <span ref={markRef} className="askbar-mark" aria-hidden="true">
           <AskWave />
+          <span className="askbar-label">Ask us</span>
         </span>
         <input
           ref={inputRef}
@@ -523,7 +594,10 @@ export default function StickyAskBar({ active }: { active: boolean }) {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           // Reduced motion gets the first prompt and only the first prompt.
-          placeholder={reduced ? PROMPTS[0] : PROMPTS[index]}
+          // Collapsed, the pill names itself (PILL_LABEL); full, it offers the
+          // questions. `compact` flips before the morph starts, so the decoy
+          // reads the new words and the swap is never seen mid-motion.
+          placeholder={compact ? PILL_LABEL : reduced ? PROMPTS[0] : PROMPTS[index]}
           aria-label="Ask a question about LENS neurofeedback"
           maxLength={2000}
           autoComplete="off"

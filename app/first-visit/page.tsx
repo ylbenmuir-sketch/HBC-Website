@@ -1,3 +1,4 @@
+import WhatItTakes from "@/components/WhatItTakes";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
@@ -89,6 +90,10 @@ export default function FirstVisitPage() {
           </div>
         </div>
       </section>
+
+      {/* Time, money, effort, before the minute-by-minute (Ben,
+          2026-10-15). The cost card below says it in full. */}
+      <WhatItTakes />
 
       <section className="sec">
         <div className="wrap" style={{ maxWidth: 940 }}>

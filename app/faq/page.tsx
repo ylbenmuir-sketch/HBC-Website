@@ -6,6 +6,8 @@ import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
 import { Btn } from "@/components/Buttons";
+import ConfirmTag from "@/components/ConfirmTag";
+import FaqHashOpener from "@/components/FaqHashOpener";
 import { faqQuestions } from "@/lib/schema";
 import { SITE_FAQS } from "@/lib/faq";
 import { hubTrail, pageMetadata } from "@/lib/pages";
@@ -43,9 +45,17 @@ const rendered: Record<string, ReactNode> = {
   ),
 };
 
+// A question still waiting on Ben carries its tag (lib/faq.ts → gated);
+// such a question exists only in a draft build.
 const faqs: FaqItem[] = SITE_FAQS.map((faq) => ({
   ...faq,
-  rendered: rendered[faq.q],
+  rendered:
+    rendered[faq.q] ??
+    (faq.confirmTag ? (
+      <>
+        {faq.a} <ConfirmTag>{faq.confirmTag}</ConfirmTag>
+      </>
+    ) : undefined),
 }));
 
 export default function FaqPage() {
@@ -69,6 +79,7 @@ export default function FaqPage() {
       <section className="sec">
         <div className="wrap" style={{ maxWidth: 900 }}>
           <FAQAccordion items={faqs} openFirst />
+          <FaqHashOpener />
           {/* The skepticism page: the two safety answers above, plus what the
               site refuses to claim and where the public reviews are. */}
           <div className="hero-ctas rv" style={{ marginTop: 40 }}>
