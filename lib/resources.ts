@@ -1429,6 +1429,202 @@ export const resources: Resource[] = [
       "Concussion symptoms that come and go months later — the fog that lifts and returns, why one good week sets no standard, and when to call your doctor.",
   },
   {
+    // Feeds /concerns/performance (musicians card). Targets the long-tail
+    // "stage nerves getting worse" / "pre-show nerves musician" — the decline
+    // frame, never "peak performance" and never "performance anxiety" (the
+    // page's own supporting term). Hands off to /concerns/anxiety when the
+    // nerves aren't only about shows, the way told-to-just-relax hands the
+    // night to /concerns/sleep. No outcome sentence anywhere; every LENS fact
+    // traces to /how-lens-works, /lens-neurofeedback, lib/faq.ts or the
+    // performance entry in lib/concerns.ts.
+    slug: "stage-nerves-getting-worse",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For musicians",
+    title: "When the nerves before a show stop working for you",
+    crumbLabel: "Nerves before a show",
+    excerpt: "The pre-show nerves you used to ride are arriving earlier and costing more.",
+    image: { src: "/images/concierge.jpg", position: "center 35%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "Twenty minutes to downbeat. You’ve played this room, or rooms like it, more times than you can count, and the nerves used to be part of the job — a lift that showed up on time, sharpened you, and left with the first song. Lately they arrive earlier, stay longer and take more out of you. Nashville is a music town, musicians are among the people we see most, and steadier nerves before a show is one of the first things they ask about.",
+    body: [
+      { type: "h2", text: "The nerves were never the problem" },
+      {
+        type: "p",
+        text: "Most working players don’t want the nerves gone. A certain charge before a show is useful. It’s what makes a set you could play in your sleep feel like it matters tonight.",
+      },
+      {
+        type: "p",
+        text: "What changes is the cost. How early it starts — at soundcheck now, or on the drive in. Whether it lifts once you’re playing or follows you through the set. And how long the night takes to leave your body afterwards. Those are the questions worth asking, because “why am I nervous?” has an obvious answer: you care, and people are watching. “Why does the same show take more out of me than it did three years ago?” is a different question, and a far more useful one.",
+      },
+      {
+        type: "blockquote",
+        text: "The show didn’t get harder. What you bring to meet it got smaller.",
+      },
+      { type: "h2", text: "What changed is usually the load, not the gig" },
+      {
+        type: "p",
+        text: "Rising to a moment and coming back down after it are two different jobs, and both draw on the same capacity. That capacity isn’t a fixed trait. It depletes and recovers, and it varies within the same person across a week — which is why one show feels like old times and the next one, same set list, same room, doesn’t.",
+      },
+      {
+        type: "p",
+        text: "A working musician’s calendar might as well be designed to drain it. Late load-outs, short nights, meals at odd hours, long drives, a session or a day job the next morning, and a recovery window that keeps getting borrowed against. None of that is a character flaw. It’s the load. And the nerves are where it shows first, because the show is the hardest hour of the day.",
+      },
+      { type: "h2", text: "What tends to help" },
+      {
+        type: "p",
+        text: "Protect the days between dates, not just the hour before the show. Sleep, food and unbroken downtime are the largest single lever most people have, and on the road they’re the first things traded away. A few weeks of honest attention there tells you what’s left underneath.",
+      },
+      {
+        type: "p",
+        text: "Put the pre-show routine outside your head. Same order, same timing, decided in the morning rather than negotiated at the side of the stage. Something that runs without your attention beats something that needs it, and the last hour before a show is when attention is scarcest.",
+      },
+      {
+        type: "p",
+        text: "Lower the demand before it fails rather than after. If soundcheck went sideways, the last twenty minutes are not the time to fix everything. Pick the one thing that matters for the first song and let the rest wait.",
+      },
+      {
+        type: "p",
+        text: "And if something prescribed is already part of your show-day routine, keep it there. That stays between you and whoever prescribed it — we never advise on medication. If the change in you has been fast or marked, start with your doctor, because the same picture can come from causes a doctor can test for.",
+      },
+      { type: "h2", text: "If it isn’t only about shows" },
+      {
+        type: "p",
+        text: "Some people notice this first on stage and then realize it’s there on an ordinary Tuesday too, with nothing on the calendar. That’s a different conversation, with its own page. A charge that arrives with the show and a body that stays on alert through a quiet week are not one problem in different clothes. If the quiet weeks are the hard part, start there instead — the link is at the foot of this page.",
+      },
+      { type: "h2", text: "Where LENS fits" },
+      {
+        type: "p",
+        text: "A LENS session asks nothing of you, which is a strange fit for people whose whole job is to perform — and a deliberate one. Small sensors sit on the scalp, the system returns a brief, very low-energy feedback signal, and there’s nothing to perform and nothing to practice between visits. Most people feel nothing at all.",
+      },
+      {
+        type: "p",
+        text: `Regular sessions run ${SESSION_LENGTH.value} in a comfortable chair — brief enough to fit around a rehearsal or a session — and many clients read or simply rest. Your first visit is the Brain Map: a recording of brain activity that your plan is built from, not a test you can fail. After that, every visit opens with a check-in on the specifics you named: how the last show went, how long it took to come down, how the days between dates are landing.`,
+      },
+      {
+        type: "links",
+        text: "Where this goes next.",
+        items: [
+          { href: "/concerns/performance", label: "Performance & mental sharpness" },
+          { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
+          { href: "/how-lens-works", label: "How a LENS session works" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Tell us what show night feels like now. We’ll be straight with you.",
+    finalSub:
+      "Describe the gap between how shows used to go and how they go now. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
+    metaTitle: "Stage Nerves Getting Worse? What’s Changed, for Musicians",
+    metaDescription:
+      "Pre-show nerves that used to sharpen you now arrive earlier and cost more. A plain look, for working musicians in Nashville, at why — and what tends to help.",
+  },
+  {
+    // Feeds /concerns/migraines. Targets the long-tail "what to ask before
+    // trying something new for migraines" — the vetting question someone with
+    // a long list asks, which the concern page (primary: post concussion
+    // headaches) does not target. Written under that entry's rules: medical
+    // care leads before anything about LENS (the `urgent` copy, mirrored);
+    // nothing says or implies LENS helps, relieves, reduces or treats
+    // migraines, hedged or otherwise; no "clients report" sentence; it
+    // describes who comes in and what a session asks, never what happens.
+    // "migraine treatment / relief / cure" and "headache treatment" appear on
+    // none of the four ranking surfaces. Image is the empty session room on
+    // purpose — no person, so nothing reads as a client after a session.
+    slug: "migraines-before-the-next-thing",
+    cluster: null,
+    datePublished: "2026-10-15",
+    tag: "For adults",
+    title: "Living with migraines: what to ask before you try the next thing",
+    crumbLabel: "Before the next thing",
+    excerpt: "Five questions worth putting to anyone new — including us.",
+    image: { src: "/images/session-room.jpg", position: "center 50%" },
+    readTime: "5 min read",
+    byline: HBC_BYLINE,
+    lede: "There’s a list somewhere — a note on your phone, a page in a folder, or just the one you carry in your head — of everything you’ve already tried. Some of it was your doctor’s idea, some of it was a friend’s, and some of it you found late at night. People come to us about migraines after they’ve tried a lot of other things, and they usually bring that list. This piece is about the next line on it, whatever that turns out to be.",
+    body: [
+      { type: "h2", text: "First, the headache that can’t wait" },
+      {
+        type: "p",
+        text: "Before any list: a sudden, severe headache — or the worst headache of your life — is a medical emergency. Call 911 or get to an emergency room now. The same goes for a headache with anything new alongside it: confusion, trouble seeing or speaking, weakness or numbness, a stiff neck with a fever. And a headache that has changed from your usual pattern belongs with your doctor before it belongs anywhere else. Nothing here comes before that.",
+      },
+      {
+        type: "p",
+        text: "Everything below is for the long haul — migraines a doctor already knows about, that have been part of your life for a while.",
+      },
+      { type: "h2", text: "Why the next thing deserves harder questions" },
+      {
+        type: "p",
+        text: "After years of good-faith attempts, the next option tends to arrive with hope already attached. That’s human, and it’s also how people end up paying for things that were never going to tell them the truth. Hope is a poor filter. A few plain questions are a better one.",
+      },
+      {
+        type: "p",
+        text: "None of what follows is meant to talk you out of anything. It’s meant to make the next thing on the list earn its place, and to give you a way of telling the difference between someone who’s being straight with you and someone who’s selling.",
+      },
+      { type: "h2", text: "Five questions to put to anyone new" },
+      {
+        type: "p",
+        text: "Does it ask you to change your medical care? The answer you want is no. Anything new should sit alongside your doctor or neurologist, not in place of them — and it should never come with advice about your medication. That conversation belongs with whoever prescribed it.",
+      },
+      {
+        type: "p",
+        text: "Will it tell you what it’ll do for your migraines? Be wary of a confident yes. Nobody who has just met you, and who isn’t your doctor, is in a position to predict what happens to yours. A promise there tells you something about the person making it.",
+      },
+      {
+        type: "blockquote",
+        text: "The most useful thing a new provider can say about your migraines is what they won’t claim.",
+      },
+      {
+        type: "p",
+        text: "Does it say plainly what it isn’t? Honest providers put their limits where you can read them before you pay, not in the small print after.",
+      },
+      {
+        type: "p",
+        text: "What does it ask of you? Some approaches need daily practice, strict routines or effort you won’t always have to spare. Know what you’re signing up to keep up with, and whether you could keep it up on your worst weeks.",
+      },
+      {
+        type: "p",
+        text: "Will they tell you if it isn’t a fit? Ask before you book. Then notice whether the answer comes before the payment or after it.",
+      },
+      { type: "h2", text: "Keep the list, and bring it with you" },
+      {
+        type: "p",
+        text: "The list is worth keeping, and worth taking seriously. Bring it to your doctor, and bring it to anyone new. It shows the person across the table what you’ve already lived through, and it keeps the conversation on you rather than on whatever they happen to offer.",
+      },
+      { type: "h2", text: "If the headaches date to a head injury" },
+      {
+        type: "p",
+        text: "For many of the people who call us about migraines, the story starts with a concussion — medically handled, and headaches that arrived with it and stayed. If that’s you, read our concussion page first. Post-concussion symptoms are the territory we know best, and that page describes it properly.",
+      },
+      { type: "h2", text: "How we’d answer those five" },
+      {
+        type: "p",
+        text: "Your medical care continues exactly as it is. We’re glad to coordinate with providers you already trust, and we never advise on medication. We won’t tell you what LENS would do for your migraines — not to be cagey, but because we don’t predict outcomes. Our limits are at the foot of this page and at the top of our migraines page, in plain words.",
+      },
+      {
+        type: "p",
+        text: `As for what it asks of you: small sensors on the scalp, a brief, very low-energy feedback signal, and nothing to perform or practice between visits. Most people feel nothing at all. Regular sessions run ${SESSION_LENGTH.value} in a comfortable chair, and every visit opens with a check-in on how things are actually going. And if we don’t think LENS is right for you, we’ll say so on the phone, before you book or pay for anything.`,
+      },
+      {
+        type: "links",
+        text: "Where to read more.",
+        items: [
+          { href: "/concerns/migraines", label: "Migraines" },
+          { href: "/concerns/concussion", label: "Post-concussion symptoms" },
+          { href: "/how-lens-works", label: "How a LENS session works" },
+        ],
+      },
+      { type: "note", text: ADULT_NOTE },
+    ],
+    finalHeading: "Bring the list to the call. We’ll answer the five questions straight.",
+    finalSub:
+      "We don’t treat migraines and won’t predict what LENS would do for yours — but we’ll listen, answer honestly, and say plainly if it isn’t the right fit, before you book anything.",
+    metaTitle: "Living With Migraines: What to Ask Before the Next Thing",
+    metaDescription:
+      "When you’ve tried a lot for migraines, the next option deserves hard questions. Five to put to anyone new — including us — and the answers worth hearing.",
+  },
+  {
     slug: "brain-fog-after-55",
     // No cluster in QUERY-TO-PAGE-MAP.md at all.
     cluster: null,
