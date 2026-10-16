@@ -862,7 +862,8 @@ function policyPassages(): Passage[] {
       keywords: ["call", "free", "phone", "talk", "consultation", "book", "appointment", "pressure", "sales", "unsure", "skeptical", "fit"],
       text: [
         "The phone call is free.",
-        // "soon", never "today" — the homepage's sentence (Ben, 2026-10-14).
+        // "soon", never "today" (Ben, 2026-10-14). The homepage hero no longer
+        // carries this pair (Ben, 2026-10-16); FinalCTA keeps the first half.
         "A real person calls you back soon.",
         "Ask anything — including the skeptical questions.",
         RISK_REVERSAL,

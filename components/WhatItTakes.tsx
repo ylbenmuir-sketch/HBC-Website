@@ -26,10 +26,10 @@ import {
 function ClockIcon() {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="2.4 2.4 19.2 19.2"
       fill="none"
-      stroke="var(--slate)"
-      strokeWidth="1.3"
+      stroke="var(--sage-deep)"
+      strokeWidth="0.95"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -39,15 +39,18 @@ function ClockIcon() {
   );
 }
 
-/** The brand wave, from the logo mark (components/Logo.tsx). */
+/**
+ * The brand wave — the logo mark's line (components/Logo.tsx) drawn as one
+ * long, calm period, the way the reference draws it at icon size; the
+ * logo's own four quick wiggles read as a squiggle this small.
+ */
 function WaveIcon() {
   return (
-    <svg viewBox="0 0 40 40" fill="none">
+    <svg className="cost-wave" viewBox="0 0 60 24" fill="none">
       <path
-        d="M6 22 C10 22, 11 14, 14 17 S 18 27, 21 21 S 26 17, 29 20 S 33 21, 34 20"
-        stroke="var(--sage)"
-        strokeWidth="1.9"
-        fill="none"
+        d="M2 19 C 9 5, 19 2, 29.5 11.5 C 39 20.5, 50 22, 58 7"
+        stroke="var(--sage-deep)"
+        strokeWidth="1.7"
         strokeLinecap="round"
       />
     </svg>
@@ -77,7 +80,7 @@ export default function WhatItTakes({ className = "" }: { className?: string }) 
       className={`sec-tight cost-sec ${className}`.trim()}
       aria-labelledby="cost-heading"
     >
-      <div className="wrap">
+      <div className="wrap-wide">
         <div className="cost-grid">
           {/* LEFT — time & what to expect */}
           <div className="cost-copy rv">
