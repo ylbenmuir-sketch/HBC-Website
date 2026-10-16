@@ -61,3 +61,12 @@ next-env.d.ts
 
 # Before/after screenshots from build sessions — local only.
 /build-screenshots/
+
+# Owner's design reference images — local only, never served.
+/design-refs/
+
+# Heavy source renders for the Murfreesboro imagery. The served assets are the
+# optimized .jpg files beside them (public/images/murfreesboro-*.jpg); the
+# source PNGs stay out of git.
+/public/images/murfreesboro-center.png
+/public/images/murfreesboro-waiting-room.png

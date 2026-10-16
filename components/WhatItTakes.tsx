@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Fragment } from "react";
 import {
   BRAIN_MAP_PRICE,
   FULL_COURSE,
@@ -10,76 +9,132 @@ import {
 } from "@/lib/site-config";
 
 /**
- * "What it takes" — time, money, effort (Ben, 2026-10-15, after Donald
- * Miller's "is this worth the time, money and effort?"). On the homepage
- * after "How it works", and on /first-visit under the hero.
+ * The cost section — "Time, cost & what to expect" (Ben, design-refs/
+ * pricing-section.png, 2026-10-16). Replaces the three-card "What it takes".
+ * On the homepage after "How it works", and on /first-visit under the hero.
  *
- * Three equal cards, each led by one figure in the display serif with a line
- * or two beneath it (Ben, second build of 2026-10-15: the first version read
- * like a price list). The fine print about the Brain Map sitting outside the
- * package is gone from here by Ben's call — FAQ "What does it cost?", the
- * link at the foot, carries it.
+ * Two columns: a left column that sets expectations (one display headline,
+ * a subline, and two icon rows), and a dark navy card that states the first
+ * step and the price. A full-width strip under both carries the honest-call
+ * line and the route to the full pricing answer on /faq.
  *
  * Every figure is read from lib/site-config.ts, so nothing here can drift
- * from the FAQ or the cost card. A Verifiable that is not verified takes its
- * claim out rather than printing it: the time card goes if SESSION_LENGTH
- * does, the full-course clause if FULL_COURSE does.
+ * from the FAQ or /first-visit's cost card. The duration row is gated on
+ * SESSION_LENGTH.verified and the "full course" sub-line on FULL_COURSE —
+ * an unverified figure drops its line rather than printing it.
  */
-type Card = { big: string; lines: string[] };
+function ClockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="var(--slate)"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.2v5l3.4 2" />
+    </svg>
+  );
+}
+
+/** The brand wave, from the logo mark (components/Logo.tsx). */
+function WaveIcon() {
+  return (
+    <svg viewBox="0 0 40 40" fill="none">
+      <path
+        d="M6 22 C10 22, 11 14, 14 17 S 18 27, 21 21 S 26 17, 29 20 S 33 21, 34 20"
+        stroke="var(--sage)"
+        strokeWidth="1.9"
+        fill="none"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+type Row = { icon: React.ReactElement; title: string; sub: string | null };
 
 export default function WhatItTakes({ className = "" }: { className?: string }) {
-  const cards = [
+  const rows = [
     SESSION_LENGTH.verified && {
-      big: `${SESSION_MINUTES} min`,
-      lines: [
-        FULL_COURSE.verified
-          ? `per visit · ${FULL_COURSE.value.sessions} sessions for a full course`
-          : "per visit",
-      ],
+      icon: <ClockIcon />,
+      title: `${SESSION_MINUTES} minutes per visit`,
+      sub: FULL_COURSE.verified
+        ? `${FULL_COURSE.value.sessions} sessions for a full course.`
+        : null,
     },
     {
-      big: BRAIN_MAP_PRICE,
-      lines: [
-        "to start, with your Brain Map",
-        `${PACKAGE_SESSIONS}-session package ${PACKAGE_PRICE} · HSA/FSA accepted`,
-      ],
+      icon: <WaveIcon />,
+      title: "Simply settle in",
+      sub: "Sit, rest or read during your session.",
     },
-    {
-      big: "Nothing",
-      lines: ["to do. Sit, rest or read."],
-    },
-  ].filter((c): c is Card => !!c);
+  ].filter((r): r is Row => !!r);
 
   return (
-    <section className={`sec-tight what-it-takes ${className}`.trim()} aria-labelledby="what-it-takes">
+    <section
+      className={`sec-tight cost-sec ${className}`.trim()}
+      aria-labelledby="cost-heading"
+    >
       <div className="wrap">
-        <div className="eyebrow rv" id="what-it-takes">
-          What it takes
-        </div>
-        <ul className="wit-grid rv">
-          {cards.map((c) => (
-            <li className="wit-card" key={c.big}>
-              <p className="wit-big">{c.big}</p>
-              {/* Each "·" segment holds together, so a line breaks between
-                  facts ("HSA/FSA accepted"), never inside one. */}
-              {c.lines.map((l) => (
-                <p className="wit-line" key={l}>
-                  {l.split(" · ").map((seg, i) => (
-                    <Fragment key={seg}>
-                      {i > 0 && " · "}
-                      <span className="wit-seg">{seg}</span>
-                    </Fragment>
-                  ))}
-                </p>
+        <div className="cost-grid">
+          {/* LEFT — time & what to expect */}
+          <div className="cost-copy rv">
+            <div className="eyebrow">Time, cost &amp; what to expect</div>
+            <h2 id="cost-heading" className="cost-head">
+              A clear path.
+              <br />
+              At your pace.
+            </h2>
+            <p className="cost-subline">
+              Know what to expect before you begin.
+            </p>
+            <ul className="cost-rows">
+              {rows.map((r) => (
+                <li className="cost-row" key={r.title}>
+                  <span className="cost-icon" aria-hidden="true">
+                    {r.icon}
+                  </span>
+                  <span className="cost-row-text">
+                    <span className="cost-row-title">{r.title}</span>
+                    {r.sub && <span className="cost-row-sub">{r.sub}</span>}
+                  </span>
+                </li>
               ))}
-            </li>
-          ))}
-        </ul>
-        <p className="wit-foot rv">
-          Free call first &mdash; we&rsquo;ll tell you honestly whether it&rsquo;s a
-          fit before you pay anything.{" "}
-          <Link href="/faq#what-does-it-cost">See full pricing &rarr;</Link>
-        </p>
+            </ul>
+          </div>
+
+          {/* RIGHT — the first step, priced */}
+          <div className="cost-card rv">
+            <div className="eyebrow cost-card-eyebrow">Your first step</div>
+            <div className="cost-card-name">Brain Map</div>
+            <p className="cost-price">
+              {BRAIN_MAP_PRICE}
+              <span className="cost-price-tail">to get started.</span>
+            </p>
+            <div className="cost-card-divider" aria-hidden="true" />
+            <div className="cost-package">
+              <span>{PACKAGE_SESSIONS}-session package</span>
+              <span className="cost-package-price">{PACKAGE_PRICE}</span>
+            </div>
+            <span className="cost-badge">HSA / FSA accepted</span>
+            <Link href="/contact" className="btn btn-invert cost-cta">
+              Start with a free call <span className="arrow">&rarr;</span>
+            </Link>
+            <p className="cost-fit">Let&rsquo;s see if we&rsquo;re a good fit.</p>
+          </div>
+        </div>
+
+        {/* BOTTOM strip — full width, thin top rule */}
+        <div className="cost-strip rv">
+          <span className="cost-strip-left">
+            An honest conversation before you pay anything.
+          </span>
+          <Link href="/faq#what-does-it-cost" className="cost-strip-link">
+            See full pricing <span className="arrow">&rarr;</span>
+          </Link>
+        </div>
       </div>
     </section>
   );

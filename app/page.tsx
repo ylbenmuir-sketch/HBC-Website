@@ -29,7 +29,6 @@ import {
   BRAIN_MAP_POINTS,
   COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
-  EXPERIENCES_DISCLAIMER,
   FEATURE_CELEBRITY,
   FOUNDER_DISPLAY_NAME,
   FOUNDER_LAST_NAME,
@@ -344,14 +343,10 @@ export default function HomePage() {
               <TalkCta />
               <BrainMapCta />
             </div>
-            <p className="micro">
-              {/* "soon", never "today" (Ben, 2026-10-14): no callback-timing
-                  promise anywhere on the site, the chat and the emails
-                  included. */}
-              A real person calls you back soon.{" "}
-              Ask anything &mdash; including the skeptical questions.{" "}
-              <Link href="/how-lens-works">See how LENS works &rarr;</Link>
-            </p>
+            {/* The hero ends at the buttons (Ben, 2026-10-16). The "A real
+                person calls you back soon / Ask anything" micro line and its
+                "See how LENS works →" link were removed; the wording lives on
+                elsewhere (components/FinalCTA.tsx, the assistant index). */}
           </div>
           <div className="rv hero-media">
             {/* Portrait source (1122x1402) where the old hero was landscape,
@@ -652,11 +647,15 @@ export default function HomePage() {
                 )}
               </div>
             )}
-            <p className="sample-note">
-              {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0
-                ? SAMPLE_QUOTES_NOTE
-                : EXPERIENCES_DISCLAIMER}
-            </p>
+            {/* The "Individual experiences vary." line was removed from under
+                the Google rating band (Ben, 2026-10-16): the disclaimer stays
+                where it sits under client quotes/stories (/stories, the concern
+                pages, the footer on every page) but not directly under the
+                review stats. The dev-only sample-copy warning is kept for the
+                design-review state where no verified quote exists. */}
+            {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0 && (
+              <p className="sample-note">{SAMPLE_QUOTES_NOTE}</p>
+            )}
           </div>
         </section>
       )}

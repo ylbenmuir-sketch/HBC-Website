@@ -156,8 +156,18 @@ export default async function LocationPage({
     { label: location.name },
   ];
   // The page's primary image: the hero photo, or failing that the street
-  // view — a real photograph either way, never a plate.
+  // view — a real photograph either way, never a plate. Deliberately NOT
+  // `heroImage`: Murfreesboro's hero is a renovation-preview render, and the
+  // og/schema image should stay the real street photograph.
   const primaryImage = location.image?.src ?? location.arrivalPhoto?.src;
+  // What the hero banner shows: an explicit `heroImage` wins (its own alt and
+  // optional on-image caption), then `image` with the generic center alt, then
+  // the sage placeholder plate. Only `heroImage` carries a caption.
+  const heroImage =
+    location.heroImage ??
+    (location.image
+      ? { ...location.image, alt: `The ${location.name} center`, caption: undefined }
+      : null);
 
   return (
     <>
@@ -336,16 +346,23 @@ export default async function LocationPage({
             </div>
           </div>
           <div className="rv">
-            {location.image ? (
-              <PhotoFrame
-                src={location.image.src}
-                alt={`The ${location.name} center`}
-                position={location.image.position}
-                height={560}
-                className="hero-ph"
-                sizes="(max-width: 1060px) 100vw, 47vw"
-                priority
-              />
+            {heroImage ? (
+              <figure className="loc-hero-figure">
+                <PhotoFrame
+                  src={heroImage.src}
+                  alt={heroImage.alt}
+                  position={heroImage.position}
+                  height={560}
+                  className="hero-ph"
+                  sizes="(max-width: 1060px) 100vw, 47vw"
+                  priority
+                />
+                {heroImage.caption && (
+                  <figcaption className="loc-hero-caption">
+                    {heroImage.caption}
+                  </figcaption>
+                )}
+              </figure>
             ) : (
               <PlaceholderPlate
                 spec={location.plateSpec ?? ""}

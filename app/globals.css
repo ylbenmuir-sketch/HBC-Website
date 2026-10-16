@@ -1950,6 +1950,16 @@ body[data-bottombar] footer.site {
    from the column the plate it replaced filled. */
 .arrival-photo { margin: 0; }
 .arrival-photo figcaption { font-size: 13.5px; letter-spacing: 0; text-transform: none; font-weight: 400; margin-top: 12px; color: var(--slate); }
+
+/* Murfreesboro's hero banner: a renovation-preview render (`heroImage`) with a
+   small on-image caption marking it as a preview. Top-left, deliberately: the
+   bottom-left corner is rounded 96px by `.hero-ph`, and the bottom-right is
+   where the fixed "Ask us" bar sits over the image at desktop scroll-top — the
+   top corners are the clean 4px ones and are never covered. Overrides the
+   sitewide small-caps `figcaption` (margin, colour, position) so it reads as an
+   unobtrusive overlay, not a photo credit. */
+.loc-hero-figure { position: relative; margin: 0; }
+.loc-hero-caption { position: absolute; left: 14px; top: 14px; margin: 0; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; color: var(--ivory); background: rgba(21, 34, 48, 0.74); padding: 7px 13px; border-radius: 3px; }
 .bmc-box { border: 1px solid var(--line); border-radius: 4px; background: #fbf8f1; }
 .bmc-svg { display: block; width: 100%; height: auto; aspect-ratio: 1400 / 530; }
 @media (max-width: 919px) { .bmc-sites { display: none; } }
@@ -1967,30 +1977,61 @@ body[data-bottombar] footer.site {
   .bm-soon-img { width: 100%; }
 }
 
-/* ── "What it takes" (components/WhatItTakes.tsx, 2026-10-15) ────────────
-   Three equal cards, each led by one figure in the display serif and a line
-   or two of plain text under it — the site's card (white, hairline border,
-   4px radius) with room around the number. Stacked on phones. */
-.what-it-takes { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
-.what-it-takes .eyebrow { margin-bottom: 34px; }
-.wit-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 24px; }
-.wit-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 44px 36px 40px; }
-.wit-big { font-family: var(--serif); font-size: clamp(52px, 4.6vw, 66px); font-weight: 600; color: var(--navy); line-height: 1; letter-spacing: -0.01em; margin: 0 0 18px; }
-.wit-line { font-size: 16px; color: var(--slate); line-height: 1.55; margin: 0; }
-.wit-line + .wit-line { margin-top: 6px; }
-.wit-seg { white-space: nowrap; }
-.wit-foot { margin-top: 36px; font-size: 16px; color: var(--ink); }
-.wit-foot a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
+/* ── Cost section — "Time, cost & what to expect" ───────────────────────
+   (components/WhatItTakes.tsx, design-refs/pricing-section.png, 2026-10-16)
+   Two columns: a left column (display headline, subline, two icon rows) and
+   a dark navy price card, with a full-width honest-call strip beneath. On
+   phones the left column stacks over the card, both full width. */
+.cost-sec { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
+.cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+
+/* LEFT column */
+.cost-copy .eyebrow { margin-bottom: 30px; }
+.cost-head { font-family: var(--serif); font-weight: 500; color: var(--navy); line-height: 1.0; font-size: clamp(46px, 5.1vw, 74px); letter-spacing: -0.015em; margin: 0 0 20px; }
+.cost-subline { color: var(--slate); font-size: 19px; line-height: 1.5; margin: 0 0 42px; }
+.cost-rows { list-style: none; margin: 0; padding: 0; }
+.cost-row { display: flex; align-items: center; padding: 26px 0; }
+.cost-row:first-child { padding-top: 0; }
+.cost-row + .cost-row { border-top: 1px solid var(--line); }
+.cost-icon { flex: none; width: 58px; display: flex; align-items: center; justify-content: center; }
+.cost-icon svg { width: 36px; height: 36px; }
+.cost-row-text { padding-left: 28px; border-left: 1px solid var(--line); min-height: 48px; display: flex; flex-direction: column; justify-content: center; }
+.cost-row-title { display: block; font-family: var(--serif); font-size: 28px; font-weight: 500; color: var(--navy); line-height: 1.15; }
+.cost-row-sub { display: block; font-size: 15.5px; color: var(--slate); margin-top: 7px; line-height: 1.45; }
+
+/* RIGHT — navy price card */
+.cost-card { background: var(--navy); border-radius: 16px; padding: 48px 48px 44px; display: flex; flex-direction: column; }
+.cost-card-eyebrow { color: var(--sage); margin-bottom: 22px; }
+.cost-card-eyebrow::before { display: none; }
+.cost-card-name { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 1; font-size: clamp(40px, 3.3vw, 52px); margin-bottom: 14px; }
+.cost-price { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 0.95; letter-spacing: -0.01em; font-size: clamp(66px, 6vw, 92px); margin: 0; }
+.cost-price-tail { display: block; font-family: var(--sans); font-weight: 400; font-size: 18px; color: rgba(251, 248, 241, 0.72); margin-top: 16px; letter-spacing: 0; }
+.cost-card-divider { height: 1px; background: rgba(251, 248, 241, 0.18); margin: 32px 0 24px; }
+.cost-package { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 24px; }
+.cost-package > span:first-child { font-size: 17px; color: rgba(251, 248, 241, 0.9); }
+.cost-package-price { font-family: var(--serif); font-size: 32px; font-weight: 500; color: var(--ivory); letter-spacing: -0.01em; }
+.cost-badge { align-self: flex-start; font-size: 13px; letter-spacing: 0.03em; color: rgba(251, 248, 241, 0.82); border: 1px solid rgba(251, 248, 241, 0.3); border-radius: 999px; padding: 8px 17px; margin-bottom: 30px; }
+.cost-cta { position: relative; width: 100%; justify-content: center; min-height: 58px; font-size: 17px; margin-top: auto; }
+.cost-cta .arrow { position: absolute; right: 24px; }
+.cost-fit { text-align: center; font-size: 14px; color: rgba(251, 248, 241, 0.6); margin: 16px 0 0; }
+
+/* BOTTOM strip */
+.cost-strip { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-top: 1px solid var(--line); margin-top: 56px; padding-top: 30px; }
+.cost-strip-left { font-size: 16px; color: var(--slate); }
+.cost-strip-link { font-size: 16px; color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; padding-bottom: 2px; }
+.cost-strip-link:hover { border-color: var(--gold); }
+
 @media (max-width: 900px) {
-  .wit-card { padding: 34px 26px 30px; }
+  .cost-grid { gap: 44px; }
+  .cost-card { padding: 40px 36px 36px; }
 }
 @media (max-width: 760px) {
-  .what-it-takes .eyebrow { margin-bottom: 20px; }
-  .wit-grid { grid-auto-flow: row; gap: 14px; }
-  .wit-card { padding: 28px 24px 26px; }
-  .wit-big { font-size: 48px; margin-bottom: 12px; }
-  .wit-line { font-size: 15.5px; }
-  .wit-foot { margin-top: 24px; font-size: 15.5px; }
+  .cost-grid { grid-template-columns: 1fr; gap: 34px; }
+  .cost-head { font-size: clamp(44px, 13vw, 58px); }
+  .cost-subline { font-size: 17.5px; margin-bottom: 32px; }
+  .cost-row-title { font-size: 25px; }
+  .cost-card { padding: 34px 26px 30px; border-radius: 14px; }
+  .cost-strip { flex-direction: column; align-items: flex-start; gap: 14px; margin-top: 44px; padding-top: 26px; }
 }
 
 /* "Who we work with" (lib/concerns.ts → audience; /concerns/performance). */

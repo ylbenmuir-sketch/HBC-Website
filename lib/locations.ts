@@ -217,6 +217,18 @@ export type Location = {
     arrivalLines: string[];
   };
   image?: { src: string; position: string };
+  /**
+   * The hero banner image, when it is NOT the card photo.
+   *
+   * `image` does double duty — it is both the hero and the card photo
+   * (components/LocationCard.tsx prefers it over `arrivalPhoto`). Murfreesboro
+   * needs a hero that its cards must not inherit: a renovation-preview render
+   * of the planned waiting room belongs at the top of its own page, while the
+   * cards keep the real street photo (Ben, 2026-10-16). `heroImage` is read
+   * only by the page hero, never by the card, so the two can differ. It
+   * carries its own `alt` and an optional on-image `caption`.
+   */
+  heroImage?: { src: string; position: string; alt: string; caption?: string };
   plateSpec?: string;
   /**
    * The center seen from the street, for the "Planning your visit" split.
@@ -581,6 +593,20 @@ export const locations: Location[] = [
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
     plateSpec: "Murfreesboro — reception or session room, natural light",
+    /**
+     * The hero banner: a rendering of the planned waiting room (Ben,
+     * 2026-10-16). It is `heroImage`, not `image`, on purpose — the cards must
+     * keep the street photo (`arrivalPhoto`), and LocationCard reads `image`
+     * ahead of it. The on-image caption says plainly that this is a preview,
+     * so the render is never mistaken for a photograph of the room today. The
+     * source PNG is gitignored; the served file is the optimized .jpg.
+     */
+    heroImage: {
+      src: "/images/murfreesboro-waiting-room.jpg",
+      position: "center 50%",
+      alt: "Planned waiting room at the Murfreesboro center: warm lamps, a fireplace and soft chairs.",
+      caption: "Waiting room — renovation preview",
+    },
     /**
      * Supplied by Ben, 2026-10-14. The building from the street — the one
      * photograph a visitor needs before the interior set arrives. Kept out of
