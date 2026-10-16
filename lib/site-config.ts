@@ -693,6 +693,15 @@ export const INSURANCE_POLICY =
   "reimbursement.";
 
 /**
+ * The short form of INSURANCE_POLICY's second sentence, for the places that
+ * show it as a label rather than explain it: the price card's gold pill, the
+ * line under the homepage hero buttons, and FinalCTA's strip (Ben,
+ * 2026-10-16 — a long-time referral partner had only just learned we take
+ * HSA/FSA). One string so the three never read differently.
+ */
+export const HSA_FSA_ACCEPTED = "HSA & FSA accepted";
+
+/**
  * What happens to what a client tells us — from Ben's client privacy notice,
  * confirmed.
  *

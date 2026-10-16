@@ -17,6 +17,7 @@ import GuideCta from "@/components/GuideCta";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
+import CheckIcon from "@/components/CheckIcon";
 import {
   locations,
   combinedReviewCount,
@@ -35,6 +36,7 @@ import {
   FOUNDER_QUOTE,
   FRANKLIN_OPENING,
   FULL_COURSE,
+  HSA_FSA_ACCEPTED,
   REVIEWS,
   SAMPLE_QUOTES_NOTE,
   SHOW_DRAFT_CONTENT,
@@ -343,10 +345,14 @@ export default function HomePage() {
               <TalkCta />
               <BrainMapCta />
             </div>
-            {/* The hero ends at the buttons (Ben, 2026-10-16). The "A real
-                person calls you back soon / Ask anything" micro line and its
-                "See how LENS works →" link were removed; the wording lives on
-                elsewhere (components/FinalCTA.tsx, the assistant index). */}
+            {/* One quiet line under the buttons, not a button (Ben,
+                2026-10-16, later the same day the "A real person calls you
+                back soon / Ask anything" micro line was removed): a long-time
+                referral partner had only just learned we take HSA/FSA. */}
+            <p className="hero-hsa">
+              <CheckIcon className="hero-hsa-check" />
+              {HSA_FSA_ACCEPTED}
+            </p>
           </div>
           <div className="rv hero-media">
             {/* Portrait source (1122x1402) where the old hero was landscape,

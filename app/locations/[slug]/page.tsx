@@ -196,7 +196,7 @@ export default async function LocationPage({
         ]}
       />
       <Breadcrumbs trail={trail} />
-      <section className="page-hero">
+      <section className="page-hero loc-hero">
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">
             <div className="eyebrow">{location.hero.eyebrow}</div>
@@ -216,7 +216,7 @@ export default async function LocationPage({
               {location.hero.titleTail}
             </h1>
             <p className="sub">{location.hero.sub}</p>
-            <div className="hero-ctas" style={{ marginTop: 34 }}>
+            <div className="hero-ctas loc-hero-ctas">
               <TalkCta href={contactHref} />
               {phone && (
                 <Btn href={`tel:${phone.tel}`} variant="ghost">
@@ -236,7 +236,7 @@ export default async function LocationPage({
                 Identical wording at both centers, 144 or 15 — see `reviewCount`
                 on Murfreesboro in lib/locations.ts. */}
             {reviewLine && (
-              <p className="micro" style={{ marginTop: 18 }}>
+              <p className="micro loc-hero-reviews">
                 {reviewLine}{" "}
                 {/* "See them on our Google listing", not "read the reviews":
                     the CID link opens this center's Maps listing with the

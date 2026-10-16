@@ -1,7 +1,9 @@
 import Link from "next/link";
+import CheckIcon from "@/components/CheckIcon";
 import {
   BRAIN_MAP_PRICE,
   FULL_COURSE,
+  HSA_FSA_ACCEPTED,
   PACKAGE_PRICE,
   PACKAGE_SESSIONS,
   SESSION_LENGTH,
@@ -116,12 +118,18 @@ export default function WhatItTakes({ className = "" }: { className?: string }) 
               {BRAIN_MAP_PRICE}
               <span className="cost-price-tail">to get started.</span>
             </p>
+            {/* Directly under the price, solid gold, not the outline pill it
+                was below the package row (Ben, 2026-10-16: visitors — and a
+                long-time referral partner — were missing it). */}
+            <span className="cost-badge">
+              <CheckIcon className="cost-badge-check" />
+              {HSA_FSA_ACCEPTED}
+            </span>
             <div className="cost-card-divider" aria-hidden="true" />
             <div className="cost-package">
               <span>{PACKAGE_SESSIONS}-session package</span>
               <span className="cost-package-price">{PACKAGE_PRICE}</span>
             </div>
-            <span className="cost-badge">HSA / FSA accepted</span>
             <Link href="/contact" className="btn btn-invert cost-cta">
               Start with a free call <span className="arrow">&rarr;</span>
             </Link>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  HSA_FSA_ACCEPTED,
   PHONE_DISPLAY,
   RISK_REVERSAL,
   SHOW_PHONE,
@@ -38,10 +39,11 @@ export default function FinalCTA({
         </div>
         <p className="after">{RISK_REVERSAL}</p>
         <p className="after" style={{ marginTop: 10 }}>
-          {/* "soon", never "Same-day" (Ben, 2026-10-14): no callback-timing
-              promise anywhere on the site. */}
-          The call is free &middot; No referral needed &middot; A real person
-          calls you back soon
+          {/* The third item was "A real person calls you back soon" until
+              Ben swapped it for HSA/FSA (2026-10-16). */}
+          The call is free &middot; No referral needed &middot;{" "}
+          {/* One unit when the strip wraps on phones. */}
+          <span style={{ whiteSpace: "nowrap" }}>{HSA_FSA_ACCEPTED}</span>
         </p>
       </div>
     </section>
