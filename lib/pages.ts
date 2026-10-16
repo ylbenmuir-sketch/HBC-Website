@@ -128,8 +128,9 @@ export const staticPages: StaticPage[] = [
     title: "How LENS Neurofeedback Works",
     description:
       "LENS stands for Low Energy Neurofeedback System. The whole idea without the jargon — and exactly what a session feels like from the chair.",
-    // The four-site "where we look" section moved to /brain-map.
-    dateModified: "2026-10-11",
+    // New opening (shift gears / stuck / where LENS fits) and the sample
+    // brain map in the photo row, 2026-10-16.
+    dateModified: "2026-10-16",
     type: "WebPage",
     crumb: "How LENS works",
   },

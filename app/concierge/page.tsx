@@ -1,3 +1,4 @@
+import LimitLine from "@/components/LimitLine";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
@@ -319,11 +320,6 @@ export default function ConciergePage() {
             contact form, choose &ldquo;Concierge / at home&rdquo; as your
             preferred center.
           </p>
-          <div className="note-sage rv" style={{ marginTop: 30, maxWidth: "70ch" }}>
-            Concierge sessions are LENS &mdash; the same wellness service,
-            with the same boundaries. It isn&rsquo;t medical care at home, and
-            it never stands in for your doctor, therapist, or school supports.
-          </div>
           <div className="hero-ctas rv" style={{ marginTop: 40 }}>
             <Btn href="/lens-neurofeedback" variant="ghost" arrow>
               What LENS is
@@ -335,6 +331,7 @@ export default function ConciergePage() {
               Our centers
             </Btn>
           </div>
+          <LimitLine className="rv" />
         </div>
       </section>
 

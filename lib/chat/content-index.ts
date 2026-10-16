@@ -562,9 +562,10 @@ function concernPassages(c: Concern): Passage[] {
       text: `${c.overview.approach} ${c.howHelp.p1} ${c.howHelp.p2}`,
     },
     {
-      // The wellness-service boundary, in the words this concern's own page
-      // uses. Retrievable on its own so a question that edges toward treatment
-      // finds the site's actual language rather than an approach paragraph.
+      // The wellness-service boundary, in this concern's own words. The page
+      // shows the shared one-line LENS_LIMIT_LINE instead since 2026-10-16
+      // (Ben); this sentence stays the assistant's, so a question that edges
+      // toward treatment finds the boundary rather than an approach paragraph.
       id: `concern:${c.slug}:limits`,
       kind: "concern",
       title: `${c.title} — what LENS is and isn't`,

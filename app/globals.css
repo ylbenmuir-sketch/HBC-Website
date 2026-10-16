@@ -490,6 +490,13 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    (the white card in ContactForm's success state). */
 .note-sage { padding: 22px 26px; background: var(--sage-soft); border: 1px solid var(--sage-deep); border-radius: 4px; font-size: 14.5px; color: var(--sage-deep); line-height: 1.6; }
 
+/* The wellness-service line (components/LimitLine.tsx, Ben 2026-10-16) —
+   what the boxed "limits" notices became: one line of small muted text at
+   the end of its section, no box, border or fill. --slate is 5.36:1 on
+   --ivory and 4.92:1 on --ivory-2. `.article .limit-line` outranks
+   `.article p`, which would otherwise set it at body size. */
+.limit-line, .article .limit-line { font-size: 14.5px; line-height: 1.6; color: var(--slate); margin: 28px 0 0; max-width: 72ch; }
+
 /* lens explain */
 .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; align-items: center; }
 .lens-seq { border-top: 1px solid var(--line); }
@@ -821,6 +828,24 @@ html.js .rv.in { opacity: 1; transform: none; }
 .steps4 > div { padding: 40px 34px 10px; border-right: 1px solid var(--line); }
 .steps4 > div:first-child { padding-left: 0; }
 .steps4 > div:last-child { padding-right: 0; border-right: 0; }
+/* /how-lens-works opening — three short blocks in the .steps4 grammar. */
+.story3 { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+.story3 > div { padding: 38px 34px 6px; border-right: 1px solid var(--line); }
+.story3 > div:first-child { padding-left: 0; }
+.story3 > div:last-child { padding-right: 0; border-right: 0; }
+.story3 .eyebrow { font-size: 11px; }
+.story3 h3 { margin: 14px 0 10px; }
+.story3 p { font-size: 16px; color: var(--slate); line-height: 1.6; }
+.story3-list { list-style: none; margin: 14px 0 0; padding: 0; }
+.story3-list li { font-size: 15.5px; line-height: 1.5; color: var(--ink); padding: 9px 0; border-top: 1px solid var(--line); }
+.story3-list li:first-child { border-top: 0; padding-top: 0; }
+.story3-list a { font-weight: 600; color: var(--navy); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.story3-list a:hover { border-color: var(--navy); }
+@media (max-width: 900px) {
+  .story3 { grid-template-columns: 1fr; }
+  .story3 > div { padding: 28px 0 22px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .story3 > div:last-child { border-bottom: 0; }
+}
 
 /* responsive */
 @media (max-width: 1060px) {
@@ -2012,54 +2037,64 @@ body[data-bottombar] footer.site {
    Sized to the reference, which is drawn on the .wrap-wide content box
    (1272px at 1440). Every size is that box times the reference's own ratio,
    so 1280 and 1061 keep the reference's proportions rather than its pixels;
-   --cw is the content width, and each clamp's ceiling is the 1440 value. */
-.cost-sec { --cw: min(1272px, 100vw - 88px); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
+   each clamp's ceiling is the 1440 value.
+
+   Then scaled down by --k (Ben, 2026-10-16: at the reference's size the
+   section dominated a desktop screen). Above 760px it sits in the standard
+   .wrap like the sections around it, and every size — type, icons, spacing,
+   the card — is 0.8 of the reference's, so eyebrow-to-strip fits a 1440×900
+   screen with room above and below. --cw is the reference box times --k;
+   each clamp's floor and ceiling are multiplied by --k too, so the ratio
+   holds at every width. Phones keep --k: 1 and render exactly as before.
+   The small lines (eyebrows, the badge, the strip, "good fit") keep a
+   readable floor rather than scaling the full 20%. */
+.cost-sec { --k: 0.8; --cw: calc(min(1272px, 100vw - 88px) * var(--k)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
 .cost-grid { display: grid; grid-template-columns: minmax(0, 595fr) minmax(0, 614fr); gap: calc(var(--cw) * 0.05); align-items: center; }
 
 /* LEFT column — sits a little below centre, as in the reference */
-.cost-copy { padding-top: clamp(16px, calc(var(--cw) * 0.025), 32px); }
-.cost-sec .eyebrow { font-size: 13.5px; }
-.cost-sec .eyebrow::before { width: 38px; }
-.cost-copy .eyebrow { gap: 25px; margin-bottom: clamp(18px, calc(var(--cw) * 0.018), 23px); }
-.cost-head { font-family: var(--serif); font-weight: 600; color: var(--navy); line-height: 0.98; font-size: clamp(46px, calc(var(--cw) * 0.0815), 104px); letter-spacing: -0.022em; margin: 0 0 clamp(14px, calc(var(--cw) * 0.0145), 18px); }
-.cost-subline { color: var(--slate); font-size: clamp(17px, calc(var(--cw) * 0.0206), 26.2px); line-height: 1.4; margin: 0 0 clamp(34px, calc(var(--cw) * 0.044), 56px); }
+.cost-copy { padding-top: clamp(calc(16px * var(--k)), calc(var(--cw) * 0.025), calc(32px * var(--k))); }
+.cost-sec .eyebrow { font-size: max(12px, calc(13.5px * var(--k))); }
+.cost-sec .eyebrow::before { width: calc(38px * var(--k)); }
+.cost-copy .eyebrow { gap: calc(25px * var(--k)); margin-bottom: clamp(calc(18px * var(--k)), calc(var(--cw) * 0.018), calc(23px * var(--k))); }
+.cost-head { font-family: var(--serif); font-weight: 600; color: var(--navy); line-height: 0.98; font-size: clamp(calc(46px * var(--k)), calc(var(--cw) * 0.0815), calc(104px * var(--k))); letter-spacing: -0.022em; margin: 0 0 clamp(calc(14px * var(--k)), calc(var(--cw) * 0.0145), calc(18px * var(--k))); }
+.cost-subline { color: var(--slate); font-size: clamp(calc(17px * var(--k)), calc(var(--cw) * 0.0206), calc(26.2px * var(--k))); line-height: 1.4; margin: 0 0 clamp(calc(34px * var(--k)), calc(var(--cw) * 0.044), calc(56px * var(--k))); }
 .cost-rows { list-style: none; margin: 0; padding: 0; }
-.cost-row { display: flex; align-items: center; padding: clamp(22px, calc(var(--cw) * 0.026), 33px) 0; }
+.cost-row { display: flex; align-items: center; padding: clamp(calc(22px * var(--k)), calc(var(--cw) * 0.026), calc(33px * var(--k))) 0; }
 .cost-row:first-child { padding-top: 0; }
 .cost-row:last-child { padding-bottom: 0; }
 .cost-row + .cost-row { border-top: 1px solid var(--line); }
-.cost-icon { flex: none; width: clamp(64px, calc(var(--cw) * 0.077), 98px); display: flex; align-items: center; justify-content: flex-start; padding-left: 2px; }
-.cost-icon svg { width: clamp(38px, calc(var(--cw) * 0.04), 51px); height: auto; }
-.cost-icon .cost-wave { width: clamp(46px, calc(var(--cw) * 0.0465), 59px); }
-.cost-row-text { padding-left: clamp(26px, calc(var(--cw) * 0.037), 47px); border-left: 1px solid var(--line); min-height: clamp(56px, calc(var(--cw) * 0.057), 72px); display: flex; flex-direction: column; justify-content: center; }
-.cost-row-title { display: block; font-family: var(--serif); font-size: clamp(27px, calc(var(--cw) * 0.0283), 36px); font-weight: 500; color: var(--navy); line-height: 1.1; letter-spacing: -0.005em; }
-.cost-row-sub { display: block; font-size: clamp(15.5px, calc(var(--cw) * 0.0153), 19.5px); color: var(--slate); margin-top: 6px; line-height: 1.4; }
+.cost-icon { flex: none; width: clamp(calc(64px * var(--k)), calc(var(--cw) * 0.077), calc(98px * var(--k))); display: flex; align-items: center; justify-content: flex-start; padding-left: 2px; }
+.cost-icon svg { width: clamp(calc(38px * var(--k)), calc(var(--cw) * 0.04), calc(51px * var(--k))); height: auto; }
+.cost-icon .cost-wave { width: clamp(calc(46px * var(--k)), calc(var(--cw) * 0.0465), calc(59px * var(--k))); }
+.cost-row-text { padding-left: clamp(calc(26px * var(--k)), calc(var(--cw) * 0.037), calc(47px * var(--k))); border-left: 1px solid var(--line); min-height: clamp(calc(56px * var(--k)), calc(var(--cw) * 0.057), calc(72px * var(--k))); display: flex; flex-direction: column; justify-content: center; }
+.cost-row-title { display: block; font-family: var(--serif); font-size: clamp(calc(27px * var(--k)), calc(var(--cw) * 0.0283), calc(36px * var(--k))); font-weight: 500; color: var(--navy); line-height: 1.1; letter-spacing: -0.005em; }
+.cost-row-sub { display: block; font-size: clamp(calc(15.5px * var(--k)), calc(var(--cw) * 0.0153), calc(19.5px * var(--k))); color: var(--slate); margin-top: calc(6px * var(--k)); line-height: 1.4; }
 
 /* RIGHT — navy price card */
-.cost-card { background: var(--navy); border-radius: 10px; padding: clamp(34px, calc(var(--cw) * 0.0338), 43px) clamp(26px, calc(var(--cw) * 0.043), 55px) clamp(22px, calc(var(--cw) * 0.0205), 26px); display: flex; flex-direction: column; }
-.cost-card .cost-card-eyebrow { color: var(--sage); font-size: 14px; letter-spacing: 0.28em; margin-bottom: clamp(7px, calc(var(--cw) * 0.008), 10px); }
+.cost-card { background: var(--navy); border-radius: calc(10px * var(--k)); padding: clamp(calc(34px * var(--k)), calc(var(--cw) * 0.0338), calc(43px * var(--k))) clamp(calc(26px * var(--k)), calc(var(--cw) * 0.043), calc(55px * var(--k))) clamp(calc(22px * var(--k)), calc(var(--cw) * 0.0205), calc(26px * var(--k))); display: flex; flex-direction: column; }
+.cost-card .cost-card-eyebrow { color: var(--sage); font-size: max(12px, calc(14px * var(--k))); letter-spacing: 0.28em; margin-bottom: clamp(calc(7px * var(--k)), calc(var(--cw) * 0.008), calc(10px * var(--k))); }
 .cost-card-eyebrow::before { display: none; }
-.cost-card-name { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 1; font-size: clamp(42px, calc(var(--cw) * 0.0518), 66px); letter-spacing: -0.01em; margin-bottom: 0; }
-.cost-price { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 0.92; letter-spacing: -0.015em; font-size: clamp(68px, calc(var(--cw) * 0.0848), 108px); margin: 0; }
-.cost-price-tail { display: block; font-family: var(--sans); font-weight: 400; font-size: clamp(18px, calc(var(--cw) * 0.0193), 24.5px); line-height: 1.3; color: rgba(251, 248, 241, 0.92); margin-top: clamp(16px, calc(var(--cw) * 0.0197), 25px); letter-spacing: 0; }
-.cost-card-divider { height: 1px; background: rgba(251, 248, 241, 0.3); margin: clamp(20px, calc(var(--cw) * 0.0228), 29px) 0 clamp(12px, calc(var(--cw) * 0.011), 14px); }
-.cost-package { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: clamp(22px, calc(var(--cw) * 0.0236), 30px); }
-.cost-package > span:first-child { font-size: clamp(17px, calc(var(--cw) * 0.0189), 24px); color: var(--ivory); }
-.cost-package-price { font-family: var(--serif); font-size: clamp(30px, calc(var(--cw) * 0.0356), 45px); font-weight: 600; color: var(--ivory); letter-spacing: -0.01em; line-height: 1; font-variant-numeric: lining-nums; }
+.cost-card-name { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 1; font-size: clamp(calc(42px * var(--k)), calc(var(--cw) * 0.0518), calc(66px * var(--k))); letter-spacing: -0.01em; margin-bottom: 0; }
+.cost-price { font-family: var(--serif); font-weight: 500; color: var(--ivory); line-height: 0.92; letter-spacing: -0.015em; font-size: clamp(calc(68px * var(--k)), calc(var(--cw) * 0.0848), calc(108px * var(--k))); margin: 0; }
+.cost-price-tail { display: block; font-family: var(--sans); font-weight: 400; font-size: clamp(calc(18px * var(--k)), calc(var(--cw) * 0.0193), calc(24.5px * var(--k))); line-height: 1.3; color: rgba(251, 248, 241, 0.92); margin-top: clamp(calc(16px * var(--k)), calc(var(--cw) * 0.0197), calc(25px * var(--k))); letter-spacing: 0; }
+.cost-card-divider { height: 1px; background: rgba(251, 248, 241, 0.3); margin: clamp(calc(20px * var(--k)), calc(var(--cw) * 0.0228), calc(29px * var(--k))) 0 clamp(calc(12px * var(--k)), calc(var(--cw) * 0.011), calc(14px * var(--k))); }
+.cost-package { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: clamp(calc(22px * var(--k)), calc(var(--cw) * 0.0236), calc(30px * var(--k))); }
+.cost-package > span:first-child { font-size: clamp(calc(17px * var(--k)), calc(var(--cw) * 0.0189), calc(24px * var(--k))); color: var(--ivory); }
+.cost-package-price { font-family: var(--serif); font-size: clamp(calc(30px * var(--k)), calc(var(--cw) * 0.0356), calc(45px * var(--k))); font-weight: 600; color: var(--ivory); letter-spacing: -0.01em; line-height: 1; font-variant-numeric: lining-nums; }
 /* HSA/FSA, directly under the price: a solid pill, not an outline (Ben,
    2026-10-16). Fill is --gold-lift, the gold made for navy grounds — it
    separates from the card at 4.98:1 — and the navy text on it reads 4.98:1
    too (plain --gold would give 4.20). */
-.cost-badge { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5em; font-size: clamp(17px, calc(var(--cw) * 0.0145), 18.5px); font-weight: 600; line-height: 1.2; letter-spacing: 0.005em; color: var(--navy); background: var(--gold-lift); border-radius: 999px; padding: 10px 20px 10px 16px; margin: clamp(20px, calc(var(--cw) * 0.019), 24px) 0 0; }
+.cost-badge { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5em; font-size: max(15px, clamp(calc(17px * var(--k)), calc(var(--cw) * 0.0145), calc(18.5px * var(--k)))); font-weight: 600; line-height: 1.2; letter-spacing: 0.005em; color: var(--navy); background: var(--gold-lift); border-radius: 999px; padding: calc(10px * var(--k)) calc(20px * var(--k)) calc(10px * var(--k)) calc(16px * var(--k)); margin: clamp(calc(20px * var(--k)), calc(var(--cw) * 0.019), calc(24px * var(--k))) 0 0; }
 .cost-badge-check { flex: none; width: 1.05em; height: 1.05em; }
-.cost-cta { position: relative; width: 100%; justify-content: center; padding-block: 0; min-height: clamp(58px, calc(var(--cw) * 0.054), 69px); font-size: clamp(17px, calc(var(--cw) * 0.0165), 21px); border-radius: 6px; margin-top: auto; }
-.cost-cta .arrow { position: absolute; right: clamp(20px, calc(var(--cw) * 0.022), 28px); }
-.cost-fit { text-align: center; font-size: clamp(15px, calc(var(--cw) * 0.014), 18px); color: rgba(251, 248, 241, 0.88); margin: clamp(12px, calc(var(--cw) * 0.011), 14px) 0 0; }
+.cost-cta { position: relative; width: 100%; justify-content: center; padding-block: 0; min-height: clamp(calc(58px * var(--k)), calc(var(--cw) * 0.054), calc(69px * var(--k))); font-size: clamp(calc(17px * var(--k)), calc(var(--cw) * 0.0165), calc(21px * var(--k))); border-radius: 6px; margin-top: auto; }
+.cost-cta .arrow { position: absolute; right: clamp(calc(20px * var(--k)), calc(var(--cw) * 0.022), calc(28px * var(--k))); }
+.cost-fit { text-align: center; font-size: max(15px, clamp(calc(15px * var(--k)), calc(var(--cw) * 0.014), calc(18px * var(--k)))); color: rgba(251, 248, 241, 0.88); margin: clamp(calc(12px * var(--k)), calc(var(--cw) * 0.011), calc(14px * var(--k))) 0 0; }
 
 /* BOTTOM strip */
-.cost-strip { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-top: 1px solid var(--line); margin-top: clamp(40px, calc(var(--cw) * 0.036), 46px); padding-top: clamp(20px, calc(var(--cw) * 0.0165), 21px); }
-.cost-strip-left { font-size: clamp(16px, calc(var(--cw) * 0.0138), 17.5px); color: var(--ink); }
-.cost-strip-link { font-size: clamp(16px, calc(var(--cw) * 0.0133), 17px); color: var(--navy); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--gold); white-space: nowrap; padding-bottom: 3px; }
+.cost-strip { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-top: 1px solid var(--line); margin-top: clamp(calc(40px * var(--k)), calc(var(--cw) * 0.036), calc(46px * var(--k))); padding-top: clamp(calc(20px * var(--k)), calc(var(--cw) * 0.0165), calc(21px * var(--k))); }
+.cost-strip-left { font-size: max(15px, clamp(calc(16px * var(--k)), calc(var(--cw) * 0.0138), calc(17.5px * var(--k)))); color: var(--ink); }
+.cost-strip-link { font-size: max(15px, clamp(calc(16px * var(--k)), calc(var(--cw) * 0.0133), calc(17px * var(--k)))); color: var(--navy); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--gold); white-space: nowrap; padding-bottom: 3px; }
 .cost-strip-link:hover { border-color: var(--navy); }
 
 @media (max-width: 900px) {
@@ -2070,6 +2105,7 @@ body[data-bottombar] footer.site {
   .cost-copy .eyebrow { gap: 14px; }
 }
 @media (max-width: 760px) {
+  .cost-sec { --k: 1; }
   .cost-grid { grid-template-columns: 1fr; gap: 40px; }
   .cost-head { font-size: clamp(46px, 13.6vw, 60px); }
   .cost-subline { font-size: 19px; margin-bottom: 34px; }

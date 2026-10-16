@@ -1,3 +1,4 @@
+import LimitLine from "@/components/LimitLine";
 import Link from "next/link";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
@@ -182,12 +183,7 @@ export default function WhatWeHelpWithPage() {
               you toward what might serve you better. We work alongside
               therapists, physicians, and schools, not in place of them.
             </p>
-            <div className="note-sage">
-              We don&rsquo;t diagnose conditions or promise outcomes, and every
-              person&rsquo;s experience is different. What we do promise:
-              honest guidance, gentle sessions, and careful attention to how
-              you actually feel.
-            </div>
+            <LimitLine />
           </div>
           <div className="rv">
             <PhotoFrame

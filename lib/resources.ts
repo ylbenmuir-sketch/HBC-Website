@@ -290,11 +290,12 @@ export type Resource = {
   metaDescription: string;
 };
 
-const STANDARD_NOTE =
-  "This article is educational and isn't medical advice. LENS is a wellness service and doesn't diagnose or treat any condition. If you're concerned about your child, talk with their pediatrician.";
-
-const ADULT_NOTE =
-  "This article is educational and isn't medical advice. LENS is a wellness service and doesn't diagnose or treat any condition. If you have health concerns, talk with your doctor.";
+/**
+ * The closing line of every article — the shared one-line limit (Ben,
+ * 2026-10-16), which replaced the boxed "educational, not medical advice"
+ * notes. The depression article adds the 988 sentence after it.
+ */
+const ARTICLE_NOTE = LENS_LIMIT_LINE;
 
 /**
  * The default closing sub, and the one limitation sentence for any article
@@ -307,6 +308,7 @@ const STANDARD_FINAL_SUB =
   "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
 import { SHOW_DRAFT_CONTENT, isDraftText } from "./site-config";
+import { CRISIS_LINE, LENS_LIMIT_LINE } from "./lens";
 
 /**
  * A resource is publishable once its lede and body carry no [draft] notes.
@@ -397,7 +399,7 @@ export const resources: Resource[] = [
           { href: "/concerns/children-school", label: "Children, school & transitions" },
         ],
       },
-      { type: "note", text: STANDARD_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Wondering whether this describes your child? Ask us.",
     finalSub:
@@ -478,7 +480,7 @@ export const resources: Resource[] = [
           { href: "/concerns/brain-fog", label: "Brain fog, memory & mental fatigue" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "The next step is a conversation, not a commitment.",
     finalSub: STANDARD_FINAL_SUB,
@@ -563,7 +565,7 @@ export const resources: Resource[] = [
           { href: "/concerns/anxiety", label: "Anxiety & nervous-system overload" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us what your nights actually look like.",
     finalSub:
@@ -638,7 +640,7 @@ export const resources: Resource[] = [
           { href: "/concerns/stress-resilience", label: "Stress & resilience" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Already tried the obvious things? Say so on the call.",
     finalSub:
@@ -730,7 +732,7 @@ export const resources: Resource[] = [
           { href: "/faq", label: "The full FAQ" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Not sure which suits you? Ask on the free call.",
     finalSub:
@@ -809,7 +811,7 @@ export const resources: Resource[] = [
           { href: "/concerns/focus-adhd", label: "Focus, ADHD & follow-through" },
         ],
       },
-      { type: "note", text: STANDARD_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Wondering whether this describes your child? Ask us.",
     finalSub:
@@ -893,7 +895,7 @@ export const resources: Resource[] = [
           { href: "/adults", label: "LENS for adults" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Not sure whether this is you? That’s what the call is for.",
     finalSub:
@@ -970,7 +972,7 @@ export const resources: Resource[] = [
           { href: "/faq", label: "The full FAQ" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Bring the question to the call. We’ll answer it straight.",
     finalSub:
@@ -1059,7 +1061,7 @@ export const resources: Resource[] = [
           { href: "/concerns/sleep", label: "Sleep difficulties" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us what it actually feels like. We’ll be straight with you.",
     finalSub:
@@ -1142,7 +1144,7 @@ export const resources: Resource[] = [
           { href: "/concerns/stress-resilience", label: "Stress & resilience" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Describe it in whatever words you’ve got. We’ll be straight with you.",
     finalSub:
@@ -1208,7 +1210,7 @@ export const resources: Resource[] = [
           { href: "/faq", label: "The full FAQ" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Bring your therapist’s questions too. We’ll answer them straight.",
     finalSub:
@@ -1239,14 +1241,6 @@ export const resources: Resource[] = [
     byline: HBC_BYLINE,
     lede: "The call you meant to return on Monday. The dishes. The email that needs two lines. None of it is hard, and all of it feels like lifting something heavy. You’re functioning — going to work, showing up — and underneath it the days have gone flat.",
     body: [
-      // The concern page renders its 988 block above the headline. An article
-      // has no such slot (the photo sits under the lede), so it is the first
-      // thing in the body, in the highlighted panel — the same numbers in the
-      // same order as CRISIS_REPLY and the page's `urgent`.
-      {
-        type: "note",
-        text: "If you’re thinking about ending your life, or you’re worried you might hurt yourself, call or text 988 — the Suicide & Crisis Lifeline — now, any hour, or text HOME to 741741. If you or someone with you is in immediate danger, call 911. Nothing in this article comes before that, and we’d tell you the same thing on the phone.",
-      },
       { type: "h2", text: "It isn’t laziness, and you already suspected that" },
       {
         type: "p",
@@ -1316,7 +1310,11 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How LENS works" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      // The 988 line follows the limit line here, as one plain sentence —
+      // Ben, 2026-10-16, which retired the boxed crisis panel that opened
+      // this article. The full 988 / 741741 / 911 block stays above the
+      // depression page's H1, and the assistant's crisis stop is unchanged.
+      { type: "note", text: `${ARTICLE_NOTE} ${CRISIS_LINE}` },
     ],
     finalHeading: "Bring the part that sounds too small to mention.",
     finalSub:
@@ -1349,9 +1347,10 @@ export const resources: Resource[] = [
       // The concern page's `urgent` block, carried into the body because an
       // article has no slot above it. Wording from the page and from
       // HEAD_INJURY_REPLY in lib/chat/safety.ts, which adds the 911 line.
-      // The highlighted panel, so it is the first thing read after the photo.
+      // The first paragraph, so it is the first thing read after the photo —
+      // plain text since the boxed panels went (Ben, 2026-10-16).
       {
-        type: "note",
+        type: "p",
         text: "If your head injury was recent, start with a doctor. Emergency care exists for a reason, and the first days after a head injury are not the time for anything else. If anyone has been knocked out, is vomiting, confused, or getting worse, call 911. And if your own symptoms are getting worse, or something new has started, that’s a call to your doctor now — not a pattern to wait out. This article is for later: weeks or months out, checked, cleared, and something still isn’t back.",
       },
       { type: "h2", text: "The swing is the hard part" },
@@ -1419,7 +1418,7 @@ export const resources: Resource[] = [
           { href: "/first-visit", label: "Your first visit" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us about the bad days too. We’ll be straight with you.",
     finalSub:
@@ -1511,7 +1510,7 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How a LENS session works" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us what show night feels like now. We’ll be straight with you.",
     finalSub:
@@ -1615,7 +1614,7 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How a LENS session works" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Bring the list to the call. We’ll answer the five questions straight.",
     finalSub:
@@ -1707,7 +1706,7 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How LENS works" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "You don’t have to explain anything to ask a question.",
     finalSub:
@@ -1812,7 +1811,7 @@ export const resources: Resource[] = [
           { href: "/first-visit", label: "Your first visit" },
         ],
       },
-      { type: "note", text: STANDARD_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us what the hard moments look like. We’ll be straight with you.",
     finalSub:
@@ -1909,7 +1908,7 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How a LENS session works" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "You don’t need the right words for the call.",
     finalSub:
@@ -2006,7 +2005,7 @@ export const resources: Resource[] = [
           { href: "/adults", label: "LENS for adults" },
         ],
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Tell us what a hard week actually costs you.",
     finalSub:
@@ -2034,7 +2033,7 @@ export const resources: Resource[] = [
         type: "p",
         text: "[Draft article — non-alarmist, sourced, and clear about when to seek medical evaluation. Keep the no-hype standard.]",
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "The next step is a conversation, not a commitment.",
     finalSub: STANDARD_FINAL_SUB,
@@ -2060,7 +2059,7 @@ export const resources: Resource[] = [
         type: "p",
         text: "[Draft article — sensors, signals, and safety, explained without jargon. Keep the no-hype standard.]",
       },
-      { type: "note", text: ADULT_NOTE },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "The best way to understand LENS is to talk with someone who does it every day.",
     finalSub: STANDARD_FINAL_SUB,

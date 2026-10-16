@@ -166,7 +166,17 @@ export type Concern = {
   goalsHeading?: string;
   faqHeading?: string;
   recognize: string[];
+  /**
+   * `note` is the per-concern limits sentence. Since 2026-10-16 the page no
+   * longer prints it: the boxed notice became one shared line
+   * (LENS_LIMIT_LINE, components/LimitLine.tsx — Ben). It stays here as the
+   * assistant's `concern:<slug>:limits` passage (lib/chat/content-index.ts),
+   * so a "does it treat X?" question still finds the boundary in that
+   * concern's own words.
+   */
   howHelp: { p1: string; p2: string; note: string };
+  /** Adds "If you're in crisis, call or text 988." after the limit line. */
+  crisisLine?: boolean;
   goals: string[]; // "Common goal" quote cards
   faqs: ConcernFaq[];
   image: { src: string; position: string } | null;
@@ -1179,6 +1189,7 @@ export const concerns: Concern[] = [
     heroEyebrow: "Alongside your care",
     heroSub:
       "Days that feel flat. Getting started on anything feels heavier than it should. You're functioning, and you're stuck — and you may already be seeing someone about it. LENS neurofeedback here runs alongside that care, never instead of it. This page is about who comes in, not about what would happen for you.",
+    crisisLine: true,
     medicalFirst: {
       aboveHeadline: true,
       // The same numbers as CRISIS_REPLY in lib/chat/safety.ts, in the same

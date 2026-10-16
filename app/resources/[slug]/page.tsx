@@ -131,8 +131,8 @@ export default async function ArticlePage({
             <p className="lede">{article.lede}</p>
           </div>
           {/* Neither an image nor a plate: no figure at all, so the body —
-              and on the depression and concussion articles, the 988 /
-              doctor-first panel that opens it — follows the lede directly,
+              and on the concussion article, the doctor-first paragraph
+              that opens it — follows the lede directly,
               the way those concern pages carry no photo (2026-10-15). */}
           {!article.image && !article.plateSpec ? null : article.image ? (
             <PhotoFrame
@@ -159,11 +159,13 @@ export default async function ArticlePage({
                   return <h2 key={i}>{block.text}</h2>;
                 case "blockquote":
                   return <blockquote key={i}>{block.text}</blockquote>;
+                // The limit line — plain, small, muted, no box (Ben,
+                // 2026-10-16). See LENS_LIMIT_LINE in lib/lens.ts.
                 case "note":
                   return (
-                    <div className="note-sage" key={i}>
+                    <p className="limit-line" key={i}>
                       {block.text}
-                    </div>
+                    </p>
                   );
                 // Ghost buttons rather than inline anchors — `.article p` has
                 // no link rule, so an inline link renders as plain body text.

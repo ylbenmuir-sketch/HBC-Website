@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
@@ -34,6 +35,30 @@ const sessionSteps = [
   },
 ];
 
+
+/** "How it gets stuck" — one recognizable pattern per concern page. */
+const stuckPatterns = [
+  {
+    label: "Focus",
+    href: "/concerns/focus-adhd",
+    line: "Can’t lock in when it counts — or locks in and can’t switch.",
+  },
+  {
+    label: "Stress",
+    href: "/concerns/anxiety",
+    line: "Stuck on alert, even when nothing’s wrong.",
+  },
+  {
+    label: "Emotions",
+    href: "/concerns/emotional-regulation",
+    line: "Zero to 100 in a heartbeat, and slow to come back down.",
+  },
+  {
+    label: "Sleep",
+    href: "/concerns/sleep",
+    line: "Tired all day, then can’t power down at night.",
+  },
+];
 
 export default function HowLensWorksPage() {
   const trail = hubTrail("/how-lens-works");
@@ -92,6 +117,59 @@ export default function HowLensWorksPage() {
               <span style={{ color: "var(--sage-deep)" }}>
                 The feedback signal is far weaker than everyday signals
               </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The story before the sensor (Ben, 2026-10-16): how a healthy brain
+          works, how it gets stuck, and where LENS fits — then the mechanism
+          below. Three short blocks, visitor first, patterns rather than
+          diagnoses ("stuck on alert", not a condition), no statistics. The
+          four patterns link to the concern pages they belong to. */}
+      <section className="sec sec-ivory2">
+        <div className="wrap">
+          <div className="sec-head rv">
+            <div className="eyebrow">The short version</div>
+            <h2>
+              Your brain is built to shift gears.{" "}
+              <em className="sage">Sometimes it gets stuck in one.</em>
+            </h2>
+          </div>
+          <div className="story3 rv">
+            <div>
+              <div className="eyebrow">How it&rsquo;s meant to work</div>
+              <h3>Gearing up, settling down.</h3>
+              <p>
+                A healthy brain is always shifting. It ramps up to focus or
+                respond, then settles back down to rest, sleep and recover.
+                That flexibility is what makes calm, focus and good sleep
+                possible.
+              </p>
+            </div>
+            <div>
+              <div className="eyebrow">How it gets stuck</div>
+              <h3>Locked in one gear.</h3>
+              <p>
+                Lose that flexibility and the brain can stay put. Sound
+                familiar?
+              </p>
+              <ul className="story3-list">
+                {stuckPatterns.map((s) => (
+                  <li key={s.label}>
+                    <Link href={s.href}>{s.label}.</Link> {s.line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <div className="eyebrow">Where LENS fits</div>
+              <h3>This is where we come in.</h3>
+              <p>
+                LENS gives your brain a brief look at its own activity, so it
+                can find its way back to that flexibility on its own. Nothing
+                for you to do &mdash; here&rsquo;s how it works.
+              </p>
             </div>
           </div>
         </div>
@@ -171,10 +249,14 @@ export default function HowLensWorksPage() {
               <figcaption>Small sensors, gently placed</figcaption>
             </figure>
             <figure>
+              {/* A sample brain map rather than the labelled glass head
+                  (Ben, 2026-10-16). The heat map over the 21-site bar chart:
+                  at a third of the row the chart's labels and bars are too
+                  small to read, and the head shape holds the crop. */}
               <PhotoFrame
-                src="/images/map-points.jpg"
-                alt="A brain map, reviewed point by point"
-                position="center 45%"
+                src="/images/brain-map-heat.png"
+                alt={`A sample brain map — a head-shaped heat map of activity at ${BRAIN_MAP_POINTS} points across the brain`}
+                position="center"
                 height={280}
                 sizes="(max-width: 640px) 100vw, 33vw"
               />

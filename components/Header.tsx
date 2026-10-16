@@ -19,6 +19,7 @@ const megaAdults = [
   { label: "Sleep", href: "/concerns/sleep" },
   { label: "Brain fog & memory", href: "/concerns/brain-fog" },
   { label: "Emotional regulation", href: "/concerns/emotional-regulation" },
+  { label: "Performance & focus under pressure", href: "/concerns/performance" },
   { label: "Concussion & TBI", href: "/concerns/concussion" },
 ];
 

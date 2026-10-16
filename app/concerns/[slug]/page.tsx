@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LimitLine from "@/components/LimitLine";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -220,9 +221,7 @@ export default async function ConcernPage({
                   </Btn>
                 </div>
               )}
-              <div className="note-sage rv" style={{ marginTop: 30 }}>
-                {concern.howHelp.note}
-              </div>
+              <LimitLine crisis={concern.crisisLine} className="rv" />
             </div>
           </section>
 
@@ -265,9 +264,7 @@ export default async function ConcernPage({
               <p className="sub" style={{ fontSize: 16 }}>
                 {concern.howHelp.p2}
               </p>
-              <div className="note-sage" style={{ marginTop: 24 }}>
-                {concern.howHelp.note}
-              </div>
+              <LimitLine crisis={concern.crisisLine} />
             </div>
           </div>
         </section>

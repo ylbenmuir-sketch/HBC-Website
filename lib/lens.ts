@@ -27,3 +27,21 @@ export const LENS_IS_NOT = [
   "A guaranteed outcome — every brain responds differently",
   "A replacement for your doctor, therapist, or school supports",
 ] as const;
+
+/**
+ * The one line that replaced every green boxed "limits" notice (Ben,
+ * 2026-10-16): concern pages, articles, /concierge, /what-we-help-with,
+ * /children-families. Plain, small, muted text at the end of its section —
+ * no box, no list of conditions, no warning. components/LimitLine.tsx
+ * renders it. The footer disclaimer, the FAQ and /is-lens-safe keep their
+ * own wording and are not this line.
+ */
+export const LENS_LIMIT_LINE =
+  "LENS is a wellness service. It works alongside — never in place of — your doctor, therapist, or school supports.";
+
+/**
+ * Follows LENS_LIMIT_LINE on the depression page and the depression article
+ * only. The full 988 / 741741 / 911 block above the depression page's H1 is
+ * separate and unchanged.
+ */
+export const CRISIS_LINE = "If you’re in crisis, call or text 988.";

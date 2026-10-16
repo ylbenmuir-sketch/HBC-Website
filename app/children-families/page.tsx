@@ -1,3 +1,4 @@
+import LimitLine from "@/components/LimitLine";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
@@ -80,11 +81,7 @@ export default function ChildrenFamiliesPage() {
               at home: mornings, homework, sleep &mdash; and how your child
               talks about themselves.
             </p>
-            <div className="note-sage" style={{ marginTop: 24 }}>
-              We coordinate happily with teachers, therapists, and
-              pediatricians. LENS is a wellness service and never replaces
-              their care.
-            </div>
+            <LimitLine />
           </div>
         </div>
       </section>

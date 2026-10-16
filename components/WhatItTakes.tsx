@@ -23,7 +23,9 @@ import {
  * Every figure is read from lib/site-config.ts, so nothing here can drift
  * from the FAQ or /first-visit's cost card. The duration row is gated on
  * SESSION_LENGTH.verified and the "full course" sub-line on FULL_COURSE —
- * an unverified figure drops its line rather than printing it.
+ * an unverified figure drops its line rather than printing it. *
+ * Sits in the standard `.wrap`, like the sections around it, at 0.8 of the
+ * reference's size on desktop (Ben, 2026-10-16) — see `--k` in globals.css.
  */
 function ClockIcon() {
   return (
@@ -82,7 +84,7 @@ export default function WhatItTakes({ className = "" }: { className?: string }) 
       className={`sec-tight cost-sec ${className}`.trim()}
       aria-labelledby="cost-heading"
     >
-      <div className="wrap-wide">
+      <div className="wrap">
         <div className="cost-grid">
           {/* LEFT — time & what to expect */}
           <div className="cost-copy rv">
