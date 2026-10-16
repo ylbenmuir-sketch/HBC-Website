@@ -1968,30 +1968,29 @@ body[data-bottombar] footer.site {
 }
 
 /* ── "What it takes" (components/WhatItTakes.tsx, 2026-10-15) ────────────
-   Time, money, effort — scannable, compact. Three columns from 761px; on a
-   phone three short rows, heading beside its lines, so the strip costs as
-   little scroll as it can before the next CTA. */
+   Three equal cards, each led by one figure in the display serif and a line
+   or two of plain text under it — the site's card (white, hairline border,
+   4px radius) with room around the number. Stacked on phones. */
 .what-it-takes { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
-.what-it-takes .eyebrow { margin-bottom: 26px; }
-.wit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-.wit-col { padding: 0 32px; border-left: 1px solid var(--line); }
-.wit-col:first-child { padding-left: 0; border-left: 0; }
-.wit-col h3 { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
-.wit-col ul { list-style: none; margin: 0; padding: 0; }
-.wit-col li { font-size: 16px; color: var(--ink); line-height: 1.5; padding: 3px 0; }
-.wit-note { font-size: 13.5px; color: var(--slate); line-height: 1.5; margin-top: 8px; }
-.wit-foot { margin-top: 28px; font-size: 16px; color: var(--ink); }
+.what-it-takes .eyebrow { margin-bottom: 34px; }
+.wit-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 24px; }
+.wit-card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 44px 36px 40px; }
+.wit-big { font-family: var(--serif); font-size: clamp(52px, 4.6vw, 66px); font-weight: 600; color: var(--navy); line-height: 1; letter-spacing: -0.01em; margin: 0 0 18px; }
+.wit-line { font-size: 16px; color: var(--slate); line-height: 1.55; margin: 0; }
+.wit-line + .wit-line { margin-top: 6px; }
+.wit-seg { white-space: nowrap; }
+.wit-foot { margin-top: 36px; font-size: 16px; color: var(--ink); }
 .wit-foot a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
+@media (max-width: 900px) {
+  .wit-card { padding: 34px 26px 30px; }
+}
 @media (max-width: 760px) {
-  .what-it-takes { padding: 44px 0 40px; }
-  .what-it-takes .eyebrow { margin-bottom: 14px; }
-  .wit-grid { grid-template-columns: 1fr; }
-  .wit-col { display: grid; grid-template-columns: 74px 1fr; column-gap: 12px; padding: 12px 0; border-left: 0; border-top: 1px solid var(--line); }
-  .wit-col:first-child { border-top: 0; padding-top: 0; }
-  .wit-col h3 { font-size: 19px; margin: 0; line-height: 1.4; }
-  .wit-col li { font-size: 15.5px; padding: 1px 0; }
-  .wit-note { grid-column: 2; font-size: 13px; margin-top: 4px; }
-  .wit-foot { margin-top: 16px; font-size: 15.5px; }
+  .what-it-takes .eyebrow { margin-bottom: 20px; }
+  .wit-grid { grid-auto-flow: row; gap: 14px; }
+  .wit-card { padding: 28px 24px 26px; }
+  .wit-big { font-size: 48px; margin-bottom: 12px; }
+  .wit-line { font-size: 15.5px; }
+  .wit-foot { margin-top: 24px; font-size: 15.5px; }
 }
 
 /* "Who we work with" (lib/concerns.ts → audience; /concerns/performance). */
@@ -2007,89 +2006,59 @@ body[data-bottombar] footer.site {
   .audience-card h3 { font-size: 19px; margin-bottom: 6px; }
 }
 
-/* ── Desktop scale (Ben, 2026-10-15) ──────────────────────────────────────
-   At 100% zoom on a laptop the site read too large; Ben preferred how it
-   felt at 90%. This is that feel built into the scale itself — no `zoom`,
-   no transform: headings, the measure and the spacing come down about ten
-   percent, body text to 16px (never below), and small print stays exactly
-   where it was (it was already at its floor). Last in the file on purpose,
-   so it wins on source order at equal specificity.
+/* ── The desktop header (Ben, 2026-10-15, second build) ──────────────────
+   Five labels — Resources moved into the About menu — with more air between
+   them, every label on one line, and the phone number only where it fits
+   without crowding (1440px and up; below that it is in the drawer, the
+   footer and every CTA). The gap between labels grows with the viewport,
+   25px at 1061 to 40px from about 1436. Between 1061 and 1199 the bar's own
+   side padding and outer gap come in a little (44→32, 30→24) — at the
+   original values the five labels and the button do not fit at 1061.
+   Everything else — type, height, the drawer below 1061 — is the header as
+   it always was. */
+@media (min-width: 1061px) {
+  .nav-links { gap: clamp(25px, calc(25px + (100vw - 1061px) * 0.04), 40px); }
+  .nav-links a.top, .nav-cta, .nav-tel { white-space: nowrap; }
+}
+@media (min-width: 1061px) and (max-width: 1199px) {
+  .nav { padding: 0 32px; gap: 24px; }
+}
+@media (min-width: 1061px) and (max-width: 1439px) {
+  .nav > .nav-tel { display: none; }
+}
 
-   Two bands, because the header changes at 1061px: type from 1024px up;
-   the nav, the measure and the section rhythm from 1061px up, where the
-   desktop nav replaces the drawer. Nothing under 1024px changes. */
+/* The About menu: one column of links, the What We Help With panel's look. */
+.mega.mega-sm { min-width: 0; padding: 22px 28px; gap: 0; }
+.mega.mega-sm .col { min-width: 180px; }
+
+/* ── /contact keeps the compact desktop scale (Ben, 2026-10-15) ──────────
+   The ~90% desktop scale from the first build of the day was too much for
+   the site and came out everywhere — except here, where it helps the form's
+   first step sit above the fold. The page wraps itself in .desk-compact
+   (app/contact/page.tsx). Every selector is the original one behind
+   :where(.desk-compact), which adds no specificity, so each rule wins and
+   loses exactly where it did site-wide; the header and footer are outside
+   the wrapper and match every other page. Nothing under 1024px changes. */
 @media (min-width: 1024px) {
-  body { font-size: 16px; }
-  h1 { font-size: clamp(40px, 4.7vw, 66px); }
-  h2 { font-size: clamp(30px, 2.95vw, 41px); }
-  h3 { font-size: 23px; }
-  .sub { font-size: 17px; }
-  .ccard h3, .ccard h4 { font-size: 23px; }
-  .concern-group-head { font-size: 29px; }
-  .family-row .fr-copy h4 { font-size: 28px; }
-  .goals-list li { font-size: 16px; }
-  .jstep h3 { font-size: 20px; }
-  .care h3 { font-size: 21px; }
-  .care-list h3 { font-size: 20px; }
-  .care-list .care-n { font-size: 28px; }
-  .founder-note blockquote { font-size: 21.5px; }
-  .quote p { font-size: 21px; }
-  .proof-grid strong { font-size: 34px; }
-  .review-band strong { font-size: 24px; }
-  .loc-card h3, .loc-card h2 { font-size: 24px; }
-  details.faq summary { font-size: 21px; padding: 22px 2px; }
-  .entry h2 { font-size: 30px; }
-  .member h3, .member h2 { font-size: 23px; }
-  .article h1 { font-size: 46px; }
-  .article .lede { font-size: 19.5px; }
-  .article p { font-size: 17px; }
-  .article h2 { font-size: 29px; margin: 42px 0 16px; }
-  .article blockquote { font-size: 23.5px; }
-  .res-card h3, .res-card h2 { font-size: 21px; }
-  .final h2 { font-size: clamp(32px, 3.2vw, 44px); }
-  .celeb-name { font-size: clamp(32px, 2.7vw, 41px); }
-  .medical-first p { font-size: 17.5px; }
-  .medical-later p { font-size: 16.5px; }
+  :where(.desk-compact) { font-size: 16px; }
+  :where(.desk-compact) h1 { font-size: clamp(40px, 4.7vw, 66px); }
+  :where(.desk-compact) h2 { font-size: clamp(30px, 2.95vw, 41px); }
+  :where(.desk-compact) h3 { font-size: 23px; }
+  :where(.desk-compact) .sub { font-size: 17px; }
 }
 @media (min-width: 1061px) {
-  .wrap { max-width: 1100px; padding: 0 40px; }
-  .wrap-wide { max-width: 1240px; padding: 0 40px; }
-
-  /* The header: shorter, and every label on one line. */
-  .nav { max-width: 1240px; padding: 0 40px; height: 76px; gap: 22px; }
-  .logo { gap: 12px; }
-  .logo-name { font-size: 19px; }
-  .logo-name span { font-size: 9.5px; }
-  .nav-links { gap: 24px; }
-  .nav-links a.top { font-size: 14.5px; padding: 27px 0; white-space: nowrap; }
-  .nav-cta { padding: 11px 20px; font-size: 14.5px; white-space: nowrap; }
-  .nav-tel { font-size: 13.5px; white-space: nowrap; }
-  .mega { padding: 30px 36px; gap: 48px; }
-  .mega a { font-size: 14.5px; }
-
-  .sec { padding: 100px 0; }
-  .sec-tight { padding: 76px 0; }
-  .home .sec-tight { padding: 72px 0; }
-  .sec-head { margin-bottom: 52px; }
-  .sec-head h2 { margin: 18px 0 14px; }
-
-  .hero { padding: 76px 0 0; }
-  .hero-grid { gap: 64px; }
-  .hero .sub { margin: 20px 0 32px; }
-  .hero-ph { height: 540px; }
-  .page-hero { padding: 80px 0 70px; }
-  .page-hero h1 { margin: 20px 0 18px; }
-  .page-hero.compact h1 { font-size: 42px; }
-
-  .btn { padding: 16px 30px; }
-  .form label { margin: 18px 0 7px; }
-  .form input, .form select, .form textarea { padding: 14px 16px; }
-  footer.site { padding: 64px 0 40px; }
-}
-/* Between 1061px and 1240px the six labels, the number and the button only
-   just fit on one line; the number gives way first (it is in the drawer,
-   the footer and on every location page). */
-@media (min-width: 1061px) and (max-width: 1239px) {
-  .nav-tel { display: none; }
-  .nav-links { gap: 20px; }
+  :where(.desk-compact) .wrap { max-width: 1100px; padding: 0 40px; }
+  :where(.desk-compact) .wrap-wide { max-width: 1240px; padding: 0 40px; }
+  :where(.desk-compact) .sec { padding: 100px 0; }
+  :where(.desk-compact) .sec-tight { padding: 76px 0; }
+  :where(.desk-compact) .sec-head { margin-bottom: 52px; }
+  :where(.desk-compact) .sec-head h2 { margin: 18px 0 14px; }
+  :where(.desk-compact) .page-hero { padding: 80px 0 70px; }
+  :where(.desk-compact) .page-hero h1 { margin: 20px 0 18px; }
+  :where(.desk-compact) .page-hero.compact h1 { font-size: 42px; }
+  :where(.desk-compact) .btn { padding: 16px 30px; }
+  :where(.desk-compact) .form label { margin: 18px 0 7px; }
+  :where(.desk-compact) .form input,
+  :where(.desk-compact) .form select,
+  :where(.desk-compact) .form textarea { padding: 14px 16px; }
 }

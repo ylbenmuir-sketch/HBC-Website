@@ -33,7 +33,9 @@ export default function ContactPage() {
     });
 
   return (
-    <>
+    // `desk-compact`: this page keeps the ~90% desktop scale the rest of the
+    // site gave back (Ben, 2026-10-15) — see the end of globals.css.
+    <div className="desk-compact">
       <PageSchema path="/contact" breadcrumb={trail} video={FIRST_VISIT_VIDEO} />
       <Breadcrumbs trail={trail} />
       {/* `compact`: the form's first step has to sit above the fold on a
@@ -72,6 +74,6 @@ export default function ContactPage() {
           />
         </div>
       </section>
-    </>
+    </div>
   );
 }

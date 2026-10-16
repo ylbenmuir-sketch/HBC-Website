@@ -43,8 +43,9 @@ already has a Vercel project deploying Production on every push to `main`
 - **410 body** — `app/api/gone/route.ts` wrote the domain as a string
   literal; it now builds the sentence from `SITE_NAME` and `SITE_URL`. The
   response is unchanged on the apex.
-- **Murfreesboro exterior** — `public/images/murfreesboro-exterior.jpg`
-  (1300×975, JPEG q78 progressive via sharp, like the other photographs),
+- **Murfreesboro exterior** — `public/images/murfreesboro-center.jpg`
+  (1448×1086, JPEG q80 mozjpeg progressive via sharp, from Ben's 3.6 MB PNG
+  of 2026-10-15 — replaces the 1300×975 `murfreesboro-exterior.jpg` crop),
   shown beside "Getting here" on `/locations/murfreesboro` as
   `arrivalPhoto` with alt and caption that say what to look for: a white
   cottage with striped awnings, the brain logo in the front window. It

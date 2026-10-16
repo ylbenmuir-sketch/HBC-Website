@@ -470,6 +470,10 @@ export const RISK_REVERSAL =
 /** First visit (Brain Map) duration — confirmed by Ben. */
 export const FIRST_VISIT_DURATION = "about 60 minutes";
 
+/** The session length as a number, for "What it takes"'s "30 min"; the
+ *  sentence form below is built from it, so the two can't disagree. */
+export const SESSION_MINUTES = 30;
+
 /**
  * Typical length of a regular session — confirmed by Ben.
  *
@@ -482,7 +486,7 @@ export const FIRST_VISIT_DURATION = "about 60 minutes";
  * page.
  */
 export const SESSION_LENGTH: Verifiable = {
-  value: "about 30 minutes",
+  value: `about ${SESSION_MINUTES} minutes`,
   verified: true,
   note: "[Confirm typical length]",
 };

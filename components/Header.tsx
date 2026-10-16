@@ -2,7 +2,7 @@
 
 import ChromeLink from "./ChromeLink";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { LogoMark, LogoName } from "./Logo";
 import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
 
@@ -29,13 +29,28 @@ const megaChildren = [
   { label: "Transitions & sensory overwhelm", href: "/concerns/children-school" },
 ];
 
-const topLinks = [
-  { label: "How LENS Works", href: "/how-lens-works" },
-  { label: "Your First Visit", href: "/first-visit" },
-  { label: "About", href: "/about" },
-  { label: "Locations", href: "/locations" },
+/**
+ * Resources left the top bar (Ben, 2026-10-15: five labels, more air) and
+ * lives in About's menu — About had no menu, so it got a small one; the
+ * articles sit better beside the people who stand behind them than inside a
+ * page about the method. It stays in the footer, and in the drawer below,
+ * where a phone has room for it.
+ */
+const aboutLinks = [
+  { label: "About Harmonized", href: "/about" },
+  { label: "Our founder", href: "/about/founder" },
+  { label: "Our team", href: "/about/team" },
   { label: "Resources", href: "/resources" },
 ];
+
+const topLinks: { label: string; href: string; menu?: typeof aboutLinks }[] = [
+  { label: "How LENS Works", href: "/how-lens-works" },
+  { label: "Your First Visit", href: "/first-visit" },
+  { label: "About", href: "/about", menu: aboutLinks },
+  { label: "Locations", href: "/locations" },
+];
+
+const drawerLinks = [...topLinks, { label: "Resources", href: "/resources" }];
 
 function isHelpActive(pathname: string) {
   return (
@@ -58,15 +73,16 @@ export default function Header() {
   // which means the trigger Escape returns focus to is itself enough to hold
   // it open — so dismissing needs a state the CSS can see, not just a blur.
   // Cleared the moment the pointer leaves the wrapper or focus moves out of
-  // it, so the next hover or Tab opens the panel normally.
-  const [megaDismissed, setMegaDismissed] = useState(false);
+  // it, so the next hover or Tab opens the panel normally. Keyed by menu
+  // ("help", or a top link's href), so dismissing one leaves the other alone.
+  const [dismissed, setDismissed] = useState<string | null>(null);
   const lastY = useRef(0);
   const headerRef = useRef<HTMLElement>(null);
-  const helpTriggerRef = useRef<HTMLAnchorElement>(null);
+  const triggerRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   useEffect(() => {
     setOpen(false);
-    setMegaDismissed(false);
+    setDismissed(null);
   }, [pathname]);
   useEffect(() => {
     // The scroll lock goes on <html>, never on <body>. An overflow that isn't
@@ -105,6 +121,28 @@ export default function Header() {
 
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
+  // About is lit on /resources too, now that Resources lives in its menu.
+  const topActive = (l: (typeof topLinks)[number]) =>
+    active(l.href) || !!l.menu?.some((m) => active(m.href));
+
+  // The hover/focus wrapper of a menu: Escape closes it and returns focus to
+  // its trigger; leaving it (pointer or focus) re-arms it.
+  const menuProps = (key: string) => ({
+    "data-mega-dismissed": dismissed === key ? "" : undefined,
+    onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "Escape") return;
+      setDismissed(key);
+      // Focus first, while the panel is still displayed: hiding it
+      // out from under a focused link would drop focus to <body>.
+      triggerRefs.current[key]?.focus();
+    },
+    onMouseLeave: () => setDismissed(null),
+    onBlur: (e: FocusEvent<HTMLDivElement>) => {
+      // focusout bubbles; relatedTarget is where focus went. Escape's
+      // own move to the trigger stays inside, so it must not clear.
+      if (!e.currentTarget.contains(e.relatedTarget)) setDismissed(null);
+    },
+  });
 
   return (
     <header
@@ -119,26 +157,11 @@ export default function Header() {
           <LogoName />
         </ChromeLink>
         <nav className="nav-links" aria-label="Primary">
-          <div
-            data-mega-dismissed={megaDismissed ? "" : undefined}
-            onKeyDown={(e) => {
-              if (e.key !== "Escape") return;
-              setMegaDismissed(true);
-              // Focus first, while the panel is still displayed: hiding it
-              // out from under a focused link would drop focus to <body>.
-              helpTriggerRef.current?.focus();
-            }}
-            onMouseLeave={() => setMegaDismissed(false)}
-            onBlur={(e) => {
-              // focusout bubbles; relatedTarget is where focus went. Escape's
-              // own move to the trigger stays inside, so it must not clear.
-              if (!e.currentTarget.contains(e.relatedTarget)) {
-                setMegaDismissed(false);
-              }
-            }}
-          >
+          <div {...menuProps("help")}>
             <ChromeLink
-              ref={helpTriggerRef}
+              ref={(el) => {
+                triggerRefs.current.help = el;
+              }}
               className={`top${isHelpActive(pathname) ? " active" : ""}`}
               href="/what-we-help-with"
             >
@@ -166,13 +189,27 @@ export default function Header() {
             </div>
           </div>
           {topLinks.map((l) => (
-            <div key={l.href}>
+            <div key={l.href} {...(l.menu ? menuProps(l.href) : {})}>
               <ChromeLink
-                className={`top${active(l.href) ? " active" : ""}`}
+                ref={(el) => {
+                  triggerRefs.current[l.href] = el;
+                }}
+                className={`top${topActive(l) ? " active" : ""}`}
                 href={l.href}
               >
                 {l.label}
               </ChromeLink>
+              {l.menu && (
+                <div className="mega mega-sm">
+                  <div className="col">
+                    {l.menu.map((m) => (
+                      <ChromeLink key={m.href} href={m.href}>
+                        {m.label}
+                      </ChromeLink>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </nav>
@@ -218,7 +255,7 @@ export default function Header() {
               ))}
               <ChromeLink href="/children-families">All children&apos;s concerns →</ChromeLink>
             </div>
-            {topLinks.map((l) => (
+            {drawerLinks.map((l) => (
               <ChromeLink key={l.href} className="d-top" href={l.href}>
                 {l.label}
               </ChromeLink>

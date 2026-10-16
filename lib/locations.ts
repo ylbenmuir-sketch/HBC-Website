@@ -585,9 +585,12 @@ export const locations: Location[] = [
      * Supplied by Ben, 2026-10-14. The building from the street — the one
      * photograph a visitor needs before the interior set arrives. Kept out of
      * the hero on purpose (Ben: its job is recognition, not atmosphere).
+     * Also the homepage, /locations and /lens-neurofeedback card photo until
+     * an interior `image` exists (components/LocationCard.tsx). The file is
+     * Ben's wider, higher-resolution frame of the same shot (2026-10-15).
      */
     arrivalPhoto: {
-      src: "/images/murfreesboro-exterior.jpg",
+      src: "/images/murfreesboro-center.jpg",
       position: "center 58%",
       alt: "The Murfreesboro center seen from the street: a white cottage with striped awnings, the brain logo in the front window.",
       caption:

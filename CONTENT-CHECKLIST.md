@@ -271,8 +271,10 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
 - [ ] Nashville: exterior · waiting room · session room (current room photo
       should be reshot professionally)
 - [ ] Murfreesboro: waiting room · session room — the **exterior is done**
-      (2026-10-14, `/images/murfreesboro-exterior.jpg`, shown beside
-      "Getting here" on `/locations/murfreesboro` as `arrivalPhoto`)
+      (2026-10-14, `/images/murfreesboro-center.jpg`, shown beside
+      "Getting here" on `/locations/murfreesboro` as `arrivalPhoto`, and on
+      the Murfreesboro card on `/`, `/locations` and `/lens-neurofeedback`
+      since 2026-10-15)
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
 - [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section

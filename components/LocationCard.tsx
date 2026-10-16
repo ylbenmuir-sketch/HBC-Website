@@ -54,13 +54,23 @@ export default function LocationCard({
         label: `About the ${location.name} center →`,
       };
 
+  /**
+   * The interior shot when there is one; otherwise the street photo (Ben,
+   * 2026-10-15: the Murfreesboro card was a gray plate while its building
+   * photo sat one click away). The exterior's alt already says what the
+   * building looks like, so it goes with it.
+   */
+  const photo = location.image
+    ? { ...location.image, alt: `${location.name} center` }
+    : location.arrivalPhoto;
+
   return (
     <div className="loc-card">
-      {location.image ? (
+      {photo ? (
         <PhotoFrame
-          src={location.image.src}
-          alt={`${location.name} center`}
-          position={location.image.position}
+          src={photo.src}
+          alt={photo.alt}
+          position={photo.position}
           height={imageHeight}
           sizes="(max-width: 640px) 100vw, (max-width: 1060px) 50vw, 33vw"
         />
