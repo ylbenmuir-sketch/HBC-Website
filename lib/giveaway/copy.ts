@@ -352,7 +352,9 @@ export const PAGES = {
     cardWinnerReaching: D("Drawn, we're reaching them now"),
     prizesNote: D("Every session includes the vibro chair."),
     /** The photo strip. */
-    photoRecline: D("Sessions in our reclining chairs"),
+    /** recline.jpg shows the vibro-acoustic chair (Ben: our chairs don't recline). */
+    photoChair: D("The vibro-acoustic chair"),
+    photoChairAlt: D("A client relaxing in the vibro-acoustic chair"),
     photoRoom: D("Our Nashville center"),
     photoBrainMap: D("Your Brain Map"),
     /** "Vagus nerve stimulator by Hoolest" — the maker from config. */

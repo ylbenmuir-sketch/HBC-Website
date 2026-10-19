@@ -444,9 +444,9 @@ function PhotoStrip() {
           <li>
             <figure>
               <div className="ty-photo" style={{ position: "relative" }}>
-                <Image src="/images/recline.jpg" alt="" fill sizes={sizes} />
+                <Image src="/images/recline.jpg" alt={t.photoChairAlt} fill sizes={sizes} />
               </div>
-              <figcaption>{t.photoRecline}</figcaption>
+              <figcaption>{t.photoChair}</figcaption>
             </figure>
           </li>
           <li>

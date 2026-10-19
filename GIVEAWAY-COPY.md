@@ -321,7 +321,7 @@ Three numbered steps, one line each; the counts, days and times are from config.
 
 ### Photos
 
-Captions: **Sessions in our reclining chairs** · **Our Nashville center** · **Your Brain Map** · **Vagus nerve stimulator by Hoolest** *(the product photo, `public/images/hoolest-handheld.webp`, contained on its own light ground)*
+Captions: **The vibro-acoustic chair** *(alt: A client relaxing in the vibro-acoustic chair)* · **Our Nashville center** · **Your Brain Map** · **Vagus nerve stimulator by Hoolest** *(the product photo, `public/images/hoolest-handheld.webp`, contained on its own light ground)*
 
 ### Three questions (stand in for the chat assistant Nov 9 – Dec 5)
 
