@@ -31,7 +31,7 @@ compositions), so desktop rendering is untouched. Key pieces:
   `components/BottomBarContext.tsx` decides which is in it; the bars only
   report their state to it. See "The bottom of the screen" below.
   - **Sticky CTA** — `components/MobileCtaBar.tsx` (homepage, ≤760px only);
-    same "Get a Free Call Today" → `/contact` ask, retiring near the final CTA band.
+    same "See If It’s a Fit" → `/contact` ask, retiring near the final CTA band.
   - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route but
     `/contact`, every width, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a field
     that opens the site assistant with whatever was typed into it. See
@@ -769,7 +769,7 @@ safety change — `lib/chat/safety.ts`, `refusals.ts` and the 988 block on
 ## The bottom of the screen
 
 Two things want to be anchored to the bottom of the viewport — the homepage's
-"Get a Free Call Today" bar and the sticky ask bar that opens the site
+"See If It’s a Fit" bar and the sticky ask bar that opens the site
 assistant — and they must never be there together.
 
 They used to settle it between themselves, with a pair of CSS rules pointing
@@ -1171,9 +1171,9 @@ them, and the build stops asking for the claim. Then re-run `check:cwv` on
   disclaimer (`lib/site-config.ts` → `DISCLAIMER`) appears on every page —
   never remove or soften it, and never add medical claims (diagnose / treat /
   cure / prevent language) anywhere.
-- Primary CTA everywhere is **"Get a Free Call Today" → `/contact`**
+- Primary CTA everywhere is **"See If It’s a Fit" → `/contact`** (was "Get a Free Call Today" until 2026-10-19)
   (`TalkCta` in `components/Buttons.tsx`). Don't introduce competing CTAs.
-- One secondary CTA exists: **"Book Your Brain Map — $150"** (`BrainMapCta`),
+- One secondary CTA exists: **"Book a First Visit — $150"** (`BrainMapCta`; was "Book Your Brain Map — $150" until 2026-10-19),
   the priced first visit, for visitors who arrive already sold. It appears in
   exactly five places — the homepage hero, `/lens-neurofeedback`,
   `/brain-map`, `/first-visit`, and `/how-lens-works` — always beside

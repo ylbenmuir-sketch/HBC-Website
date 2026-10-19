@@ -222,7 +222,7 @@ export default function Header() {
           </a>
         )}
         <ChromeLink className="nav-cta" href="/contact">
-          Get a Free Call Today
+          See If It&rsquo;s a Fit
         </ChromeLink>
         <button
           className={`nav-burger${open ? " is-open" : ""}`}
@@ -266,7 +266,7 @@ export default function Header() {
           </nav>
           <div className="d-cta">
             <ChromeLink className="nav-cta" href="/contact">
-              Get a Free Call Today
+              See If It&rsquo;s a Fit
             </ChromeLink>
             {SHOW_PHONE && (
               <a className="nav-tel" href={`tel:${PHONE_TEL}`}>

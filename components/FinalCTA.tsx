@@ -29,7 +29,7 @@ export default function FinalCTA({
         <p className="sub">{sub}</p>
         <div className="row">
           <Link className="btn btn-invert" href={href}>
-            Get a Free Call Today
+            See If It&rsquo;s a Fit
           </Link>
           {SHOW_PHONE && (
             <div className="tel">
