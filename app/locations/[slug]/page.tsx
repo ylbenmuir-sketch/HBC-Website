@@ -460,7 +460,7 @@ export default async function LocationPage({
                   <PhotoFrame
                     key={i}
                     src={p.src}
-                    alt={`Inside the ${location.name} center`}
+                    alt={p.alt ?? `Inside the ${location.name} center`}
                     position={p.position}
                     height={330}
                     sizes="(max-width: 640px) 100vw, 33vw"

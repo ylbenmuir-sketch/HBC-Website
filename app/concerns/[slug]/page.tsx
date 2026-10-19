@@ -161,7 +161,7 @@ export default async function ConcernPage({
               {concern.image ? (
                 <PhotoFrame
                   src={concern.image.src}
-                  alt={concern.title}
+                  alt={concern.image.alt ?? concern.title}
                   position={concern.image.position}
                   height={460}
                   sizes="(max-width: 1060px) 100vw, 47vw"

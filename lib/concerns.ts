@@ -179,7 +179,9 @@ export type Concern = {
   crisisLine?: boolean;
   goals: string[]; // "Common goal" quote cards
   faqs: ConcernFaq[];
-  image: { src: string; position: string } | null;
+  /** `alt` when the photo needs its own words; the page falls back to the
+   *  concern title. */
+  image: { src: string; position: string; alt?: string } | null;
   plateSpec?: string;
   /**
    * The eyebrow over "Who we see." in the medical-first body layout. It
@@ -463,7 +465,8 @@ export const concerns: Concern[] = [
         a: "Yes — LENS is routinely used alongside other care, and we're glad to coordinate with providers you already trust. We never advise on medication.",
       },
     ],
-    image: { src: "/images/recline.jpg", position: "center 55%" },
+    // The vibro-acoustic chair (the chairs do not recline — Ben, 2026-10-19).
+    image: { src: "/images/recline.jpg", position: "center 55%", alt: "A client relaxing in the vibro-acoustic chair" },
     related: ["anxiety", "brain-fog", "stress-resilience"],
     metaTitle: "Neurofeedback for Sleep in Nashville & Murfreesboro, TN",
     metaDescription:

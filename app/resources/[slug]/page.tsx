@@ -137,7 +137,7 @@ export default async function ArticlePage({
           {!article.image && !article.plateSpec ? null : article.image ? (
             <PhotoFrame
               src={article.image.src}
-              alt={article.title}
+              alt={article.image.alt ?? article.title}
               position={article.image.position}
               height={420}
               className="rv above-fold"

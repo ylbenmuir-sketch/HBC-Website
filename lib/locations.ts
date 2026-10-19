@@ -282,7 +282,7 @@ export type Location = {
     heading: string;
     sub: string;
     photos: Array<
-      | { kind: "photo"; src: string; position: string }
+      | { kind: "photo"; src: string; position: string; alt?: string }
       | { kind: "plate"; spec: string }
     >;
     /**
@@ -452,7 +452,8 @@ export const locations: Location[] = [
       heading: "Quiet rooms, and no waiting-room churn.",
       sub: "No fluorescent hum, no clipboard queue. Comfortable chairs, low light, and a team that isn't rushing you anywhere.",
       photos: [
-        { kind: "photo", src: "/images/recline.jpg", position: "center 55%" },
+        // The vibro-acoustic chair (the chairs do not recline — Ben, 2026-10-19).
+        { kind: "photo", src: "/images/recline.jpg", position: "center 55%", alt: "A client relaxing in the vibro-acoustic chair" },
         { kind: "photo", src: "/images/session-wide.jpg", position: "center 40%" },
         { kind: "photo", src: "/images/art-wall.jpg", position: "center 45%" },
       ],

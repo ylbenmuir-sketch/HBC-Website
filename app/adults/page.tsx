@@ -131,9 +131,12 @@ export default function AdultsPage() {
       <section className="sec sec-ivory2">
         <div className="wrap split">
           <div className="rv">
+            {/* The vibro-acoustic chair (Ben, 2026-10-19). The file is
+                named recline.jpg; the chairs do not recline, and the alt
+                says what is pictured. Same alt wherever this photo appears. */}
             <PhotoFrame
               src="/images/recline.jpg"
-              alt="A client reclining comfortably during a session"
+              alt="A client relaxing in the vibro-acoustic chair"
               position="center 55%"
               height={480}
             />

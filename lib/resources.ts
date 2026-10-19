@@ -250,7 +250,9 @@ export type Resource = {
   /** The photo under the lede. With neither this nor `plateSpec`, the
    *  article renders no figure — for pieces whose first body block must
    *  follow the lede directly (a crisis or doctor-first panel). */
-  image?: { src: string; position: string };
+  /** `alt` when the photo needs its own words; the page falls back to the
+   *  article title. */
+  image?: { src: string; position: string; alt?: string };
   plateSpec?: string;
   readTime: string;
   byline: Byline;
@@ -498,7 +500,7 @@ export const resources: Resource[] = [
     title: "The 3 a.m. waking, and why it isn’t random",
     crumbLabel: "The 3 a.m. waking",
     excerpt: "Waking in the small hours for no reason, and no way back down.",
-    image: { src: "/images/recline.jpg", position: "center 55%" },
+    image: { src: "/images/recline.jpg", position: "center 55%", alt: "A client relaxing in the vibro-acoustic chair" },
     readTime: "5 min read",
     byline: HBC_BYLINE,
     lede: "You didn’t wake for a reason. No noise, no bad dream you can recall, nothing to do. You were simply awake, at more or less the hour you were awake yesterday — and then you were awake for another ninety minutes.",
@@ -1932,7 +1934,7 @@ export const resources: Resource[] = [
     title: "When time off stops feeling like rest",
     crumbLabel: "When time off isn’t rest",
     excerpt: "You took the days off and did nothing on purpose. By Tuesday it was as if you’d never left.",
-    image: { src: "/images/recline.jpg", position: "center 55%" },
+    image: { src: "/images/recline.jpg", position: "center 55%", alt: "A client relaxing in the vibro-acoustic chair" },
     readTime: "5 min read",
     byline: HBC_BYLINE,
     lede: "You took the long weekend. You slept late, saw nobody you had to, and did nothing on purpose. By Tuesday lunchtime it was as though you’d never left. It’s one of the things we hear most from people who are still holding everything together — the job, the family, the calendar — and quietly running on empty.",
