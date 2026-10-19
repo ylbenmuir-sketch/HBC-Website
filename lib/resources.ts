@@ -585,7 +585,7 @@ export const resources: Resource[] = [
     title: "When sleep hygiene isn’t the problem",
     crumbLabel: "When sleep hygiene isn’t it",
     excerpt: "You’ve done the blackout blind and the no-screens rule. It’s worth knowing what that does and doesn’t rule out.",
-    plateSpec: "Bedside table at night — book, lamp, no phone — still life",
+    image: { src: "/images/article-sleep-hygiene.jpg", position: "center 35%", alt: "A woman in a green T-shirt sitting on the edge of her bed in the morning light, looking toward the window" },
     readTime: "4 min read",
     byline: HBC_BYLINE,
     lede: "The room is dark. The phone charges in the kitchen. Caffeine stops at noon, and the routine has been the same for six weeks. The nights are exactly as they were. That is worth something — just not what it feels like it’s worth.",
@@ -752,7 +752,7 @@ export const resources: Resource[] = [
     title: "When a bright kid starts saying “I'm just bad at school”",
     crumbLabel: "“Bad at school”",
     excerpt: "The self-story problem — and how to interrupt it early.",
-    plateSpec: "Parent and teen talking at kitchen table — candid",
+    image: { src: "/images/article-bad-at-school.jpg", position: "center 35%", alt: "A boy resting his head on his hand over an open notebook at the kitchen table, his mom sitting beside him" },
     readTime: "5 min read",
     byline: HBC_BYLINE,
     lede: "It usually arrives as a throwaway line, mid-argument, and it’s easy to hear as self-pity. It’s closer to a conclusion. Somewhere in the last year or two your child ran an experiment, over and over, and this is the result they believe it produced.",
@@ -1238,6 +1238,7 @@ export const resources: Resource[] = [
     title: "When getting started on anything feels heavier than it should",
     crumbLabel: "When everything feels like effort",
     excerpt: "The dishes, the email, the call back — and why effort isn’t what’s missing.",
+    image: { src: "/images/article-getting-started.jpg", position: "center 35%", alt: "A man at a wooden table looking down at an open notebook, a pen across the page and a closed laptop beside him" },
     // No figure (see `image`): the 988 line follows the lede directly.
     readTime: "5 min read",
     byline: HBC_BYLINE,
@@ -1343,6 +1344,7 @@ export const resources: Resource[] = [
     title: "Good days and bad days, months after a concussion",
     crumbLabel: "Good days and bad days",
     excerpt: "The fog that lifts and returns, and why one good week doesn’t set the standard.",
+    image: { src: "/images/article-concussion-good-bad-days.jpg", position: "center 30%", alt: "A woman in a cardigan sitting in a blue armchair by a window, holding a closed book and looking outside" },
     // No figure (see `image`): the doctor-first panel follows the lede.
     readTime: "5 min read",
     byline: HBC_BYLINE,
