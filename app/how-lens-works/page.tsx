@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import BrainMapHeat from "@/components/BrainMapHeat";
 import Link from "next/link";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
@@ -253,13 +254,9 @@ export default function HowLensWorksPage() {
                   (Ben, 2026-10-16). The heat map over the 21-site bar chart:
                   at a third of the row the chart's labels and bars are too
                   small to read, and the head shape holds the crop. */}
-              <PhotoFrame
-                src="/images/brain-map-heat.png"
-                alt={`A sample brain map — a head-shaped heat map of activity at ${BRAIN_MAP_POINTS} points across the brain`}
-                position="center"
-                height={280}
-                sizes="(max-width: 640px) 100vw, 33vw"
-              />
+              <div className="hlw-heat" style={{ height: 280 }}>
+                <BrainMapHeat legend={false} />
+              </div>
               <figcaption>Your map, point by point</figcaption>
             </figure>
             <figure>

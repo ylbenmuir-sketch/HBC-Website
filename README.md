@@ -1140,14 +1140,15 @@ through one component, `components/BrainMapFigure.tsx`, whose only input is
 `BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts`.
 
 **Today (`false`).** The primary image is the bar chart a client actually
-receives: `public/images/brain-map-chart.svg` as Ben supplied it, inlined as
-`components/BrainMapChart.tsx` (viewBox kept, fixed size dropped,
-`preserveAspectRatio="xMidYMid meet"`) so it inherits DM Sans and costs no
-request. Caption: "A sample recording — 21 sites, measured in microvolts. Not
-a diagnosis." The chart always fits its container and never scrolls; below
-920px the 21 site labels (grouped as `.bmc-sites`) are hidden — the axis,
-range band, legend and aria-label stay. Beneath it the heat map
-(`/images/brain-map-heat.png`) is a coming-soon block: the render at 40% of
+receives, `components/BrainMapBars.tsx`, drawn from the one sample dataset
+in `lib/brain-map-sample.ts` (21 sites, µV values; the heat map
+`components/BrainMapHeat.tsx` and the homepage stage draw from the same
+file, so the visuals cannot disagree — 2026-10-19). Caption: "A sample
+recording — 21 sites, measured in microvolts. Not a diagnosis." The chart
+has an upright and a sideways drawing of the same data and shows one per
+width (sideways under 760px), so all 21 bars and their labels are legible
+on a phone and nothing scrolls. Beneath it the heat map
+(the SVG, not the retired `/images/brain-map-heat.png`) is a coming-soon block: the render at 40% of
 the content width beside the copy (full width above it on phones), at full
 opacity — Ben, 2026-10-13: the eyebrow says "not yet", dimming it only made
 it look worse — eyebrow "COMING SOON", line "Your brain in full color — the
