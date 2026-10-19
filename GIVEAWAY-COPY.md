@@ -149,7 +149,7 @@ get shorter but not longer.
 - **Footer:** identity line · marketing line · Unsubscribe.
 - **From config:** next drawing's day, time and prize (reader's version), the reader's entry count.
 - Heading, body and count line follow the shape in decision 15 word for word; no winner name anywhere.
-- Filled example, Friday's email to a current client: Subject "Saturday's grand prize: 13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner" · Body "Next drawing: Saturday at 5:00 pm — 13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner."
+- Filled example, Friday's email to a current client: Subject "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner" · Body "Next drawing: Saturday at 5:00 pm — 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner."
 
 ### 7. Winner *(transactional; the moment they are drawn)*
 
@@ -165,7 +165,7 @@ get shorter but not longer.
 - **Button:** Claim my prize
 - **Footer:** identity line · transactional line.
 - **From config:** day name, prize in the winner's version, the claim deadline (72 h, or the following Tuesday 5:00 pm CT when it would land on a Sunday or Monday), the tax flag.
-- Filled example, the grand prize to a current client: "Your prize: 13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner." · "…give us the best number by Tue Nov 24, 5:00 PM CT…" · tax line shown.
+- Filled example, the grand prize to a current client: "Your prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner." · "…give us the best number by Tue Nov 24, 5:00 PM CT…" · tax line shown.
 
 ### 8. Thank-you + offer *(marketing; Sun Nov 22, 10:00 am CT, to everyone not holding a prize)*
 
@@ -298,19 +298,20 @@ The Saturday row is labelled *Saturday (grand prize)*. The list shows from close
 
 ### The prize ladder
 
-- **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize and value)*
-- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), the prize in plain words, and a gold value tag.
-- **Prize words:** *{Brain Map + }{2} sessions* · + Hoolest keychain · + Hoolest device to keep · + a gift from every partner *(each line only while the prize in config includes it)*
-- **Value tag:** $*{480}* value — and $*{810}*+ value where a part (the keychain) has no price yet. Rates from config: Brain Map $150, session $125, vibro chair $40 per session, Hoolest handheld $429.
-- **Saturday** *(the navy card)*: the label **Grand prize**, the full prize, the value tag.
+- **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize, value and breakdown)*
+- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), then the value first and largest — **$*{480}*** (**$*{810}*+** where a part has no price yet) with **value** in small caps under it — then the prize in plain words.
+- **Prize words:** *{Brain Map + }{2} sessions* · + Pocket vagus nerve stimulator *by Hoolest* · + Handheld vagus nerve stimulator *by Hoolest · yours to keep* · + a gift from every partner *(each line only while the prize in config includes it; the device names are `DEVICES` in config and read the same in the emails and the rules)*
+- **Saturday** *(the navy card)*: the label **Grand prize**, then the same.
 - **Partner line** *(when named in config)*: Plus from *{partner}*: *{prize}*
 - **Live tags:** Next (the next drawing's card, sage outline) · Drawn (a drawn day with no winner row yet).
 - **A drawn day in live mode** shows **Winner** and one of: *{Jane D., Franklin}* · Claimed ✓ · Drawn, we're reaching them now.
+- **Every card opens** (tap anywhere; hover on desktop; Enter/Space) to its value breakdown, one line per part from config:
+  **Brain Map** · $*{150}* — ***{2}* LENS sessions** · $*{250}* — **Vibro chair at every session** · $*{80}* — **Pocket vagus nerve stimulator** *by Hoolest* · bonus *(no price supplied yet; the total carries the "+")* — **Handheld vagus nerve stimulator** *by Hoolest · yours to keep* · $*{429}* *(with the product photo beside it on Saturday)* — **Gift from *{partner}*** · $*{…}* *(when named)* — then **Total** · **$*{480}*** in bold, and the link **What's a Brain Map?** *(to /brain-map, new tab)*.
 - **Under the row:** Every session includes the vibro chair.
 
 ### Photos
 
-Captions: **Sessions in our reclining chairs** · **Our Nashville center** · **Your Brain Map** · **Hoolest device** *(a neutral placeholder plate until the product photo exists — TODO in the code)*
+Captions: **Sessions in our reclining chairs** · **Our Nashville center** · **Your Brain Map** · **Vagus nerve stimulator by Hoolest** *(the product photo, `public/images/hoolest-handheld.webp`, contained on its own light ground)*
 
 ### Three questions (stand in for the chat assistant Nov 9 – Dec 5)
 
@@ -387,8 +388,7 @@ from config:
    more than the rule's exception, say which comes first and the other goes
    to a text link.
 2. **Grand-prize subject length.** Friday's daily email subject is the prize
-   name: "Saturday's grand prize: 13 sessions + Hoolest handheld vagus nerve
-   stimulator (to keep) + one service from every partner" (about 110
+   name: "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner" (about 110
    characters; phones show ~40). A shorter *display* name for the grand
    prize would need a config change, not a copy change.
 3. **Typed days and counts.** "Monday's prize" (It's-live subject),
@@ -401,7 +401,7 @@ from config:
    wanted on the page too.
 5. **Marketing opt-in wording** ("Email me HBC news after the giveaway") is
    §8 legal item 5 — yours or counsel's to settle.
-6. **"Hoolest handheld vagus nerve stimulator"** is the product's own name
-   and appears in prize lists from config. It names a device, not a result;
-   if you'd rather the public prize list said "Hoolest handheld device", that
-   is a config change.
+6. **Device names** (Ben, 2026-10-19) are `DEVICES` in config — "Handheld
+   vagus nerve stimulator by Hoolest (yours to keep)" and "Pocket vagus nerve
+   stimulator by Hoolest" — and appear in prize lists on the page, in the
+   emails and in the rules. They name what the device is, never what it does.

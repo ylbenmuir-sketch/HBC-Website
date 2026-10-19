@@ -6,6 +6,8 @@ import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
 import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, pageMode, partnerFor, prizeFor, prizeName } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { hideDraftTags } from "@/lib/giveaway/draft";
+import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
+import AssistantOff from "@/components/giveaway/AssistantOff";
 import { DBA_SENTENCE, LEGAL_ENTITY, REGISTERED_ADDRESS_LINE } from "@/lib/sms-identity";
 
 /**
@@ -28,6 +30,7 @@ export default function RulesPage() {
   const q = giveawayQuestions();
   return (
     <section className="page-hero ty-details">
+      {assistantSuppressedByGiveaway() && <AssistantOff />}
       <div className="wrap article policy" style={{ maxWidth: 760 }}>
         <p className="ty-eyebrow">{t.eyebrow}</p>
         <h1 id="prizes" style={{ fontSize: 36 }}>

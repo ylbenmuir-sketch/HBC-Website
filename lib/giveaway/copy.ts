@@ -308,11 +308,27 @@ export const PAGES = {
     grandLabel: D("Grand prize"),
     /** The prize in plain words, built from the spec's flags. */
     prizeWords: (brainMap: boolean, sessions: number) => D(`${brainMap ? "Brain Map + " : ""}${sessions} sessions`),
-    keychainLine: D("+ Hoolest keychain"),
-    handheldLine: D("+ Hoolest device to keep"),
+    /** A device line: the name from config (DEVICES), "by Hoolest" small beside it. */
+    deviceLine: (name: string) => D(`+ ${name}`),
+    deviceBy: (by: string) => D(`by ${by}`),
+    deviceKeep: (keep: string) => D(keep),
     partnersLine: D("+ a gift from every partner"),
-    /** "$480 value", "$810+ value" when a part has no price yet. */
-    valueTag: (usd: number, floor: boolean) => D(`$${usd.toLocaleString("en-US")}${floor ? "+" : ""} value`),
+    /** The value, first and largest: "$480", "$810+" when a part has no price yet; "value" in small caps under it. */
+    valueBig: (usd: number, floor: boolean) => D(`$${usd.toLocaleString("en-US")}${floor ? "+" : ""}`),
+    valueWord: D("value"),
+    /** The expanded card: one line per part, from config's prizeBreakdown. */
+    breakdown: {
+      open: D("See the value"),
+      close: D("Close"),
+      brainMap: D("Brain Map"),
+      sessions: (n: number) => D(`${n} LENS ${n === 1 ? "session" : "sessions"}`),
+      chair: D("Vibro chair at every session"),
+      partner: (name: string) => D(`Gift from ${name}`),
+      /** A part with no price yet (the pocket device today): it rides on top of the total, which carries the "+". */
+      unpriced: D("bonus"),
+      total: D("Total"),
+      whatsBrainMap: D("What's a Brain Map?"),
+    },
     nextTag: D("Next"),
     drawnTag: D("Drawn"),
     /** A drawn day's card, in the three public states (decision 7). */
@@ -324,7 +340,8 @@ export const PAGES = {
     photoRecline: D("Sessions in our reclining chairs"),
     photoRoom: D("Our Nashville center"),
     photoBrainMap: D("Your Brain Map"),
-    photoHoolest: D("Hoolest device"),
+    /** "Vagus nerve stimulator by Hoolest" — the maker from config. */
+    photoDevice: (by: string) => D(`Vagus nerve stimulator by ${by}`),
     /** /10years/rules: the full table and every question. */
     detailsTitle: D("Prize details & drawing times"),
     newClient: D("New client"),

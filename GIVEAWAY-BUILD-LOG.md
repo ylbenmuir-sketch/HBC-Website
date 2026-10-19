@@ -6,6 +6,34 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## /10years, third pass: the ladder (Mon Oct 19 2026, Ben's third brief)
+
+- **Value first** on every card (`$480` / `$810+` in gold serif, "value" in
+  small caps, the prize words below, less air), and **every card opens** to
+  its breakdown from `prizeBreakdown()` in config (`components/giveaway/
+  Ladder.tsx`: tap on any device, hover on a fine pointer, Enter/Space,
+  aria-expanded, inert while closed, one open at a time). The unpriced
+  pocket device reads "bonus" and the total carries the "+".
+- **Device names** are `DEVICES` in config — page, emails and rules all read
+  them; the 0010 seed block was regenerated (names/descriptions changed;
+  0010 is still not applied, so paste the branch's file).
+- **Photo:** `public/images/hoolest-handheld.webp` (Ben's attachment —
+  origin/giveaway-build had no such file) in the strip, contained on its
+  own light grey, and as a 40 px thumbnail beside Saturday's device line.
+- **Bug: the assistant showed on /10years with the local clock on Nov 10.**
+  The client read the real date. Now the page decides, from
+  `giveawayNow()` (`lib/giveaway/assistant.ts`), and renders
+  `<AssistantOff>` which tells `BottomBarProvider` (`setPageSuppressed`);
+  `assistantSuppressedOn()` keeps only the fixed routes. Test:
+  `lib/giveaway/assistant.test.mjs`; the harness checks the marker and
+  that no ask bar renders.
+- **The dev overlay's "1 Issue"** was two of ours: the `<html>` class
+  mismatch from the inline `js` script (now `suppressHydrationWarning` on
+  that element) and next/image's "fill parent is static" warnings on the
+  photo frames (inline `position: relative`).
+
+---
+
 ## /10years, second pass (Mon Oct 19 2026, Ben's second brief)
 
 - **`GIVEAWAY_HIDE_DRAFT_TAGS=1`** (`lib/giveaway/draft.ts`) hides the

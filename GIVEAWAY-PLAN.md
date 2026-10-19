@@ -58,10 +58,10 @@ already an HBC client"** checkbox picks which one:
 |---|---|---|---|
 | Mon | Brain Map + 2 sessions | 2 sessions | Partner 1 (TBD) |
 | Tue | Brain Map + 3 sessions | 3 sessions | Partner 2 (TBD) |
-| Wed | Brain Map + 4 sessions + Hoolest keychain | 4 sessions + Hoolest keychain | Partner 3 (TBD) |
-| Thu | Brain Map + 5 sessions + Hoolest keychain | 5 sessions + Hoolest keychain | Partner 4 (TBD) |
-| Fri | Brain Map + 7 sessions + Hoolest keychain | 7 sessions + Hoolest keychain | Partner 5 (TBD) |
-| **Sat GRAND** | Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
+| Wed | Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest | 4 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 3 (TBD) |
+| Thu | Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest | 5 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 4 (TBD) |
+| Fri | Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest | 7 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 5 (TBD) |
+| **Sat GRAND** | Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
 
 - **Every prize session includes the vibro chair.**
 - Partner prizes are six slots, smallest Monday to biggest Saturday, all

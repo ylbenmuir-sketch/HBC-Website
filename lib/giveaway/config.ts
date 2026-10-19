@@ -229,6 +229,15 @@ export const RATES = {
   practitionerCostPerUnit: { usd: 35, confirmed: true } as Rate,
 } as const;
 
+/**
+ * The devices, by what they are (Ben, 2026-10-19): display names used on
+ * the page, in the emails and in the rules. Never by what they do.
+ */
+export const DEVICES = {
+  handheld: { name: "Handheld vagus nerve stimulator", by: "Hoolest", keep: "yours to keep" },
+  keychain: { name: "Pocket vagus nerve stimulator", by: "Hoolest" },
+} as const;
+
 /** Over this computed retail value a winner needs a tax form (decision 16). */
 export const TAX_FORM_THRESHOLD_USD = 600;
 
@@ -338,29 +347,52 @@ export function prizeUnconfirmedRates(p: PrizeSpec, rates = RATES): string[] {
   return out;
 }
 
-/** The HBC prize in words: "Brain Map + 4 sessions + Hoolest keychain".
- *  The chair is a clause, not an item, so the list reads as Ben wrote it. */
+/** The HBC prize in words: "Brain Map + 4 sessions + Pocket vagus nerve
+ *  stimulator by Hoolest". The chair is a clause, not an item, so the list
+ *  reads as Ben wrote it; the devices read as DEVICES names them. */
 export function prizeName(p: PrizeSpec): string {
   const items: string[] = [];
   if (p.brainMap) items.push("Brain Map");
   items.push(`${p.sessions} sessions`);
-  if (p.hoolestKeychain) items.push("Hoolest keychain");
-  if (p.hoolestHandheld) items.push("Hoolest handheld vagus nerve stimulator (to keep)");
+  if (p.hoolestKeychain) items.push(`${DEVICES.keychain.name} by ${DEVICES.keychain.by}`);
+  if (p.hoolestHandheld) items.push(`${DEVICES.handheld.name} by ${DEVICES.handheld.by} (${DEVICES.handheld.keep})`);
   if (p.partnerServices) items.push("one service from every partner");
   return items.join(" + ");
 }
 
-/** The sentence under the name: "a Brain Map, 4 LENS sessions and a Hoolest
- *  keychain (every session includes the vibro chair)". */
+const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
+/** The sentence under the name: "a Brain Map, 4 LENS sessions and a pocket
+ *  vagus nerve stimulator by Hoolest (every session includes the vibro chair)". */
 export function prizeDescription(p: PrizeSpec): string {
   const items: string[] = [];
   if (p.brainMap) items.push("a Brain Map");
   items.push(`${p.sessions} LENS sessions`);
-  if (p.hoolestKeychain) items.push("a Hoolest keychain");
-  if (p.hoolestHandheld) items.push("a Hoolest handheld vagus nerve stimulator to keep");
+  if (p.hoolestKeychain) items.push(`a ${lower(DEVICES.keychain.name)} by ${DEVICES.keychain.by}`);
+  if (p.hoolestHandheld) items.push(`a ${lower(DEVICES.handheld.name)} by ${DEVICES.handheld.by}, ${DEVICES.handheld.keep}`);
   if (p.partnerServices) items.push("one service from every partner");
   const list = items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
   return p.vibroChair ? `${list} (every session includes the vibro chair)` : list;
+}
+
+/**
+ * The value breakdown behind a prize, one row per part, for the ladder's
+ * expanded card: the map, the sessions, the chair at every session, a
+ * device, a partner's gift. `usd` is null where no price has been supplied
+ * (the keychain today), which is what puts the "+" on the total.
+ */
+export type PrizePart = { kind: "brainMap" | "sessions" | "chair" | "keychain" | "handheld" | "partner"; count: number; usd: number | null; partner?: Partner };
+
+export function prizeBreakdown(p: PrizeSpec, rates = RATES): PrizePart[] {
+  const parts: PrizePart[] = [];
+  if (p.brainMap) parts.push({ kind: "brainMap", count: 1, usd: rates.brainMap.usd });
+  parts.push({ kind: "sessions", count: p.sessions, usd: rates.session.usd == null ? null : p.sessions * rates.session.usd });
+  if (p.vibroChair) parts.push({ kind: "chair", count: p.sessions, usd: rates.vibroChair.usd == null ? null : p.sessions * rates.vibroChair.usd });
+  if (p.hoolestKeychain) parts.push({ kind: "keychain", count: 1, usd: rates.hoolestKeychain.usd });
+  if (p.hoolestHandheld) parts.push({ kind: "handheld", count: 1, usd: rates.hoolestHandheld.usd });
+  const partner = partnerFor(p.slot);
+  if (partner) parts.push({ kind: "partner", count: 1, usd: partner.retailUsd, partner });
+  return parts;
 }
 
 /* ------------------------------------------------------------------ */

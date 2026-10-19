@@ -144,22 +144,25 @@ export const FEATURE_ASSISTANT =
 export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin"] as const;
 
 /**
- * Routes suppressed only inside a window (decision 14): /10years from the
- * notify-me date through the offer's end, then the assistant returns. The
- * window comes from lib/giveaway/config.ts so it cannot drift from the
- * page's own dates. Evaluated against the real clock on the client, which is
- * where this runs (components/BottomBarContext.tsx).
+ * The window (decision 14): /10years from the notify-me date through the
+ * offer's end, then the assistant returns. It comes from
+ * lib/giveaway/config.ts so it cannot drift from the page's own dates.
+ *
+ * It is NOT evaluated here. The client's clock is the wrong one: the page
+ * decides its mode from giveawayNow() (which honours the local fake clock),
+ * so the page is what says whether the assistant is off — it renders
+ * <AssistantOff> (components/giveaway/AssistantOff.tsx) from
+ * lib/giveaway/assistant.ts, and components/BottomBarContext.tsx listens.
+ * Ben, 2026-10-19: with the local clock on Nov 10 the bar still showed,
+ * because this check read the real October date.
  */
-export const ASSISTANT_SUPPRESSED_WINDOWS: ReadonlyArray<{ route: string; from: Date; to: Date }> = [
-  { route: "/10years", from: CHAT_SUPPRESSION_WINDOW.from, to: CHAT_SUPPRESSION_WINDOW.to },
-];
+export const ASSISTANT_SUPPRESSED_WINDOW = { route: "/10years", from: CHAT_SUPPRESSION_WINDOW.from, to: CHAT_SUPPRESSION_WINDOW.to } as const;
 
-/** True when the assistant must not render on this pathname. */
-export function assistantSuppressedOn(pathname: string | null, now: Date = new Date()): boolean {
+/** True when the assistant must not render on this pathname, whatever the date. */
+export function assistantSuppressedOn(pathname: string | null): boolean {
   if (!pathname) return false;
   const under = (route: string) => pathname === route || pathname.startsWith(`${route}/`);
-  if (ASSISTANT_SUPPRESSED_ROUTES.some(under)) return true;
-  return ASSISTANT_SUPPRESSED_WINDOWS.some((w) => under(w.route) && now.getTime() >= w.from.getTime() && now.getTime() <= w.to.getTime());
+  return ASSISTANT_SUPPRESSED_ROUTES.some(under);
 }
 
 /**

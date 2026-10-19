@@ -286,6 +286,9 @@ try {
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
   expect("/10years answers 200 in notify-me mode", page.status === 200 && page.text.includes('action="/10years/signup"') && /Send me my entry link/.test(page.text), String(page.status));
+  // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
+  expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
+  expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
   expect("sitemap now lists /10years", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text));
   const A = person("A", "alice.notify@example.test");
   const B = person("B", "bob.notify@example.test", { existing: true });
@@ -682,6 +685,18 @@ async function browserChecks() {
         expect(`${mode} at ${width}: form present, no sideways scroll`, form && !overflow, `overflow=${overflow} h1=${h1.slice(0, 60)}`);
         const counting = await page.eval("Boolean(document.querySelector('[data-countdown]'))");
         expect(`${mode} at ${width}: the countdown is on the page`, counting);
+        const askBar = await page.eval("Boolean(document.querySelector('.askbar, [class*=\"askbar\"]'))");
+        expect(`${mode} at ${width}: no ask bar on the page`, !askBar);
+        // The ladder opens: tap Monday's head → aria-expanded, a Total line; tap Saturday → one open at a time.
+        await page.eval("document.querySelector('.ty-step[data-slot=\"mon\"] .ty-step-head').click()");
+        await sleep(350);
+        // The panel is under the card on a wide screen and under the row on a phone; aria-controls names it either way.
+        const monOpen = await page.eval("(() => { const h = document.querySelector('.ty-step[data-slot=\"mon\"] .ty-step-head'); const p = document.getElementById(h.getAttribute('aria-controls')); return h.getAttribute('aria-expanded') === 'true' && Boolean(p) && p.querySelector('.ty-bd-total').getBoundingClientRect().height > 0; })()");
+        expect(`${mode} at ${width}: Monday's card opens to its breakdown`, monOpen);
+        await page.eval("document.querySelector('.ty-step[data-slot=\"grand\"] .ty-step-head').click()");
+        await sleep(350);
+        const oneOpen = await page.eval("[...document.querySelectorAll('.ty-step-head[aria-expanded=\"true\"]')].map(b => b.closest('li').dataset.slot).join()");
+        expect(`${mode} at ${width}: tapping Saturday switches (one open at a time)`, oneOpen === "grand", oneOpen);
         if (width === 1440) {
           // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.
           const cardBottom = await page.eval("Math.ceil(document.querySelector('.ty-card').getBoundingClientRect().bottom)");

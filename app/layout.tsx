@@ -143,6 +143,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cormorant.variable} ${cormorantItalic.variable} ${dmSans.variable}`}
+      // The inline script below adds `js` to this element before React
+      // hydrates, by design (see the reveal gate). React compares the
+      // attribute and reports a mismatch on every page in development
+      // (the dev overlay's "1 Issue"); the attribute is left as the browser
+      // has it either way, so the warning is the only effect. Suppressed
+      // here, for this one element.
+      suppressHydrationWarning
     >
       <head>
         {/* The `js` class the reveal gate hangs off. Synchronous and first in
