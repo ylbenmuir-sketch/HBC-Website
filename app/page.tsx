@@ -346,8 +346,9 @@ export default function HomePage() {
             {/* One row on a desktop: both buttons, then the HSA/FSA line to
                 the right of the second (Ben, 2026-10-19). When the hero
                 stacks (≤1060px) `.hero-ctas` is `display: contents` and the
-                copy column orders its children: buttons, chips, HSA line,
-                then the photo — see the hero rules in globals.css. */}
+                copy column orders its children: buttons, chips, HSA line —
+                then the photo on a tablet, or over the photo on a phone,
+                where the copy sits on the scrim (globals.css ≤760px). */}
             <div className="hero-ctas">
               <div className="hero-btns">
                 <TalkCta />
@@ -388,6 +389,9 @@ export default function HomePage() {
               sizes="(max-width: 1060px) 100vw, 47vw"
               priority
             />
+            {/* Phones only (globals.css ≤760px): the navy scrim the copy
+                sits on. `display: none` everywhere else. */}
+            <span className="hero-scrim" aria-hidden="true" />
           </div>
         </div>
       </section>

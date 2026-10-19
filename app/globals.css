@@ -409,6 +409,8 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 }
 .hero-ph { height: 620px; border-radius: 4px 4px 4px 96px; }
 
+.hero-scrim { display: none; }
+
 /* proof band */
 .proof { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-top: 88px; background: var(--ivory); }
 .proof-grid { display: grid; grid-template-columns: repeat(var(--proof-cols, 4), 1fr); }
@@ -1132,12 +1134,12 @@ html.js .rv.in { opacity: 1; transform: none; }
      flex margins don't collapse, and the section spacing was tuned that way. */
   .home { display: flex; flex-direction: column; }
 
-  /* ---- the phone hero: copy first, photo under it ----
-     It was a cinematic composition (photo behind the copy under a navy
-     scrim) until 2026-10-19, when Ben asked for the photo to follow the
-     chips whenever the hero stacks. Light ground, navy type, the same order
-     as the tablet: eyebrow, H1, sentence, buttons, chips, HSA, photo. */
-  .hero, .home .hero { padding: 44px 24px 0; }
+  /* ---- cinematic hero: layered image, scrim, editorial type ----
+     The photo behind the copy under a navy scrim. Retired for a stacked
+     hero for one build on 2026-10-19 and restored the same day (Ben), now
+     carrying the longer copy: eyebrow, H1, sentence, both buttons, the
+     "What brings you in?" chips, the HSA line. The desktop is untouched. */
+  .hero, .home .hero { padding: 0; }
   /* The location hero, tightened from the top so its links clear the resting
      Ask bar at load (Ben, 2026-10-16). At 390×844 the bar's top edge is
      y=772, and Murfreesboro's Google-listing link ended at 858 and its Call
@@ -1149,17 +1151,56 @@ html.js .rv.in { opacity: 1; transform: none; }
   .loc-hero h1 { margin-top: 16px; }
   .loc-hero-ctas { margin-top: 24px; }
   .loc-hero-reviews { margin-top: 12px; }
-  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
-  .hero h1 { font-size: clamp(38px, 11vw, 50px); line-height: 1.06; margin-top: 18px; }
-  .hero .sub { font-size: 16.5px; line-height: 1.55; margin: 16px 0 26px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 0; }
+  .hero-copy, .hero-media { grid-area: 1 / 1; }
+  /* The copy is taller than a phone screen now, so the hero is as tall as
+     the copy plus the room above it (the copy's padding-top) where the two
+     faces sit; the old `min(100svh - 68px, 700px)` floor stays for a copy
+     that is somehow shorter. */
+  .hero-media { position: relative; z-index: 0; align-self: stretch; min-height: calc(100vh - 68px); min-height: min(calc(100svh - 68px), 700px); }
+  /* Scoped to .hero-media, and it has to be. `.hero-ph` is a size-and-shape
+     class, and /locations/[slug] uses it on the photo beside its page hero —
+     which has no positioned ancestor, so an unscoped `position: absolute;
+     inset: 0` laid that photo over the initial containing block and covered
+     the breadcrumbs, the eyebrow, the H1 and half the sub on every phone.
+     Only the homepage hero layers its photo behind its copy. */
+  /* The photo fills the top 700px only, fading into the navy the scrim is
+     already at by then (the media's own background). Filling the whole
+     ≈1060px hero scaled the portrait so tall that a 390px screen saw 46% of
+     its width — the mother, and the daughter cropped off the right edge.
+     At 700px it shows 70%, both faces, as the pre-2026-10-19 hero did. */
+  .hero-media { background: rgb(21, 34, 48); }
+  .hero-media .hero-ph { position: absolute; top: 0; left: 0; right: 0; height: 700px !important; border-radius: 0; -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent); mask-image: linear-gradient(to bottom, #000 78%, transparent); }
+  /* The scrim is shaped to the copy block. In a 700px frame the two faces
+     sit at about 70–210px; the copy's 340px padding-top keeps the eyebrow
+     under the daughter's chin at 390 and 320 (hero ≈1060px).
+     Percentages are from the bottom (`to top`): light across the faces
+     (≥74%), 0.9 by the eyebrow (68%), and 0.97 under the chips and the HSA
+     line at the foot (Ben, 2026-10-19: legibility over the photo where the
+     chips sit). Checked by sampling the rendered background under every text
+     run at 390 and 320 — every run clears AA on its worst pixel. */
+  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.95) 40%, rgba(21, 34, 48, 0.92) 58%, rgba(21, 34, 48, 0.9) 68%, rgba(21, 34, 48, 0.35) 74%, rgba(21, 34, 48, 0.18) 84%, rgba(21, 34, 48, 0.28) 100%); }
+  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 340px 24px calc(30px + env(safe-area-inset-bottom)); }
+  .hero-copy .eyebrow { color: #d3dccf; }
+  .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 18px; text-wrap: initial; }
+  .hero h1 em.sage { color: #cbd6c7; }
+  .hero .sub { color: rgba(251, 248, 241, 0.86); font-size: 16.5px; line-height: 1.55; max-width: 32ch; margin: 18px 0 28px; }
+  .hero .sub .kw { color: var(--ivory); }
+  /* `.hero-ctas` is `display: contents` from 1060px down (the stacking rule
+     above), so these style its two children directly. */
   .hero-btns { flex-direction: column; align-items: stretch; align-self: stretch; gap: 6px; }
-  .hero .btn-primary { width: 100%; }
-  .hero .btn-ghost { align-self: center; border-bottom: 0; font-size: 15px; padding: 14px 4px; }
-  .hero-chips { margin-top: 22px; }
-  .hero-hsa { align-self: center; margin-top: 18px; font-size: 15px; }
-  /* Scoped to .hero-media: `.hero-ph` is a size-and-shape class that
-     /locations/[slug] uses too. */
-  .hero-media .hero-ph { height: 340px !important; border-radius: 4px 4px 4px 56px; }
+  .hero .btn-primary { background: var(--ivory); color: var(--navy); width: 100%; }
+  .hero .btn-primary:active { background: #fff; }
+  .hero .btn-ghost { color: rgba(251, 248, 241, 0.9); border-bottom: 0; align-self: center; font-size: 15px; padding: 14px 4px; }
+  .hero .btn-ghost .arrow { color: var(--gold); }
+  /* The chips over the photo: fully opaque ivory, the thin border, navy
+     text — their own contrast, whatever the photo does behind them. */
+  .hero-chips { margin-top: 18px; }
+  .hero-chips-label { color: rgba(251, 248, 241, 0.86); }
+  .hero-chip { background: var(--ivory); border-color: rgba(251, 248, 241, 0.55); }
+  .hero-chip:hover { background: #fff; }
+  .hero-hsa { align-self: center; margin-top: 18px; font-size: 15px; color: rgba(251, 248, 241, 0.9); }
+  .hero-hsa-check { color: var(--gold-lift); }
 
   /* ---- proof: a compact 2×2, significant but brief ---- */
   .proof, .home .proof { margin-top: 0; }
