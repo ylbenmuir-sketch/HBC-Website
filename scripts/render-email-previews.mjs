@@ -127,6 +127,40 @@ const emails = [
   },
 ];
 
+// ── The ten giveaway emails (lib/giveaway/emails.ts; copy is [DRAFT]) ──
+// Realistic data, every fact from lib/giveaway/config.ts. Marketing ones
+// carry the unsubscribe link; staff ones carry neither footer line.
+const G = await import(`${ROOT}/lib/giveaway/emails.ts`);
+const GC = await import(`${ROOT}/lib/giveaway/config.ts`);
+const { DBA_NAME } = await import(`${ROOT}/lib/sms-consent.ts`);
+const { REGISTERED_ADDRESS_LINE } = await import(`${ROOT}/lib/sms-identity.ts`);
+const footing = {
+  identityLine: `${DBA_NAME} · ${REGISTERED_ADDRESS_LINE}`,
+  siteUrl: "https://harmonizedbraincenterstn.com",
+  unsubscribeUrl: "https://harmonizedbraincenterstn.com/unsubscribe?t=eyJrIjoidW5zdWJzY3JpYmUifQ.c2lnbmF0dXJl",
+};
+const mon = GC.drawing("mon");
+const tue = GC.drawing("tue");
+const grand = GC.drawing("grand");
+const sarah = { name: "Sarah Mitchell", email: "sarah.mitchell@gmail.com", zip: "37064", city: "Franklin", isExistingClient: false };
+const G_NOW = new Date("2026-11-16T18:00:30Z");
+const giveawayEmails = [
+  { file: "g01-notify-verify", ...G.notifyVerifyEmail({ firstName: "Sarah", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
+  { file: "g02-its-live", ...G.itsLiveEmail({ firstName: "Sarah", isExistingClient: false, enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
+  { file: "g03-monday-reminder", ...G.mondayReminderEmail({ firstName: "Sarah", isExistingClient: false, enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
+  { file: "g04-entry-verify", ...G.entryVerifyEmail({ firstName: "Marcus", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
+  { file: "g05-youre-in", ...G.youreInEmail({ firstName: "Sarah", isExistingClient: false, referredBonus: true, nextDrawing: tue, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
+  { file: "g05b-youre-in-existing-client", ...G.youreInEmail({ firstName: "Marcus", isExistingClient: true, referredBonus: false, nextDrawing: mon, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", offerCode: "10Y-D3FG7H", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-D3FG7H", footing }) },
+  { file: "g06-daily-afternoon", ...G.dailyAfternoonEmail({ isExistingClient: false, nextDrawing: tue, entries: 4, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
+  { file: "g06b-daily-afternoon-friday", ...G.dailyAfternoonEmail({ isExistingClient: true, nextDrawing: grand, entries: 1, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
+  { file: "g07-winner", ...G.winnerEmail({ firstName: "Sarah", drawing: mon, version: "new_client", claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(mon.at), taxFormRequired: false, footing }) },
+  { file: "g07b-winner-grand-tax-form", ...G.winnerEmail({ firstName: "Marcus", drawing: grand, version: "current_client", claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, footing }) },
+  { file: "g08-thank-you-offer", ...G.thankYouEmail({ firstName: "Sarah", isExistingClient: false, offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
+  { file: "g09-staff-winner-alert", ...G.staffWinnerAlertEmail({ drawing: grand, winner: sarah, version: "new_client", claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: G_NOW }) },
+  { file: "g10-staff-tuesday-call-today", ...G.tuesdayCallTodayEmail({ drawing: mon, winner: sarah, version: "new_client", claimDeadline: GC.claimDeadline(mon.at), adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: GC.SCHEDULE.tuesdayCallToday.at }) },
+];
+emails.push(...giveawayEmails);
+
 // The visitor email's thumbnail is an absolute URL on the live domain
 // (lib/email/visitor-content.ts), which may not serve it yet; the preview
 // loads the committed file instead, so the image is measured at its real

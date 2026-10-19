@@ -25,6 +25,10 @@
  * data, screenshots it at 390 and 640 wide, and measures it.
  *
  * Pure: no environment reads, no network, `now` passed in.
+ *
+ * The pieces (page, section, footer, buttons, factGrid, textOf, the brand
+ * tokens) are exported for lib/giveaway/emails.ts, which builds the ten
+ * giveaway emails on the same design (GIVEAWAY-PLAN.md §4).
  */
 
 import {
@@ -39,7 +43,7 @@ import {
 /* ------------------------------------------------------------------ */
 
 /** The site's tokens (app/globals.css :root). */
-const C = {
+export const C = {
   navy: "#1c2b3a",
   ink: "#243240",
   slate: "#5d6873",
@@ -54,9 +58,9 @@ const C = {
   alert: "#9a3b2e",
 };
 
-const SANS =
+export const SANS =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
+export const SERIF = "Georgia, 'Times New Roman', serif";
 
 /** The four center badges (and the two others), by what the badge says. */
 export type BadgeKind =
@@ -102,14 +106,14 @@ function badge(kind: BadgeKind): string {
 
 /** A bulletproof button: a table cell carries the fill, so it renders even
  *  where padding on <a> does not. `quiet` is the outlined footer style. */
-function button(label: string, href: string, { quiet = false } = {}): string {
+export function button(label: string, href: string, { quiet = false } = {}): string {
   const bg = quiet ? C.white : C.navy;
   const fg = quiet ? C.navy : C.white;
   const border = quiet ? `1px solid ${C.line}` : `1px solid ${C.navy}`;
   return `<td class="${quiet ? "hbc-btn-quiet" : "hbc-btn"}" style="background:${bg};border:${border};border-radius:6px;" bgcolor="${bg}"><a href="${esc(href)}" style="display:inline-block;padding:${quiet ? "7px 12px" : "10px 22px"};font-family:${SANS};font-size:${quiet ? 13 : 15}px;font-weight:600;color:${fg};text-decoration:none;line-height:1.2;">${esc(label)}</a></td>`;
 }
 
-function buttons(list: Array<[string, string]>, opts: { quiet?: boolean } = {}): string {
+export function buttons(list: Array<[string, string]>, opts: { quiet?: boolean } = {}): string {
   if (list.length === 0) return "";
   const cells = list
     .map(([label, href], i) => `${i > 0 ? `<td style="width:8px;font-size:0;">&nbsp;</td>` : ""}${button(label, href, opts)}`)
@@ -123,7 +127,7 @@ function fact(label: string, valueHtml: string): string {
 }
 
 /** Two columns of facts, two to a row. */
-function factGrid(items: Array<[string, string]>): string {
+export function factGrid(items: Array<[string, string]>): string {
   const rows: string[] = [];
   for (let i = 0; i < items.length; i += 2) {
     const [a, b] = [items[i], items[i + 1]];
@@ -151,12 +155,12 @@ function hasDetails(d: Details): boolean {
 }
 
 /** A row of the card. */
-function section(inner: string, padding = "14px 20px 0"): string {
+export function section(inner: string, padding = "14px 20px 0"): string {
   return `<tr><td style="padding:${padding};">${inner}</td></tr>`;
 }
 
 /** The gray footer: an optional quiet button, then small lines. */
-function footer(lines: string[], action?: [string, string]): string {
+export function footer(lines: string[], action?: [string, string]): string {
   const body = lines
     .filter(Boolean)
     .map((l) => `<div style="font-family:${SANS};font-size:12px;line-height:1.5;color:${C.slate};">${l}</div>`)
@@ -168,7 +172,7 @@ function footer(lines: string[], action?: [string, string]): string {
  * The page around the card: wordmark, the card's rows, the hidden preheader
  * (the inbox's preview line), and the dark-mode overrides for Apple Mail.
  */
-function page({ title, preheader, rows }: { title: string; preheader: string; rows: string[] }): string {
+export function page({ title, preheader, rows }: { title: string; preheader: string; rows: string[] }): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -220,7 +224,7 @@ ${rows.join("\n")}
 }
 
 /** Plain-text twin: lines, blank lines collapsed, trailing space trimmed. */
-function textOf(lines: Array<string | null | false | undefined>): string {
+export function textOf(lines: Array<string | null | false | undefined>): string {
   return lines
     .filter((l): l is string => typeof l === "string")
     .join("\n")
