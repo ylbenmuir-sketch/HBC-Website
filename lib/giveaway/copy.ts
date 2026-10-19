@@ -226,7 +226,8 @@ export const PAGES = {
     environment: D("Environment"),
     schedule: D("Schedule (from config)"),
   },
-  nonTennesseeZip: D("Thanks for wanting in — this one's for Tennessee residents. If that's you and we got the ZIP wrong, check the five digits and try again."),
+  /** A ZIP outside ELIGIBLE_STATES (config). */
+  notEligibleZip: D("Thanks for wanting in! This one's for neighbors within driving distance of our centers. If we got your ZIP wrong, check the five digits and try again."),
 
   /** /10years in its four modes: the hero, the form card, the prize ladder, the photos, three questions. */
   tenYears: {
@@ -241,7 +242,7 @@ export const PAGES = {
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
     /** The count and the dates come from config. */
     sub: (drawings: number, span: string) => D(`${countWord(drawings)} drawings, ${span}. Enter once and you're in every one.`),
-    closedSub: D("Entries are closed. Thank you, Tennessee."),
+    closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
     /** The countdown. */
     countdownNotify: D("until entries open"),
@@ -282,7 +283,7 @@ export const PAGES = {
     firstName: D("First name"),
     lastName: D("Last name"),
     email: D("Email"),
-    zip: D("Tennessee ZIP"),
+    zip: D("ZIP code"),
     /** One box for both (age and rules); the link sits on "Official Rules". */
     ageRules: D("I'm 18+ and agree to the"),
     rulesLink: D("Official Rules"),
@@ -369,7 +370,8 @@ export const PAGES = {
     /** Q&A (decision 14). The page shows enter, more and win; /10years/rules shows all five. */
     qa: {
       enterQ: D("How do I enter?"),
-      enterA: D("Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over."),
+      /** The eligibility is config's eligibilityPhrase(): "Tennessee and neighboring states (KY, …)". */
+      enterA: (eligibility: string) => D(`Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; residents of ${eligibility}, 18 and over.`),
       moreQ: D("How do bonus entries work?"),
       moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters and confirms gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
       whenQ: D("When are the drawings?"),

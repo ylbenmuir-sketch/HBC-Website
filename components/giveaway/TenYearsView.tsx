@@ -15,6 +15,7 @@ import {
   REFERRAL,
   SCHEDULE,
   centralParts,
+  eligibilityPhrase,
   nextDrawing,
   partnerFor,
   prizeBreakdown,
@@ -486,7 +487,7 @@ function PhotoStrip() {
 
 export function giveawayQuestions() {
   return {
-    enter: { q: t.qa.enterQ, a: t.qa.enterA },
+    enter: { q: t.qa.enterQ, a: t.qa.enterA(eligibilityPhrase()) },
     more: { q: t.qa.moreQ, a: t.qa.moreA(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap) },
     when: { q: t.qa.whenQ, a: t.qa.whenA(DRAWINGS.filter((d) => d.kind === "daily").map((d) => d.dayName).join(", "), spokenCentral(DRAWINGS[DRAWINGS.length - 1].at)) },
     win: { q: t.qa.winQ, a: t.qa.winA(Math.round(CLAIM_WINDOW_MS / 3_600_000)) },

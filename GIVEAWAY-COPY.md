@@ -215,7 +215,7 @@ show the same page with the result in the card.
 - **Value line (notify-me, live):** Over $*{6,000}* in prizes. One entry.
 - **Value line (closed, thank-you):** Over $*{6,000}* in prizes.
 - **Line (notify-me, live):** *{Six}* drawings, *{Nov 16–21}*. Enter once and you're in every one.
-- **Line (closed):** Entries are closed. Thank you, Tennessee.
+- **Line (closed):** Entries are closed. Thank you, neighbors.
 - **Line (thank-you page):** Here's who won our anniversary week.
 - **Countdown** *(notify-me, live only)*: four boxes labelled **days · hrs · min · sec**, then **until entries open** (notify-me, to the entries-open time) or **until the next drawing** (live, to the next drawing). Ticks from the server's clock.
 - **Proof line:** *{10}* years · *{140,000+}* sessions · Nashville & Murfreesboro *(the count is `STAT_SESSIONS`)*
@@ -236,7 +236,7 @@ show the same page with the result in the card.
 
 ### The form (both modes)
 
-Fields (label inside each box): **First name** · **Last name** (one row) · **Email** · **Tennessee ZIP** (one row)
+Fields (label inside each box): **First name** · **Last name** (one row) · **Email** · **ZIP code** (one row)
 Checkboxes: **I'm 18+ and agree to the Official Rules** (required; link on **Official Rules**) · **I'm already an HBC client**
 Under the button, unticked: **Email me HBC news after the giveaway**
 Hidden honeypot label (never seen): Website
@@ -248,7 +248,7 @@ Hidden honeypot label (never seen): Website
 | name missing | Please add your first and last name. |
 | bad email | That email address doesn't look right. |
 | bad ZIP | Please add your five-digit ZIP code. |
-| ZIP not Tennessee | Thanks for wanting in — this one's for Tennessee residents. If that's you and we got the ZIP wrong, check the five digits and try again. |
+| ZIP outside the eligible states | Thanks for wanting in! This one's for neighbors within driving distance of our centers. If we got your ZIP wrong, check the five digits and try again. |
 | 18+/rules box unticked | Please confirm you're 18 or older and agree to the Official Rules. |
 | rate limited | Too many tries from this connection. Please wait a little and try again. |
 | email failed | We couldn't send the confirmation email just now. Please try again in a minute. |
@@ -327,7 +327,7 @@ Captions: **The vibro-acoustic chair** *(alt: A client relaxing in the vibro-aco
 
 On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus the link **All giveaway questions** *(to /10years/rules#questions, which lists all five)*.
 
-1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over.
+1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; residents of *{Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)}*, 18 and over. *(the states are `ELIGIBLE_STATES` in config)*
 2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
 3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
 4. **How will I know if I won?** We email you the moment you're drawn, then call to arrange your prize. You have *{72}* hours to get back to us (a little longer over the weekend); after that, we draw again.
@@ -380,7 +380,7 @@ from config:
 
 1. **Sponsor** — legal entity, DBA, registered address (from `lib/sms-identity.ts`)
 2. **No purchase necessary**
-3. **Eligibility** — Tennessee, 18+, employees excluded, current clients eligible
+3. **Eligibility** — residents of *{Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)}* (from config), 18+, employees excluded, current clients eligible
 4. **Entry period** — entries open and close timestamps
 5. **How to enter** — one entry per person; referral numbers (3 / 1 / cap 10); self-referral voids
 6. **Drawings** — the six drawings with time and both prize versions; daily winners stay in the grand pool; odds statement

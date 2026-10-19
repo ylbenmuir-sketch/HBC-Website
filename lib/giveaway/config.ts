@@ -482,6 +482,47 @@ export const REFERRAL = {
 } as const;
 
 /* ------------------------------------------------------------------ */
+/* Eligibility: Tennessee and its neighbours (Ben, 2026-10-19)          */
+/* ------------------------------------------------------------------ */
+
+/** Who may enter: residents of these states, 18+. ONE list — the ZIP
+ *  check (lib/giveaway/zip.ts), the page, the rules and the deck all read
+ *  it. Tennessee first; then its bordering states, clockwise from the north. */
+export const ELIGIBLE_STATES = [
+  { code: "TN", name: "Tennessee" },
+  { code: "KY", name: "Kentucky" },
+  { code: "VA", name: "Virginia" },
+  { code: "NC", name: "North Carolina" },
+  { code: "GA", name: "Georgia" },
+  { code: "AL", name: "Alabama" },
+  { code: "MS", name: "Mississippi" },
+  { code: "AR", name: "Arkansas" },
+  { code: "MO", name: "Missouri" },
+] as const;
+
+export type EligibleStateCode = (typeof ELIGIBLE_STATES)[number]["code"];
+
+export const ELIGIBLE_STATE_CODES: readonly EligibleStateCode[] = ELIGIBLE_STATES.map((s) => s.code);
+
+export function isEligibleStateCode(code: string | null | undefined): code is EligibleStateCode {
+  return (ELIGIBLE_STATE_CODES as readonly string[]).includes(code ?? "");
+}
+
+export function eligibleStateName(code: EligibleStateCode): string {
+  return ELIGIBLE_STATES.find((s) => s.code === code)!.name;
+}
+
+/** "KY, VA, NC, GA, AL, MS, AR, MO" — the neighbours, for a parenthesis. */
+export function neighbourCodes(): string {
+  return ELIGIBLE_STATES.filter((s) => s.code !== "TN").map((s) => s.code).join(", ");
+}
+
+/** "Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)" — the eligibility, in prose. */
+export function eligibilityPhrase(): string {
+  return `Tennessee and neighboring states (${neighbourCodes()})`;
+}
+
+/* ------------------------------------------------------------------ */
 /* Page modes and the chat window (decisions 11, 14)                   */
 /* ------------------------------------------------------------------ */
 

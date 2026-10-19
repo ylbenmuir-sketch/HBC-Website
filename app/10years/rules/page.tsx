@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import FAQAccordion from "@/components/FAQAccordion";
 import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
-import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, pageMode, partnerFor, prizeFor, prizeName } from "@/lib/giveaway/config";
+import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, eligibilityPhrase, pageMode, partnerFor, prizeFor, prizeName } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { hideDraftTags } from "@/lib/giveaway/draft";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
@@ -76,7 +76,7 @@ export default function RulesPage() {
         <h2>No purchase necessary</h2>
         <p>{D("No purchase or payment of any kind is necessary to enter or win. A purchase will not improve your chances of winning.")}</p>
         <h2>Eligibility</h2>
-        <p>{D("Open to legal residents of Tennessee who are 18 years of age or older at the time of entry. Employees of the Sponsor and their immediate families are not eligible. Current clients of the Sponsor are eligible.")}</p>
+        <p>{D(`Open to legal residents of ${eligibilityPhrase()} who are 18 years of age or older at the time of entry. Employees of the Sponsor and their immediate families are not eligible. Current clients of the Sponsor are eligible.`)}</p>
         <h2>Entry period</h2>
         <p>{D(`Entries open ${SCHEDULE.entriesOpen.ct} and close ${SCHEDULE.entriesClose.ct}. Sign-ups before that date are notifications only and are not entries until the person taps the entry link.`)}</p>
         <h2>How to enter</h2>

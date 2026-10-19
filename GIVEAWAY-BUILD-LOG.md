@@ -6,6 +6,21 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## Eligibility opened to the bordering states (Mon Oct 19 2026)
+
+`ELIGIBLE_STATES` in `lib/giveaway/config.ts` (TN + KY, VA, NC, GA, AL, MS,
+AR, MO) is the one list; `lib/giveaway/zip.ts` maps a ZIP to its state by
+USPS three-digit prefix ranges (offline), the refusal is `not_eligible`
+with Ben's "neighbors within driving distance" line, the field is "ZIP
+code", the closed line thanks "neighbors", and the Q&A / rules / deck /
+plan read `eligibilityPhrase()`. City labels cover a metro table for all
+nine states (the public label falls back to the state's name); out of
+state the nearer center is by the road in (KY, MO, AR, MS → Nashville;
+AL, GA, NC, VA → Murfreesboro). Tests: a Louisville ZIP accepted, a
+Columbus, Ohio ZIP refused; the harness signs one person up from Kentucky.
+
+---
+
 ## /10years, fourth pass: "How it works" strip (Mon Oct 19 2026)
 
 Three numbered steps between the hero and the ladder (`HowItWorks` in

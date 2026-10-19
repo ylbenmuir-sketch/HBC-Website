@@ -68,7 +68,7 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
 
 function errorText(code: string): string {
   const e = PAGES.tenYears.errors as Record<string, string>;
-  if (code === "not_tennessee") return PAGES.nonTennesseeZip;
+  if (code === "not_eligible") return PAGES.notEligibleZip;
   if (code === "closed") return PAGES.tenYears.tapClosed;
   return e[code] ?? e.unavailable;
 }

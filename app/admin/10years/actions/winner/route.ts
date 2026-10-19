@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     case "public_ok": {
       const person = await personById(store, winner.person_id);
       if (!person) return back(request, SCREEN, { ok: undefined, error: "person-missing" }, anchor);
-      action = { kind, on, label: publicLabel(person.first_name, person.last_name, person.city) };
+      action = { kind, on, label: publicLabel(person.first_name, person.last_name, person.city, person.zip) };
       break;
     }
     case "tax_form_received": {

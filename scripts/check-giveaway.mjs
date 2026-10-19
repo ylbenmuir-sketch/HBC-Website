@@ -22,7 +22,7 @@
  * headless Chrome for the page itself:
  *
  *   today            /10years is a 404; /admin/10years is noindex + no-store
- *   Nov 10           notify-me: three signups + a non-Tennessee ZIP refused +
+ *   Nov 10           notify-me: three signups (one from Kentucky) + an Ohio ZIP refused +
  *                    a honeypot swallowed; three verification emails; links
  *                    clicked (one twice); /10years now in the sitemap
  *   Nov 15 6 pm      cron → "It's live" to the three; A taps Sunday night
@@ -291,15 +291,18 @@ try {
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
   expect("sitemap now lists /10years", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text));
   const A = person("A", "alice.notify@example.test");
-  const B = person("B", "bob.notify@example.test", { existing: true });
+  // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES).
+  const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
   const Cc = person("C", "cara.notify@example.test");
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: "37064", age_rules: "on", ...(p.existing ? { existing_client: "on" } : {}), ...extra });
+  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...(p.existing ? { existing_client: "on" } : {}), ...extra });
   for (const p of [A, B, Cc]) {
     const r = await postForm("/10years/signup", signupFields(p), p);
     expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
   }
-  const nonTn = await postForm("/10years/signup", signupFields(person("Z", "zed@example.test"), { zip: "30301" }), person("Z1", ""));
-  expect("a non-Tennessee ZIP is refused with the polite message", /error=not_tennessee/.test(nonTn.location), nonTn.location);
+  const nonTn = await postForm("/10years/signup", signupFields(person("Z", "zed@example.test"), { zip: "43215" }), person("Z1", ""));
+  expect("an Ohio ZIP is refused with the neighbors message", /error=not_eligible/.test(nonTn.location), nonTn.location);
+  expect("the page shows the neighbors message for it", /neighbors within driving distance/.test((await get("/10years?error=not_eligible")).text));
+  expect("B's Kentucky ZIP (Louisville) was accepted", (await dump("giveaway_notify")).some((r) => r.email === B.email && r.zip === "40202"));
   const bot = await postForm("/10years/signup", signupFields(person("Bot", "bot@example.test"), { website: "http://spam.example" }), person("Bot1", ""));
   expect("a filled honeypot is swallowed as a success", /\?sent=1$/.test(bot.location), bot.location);
   let fresh = newEmails();
@@ -345,6 +348,8 @@ try {
   await clock(ct(2026, 11, 16, 14));
   const tapB = await get(new URL(enterLinks[B.email]).pathname, B);
   expect("B: Monday-afternoon tap enters without the early bird", /data-ok="1"/.test(tapB.text) && !/early-bird/.test(tapB.text));
+  const bPerson = (await dump("giveaway_people")).find((r) => r.email === B.email);
+  expect("B's row: city Louisville, nearer center Nashville (out of state, by the road in)", Boolean(bPerson) && bPerson.city === "Louisville" && bPerson.nearest_center === "nashville", JSON.stringify(bPerson && { city: bPerson.city, center: bPerson.nearest_center }));
   youreIn = newEmails();
   expect("B (a current client): You're in carries the forward line", youreIn.length === 1 && /Forward this to a friend/.test(youreIn[0].body.text));
 

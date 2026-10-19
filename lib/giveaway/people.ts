@@ -65,7 +65,7 @@ export type SignupInput = {
 
 export type SignupContext = { ipHash: string | null; uaHash: string | null; now: Date };
 
-export type SignupRefusal = "invalid_name" | "invalid_email" | "invalid_zip" | "not_tennessee" | "age" | "rules";
+export type SignupRefusal = "invalid_name" | "invalid_email" | "invalid_zip" | "not_eligible" | "age" | "rules";
 
 export type Validated = {
   firstName: string;
@@ -89,7 +89,7 @@ export function validateSignup(input: SignupInput): { ok: true; value: Validated
   const zip = (input.zip ?? "").trim();
   const info = zipInfo(zip);
   if (!/^\d{5}$/.test(zip)) return { ok: false, reason: "invalid_zip" };
-  if (!info.tennessee) return { ok: false, reason: "not_tennessee" };
+  if (!info.eligible) return { ok: false, reason: "not_eligible" };
   if (!input.ageConfirmed) return { ok: false, reason: "age" };
   if (!input.rulesAccepted) return { ok: false, reason: "rules" };
   return { ok: true, value: { firstName, lastName, email, emailDisplay: input.email.trim().slice(0, 254), zip, city: info.city, nearestCenter: info.nearestCenter } };

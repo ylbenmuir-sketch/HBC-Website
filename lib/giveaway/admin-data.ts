@@ -221,7 +221,7 @@ export async function loadWinners(store: GiveawayStore): Promise<{ current: Winn
       config,
       prizeName: spec ? prizeName(spec) : "(prize unknown)",
       versionLabel: versionLabel(w.prize_version),
-      publicLabelPreview: person ? publicLabel(person.first_name, person.last_name, person.city) : "",
+      publicLabelPreview: person ? publicLabel(person.first_name, person.last_name, person.city, person.zip) : "",
     };
   });
   const order = (v: WinnerView) => (v.config ? SLOT_ORDER[v.config.slot] : 99);
