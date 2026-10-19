@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { fakeNowActive, giveawayNow, setFakeNow } from "@/lib/giveaway/clock";
 import { giveawayEnv, isTestingEnv } from "@/lib/giveaway/env";
-import { memoryDb } from "@/lib/giveaway/store";
+import { giveawayStore, isGiveawayTable, memoryDb } from "@/lib/giveaway/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +24,16 @@ function authorized(request: Request): boolean {
 export async function GET(request: Request) {
   if (!isTestingEnv(giveawayEnv())) return new NextResponse(null, { status: 404 });
   if (!authorized(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // ?dump=<giveaway table>: this env's rows, for the check's assertions.
+  const table = new URL(request.url).searchParams.get("dump");
+  if (table) {
+    if (!isGiveawayTable(table)) return NextResponse.json({ error: "not a giveaway table" }, { status: 400 });
+    const store = giveawayStore();
+    if (!store) return NextResponse.json({ error: "no store" }, { status: 503 });
+    const { data, error } = await store.select(table, "*");
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ env: store.env, table, rows: data ?? [] });
+  }
   return NextResponse.json({ env: giveawayEnv(), now: giveawayNow().toISOString(), fake: fakeNowActive(), memory: Boolean(memoryDb()) });
 }
 

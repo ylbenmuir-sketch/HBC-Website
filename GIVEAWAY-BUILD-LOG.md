@@ -77,19 +77,56 @@ unit-tested without it.
 
 ## Milestones (overnight)
 
-- [ ] 0. Core for the night: in-memory PostgREST-shaped client (tests +
-      `GIVEAWAY_REPO=memory` server mode for local/test only); PGlite proves
-      0010 executes.
-- [ ] 1. Copy deck `GIVEAWAY-COPY.md` + `lib/giveaway/copy.ts` wired.
-- [ ] 2. Phase 2 notify-me (`/10years` date-gated, form, TN ZIP, honeypot,
-      limiter, verify, chat suppression window, Q&A, sitemap/noindex rules,
-      `PRIVACY-POLICY-GIVEAWAY-DRAFT.md`).
-- [ ] 3. Phase 3 engine (entries, one-tap + early bird, referrals, drawings
-      on the cron, scheduled sends, winner + claim + deadline + tax step,
-      redraw, winners list, alerts, offer codes + /contact, admin screens).
-- [ ] 4. Phase 4 prep: `check:giveaway` end to end.
+- [x] 0. Core for the night (ba12fb0): in-memory PostgREST-shaped client
+      (`lib/giveaway/memory-client.ts`, tests), `GIVEAWAY_REPO=memory` server
+      mode (local/test only), `GIVEAWAY_OTP_MOCK_CODE`, ZIP table. **PGlite
+      proved 0010 executes — and found a real bug: the drawings seed had its
+      row commas inside trailing comments. FIXED on this branch; the copy on
+      main (2eeb84f) would fail in the SQL editor with "syntax error at or
+      near (".** `lib/giveaway/migration.test.mjs` now runs every migration.
+- [x] 3a. Engine (984be17): `people.ts` (signup, verify, one-tap + early
+      bird, referrals +3/+1 cap 10, self-referral/disposable voids, offers),
+      `drawings.ts` (frozen pool, deterministic pick from stored seed,
+      claim/never-twice, redraw with per-winner seed + exclusions,
+      re-verify, winner updates), `sends.ts` (job + receipt rows),
+      `alerts.ts`, `clock.ts` (fake clock, test env only). 15 engine tests.
+- [x] 2 + 3b. Surface (39a0457): `/10years` in four modes, signup/verify/
+      enter/claim/rules routes, `/api/cron/giveaway` (+ vercel.json),
+      `/api/giveaway/test-clock` (test env only), `/contact` offer-code
+      validation + redemption (source `giveaway`, subject "(10 years)",
+      center from ZIP), date-gated chat suppression, sitemap gating.
+- [ ] 1. Copy deck `GIVEAWAY-COPY.md` + copy polish — agent running.
+- [ ] 3c. Admin screens — agent running.
+- [ ] 2b. `PRIVACY-POLICY-GIVEAWAY-DRAFT.md` — agent running.
+- [ ] 4. `check:giveaway` written (`scripts/check-giveaway.mjs`); run owed.
 - [ ] 5. lint / typecheck / tests / checks; push `giveaway-build`.
 
 ## Questions for Ben
 
-_(filled in as decisions are made overnight)_
+1. **Migration 0010 on main is broken** (the seed's trailing comments ate
+   the row commas). Apply the copy from `giveaway-build` (or merge first),
+   not main's. Proven in embedded Postgres by `npm test`.
+2. **Thank-you send time**: Sun Nov 22 at 10:00 am CT (my call; the plan
+   said only "Sun Nov 22"). Dec 1 reminder: 10:00 am CT. Both in config.
+3. **Nearer center by ZIP** (lib/giveaway/zip.ts): Rutherford County and
+   I-24 south-east → Murfreesboro; Williamson/Davidson and west →
+   Nashville; East Tennessee → Murfreesboro. Nolensville, College Grove and
+   Lebanon went to Nashville. Move any ZIP in the table.
+4. **Draw determinism**: the pick is SHA-256(seed ‖ pool hash ‖ exclusions)
+   mod pool size with a 32-byte random seed stored per winner row, so every
+   pick re-verifies from the rows. The plan said `crypto.randomInt`; that
+   alone is not re-verifiable. Same randomness, auditable.
+5. **Unreachable → redraw is a two-step admin action** (mark unreachable,
+   then Redraw with a reason), not automatic at the deadline, so nobody is
+   redrawn while Sheri is still trying on a Sunday. Say if you want the
+   cron to redraw automatically after the deadline instead.
+6. **The claim page marks the winner "claimed"** when they enter a phone
+   number (the call still has to happen; admin can set contacted/claimed
+   either way). The public list then shows "claimed ✓" until public-OK.
+7. **check:giveaway runs on the in-memory tables** (0010 is not on the
+   project). Once you apply 0010, run `npm run check:giveaway -- --db` to
+   repeat it against Supabase with env=test rows.
+8. **`/10years/rules` is a placeholder** built from config for counsel to
+   replace; the form links to it and records RULES_VERSION.
+9. **Admin sessions are the site's own 12-hour cookie** after the Supabase
+   code, not Supabase's JWT — no refresh handling, no JWT-lifetime setting.
