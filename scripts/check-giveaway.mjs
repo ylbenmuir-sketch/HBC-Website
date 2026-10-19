@@ -456,6 +456,11 @@ try {
   const winTue = fresh.find((e) => /You won Tuesday/.test(e.body.subject));
   const tuePrize = (await dump("giveaway_prizes")).find((p) => p.id === tueWinner.prize_id);
   expect("the tax-form line appears exactly when the prize is over $600", Boolean(winTue) && /tax form/.test(winTue.body.text) === tuePrize.tax_form_required, `${tuePrize.name} $${tuePrize.retail_value_usd}`);
+  if (tuePrize.tax_form_required) {
+    const tax = await adminPost(`/admin/10years/actions/winner`, { winner_id: tueWinner.id, kind: "tax_form_received", on: "1" });
+    expect("admin: tax form received toggled on Tuesday's >$600 prize", tax.status === 303 && !/error/.test(tax.location), tax.location);
+    expect("the winner row records tax_form_received_at", (await dump("giveaway_winners")).find((w) => w.id === tueWinner.id).tax_form_received_at !== null);
+  }
   await clock(C.drawing("tue").dailyEmailAt);
   run = await tick("Tuesday 4 pm");
   expect("Tuesday daily skips the unsubscribed entrant", run.sends.sent === verifiedNow - 1, `${run.sends.sent}`);
@@ -596,16 +601,16 @@ console.log("✓ check:giveaway: the whole week ran end to end; no real email, n
 
 async function adminActionsAfterMonday(monWinner) {
   // Mark Monday's winner contacted (Ben called); toggle public OK.
-  const contacted = await adminPost(`/admin/10years/actions/winner-status`, { winner_id: monWinner.id, status: "contacted" });
+  const contacted = await adminPost(`/admin/10years/actions/winner`, { winner_id: monWinner.id, kind: "status", status: "contacted" });
   expect("admin: mark Monday's winner contacted", contacted.status === 303 && !/error/.test(contacted.location), contacted.location);
-  const ok = await adminPost(`/admin/10years/actions/winner-public-ok`, { winner_id: monWinner.id, on: "1" });
+  const ok = await adminPost(`/admin/10years/actions/winner`, { winner_id: monWinner.id, kind: "public_ok", on: "1" });
   expect("admin: public OK toggled", ok.status === 303 && !/error/.test(ok.location), ok.location);
   const w = (await dump("giveaway_winners")).find((x) => x.id === monWinner.id);
   const label = w.public_label ?? "";
   expect("the winner row carries the public label 'First L., City'", w.public_ok && /^[A-Z][^,]*[A-Z]\., /.test(label), String(w.public_label));
   expect("the winners list names Monday's winner", Boolean(label) && new RegExp(`Monday: ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test((await get("/10years")).text));
   if (w.tax_form_required) {
-    const tax = await adminPost(`/admin/10years/actions/winner-tax-form`, { winner_id: monWinner.id, on: "1" });
+    const tax = await adminPost(`/admin/10years/actions/winner`, { winner_id: monWinner.id, kind: "tax_form_received", on: "1" });
     expect("admin: tax form received toggled", tax.status === 303 && !/error/.test(tax.location));
   }
   const page = await adminGet("/admin/10years/winners");
@@ -613,9 +618,9 @@ async function adminActionsAfterMonday(monWinner) {
 }
 
 async function adminRedraw(drawing, winner) {
-  const attempt = await adminPost(`/admin/10years/actions/winner-call`, { winner_id: winner.id, outcome: "voicemail, day 1" });
+  const attempt = await adminPost(`/admin/10years/actions/winner`, { winner_id: winner.id, kind: "call_attempt", outcome: "voicemail, day 1" });
   expect("admin: a call attempt is logged", attempt.status === 303 && !/error/.test(attempt.location), attempt.location);
-  const un = await adminPost(`/admin/10years/actions/winner-status`, { winner_id: winner.id, status: "unreachable" });
+  const un = await adminPost(`/admin/10years/actions/winner`, { winner_id: winner.id, kind: "status", status: "unreachable" });
   expect("admin: Thursday's winner marked unreachable", un.status === 303 && !/error/.test(un.location), un.location);
   const re = await adminPost(`/admin/10years/actions/redraw`, { drawing_id: drawing.id, reason: "unreachable after the deadline" });
   expect("admin: redraw with a reason accepted", re.status === 303 && !/error/.test(re.location), re.location);
@@ -626,8 +631,10 @@ async function adminRedraw(drawing, winner) {
 async function adminReverifyAll(drawings) {
   for (const d of drawings) {
     const r = await adminPost(`/admin/10years/actions/reverify`, { drawing_id: d.id });
-    const page = await adminGet(r.location.replace(BASE, "").replace(/^https?:\/\/[^/]+/, ""));
-    expect(`admin: re-verify ${d.slot} reports every pick intact`, page.status === 200 && !/mismatch|✗/.test(page.text) && /verif/i.test(page.text), `${page.status}`);
+    const path = r.location.replace(/^https?:\/\/[^/]+/, "").replace(/#.*$/, "");
+    const page = await adminGet(path);
+    const results = (page.text.match(/winner [^<]*?: (ok|FAIL)/g) ?? []);
+    expect(`admin: re-verify ${d.slot} reports every pick intact`, page.status === 200 && /reverify=/.test(path) && results.length >= 1 && !results.some((x) => /FAIL/.test(x)), `${page.status} ${path} ${results.join("; ")}`);
   }
   const csv = await adminGet("/admin/10years/actions/export/winners");
   expect("admin: winners CSV export downloads and is audited", csv.status === 200 && /text\/csv/.test(csv.headers.get("content-type") ?? "") && (await dump("giveaway_audit")).some((a) => a.action === "export_csv"), String(csv.status));
