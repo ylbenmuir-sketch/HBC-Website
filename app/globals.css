@@ -378,6 +378,14 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
   .hero-copy { padding-bottom: 28px; }
   .hero-media { align-self: end; }
 }
+/* The headline about 17% under the base h1 from 1024px up (Ben, 2026-10-18):
+   at 5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
+   the foot of a 1440×900 screen. 4.5vw/63px holds it to three lines from
+   1061px (where the photo sits beside it) to any width. Under 1024px the base
+   and phone sizes stand. */
+@media (min-width: 1024px) {
+  .hero h1 { font-size: clamp(44px, 4.5vw, 63px); }
+}
 .hero-ph { height: 620px; border-radius: 4px 4px 4px 96px; }
 
 /* proof band */
