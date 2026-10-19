@@ -109,7 +109,7 @@ async function startServer() {
     DIALPAD_SMS_FROM: "+16155550100",
     INQUIRY_API_BASE: "http://platform.test",
     INQUIRY_INTAKE_SECRET: "test",
-    NEXT_PUBLIC_SITE_URL: BASE,
+    GIVEAWAY_SITE_URL: BASE,
   };
   if (USE_DB) {
     delete env.GIVEAWAY_REPO;
@@ -448,7 +448,8 @@ try {
   const alertTue = fresh.find((e) => /10 years — Tuesday winner/.test(e.body.subject));
   expect("Tuesday: alert to the STAFF route (denise@, cc kylie@)", alertTue && to(alertTue) === "denise@example.test" && JSON.stringify(alertTue.body.cc) === JSON.stringify(["kylie@example.test"]), alertTue ? `${to(alertTue)}` : "no alert");
   winners = await dump("giveaway_winners");
-  const tueWinner = winners.find((w) => w.drawing_id === (await dump("giveaway_drawings")).find((d) => d.slot === "tue").id);
+  const tueDrawingId = (await dump("giveaway_drawings")).find((d) => d.slot === "tue").id;
+  const tueWinner = winners.find((w) => w.drawing_id === tueDrawingId);
   expect("Tuesday's winner is not Monday's", tueWinner.person_id !== monWinner.person_id);
   const tuePool = (await dump("giveaway_drawing_pool")).filter((p) => p.drawing_id === tueWinner.drawing_id);
   expect("Monday's winner is absent from Tuesday's frozen pool", !tuePool.some((p) => p.person_id === monWinner.person_id));
@@ -600,14 +601,15 @@ async function adminActionsAfterMonday(monWinner) {
   const ok = await adminPost(`/admin/10years/actions/winner-public-ok`, { winner_id: monWinner.id, on: "1" });
   expect("admin: public OK toggled", ok.status === 303 && !/error/.test(ok.location), ok.location);
   const w = (await dump("giveaway_winners")).find((x) => x.id === monWinner.id);
-  expect("the winner row carries the public label 'First L., City'", w.public_ok && /^[A-Z][^,]*[A-Z]\., /.test(w.public_label ?? ""), String(w.public_label));
-  expect("the winners list names Monday's winner", new RegExp(`Monday: ${w.public_label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test((await get("/10years")).text));
+  const label = w.public_label ?? "";
+  expect("the winner row carries the public label 'First L., City'", w.public_ok && /^[A-Z][^,]*[A-Z]\., /.test(label), String(w.public_label));
+  expect("the winners list names Monday's winner", Boolean(label) && new RegExp(`Monday: ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test((await get("/10years")).text));
   if (w.tax_form_required) {
     const tax = await adminPost(`/admin/10years/actions/winner-tax-form`, { winner_id: monWinner.id, on: "1" });
     expect("admin: tax form received toggled", tax.status === 303 && !/error/.test(tax.location));
   }
   const page = await adminGet("/admin/10years/winners");
-  expect("admin: winners screen lists the winner", page.status === 200 && page.text.includes(w.public_label));
+  expect("admin: winners screen lists the winner", page.status === 200 && Boolean(label) && page.text.includes(label));
 }
 
 async function adminRedraw(drawing, winner) {

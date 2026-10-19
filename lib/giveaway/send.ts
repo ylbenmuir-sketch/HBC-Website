@@ -31,8 +31,14 @@ export const PATHS = {
   admin: "/admin/10years",
 } as const;
 
+/**
+ * The origin every giveaway link is built on. GIVEAWAY_SITE_URL (server-side,
+ * read at request time) wins — check:giveaway points it at its own server —
+ * then the canonical SITE_URL. Not NEXT_PUBLIC_SITE_URL: that is inlined at
+ * build time, so a server started with another value could not change it.
+ */
 export function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? SITE_URL).replace(/\/$/, "");
+  return (process.env.GIVEAWAY_SITE_URL?.trim() || SITE_URL).replace(/\/$/, "");
 }
 
 export function tokenLink(kind: TokenKind, subject: string, env: GiveawayEnv, opts: { expiresAt?: Date | null; secret?: string } = {}): string {
