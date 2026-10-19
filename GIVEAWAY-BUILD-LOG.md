@@ -12,7 +12,15 @@ Three numbered steps between the hero and the ladder (`HowItWorks` in
 `TenYearsView.tsx`, `copy.ts` → `tenYears.how`): the referral count, the
 daily time and day span, the grand day and time all from config; in live
 mode step 3 names the next drawing (or "the grand prize" when Saturday is
-next). Quiet: two hairlines, no cards, ~90 px tall at 1440.
+next). Quiet: two hairlines, no cards, ~108 px tall at 1440.
+
+**Gotcha (Ben saw the strip unstyled on localhost):** nothing was wrong in
+the code — `next dev --turbopack` on :3000 kept serving a stale
+`globals.css` chunk (same chunk name, old contents; it had missed a
+wholesale rewrite of the file). The fix is to restart the dev server (and
+re-POST the fake clock). The build and the check never saw it because they
+compile fresh. If a `.ty-*` rule "does nothing" on localhost, curl the CSS
+chunk and grep for the class before debugging the CSS.
 
 ---
 
