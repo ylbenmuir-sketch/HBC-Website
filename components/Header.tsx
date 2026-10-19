@@ -66,6 +66,17 @@ function isHelpActive(pathname: string) {
 export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The drawer's "What We Help With" accordion (Ben, 2026-10-19): the top row
+  // opens two section rows, Adults and Children & Families, one open at a
+  // time. Both reset when the drawer closes so it always opens collapsed.
+  const [wwhOpen, setWwhOpen] = useState(false);
+  const [wwhSection, setWwhSection] = useState<"adults" | "children" | null>(null);
+  useEffect(() => {
+    if (!open) {
+      setWwhOpen(false);
+      setWwhSection(null);
+    }
+  }, [open]);
   const [scrolled, setScrolled] = useState(false);
   // Hide-on-scroll (phones/tablets via CSS): slides away while reading down,
   // returns on the first scroll up. Never hides while the drawer is open or
@@ -239,24 +250,61 @@ export default function Header() {
       <div id="mobile-drawer" className={`drawer${open ? " open" : ""}`}>
         <div className="d-inner">
           <nav className="d-nav" aria-label="Mobile">
-            <ChromeLink className="d-top" href="/what-we-help-with">
-              What We Help With
-            </ChromeLink>
-            <div className="d-group">
-              <p className="h5">Adults</p>
-              {megaAdults.map((l) => (
-                <ChromeLink key={l.label} href={l.href}>
-                  {l.label}
+            {/* An accordion, not a link plus an always-open list (Ben,
+                2026-10-19): the row toggles two section rows, each a button
+                with aria-expanded that opens its links and its "All …
+                concerns →" link; one section open at a time. The hub page
+                keeps a quiet link at the foot of the panel so it is still
+                reachable from the drawer. Real <button>s, so a keyboard and
+                a screen reader get it for free. */}
+            <div className="d-acc">
+              <button
+                type="button"
+                className="d-top d-acc-btn"
+                aria-expanded={wwhOpen}
+                aria-controls="d-wwh"
+                onClick={() => setWwhOpen((v) => !v)}
+              >
+                What We Help With
+                <span className="d-sign" aria-hidden="true">{wwhOpen ? "−" : "+"}</span>
+              </button>
+              <div id="d-wwh" className="d-acc-panel" hidden={!wwhOpen}>
+                {(
+                  [
+                    { key: "adults", label: "Adults", links: megaAdults, all: { label: "All adult concerns →", href: "/adults" } },
+                    { key: "children", label: "Children & Families", links: megaChildren, all: { label: "All children’s concerns →", href: "/children-families" } },
+                  ] as const
+                ).map((sec) => {
+                  const isOpen = wwhSection === sec.key;
+                  return (
+                    <div className="d-sec" key={sec.key}>
+                      <button
+                        type="button"
+                        className="d-sec-btn"
+                        aria-expanded={isOpen}
+                        aria-controls={`d-sec-${sec.key}`}
+                        onClick={() => setWwhSection(isOpen ? null : sec.key)}
+                      >
+                        {sec.label}
+                        <span className="d-sign" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                      </button>
+                      <div id={`d-sec-${sec.key}`} className="d-sec-panel" hidden={!isOpen}>
+                        {sec.links.map((l) => (
+                          <ChromeLink key={l.label} href={l.href}>
+                            {l.label}
+                          </ChromeLink>
+                        ))}
+                        <ChromeLink className="d-all" href={sec.all.href}>
+                          {sec.all.label}
+                        </ChromeLink>
+                      </div>
+                    </div>
+                  );
+                })}
+                <ChromeLink className="d-hub" href="/what-we-help-with">
+                  Everything we help with →
                 </ChromeLink>
-              ))}
-              <ChromeLink href="/adults">All adult concerns →</ChromeLink>
-              <p className="h5">Children &amp; families</p>
-              {megaChildren.map((l) => (
-                <ChromeLink key={l.label} href={l.href}>
-                  {l.label}
-                </ChromeLink>
-              ))}
-              <ChromeLink href="/children-families">All children&apos;s concerns →</ChromeLink>
+              </div>
             </div>
             {drawerLinks.map((l) => (
               <ChromeLink key={l.href} className="d-top" href={l.href}>
