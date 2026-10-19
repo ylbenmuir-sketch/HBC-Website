@@ -531,7 +531,11 @@ try {
     fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.200" }, body: JSON.stringify({ source: "giveaway", offer_code: code, first_name: "TEST Dan Tester", phone: "0000000000", email: D.email, preferred_center: center, best_time: "Any time", source_page: "10years", sms_consent: false }) });
   let b = await booking(dCode);
   let bj = await b.json().catch(() => null);
-  expect("a valid code books (the lead is accepted)", b.ok, `${b.status} ${JSON.stringify(bj)}`);
+  // Without a database (the default: SUPABASE_URL is emptied so nothing can
+  // touch the real one) the route cannot save the row and answers 502 after
+  // sending the rescue email and stamping the offer — which is exactly what
+  // the next assertions check. With --db the row saves and it answers 200.
+  expect(USE_DB ? "a valid code books (the lead is accepted)" : "a valid code is accepted (502 = no database to save the row; the rescue email and the redemption follow)", USE_DB ? b.ok : b.status === 502, `${b.status} ${JSON.stringify(bj)}`);
   fresh = newEmails();
   const staffLead = fresh.find((e) => /free call request \(10 years\)/.test(e.body.subject));
   expect("the staff lead email's subject says (10 years) and the center came from the ZIP (Nashville)", staffLead && /Nashville/.test(staffLead.body.subject), staffLead?.body.subject ?? fresh.map((e) => e.body.subject).join(" | "));
@@ -563,7 +567,7 @@ try {
     itsLive: all.filter((e) => /^\[DRAFT\] It's live/.test(e.body.subject)).length,
     reminder: all.filter((e) => /Today at noon/.test(e.body.subject)).length,
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
-    daily: all.filter((e) => /^\[DRAFT\] Next: /.test(e.body.subject)).length,
+    daily: all.filter((e) => /^\[DRAFT\] \w+'s (grand )?prize: |That was the last drawing/.test(e.body.subject)).length,
     winner: all.filter((e) => /You won/.test(e.body.subject)).length,
     thanks: all.filter((e) => /Thank you — and your first visit/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,
@@ -633,7 +637,9 @@ async function adminReverifyAll(drawings) {
     const r = await adminPost(`/admin/10years/actions/reverify`, { drawing_id: d.id });
     const path = r.location.replace(/^https?:\/\/[^/]+/, "").replace(/#.*$/, "");
     const page = await adminGet(path);
-    const results = (page.text.match(/winner [^<]*?: (ok|FAIL)/g) ?? []);
+    // React puts <!-- --> between interpolations; strip them before matching.
+    const plain = page.text.replace(/<!--\s*-->/g, "");
+    const results = (plain.match(/winner [0-9a-f…]+: (ok|FAIL)/g) ?? []);
     expect(`admin: re-verify ${d.slot} reports every pick intact`, page.status === 200 && /reverify=/.test(path) && results.length >= 1 && !results.some((x) => /FAIL/.test(x)), `${page.status} ${path} ${results.join("; ")}`);
   }
   const csv = await adminGet("/admin/10years/actions/export/winners");
