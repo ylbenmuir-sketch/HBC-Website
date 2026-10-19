@@ -8,6 +8,7 @@ import { practitionerBandStat } from "@/lib/team";
 import {
   FOUNDER_DISPLAY_NAME,
   PHYSICIAN_REFERRALS,
+  SHOW_TEAM,
   STAT_SESSIONS,
   TRAINING_CLAIM,
   verifiedOr,
@@ -158,6 +159,9 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Off while SHOW_TEAM is (lib/site-config.ts): the photo grid is the
+          practitioners' block, and the button leads to the hidden page. */}
+      {SHOW_TEAM && (
       <section className="sec">
         <div className="wrap split">
           <div className="rv">
@@ -205,6 +209,7 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      )}
 
       <FinalCTA />
     </>

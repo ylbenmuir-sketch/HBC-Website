@@ -11,7 +11,7 @@ import {
   locationPhone,
   practitionerNames,
 } from "@/lib/locations";
-import { SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
+import { SHOW_DRAFT_CONTENT, SHOW_TEAM, isDraftText } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
@@ -112,7 +112,7 @@ export default function LocationsPage() {
                       ]
                         .filter(Boolean)
                         .join(" · ")}
-                      {practitionerNames(loc).length > 0 && (
+                      {SHOW_TEAM && practitionerNames(loc).length > 0 && (
                         <>
                           <br />
                           Practitioners: {practitionerNames(loc).join(", ")}

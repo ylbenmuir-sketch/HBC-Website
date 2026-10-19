@@ -724,14 +724,33 @@ const MUST_NOT_MATCH = [
  * longer on its page: an allowlist nobody prunes is an allowlist that hides
  * the next collision instead of surfacing it.
  */
+/**
+ * The id of the /faq passage that asks `question`, looked up rather than
+ * typed. /faq ids are positional (`faq:${i + 1}` in lib/chat/content-index.ts)
+ * and lib/faq.ts holds gated questions that exist only in a draft build — the
+ * one this audit runs — so a typed `faq:12` meant one question in production
+ * and the next one here. Every expectation below that names a /faq answer
+ * names it by its question, and a question that leaves the FAQ fails loudly
+ * instead of silently pointing at its neighbour.
+ */
+function faqId(question) {
+  const passage = CONTENT_INDEX.find(
+    (p) => p.kind === "faq" && p.question === question
+  );
+  if (!passage) {
+    throw new Error(`no /faq passage asks ${JSON.stringify(question)} — update the audit`);
+  }
+  return passage.id;
+}
+
 const DUPLICATE_QUESTIONS_ALLOWED = [
   // --- two passages about the same subject on different pages. Both answers
   // are true and compatible, and whichever wins, the visitor is answered.
-  ["faq:12", "page:first-visit:cost"],
-  ["faq:12", "policy:pricing"],
+  [faqId("What does it cost?"), "page:first-visit:cost"],
+  [faqId("What does it cost?"), "policy:pricing"],
   ["page:first-visit:cost", "policy:pricing"],
-  ["faq:13", "page:first-visit:insurance"],
-  ["faq:8", "page:first-visit:what"],
+  [faqId("Does insurance cover it?"), "page:first-visit:insurance"],
+  [faqId("What does the first visit include?"), "page:first-visit:what"],
   ["page:about:who", "page:about:team"],
   ["page:how-lens-works:session", "page:first-visit:after"],
   ["location:nashville:visiting", "location:nashville:directions"],
@@ -777,19 +796,20 @@ const PAGE_ROUTING = [
   ["What happens at a first visit?", "page:first-visit:"],
   // Both added after the collision sweep. "What do you help with?" was
   // answered by a focus-and-ADHD FAQ about tracking progress, because it
-  // tokenizes to the single term `help` and faq:9 contained the word nowhere.
+  // tokenizes to the single term `help` and the /faq concerns answer
+  // contained the word nowhere.
   // "Should I see my doctor first?" is brain-fog FAQ 2, and the concussion
   // page's medical-first passage had taken it with a near-identical synthetic
   // question — a visitor worried about cognitive change was being answered
   // about head injuries.
-  ["What do you help with?", "faq:9"],
+  ["What do you help with?", faqId("What kinds of concerns do clients come in with?")],
   ["Should I see my doctor first?", "concern:brain-fog:faq:2"],
   // /brain-map owns the term now (Oct 2026); the four-site passage moved
   // there with it.
   ["What is the Brain Map?", "page:brain-map:"],
   ["How does LENS work?", "page:how-lens-works:"],
-  ["What is LENS neurofeedback?", "faq:1"],
-  ["How many sessions will I need?", "faq:7"],
+  ["What is LENS neurofeedback?", faqId("What is LENS neurofeedback?")],
+  ["How many sessions will I need?", faqId("How many sessions will I need?")],
   ["What does it cost?", "policy:"],
   ["Does insurance cover it?", "page:first-visit:insurance"],
   ["Where are you located?", "location:"],
@@ -803,7 +823,7 @@ const PAGE_ROUTING = [
   ["How far will you come for concierge?", "page:concierge:details"],
   ["What does it cost for a family of three?", "page:concierge:"],
   ["How much does a session cost?", "policy:"],
-  ["What's the price?", "faq:12"],
+  ["What's the price?", faqId("What does it cost?")],
   ["How much is the first visit?", "page:first-visit:"],
 ];
 
@@ -1281,7 +1301,7 @@ const HOURS_NO_DAY = [
 
 /** A day *word* is not a day question. These must fall through. */
 const MUST_NOT_BE_PRE_ANSWERED = [
-  // A package word without a concierge word is faq:7's question, and a
+  // A package word without a concierge word is the /faq sessions question, and a
   // concierge word without a package word is the concierge page's.
   "Do we have to commit to a package?",
   "How many sessions are in the package?",
@@ -1610,7 +1630,9 @@ function guardrails() {
       continue;
     }
     const top = result.passages[0].passage.id;
-    if (!top.startsWith(prefix)) {
+    // A /faq id is exact — "faq:1" as a prefix would also accept faq:10–14.
+    const routed = /^faq:\d+$/.test(prefix) ? top === prefix : top.startsWith(prefix);
+    if (!routed) {
       failures.push(`routed to ${top}, expected ${prefix}: ${question}`);
     }
   }

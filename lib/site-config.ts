@@ -145,6 +145,30 @@ export function assistantSuppressedOn(pathname: string | null): boolean {
   );
 }
 
+/**
+ * The team pages and blocks — **off until the headshots are ready** (Ben,
+ * 2026-10-18). A plain constant, not an env var: it is a content decision,
+ * and it holds in draft builds too, so nobody audits a team the live site
+ * does not show.
+ *
+ * While false:
+ * - /about/team (and anything under it) answers a TEMPORARY 307 to /about
+ *   (next.config.ts), and leaves the sitemap and llms.txt;
+ * - "Our team" leaves the About menu and the footer (the drawer never
+ *   listed it);
+ * - the practitioner blocks leave the other pages: /about's "The team"
+ *   section, the location pages' team grids and their Person nodes, the
+ *   locations index's "Practitioners:" lines, and /lens-neurofeedback's
+ *   "Meet the team" button.
+ *
+ * What stays: Sheri's founder block on the homepage, /about/founder exactly
+ * as it is, and the "Nine practitioners" stat (lib/team.ts counts it from
+ * the roster either way). Nothing is deleted — the bios in lib/team.ts and
+ * every component stay — so setting this back to true restores all of it,
+ * the redirect's removal and the sitemap entry included.
+ */
+export const SHOW_TEAM = false;
+
 /** Embedding is disabled for this video — always link out, never iframe. */
 export const TRISHA_VIDEO_URL = "https://www.youtube.com/shorts/fhmoa68_uHY";
 export const TRISHA_QUOTE = "I feel like I am in my thirties again.";

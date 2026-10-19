@@ -4,7 +4,7 @@ import ChromeLink from "./ChromeLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { LogoMark, LogoName } from "./Logo";
-import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
+import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE, SHOW_TEAM } from "@/lib/site-config";
 
 /**
  * The column labels in the mega-menu and the drawer are `<p class="h5">`,
@@ -40,7 +40,8 @@ const megaChildren = [
 const aboutLinks = [
   { label: "About Harmonized", href: "/about" },
   { label: "Our founder", href: "/about/founder" },
-  { label: "Our team", href: "/about/team" },
+  // Off with the team pages while SHOW_TEAM is (lib/site-config.ts).
+  ...(SHOW_TEAM ? [{ label: "Our team", href: "/about/team" }] : []),
   { label: "Resources", href: "/resources" },
 ];
 

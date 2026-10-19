@@ -9,7 +9,10 @@
  *
  * - `GA_ID` — a GA4 measurement ID (`G-XXXXXXXXXX`). When set, the gtag
  *   loader is rendered by components/Analytics.tsx and page views are sent
- *   on every client-side navigation as well as the first load.
+ *   on every client-side navigation as well as the first load — **in
+ *   production only** (see ANALYTICS_ENABLED): never under `next dev`, and
+ *   on Vercel never on a preview deployment, even with the variable set
+ *   for every environment.
  * - `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` — the tokens from
  *   Search Console's and Bing Webmaster Tools' "HTML tag" method, rendered
  *   as `<meta name="google-site-verification">` and
@@ -32,8 +35,18 @@ export const GOOGLE_SITE_VERIFICATION =
 export const BING_SITE_VERIFICATION =
   process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "";
 
-/** True when the GA4 tag is configured and may load. */
-export const ANALYTICS_ENABLED = GA_ID.length > 0;
+/**
+ * A production build, and on Vercel the Production deployment. Previews are
+ * production builds too (NODE_ENV says nothing about them), so the second
+ * half reads VERCEL_ENV, inlined as HBC_VERCEL_ENV by next.config.ts. Off
+ * Vercel it is empty and the NODE_ENV half decides alone.
+ */
+const PRODUCTION_DEPLOY =
+  process.env.NODE_ENV === "production" &&
+  ["", "production"].includes(process.env.HBC_VERCEL_ENV ?? "");
+
+/** True when the GA4 tag is configured and may load — production only. */
+export const ANALYTICS_ENABLED = GA_ID.length > 0 && PRODUCTION_DEPLOY;
 
 type Gtag = (...args: unknown[]) => void;
 

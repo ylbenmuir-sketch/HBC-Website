@@ -29,6 +29,7 @@ import {
   SESSION_LENGTH,
   SESSION_PRICE,
   SHOW_DRAFT_CONTENT,
+  SHOW_TEAM,
   STAT_SESSIONS,
   TESTIMONIALS,
   TRAINING_CLAIM,
@@ -585,9 +586,11 @@ export default function LensNeurofeedbackPage() {
             <h2>Certified through the company that created LENS.</h2>
             <p>{TRAINING_CLAIM}</p>
             <div className="hero-ctas" style={{ marginTop: 30 }}>
-              <Btn href="/about/team" variant="ghost" arrow>
-                Meet the team
-              </Btn>
+              {SHOW_TEAM && (
+                <Btn href="/about/team" variant="ghost" arrow>
+                  Meet the team
+                </Btn>
+              )}
               <Btn href="/about" variant="ghost" arrow>
                 About Harmonized
               </Btn>

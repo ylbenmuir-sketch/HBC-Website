@@ -1236,11 +1236,17 @@ export const resources: Resource[] = [
     title: "When getting started on anything feels heavier than it should",
     crumbLabel: "When everything feels like effort",
     excerpt: "The dishes, the email, the call back — and why effort isn’t what’s missing.",
-    // No figure (see `image`): the 988 panel follows the lede directly.
+    // No figure (see `image`): the 988 line follows the lede directly.
     readTime: "5 min read",
     byline: HBC_BYLINE,
     lede: "The call you meant to return on Monday. The dishes. The email that needs two lines. None of it is hard, and all of it feels like lifting something heavy. You’re functioning — going to work, showing up — and underneath it the days have gone flat.",
     body: [
+      // The 988 line opens the body, right under the lede, as one plain
+      // sentence in the muted limit-line style — no box (Ben, 2026-10-18,
+      // moving it up from the end, where it followed the limit line). It
+      // appears once. The full 988 / 741741 / 911 block stays above the
+      // depression page's H1, and the assistant's crisis stop is unchanged.
+      { type: "note", text: CRISIS_LINE },
       { type: "h2", text: "It isn’t laziness, and you already suspected that" },
       {
         type: "p",
@@ -1310,11 +1316,7 @@ export const resources: Resource[] = [
           { href: "/how-lens-works", label: "How LENS works" },
         ],
       },
-      // The 988 line follows the limit line here, as one plain sentence —
-      // Ben, 2026-10-16, which retired the boxed crisis panel that opened
-      // this article. The full 988 / 741741 / 911 block stays above the
-      // depression page's H1, and the assistant's crisis stop is unchanged.
-      { type: "note", text: `${ARTICLE_NOTE} ${CRISIS_LINE}` },
+      { type: "note", text: ARTICLE_NOTE },
     ],
     finalHeading: "Bring the part that sounds too small to mention.",
     finalSub:

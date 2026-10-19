@@ -255,13 +255,25 @@ export function mentionsFranklin(message: string): boolean {
 /* Step 5 — best time                                                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * A clock time typed with its am/pm — "after 3pm", "10:30 am". `\bpm\b` alone
+ * never matched "3pm": there is no word boundary between the 3 and the p.
+ * Only the hours a "Morning" or "Afternoon" call could honestly cover: 6pm
+ * onward is evening, which is asked again exactly like the word "evening".
+ * `[: ]` because simplify() has already turned "2:30" into "2 30".
+ */
+const CLOCK_MORNING = /\b([5-9]|1[01])([: ][0-5]\d)?\s?(am|a\.m\.)/;
+const CLOCK_AFTERNOON = /\b(12|[1-5])([: ][0-5]\d)?\s?(pm|p\.m\.)/;
+
 /** A tapped button or typed answer → one of the three, or null. */
 export function matchBestTime(message: string): TimeValue | null {
   const text = simplify(message);
   if (!text) return null;
   const morning = /\b(morning|mornings|am|a\.m\.|early|before noon|mornin|morn)\b/.test(text) ||
+    CLOCK_MORNING.test(text) ||
     text.split(/\s+/).some((t) => t.length >= 6 && editDistance(t, "morning") <= 2);
   const afternoon = /\b(afternoon|afternoons|pm|p\.m\.|after lunch|after noon|later in the day|arvo)\b/.test(text) ||
+    CLOCK_AFTERNOON.test(text) ||
     text.split(/\s+/).some((t) => t.length >= 7 && editDistance(t, "afternoon") <= 2);
   const any = /\b(any time|anytime|any|whenever|either|both|all day|doesn't matter|doesnt matter|no preference|flexible|whatever)\b/.test(text);
   if (any || (morning && afternoon)) return "Any time";

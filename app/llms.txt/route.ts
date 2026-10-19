@@ -22,6 +22,7 @@ import {
   PACKAGE_SESSIONS,
   SESSION_LENGTH,
   SESSION_PRICE,
+  SHOW_TEAM,
   SITE_NAME,
   SITE_URL,
   usd,
@@ -108,7 +109,7 @@ ${liveResources()
 
 ## About
 
-${["/about", "/about/founder", "/about/team", "/stories", "/contact", "/privacy-policy"]
+${["/about", "/about/founder", ...(SHOW_TEAM ? ["/about/team"] : []), "/stories", "/contact", "/privacy-policy"]
   .map((p) => pageByPath(p))
   .map((p) => line(p.title, p.path, p.description))
   .join("\n")}

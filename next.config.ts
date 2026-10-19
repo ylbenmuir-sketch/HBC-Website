@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import { SHOW_TEAM } from "./lib/site-config";
 
 /**
  * The legacy paths that answer 410 Gone, as one regex alternation, written
@@ -33,6 +34,17 @@ const nextConfig: NextConfig = {
   /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
    *  scanner wants (SEO-AUDIT-3 §2.4). */
   poweredByHeader: false,
+
+  /**
+   * Which Vercel deployment this build is, inlined for the browser bundle:
+   * Vercel sets `VERCEL_ENV` ("production" | "preview" | "development") at
+   * build time, but only `NEXT_PUBLIC_*` reaches client code on its own.
+   * lib/analytics.ts reads it so GA4 loads on the Production deployment and
+   * never on a preview. Empty off Vercel.
+   */
+  env: {
+    HBC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
+  },
 
   /**
    * Pin the workspace root to this directory.
@@ -271,6 +283,23 @@ const nextConfig: NextConfig = {
       // a preview card of its own; temporary, so it can point at another
       // video later without browsers having cached this one forever.
       { source: "/watch/first-visit", destination: "https://www.youtube.com/watch?v=FCUyUqzE3Dk", permanent: false },
+
+      // The team pages, while SHOW_TEAM is off (lib/site-config.ts — Ben,
+      // 2026-10-18: headshots aren't ready). Temporary on purpose: a 307 tells
+      // Google the page is coming back, so nothing about /about/team is
+      // forgotten. Collected with the legacy sources so the slash form is one
+      // hop too. Turning SHOW_TEAM on removes both rows.
+      ...(SHOW_TEAM
+        ? []
+        : (() => {
+            const sources = ["/about/team", "/about/team/:path*"];
+            legacy.push(...sources);
+            return sources.map((source) => ({
+              source,
+              destination: "/about",
+              permanent: false,
+            }));
+          })()),
 
       // Last: the trailing-slash normalisation Next used to do first, at the
       // 308 it used. The lookahead steps around the 410 paths: redirects run

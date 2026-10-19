@@ -24,6 +24,7 @@ import { type CenterSlug, publishableMembers, teamForCenter } from "@/lib/team";
 import {
   PHYSICIAN_REFERRALS,
   SHOW_DRAFT_CONTENT,
+  SHOW_TEAM,
   SITE_NAME,
   isDraftText,
 } from "@/lib/site-config";
@@ -104,15 +105,18 @@ export default async function LocationPage({
   // This center's own number — Murfreesboro's line on the Murfreesboro page,
   // not the sitewide one. Same value the card and the LocalBusiness carry.
   const phone = locationPhone(location);
-  // Draft team members / arrival notes never ship (see site-config).
+  // Draft team members / arrival notes never ship (see site-config). The
+  // whole section is off while SHOW_TEAM is, and with it the Person nodes.
   const team = location.team.filter(
-    (m) => SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio))
+    (m) =>
+      SHOW_TEAM &&
+      (SHOW_DRAFT_CONTENT || (!isDraftText(m.name) && !isDraftText(m.bio)))
   );
   // The Person nodes come from the roster through the same [placeholder]
   // gate the cards use (lib/team.ts), so the markup names exactly the people
   // the section shows. An open center's `team` IS teamForCenter(); Franklin's
   // is a hiring card, not people, so it contributes nothing.
-  const people = location.comingSoon
+  const people = location.comingSoon || !SHOW_TEAM
     ? []
     : publishableMembers(teamForCenter(location.slug as CenterSlug));
   // Written from the `hours` data in lib/locations.ts, not from copy stored

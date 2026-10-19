@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL, SHOW_DRAFT_CONTENT, isDraftText } from "@/lib/site-config";
+import { SITE_URL, SHOW_DRAFT_CONTENT, SHOW_TEAM, isDraftText } from "@/lib/site-config";
 import { concerns } from "@/lib/concerns";
 import { locations } from "@/lib/locations";
 import { staticPages } from "@/lib/pages";
@@ -30,7 +30,11 @@ const utcDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: { path: string; lastModified: string }[] = [
-    ...staticPages.map((p) => ({ path: p.path, lastModified: p.dateModified })),
+    // /about/team leaves while SHOW_TEAM is off — it 307s to /about then
+    // (next.config.ts), and a sitemap lists only pages that answer 200.
+    ...staticPages
+      .filter((p) => SHOW_TEAM || !p.path.startsWith("/about/team"))
+      .map((p) => ({ path: p.path, lastModified: p.dateModified })),
     ...concerns.map((c) => ({
       path: `/concerns/${c.slug}`,
       lastModified: c.dateModified,
@@ -43,6 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // 404 in production builds (see the matching page-level gates). No
     // profile carries a date of its own yet; none has copy to date.
     ...team
+      .filter(() => SHOW_TEAM)
       .filter((m) => m.slug)
       .filter((m) => SHOW_DRAFT_CONTENT || !isDraftText(m.name))
       .map((m) => ({ path: `/about/team/${m.slug}`, lastModified: "2026-09-01" })),

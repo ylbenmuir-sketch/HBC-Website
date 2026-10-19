@@ -322,7 +322,7 @@ submission requires Supabase credentials.
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
-| `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and the form conversion events (`generate_lead`, `sign_up`) are no-ops. Build-time. See `lib/analytics.ts`. |
+| `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and the form conversion events (`generate_lead`, `sign_up`) are no-ops. Loads in production only: never under `next dev`, never on a Vercel preview (reads `VERCEL_ENV`). Build-time. See `lib/analytics.ts`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing Webmaster "HTML tag" tokens (the `content` value). Each renders its meta tag only when set. Build-time. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
@@ -663,6 +663,11 @@ Every unverified fact is centralized and **cannot ship to production**:
   (set in `.env.example`; production needs it in the deploy environment plus a
   rebuild). The gate itself stays — every permission must still be confirmed in
   writing, and the flag being on is not evidence that they are.
+- `SHOW_TEAM` in `lib/site-config.ts` is **false** until the headshots are
+  ready (2026-10-18): /about/team 307s to /about and leaves the sitemap,
+  "Our team" leaves the menu and footer, and the practitioner blocks leave
+  /about, the location pages and /lens-neurofeedback. The founder content
+  stays. Set it to `true` and everything returns; nothing was deleted.
 - `REQUIRE_VERIFIED_CONTENT=true npm run build` fails the build while required
   facts are unverified (`lib/content-validation.ts`).
 
