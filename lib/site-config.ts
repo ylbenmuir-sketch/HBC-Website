@@ -742,18 +742,23 @@ export const HSA_FSA_ACCEPTED = "HSA & FSA accepted";
  * describes a practice, and it would remain true whatever that review
  * concludes. Do not add any of that later without Ben saying so.
  *
- * Two standards, and they are not the same, so the sentence keeps them apart:
- * information goes to another provider **only at the client's request**, and
- * it is **never sold**, while marketing use requires explicit consent.
+ * **Unconditional, on purpose (2026-10-18).** It used to say information went
+ * nowhere "unless you ask us to send it" and was not used for marketing
+ * "unless you've told us we can". Dialpad's A2P compliance scan failed
+ * /privacy-policy on exactly that: SMS opt-in data cannot be shared even with
+ * consumer consent, so any "unless you ask / with your consent" clause tied to
+ * sharing is non-compliant. Do not reintroduce a consent condition here or on
+ * the privacy page.
  *
- * Not in the assistant's index. It is a plain constant that no passage in
- * lib/chat/content-index.ts reads, which is a deliberate hold rather than an
- * oversight — a policy passage changes the retrieval corpus and wants the
- * before/after sweep run against it. Worth doing; not done here.
+ * It is the assistant's answer to "Do you share my information?"
+ * (policy:information-sharing in lib/chat/content-index.ts) and closes the
+ * therapy-coordination article in lib/resources.ts, as well as opening the
+ * privacy notice.
  */
 export const INFORMATION_SHARING =
-  "Nothing you tell us goes to anyone unless you ask us to send it. We don’t " +
-  "sell it, and we don’t use it for marketing unless you’ve told us we can.";
+  "We don’t sell what you tell us, and we never share it with anyone for " +
+  "their marketing. Your phone number and text-message consent are never " +
+  "shared with third parties.";
 
 /* ------------------------------------------------------------------ */
 /* Credibility                                                         */
@@ -797,7 +802,7 @@ export const PHYSICIAN_REFERRALS =
  *
  * Bump it when the notice itself changes — not when the site does.
  */
-export const PRIVACY_EFFECTIVE_DATE = "2026-10-15";
+export const PRIVACY_EFFECTIVE_DATE = "2026-10-18";
 
 /**
  * How long a form submission is kept before it is deleted — confirmed by Ben.

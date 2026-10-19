@@ -271,10 +271,12 @@ export const staticPages: StaticPage[] = [
     path: "/privacy-policy",
     title: "Privacy",
     description:
-      "What the Harmonized Brain Centers website collects, what happens to it, and who else sees it. Nothing you tell us goes anywhere unless you ask us to send it.",
+      "We don’t sell what you tell us, and we never share it with anyone for their marketing. Your phone number and text-message consent are never shared with third parties.",
     // 2026-10-15: rewritten from the code — every field, every service, the
     // emails, the assistant's session, YouTube, the two carrier sentences.
-    dateModified: "2026-10-15",
+    // 2026-10-18: every consent-conditioned sharing clause removed (Dialpad's
+    // A2P scan rejects them; see INFORMATION_SHARING).
+    dateModified: "2026-10-18",
     type: "WebPage",
     crumb: "Privacy",
   },

@@ -259,13 +259,16 @@ export default function PrivacyPolicyPage() {
               guide request tells us which guide was opened, and nothing
               follows from it.
             </p>
-            <p>{INFORMATION_SHARING}</p>
+            {/* Unconditional on purpose: no "unless you ask", "with your
+                consent" or "if you agree" tied to sharing, here or anywhere on
+                this page. Dialpad's A2P scan fails a privacy policy that has
+                one (see INFORMATION_SHARING). */}
             <p>
-              Two of those are different promises and it is worth keeping them
-              apart. Passing your information to another provider &mdash; a
-              doctor, a therapist, anyone &mdash; happens only when you ask us
-              to. Selling it does not happen at all. And being added to anything
-              we send out later takes your say-so first.
+              We use what you send only to get back to you and to care for you
+              if you become a client. We never sell it and never share it with
+              third parties or affiliates for marketing or promotional
+              purposes. Text-message opt-in data and consent are never shared
+              with any third party, for any reason.
             </p>
 
             {/* Read off the code like the rest: the consent columns are
@@ -313,7 +316,7 @@ export default function PrivacyPolicyPage() {
                 and the ones to our team &mdash; so it handles what is in them.
               </li>
               <li>
-                <b>Dialpad</b> sends text messages, only if you agreed to them.
+                <b>Dialpad</b> sends the text messages described above.
               </li>
               {FEATURE_ASSISTANT && (
                 <li>
@@ -338,6 +341,10 @@ export default function PrivacyPolicyPage() {
               Those services hold the information in order to run; they are not
               given it to use for anything of their own.
             </p>
+            <p>
+              None of them receives your text-message consent for any purpose of
+              its own, and none may use your mobile number for marketing.
+            </p>
 
             {retention && (
               <>
@@ -349,9 +356,9 @@ export default function PrivacyPolicyPage() {
             <h2>If you tell us about your child</h2>
             <p>
               Parents are usually the ones filling the form in, and what you say
-              about your child is handled exactly like anything else here: it
-              goes nowhere unless you ask us to send it, it is never sold, and
-              it is not used to market to anyone. This site is written for
+              about your child is handled exactly like everything else here:
+              never sold, never shared for marketing, and never used to market
+              to anyone. This site is written for
               parents and adults, and is not directed at children.
             </p>
 
