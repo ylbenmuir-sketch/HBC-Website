@@ -317,21 +317,21 @@ export default function HomePage() {
             <div className="eyebrow">Nashville &amp; Murfreesboro</div>
             {/* The headline turns on the em dash, and the sage italic carries
                 the pivot — the same shape as "nothing to perform." on
-                /how-lens-works. The pivot has been rewritten three times
-                (2026-10-15, -18, -19 — all Ben); since 2026-10-19 it names
-                the method. The metadata description (app/layout.tsx,
-                lib/pages.ts) kept the previous pivot on purpose — Ben's
-                brief left titles and descriptions alone. The chat mirror
-                (lib/chat/site-copy.ts) follows this H1 — edit both.
-                Wraps, checked at 1440, 1024, 390 and 320: `&nbsp;` keeps the
-                dash with "sleep", and `.tie` keeps "personalized
-                neurofeedback." on one line wherever the photo sits beside the
-                copy (≥1061px, globals.css) — on a phone the pair is wider than
-                the column and wraps as two words, never mid-word. */}
+                /how-lens-works. "without medication." is Ben's wording
+                (2026-10-19, reaffirmed): it was the pivot until 2026-10-15,
+                came off beside /is-lens-safe's "not an alternative to
+                medication", and he chose it back over the two since. The
+                metadata description (app/layout.tsx, lib/pages.ts) kept the
+                2026-10-18 pivot on purpose — Ben's brief left titles and
+                descriptions alone. The chat mirror (lib/chat/site-copy.ts)
+                follows this H1 — edit both. `&nbsp;` keeps the dash with
+                "sleep"; `.tie` keeps the pivot on one line from 641px up
+                (globals.css) — on a phone it may wrap as two words, never
+                mid-word. */}
             <h1>
               Help for anxiety, focus, and sleep&nbsp;&mdash;{" "}
               <em className="sage">
-                through <span className="tie">personalized neurofeedback.</span>
+                <span className="tie">without medication.</span>
               </em>
             </h1>
             {/* What the first visit is, in one sentence (Ben, 2026-10-19).

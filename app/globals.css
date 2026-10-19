@@ -391,19 +391,19 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
   .hero-copy { padding-bottom: 28px; }
   .hero-media { align-self: end; }
 }
-/* The headline under the base h1 from 1024px up (Ben, 2026-10-18): at
-   5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
-   the foot of a 1440×900 screen. 4.5vw/63px held the 2026-10-18 headline to
-   three lines; the 2026-10-19 one ends in "personalized neurofeedback.",
-   618px at 63px in a 596px column, so the cap is 58px (569px) and the slope
-   4.1vw — three lines from 1061px to any width, with the pair on the last
-   line (`.tie`, below). Under 1024px the base and phone sizes stand. */
+/* The headline about 17% under the base h1 from 1024px up (Ben, 2026-10-18):
+   at 5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
+   the foot of a 1440×900 screen. 4.5vw/63px holds "…— without medication."
+   (2026-10-19) to three lines from 1280px up and two below that. Balanced,
+   so the three read "Help for anxiety, / focus, and sleep — / without
+   medication." rather than leaving "and sleep —" alone on the middle line
+   (measured at 1440, 1366, 1280, 1200, 1061, 1024). Under 1024px the base
+   and phone sizes stand. */
 @media (min-width: 1024px) {
-  .hero h1 { font-size: clamp(44px, 4.1vw, 58px); }
+  .hero h1 { font-size: clamp(44px, 4.5vw, 63px); text-wrap: balance; }
 }
-/* From 641px up the pair always fits the column (432px at the 44px floor in
-   a 553px column at 641px wide); narrower than that it can be wider than the
-   column, and a forced no-break would split it mid-word. */
+/* From 641px up the pivot always fits the column; narrower than that it can
+   be wider than the column, and a forced no-break would split it mid-word. */
 @media (min-width: 641px) {
   .hero h1 .tie { white-space: nowrap; }
 }

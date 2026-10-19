@@ -868,22 +868,23 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "anxiety",
           "focus",
           "sleep",
-          // "medication" left with the old headline (2026-10-15): this
-          // passage no longer mentions it, and /is-lens-safe answers it.
+          // "medication" is deliberately NOT a keyword even though the
+          // headline says it again (Ben, 2026-10-19): /is-lens-safe answers
+          // medication questions, and routing them here would answer "is it
+          // an alternative to my medication?" with a headline.
           // "adult", "kid" and "tennessee" left with the hero sentence
           // (2026-10-19): the /about passage (page:about:who) carries
           // "adults, children, and families across Middle Tennessee" and
           // routes them. The hero now says what the first visit is.
           "neurofeedback",
-          "personalized",
           "brain map",
           "first visit",
           "recording",
           "running hot",
         ],
-        text: "Help for anxiety, focus, and sleep — through personalized neurofeedback. Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
+        text: "Help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         mirror: [
-          "Help for anxiety, focus, and sleep — through personalized neurofeedback.",
+          "Help for anxiety, focus, and sleep — without medication.",
           "Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         ],
       },
