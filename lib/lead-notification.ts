@@ -65,7 +65,7 @@ export type SendResult =
   | { status: "sent"; messageId: string | null; error: null }
   | { status: "failed" | "not_configured"; messageId: null; error: string };
 
-type Outbound = {
+export type Outbound = {
   to: string | null;
   cc?: string[];
   subject: string;
@@ -80,7 +80,7 @@ type Outbound = {
  * a SendResult for the caller to log against the lead's id and store. No
  * submitted value is put in an error string.
  */
-async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
+export async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return { status: "not_configured", messageId: null, error: "RESEND_API_KEY is not set" };

@@ -200,7 +200,11 @@ create table if not exists public.giveaway_winners (
   tax_form_received_at timestamptz,
   redraw_reason text,
   redrawn_at timestamptz,
-  notes text
+  notes text,
+  -- The pick is a function of (seed, frozen pool minus pool_excluded), so
+  -- every result — the first draw and each redraw — can be recomputed later.
+  seed text,
+  pool_excluded jsonb not null default '[]'::jsonb
 );
 alter table public.giveaway_winners enable row level security;
 create index if not exists giveaway_winners_drawing_idx on public.giveaway_winners (env, drawing_id);

@@ -38,7 +38,7 @@ const DEFAULTS: Partial<Record<GiveawayTable, () => Row>> = {
   giveaway_entries: () => ({ referral_person_id: null, void_reason: null, voided_at: null }),
   giveaway_prizes: () => ({ vibro_chair: true, hoolest_keychain: false, hoolest_handheld: false, partner_services: false, fulfilment_status: "pending" }),
   giveaway_drawings: () => ({ status: "scheduled", pool_snapshot_hash: null, pool_size: null, entries_count: null, seed: null, winner_entry_id: null, winner_person_id: null, drawn_at: null, drawn_by: null, claimed_at: null }),
-  giveaway_winners: () => ({ entry_id: null, claim_token_hash: null, phone: null, status: "drawn", call_attempts: [], contacted_at: null, claimed_at: null, public_ok: false, public_ok_at: null, public_label: null, tax_form_required: false, tax_form_received_at: null, redraw_reason: null, redrawn_at: null, notes: null }),
+  giveaway_winners: () => ({ entry_id: null, claim_token_hash: null, phone: null, status: "drawn", call_attempts: [], contacted_at: null, claimed_at: null, public_ok: false, public_ok_at: null, public_label: null, tax_form_required: false, tax_form_received_at: null, redraw_reason: null, redrawn_at: null, notes: null, seed: null, pool_excluded: [] }),
   giveaway_audit: () => ({ target_table: null, target_id: null, reason: null, before: null, after: null, ip_hash: null }),
   giveaway_offers: () => ({ kind: "free_first_visit", redeemed_at: null, consultation_request_id: null, redeemed_center: null }),
   giveaway_admin_allowlist: () => ({ added_by: "env" }),

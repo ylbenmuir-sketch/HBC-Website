@@ -11,6 +11,7 @@
  * role (lib/consultation.ts → supabaseAdmin). Server-only.
  */
 
+import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "../consultation";
 import { giveawayEnv, isTestingEnv, type GiveawayEnv } from "./env";
@@ -37,6 +38,14 @@ export function isGiveawayTable(name: string): name is GiveawayTable {
 
 type Row = Record<string, unknown>;
 
+/**
+ * The builders come back loosely typed: the giveaway tables are not in a
+ * generated Database type, and postgrest-js then types every parsed column
+ * as an error. Callers cast rows to the shapes in lib/giveaway/rows.ts.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Loose = PostgrestFilterBuilder<any, any, any, any, any, any, any>;
+
 /** The subset of the Supabase client this module uses — a fake in tests. */
 export type MinimalClient = Pick<SupabaseClient, "from" | "rpc">;
 
@@ -56,27 +65,27 @@ export class GiveawayStore {
 
   /** `select(...)` already filtered to this env; chain more filters on it. */
   select(table: GiveawayTable, columns = "*", options?: { count?: "exact" | "planned" | "estimated"; head?: boolean }) {
-    return this.table(table).select(columns, options).eq("env", this.env);
+    return this.table(table).select(columns, options).eq("env", this.env) as unknown as Loose;
   }
 
   /** Every row stamped with this env; a row that names another env is refused. */
   insert<T extends Row>(table: GiveawayTable, rows: T | T[]) {
-    return this.table(table).insert(this.stamp(rows));
+    return this.table(table).insert(this.stamp(rows)) as unknown as Loose;
   }
 
   upsert<T extends Row>(table: GiveawayTable, rows: T | T[], options?: { onConflict?: string; ignoreDuplicates?: boolean }) {
-    return this.table(table).upsert(this.stamp(rows), options);
+    return this.table(table).upsert(this.stamp(rows), options) as unknown as Loose;
   }
 
   /** `update(...)` already filtered to this env; chain more filters on it. */
   update(table: GiveawayTable, patch: Row) {
     if ("env" in patch && patch.env !== this.env) throw new Error("a giveaway row cannot change env");
-    return this.table(table).update(patch).eq("env", this.env);
+    return this.table(table).update(patch).eq("env", this.env) as unknown as Loose;
   }
 
   /** `delete()` already filtered to this env; chain more filters on it. */
   delete(table: GiveawayTable) {
-    return this.table(table).delete().eq("env", this.env);
+    return this.table(table).delete().eq("env", this.env) as unknown as Loose;
   }
 
   /** A SQL function call with `p_env` filled in. */
