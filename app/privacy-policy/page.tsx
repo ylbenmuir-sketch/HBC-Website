@@ -229,9 +229,11 @@ export default function PrivacyPolicyPage() {
               <p>
                 We use Google Analytics to count visits and see which pages
                 people find useful. It sets cookies, and it sends Google the
-                pages you view and general details about your browser and
-                device. It never receives what you type into a form. There are
-                no advertising tags or pixels here.
+                pages you view, general details about your browser and device,
+                and a note when you request a call (with which center you
+                picked), get the guide, or tap our phone number or email
+                address. It never receives what you type into a form. There
+                are no advertising tags or pixels here.
               </p>
             ) : (
               <p>

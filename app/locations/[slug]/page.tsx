@@ -220,7 +220,7 @@ export default async function LocationPage({
               {location.hero.titleTail}
             </h1>
             <p className="sub">{location.hero.sub}</p>
-            <div className="hero-ctas loc-hero-ctas">
+            <div className="hero-ctas loc-hero-ctas" data-link-location="location page">
               <TalkCta href={contactHref} />
               {phone && (
                 <Btn href={`tel:${phone.tel}`} variant="ghost">

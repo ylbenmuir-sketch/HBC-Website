@@ -83,7 +83,15 @@ const MAX_MESSAGE_LENGTH = 2000;
 type ChatRequest = { message?: unknown; sessionId?: unknown; page?: unknown };
 
 function reply(
-  body: { reply: string; sessionId: string; ended?: boolean; buttons?: string[] },
+  body: {
+    reply: string;
+    sessionId: string;
+    ended?: boolean;
+    buttons?: string[];
+    /** Only on the turn whose booking saved — the widget's cue to send the
+     *  GA4 lead events (lib/analytics.ts). The center, nothing she typed. */
+    lead?: { saved: true; center: string };
+  },
   status = 200
 ) {
   return NextResponse.json(body, { status });
@@ -144,7 +152,8 @@ export async function POST(request: Request) {
     text: string,
     outcome: TurnOutcome,
     detail?: string,
-    passages?: string[]
+    passages?: string[],
+    lead?: { saved: true; center: string }
   ) => {
     session.bookingOffered = offersCall(text);
     await sessionStore.save(session);
@@ -163,7 +172,7 @@ export async function POST(request: Request) {
     // derived from the step, not the reply, so a question re-asked after a
     // refusal or an hours answer brings its buttons with it.
     const buttons = bookingActive(session) ? bookingButtons(session.step) : undefined;
-    return reply({ reply: text, sessionId, ended: outcome === "crisis", buttons });
+    return reply({ reply: text, sessionId, ended: outcome === "crisis", buttons, lead });
   };
 
   // ------------------------------------------------------------------
@@ -257,7 +266,10 @@ export async function POST(request: Request) {
         if (!response.ok || result?.ok !== true || !result.id) {
           throw new Error(`consultation route: ${response.status}`);
         }
-        return finish(bookingSuccessReply(submission), "booking-submitted");
+        return finish(bookingSuccessReply(submission), "booking-submitted", undefined, undefined, {
+          saved: true,
+          center: submission.preferred_center,
+        });
       } catch (error) {
         console.error(
           "[chat] consultation submit failed:",

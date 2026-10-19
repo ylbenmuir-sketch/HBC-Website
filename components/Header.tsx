@@ -148,6 +148,7 @@ export default function Header() {
 
   return (
     <header
+      data-link-location="header"
       ref={headerRef}
       className={`site${scrolled ? " scrolled" : ""}${
         hidden && !open ? " tucked" : ""

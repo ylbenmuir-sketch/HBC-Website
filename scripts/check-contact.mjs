@@ -968,10 +968,13 @@ async function chatConversation(consent, n) {
     if (res.status === 404) throw new Error("/api/chat answered 404 — the server was built with NEXT_PUBLIC_FEATURE_ASSISTANT off; check:contact needs it on");
     if (!res.ok) throw new Error(`/api/chat → ${res.status} ${JSON.stringify(body)}`);
     sessionId = body.sessionId;
-    return { reply: String(body.reply ?? ""), buttons: body.buttons ?? null };
+    return { reply: String(body.reply ?? ""), buttons: body.buttons ?? null, lead: body.lead ?? null };
   };
+  // `lead` is the widget's cue to send the GA4 lead events (lib/analytics.ts):
+  // on the saved-booking turn and on no other.
   const turn = async (message, reply, buttons = null) => {
     const got = await say(message);
+    if (got.lead !== null) expect(`${name}: ${JSON.stringify(message)} carries no lead marker`, false, JSON.stringify(got.lead));
     expect(`${name}: ${JSON.stringify(message)} → ${JSON.stringify(reply.length > 70 ? `${reply.slice(0, 67)}…` : reply)}`, got.reply === reply, JSON.stringify(got.reply));
     expect(`${name}:   buttons ${buttons ? buttons.join(" · ") : "none"}`, JSON.stringify(got.buttons) === JSON.stringify(buttons), JSON.stringify(got.buttons));
     return got;
@@ -1013,6 +1016,7 @@ async function chatConversation(consent, n) {
     : `You’re all set, ${firstWord(name)}. Someone from our team will call you soon.`;
   expect(`${name}: booking saved, then "${want}"`, done.reply === want && done.buttons === null, JSON.stringify(done));
   expect(`${name}: the closing promises no "today"`, !/today/i.test(done.reply));
+  expect(`${name}: the saved booking carries the GA4 lead marker, center only`, JSON.stringify(done.lead) === JSON.stringify({ saved: true, center }), JSON.stringify(done.lead));
   await sleep(300);
   // The wording stored is the question as asked, for a yes and a no alike.
   const row = await expectRow(name, { center, helpingWho: "Myself", concerns: [], note: "Myself — trouble sleeping", email: finalEmail, source: "chat", bestTime: time, sourcePage: "/", consent, consentText: CHAT_CONSENT_QUESTION });

@@ -68,7 +68,7 @@ const groups = [
 
 export default function Footer() {
   return (
-    <footer className="site">
+    <footer className="site" data-link-location="footer">
       <div className="wrap-wide">
         <div className="foot-grid">
           <div>

@@ -24,9 +24,9 @@
  * set in the deploy environment *and* a rebuild — the same rule as the
  * feature flags (README → Environment variables).
  *
- * What is deliberately not sent: anything a visitor typed. The conversion
- * event carries which form, which page, and the coarse choices (who the
- * visitor is helping, which center) — never a name, phone, email, or note.
+ * What is deliberately not sent: anything a visitor typed. The lead events
+ * carry where the lead came from, which center and which page — never a
+ * name, phone, email, or note (see SiteEvent below).
  */
 
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
@@ -58,28 +58,153 @@ declare global {
 }
 
 /**
- * The conversion events the site reports, named after GA4's recommended
- * events so they can be marked as key events in the property without a
- * custom definition: `generate_lead` for a consultation request,
- * `sign_up` for the guide.
+ * The events the site reports. The lead and link names are the old WordPress
+ * site's own (Ben, 2026-10-18), so the GA4 reports run on across the move
+ * without a gap: `submit_lead_form` for a saved call request,
+ * `contact_link_click` for a phone or email tap. `generate_lead` rides along
+ * with every `submit_lead_form` as GA's recommended lead event.
+ *
+ * Every parameter is a fixed value or a path — nothing here can carry what a
+ * visitor typed. The builders below pick named fields rather than spreading
+ * their input, and map free strings onto fixed lists, so an extra field or an
+ * unexpected value never reaches GA. lib/analytics.test.mjs holds them to it.
  */
+export const LEAD_CENTERS = ["Nashville", "Murfreesboro", "Concierge", "Not sure"] as const;
+export type LeadCenter = (typeof LEAD_CENTERS)[number];
+export type LeadSource = "form" | "chat";
+
+export const LINK_LOCATIONS = [
+  "header",
+  "footer",
+  "hero",
+  "location page",
+  "confirmation",
+  "other",
+] as const;
+export type LinkLocation = (typeof LINK_LOCATIONS)[number];
+
+type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
+
 export type SiteEvent =
+  | { name: "submit_lead_form"; params: LeadParams }
+  | { name: "generate_lead"; params: LeadParams }
   | {
-      name: "generate_lead";
-      params: {
-        form: "consultation";
-        source_page: string;
-        /** Collected in the form's optional second step, so absent on the
-         *  event — which fires when the callback is saved, not after. */
-        helping_who?: string;
-        preferred_center: string;
-      };
+      name: "contact_link_click";
+      params: { link_type: "phone" | "email"; location: LinkLocation; page_path: string };
     }
-  | {
-      name: "sign_up";
-      params: { form: "guide"; method: "guide"; source_page: string };
-    }
+  | { name: "guide_download"; params: { page_path: string } }
   | { name: "page_view"; params: { page_path: string } };
+
+/**
+ * The path alone: no query string, no fragment. A path on this site never
+ * holds anything personal; a query string could (a mail client's tracking
+ * parameters, someone's pasted link).
+ */
+export function cleanPath(path: unknown): string {
+  if (typeof path !== "string") return "";
+  return path.split(/[?#]/)[0].slice(0, 200);
+}
+
+/**
+ * Either form's center answer → one of the four reported values. The form
+ * says "Not sure yet" and "Concierge / at home"; the chat already uses the
+ * short labels. Anything unrecognised reports as "Not sure" rather than
+ * passing an unknown string through.
+ */
+export function leadCenter(value: unknown): LeadCenter {
+  const v = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (v.startsWith("nashville")) return "Nashville";
+  if (v.startsWith("murfreesboro")) return "Murfreesboro";
+  if (v.startsWith("concierge")) return "Concierge";
+  return "Not sure";
+}
+
+/**
+ * /api/consultation's own "saved": a 2xx whose body says `ok` with a row id.
+ * The route answers 502 when the row did not save (save-first), so this is
+ * the line between a lead that exists and one that does not. Used by the
+ * contact form and the guide form alike.
+ */
+export function consultationSaved(ok: boolean, body: unknown): boolean {
+  if (!ok || typeof body !== "object" || body === null) return false;
+  const { ok: saved, id } = body as { ok?: unknown; id?: unknown };
+  return saved === true && typeof id === "string" && id.length > 0;
+}
+
+/**
+ * /api/chat's booking marker: present only on the turn whose in-process
+ * consultation submit came back saved (app/api/chat/route.ts). Returns the
+ * center to report, or null for every other reply.
+ */
+export function chatBookingSaved(ok: boolean, body: unknown): LeadCenter | null {
+  if (!ok || typeof body !== "object" || body === null) return null;
+  const lead = (body as { lead?: unknown }).lead;
+  if (typeof lead !== "object" || lead === null) return null;
+  if ((lead as { saved?: unknown }).saved !== true) return null;
+  return leadCenter((lead as { center?: unknown }).center);
+}
+
+/** The two events a saved call request sends, same parameters on each. */
+export function leadEvents(lead: {
+  source: LeadSource;
+  center: unknown;
+  pagePath: unknown;
+}): SiteEvent[] {
+  const params: LeadParams = {
+    lead_source: lead.source === "chat" ? "chat" : "form",
+    center: leadCenter(lead.center),
+    page_path: cleanPath(lead.pagePath),
+  };
+  return [
+    { name: "submit_lead_form", params },
+    { name: "generate_lead", params: { ...params } },
+  ];
+}
+
+/**
+ * The click event for a link, or null when it is not a `tel:` or `mailto:`.
+ * Only the scheme is read from the href — the number or address never leaves
+ * this function. `location` comes from the nearest `data-link-location`
+ * (components/Analytics.tsx); anything not on the list reports as "other".
+ */
+export function contactLinkEvent(
+  href: unknown,
+  location: unknown,
+  pagePath: unknown
+): SiteEvent | null {
+  if (typeof href !== "string") return null;
+  const scheme = href.trim().toLowerCase();
+  const linkType = scheme.startsWith("tel:")
+    ? "phone"
+    : scheme.startsWith("mailto:")
+      ? "email"
+      : null;
+  if (!linkType) return null;
+  return {
+    name: "contact_link_click",
+    params: {
+      link_type: linkType,
+      location: (LINK_LOCATIONS as readonly unknown[]).includes(location)
+        ? (location as LinkLocation)
+        : "other",
+      page_path: cleanPath(pagePath),
+    },
+  };
+}
+
+/** A saved call request — form step one or a chat booking. */
+export function trackLeadSaved(lead: {
+  source: LeadSource;
+  center: unknown;
+  pagePath: unknown;
+}): void {
+  for (const event of leadEvents(lead)) trackEvent(event);
+}
+
+/** A saved guide sign-up. The page only — never the address. */
+export function trackGuideDownload(pagePath: unknown): void {
+  trackEvent({ name: "guide_download", params: { page_path: cleanPath(pagePath) } });
+}
 
 /**
  * Send an event to GA4 if the tag is loaded. Safe to call anywhere on the

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
-import { trackEvent } from "@/lib/analytics";
+import { consultationSaved, trackLeadSaved } from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
 import { capitalizeName } from "@/lib/name-case";
 import { FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
@@ -280,17 +280,13 @@ export default function ContactForm({
         | null;
       if (!res.ok) throw new Error(data?.error ?? "Something went wrong.");
 
-      // The conversion event — the coarse choices and the page, never the
-      // name, phone or email. A no-op until GA4 is configured. Fires here,
-      // when the lead exists, not after the optional step.
-      trackEvent({
-        name: "generate_lead",
-        params: {
-          form: "consultation",
-          source_page: from || pathname,
-          preferred_center: preferredCenter,
-        },
-      });
+      // The lead events (submit_lead_form + generate_lead) — which center
+      // and which page, never the name, phone or email. Only on the route's
+      // own "saved", and here, when the lead exists, not after the optional
+      // step. A no-op until GA4 is configured (lib/analytics.ts).
+      if (consultationSaved(res.ok, data)) {
+        trackLeadSaved({ source: "form", center: preferredCenter, pagePath: pathname });
+      }
 
       setStatus("idle");
       // The lead landed. Step two needs a row to add to; without an id (the
@@ -386,7 +382,7 @@ export default function ContactForm({
       >
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
         <p className="done-line">Free call, no obligation.</p>
-        <p className="done-line done-phones">
+        <p className="done-line done-phones" data-link-location="confirmation">
           Want to talk now?{" "}
           {lines.map(({ name: center, phone: line }, i) => (
             <span key={center || line.tel}>
