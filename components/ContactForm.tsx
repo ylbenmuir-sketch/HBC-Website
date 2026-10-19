@@ -16,7 +16,8 @@ import ScannerText from "./ScannerText";
 /**
  * The contact form, in three steps.
  *
- *   1. **Request your free call** — name (first and last, one field), phone,
+ *   1. **Request your free call** ("Send My Request" on the button — Ben,
+ *      2026-10-19, no promise in button text) — name (first and last, one field), phone,
  *      email, best way to reach them (Call · Text · Email, Ben 2026-10-19),
  *      preferred center, best time. All but the time are required.
  *      Submit saves the row; nothing after this step is needed for the
@@ -480,7 +481,7 @@ export default function ContactForm({
               type="submit"
               disabled={status === "submitting"}
             >
-              {status === "submitting" ? "Saving…" : "Save these details"}
+              {status === "submitting" ? "Sending…" : "Send My Request"}
             </button>
             {/* The exit. Small and low-contrast by design — present for
                 the person who will not answer, not offered to everyone. */}
@@ -680,7 +681,7 @@ export default function ContactForm({
         type="submit"
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending…" : "Request my free call"}
+        {status === "submitting" ? "Sending…" : "Send My Request"}
       </button>
       {/* The privacy link sits here, on the sentence that is already about
           what happens to what she sends us, rather than in a separate line of

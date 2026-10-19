@@ -133,7 +133,7 @@ export default function WhatItTakes({ className = "" }: { className?: string }) 
               <span className="cost-package-price">{PACKAGE_PRICE}</span>
             </div>
             <Link href="/contact" className="btn btn-invert cost-cta">
-              Start with a free call <span className="arrow">&rarr;</span>
+              See If It&rsquo;s a Fit <span className="arrow">&rarr;</span>
             </Link>
             <p className="cost-fit">Let&rsquo;s see if we&rsquo;re a good fit.</p>
           </div>

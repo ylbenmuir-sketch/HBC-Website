@@ -709,13 +709,13 @@ async function stepOne(page, width, name, { email = emailFor(name), center = "No
   expect(`${name}: submitting without a reach choice is refused in the browser`, /best way to reach/i.test(refused ?? ""), JSON.stringify(refused));
   const reach = await page.eval(`(() => { const b = document.querySelector("#reach-call"); if (!b) return "no #reach-call"; b.click(); return b.getAttribute("aria-checked") === "true" ? "ok" : "not checked"; })()`);
   if (reach !== "ok") throw new Error(reach);
-  const r = await page.eval(clickText("Request my free call"));
+  const r = await page.eval(clickText("Send My Request"));
   if (r !== "ok") throw new Error(r);
 }
 
 /** Submit, then read the form's own error line (role=alert), if any. */
 async function submitAndReadAlert(page) {
-  const r = await page.eval(clickText("Request my free call"));
+  const r = await page.eval(clickText("Send My Request"));
   if (r !== "ok") throw new Error(r);
   await sleep(150);
   return page.eval(`(() => document.querySelector('form [role="alert"]')?.textContent.trim() ?? null)()`);
@@ -743,7 +743,9 @@ async function pathSave(page, width) {
   for (const t of ["Sleep", "Focus & ADHD"]) await page.eval(clickText(t));
   await page.eval(setValue("#note", "E2E note — bedtime is the hard part."));
   await page.eval(setValue("#referred-by", "E2E referral — Dr. Smith"));
-  await page.eval(clickText("Save these details"));
+  // Step two's submit carries the same label as step one's (2026-10-19);
+  // the step-one form is gone by now, so the first match is step two's.
+  await page.eval(clickText("Send My Request"));
   const three = await waitPanel(page, "We’ll call you soon.");
   expect(`${name}: confirmation mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
   const readVideo = () => page.eval(`JSON.stringify((() => { const b = document.querySelector(".video-play"); const img = document.querySelector(".video-stage img"); return { button: !!b, label: b?.getAttribute("aria-label"), poster: img?.currentSrc ?? null, posterLoaded: img ? img.complete && img.naturalWidth > 0 : false, iframes: document.querySelectorAll("iframe").length, phones: [...document.querySelectorAll(".form-step .done-phones a[href^='tel:']")].length }; })())`);
