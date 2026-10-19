@@ -1,7 +1,7 @@
 import ChromeLink from "./ChromeLink";
 import { LogoName } from "./Logo";
 import FooterGroup from "./FooterGroup";
-import { DISCLAIMER, SHOW_TEAM } from "@/lib/site-config";
+import { DISCLAIMER, EMAIL_ADDRESS, SHOW_EMAIL, SHOW_TEAM } from "@/lib/site-config";
 import { PRIVACY_PATH, SMS_TERMS_PATH } from "@/lib/sms-consent";
 import {
   DBA_SENTENCE,
@@ -99,6 +99,13 @@ export default function Footer() {
           <br />
           {REGISTERED_ADDRESS_LINE} &middot;{" "}
           <a href={`tel:${SUPPORT_PHONE.tel}`}>{SUPPORT_PHONE.display}</a>
+          {/* The front desk's address, as a mailto: (Ben, 2026-10-19). Same
+              gate as every other email UI (lib/site-config.ts → EMAIL). */}
+          {SHOW_EMAIL && (
+            <>
+              {" "}&middot; <a href={`mailto:${EMAIL_ADDRESS}`}>{EMAIL_ADDRESS}</a>
+            </>
+          )}
           <br />
           <ChromeLink href={PRIVACY_PATH}>Privacy Policy</ChromeLink> &middot;{" "}
           <ChromeLink href={SMS_TERMS_PATH}>SMS Terms</ChromeLink>

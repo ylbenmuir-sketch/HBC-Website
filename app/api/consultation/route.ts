@@ -3,6 +3,7 @@ import {
   CENTER_UNSPECIFIED,
   HELPING_OPTIONS,
   concernList,
+  isContactMethod,
   str,
   supabaseAdmin,
 } from "@/lib/consultation";
@@ -62,6 +63,9 @@ type Payload = {
   email?: unknown;
   preferred_center?: unknown;
   best_time?: unknown;
+  /** "Best way to reach you": call, text or email (lib/contact-method.ts).
+   *  Required on the form (it enforces that), never sent by the chat. */
+  contact_method?: unknown;
   note?: unknown;
   source_page?: unknown;
   /** True only when she ticked the box (form) or said yes (chat). */
@@ -114,6 +118,16 @@ function looksLikeEmail(value: string): boolean {
  * health information about a real person, usually a child.
  */
 
+/** PostgREST's "no such column" for one named column: PGRST204 (schema
+ *  cache) or Postgres 42703 (undefined column), naming it. */
+function isMissingColumn(error: { code?: string; message?: string }, column: string): boolean {
+  return (
+    (error.code === "PGRST204" || error.code === "42703") &&
+    typeof error.message === "string" &&
+    error.message.includes(column)
+  );
+}
+
 /** The row of record. Owns its own config check — a missing env var is this
  *  destination failing, not the request failing. Resolves to the new row's id,
  *  or null when nothing was saved. */
@@ -126,11 +140,23 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
     return null;
   }
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("consultation_requests")
       .insert(values)
       .select("id")
       .single();
+    // The newest column (contact_method, migration 0011) may not exist yet:
+    // PostgREST refuses the whole insert with PGRST204 ("Could not find the
+    // 'contact_method' column"). The lead must not be the thing lost, so the
+    // insert is retried once without it and the log says what to apply.
+    if (error && "contact_method" in values && isMissingColumn(error, "contact_method")) {
+      console.error(
+        "[destination: supabase] contact_method column missing — migration 0011 is not applied; saving the lead without it."
+      );
+      const { contact_method: _dropped, ...rest } = values;
+      void _dropped;
+      ({ data, error } = await supabase.from("consultation_requests").insert(rest).select("id").single());
+    }
     if (error) {
       // `message` and `code` only — deliberately NOT `details` or `hint`,
       // which are where Postgres puts the offending value ("Key (email)=(…)").
@@ -324,7 +350,7 @@ async function confirmToVisitor(
 
 /**
  * POST — a new request. For the contact form this is **step one**: name,
- * phone, email, preferred center, best time. The row is saved
+ * phone, email, best way to reach them, preferred center, best time. The row is saved
  * and the lead email sent here, before the form shows anything else; the
  * optional second step (who the call is for, concerns, a note) PATCHes the
  * row whose id this returns. The chat sends everything in one POST, with
@@ -408,6 +434,14 @@ export async function POST(request: Request) {
   const note = str(body.note, 2000);
   const sourcePage = str(body.source_page, 200);
 
+  // "Best way to reach you" (lib/contact-method.ts). The form requires it
+  // and sends one of three values; the chat never sends the key. Anything
+  // else is a malformed request, not a lead.
+  if (body.contact_method !== undefined && body.contact_method !== null && !isContactMethod(body.contact_method)) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+  const contactMethod = !isGuide && isContactMethod(body.contact_method) ? body.contact_method : null;
+
   // Text-message consent (lib/sms-consent.ts). Opt-in, never assumed: only
   // a literal `true` that arrives WITH the wording she was shown counts, so
   // an old cached form, a script, or a guide signup is a no. The wording is
@@ -436,6 +470,9 @@ export async function POST(request: Request) {
     email,
     preferred_center: preferredCenter,
     best_time: isGuide ? null : bestTime,
+    // Only when answered: the key's absence is what lets saveRow's retry
+    // leave the column out, and a guide/chat row never carries it.
+    ...(contactMethod ? { contact_method: contactMethod } : {}),
     note: isGuide ? null : note,
     source_page: sourcePage,
     sms_consent: smsConsent,
@@ -458,6 +495,7 @@ export async function POST(request: Request) {
           email,
           preferredCenter,
           bestTime,
+          contactMethod,
           note,
           website: honeypot,
           smsConsent,
@@ -500,6 +538,7 @@ export async function POST(request: Request) {
         email,
         preferredCenter,
         bestTime,
+        contactMethod,
         note,
         sourcePage,
         smsConsent,

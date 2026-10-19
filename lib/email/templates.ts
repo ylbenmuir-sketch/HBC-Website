@@ -294,11 +294,20 @@ export type StaffLead = {
   /** As stored ("Concierge / at home", "Not sure yet"…) — shown in the grid. */
   preferredCenter: string | null;
   bestTime: string | null;
+  /** "Best way to reach you" as a label — Call, Text or Email — or null when
+   *  not asked (the chat, older rows). Shown first, plainly (Ben, 2026-10-19). */
+  contactMethod: string | null;
   smsConsent: boolean;
   sourcePage: string | null;
   details: Details;
   honeypotFilled: boolean;
 };
+
+/** The one plain line at the top of the lead: how she asked to be reached. */
+function reachLine(lead: Pick<StaffLead, "contactMethod">): string | null {
+  if (!lead.contactMethod) return null;
+  return `<div style="font-family:${SANS};font-size:15px;color:${C.navy};">Best way to reach them: <b>${esc(lead.contactMethod)}</b></div>`;
+}
 
 export function staffNotification(input: {
   lead: StaffLead;
@@ -322,6 +331,7 @@ export function staffNotification(input: {
     lead.honeypotFilled
       ? section(`<div style="font-family:${SANS};font-size:12px;color:${C.alert};">Spam check: the hidden field was filled in — probably a bot.</div>`, "4px 20px 0")
       : null,
+    reachLine(lead) ? section(reachLine(lead) as string, "10px 20px 0") : null,
     section(personBlock(lead), "8px 20px 0"),
     section(
       factGrid([
@@ -346,6 +356,7 @@ export function staffNotification(input: {
     saved ? null : "",
     `${title.toUpperCase()} · ${badges.join(" · ")}`,
     lead.honeypotFilled ? "Spam check: the hidden field was filled in — probably a bot." : null,
+    lead.contactMethod ? `Best way to reach them: ${lead.contactMethod}` : null,
     "",
     lead.name,
     [lead.phone ? displayPhone(lead.phone) : null, lead.email].filter(Boolean).join(" · ") || null,
@@ -390,6 +401,7 @@ export function detailsUpdate(input: {
   const d = lead.details;
   const rows = [
     section(heading("Details added", [center]), "14px 20px 0"),
+    originalSent || !reachLine(lead) ? null : section(reachLine(lead) as string, "10px 20px 0"),
     section(
       originalSent
         ? `<div class="hbc-name" style="font-family:${SANS};font-size:20px;font-weight:700;color:${C.navy};line-height:1.25;">${esc(lead.name)}</div><div class="hbc-muted" style="font-family:${SANS};font-size:13px;color:${C.slate};padding-top:2px;">Added to the call request above, from the contact form&rsquo;s second page.</div>`
@@ -420,6 +432,7 @@ export function detailsUpdate(input: {
 
   const text = textOf([
     `DETAILS ADDED · ${center}`,
+    originalSent || !lead.contactMethod ? null : `Best way to reach them: ${lead.contactMethod}`,
     "",
     lead.name,
     originalSent ? "Added to the call request above, from the contact form's second page." : [lead.phone ? displayPhone(lead.phone) : null, lead.email].filter(Boolean).join(" · "),

@@ -25,6 +25,8 @@
 // count. The platform's own error bodies are safe to log verbatim because the
 // contract guarantees they name fields and never echo values.
 
+import { contactMethodLabel } from "./contact-method";
+
 /** The visitor is waiting on this request. A hung platform must not hold the
  *  form open — the Supabase row is already committed by the time we get here,
  *  so giving up costs nothing but this one delivery. */
@@ -116,6 +118,9 @@ export type InquiryForward = {
   email: string | null;
   preferredCenter: string | null;
   bestTime: string | null;
+  /** "Best way to reach you" (call/text/email, lib/consultation.ts); rides in
+   *  `message` as a labelled first line. Absent for the chat. */
+  contactMethod?: string | null;
   note: string | null;
   /** "Who referred you?" (form step two). The contract has no field for it,
    *  so it rides in the message as a labelled line — ahead of her note, so
@@ -188,6 +193,7 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
     input.update ? UPDATE_LINE : null,
     input.helpingWho === null ? WHO_FOR_NOT_GIVEN_LINE : null,
     input.smsConsent ? null : NO_TEXT_CONSENT_LINE,
+    contactMethodLabel(input.contactMethod) ? `Best way to reach them: ${contactMethodLabel(input.contactMethod)}` : null,
     input.referredBy?.trim() ? `Referred by: ${input.referredBy.trim()}` : null,
     input.note?.trim() || null,
   ]

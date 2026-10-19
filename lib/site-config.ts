@@ -71,20 +71,19 @@ export const SHOW_PHONE = PHONE.verified || SHOW_DRAFT_CONTENT;
  * privacy notice's access paragraph and that paragraph falls back to the
  * phone-and-form wording it carried before — see PRIVACY_ACCESS_REQUESTS.
  *
- * **It is published in exactly one place: that paragraph.** Not the footer,
- * not /contact, not the NAP block on either location page, and not as `email`
- * on the schema nodes. Each of those is a defensible place for it and none of
- * them was asked for — a footer address is an address every scraper on the
- * internet has, which is a decision to take deliberately rather than to
- * acquire as a side effect of the privacy page needing a route.
+ * Published in three places: the privacy notice's access paragraph, the
+ * footer's identity block, and /contact's "three ways" strip — the last two
+ * since 2026-10-19 (Ben), when the address became the front desk's
+ * (denise@) rather than Ben's own. Not the NAP block on either location page
+ * and not as `email` on the schema nodes: neither was asked for.
  */
 export const EMAIL: Verifiable = {
-  value: "ben@harmonizedbraincenterstn.com",
+  value: "denise@harmonizedbraincenterstn.com",
   verified: true,
   note: "[Confirm email address]",
 };
 export const EMAIL_ADDRESS = EMAIL.value;
-/** True when any email UI (currently the privacy access paragraph) may render. */
+/** True when any email UI (privacy access paragraph, footer, /contact) may render. */
 export const SHOW_EMAIL = EMAIL.verified || SHOW_DRAFT_CONTENT;
 
 /* ------------------------------------------------------------------ */

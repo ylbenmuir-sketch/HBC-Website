@@ -305,6 +305,15 @@ async function expectRow(name, { center, helpingWho, concerns, note, referredBy 
   expect(`${name}: phone saved`, r.phone === "0000000000", r.phone);
   expect(`${name}: preferred_center = ${JSON.stringify(center)}`, r.preferred_center === center, String(r.preferred_center));
   expect(`${name}: best_time = ${JSON.stringify(bestTime)}`, r.best_time === bestTime, String(r.best_time));
+  // contact_method (migration 0011): "call" on every form row — stepOne
+  // chooses Call — and null on a chat row. Skipped, and said so, on a
+  // database where 0011 is not applied yet (the route then saves without it).
+  if ("contact_method" in r) {
+    const want = source === "form" ? "call" : null;
+    expect(`${name}: contact_method = ${JSON.stringify(want)}`, r.contact_method === want, String(r.contact_method));
+  } else {
+    console.log(`  · ${name}: contact_method not checked — migration 0011 is not applied on this database`);
+  }
   expect(`${name}: email = ${JSON.stringify(email)}`, r.email === email, String(r.email));
   expect(`${name}: source_page = ${sourcePage}`, r.source_page === sourcePage, String(r.source_page));
   expect(`${name}: helping_who = ${JSON.stringify(helpingWho)}`, r.helping_who === helpingWho, String(r.helping_who));
@@ -694,6 +703,12 @@ async function stepOne(page, width, name, { email = emailFor(name), center = "No
     const r = await page.eval(setValue(sel, val));
     if (r !== "ok") throw new Error(r);
   }
+  // "Best way to reach you" is required (2026-10-19): without a choice the
+  // form refuses in the browser, then Call is chosen and saved as "call".
+  const refused = await submitAndReadAlert(page);
+  expect(`${name}: submitting without a reach choice is refused in the browser`, /best way to reach/i.test(refused ?? ""), JSON.stringify(refused));
+  const reach = await page.eval(`(() => { const b = document.querySelector("#reach-call"); if (!b) return "no #reach-call"; b.click(); return b.getAttribute("aria-checked") === "true" ? "ok" : "not checked"; })()`);
+  if (reach !== "ok") throw new Error(reach);
   const r = await page.eval(clickText("Request my free call"));
   if (r !== "ok") throw new Error(r);
 }

@@ -4,8 +4,8 @@
 //
 //   1. Staff notification — a new call request (form or chat), to the inbox
 //      its route names (lib/lead-routing.ts). While the clinic platform is in
-//      testing this email IS the lead: name, number, center, best time, text
-//      consent, and anything they told us.
+//      testing this email IS the lead: name, number, how they want to be
+//      reached, center, best time, text consent, and anything they told us.
 //   2. Page-two update — when a visitor SAVES the contact form's second page
 //      (never on Skip). Same recipients as #1, same subject with "Re: ", and
 //      In-Reply-To / References pointing at #1's Message-ID, so it lands in
@@ -35,6 +35,7 @@
 //
 // Resend's REST API over fetch, deliberately without the `resend` SDK.
 
+import { contactMethodLabel } from "./contact-method";
 import { senderAddress, type Recipients } from "./lead-routing";
 import { replySubject, threadHeaders } from "./email/format";
 import {
@@ -197,6 +198,9 @@ export type LeadDetails = {
   email: string | null;
   preferredCenter: string | null;
   bestTime: string | null;
+  /** "Best way to reach you" — call, text or email (the stored value, see
+   *  lib/consultation.ts). Null for the chat and for older rows. */
+  contactMethod?: string | null;
   note: string | null;
   referredBy?: string | null;
   sourcePage: string | null;
@@ -215,6 +219,7 @@ function staffLead(lead: LeadDetails): StaffLead {
     email: lead.email,
     preferredCenter: lead.preferredCenter,
     bestTime: lead.bestTime,
+    contactMethod: contactMethodLabel(lead.contactMethod),
     smsConsent: lead.smsConsent,
     sourcePage: lead.sourcePage,
     details: {

@@ -9,6 +9,9 @@ import { createClient } from "@supabase/supabase-js";
  *  contract (lib/inquiry-intake.ts) both understand exactly these. */
 export const HELPING_OPTIONS = new Set(["My child", "Myself", "Someone else"]);
 
+/** "Best way to reach you" — the vocabulary lives in lib/contact-method.ts. */
+export { CONTACT_METHODS, contactMethodLabel, isContactMethod, type ContactMethod } from "./contact-method";
+
 /**
  * What a consultation row says when the visitor did not choose a center. The
  * form's <select> defaults to this string; the chat records null when she

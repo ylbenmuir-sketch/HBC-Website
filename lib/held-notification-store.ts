@@ -14,8 +14,11 @@ import type { FailureEntry, HeldRow, HeldStore, HoldState, Sender } from "./held
 const TABLE = "consultation_requests";
 const HEARTBEATS = "lead_job_heartbeats";
 
-const ROW_COLUMNS =
-  "id, created_at, first_name, phone, email, preferred_center, best_time, helping_who, concerns, note, referred_by, source_page, sms_consent, notify_route, notify_env, notify_to, notify_cc, notify_hold_state, notify_attempts, notify_failures";
+/** Every column (`*`), not a list: a named column that a pending migration
+ *  has not added yet (contact_method, 0011) would fail the whole select, and
+ *  with it every release. `*` returns what exists; HeldRow marks the newest
+ *  column optional. The rows are small and the caller is the server. */
+const ROW_COLUMNS = "*";
 
 /** PostgREST filter value, quoted (an ISO time carries ":" and "."). */
 const q = (value: string) => `"${value}"`;
@@ -167,6 +170,7 @@ export function leadFromRow(row: HeldRow, route: string | null): LeadDetails {
     email: row.email,
     preferredCenter: row.preferred_center,
     bestTime: row.best_time,
+    contactMethod: row.contact_method ?? null,
     note: row.note,
     referredBy: row.referred_by,
     sourcePage: row.source_page,

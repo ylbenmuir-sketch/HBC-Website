@@ -17,8 +17,8 @@ import { ANALYTICS_ENABLED, GA_ID, contactLinkEvent, trackEvent } from "@/lib/an
  * render too, which is the one page view that replaces the automatic one.
  *
  * `contact_link_click` comes from one listener on the document rather than
- * an onClick on every link: it catches every `tel:` and `mailto:` on the
- * site, including links in copy and ones added later, with nothing to
+ * an onClick on every link: it catches every `tel:`, `mailto:` and `sms:` on
+ * the site, including links in copy and ones added later, with nothing to
  * forget. The location is the nearest `data-link-location` ancestor (the
  * header, the footer, a location page's hero buttons, the form's
  * confirmation); anything untagged reports as "other". Capture phase, so a
@@ -43,7 +43,7 @@ export default function Analytics() {
     const onClick = (e: MouseEvent) => {
       const link =
         e.target instanceof Element
-          ? e.target.closest('a[href^="tel:" i], a[href^="mailto:" i]')
+          ? e.target.closest('a[href^="tel:" i], a[href^="mailto:" i], a[href^="sms:" i]')
           : null;
       if (!link) return;
       const event = contactLinkEvent(

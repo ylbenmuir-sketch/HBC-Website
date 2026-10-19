@@ -62,6 +62,8 @@ type UpdatedRow = {
   email: string | null;
   preferred_center: string | null;
   best_time: string | null;
+  /** Read, never written here. Absent until migration 0011 is applied. */
+  contact_method?: string | null;
   note: string | null;
   referred_by: string | null;
   /** Read, never written here — carried to the re-post (NO_TEXT_CONSENT_LINE). */
@@ -76,8 +78,9 @@ type UpdatedRow = {
   notify_rfc_message_id: string | null;
 };
 
-const ROW_COLUMNS =
-  "id, helping_who, concerns, first_name, phone, email, preferred_center, best_time, note, referred_by, sms_consent, source_page, notify_route, notify_env, notify_to, notify_cc, notify_status, notify_message_id, notify_rfc_message_id";
+/** `*`, not a list: a column a pending migration has not added yet
+ *  (contact_method, 0011) would fail the select and with it the save. */
+const ROW_COLUMNS = "*";
 
 const ROUTES = new Set<RouteName>(["guide", "more_info", "concierge", "nashville", "murfreesboro", "fallback"]);
 
@@ -145,6 +148,7 @@ async function emailDetails(row: UpdatedRow, supabase: NonNullable<ReturnType<ty
         email: row.email,
         preferredCenter: row.preferred_center,
         bestTime: row.best_time,
+        contactMethod: row.contact_method ?? null,
         note: row.note,
         referredBy: row.referred_by,
         sourcePage: row.source_page,
@@ -361,6 +365,7 @@ export async function PATCH(
       email: row.email,
       preferredCenter: row.preferred_center,
       bestTime: row.best_time,
+      contactMethod: row.contact_method ?? null,
       note: row.note,
       referredBy: row.referred_by,
       website: "",

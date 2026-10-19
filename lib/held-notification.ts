@@ -130,6 +130,8 @@ export type HeldRow = {
   email: string | null;
   preferred_center: string | null;
   best_time: string | null;
+  /** Absent until migration 0011 is applied — the store selects `*`. */
+  contact_method?: string | null;
   helping_who: string | null;
   concerns: string[] | null;
   note: string | null;

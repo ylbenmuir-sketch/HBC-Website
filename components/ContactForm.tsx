@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
+import { CONTACT_METHODS, CONTACT_METHOD_LABELS, type ContactMethod } from "@/lib/contact-method";
 import { consultationSaved, trackLeadSaved } from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
 import { capitalizeName } from "@/lib/name-case";
@@ -16,7 +17,8 @@ import ScannerText from "./ScannerText";
  * The contact form, in three steps.
  *
  *   1. **Request your free call** — name (first and last, one field), phone,
- *      email, preferred center, best time. All but the time are required.
+ *      email, best way to reach them (Call · Text · Email, Ben 2026-10-19),
+ *      preferred center, best time. All but the time are required.
  *      Submit saves the row; nothing after this step is needed for the
  *      office to make the call. The office's email is held (Ben,
  *      2026-10-15) so it goes once, carrying step two: on Save, on Skip, or
@@ -202,6 +204,9 @@ export default function ContactForm({
   const [email, setEmail] = useState("");
   const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
   const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
+  // "Best way to reach you" — required, nothing preselected: an answer the
+  // visitor did not give is not an answer. Saved to contact_method (0011).
+  const [contactMethod, setContactMethod] = useState<ContactMethod | null>(null);
   // Unchecked by default, and never required (lib/sms-consent.ts).
   const [smsConsent, setSmsConsent] = useState(false);
   // The honeypot. Real visitors never see this field and so always submit it
@@ -251,6 +256,11 @@ export default function ContactForm({
       setStatus("error");
       return;
     }
+    if (!contactMethod) {
+      setErrorMessage("Please choose the best way to reach you — call, text or email.");
+      setStatus("error");
+      return;
+    }
     setStatus("submitting");
     setErrorMessage("");
     // Read at submit time (not via useSearchParams) so the form prerenders.
@@ -267,6 +277,7 @@ export default function ContactForm({
           email: email.trim(),
           preferred_center: preferredCenter,
           best_time: bestTime,
+          contact_method: contactMethod,
           website,
           source_page: from || pathname,
           sms_consent: smsConsent,
@@ -569,6 +580,31 @@ export default function ContactForm({
           )}
         </label>
       </div>
+
+      {/* Required (Ben, 2026-10-19). Below the consent box so that box stays
+          directly under the phone number it is about. Choosing "Text" does
+          not tick the box — consent is her action, not an inference — so a
+          quiet line says what texting needs when it is unticked. The consent
+          wording itself is untouched. */}
+      <label id="reach-label">Best way to reach you</label>
+      <div className="chips reach-chips" role="radiogroup" aria-labelledby="reach-label" aria-required="true">
+        {CONTACT_METHODS.map((m) => (
+          <button
+            key={m}
+            id={`reach-${m}`}
+            type="button"
+            role="radio"
+            aria-checked={contactMethod === m}
+            className={`chip${contactMethod === m ? " on" : ""}`}
+            onClick={() => setContactMethod(m)}
+          >
+            {CONTACT_METHOD_LABELS[m]}
+          </button>
+        ))}
+      </div>
+      {contactMethod === "text" && !smsConsent && (
+        <p className="micro reach-note">To text you, we need the box above ticked.</p>
+      )}
 
       <div className="two">
         <div>
