@@ -5,7 +5,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
-import BrainMapFigure from "@/components/BrainMapFigure";
+import BrainMapStage from "@/components/BrainMapStage";
+import BrainMapHeat from "@/components/BrainMapHeat";
+import BrainMapBars from "@/components/BrainMapBars";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
 import ConcernRail from "@/components/ConcernRail";
@@ -19,6 +21,7 @@ import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
 import HeroConcernChips from "@/components/HeroConcernChips";
+import HeroBrainMapJump from "@/components/HeroBrainMapJump";
 import {
   locations,
   combinedReviewCount,
@@ -27,7 +30,10 @@ import {
 } from "@/lib/locations";
 import { practitionerBandStat } from "@/lib/team";
 import {
+  BRAIN_MAP_CALLOUTS,
   BRAIN_MAP_CLAIM,
+  BRAIN_MAP_HEATMAP_LIVE,
+  BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
@@ -369,7 +375,9 @@ export default function HomePage() {
             <div className="hero-ctas">
               <div className="hero-btns">
                 <TalkCta />
-                <BrainMapCta />
+                {/* "See What a Brain Map Shows ↓" → #brain-map (Ben,
+                    2026-10-19). The priced BrainMapCta lives in the stage. */}
+                <HeroBrainMapJump />
               </div>
               {/* One quiet line, not a button (Ben, 2026-10-16): a long-time
                   referral partner had only just learned we take HSA/FSA. */}
@@ -777,51 +785,112 @@ export default function HomePage() {
           2026-10-15). Every figure from lib/site-config.ts. */}
       <WhatItTakes />
 
-      {/* The Harmonized Brain Map — a handoff now, not the section that owned
-          it (Oct 2026). The brain-mapping cluster was landing here, on a
-          section, and a section cannot rank for a term; /brain-map owns it
-          and carries the full copy. What stays is the pairing with step 2
-          above ("Map" names the thing, this shows it) and the render — said
-          in two sentences, with no "brain map" in the H2, so the homepage
-          supports the page instead of competing with it. The claim sentence
-          is gated like every other unverified fact. BrainMapCta left with
-          the copy: it has four homes (components/Buttons.tsx), and the fourth
-          is /brain-map now.
-
-          The image is BrainMapFigure's decision (Oct 2026, temporary): the
-          bar chart a client receives today, full width under the copy, with
-          the heat map as a coming-soon preview beneath it. The copy, the
-          CTAs and their order are unchanged; the section stopped being a
-          .split because the chart is drawn 1400 units wide and is not
-          legible in half a column. BRAIN_MAP_HEATMAP_LIVE in
-          lib/site-config.ts puts the heat map back. */}
-      <section className="sec home-brain-map">
+      {/* The Harmonized Brain Map — a 1-2-3 stage (Ben, 2026-10-19): Scan,
+          Results, Plan, with one large visual that follows the step. Every
+          visual draws from lib/brain-map-sample.ts — the same 21 numbers on
+          the heat map, the bars and /brain-map — so they cannot disagree.
+          The section keeps its id (#brain-map): the hero's "See What a Brain
+          Map Shows" scrolls here, and `scroll-margin-top` lands it under the
+          sticky header. /brain-map still owns the cluster and the full copy;
+          this is the show, that is the page (the "About" link below the
+          buttons). The Results callouts are Verifiables awaiting Sheri
+          (BRAIN_MAP_CALLOUTS): production shows the numbered site and not
+          the sentence until each is verified. BRAIN_MAP_CLAIM keeps its gate,
+          under the caption. */}
+      <section className="sec home-brain-map" id="brain-map">
         <div className="wrap">
-          <div className="sec-head rv" style={{ marginBottom: 0 }}>
-            <div className="eyebrow">What you walk away with</div>
-            <h2>A written plan &mdash; and the recording it&rsquo;s built from.</h2>
-            <p>
-              Your first visit includes a {BRAIN_MAP_POINTS}-point recording of
-              your brain&rsquo;s electrical activity, turned into a map you can
-              actually read and walked through point by point. We built this.
-              {brainMapClaim && (
-                <>
-                  {" "}
-                  {brainMapClaim}
-                  <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
-                </>
-              )}
-            </p>
-            <div className="hero-ctas" style={{ marginTop: 30 }}>
-              <TalkCta />
-              <Btn href="/brain-map" variant="ghost" arrow>
-                About the Harmonized Brain Map
-              </Btn>
-            </div>
-          </div>
-          <div className="rv">
-            <BrainMapFigure />
-          </div>
+          <BrainMapStage
+            heatLive={BRAIN_MAP_HEATMAP_LIVE}
+            head={
+              <>
+                <div className="eyebrow">{BRAIN_MAP_NAME}</div>
+                <h2>See what your brain is doing, before anything else.</h2>
+              </>
+            }
+            steps={[
+              {
+                title: "Scan.",
+                text: (
+                  <>
+                    A short LENS recording measures {BRAIN_MAP_POINTS} sites
+                    across your brain and shows which areas are running hot,
+                    running low, or right in range.
+                  </>
+                ),
+              },
+              {
+                title: "Results.",
+                text: (
+                  <>
+                    We walk through your map with you, point by point and in
+                    plain language, and connect what it shows to what you
+                    notice day to day: sleep, focus, stress, mood.
+                  </>
+                ),
+              },
+              {
+                title: "Plan.",
+                text: (
+                  <>
+                    Your practitioner builds a plan from your map using the
+                    Harmonized Method, our proprietary process, built in-house
+                    from the ground up and refined over {STAT_SESSIONS.value}{" "}
+                    LENS sessions. Sessions are brief and passive. LENS gives
+                    the brain gentle feedback and lets it do the adjusting.{" "}
+                    <em className="sage">Feedback, not force.</em>
+                  </>
+                ),
+              },
+            ]}
+            heat={<BrainMapHeat />}
+            bars={<BrainMapBars />}
+            resultsHeat={
+              <BrainMapHeat
+                legend={false}
+                callouts={BRAIN_MAP_CALLOUTS.map((c, i) => ({ n: i + 1, sites: c.sites }))}
+              />
+            }
+            callouts={BRAIN_MAP_CALLOUTS.map((c, i) => ({
+              n: i + 1,
+              where: c.where,
+              line: verifiedOr(c.line),
+              note: c.line.note,
+            }))}
+            plan={
+              <PhotoFrame
+                src="/images/session-room.jpg"
+                alt="A session room at Harmonized Brain Centers: a reclining session chair by a bright window, string lights along the wall, children's drawings pinned beside it"
+                position="center 55%"
+                aspect="16 / 10"
+                style={{ height: "auto" }}
+                sizes="(max-width: 1023px) calc(100vw - 72px), 720px"
+              />
+            }
+            actions={
+              <>
+                <TalkCta />
+                <BrainMapCta />
+              </>
+            }
+            about={
+              <Link href="/brain-map" className="bms-about">
+                About the Harmonized Brain Map &rarr;
+              </Link>
+            }
+            caption={
+              <>
+                A sample Brain Map &mdash; {BRAIN_MAP_POINTS} sites, measured in
+                microvolts. Not a diagnosis.
+                {brainMapClaim && (
+                  <>
+                    {" "}
+                    {brainMapClaim}
+                    <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
+                  </>
+                )}
+              </>
+            }
+          />
         </div>
       </section>
 

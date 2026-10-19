@@ -1006,6 +1006,48 @@ export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
   note: "[Confirm basis for the claim]",
 };
 
+/**
+ * The homepage Brain Map stage's "Results" callouts (Ben, 2026-10-19): three
+ * pattern-based, third-person lines beside numbered sites on the sample heat
+ * map. Each is a Verifiable with Sheri's confirmation pending, so production
+ * renders the numbered site without its sentence until `verified` flips —
+ * the same rule as every other unconfirmed line on the site. The sites
+ * are from lib/brain-map-sample.ts; the wording never names a condition.
+ */
+export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
+  sites: string[];
+  where: string;
+  line: Verifiable;
+}> = [
+  {
+    sites: ["F7"],
+    where: "F7",
+    line: {
+      value: "Running hot here often shows up as a mind that’s hard to switch off.",
+      verified: false,
+      note: "[Confirm wording with Sheri]",
+    },
+  },
+  {
+    sites: ["Pz", "Oz"],
+    where: "Back of the head (Pz/Oz)",
+    line: {
+      value: "Running low here often lines up with feeling foggy or flat by afternoon.",
+      verified: false,
+      note: "[Confirm wording with Sheri]",
+    },
+  },
+  {
+    sites: ["Fp1", "F3"],
+    where: "Fp1/F3",
+    line: {
+      value: "A little high here can look like overthinking small decisions.",
+      verified: false,
+      note: "[Confirm wording with Sheri]",
+    },
+  },
+];
+
 // PRICING_TAG, HSA_FSA_TAG, INSURANCE_TAG, TRAINING_CLAIM_TAG and
 // FIRST_VISIT_DURATION_TAG were deleted when Ben confirmed the facts behind
 // them. Their copy is above — SESSION_PRICE and the package figures,

@@ -111,6 +111,7 @@ export type SiteEvent =
       params: { link_type: "phone" | "email" | "sms"; location: LinkLocation; page_path: string };
     }
   | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
+  | { name: "brain_map_jump"; params: { page_path: string } }
   | { name: "guide_download"; params: { page_path: string } }
   | { name: "page_view"; params: { page_path: string } };
 
@@ -234,6 +235,11 @@ export function concernChipEvent(label: unknown, pagePath: unknown): SiteEvent {
       page_path: cleanPath(pagePath),
     },
   };
+}
+
+/** The hero's "See What a Brain Map Shows" tap (scrolls to #brain-map). Not a Key event. */
+export function brainMapJumpEvent(pagePath: unknown): SiteEvent {
+  return { name: "brain_map_jump", params: { page_path: cleanPath(pagePath) } };
 }
 
 /** A saved guide sign-up. The page only — never the address. */
