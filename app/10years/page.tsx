@@ -45,21 +45,23 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   const ref = (sp.ref ?? "").toUpperCase().slice(0, 20);
   const error = sp.error ? errorText(sp.error) : null;
 
+  // The winners: the ladder's drawn cards during the week, the card itself after close.
+  const store = mode === "notify_me" ? null : giveawayStore();
+  const winners = store ? await publicWinners(store).catch(() => []) : [];
+
   let card;
   if (mode === "notify_me" || mode === "live") {
     if (sp.sent) card = <MessageCard title={t.sentTitle} message={mode === "notify_me" ? t.notifySent : t.liveSent} />;
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
     else card = <FormCard mode={mode} now={now} refCode={ref} error={error} />;
   } else {
-    const store = giveawayStore();
-    const winners = store ? await publicWinners(store).catch(() => []) : [];
     card = <WinnersCard winners={winners} notice={error} />;
   }
 
   return (
     <>
       <PageSchema path="/10years" />
-      <TenYearsView mode={mode} now={now} card={card} />
+      <TenYearsView mode={mode} now={now} card={card} winners={winners} />
     </>
   );
 }

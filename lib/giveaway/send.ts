@@ -12,6 +12,7 @@
 
 import { deliver, type SendResult } from "../lead-notification";
 import { isDraftText, SITE_URL } from "../site-config";
+import { COPY_IS_DRAFT } from "./copy";
 import { DBA_NAME } from "../sms-consent";
 import { REGISTERED_ADDRESS_LINE } from "../sms-identity";
 import type { Email, Footing } from "./emails";
@@ -96,7 +97,10 @@ export type GiveawaySendInput = {
  */
 export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<SendResult> {
   const env = giveawayEnv();
-  if (!isTestingEnv(env) && isDraftText(input.email.subject)) {
+  // Two locks, either one holds: the copy file is still draft (whatever the
+  // subject looks like — GIVEAWAY_HIDE_DRAFT_TAGS can hide the prefix on
+  // screen), or this particular subject carries a draft marker.
+  if (!isTestingEnv(env) && (COPY_IS_DRAFT || isDraftText(input.email.subject))) {
     return { status: "failed", messageId: null, error: "refusing to send [DRAFT] copy outside a testing env" };
   }
   const headers: Record<string, string> = {};

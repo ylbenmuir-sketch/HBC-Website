@@ -113,9 +113,9 @@ export function spokenCentralDateTime(date: Date): string {
   return `${dayName}, ${monthDay} at ${h12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour < 12 ? "AM" : "PM"}`;
 }
 
-/** "November 16–21" (or "November 30 – December 5") — a span of Central dates. */
-export function spokenCentralRange(from: Date, to: Date): string {
-  const month = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: "long" }).format(d);
+/** "November 16–21" (or "November 30 – December 5") — a span of Central dates; `short` gives "Nov 16–21". */
+export function spokenCentralRange(from: Date, to: Date, style: "long" | "short" = "long"): string {
+  const month = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: style }).format(d);
   const a = centralParts(from);
   const b = centralParts(to);
   return a.month === b.month ? `${month(from)} ${a.day}–${b.day}` : `${month(from)} ${a.day} – ${month(to)} ${b.day}`;
@@ -222,7 +222,8 @@ export const RATES = {
   session: { usd: 125, confirmed: true } as Rate,
   /** Per use; every prize session includes the chair. */
   vibroChair: { usd: 40, confirmed: true } as Rate,
-  hoolestHandheld: { usd: 429, confirmed: false, note: "UNCONFIRMED — Ben to confirm the Hoolest handheld retail price" } as Rate,
+  /** Ben's brief of 2026-10-19 states $429 for the page's value tags. */
+  hoolestHandheld: { usd: 429, confirmed: true } as Rate,
   hoolestKeychain: { usd: null, confirmed: false, note: "UNCONFIRMED — Hoolest keychain retail price not yet supplied; counted as $0" } as Rate,
   /** Admin cost view only. Per session or map. */
   practitionerCostPerUnit: { usd: 35, confirmed: true } as Rate,
@@ -300,6 +301,20 @@ export function prizeRetailUsd(p: PrizeSpec, rates = RATES): number {
   if (p.hoolestKeychain) total += usdOf(rates.hoolestKeychain);
   if (p.hoolestHandheld) total += usdOf(rates.hoolestHandheld);
   return total;
+}
+
+/** True when the retail value is a floor — a part of the prize (the
+ *  keychain) has no price supplied yet, so the page shows "$810+". */
+export function prizeValueIsFloor(p: PrizeSpec, rates = RATES): boolean {
+  return (p.hoolestKeychain && rates.hoolestKeychain.usd == null) || (p.hoolestHandheld && rates.hoolestHandheld.usd == null);
+}
+
+/** The week's prizes in one number: the sum of one version's retail
+ *  values, rounded DOWN to the nearest $1,000 ("Over $6,000 in prizes").
+ *  Never typed; the page and the deck read it from here. */
+export function prizeTotalFloorUsd(version: PrizeVersion = "new_client", rates = RATES): number {
+  const sum = PRIZES.filter((p) => p.version === version).reduce((t, p) => t + prizeRetailUsd(p, rates), 0);
+  return Math.floor(sum / 1000) * 1000;
 }
 
 /** Practitioner cost (admin cost view only): $35 per session and per map. */

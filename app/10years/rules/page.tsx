@@ -5,6 +5,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
 import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, pageMode, partnerFor, prizeFor, prizeName } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
+import { hideDraftTags } from "@/lib/giveaway/draft";
 import { DBA_SENTENCE, LEGAL_ENTITY, REGISTERED_ADDRESS_LINE } from "@/lib/sms-identity";
 
 /**
@@ -22,7 +23,7 @@ export const metadata: Metadata = { title: "Prize details and Official Rules —
 
 export default function RulesPage() {
   if (pageMode(giveawayNow()) === "hidden") notFound();
-  const D = (s: string) => `[DRAFT — counsel to replace] ${s}`;
+  const D = (s: string) => (hideDraftTags() ? s : `[DRAFT — counsel to replace] ${s}`);
   const t = PAGES.tenYears;
   const q = giveawayQuestions();
   return (

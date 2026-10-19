@@ -104,6 +104,8 @@ async function startServer() {
     GIVEAWAY_TOKEN_SECRET: TOKEN_SECRET,
     GIVEAWAY_OTP_MOCK_CODE: OTP_CODE,
     GIVEAWAY_ENV: "test",
+    // The check matches "[DRAFT]" subjects; empty beats unset (.env.local).
+    GIVEAWAY_HIDE_DRAFT_TAGS: "",
     CRON_SECRET,
     DIALPAD_API_KEY: "test",
     DIALPAD_SMS_FROM: "+16155550100",
@@ -678,10 +680,13 @@ async function browserChecks() {
         const form = await page.eval("Boolean(document.querySelector('form[action=\"/10years/signup\"]'))");
         const h1 = await page.eval("document.querySelector('h1')?.textContent ?? ''");
         expect(`${mode} at ${width}: form present, no sideways scroll`, form && !overflow, `overflow=${overflow} h1=${h1.slice(0, 60)}`);
+        const counting = await page.eval("Boolean(document.querySelector('[data-countdown]'))");
+        expect(`${mode} at ${width}: the countdown is on the page`, counting);
         if (width === 1440) {
-          // Ben, 2026-10-19: the whole page fits one 1440×900 screen.
-          const tall = await page.eval("document.documentElement.scrollHeight");
-          expect(`${mode} at 1440×900: the whole page fits one screen (${tall}px)`, tall <= 900, `${tall}px`);
+          // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.
+          const cardBottom = await page.eval("Math.ceil(document.querySelector('.ty-card').getBoundingClientRect().bottom)");
+          const textBottom = await page.eval("Math.ceil(document.querySelector('.ty-hero-text').getBoundingClientRect().bottom)");
+          expect(`${mode} at 1440×900: the hero fits the first screen (card ${cardBottom}px, text ${textBottom}px)`, cardBottom <= 900 && textBottom <= 900);
         }
       }
     }

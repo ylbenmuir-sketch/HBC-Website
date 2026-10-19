@@ -191,7 +191,8 @@ async function sendYoureIn(store: GiveawayStore, secret: string, personId: strin
 /* The public winners list (decision 7)                                */
 /* ------------------------------------------------------------------ */
 
-export type PublicWinner = { slot: string; day: string; line: string; state: "named" | "claimed" | "reaching" | "pending" };
+/** `label` is the public "First L., City" when the winner said yes; the ladder cards show it bare. */
+export type PublicWinner = { slot: string; day: string; line: string; label: string | null; state: "named" | "claimed" | "reaching" | "pending" };
 
 export async function publicWinners(store: GiveawayStore): Promise<PublicWinner[]> {
   const { data } = await store.select("giveaway_drawings", "id, slot, status, scheduled_at");
@@ -204,13 +205,13 @@ export async function publicWinners(store: GiveawayStore): Promise<PublicWinner[
     let winner: WinnerRow | null = null;
     if (row && (row.status === "drawn" || row.status === "redrawn")) winner = await currentWinner(store, row.id);
     if (!winner) {
-      out.push({ slot: d.slot, day: d.dayName, line: t.winnerPending(dayLabel, d.ct), state: "pending" });
+      out.push({ slot: d.slot, day: d.dayName, line: t.winnerPending(dayLabel, d.ct), label: null, state: "pending" });
     } else if (winner.public_ok && winner.public_label) {
-      out.push({ slot: d.slot, day: d.dayName, line: t.winnerNamed(dayLabel, winner.public_label), state: "named" });
+      out.push({ slot: d.slot, day: d.dayName, line: t.winnerNamed(dayLabel, winner.public_label), label: winner.public_label, state: "named" });
     } else if (winner.status === "contacted" || winner.status === "claimed") {
-      out.push({ slot: d.slot, day: d.dayName, line: t.winnerClaimed(dayLabel), state: "claimed" });
+      out.push({ slot: d.slot, day: d.dayName, line: t.winnerClaimed(dayLabel), label: null, state: "claimed" });
     } else {
-      out.push({ slot: d.slot, day: d.dayName, line: t.winnerReaching(dayLabel), state: "reaching" });
+      out.push({ slot: d.slot, day: d.dayName, line: t.winnerReaching(dayLabel), label: null, state: "reaching" });
     }
   }
   return out;

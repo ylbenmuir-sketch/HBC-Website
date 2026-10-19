@@ -1,14 +1,22 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 import FAQAccordion from "@/components/FAQAccordion";
+import Countdown from "./Countdown";
 import CopyLink from "./CopyLink";
+import Seal from "./Seal";
 import {
   CLAIM_WINDOW_MS,
   DRAWINGS,
   OFFER,
   REFERRAL,
   SCHEDULE,
+  centralParts,
   nextDrawing,
+  partnerFor,
   prizeFor,
+  prizeRetailUsd,
+  prizeTotalFloorUsd,
+  prizeValueIsFloor,
   shortCentralTime,
   spokenCentral,
   spokenCentralDateTime,
@@ -19,15 +27,19 @@ import {
 } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import type { PublicWinner } from "@/lib/giveaway/web";
+import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
 
 /**
- * /10years, laid out to fit one 1440×900 screen (Ben, 2026-10-19): a
- * two-column hero (the words left, the form card right — the only card
- * with an edge on the page), one row of prizes, three questions. The verify
- * and one-tap pages render the same view with a different card, so a
- * confirmation lands where the form was.
+ * /10years (Ben, 2026-10-19, second brief): an anniversary page, not a
+ * sign-up form. The hero — seal, headline, the week's value, a countdown,
+ * the form card — fits the first 1440×900 screen; the prize ladder is the
+ * first thing a visitor scrolls into, six cards climbing Monday to
+ * Saturday; then the photos and three questions. The verify and one-tap
+ * pages render the same view with a different card, so a confirmation
+ * lands where the form was.
  *
- * Every time and prize is read from lib/giveaway/config.ts; every word from
+ * Every prize, value, time and count is read from lib/giveaway/config.ts
+ * (and the session count from lib/site-config.ts); every word from
  * lib/giveaway/copy.ts. Styles are the `.ty-` block in app/globals.css.
  */
 
@@ -35,27 +47,44 @@ const t = PAGES.tenYears;
 
 type ViewMode = Exclude<PageMode, "hidden">;
 
-export default function TenYearsView({ mode, now, card }: { mode: ViewMode; now: Date; card: ReactNode }) {
-  const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length);
+const WEEK_YEAR = centralParts(DRAWINGS[0].at).year;
+const headingLines = t.heading.split(/(?<=\.)\s+/);
+const YEARS = WEEK_YEAR - ESTABLISHED_YEAR.value;
+
+export default function TenYearsView({ mode, now, card, winners = [] }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[] }) {
+  const total = prizeTotalFloorUsd("new_client");
+  const open = mode === "notify_me" || mode === "live";
+  const next = nextDrawing(now);
+  const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
+  const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
   return (
     <div className="ty" data-mode={mode}>
       <section className="ty-hero">
         <div className="wrap ty-hero-grid">
           <div className="ty-hero-text">
-            <span className="ty-ten" aria-hidden="true">
-              10
-            </span>
-            <p className="ty-eyebrow">{t.eyebrow}</p>
-            <h1>{t.heading}</h1>
+            <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
+            <h1>
+              {/* Break after the first sentence, so the headline never splits as "10 / years." */}
+              {headingLines[0]}
+              {headingLines.length > 1 && (
+                <>
+                  <br />
+                  {headingLines.slice(1).join(" ")}
+                </>
+              )}
+            </h1>
+            <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
             <p className="ty-sub">{sub}</p>
-            <p className="ty-meta">{t.meta(spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at))}</p>
+            {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
+            <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
           </div>
           <div className="ty-card" id="enter">
             {card}
           </div>
         </div>
       </section>
-      <PrizesRow mode={mode} now={now} />
+      <PrizeLadder mode={mode} now={now} winners={winners} />
+      <PhotoStrip />
       <QuestionsRow />
     </div>
   );
@@ -185,12 +214,11 @@ export function WinnersCard({ winners, notice }: { winners: PublicWinner[]; noti
 }
 
 /* ------------------------------------------------------------------ */
-/* Prizes: the grand prize block, then Mon–Fri as one divided row      */
+/* The prize ladder: six cards climbing Monday to Saturday             */
 /* ------------------------------------------------------------------ */
 
-/** Both versions of a value; CSS shows the one the toggle picks. Equal values render once. */
+/** Both versions of a value; CSS shows the one the toggle picks. */
 function Both({ n, c }: { n: ReactNode; c: ReactNode }) {
-  if (n === c) return <>{n}</>;
   return (
     <>
       <span className="v-new">{n}</span>
@@ -199,7 +227,22 @@ function Both({ n, c }: { n: ReactNode; c: ReactNode }) {
   );
 }
 
-const grandShort = (p: PrizeSpec) => `${p.brainMap ? "Brain Map + " : ""}${p.sessions} sessions`;
+/** "Mon · noon", "Sat · 5 PM". */
+const cardTime = (d: Drawing) => t.cardTime(d.dayName.slice(0, 3), shortCentralTime(d.at).replace(/\b(am|pm)$/, (m) => m.toUpperCase()));
+
+/** The prize in plain words, one line per part. */
+function PrizeWords({ p }: { p: PrizeSpec }) {
+  return (
+    <>
+      <span className="ty-prize-main">{t.prizeWords(p.brainMap, p.sessions)}</span>
+      {p.hoolestKeychain && <span className="ty-prize-line">{t.keychainLine}</span>}
+      {p.hoolestHandheld && <span className="ty-prize-line">{t.handheldLine}</span>}
+      {p.partnerServices && <span className="ty-prize-line">{t.partnersLine}</span>}
+    </>
+  );
+}
+
+const valueTag = (p: PrizeSpec) => t.valueTag(prizeRetailUsd(p), prizeValueIsFloor(p));
 
 function stateOf(d: Drawing, mode: ViewMode, now: Date): "next" | "drawn" | "upcoming" {
   if (mode === "notify_me") return "upcoming";
@@ -207,18 +250,7 @@ function stateOf(d: Drawing, mode: ViewMode, now: Date): "next" | "drawn" | "upc
   return nextDrawing(now)?.slot === d.slot ? "next" : "upcoming";
 }
 
-function Tag({ state, d }: { state: "next" | "drawn" | "upcoming"; d: Drawing }) {
-  if (state === "next") return <span className="ty-tag">{t.nextTag(shortCentralTime(d.at))}</span>;
-  if (state === "drawn") return <span className="ty-tag">{t.drawnTag}</span>;
-  return null;
-}
-
-function PrizesRow({ mode, now }: { mode: ViewMode; now: Date }) {
-  const grand = DRAWINGS.find((d) => d.kind === "grand")!;
-  const daily = DRAWINGS.filter((d) => d.kind === "daily");
-  const gN = prizeFor(grand.slot, "new_client");
-  const gC = prizeFor(grand.slot, "current_client");
-  const grandState = stateOf(grand, mode, now);
+function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winners: PublicWinner[] }) {
   return (
     <section className="ty-prizes" aria-labelledby="ty-prizes-h">
       {/* The toggle is two radios ahead of the row; CSS swaps every .v-new for its .v-cur. No script. */}
@@ -232,46 +264,96 @@ function PrizesRow({ mode, now }: { mode: ViewMode; now: Date }) {
             <label htmlFor="ty-v-cur">{t.currentClients}</label>
           </div>
         </div>
-        <div className="ty-prize-row" data-prizes>
-          <div className="ty-grand" data-state={grandState}>
-            <p className="ty-grand-eyebrow">
-              {t.grandEyebrow(grand.dayName)}
-              <Tag state={grandState} d={grand} />
-            </p>
-            <p className="ty-grand-prize">
-              <Both n={grandShort(gN)} c={grandShort(gC)} />
-            </p>
-            <p className="ty-grand-extra">{t.grandExtras(gN.hoolestHandheld, gN.partnerServices)}</p>
-          </div>
-          <ol className="ty-days">
-            {daily.map((d) => {
-              const pN = prizeFor(d.slot, "new_client");
-              const pC = prizeFor(d.slot, "current_client");
-              const state = stateOf(d, mode, now);
-              return (
-                <li key={d.slot} data-state={state}>
-                  <span className="ty-day">
-                    <abbr title={d.dayName}>{d.dayName.slice(0, 3)}</abbr>
-                  </span>
-                  <span className="ty-num">
-                    <Both n={pN.sessions} c={pC.sessions} />
-                  </span>
-                  <span className="ty-unit">{t.sessionsUnit}</span>
-                  <span className="ty-extra">
-                    <Both n={pN.hoolestKeychain ? t.keychain : null} c={pC.hoolestKeychain ? t.keychain : null} />
-                  </span>
-                  <Tag state={state} d={d} />
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-        <p className="ty-prizes-note">
-          {t.prizesNote}{" "}
-          <a className="ty-textlink" href="/10years/rules#prizes">
-            {t.prizesLink}
-          </a>
-        </p>
+        <ol className="ty-ladder" data-prizes>
+          {DRAWINGS.map((d) => {
+            const pN = prizeFor(d.slot, "new_client");
+            const pC = prizeFor(d.slot, "current_client");
+            const state = stateOf(d, mode, now);
+            const partner = partnerFor(d.slot);
+            // Live mode: a drawn day shows its winner (three public states) in place of the prize.
+            const winner = mode === "live" && state === "drawn" ? winners.find((w) => w.slot === d.slot && w.state !== "pending") : undefined;
+            return (
+              <li key={d.slot} className={d.kind === "grand" ? "ty-step ty-step-grand" : "ty-step"} data-state={state} data-slot={d.slot}>
+                <p className="ty-step-time">
+                  {cardTime(d)}
+                  {state === "next" && <span className="ty-tag ty-tag-next">{t.nextTag}</span>}
+                  {state === "drawn" && !winner && <span className="ty-tag">{t.drawnTag}</span>}
+                </p>
+                {d.kind === "grand" && <p className="ty-step-label">{t.grandLabel}</p>}
+                {winner ? (
+                  <div className="ty-step-winner" data-winner-state={winner.state}>
+                    <span className="ty-step-label">{t.winnerLabel}</span>
+                    <span className="ty-step-winner-line">{winner.state === "named" ? winner.label : winner.state === "claimed" ? t.cardWinnerClaimed : t.cardWinnerReaching}</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="ty-step-prize">
+                      <Both n={<PrizeWords p={pN} />} c={<PrizeWords p={pC} />} />
+                    </p>
+                    {partner && <p className="ty-step-partner">{`${t.partnerPrefix} ${partner.name}${partner.prize ? `: ${partner.prize}` : ""}`}</p>}
+                    <p className="ty-step-value">
+                      <Both n={valueTag(pN)} c={valueTag(pC)} />
+                    </p>
+                  </>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="ty-prizes-note">{t.prizesNote}</p>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Photos                                                              */
+/* ------------------------------------------------------------------ */
+
+function PhotoStrip() {
+  const sizes = "(max-width: 760px) 50vw, 25vw";
+  return (
+    <section className="ty-photos" aria-label="Photos">
+      <div className="wrap">
+        <ul className="ty-photo-grid">
+          <li>
+            <figure>
+              <div className="ty-photo">
+                <Image src="/images/recline.jpg" alt="" fill sizes={sizes} />
+              </div>
+              <figcaption>{t.photoRecline}</figcaption>
+            </figure>
+          </li>
+          <li>
+            <figure>
+              <div className="ty-photo">
+                <Image src="/images/session-room.jpg" alt="" fill sizes={sizes} />
+              </div>
+              <figcaption>{t.photoRoom}</figcaption>
+            </figure>
+          </li>
+          <li>
+            <figure>
+              <div className="ty-photo ty-photo-map">
+                <Image src="/images/brain-map-heat.png" alt="" fill sizes={sizes} />
+              </div>
+              <figcaption>{t.photoBrainMap}</figcaption>
+            </figure>
+          </li>
+          <li>
+            <figure>
+              {/* TODO: real Hoolest product photo — a neutral plate holds the slot until then. */}
+              <div className="ty-photo ty-photo-placeholder" aria-hidden="true">
+                <svg viewBox="0 0 80 80" width="56" height="56" fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <rect x="26" y="8" width="28" height="64" rx="10" />
+                  <circle cx="40" cy="30" r="7" />
+                  <path d="M40 44v18" strokeLinecap="round" />
+                </svg>
+              </div>
+              <figcaption>{t.photoHoolest}</figcaption>
+            </figure>
+          </li>
+        </ul>
       </div>
     </section>
   );

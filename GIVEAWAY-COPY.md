@@ -12,6 +12,12 @@ wrapped in `D("…")`, which prefixes "[DRAFT] " to it, and the sender
 (`lib/giveaway/send.ts`) refuses to send a `[DRAFT]` subject outside a
 testing environment. The text below is shown *without* the prefix.
 
+**Reading it without the tags.** `GIVEAWAY_HIDE_DRAFT_TAGS=1` (set in
+`.env.local`, or `GIVEAWAY_HIDE_DRAFT_TAGS=1 npm run preview:emails`) hides
+the prefix on screen — pages, admin, previews — locally and on a Vercel
+preview only. It is display-only: `COPY_IS_DRAFT` stays true and the sender
+still refuses (`lib/giveaway/draft.test.mjs`).
+
 **How approval works.** Mark this deck up. For each string you approve, the
 `D("…")` wrapper is removed in `copy.ts` and the plain string stays. When
 every `D()` is gone, `COPY_IS_DRAFT` at the top of `copy.ts` is set to
@@ -196,19 +202,24 @@ get shorter but not longer.
 
 ## The page: /10years
 
-Redesigned 2026-10-19 to fit one 1440×900 screen: the hero (words left,
-form card right), one row of prizes, three questions. The verify and
-one-tap pages show the same page with the result in the card.
+Redesigned 2026-10-19 (second brief): an anniversary page. The hero —
+seal, headline, the week's value, a countdown, the form card — fits the
+first 1440×900 screen; the prize ladder is the first thing people scroll
+into; then four photos and three questions. The verify and one-tap pages
+show the same page with the result in the card.
 
 ### The hero (every mode)
 
-- **Eyebrow:** Celebrating 10 years
-- **H1:** 10 years. A week of giving back.
-- **Sub (notify-me, live):** *{Six}* drawings. One entry counts in every one.
-- **Sub (closed):** Entries are closed. Thank you, Tennessee.
-- **Sub (thank-you page):** Here's who won our anniversary week.
-- **Meta line:** *{November 16–21}* · Middle Tennessee
-- From config: the number of drawings (spelled out), the first-to-last drawing dates. A faint gold outline "10" sits behind the H1 on desktop (decoration, not copy).
+- **Seal** *(gold, pure SVG)*: top arc *{10}* YEARS · bottom arc *{2016–2026}* · the number in the middle. Years = the drawing year minus `ESTABLISHED_YEAR` (site-config).
+- **H1:** 10 years. A week of prizes. *(breaks after the first sentence)*
+- **Value line (notify-me, live):** Over $*{6,000}* in prizes. One entry.
+- **Value line (closed, thank-you):** Over $*{6,000}* in prizes.
+- **Line (notify-me, live):** *{Six}* drawings, *{Nov 16–21}*. Enter once and you're in every one.
+- **Line (closed):** Entries are closed. Thank you, Tennessee.
+- **Line (thank-you page):** Here's who won our anniversary week.
+- **Countdown** *(notify-me, live only)*: four boxes labelled **days · hrs · min · sec**, then **until entries open** (notify-me, to the entries-open time) or **until the next drawing** (live, to the next drawing). Ticks from the server's clock.
+- **Proof line:** *{10}* years · *{140,000+}* sessions · Nashville & Murfreesboro *(the count is `STAT_SESSIONS`)*
+- The total is the sum of the six new-client prize values from config ($6,774 today), rounded down to the nearest $1,000 — never typed.
 
 ### The form card — notify-me (Nov 9 – Nov 15)
 
@@ -285,18 +296,25 @@ With "You're in": **Your share link** (the link in a field) · button **Copy** �
 
 The Saturday row is labelled *Saturday (grand prize)*. The list shows from close; during the live week the prizes row marks each day "Drawn" instead.
 
-### The prizes row
+### The prize ladder
 
-- **Heading:** What you could win
-- **Toggle:** New clients | Current clients *(default New clients; switches every prize)*
-- **Grand prize block:** *{Saturday}* · Grand prize — *{Brain Map + 12 sessions}* / current: *{13 sessions}* — Plus a Hoolest device to keep and a gift from every partner. *(each clause shows only while the prize in config includes it)*
-- **Mon–Fri:** *{Mon}* · *{2}* · sessions · + Hoolest keychain *(where the prize has one)*
-- **Live tags:** Next · *{noon}* (the next drawing, sage underline) · Drawn (days already drawn, dimmed)
-- **Under the row:** Every session includes the vibro chair. New-client prizes include a Brain Map. · link: **Prize details & drawing times** *(to /10years/rules#prizes)*
+- **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize and value)*
+- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), the prize in plain words, and a gold value tag.
+- **Prize words:** *{Brain Map + }{2} sessions* · + Hoolest keychain · + Hoolest device to keep · + a gift from every partner *(each line only while the prize in config includes it)*
+- **Value tag:** $*{480}* value — and $*{810}*+ value where a part (the keychain) has no price yet. Rates from config: Brain Map $150, session $125, vibro chair $40 per session, Hoolest handheld $429.
+- **Saturday** *(the navy card)*: the label **Grand prize**, the full prize, the value tag.
+- **Partner line** *(when named in config)*: Plus from *{partner}*: *{prize}*
+- **Live tags:** Next (the next drawing's card, sage outline) · Drawn (a drawn day with no winner row yet).
+- **A drawn day in live mode** shows **Winner** and one of: *{Jane D., Franklin}* · Claimed ✓ · Drawn, we're reaching them now.
+- **Under the row:** Every session includes the vibro chair.
+
+### Photos
+
+Captions: **Sessions in our reclining chairs** · **Our Nashville center** · **Your Brain Map** · **Hoolest device** *(a neutral placeholder plate until the product photo exists — TODO in the code)*
 
 ### Three questions (stand in for the chat assistant Nov 9 – Dec 5)
 
-On the page: 1, 2 and 4 below, plus the link **All giveaway questions** *(to /10years/rules#questions, which lists all five)*.
+On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus the link **All giveaway questions** *(to /10years/rules#questions, which lists all five)*.
 
 1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over.
 2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
@@ -311,7 +329,7 @@ On the page: 1, 2 and 4 below, plus the link **All giveaway questions** *(to /10
 - **Heading:** Prize details & drawing times
 - **Table heads:** Drawing · New client · Current client — rows (day, time, both prize names) straight from config.
 - **Partner line under a prize** *(when named)*: Plus from *{partner}*: *{prize}*
-- Under the table: the chair / Brain Map line from the prizes row.
+- Under the table: the chair line from the ladder.
 - **Questions heading:** Giveaway questions *(all five, above)*
 
 ### Page chrome on /10years and below

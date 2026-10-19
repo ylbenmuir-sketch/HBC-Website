@@ -6,6 +6,30 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## /10years, second pass (Mon Oct 19 2026, Ben's second brief)
+
+- **`GIVEAWAY_HIDE_DRAFT_TAGS=1`** (`lib/giveaway/draft.ts`) hides the
+  "[DRAFT] " prefix on screen — pages, admin, email previews — locally and
+  on preview only; production always shows it. Display-only: `COPY_IS_DRAFT`
+  stays true and `sendGiveawayEmail` now refuses on that flag as well as on
+  the subject text (`lib/giveaway/draft.test.mjs`). Set in Ben's
+  `.env.local`; the check harness pins it empty. `npm run preview:emails`
+  needs it in the shell to hide the tags.
+- **The page is a celebration now:** gold SVG seal, "10 years. A week of
+  prizes.", "Over $6,000 in prizes. One entry." (the six new-client values
+  from config, $6,774, floored to $1,000 — `prizeTotalFloorUsd`), a live
+  countdown (`components/giveaway/Countdown.tsx`, ticking from the server's
+  clock so the fake clock works), the proof line from `STAT_SESSIONS`.
+  Below: the prize ladder (six cards climbing to Saturday, value tags from
+  `prizeRetailUsd`, "+" where the keychain is unpriced — `prizeValueIsFloor`;
+  drawn days in live mode show the winner in decision 7's three states),
+  four photos (Hoolest slot is a placeholder, TODO in the code), the three
+  questions. The one-screen rule is dropped; the harness now asserts the
+  hero fits 1440×900 and the countdown is present.
+- The Hoolest handheld's $429 is marked confirmed in config (Ben's brief).
+
+---
+
 ## /10years redesign (Mon Oct 19 2026, Ben's brief)
 
 The page now fits one 1440×900 screen in notify-me and live mode

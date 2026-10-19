@@ -34,11 +34,14 @@
  */
 
 import { spokenCentral, type Drawing } from "./config";
+import { hideDraftTags } from "./draft";
 
 export const COPY_IS_DRAFT = true;
 
-/** The draft marker. Remove per string as Ben approves it. */
-export const D = (s: string): string => (COPY_IS_DRAFT ? `[DRAFT] ${s}` : s);
+/** The draft marker. Remove per string as Ben approves it. The prefix can
+ *  be hidden on screen (GIVEAWAY_HIDE_DRAFT_TAGS=1, never in production —
+ *  lib/giveaway/draft.ts); that changes what is shown, not what may be sent. */
+export const D = (s: string): string => (COPY_IS_DRAFT && !hideDraftTags() ? `[DRAFT] ${s}` : s);
 
 export const BRAND = "Harmonized Brain Centers";
 export const CAMPAIGN = "10 Years of Harmonized Brain Centers";
@@ -225,17 +228,27 @@ export const PAGES = {
   },
   nonTennesseeZip: D("Thanks for wanting in — this one's for Tennessee residents. If that's you and we got the ZIP wrong, check the five digits and try again."),
 
-  /** /10years in its four modes: the hero, the form card, the prizes row, three questions. */
+  /** /10years in its four modes: the hero, the form card, the prize ladder, the photos, three questions. */
   tenYears: {
     eyebrow: D("Celebrating 10 years"),
+    /** The seal: "10 YEARS" over "2016–2026" (years from config and site-config). */
+    sealYears: (years: number) => D(`${years} years`),
+    sealSpan: (from: number, to: number) => D(`${from}–${to}`),
     /** The hero, every mode. */
-    heading: D("10 years. A week of giving back."),
-    /** The count is the number of drawings in config. */
-    sub: (drawings: number) => D(`${countWord(drawings)} drawings. One entry counts in every one.`),
-    /** The span is the first to the last drawing, from config. */
-    meta: (span: string) => D(`${span} · Middle Tennessee`),
+    heading: D("10 years. A week of prizes."),
+    /** The total is the week's new-client retail value, floored to $1,000 (config). */
+    valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
+    valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
+    /** The count and the dates come from config. */
+    sub: (drawings: number, span: string) => D(`${countWord(drawings)} drawings, ${span}. Enter once and you're in every one.`),
     closedSub: D("Entries are closed. Thank you, Tennessee."),
     thankYouSub: D("Here's who won our anniversary week."),
+    /** The countdown. */
+    countdownNotify: D("until entries open"),
+    countdownLive: D("until the next drawing"),
+    countdownUnits: { days: D("days"), hours: D("hrs"), minutes: D("min"), seconds: D("sec") },
+    /** "10 years · 140,000+ sessions · Nashville & Murfreesboro" — the count is STAT_SESSIONS. */
+    proofLine: (years: number, sessions: string) => D(`${years} years · ${sessions} sessions · Nashville & Murfreesboro`),
     /** The form card — notify-me (Nov 9–15). */
     notifyFormTitle: D("Get your one-tap entry."),
     notifyFormLine: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. We'll email your link.`),
@@ -286,19 +299,32 @@ export const PAGES = {
       send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
     },
-    /** The prizes row. */
-    prizesTitle: D("What you could win"),
+    /** The prize ladder. */
+    prizesTitle: D("The prize ladder"),
     newClients: D("New clients"),
     currentClients: D("Current clients"),
-    grandEyebrow: (dayName: string) => D(`${dayName} · Grand prize`),
-    /** Under the grand prize; which clauses show follows the prize in config. */
-    grandExtras: (device: boolean, partners: boolean) => D(device && partners ? "Plus a Hoolest device to keep and a gift from every partner." : device ? "Plus a Hoolest device to keep." : partners ? "Plus a gift from every partner." : ""),
-    sessionsUnit: D("sessions"),
-    keychain: D("+ Hoolest keychain"),
-    nextTag: (time: string) => D(`Next · ${time}`),
+    /** "Mon · noon", "Sat · 5 PM" — day and time from config. */
+    cardTime: (dayAbbr: string, time: string) => D(`${dayAbbr} · ${time}`),
+    grandLabel: D("Grand prize"),
+    /** The prize in plain words, built from the spec's flags. */
+    prizeWords: (brainMap: boolean, sessions: number) => D(`${brainMap ? "Brain Map + " : ""}${sessions} sessions`),
+    keychainLine: D("+ Hoolest keychain"),
+    handheldLine: D("+ Hoolest device to keep"),
+    partnersLine: D("+ a gift from every partner"),
+    /** "$480 value", "$810+ value" when a part has no price yet. */
+    valueTag: (usd: number, floor: boolean) => D(`$${usd.toLocaleString("en-US")}${floor ? "+" : ""} value`),
+    nextTag: D("Next"),
     drawnTag: D("Drawn"),
-    prizesNote: D("Every session includes the vibro chair. New-client prizes include a Brain Map."),
-    prizesLink: D("Prize details & drawing times"),
+    /** A drawn day's card, in the three public states (decision 7). */
+    winnerLabel: D("Winner"),
+    cardWinnerClaimed: D("Claimed ✓"),
+    cardWinnerReaching: D("Drawn, we're reaching them now"),
+    prizesNote: D("Every session includes the vibro chair."),
+    /** The photo strip. */
+    photoRecline: D("Sessions in our reclining chairs"),
+    photoRoom: D("Our Nashville center"),
+    photoBrainMap: D("Your Brain Map"),
+    photoHoolest: D("Hoolest device"),
     /** /10years/rules: the full table and every question. */
     detailsTitle: D("Prize details & drawing times"),
     newClient: D("New client"),
