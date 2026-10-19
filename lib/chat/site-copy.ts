@@ -875,9 +875,9 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "tennessee",
           "neurofeedback",
         ],
-        text: "Help for anxiety, focus, and sleep — nothing to take, nothing to do. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+        text: "Help for anxiety, focus, and sleep — starting with a map of your brain. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         mirror: [
-          "Help for anxiety, focus, and sleep — nothing to take, nothing to do.",
+          "Help for anxiety, focus, and sleep — starting with a map of your brain.",
           "Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
         ],
       },

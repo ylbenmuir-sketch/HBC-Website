@@ -77,7 +77,10 @@ export const SITE_FAQS: SiteFaq[] = [
   },
   {
     q: "Does it hurt?",
-    a: "No. Most people — including young children — feel nothing at all during a session.",
+    // The plain "No." first, by design (Ben, 2026-10-18) — this is the one
+    // question where the one-word answer is the answer. The second sentence
+    // is what lets the assistant say it too: it answers only from passages.
+    a: "No. Most people — including young children — feel nothing at all during a session. Sessions are quiet and comfortable.",
   },
   {
     q: "Is it appropriate for children?",

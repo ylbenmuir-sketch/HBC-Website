@@ -1348,8 +1348,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .celeb-quote { font-size: 25px; }
 }
 /* Short, narrow phones (320×568, the iPhone SE class): the 2026-10-15
-   headline ("nothing to take, nothing to do.") runs a line longer than the
-   old one, which put the bottom of "Get a Free Call Today" 11px under the
+   headline (now "starting with a map of your brain.", the same length) runs
+   a line longer than the old one, which put the bottom of "Get a Free Call Today" 11px under the
    ask bar. One size down and a tighter sub keep 12px clear. */
 @media (max-width: 340px) and (max-height: 640px) {
   .hero h1 { font-size: 35px; }

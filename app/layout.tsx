@@ -99,11 +99,11 @@ export const metadata: Metadata = {
   // The homepage H1 and sub as one sentence, plus the free call. "Gentle" went
   // from the tagline in Oct 2026 (Ben: no softener in its place), and the cut
   // left this at 119 characters, so the two cities and the free call — both
-  // concrete, both true — bring it back to 149. The session count is
+  // concrete, both true — bring it back to 158. The session count is
   // deliberately not here — metadata has no draft mode, and this is not a
   // place to stack proof. Same string as the "/" entry in lib/pages.ts.
   description:
-    "Help for anxiety, focus, and sleep — nothing to take, nothing to do. LENS neurofeedback for adults and kids in Nashville and Murfreesboro. First call free.",
+    "Help for anxiety, focus, and sleep — starting with a map of your brain. LENS neurofeedback for adults and kids in Nashville and Murfreesboro. First call free.",
   // Self-referencing canonical on every page. "./" is relative, so Next
   // resolves it per-route against metadataBase above — one declaration here
   // covers all 25 routes, including the dynamic concern/location/team/article

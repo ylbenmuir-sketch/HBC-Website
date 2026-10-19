@@ -6,7 +6,11 @@ import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import PageSchema from "@/components/PageSchema";
 import { founderRef, founderSchema } from "@/lib/schema";
-import { FOUNDER_DISPLAY_NAME, SHOW_DRAFT_CONTENT } from "@/lib/site-config";
+import {
+  FOUNDER_DISPLAY_NAME,
+  SHOW_DRAFT_CONTENT,
+  SHOW_TEAM,
+} from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
 
 // Title, description and the page's content date live in lib/pages.ts.
@@ -109,9 +113,14 @@ export default function FounderPage() {
               designed so every client, at every center, gets the same
               standard she set.
             </p>
-            <Btn href="/about/team" variant="ghost" arrow>
-              Meet the whole team
-            </Btn>
+            {/* Hidden with the team pages (SHOW_TEAM, lib/site-config.ts):
+                while /about/team 307s to /about the button would promise a
+                page that isn't there. Back the moment the switch is. */}
+            {SHOW_TEAM && (
+              <Btn href="/about/team" variant="ghost" arrow>
+                Meet the whole team
+              </Btn>
+            )}
           </div>
         </div>
       </section>

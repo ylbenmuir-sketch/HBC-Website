@@ -319,12 +319,15 @@ export default function HomePage() {
                 /how-lens-works. It said "without medication." until
                 2026-10-15 (Ben): beside /is-lens-safe's "we don't position
                 LENS as an alternative to medication" a skeptic read a
-                contradiction. "Nothing to take, nothing to do" is the same
-                difference, said about the session rather than against a
-                prescription. */}
+                contradiction. "Nothing to take, nothing to do" replaced it,
+                and was retired in turn on 2026-10-18 (Ben, the last build
+                before launch): the pivot now names the first visit — the
+                Brain Map — rather than what the session isn't. Same string
+                in the metadata description (app/layout.tsx, lib/pages.ts)
+                and the chat mirror (lib/chat/site-copy.ts) — edit all. */}
             <h1>
               Help for anxiety, focus, and sleep &mdash;{" "}
-              <em className="sage">nothing to take, nothing to do.</em>
+              <em className="sage">starting with a map of your brain.</em>
             </h1>
             {/* The one declarative sentence about what the organisation is,
                 on the page every engine fetches first. It lived only on
