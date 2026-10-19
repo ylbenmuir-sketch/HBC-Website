@@ -870,15 +870,21 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "sleep",
           // "medication" left with the old headline (2026-10-15): this
           // passage no longer mentions it, and /is-lens-safe answers it.
-          "adult",
-          "kid",
-          "tennessee",
+          // "adult", "kid" and "tennessee" left with the hero sentence
+          // (2026-10-19): the /about passage (page:about:who) carries
+          // "adults, children, and families across Middle Tennessee" and
+          // routes them. The hero now says what the first visit is.
           "neurofeedback",
+          "personalized",
+          "brain map",
+          "first visit",
+          "recording",
+          "running hot",
         ],
-        text: "Help for anxiety, focus, and sleep — starting with a map of your brain. Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+        text: "Help for anxiety, focus, and sleep — through personalized neurofeedback. Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         mirror: [
-          "Help for anxiety, focus, and sleep — starting with a map of your brain.",
-          "Harmonized Brain Centers offers LENS neurofeedback for adults and kids across Middle Tennessee, from centers in Nashville and Murfreesboro.",
+          "Help for anxiety, focus, and sleep — through personalized neurofeedback.",
+          "Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         ],
       },
     ],

@@ -18,6 +18,7 @@ import MobileCtaBar from "@/components/MobileCtaBar";
 import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
+import HeroConcernChips from "@/components/HeroConcernChips";
 import {
   locations,
   combinedReviewCount,
@@ -311,51 +312,55 @@ export default function HomePage() {
       <section className="hero wrap">
         <div className="hero-grid">
           <div className="rv hero-copy">
-            <div className="eyebrow">
-              LENS Neurofeedback &middot; Nashville &amp; Murfreesboro
-            </div>
+            {/* "LENS Neurofeedback ·" came off the eyebrow 2026-10-19 (Ben):
+                the metro alone. */}
+            <div className="eyebrow">Nashville &amp; Murfreesboro</div>
             {/* The headline turns on the em dash, and the sage italic carries
                 the pivot — the same shape as "nothing to perform." on
-                /how-lens-works. It said "without medication." until
-                2026-10-15 (Ben): beside /is-lens-safe's "we don't position
-                LENS as an alternative to medication" a skeptic read a
-                contradiction. "Nothing to take, nothing to do" replaced it,
-                and was retired in turn on 2026-10-18 (Ben, the last build
-                before launch): the pivot now names the first visit — the
-                Brain Map — rather than what the session isn't. Same string
-                in the metadata description (app/layout.tsx, lib/pages.ts)
-                and the chat mirror (lib/chat/site-copy.ts) — edit all. */}
+                /how-lens-works. The pivot has been rewritten three times
+                (2026-10-15, -18, -19 — all Ben); since 2026-10-19 it names
+                the method. The metadata description (app/layout.tsx,
+                lib/pages.ts) kept the previous pivot on purpose — Ben's
+                brief left titles and descriptions alone. The chat mirror
+                (lib/chat/site-copy.ts) follows this H1 — edit both.
+                Wraps, checked at 1440, 1024, 390 and 320: `&nbsp;` keeps the
+                dash with "sleep", and `.tie` keeps "personalized
+                neurofeedback." on one line wherever the photo sits beside the
+                copy (≥1061px, globals.css) — on a phone the pair is wider than
+                the column and wraps as two words, never mid-word. */}
             <h1>
-              Help for anxiety, focus, and sleep &mdash;{" "}
-              <em className="sage">starting with a map of your brain.</em>
+              Help for anxiety, focus, and sleep&nbsp;&mdash;{" "}
+              <em className="sage">
+                through <span className="tie">personalized neurofeedback.</span>
+              </em>
             </h1>
-            {/* The one declarative sentence about what the organisation is,
-                on the page every engine fetches first. It lived only on
-                /about (SEO-AUDIT-3 §5.3, A11). It leads with the service, not
-                with the category (Ben's voice brief, Oct 2026): "is a wellness
-                practice offering gentle…" had the practice qualifying its
-                service before describing it. The wellness-service boundary
-                has three homes on this page already — the three-question
-                block, the footer disclaimer, and /faq a click away — and it
-                belongs there, not in the opening clause. Mirrored in
+            {/* What the first visit is, in one sentence (Ben, 2026-10-19).
+                It replaced the one-line description of the organisation,
+                which /about still carries. Mirrored in
                 lib/chat/site-copy.ts — edit both. */}
             <p className="sub">
-              Harmonized Brain Centers offers LENS neurofeedback for adults and
-              kids across Middle Tennessee, from centers in Nashville and
-              Murfreesboro.
+              Your first visit starts with a Brain Map: a short recording that
+              shows which areas of your brain are running smoothly, running
+              hot, or running low, and what that means for everyday life.
             </p>
+            {/* One row on a desktop: both buttons, then the HSA/FSA line to
+                the right of the second (Ben, 2026-10-19). When the hero
+                stacks (≤1060px) `.hero-ctas` is `display: contents` and the
+                copy column orders its children: buttons, chips, HSA line,
+                then the photo — see the hero rules in globals.css. */}
             <div className="hero-ctas">
-              <TalkCta />
-              <BrainMapCta />
+              <div className="hero-btns">
+                <TalkCta />
+                <BrainMapCta />
+              </div>
+              {/* One quiet line, not a button (Ben, 2026-10-16): a long-time
+                  referral partner had only just learned we take HSA/FSA. */}
+              <p className="hero-hsa">
+                <CheckIcon className="hero-hsa-check" />
+                {HSA_FSA_ACCEPTED}
+              </p>
             </div>
-            {/* One quiet line under the buttons, not a button (Ben,
-                2026-10-16, later the same day the "A real person calls you
-                back soon / Ask anything" micro line was removed): a long-time
-                referral partner had only just learned we take HSA/FSA. */}
-            <p className="hero-hsa">
-              <CheckIcon className="hero-hsa-check" />
-              {HSA_FSA_ACCEPTED}
-            </p>
+            <HeroConcernChips />
           </div>
           <div className="rv hero-media">
             {/* Portrait source (1122x1402) where the old hero was landscape,
@@ -383,7 +388,6 @@ export default function HomePage() {
               sizes="(max-width: 1060px) 100vw, 47vw"
               priority
             />
-            <span className="hero-scrim" aria-hidden="true" />
           </div>
         </div>
       </section>

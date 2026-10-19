@@ -367,24 +367,45 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .hero { padding: 100px 0 0; }
 .hero-grid { display: grid; grid-template-columns: 1.06fr 0.94fr; gap: 76px; align-items: center; }
 .hero .sub { margin: 24px 0 38px; }
-.hero-ctas { display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
-/* The HSA/FSA line under the hero buttons: small print weight, not a button. */
-.hero-hsa { display: flex; align-items: center; gap: 8px; margin: 22px 0 0; font-size: 15.5px; color: var(--slate); }
+/* One row on a desktop (Ben, 2026-10-19): the two buttons, then the HSA/FSA
+   line to the right of the second. Both wrap when the column is narrow. */
+.hero-ctas { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+/* 22px gaps, not the 30px of other button rows: the two buttons and the HSA
+   line measure 542px, and the copy column is 596px from 1200px up. */
+.hero-btns { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+/* The HSA/FSA line: small print weight, not a button. */
+.hero-hsa { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15.5px; color: var(--slate); white-space: nowrap; }
 .hero-hsa-check { flex: none; width: 16px; height: 16px; color: var(--gold-ink); }
-/* With that line the copy column is as tall as the 620px photo at 1280 and up,
-   so it ran into the band below. Room under the copy, and the photo pinned to
-   the bottom so it still meets the band flush. */
+/* "What brings you in?" — a small grey label and eight quiet pill links to the
+   concern pages (components/HeroConcernChips.tsx). Quieter than both buttons:
+   thin border, ivory ground, small type. They wrap; nothing scrolls sideways. */
+.hero-chips { margin-top: 28px; }
+.hero-chips-label { display: block; font-family: var(--sans); font-size: 12.5px; letter-spacing: 0.02em; color: var(--slate); margin-bottom: 9px; }
+.hero-chips-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.hero-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 5px 13px; border: 1px solid var(--line); border-radius: 100px; background: var(--ivory); color: var(--navy); font-family: var(--sans); font-size: 13.5px; font-weight: 500; line-height: 1.2; text-decoration: none; white-space: nowrap; transition: border-color 0.2s, background 0.2s; }
+.hero-chip:hover { border-color: var(--sage-deep); background: #fff; }
+/* With those rows the copy column is as tall as the 620px photo at 1280 and
+   up, so it ran into the band below. Room under the copy, and the photo pinned
+   to the bottom so it still meets the band flush. */
 @media (min-width: 1061px) {
   .hero-copy { padding-bottom: 28px; }
   .hero-media { align-self: end; }
 }
-/* The headline about 17% under the base h1 from 1024px up (Ben, 2026-10-18):
-   at 5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
-   the foot of a 1440×900 screen. 4.5vw/63px holds it to three lines from
-   1061px (where the photo sits beside it) to any width. Under 1024px the base
-   and phone sizes stand. */
+/* The headline under the base h1 from 1024px up (Ben, 2026-10-18): at
+   5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
+   the foot of a 1440×900 screen. 4.5vw/63px held the 2026-10-18 headline to
+   three lines; the 2026-10-19 one ends in "personalized neurofeedback.",
+   618px at 63px in a 596px column, so the cap is 58px (569px) and the slope
+   4.1vw — three lines from 1061px to any width, with the pair on the last
+   line (`.tie`, below). Under 1024px the base and phone sizes stand. */
 @media (min-width: 1024px) {
-  .hero h1 { font-size: clamp(44px, 4.5vw, 63px); }
+  .hero h1 { font-size: clamp(44px, 4.1vw, 58px); }
+}
+/* From 641px up the pair always fits the column (432px at the 44px floor in
+   a 553px column at 641px wide); narrower than that it can be wider than the
+   column, and a forced no-break would split it mid-word. */
+@media (min-width: 641px) {
+  .hero h1 .tie { white-space: nowrap; }
 }
 .hero-ph { height: 620px; border-radius: 4px 4px 4px 96px; }
 
@@ -874,6 +895,15 @@ html.js .rv.in { opacity: 1; transform: none; }
      needed it: the guard is free, and the failure is silent. */
   .hero-grid > *, .split > *, .lens-grid > *, .goals-grid > *,
   .duo > *, .wwh-hero > *, .prac-hero > * { min-width: 0; }
+  /* The stacked hero (phones and tablet portrait) reads: eyebrow, H1,
+     sentence, buttons, chips, HSA line, then the photo (Ben, 2026-10-19).
+     The HSA line is the buttons' row-mate on a desktop, so the row dissolves
+     here (`display: contents`) and the copy column orders its children. The
+     photo is the next grid item after the copy, so it follows on its own. */
+  .hero-copy { display: flex; flex-direction: column; align-items: flex-start; }
+  .hero-ctas { display: contents; }
+  .hero-chips { order: 1; }
+  .hero-hsa { order: 2; margin-top: 20px; }
   .trio-quotes { grid-template-columns: 1fr; }
   .half-row { grid-template-columns: 1fr; }
   .steps4 { grid-template-columns: 1fr 1fr; }
@@ -991,7 +1021,6 @@ html.js .rv.in { opacity: 1; transform: none; }
    5.4vw that passes the 511px column at 1349px — measured, not derived). */
 .br-wide { display: none; }
 @media (min-width: 1349px) { .br-wide { display: inline; } }
-.hero-scrim { display: none; }
 .cta-bar { display: none; }
 
 /* -- premium compact header (tablet + phone) -- */
@@ -1103,8 +1132,12 @@ html.js .rv.in { opacity: 1; transform: none; }
      flex margins don't collapse, and the section spacing was tuned that way. */
   .home { display: flex; flex-direction: column; }
 
-  /* ---- cinematic hero: layered image, scrim, editorial type ---- */
-  .hero, .home .hero { padding: 0; }
+  /* ---- the phone hero: copy first, photo under it ----
+     It was a cinematic composition (photo behind the copy under a navy
+     scrim) until 2026-10-19, when Ben asked for the photo to follow the
+     chips whenever the hero stacks. Light ground, navy type, the same order
+     as the tablet: eyebrow, H1, sentence, buttons, chips, HSA, photo. */
+  .hero, .home .hero { padding: 44px 24px 0; }
   /* The location hero, tightened from the top so its links clear the resting
      Ask bar at load (Ben, 2026-10-16). At 390×844 the bar's top edge is
      y=772, and Murfreesboro's Google-listing link ended at 858 and its Call
@@ -1116,41 +1149,17 @@ html.js .rv.in { opacity: 1; transform: none; }
   .loc-hero h1 { margin-top: 16px; }
   .loc-hero-ctas { margin-top: 24px; }
   .loc-hero-reviews { margin-top: 12px; }
-  .hero-grid { grid-template-columns: 1fr; gap: 0; }
-  .hero-copy, .hero-media { grid-area: 1 / 1; }
-  .hero-media { position: relative; z-index: 0; min-height: calc(100vh - 68px); min-height: min(calc(100svh - 68px), 700px); }
-  /* Scoped to .hero-media, and it has to be. `.hero-ph` is a size-and-shape
-     class, and /locations/[slug] uses it on the photo beside its page hero —
-     which has no positioned ancestor, so an unscoped `position: absolute;
-     inset: 0` laid that photo over the initial containing block and covered
-     the breadcrumbs, the eyebrow, the H1 and half the sub on every phone.
-     Only the homepage hero layers its photo behind its copy. */
-  .hero-media .hero-ph { position: absolute; inset: 0; height: 100% !important; border-radius: 0; }
-  /* The scrim is shaped to the copy block, not to the frame. The copy is
-     bottom-anchored and runs 494–544px tall inside a 700px hero, so its top
-     edge — the eyebrow — lands at 70–78% of the frame height at every phone
-     width. That is the constraint: the eyebrow is #b9c5b7 light sage over
-     hair and skin, the highest-luminance backdrop in the photo, and it needs
-     the *most* scrim while sitting *highest*. So the ramp holds through 79%
-     rather than falling away from 46% as it used to (0.18 by 68%, which is
-     what put the eyebrow at 1.35:1 and the H1 at 2.1:1), then drops fast
-     across 79→93% so the two faces above the copy keep the photo's light.
-     Same navy, same stops-in-one-gradient technique; only the shape moved. */
-  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.92) 40%, rgba(21, 34, 48, 0.86) 62%, rgba(21, 34, 48, 0.8) 79%, rgba(21, 34, 48, 0.48) 86%, rgba(21, 34, 48, 0.24) 93%, rgba(21, 34, 48, 0.34) 100%); }
-  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 0 24px calc(30px + env(safe-area-inset-bottom)); }
-  .hero-copy .eyebrow { color: #b9c5b7; }
-  .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 18px; text-wrap: initial; }
-  .hero h1 em.sage { color: #c7d3c3; }
-  .hero .sub { color: rgba(251, 248, 241, 0.82); font-size: 16.5px; line-height: 1.55; max-width: 32ch; margin: 18px 0 28px; }
-  .hero .sub .kw { color: var(--ivory); }
-  .hero-ctas { flex-direction: column; align-items: stretch; align-self: stretch; gap: 6px; }
-  .hero .btn-primary { background: var(--ivory); color: var(--navy); width: 100%; }
-  .hero .btn-primary:active { background: #fff; }
-  .hero .btn-ghost { color: rgba(251, 248, 241, 0.85); border-bottom: 0; align-self: center; font-size: 15px; padding: 14px 4px; }
-  .hero .btn-ghost .arrow { color: var(--gold); }
-  .hero .micro { color: rgba(251, 248, 241, 0.6); margin-top: 4px; align-self: center; text-align: center; max-width: 34ch; }
-  .hero-hsa { align-self: center; margin-top: 4px; font-size: 15px; color: rgba(251, 248, 241, 0.85); }
-  .hero-hsa-check { color: var(--gold-lift); }
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero h1 { font-size: clamp(38px, 11vw, 50px); line-height: 1.06; margin-top: 18px; }
+  .hero .sub { font-size: 16.5px; line-height: 1.55; margin: 16px 0 26px; }
+  .hero-btns { flex-direction: column; align-items: stretch; align-self: stretch; gap: 6px; }
+  .hero .btn-primary { width: 100%; }
+  .hero .btn-ghost { align-self: center; border-bottom: 0; font-size: 15px; padding: 14px 4px; }
+  .hero-chips { margin-top: 22px; }
+  .hero-hsa { align-self: center; margin-top: 18px; font-size: 15px; }
+  /* Scoped to .hero-media: `.hero-ph` is a size-and-shape class that
+     /locations/[slug] uses too. */
+  .hero-media .hero-ph { height: 340px !important; border-radius: 4px 4px 4px 56px; }
 
   /* ---- proof: a compact 2×2, significant but brief ---- */
   .proof, .home .proof { margin-top: 0; }
@@ -1355,10 +1364,10 @@ html.js .rv.in { opacity: 1; transform: none; }
   .home .ccard { flex-basis: 88%; }
   .celeb-quote { font-size: 25px; }
 }
-/* Short, narrow phones (320×568, the iPhone SE class): the 2026-10-15
-   headline (now "starting with a map of your brain.", the same length) runs
-   a line longer than the old one, which put the bottom of "Get a Free Call Today" 11px under the
-   ask bar. One size down and a tighter sub keep 12px clear. */
+/* Short, narrow phones (320×568, the iPhone SE class): one size down and a
+   tighter sub, so the headline leaves room for the first button above the
+   ask bar. (Written for the 2026-10-15 headline; kept for the 2026-10-19 one,
+   which runs the same number of lines at 320.) */
 @media (max-width: 340px) and (max-height: 640px) {
   .hero h1 { font-size: 35px; }
   .hero .sub { margin: 14px 0 22px; }
@@ -1600,7 +1609,7 @@ body[data-menu-open] .assistant { opacity: 0; visibility: hidden; pointer-events
    Colours are existing tokens only. Ink on cream — --ivory-2
    ground, --ivory field, --slate placeholder, --sage-deep accent —
    which puts the ask bar a clear step below the navy of the hero's
-   "Get a Free Call Today". No gold: gold is the primary-CTA accent
+   "See If It’s a Fit". No gold: gold is the primary-CTA accent
    and this is deliberately not one. The single exception is the
    sitewide focus ring, which is an accessibility convention rather
    than an accent and is worth more as one consistent ring across
@@ -1943,6 +1952,38 @@ body[data-bottombar] footer.site {
 .page-hero.compact h1 { margin: 12px auto 10px; }
 @media (min-width: 1061px) { .page-hero.compact h1 { font-size: 46px; max-width: none; } }
 .sec.sec-form { padding-top: 28px; }
+/* The form section is the "Send a message" target: land it under the sticky
+   header, not behind it. */
+.sec.sec-form { scroll-margin-top: 96px; }
+/* /contact's three ways in (Ben, 2026-10-19): three equal cards, then one
+   line. Each card is one link — sms:, tel:, or the form anchor. The sms: card
+   carries two hints and CSS shows one: "Text this number" where a pointer is
+   fine (a desktop, where sms: links mostly do nothing) and "Opens your
+   messages" on touch screens. */
+.contact-ways-sec { padding: 28px 0 0; }
+.contact-ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.contact-way { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px; padding: 18px 12px 16px; background: #fff; border: 1px solid var(--line); border-radius: 4px; text-decoration: none; color: var(--navy); transition: border-color 0.2s, background 0.2s; }
+.contact-way:hover { border-color: var(--sage-deep); }
+.contact-way-title { font-family: var(--sans); font-weight: 600; font-size: 16px; color: var(--navy); }
+.contact-way-detail { font-family: var(--sans); font-size: 14.5px; color: var(--ink); }
+.contact-way-hint { font-family: var(--sans); font-size: 12px; color: var(--slate); letter-spacing: 0.02em; }
+.contact-way-hint-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .contact-way-hint-desk { display: none; }
+  .contact-way-hint-touch { display: inline; }
+}
+.contact-ways-line { margin: 14px 0 0; text-align: center; font-size: 15px; color: var(--slate); }
+.contact-ways-line a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.contact-ways-line a:hover { border-color: var(--gold); }
+@media (max-width: 640px) {
+  .contact-ways { grid-template-columns: 1fr; gap: 10px; }
+  .contact-way { flex-direction: row; justify-content: space-between; flex-wrap: wrap; text-align: left; padding: 14px 16px; gap: 2px 12px; }
+  .contact-way-title { flex: 1 1 100%; }
+  .contact-ways-email { display: block; margin-top: 4px; }
+}
+/* "Best way to reach you" — the step-two chip pattern on step one. */
+.reach-chips .chip { padding: 10px 20px; }
+.reach-note { margin-top: 10px; }
 .form-compact label { margin: 11px 0 6px; }
 .form-compact input, .form-compact select { padding: 12px 16px; }
 .form-compact .micro { margin-top: 10px; }

@@ -79,8 +79,26 @@ export const LINK_LOCATIONS = [
   "hero",
   "location page",
   "confirmation",
+  "contact options",
   "other",
 ] as const;
+
+/**
+ * The homepage hero's "What brings you in?" chips (Ben, 2026-10-19). The
+ * label reported is one of these, never the href or anything typed —
+ * `concernChipEvent` maps anything else onto "other". Not a Key event.
+ */
+export const CONCERN_CHIPS = [
+  "Anxiety",
+  "Stress",
+  "Depression",
+  "Focus & ADHD",
+  "Sleep",
+  "Concussion",
+  "Brain fog",
+  "Migraines",
+] as const;
+export type ConcernChip = (typeof CONCERN_CHIPS)[number];
 export type LinkLocation = (typeof LINK_LOCATIONS)[number];
 
 type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
@@ -90,8 +108,9 @@ export type SiteEvent =
   | { name: "generate_lead"; params: LeadParams }
   | {
       name: "contact_link_click";
-      params: { link_type: "phone" | "email"; location: LinkLocation; page_path: string };
+      params: { link_type: "phone" | "email" | "sms"; location: LinkLocation; page_path: string };
     }
+  | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
   | { name: "guide_download"; params: { page_path: string } }
   | { name: "page_view"; params: { page_path: string } };
 
@@ -162,9 +181,10 @@ export function leadEvents(lead: {
 }
 
 /**
- * The click event for a link, or null when it is not a `tel:` or `mailto:`.
- * Only the scheme is read from the href — the number or address never leaves
- * this function. `location` comes from the nearest `data-link-location`
+ * The click event for a link, or null when it is not a `tel:`, `mailto:` or
+ * `sms:` (the /contact "Text us" option, Ben 2026-10-19). Only the scheme is
+ * read from the href — the number or address never leaves this function.
+ * `location` comes from the nearest `data-link-location`
  * (components/Analytics.tsx); anything not on the list reports as "other".
  */
 export function contactLinkEvent(
@@ -178,7 +198,9 @@ export function contactLinkEvent(
     ? "phone"
     : scheme.startsWith("mailto:")
       ? "email"
-      : null;
+      : scheme.startsWith("sms:")
+        ? "sms"
+        : null;
   if (!linkType) return null;
   return {
     name: "contact_link_click",
@@ -199,6 +221,19 @@ export function trackLeadSaved(lead: {
   pagePath: unknown;
 }): void {
   for (const event of leadEvents(lead)) trackEvent(event);
+}
+
+/** A hero concern chip tap: the fixed label and the page, nothing else. */
+export function concernChipEvent(label: unknown, pagePath: unknown): SiteEvent {
+  return {
+    name: "concern_chip_click",
+    params: {
+      chip_label: (CONCERN_CHIPS as readonly unknown[]).includes(label)
+        ? (label as ConcernChip)
+        : "other",
+      page_path: cleanPath(pagePath),
+    },
+  };
 }
 
 /** A saved guide sign-up. The page only — never the address. */
