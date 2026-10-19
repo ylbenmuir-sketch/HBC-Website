@@ -166,10 +166,24 @@ async function get(path, p = person("anon", ""), extra = {}) {
   return { status: r.status, text: await r.text(), headers: r.headers };
 }
 const cronAuth = { authorization: `Bearer ${CRON_SECRET}` };
+let clockNow = null;
 async function clock(now) {
+  clockNow = now;
   const r = await fetch(`${BASE}/api/giveaway/test-clock`, { method: "POST", headers: { ...cronAuth, "content-type": "application/json" }, body: JSON.stringify({ now: now ? now.toISOString() : null }) });
   if (!r.ok) throw new Error(`clock → ${r.status}`);
   return r.json();
+}
+/** The winners list shows from close (the live page marks days "Drawn"
+ *  instead), so a mid-week look at it reads the page as it will be at
+ *  close, then puts the clock back. A page view only reads. */
+async function peekClosed() {
+  const back = clockNow;
+  await clock(new Date(C.SCHEDULE.entriesClose.at.getTime() + 60_000));
+  try {
+    return await get("/10years");
+  } finally {
+    await clock(back);
+  }
 }
 async function resetAll() {
   const r = await fetch(`${BASE}/api/giveaway/test-clock`, { method: "POST", headers: { ...cronAuth, "content-type": "application/json" }, body: JSON.stringify({ now: null, reset: true }) });
@@ -269,12 +283,12 @@ try {
   section("Nov 10: notify-me");
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
-  expect("/10years answers 200 in notify-me mode", page.status === 200 && page.text.includes('action="/10years/signup"') && /Put me on the list/.test(page.text), String(page.status));
+  expect("/10years answers 200 in notify-me mode", page.status === 200 && page.text.includes('action="/10years/signup"') && /Send me my entry link/.test(page.text), String(page.status));
   expect("sitemap now lists /10years", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text));
   const A = person("A", "alice.notify@example.test");
   const B = person("B", "bob.notify@example.test", { existing: true });
   const Cc = person("C", "cara.notify@example.test");
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: "37064", age: "on", rules: "on", ...(p.existing ? { existing_client: "on" } : {}), ...extra });
+  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: "37064", age_rules: "on", ...(p.existing ? { existing_client: "on" } : {}), ...extra });
   for (const p of [A, B, Cc]) {
     const r = await postForm("/10years/signup", signupFields(p), p);
     expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
@@ -416,7 +430,7 @@ try {
   expect("claim page accepts the number", /done=1/.test(claimed.location), claimed.location);
   winners = await dump("giveaway_winners");
   expect("the winner row is claimed with the phone", winners.find((w) => w.id === monWinner.id).status === "claimed" && winners.find((w) => w.id === monWinner.id).phone === "(615) 555-0101");
-  expect("the winners list shows Monday as claimed ✓ (no name yet)", /Monday's winner: claimed/.test((await get("/10years")).text));
+  expect("the winners list shows Monday as claimed ✓ (no name yet)", /Monday's winner: claimed/.test((await peekClosed()).text));
   // ADMIN_ACTIONS_MONDAY — filled in once the admin screens exist.
   await adminActionsAfterMonday(monWinner);
 
@@ -612,7 +626,7 @@ async function adminActionsAfterMonday(monWinner) {
   const w = (await dump("giveaway_winners")).find((x) => x.id === monWinner.id);
   const label = w.public_label ?? "";
   expect("the winner row carries the public label 'First L., City'", w.public_ok && /^[A-Z][^,]*[A-Z]\., /.test(label), String(w.public_label));
-  expect("the winners list names Monday's winner", Boolean(label) && new RegExp(`Monday: ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test((await get("/10years")).text));
+  expect("the winners list names Monday's winner", Boolean(label) && new RegExp(`Monday: ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test((await peekClosed()).text));
   if (w.tax_form_required) {
     const tax = await adminPost(`/admin/10years/actions/winner`, { winner_id: monWinner.id, kind: "tax_form_received", on: "1" });
     expect("admin: tax form received toggled", tax.status === 303 && !/error/.test(tax.location));
@@ -658,12 +672,17 @@ async function browserChecks() {
     for (const [mode, at] of [["notify-me", ct(2026, 11, 10, 10)], ["live", ct(2026, 11, 17, 9)]]) {
       await clock(at);
       for (const width of [390, 1440]) {
-        await page.setViewport(width, 844);
+        await page.setViewport(width, width === 1440 ? 900 : 844);
         await page.goto(`${BASE}/10years`, { settle: 300 });
         const overflow = await page.eval("document.documentElement.scrollWidth > innerWidth");
         const form = await page.eval("Boolean(document.querySelector('form[action=\"/10years/signup\"]'))");
         const h1 = await page.eval("document.querySelector('h1')?.textContent ?? ''");
         expect(`${mode} at ${width}: form present, no sideways scroll`, form && !overflow, `overflow=${overflow} h1=${h1.slice(0, 60)}`);
+        if (width === 1440) {
+          // Ben, 2026-10-19: the whole page fits one 1440×900 screen.
+          const tall = await page.eval("document.documentElement.scrollHeight");
+          expect(`${mode} at 1440×900: the whole page fits one screen (${tall}px)`, tall <= 900, `${tall}px`);
+        }
       }
     }
   } finally {

@@ -1,29 +1,71 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, pageMode, prizeFor, prizeName } from "@/lib/giveaway/config";
+import FAQAccordion from "@/components/FAQAccordion";
+import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
+import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, pageMode, partnerFor, prizeFor, prizeName } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { DBA_SENTENCE, LEGAL_ENTITY, REGISTERED_ADDRESS_LINE } from "@/lib/sms-identity";
 
 /**
- * /10years/rules — a PLACEHOLDER for counsel's Official Rules
- * (GIVEAWAY-PLAN.md §8 legal item 1). The form links here and records
- * RULES_VERSION on acceptance. Everything below is a [DRAFT] skeleton of
+ * /10years/rules — the prize details and every question (the /10years
+ * page links here instead of carrying them, so it fits one screen), then a
+ * PLACEHOLDER for counsel's Official Rules (GIVEAWAY-PLAN.md §8 legal
+ * item 1) at #rules. The form links there and records RULES_VERSION on
+ * acceptance. Everything below is a [DRAFT] skeleton of
  * what the real rules must cover, with the facts pulled from config; the
  * words are counsel's to replace before Nov 9.
  */
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const metadata: Metadata = { title: "Official Rules — 10-year giveaway", robots: { index: false, follow: true } };
+export const metadata: Metadata = { title: "Prize details and Official Rules — 10-year giveaway", robots: { index: false, follow: true } };
 
 export default function RulesPage() {
   if (pageMode(giveawayNow()) === "hidden") notFound();
   const D = (s: string) => `[DRAFT — counsel to replace] ${s}`;
+  const t = PAGES.tenYears;
+  const q = giveawayQuestions();
   return (
-    <section className="page-hero">
+    <section className="page-hero ty-details">
       <div className="wrap article policy" style={{ maxWidth: 760 }}>
-        <div className="eyebrow">{PAGES.tenYears.eyebrow}</div>
-        <h1 style={{ fontSize: 36 }}>Official Rules</h1>
+        <p className="ty-eyebrow">{t.eyebrow}</p>
+        <h1 id="prizes" style={{ fontSize: 36 }}>
+          {t.detailsTitle}
+        </h1>
+        <table className="ty-table" data-prizes>
+          <thead>
+            <tr>
+              <th scope="col">Drawing</th>
+              <th scope="col">{t.newClient}</th>
+              <th scope="col">{t.currentClient}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DRAWINGS.map((d) => {
+              const partner = partnerFor(d.slot);
+              return (
+                <tr key={d.slot}>
+                  <td>
+                    <b>
+                      {d.dayName}
+                      {d.kind === "grand" ? " — grand prize" : ""}
+                    </b>
+                    <span>{d.ct}</span>
+                  </td>
+                  <td>
+                    {prizeName(prizeFor(d.slot, "new_client"))}
+                    {partner ? <span>{`${t.partnerPrefix} ${partner.name}${partner.prize ? `: ${partner.prize}` : ""}`}</span> : null}
+                  </td>
+                  <td>{prizeName(prizeFor(d.slot, "current_client"))}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="micro">{t.prizesNote}</p>
+        <h2 id="questions">{t.qaTitle}</h2>
+        <FAQAccordion items={[q.enter, q.more, q.when, q.win, q.offer]} className="faq-list ty-details-qa" />
+        <h2 id="rules">Official Rules</h2>
         <p className="sub">Rules version {RULES_VERSION}. {D("Placeholder text. The Official Rules are being prepared by counsel and will replace this page before entries open.")}</p>
         <h2>Sponsor</h2>
         <p>{D(`${LEGAL_ENTITY}, doing business as Harmonized Brain Centers, ${REGISTERED_ADDRESS_LINE}. ${DBA_SENTENCE}`)}</p>

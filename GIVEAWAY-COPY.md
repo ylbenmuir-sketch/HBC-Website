@@ -196,48 +196,41 @@ get shorter but not longer.
 
 ## The page: /10years
 
-Eyebrow on every giveaway page: **Ten years**
+Redesigned 2026-10-19 to fit one 1440×900 screen: the hero (words left,
+form card right), one row of prizes, three questions. The verify and
+one-tap pages show the same page with the result in the card.
 
-### Mode 1 — notify-me (Nov 9 – Nov 15)
+### The hero (every mode)
 
-- **H1:** Ten years of Harmonized Brain Centers. A week of prizes to say thank you.
-- **Sub:** Entries open *{Sunday at 6:00 pm}*. Sign up now and, the moment they do, one tap puts you in every drawing — with a bonus entry if you tap before the first one. Monday's prize: *{Brain Map + 2 sessions}*.
-- **Form title:** Get the one-tap entry
-- **Button:** Put me on the list
-- **After submit:** Check your inbox — tap the link to confirm, and you're on the list.
-- **Already signed up:** You're already on the list. Watch for the one-tap entry when entries open.
-- **From config:** the entries-open time, Monday's new-client prize. "Monday's" is typed here (the builder is handed the open time and the prize, not the drawing).
+- **Eyebrow:** Celebrating 10 years
+- **H1:** 10 years. A week of giving back.
+- **Sub (notify-me, live):** *{Six}* drawings. One entry counts in every one.
+- **Sub (closed):** Entries are closed. Thank you, Tennessee.
+- **Sub (thank-you page):** Here's who won our anniversary week.
+- **Meta line:** *{November 16–21}* · Middle Tennessee
+- From config: the number of drawings (spelled out), the first-to-last drawing dates. A faint gold outline "10" sits behind the H1 on desktop (decoration, not copy).
 
-### Mode 2 — live (Nov 15 – Nov 21)
+### The form card — notify-me (Nov 9 – Nov 15)
 
-- **H1:** Six drawings this week. One entry counts in every one still to come.
-- **Sub:** Next drawing: *{Tuesday at noon}* — *{Brain Map + 3 sessions}*. Enter now and you're in it, and in every drawing after.
-- **Form title:** Enter the giveaway
-- **Referral note** *(when ?ref= is on the URL)*: You came through a friend's link: confirm your entry and you both get bonus entries.
+- **Title:** Get your one-tap entry.
+- **Line:** Entries open *{Sunday, Nov 15 at 6 PM}*. We'll email your link.
+- **Button:** Send me my entry link
+
+### The form card — live (Nov 15 – Nov 21)
+
+- **Title:** Enter the giveaway
+- **Line:** Next drawing: *{Tuesday at noon}*
+- **Friend's link** *(when ?ref= is on the URL, above the button)*: A friend sent you. You'll both get bonus entries.
 - **Button:** Enter me
-- **After submit:** Check your inbox — tap the link to confirm your entry. Unconfirmed entries can't be drawn.
-- **Already in:** You're already in. Watch your inbox each afternoon for the next drawing.
-- "Six" is typed (the page has six drawings in config; the heading builder takes no count).
 
-### Mode 3 — closed (Nov 21 – Dec 5)
+### The form (both modes)
 
-- **H1:** Entries are closed. Thank you, Tennessee.
-- **Sub:** Every entrant has a thank-you in their inbox: a free first visit, any day through *{December 31}*. Winners appear below once they've said we may post their name.
-- **Button:** Talk with our team *(to /contact)*
-
-### Mode 4 — thank-you page (after Dec 5, permanent)
-
-- **H1:** Ten years. Thank you.
-- **Sub:** Here's who won our anniversary week. The door is always open for a first conversation.
-- **Button:** Talk with our team
-
-### The form (modes 1 and 2)
-
-Labels: **First name** · **Last name** · **Email** · **ZIP code (Tennessee)**
-Checkboxes: **I'm 18 or older** (required) · **I've read the Official Rules** (required; link text **Official Rules**) · **I'm already an HBC client** · **Yes, send me news from Harmonized Brain Centers after the giveaway**
+Fields (label inside each box): **First name** · **Last name** (one row) · **Email** · **Tennessee ZIP** (one row)
+Checkboxes: **I'm 18+ and agree to the Official Rules** (required; link on **Official Rules**) · **I'm already an HBC client**
+Under the button, unticked: **Email me HBC news after the giveaway**
 Hidden honeypot label (never seen): Website
 
-**Error messages**
+**Error messages** *(shown in the card above the form)*
 
 | When | Text |
 |---|---|
@@ -245,33 +238,43 @@ Hidden honeypot label (never seen): Website
 | bad email | That email address doesn't look right. |
 | bad ZIP | Please add your five-digit ZIP code. |
 | ZIP not Tennessee | Thanks for wanting in — this one's for Tennessee residents. If that's you and we got the ZIP wrong, check the five digits and try again. |
-| age unticked | You need to be 18 or older to enter. |
-| rules unticked | Please read and accept the Official Rules. |
+| 18+/rules box unticked | Please confirm you're 18 or older and agree to the Official Rules. |
 | rate limited | Too many tries from this connection. Please wait a little and try again. |
 | email failed | We couldn't send the confirmation email just now. Please try again in a minute. |
 | entries closed | Entries have closed — thank you for wanting in. |
 | anything else | The giveaway isn't available right now. Please try again shortly. |
 
-### The prizes section
+### The card after a submit (replaces the form)
 
-- **Title:** The prizes
-- **Intro:** One winner a day, Monday to Friday, and the grand prize Saturday. Every prize comes in two versions — one for new clients, which starts with a Brain Map, and one for current clients — and every session includes the vibro chair.
-- **Column heads:** New client · Current client
-- **Partner line under a prize** *(when named)*: Plus from *{partner}*: *{prize}*
-- The table rows (day, time, both prize names) come straight from config.
-- Change from the first draft: the intro said current clients "get an extra session instead" — true only of the grand prize, so it now just says there are two versions.
+| When | Title | Line |
+|---|---|---|
+| notify-me, sent | Check your inbox. | Tap the link we just sent to confirm your email. Your entry link follows when entries open. |
+| live, sent | Check your inbox. | Tap the link we just sent to confirm your entry. Unconfirmed entries can't be drawn. |
+| notify-me, already signed up | You're on the list. | You're already signed up. Watch for your entry link when entries open. |
+| live, already in | You're already in. | Watch your inbox each afternoon for the next drawing. |
 
-### On-page Q&A — "How it works" (stands in for the chat assistant Nov 9 – Dec 5)
+### The card after the email link (/10years/verify) or the one tap (/10years/enter/…)
 
-1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over.
-2. **How do I get more entries?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
-3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
-4. **How will I know if I won?** We email you the moment you're drawn, then call to arrange your prize. You have *{72}* hours to get back to us (a little longer over the weekend); after that, we draw again.
-5. **What's the thank-you offer?** Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
+| When | Title | Line |
+|---|---|---|
+| notify-me email confirmed | You're on the list. | When entries open, you'll get one email with one button. That button is your entry. |
+| entry confirmed | You're in. | Confirmed, with *{1}* entry. Your thank-you code is in your inbox. *(2+ → "entries")* |
+| one tap | You're in. | Confirmed. Your thank-you code is in your inbox. |
+| one tap before the first drawing | You're in. | Confirmed, with an early-bird bonus entry. Your thank-you code is in your inbox. |
+| bad or expired link | Not yet. | That link isn't valid or has expired. Enter again below and we'll send a fresh one. · link: **Back to the form** |
+| tap before entries open | Not yet. | Entries aren't open yet — this link works the moment they do. |
+| tap after entries close | Not yet. | Entries have closed — thank you for wanting in. |
 
-"noon Central" in Q3 is typed; the day list and the grand time are from config.
+With "You're in": **Your share link** (the link in a field) · button **Copy** → **Copied** · under it: Each friend who enters through it adds *{3}* entries for you and *{1}* for them.
 
-### Winners list — "This week's winners" (three states, decision 7)
+### The card — closed (Nov 21 – Dec 5) and thank-you page (after Dec 5)
+
+- **Title:** This week's winners
+- The winners list, below.
+- **Line:** Every entrant has a free first visit waiting, any day through *{December 31}*.
+- **Button:** Talk with our team *(to /contact — the only call button on the page)*
+
+### Winners list (three states, decision 7)
 
 | State | Text |
 |---|---|
@@ -280,22 +283,41 @@ Hidden honeypot label (never seen): Website
 | drawn, not yet reached | *{Monday}*'s winner has been drawn — we're reaching them now |
 | not yet drawn | *{Tuesday}*: drawing *{Tue Nov 17, 12:00 PM CT}* |
 
-The Saturday row is labelled *Saturday (grand prize)*.
+The Saturday row is labelled *Saturday (grand prize)*. The list shows from close; during the live week the prizes row marks each day "Drawn" instead.
 
-### Verify page (/10years/verify, after the email link)
+### The prizes row
 
-- Notify-me confirmed: You're on the list. When entries open you'll get one email with one button.
-- Entry confirmed: You're in with *{1}* entry. Your share link and your thank-you code are in your inbox. *(2+ → "entries")*
-- Bad or expired link: That link isn't valid or has expired. Enter again below and we'll send a fresh one.
-- Hard-coded on the page, not in copy.ts: the H1 "Confirmed." / "Hmm." and the button "Back to the giveaway".
+- **Heading:** What you could win
+- **Toggle:** New clients | Current clients *(default New clients; switches every prize)*
+- **Grand prize block:** *{Saturday}* · Grand prize — *{Brain Map + 12 sessions}* / current: *{13 sessions}* — Plus a Hoolest device to keep and a gift from every partner. *(each clause shows only while the prize in config includes it)*
+- **Mon–Fri:** *{Mon}* · *{2}* · sessions · + Hoolest keychain *(where the prize has one)*
+- **Live tags:** Next · *{noon}* (the next drawing, sage underline) · Drawn (days already drawn, dimmed)
+- **Under the row:** Every session includes the vibro chair. New-client prizes include a Brain Map. · link: **Prize details & drawing times** *(to /10years/rules#prizes)*
 
-### One-tap page (/10years/enter/…, from the "It's live" button)
+### Three questions (stand in for the chat assistant Nov 9 – Dec 5)
 
-- Tapped: You're in. Your share link is on its way.
-- Tapped before the first drawing: You're in — with an early-bird bonus entry. Your share link is on its way.
-- Before entries open: Entries aren't open yet — this link works the moment they do.
-- After entries close: Entries have closed — thank you for wanting in.
-- Hard-coded on the page: the H1 "You're in." / "Not yet." and "Back to the giveaway".
+On the page: 1, 2 and 4 below, plus the link **All giveaway questions** *(to /10years/rules#questions, which lists all five)*.
+
+1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over.
+2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
+3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
+4. **How will I know if I won?** We email you the moment you're drawn, then call to arrange your prize. You have *{72}* hours to get back to us (a little longer over the weekend); after that, we draw again.
+5. **What's the thank-you offer?** Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
+
+"noon Central" in Q3 is typed; the day list and the grand time are from config.
+
+### Prize details (/10years/rules, above the Official Rules)
+
+- **Heading:** Prize details & drawing times
+- **Table heads:** Drawing · New client · Current client — rows (day, time, both prize names) straight from config.
+- **Partner line under a prize** *(when named)*: Plus from *{partner}*: *{prize}*
+- Under the table: the chair / Brain Map line from the prizes row.
+- **Questions heading:** Giveaway questions *(all five, above)*
+
+### Page chrome on /10years and below
+
+- Header: the logo, **Explore HBC** *(to the homepage)*, the phone number. No menu, no call button.
+- Footer: © *{year}* Harmonized Brain Centers · **Official Rules** · **Privacy**. Both are hard-coded in the components, not in copy.ts.
 
 ### Claim page (/10years/claim/…, from the winner email)
 
@@ -351,17 +373,16 @@ from config:
    stimulator (to keep) + one service from every partner" (about 110
    characters; phones show ~40). A shorter *display* name for the grand
    prize would need a config change, not a copy change.
-3. **Typed days and counts.** "Monday's prize" (It's-live subject, notify-me
-   sub), "Today at noon" (Monday reminder), "Six drawings" (live H1), "Monday
-   to Friday … Saturday" (prizes intro) and "noon Central" (Q&A) are typed
+3. **Typed days and counts.** "Monday's prize" (It's-live subject),
+   "Today at noon" (Monday reminder) and "noon Central" (Q&A) are typed
    because those builders are not handed a drawing. They match the schedule
-   as decided; a schedule change would need them re-read.
+   as decided; a schedule change would need them re-read. ("Six drawings"
+   and the page's dates now come from config.)
 4. **"Free to enter, nothing to buy"** was added to Q&A 1. Counsel's rules
    will carry the formal no-purchase statement; confirm the plain line is
    wanted on the page too.
-5. **Marketing opt-in wording** ("Yes, send me news from Harmonized Brain
-   Centers after the giveaway") is §8 legal item 5 — yours or counsel's to
-   settle.
+5. **Marketing opt-in wording** ("Email me HBC news after the giveaway") is
+   §8 legal item 5 — yours or counsel's to settle.
 6. **"Hoolest handheld vagus nerve stimulator"** is the product's own name
    and appears in prize lists from config. It names a device, not a result;
    if you'd rather the public prize list said "Hoolest handheld device", that

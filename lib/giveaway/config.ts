@@ -95,6 +95,32 @@ export function spokenCentral(date: Date): string {
   return `${dayName} at ${h12}:${mm} ${hour < 12 ? "am" : "pm"}`;
 }
 
+/** "noon", "5 pm", "6:30 pm" — the time alone, for small labels. */
+export function shortCentralTime(date: Date): string {
+  const { hour, minute } = centralParts(date);
+  if (hour === 12 && minute === 0) return "noon";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour < 12 ? "am" : "pm"}`;
+}
+
+/** "Sunday, Nov 15 at 6 PM" — a date and time, for one-line notices. */
+export function spokenCentralDateTime(date: Date): string {
+  const { weekday, hour, minute } = centralParts(date);
+  const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][weekday];
+  const monthDay = new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: "short", day: "numeric" }).format(date);
+  if (hour === 12 && minute === 0) return `${dayName}, ${monthDay} at noon`;
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${dayName}, ${monthDay} at ${h12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour < 12 ? "AM" : "PM"}`;
+}
+
+/** "November 16–21" (or "November 30 – December 5") — a span of Central dates. */
+export function spokenCentralRange(from: Date, to: Date): string {
+  const month = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: "long" }).format(d);
+  const a = centralParts(from);
+  const b = centralParts(to);
+  return a.month === b.month ? `${month(from)} ${a.day}–${b.day}` : `${month(from)} ${a.day} – ${month(to)} ${b.day}`;
+}
+
 /* ------------------------------------------------------------------ */
 /* The calendar (§1)                                                   */
 /* ------------------------------------------------------------------ */

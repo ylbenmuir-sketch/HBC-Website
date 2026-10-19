@@ -27,7 +27,7 @@
  * Phrases other code matches on (keep them): lib/giveaway/engine.test.mjs
  * — "Today at noon", "Monday's winner still needs a call", "Thank you", the
  * next drawing's day name in the daily subject; scripts/check-giveaway.mjs
- * — "Put me on the list", "Enter me", "Forward this to a friend", "friend's
+ * — "Send me my entry link", "Enter me", "Forward this to a friend", "friend's
  * link", "with N entries", "You won Monday", "10 years — Monday winner",
  * "GRAND PRIZE", "tax form", "congratulations", "Monday's winner: claimed",
  * "already" (unsubscribe), "You're in." (subject).
@@ -45,6 +45,9 @@ export const CAMPAIGN = "10 Years of Harmonized Brain Centers";
 
 /** "Monday at noon", "Saturday at 5:00 pm" — read off the drawing, never typed. */
 const when = (d: Drawing) => spokenCentral(d.at);
+
+/** 6 → "Six". Counts come from config; this only spells them. */
+const countWord = (n: number) => ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"][n] ?? String(n);
 
 /* ------------------------------------------------------------------ */
 /* Shared fragments                                                    */
@@ -222,64 +225,92 @@ export const PAGES = {
   },
   nonTennesseeZip: D("Thanks for wanting in — this one's for Tennessee residents. If that's you and we got the ZIP wrong, check the five digits and try again."),
 
-  /** /10years in its four modes, the form, the Q&A, the winners list. */
+  /** /10years in its four modes: the hero, the form card, the prizes row, three questions. */
   tenYears: {
-    eyebrow: D("Ten years"),
-    /** Notify-me (Nov 9–15). */
-    notifyHeading: D("Ten years of Harmonized Brain Centers. A week of prizes to say thank you."),
-    notifySub: (entriesOpenSpoken: string, firstPrize: string) => D(`Entries open ${entriesOpenSpoken}. Sign up now and, the moment they do, one tap puts you in every drawing — with a bonus entry if you tap before the first one. Monday's prize: ${firstPrize}.`),
-    notifyFormTitle: D("Get the one-tap entry"),
-    notifyButton: D("Put me on the list"),
-    notifySent: (email: string) => D(`Check ${email} — tap the link to confirm, and you're on the list.`),
-    notifyAlready: D("You're already on the list. Watch for the one-tap entry when entries open."),
-    /** Live (Nov 15–21). */
-    liveHeading: D("Six drawings this week. One entry counts in every one still to come."),
-    liveSub: (nextSpoken: string, nextPrize: string) => D(`Next drawing: ${nextSpoken} — ${nextPrize}. Enter now and you're in it, and in every drawing after.`),
+    eyebrow: D("Celebrating 10 years"),
+    /** The hero, every mode. */
+    heading: D("10 years. A week of giving back."),
+    /** The count is the number of drawings in config. */
+    sub: (drawings: number) => D(`${countWord(drawings)} drawings. One entry counts in every one.`),
+    /** The span is the first to the last drawing, from config. */
+    meta: (span: string) => D(`${span} · Middle Tennessee`),
+    closedSub: D("Entries are closed. Thank you, Tennessee."),
+    thankYouSub: D("Here's who won our anniversary week."),
+    /** The form card — notify-me (Nov 9–15). */
+    notifyFormTitle: D("Get your one-tap entry."),
+    notifyFormLine: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. We'll email your link.`),
+    notifyButton: D("Send me my entry link"),
+    /** The form card — live (Nov 15–21). */
     liveFormTitle: D("Enter the giveaway"),
+    liveFormLine: (nextSpoken: string) => D(`Next drawing: ${nextSpoken}`),
     liveButton: D("Enter me"),
-    liveSent: (email: string) => D(`Check ${email} — tap the link to confirm your entry. Unconfirmed entries can't be drawn.`),
-    liveAlready: D("You're already in. Watch your inbox each afternoon for the next drawing."),
-    refNote: D("You came through a friend's link: confirm your entry and you both get bonus entries."),
-    /** Closed (Nov 21 – Dec 5). */
-    closedHeading: D("Entries are closed. Thank you, Tennessee."),
-    closedSub: (visitBySpoken: string) => D(`Every entrant has a thank-you in their inbox: a free first visit, any day through ${visitBySpoken}. Winners appear below once they've said we may post their name.`),
-    /** Thank-you page (after Dec 5, forever). */
-    thankYouHeading: D("Ten years. Thank you."),
-    thankYouSub: D("Here's who won our anniversary week. The door is always open for a first conversation."),
+    refNote: D("A friend sent you. You'll both get bonus entries."),
+    /** The card after a submit, both modes. */
+    sentTitle: D("Check your inbox."),
+    notifySent: D("Tap the link we just sent to confirm your email. Your entry link follows when entries open."),
+    liveSent: D("Tap the link we just sent to confirm your entry. Unconfirmed entries can't be drawn."),
+    alreadyNotifyTitle: D("You're on the list."),
+    notifyAlready: D("You're already signed up. Watch for your entry link when entries open."),
+    alreadyLiveTitle: D("You're already in."),
+    liveAlready: D("Watch your inbox each afternoon for the next drawing."),
+    /** The card after the email link (verify) or the one tap. */
+    onListTitle: D("You're on the list."),
+    inTitle: D("You're in."),
+    notYetTitle: D("Not yet."),
+    shareLabel: D("Your share link"),
+    shareLine: (referrer: number, referred: number) => D(`Each friend who enters through it adds ${referrer} entries for you and ${referred} for them.`),
+    copy: D("Copy"),
+    copied: D("Copied"),
+    backToForm: D("Back to the form"),
+    /** The card in closed and thank-you modes. */
+    closedCardLine: (visitBySpoken: string) => D(`Every entrant has a free first visit waiting, any day through ${visitBySpoken}.`),
     talk: D("Talk with our team"),
     /** The form. */
     firstName: D("First name"),
     lastName: D("Last name"),
     email: D("Email"),
-    zip: D("ZIP code (Tennessee)"),
-    age: D("I'm 18 or older"),
-    rules: D("I've read the Official Rules"),
+    zip: D("Tennessee ZIP"),
+    /** One box for both (age and rules); the link sits on "Official Rules". */
+    ageRules: D("I'm 18+ and agree to the"),
     rulesLink: D("Official Rules"),
     existingClient: D("I'm already an HBC client"),
-    marketing: D("Yes, send me news from Harmonized Brain Centers after the giveaway"),
+    marketing: D("Email me HBC news after the giveaway"),
     honeypot: D("Website"),
     errors: {
       invalid_name: D("Please add your first and last name."),
       invalid_email: D("That email address doesn't look right."),
       invalid_zip: D("Please add your five-digit ZIP code."),
-      age: D("You need to be 18 or older to enter."),
-      rules: D("Please read and accept the Official Rules."),
+      age: D("Please confirm you're 18 or older and agree to the Official Rules."),
+      rules: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
       send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
     },
-    /** Prizes. */
-    prizesTitle: D("The prizes"),
-    prizesIntro: D("One winner a day, Monday to Friday, and the grand prize Saturday. Every prize comes in two versions — one for new clients, which starts with a Brain Map, and one for current clients — and every session includes the vibro chair."),
+    /** The prizes row. */
+    prizesTitle: D("What you could win"),
+    newClients: D("New clients"),
+    currentClients: D("Current clients"),
+    grandEyebrow: (dayName: string) => D(`${dayName} · Grand prize`),
+    /** Under the grand prize; which clauses show follows the prize in config. */
+    grandExtras: (device: boolean, partners: boolean) => D(device && partners ? "Plus a Hoolest device to keep and a gift from every partner." : device ? "Plus a Hoolest device to keep." : partners ? "Plus a gift from every partner." : ""),
+    sessionsUnit: D("sessions"),
+    keychain: D("+ Hoolest keychain"),
+    nextTag: (time: string) => D(`Next · ${time}`),
+    drawnTag: D("Drawn"),
+    prizesNote: D("Every session includes the vibro chair. New-client prizes include a Brain Map."),
+    prizesLink: D("Prize details & drawing times"),
+    /** /10years/rules: the full table and every question. */
+    detailsTitle: D("Prize details & drawing times"),
     newClient: D("New client"),
     currentClient: D("Current client"),
     partnerPrefix: D("Plus from"),
-    /** Q&A (decision 14). */
-    qaTitle: D("How it works"),
+    qaTitle: D("Giveaway questions"),
+    allQuestions: D("All giveaway questions"),
+    /** Q&A (decision 14). The page shows enter, more and win; /10years/rules shows all five. */
     qa: {
       enterQ: D("How do I enter?"),
       enterA: D("Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; Tennessee residents 18 and over."),
-      moreQ: D("How do I get more entries?"),
+      moreQ: D("How do bonus entries work?"),
       moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters and confirms gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
       whenQ: D("When are the drawings?"),
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
@@ -295,11 +326,11 @@ export const PAGES = {
     winnerReaching: (day: string) => D(`${day}'s winner has been drawn — we're reaching them now`),
     winnerPending: (day: string, spoken: string) => D(`${day}: drawing ${spoken}`),
     /** The verification click. */
-    verifiedNotify: D("You're on the list. When entries open you'll get one email with one button."),
-    verifiedEntry: (entries: number) => D(`You're in with ${entries} ${entries === 1 ? "entry" : "entries"}. Your share link and your thank-you code are in your inbox.`),
+    verifiedNotify: D("When entries open, you'll get one email with one button. That button is your entry."),
+    verifiedEntry: (entries: number) => D(`Confirmed, with ${entries} ${entries === 1 ? "entry" : "entries"}. Your thank-you code is in your inbox.`),
     verifyInvalid: D("That link isn't valid or has expired. Enter again below and we'll send a fresh one."),
     /** The one-tap page. */
-    tapped: (earlyBird: boolean) => D(earlyBird ? "You're in — with an early-bird bonus entry. Your share link is on its way." : "You're in. Your share link is on its way."),
+    tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you code is in your inbox." : "Confirmed. Your thank-you code is in your inbox."),
     tapNotOpen: D("Entries aren't open yet — this link works the moment they do."),
     tapClosed: D("Entries have closed — thank you for wanting in."),
     /** The claim page. */

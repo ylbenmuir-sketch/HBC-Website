@@ -6,6 +6,24 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## /10years redesign (Mon Oct 19 2026, Ben's brief)
+
+The page now fits one 1440×900 screen in notify-me and live mode
+(`check:giveaway` asserts it): two-column hero with the form card, one prizes
+row (New/Current clients toggle, CSS-only), three questions in a row, quiet
+header (logo, Explore HBC, phone) and slim footer on /10years and below.
+Verify and one-tap pages render the same view with the result in the card
+("You're in" + share link + Copy). The full prize table and all five
+questions moved to `/10years/rules` (#prizes, #questions, #rules). One
+"18+ and Official Rules" box (`age_rules`). The public winners list now
+shows from close only; mid-week the prizes row marks days "Drawn" (the
+check peeks at the closed page for its winners-list assertions). Copy in
+`copy.ts` and `GIVEAWAY-COPY.md`. Also fixed a 1-in-6 flake in
+engine.test (the thank-you count when the unsubscribed entrant wins Monday).
+Screens: `../giveaway-screens/` (outside the repo).
+
+---
+
 ## Morning report (Sun Oct 19 2026, overnight build on `giveaway-build`)
 
 **Done, per step** (branch `giveaway-build`, 9 commits off main 2eeb84f, pushed; main untouched):

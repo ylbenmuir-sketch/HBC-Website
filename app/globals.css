@@ -2203,3 +2203,180 @@ body[data-bottombar] footer.site {
   :where(.desk-compact) .form select,
   :where(.desk-compact) .form textarea { padding: 14px 16px; }
 }
+
+/* ── /10years (components/giveaway/TenYearsView.tsx) ─────────────────────
+   Ben, 2026-10-19: on a 1440×900 desktop the whole notify-me and live page
+   — header, hero with the form, the prizes row, three questions, footer —
+   fits one screen without scrolling; on a 390 phone it is one short
+   column. The form card is the only box with an edge and a shadow; the
+   grand prize is the only dark block. Everything else is type, space and
+   a few hairlines. */
+
+/* The quiet header: logo, "Explore HBC", the phone. */
+header.site.campaign { border-bottom-color: transparent; }
+header.site.campaign.scrolled { border-bottom-color: var(--line); }
+header.site.campaign .nav { height: 62px; }
+.nav-campaign { display: flex; align-items: center; gap: 28px; }
+.nav-explore { font-size: 15px; font-weight: 500; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; padding: 4px 0; border-bottom: 1px solid var(--gold-soft); }
+.nav-explore:hover { color: var(--sage-deep); border-color: var(--gold); }
+.nav-campaign .nav-tel { color: var(--navy); font-weight: 500; }
+
+/* The slim footer: one line, on the page's own ground. */
+footer.site.slim { background: transparent; color: var(--slate); padding: 10px 0 12px; font-size: 13px; border-top: 1px solid var(--line); }
+body[data-bottombar] footer.site.slim { padding-bottom: calc(14px + var(--bottombar-h) + env(safe-area-inset-bottom)); }
+.slim-row { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; }
+.slim-row nav { display: flex; gap: 22px; }
+footer.site.slim a { color: var(--ink); text-decoration: none; display: inline-flex; min-height: 24px; align-items: center; }
+footer.site.slim a:hover { color: var(--sage-deep); }
+
+/* Hero: words left, the form card right. */
+.ty-hero { padding: 22px 0 20px; }
+.ty-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 64px; align-items: center; }
+.ty-hero-text { position: relative; }
+.ty-hero-text > :not(.ty-ten) { position: relative; z-index: 1; }
+/* The decorative "10": a gold outline behind the headline, quiet enough to
+   read as paper texture rather than a second headline. */
+.ty-ten { position: absolute; z-index: 0; left: 30%; top: 50%; transform: translateY(-52%); font-family: var(--serif); font-weight: 500; font-size: 400px; line-height: 1; letter-spacing: -0.04em; color: transparent; -webkit-text-stroke: 1.25px var(--gold); opacity: 0.2; pointer-events: none; user-select: none; }
+.ty-eyebrow { font-family: var(--sans); font-size: 12px; line-height: 1.6; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; display: flex; align-items: center; gap: 14px; margin: 0; }
+.ty-eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--gold); }
+.ty-hero h1 { font-size: clamp(44px, 4.4vw, 64px); line-height: 1.04; letter-spacing: -0.015em; max-width: 12ch; margin: 18px 0 20px; }
+.ty-sub { font-size: 20px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 34ch; }
+.ty-meta { font-size: 14px; color: var(--slate); letter-spacing: 0.04em; margin: 14px 0 0; }
+
+/* The form card. */
+.ty-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 28px 60px -40px rgba(21, 34, 48, 0.4); padding: 24px 30px 20px; }
+.ty-card-title { font-family: var(--serif); font-size: 27px; font-weight: 500; line-height: 1.15; color: var(--navy); margin: 0 0 4px; text-wrap: pretty; }
+.ty-card-line { font-size: 14.5px; line-height: 1.5; color: var(--slate); margin: 0; }
+.ty-error { font-size: 14.5px; line-height: 1.5; color: #9a3b2e; margin: 10px 0 0; }
+.ty-form { margin-top: 4px; }
+.ty-fields { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 12px; }
+.ty-fields > div { grid-column: span 6; }
+.ty-fields > div:nth-child(3) { grid-column: span 7; }
+.ty-fields > div:nth-child(4) { grid-column: span 5; }
+/* Each label sits inside its field's box, top-left — a real <label>, just
+   not a line of its own. */
+.ty-fields { margin-top: 16px; row-gap: 10px; }
+.ty-fields > div { position: relative; }
+.form.ty-form .ty-fields label { position: absolute; top: 8px; left: 14px; right: 10px; margin: 0; font-size: 10.5px; line-height: 1.2; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.form.ty-form input:not([type="checkbox"]) { height: 52px; padding: 19px 14px 5px; }
+.ty-checks { display: grid; gap: 6px; margin-top: 14px; }
+.form.ty-form .ty-check, .form.ty-form .ty-optin { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 14.5px; line-height: 1.45; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
+.form.ty-form .ty-check input, .form.ty-form .ty-optin input { width: 18px; height: 18px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
+.ty-check a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.ty-ref { font-size: 13.5px; line-height: 1.5; color: var(--sage-deep); margin: 10px 0 -4px; }
+.ty-submit { width: 100%; margin-top: 14px; padding: 13px 24px; min-height: 46px; }
+.form.ty-form .ty-optin { margin-top: 10px; font-size: 13px; color: var(--slate); }
+.form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
+.ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
+.ty-small { font-size: 13px; line-height: 1.5; color: var(--slate); margin: 10px 0 0; }
+.ty-share { margin-top: 18px; }
+.ty-share label { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 6px; }
+.ty-share-row { display: flex; gap: 8px; }
+.ty-share-row input { flex: 1; min-width: 0; border: 1px solid var(--line-control); border-radius: 4px; background: var(--ivory); padding: 11px 12px; font-family: var(--sans); font-size: 15px; color: var(--ink); }
+.ty-share-row .btn { padding: 11px 20px; flex: none; }
+.ty-winners { list-style: none; margin: 14px 0 14px; padding: 0; }
+.ty-winners li { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); }
+.ty-winners li:first-child { border-top: 0; padding-top: 0; }
+.ty-winners li[data-state="pending"], .ty-winners li[data-state="reaching"] { color: var(--slate); }
+
+/* Prizes: heading + toggle, then the grand block and Mon–Fri in one row. */
+.ty-prizes { position: relative; padding: 0 0 16px; }
+/* The toggle's two radios: off-screen but focusable, ahead of .wrap so the
+   ~ selectors below can reach every value. */
+.ty-v { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.ty-prizes-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 12px; }
+.ty-prizes-head h2 { font-size: 26px; margin: 0; }
+.ty-pill { display: inline-flex; background: var(--ivory-2); border-radius: 999px; padding: 3px; }
+.ty-pill label { font-size: 13.5px; font-weight: 600; color: var(--slate); padding: 6px 16px; border-radius: 999px; cursor: pointer; line-height: 1.4; white-space: nowrap; transition: background 0.2s, color 0.2s; }
+#ty-v-new:checked ~ .wrap label[for="ty-v-new"], #ty-v-cur:checked ~ .wrap label[for="ty-v-cur"] { background: var(--navy); color: var(--ivory); }
+#ty-v-new:focus-visible ~ .wrap label[for="ty-v-new"], #ty-v-cur:focus-visible ~ .wrap label[for="ty-v-cur"] { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ty-prizes .v-cur { display: none; }
+#ty-v-cur:checked ~ .wrap .v-new { display: none; }
+#ty-v-cur:checked ~ .wrap .v-cur { display: inline; }
+.ty-prize-row { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 32px; align-items: stretch; }
+.ty-grand { background: var(--navy); color: var(--ivory); border-radius: 6px; padding: 18px 24px 18px; display: flex; flex-direction: column; justify-content: center; }
+.ty-grand-eyebrow { font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-lift); font-weight: 600; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.ty-grand-prize { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1.1; color: var(--ivory); margin: 6px 0 6px; }
+.ty-grand-extra { font-size: 13.5px; line-height: 1.45; color: rgba(251, 248, 241, 0.78); margin: 0; }
+.ty-grand .ty-tag { margin: 0; color: var(--ivory); border-bottom: 2px solid var(--sage); padding-bottom: 1px; }
+.ty-grand[data-state="drawn"] { opacity: 0.6; }
+.ty-grand[data-state="drawn"] .ty-tag { border-bottom-color: transparent; }
+.ty-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ty-days li { display: flex; flex-direction: column; align-items: flex-start; padding: 2px 12px 2px 20px; border-left: 1px solid var(--line); }
+.ty-days li:first-child { border-left: 0; padding-left: 4px; }
+.ty-day { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate); font-weight: 600; }
+.ty-day abbr { text-decoration: none; }
+.ty-num { font-family: var(--serif); font-size: 48px; font-weight: 500; line-height: 1; color: var(--navy); margin: 4px 0 2px; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.ty-unit { font-size: 13.5px; color: var(--ink); white-space: nowrap; }
+.ty-extra { font-size: 12.5px; line-height: 1.35; color: var(--slate); margin-top: 2px; }
+.ty-tag { display: inline-block; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; margin-top: 6px; }
+.ty-days li[data-state="next"] .ty-num { border-bottom-color: var(--sage); }
+.ty-days li[data-state="next"] .ty-tag { color: var(--sage-deep); }
+.ty-days li[data-state="drawn"] > :not(.ty-tag) { opacity: 0.42; }
+.ty-days li[data-state="drawn"] .ty-tag { color: var(--slate); }
+.ty-prizes-note { font-size: 13.5px; line-height: 1.5; color: var(--slate); margin: 12px 0 0; }
+.ty-textlink { color: var(--sage-deep); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.ty-textlink:hover { border-color: var(--gold); }
+.ty-prizes-note .ty-textlink { margin-left: 4px; }
+
+/* Three questions, side by side; each opens beneath itself. */
+.ty-qa { padding: 0 0 14px; }
+.ty-qa-row { display: flex; align-items: flex-start; gap: 24px; border-top: 1px solid var(--line); }
+.ty-qa-list { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; align-items: start; }
+.ty-qa details.faq { border-bottom: 0; }
+.ty-qa details.faq summary { font-size: 17px; padding: 13px 2px 11px; gap: 8px; }
+.ty-qa details.faq .a { font-size: 15px; padding: 0 2px 12px; }
+.ty-qa-row > .ty-textlink { font-size: 13.5px; line-height: 1.5; flex: none; max-width: 11.5em; margin-top: 14px; }
+
+/* /10years/rules: the full prize table. */
+.ty-details .ty-eyebrow { margin-bottom: 18px; }
+.ty-table { width: 100%; border-collapse: collapse; font-size: 15.5px; margin: 8px 0 10px; }
+.ty-table th { text-align: left; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate); font-weight: 600; padding: 8px 12px 8px 0; }
+.ty-table td { padding: 12px 12px 12px 0; border-top: 1px solid var(--line); vertical-align: top; color: var(--ink); }
+.ty-table td span { display: block; font-size: 13.5px; color: var(--slate); }
+.ty-details h2[id], .ty-details h1[id] { scroll-margin-top: 96px; }
+
+@media (max-width: 1060px) {
+  header.site.campaign .nav { height: 64px; }
+  .ty-hero-grid { grid-template-columns: minmax(0, 1fr) 400px; gap: 40px; }
+  .ty-ten { font-size: 300px; }
+  .ty-prize-row { grid-template-columns: 1fr; gap: 22px; }
+}
+@media (max-width: 900px) {
+  .ty-hero-grid { grid-template-columns: 1fr; gap: 28px; }
+  .ty-hero h1 { max-width: 16ch; }
+  .ty-ten { display: none; }
+}
+@media (max-width: 760px) {
+  .nav-campaign { gap: 16px; }
+  .nav-explore, .nav-campaign .nav-tel { font-size: 13.5px; }
+  .ty-hero { padding: 24px 0 24px; }
+  .ty-hero-grid { gap: 22px; }
+  .ty-hero h1 { font-size: 40px; margin: 14px 0 14px; max-width: none; }
+  .ty-sub { font-size: 17.5px; }
+  .ty-meta { font-size: 13px; margin-top: 10px; }
+  .ty-card { padding: 22px 18px 18px; box-shadow: 0 20px 44px -34px rgba(21, 34, 48, 0.45); }
+  .ty-card-title { font-size: 25px; }
+  .ty-prizes { padding-bottom: 22px; }
+  .ty-prizes-head h2 { font-size: 24px; }
+  .ty-pill label { font-size: 12.5px; padding: 6px 12px; }
+  .ty-fields > div:nth-child(3) { grid-column: span 12; }
+  .ty-fields > div:nth-child(4) { grid-column: span 6; }
+  .ty-grand { padding: 18px 20px 20px; }
+  .ty-grand-prize { font-size: 28px; }
+  /* Mon–Fri as a swipe row: three and a bit across, so the edge shows there is more. */
+  .ty-days { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 24px; scrollbar-width: none; margin: 0 -24px; padding: 0 24px; }
+  .ty-days::-webkit-scrollbar { display: none; }
+  .ty-days li { flex: 0 0 30%; scroll-snap-align: start; padding: 2px 12px 2px 14px; }
+  .ty-num { font-size: 44px; }
+  .ty-qa-row { display: block; border-top: 0; }
+  .ty-qa-list { grid-template-columns: 1fr; border-top: 1px solid var(--line); }
+  .ty-qa details.faq { border-bottom: 1px solid var(--line); }
+  .ty-qa details.faq summary { font-size: 18px; padding: 14px 2px; }
+  .ty-qa-row > .ty-textlink { display: inline-block; max-width: none; margin-top: 14px; }
+  .slim-row { justify-content: center; text-align: center; }
+}
+@media (max-width: 420px) {
+  header.site.campaign .nav { padding: 0 16px; gap: 12px; }
+  .nav-campaign { gap: 14px; }
+}

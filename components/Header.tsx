@@ -146,6 +146,32 @@ export default function Header() {
     },
   });
 
+  // The giveaway's pages (/10years and below) get a quiet header: the
+  // logo, one way back into the site, the phone. No menu and no call
+  // button — the form is the page's one action (Ben, 2026-10-19).
+  if (pathname === "/10years" || pathname.startsWith("/10years/")) {
+    return (
+      <header data-link-location="header" ref={headerRef} className={`site campaign${scrolled ? " scrolled" : ""}`}>
+        <div className="nav">
+          <ChromeLink className="logo" href="/">
+            <LogoMark />
+            <LogoName />
+          </ChromeLink>
+          <div className="nav-campaign">
+            <ChromeLink className="nav-explore" href="/">
+              Explore HBC
+            </ChromeLink>
+            {SHOW_PHONE && (
+              <a className="nav-tel" href={`tel:${PHONE_TEL}`}>
+                {PHONE_DISPLAY}
+              </a>
+            )}
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header
       data-link-location="header"

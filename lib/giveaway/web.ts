@@ -66,8 +66,9 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     lastName: field(form, "last_name", 60),
     email: field(form, "email", 254),
     zip: field(form, "zip", 10),
-    ageConfirmed: checked(form, "age"),
-    rulesAccepted: checked(form, "rules"),
+    // One box on the form: "I'm 18+ and agree to the Official Rules".
+    ageConfirmed: checked(form, "age_rules"),
+    rulesAccepted: checked(form, "age_rules"),
     isExistingClient: checked(form, "existing_client"),
     marketingOptIn: checked(form, "marketing"),
     ref: field(form, "ref", 20) || null,
@@ -119,7 +120,8 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
   return back("?sent=1");
 }
 
-export type VerifyPageResult = { ok: true; message: string } | { ok: false; message: string };
+/** `shareUrl` is set once an entry is confirmed (the card shows it with a copy button). */
+export type VerifyPageResult = { ok: true; kind: "notify" | "entry"; message: string; shareUrl?: string } | { ok: false; message: string };
 
 /** The verification click, either kind. Sends "You're in" on a first entry verification. */
 export async function handleVerify(token: string | null): Promise<VerifyPageResult> {
@@ -136,14 +138,14 @@ export async function handleVerify(token: string | null): Promise<VerifyPageResu
   const asNotify = verifyToken(token, { kind: "verify_notify", env: store.env, now }, secret);
   if (asNotify.ok) {
     const r = await verifyNotify(store, asNotify.payload.s, now);
-    return r.ok ? { ok: true, message: PAGES.tenYears.verifiedNotify } : { ok: false, message: PAGES.tenYears.verifyInvalid };
+    return r.ok ? { ok: true, kind: "notify", message: PAGES.tenYears.verifiedNotify } : { ok: false, message: PAGES.tenYears.verifyInvalid };
   }
   const asEntry = verifyToken(token, { kind: "verify_entry", env: store.env, now }, secret);
   if (!asEntry.ok) return { ok: false, message: PAGES.tenYears.verifyInvalid };
   const r = await verifyEntry(store, asEntry.payload.s, now);
   if (!r.ok) return { ok: false, message: PAGES.tenYears.verifyInvalid };
   if (r.first) await sendYoureIn(store, secret, r.person.id, r.referredBonus, r.offer.code, now);
-  return { ok: true, message: PAGES.tenYears.verifiedEntry(await entryCount(store, r.person.id)) };
+  return { ok: true, kind: "entry", message: PAGES.tenYears.verifiedEntry(await entryCount(store, r.person.id)), shareUrl: await shareUrlFor(store, r.person.id) };
 }
 
 /** The one-tap link. Sends "You're in" on the first tap. */
@@ -166,7 +168,13 @@ export async function handleTap(token: string | null): Promise<VerifyPageResult>
     return { ok: false, message: PAGES.tenYears.verifyInvalid };
   }
   if (r.first) await sendYoureIn(store, secret, r.person.id, false, r.offer.code, now);
-  return { ok: true, message: PAGES.tenYears.tapped(r.earlyBird) };
+  return { ok: true, kind: "entry", message: PAGES.tenYears.tapped(r.earlyBird), shareUrl: await shareUrlFor(store, r.person.id) };
+}
+
+async function shareUrlFor(store: GiveawayStore, personId: string): Promise<string | undefined> {
+  const { data } = await store.select("giveaway_people", "referral_code").eq("id", personId).single();
+  const code = (data as { referral_code?: string } | null)?.referral_code;
+  return code ? referralLink(code) : undefined;
 }
 
 async function sendYoureIn(store: GiveawayStore, secret: string, personId: string, referredBonus: boolean, offerCode: string, now: Date): Promise<void> {

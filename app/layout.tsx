@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SlimFooter from "@/components/SlimFooter";
+import RouteFooter from "@/components/RouteFooter";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
@@ -184,7 +186,7 @@ export default function RootLayout({
           <main id="main" tabIndex={-1}>
             {children}
           </main>
-          <Footer />
+          <RouteFooter full={<Footer />} slim={<SlimFooter />} />
           {/* Site assistant — OFF. Renders only with
               NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
               .env.example, not in draft mode, not in dev. Wired in so Ben can
