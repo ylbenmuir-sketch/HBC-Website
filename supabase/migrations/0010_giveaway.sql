@@ -19,7 +19,6 @@
 -- Apply: Supabase → project HBC-Website (brwyfneahhhkymytkvpx) → SQL Editor
 -- → New query → paste this whole file → Run. Idempotent: safe to run twice.
 
-create extension if not exists pgcrypto;
 
 -- ── People ────────────────────────────────────────────────────────────────
 -- One row per verified person (notify-me signups who tapped, entrants who
@@ -371,29 +370,29 @@ on conflict (env, slot, version) do nothing;
 
 insert into public.giveaway_drawings (env, slot, kind, scheduled_at)
 values
-  ('production', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('production', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('production', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('production', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('production', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('production', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('preview', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('preview', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('preview', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('preview', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('preview', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('preview', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('local', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('local', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('local', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('local', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('local', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('local', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('test', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('test', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('test', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('test', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('test', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
+  ('production', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('production', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('production', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('production', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('production', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('production', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('preview', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('preview', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('preview', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('preview', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('preview', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('preview', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('local', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('local', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('local', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('local', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('local', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('local', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('test', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('test', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('test', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('test', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('test', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
   ('test', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT
 on conflict (env, scheduled_at, kind) do nothing;
 -- END generated from lib/giveaway/config.ts

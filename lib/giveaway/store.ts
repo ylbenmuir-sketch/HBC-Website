@@ -13,7 +13,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "../consultation";
-import { giveawayEnv, type GiveawayEnv } from "./env";
+import { giveawayEnv, isTestingEnv, type GiveawayEnv } from "./env";
 
 export const GIVEAWAY_TABLES = [
   "giveaway_people",
@@ -95,11 +95,52 @@ export class GiveawayStore {
   }
 }
 
+/**
+ * `GIVEAWAY_REPO=memory`: the server keeps the giveaway tables in this
+ * process (lib/giveaway/memory-client.ts) instead of Supabase — for
+ * check:giveaway and local work while migration 0010 is not on the project.
+ * Honoured ONLY when the giveaway env is local or test; anywhere else it is
+ * refused with an error in the log and Supabase is used, so a stray variable
+ * on a production deployment cannot make the real giveaway run on air.
+ * One MemoryDb per process, kept on globalThis so every route shares it.
+ */
+export const MEMORY_REPO_ENV = "GIVEAWAY_REPO";
+
+type MemoryModule = typeof import("./memory-client");
+const memoryGlobal = globalThis as unknown as { __hbcGiveawayMemoryDb?: InstanceType<MemoryModule["MemoryDb"]>; __hbcGiveawayMemoryModule?: MemoryModule };
+
+function memoryRepoWanted(env: GiveawayEnv): boolean {
+  if (process.env[MEMORY_REPO_ENV]?.trim() !== "memory") return false;
+  if (isTestingEnv(env)) return true;
+  console.error(`[giveaway store] ${MEMORY_REPO_ENV}=memory is refused for env "${env}" — using Supabase`);
+  return false;
+}
+
+/** The shared in-memory database when memory mode is on, else null. */
+export function memoryDb(): InstanceType<MemoryModule["MemoryDb"]> | null {
+  const env = giveawayEnv();
+  if (!memoryRepoWanted(env)) return null;
+  if (!memoryGlobal.__hbcGiveawayMemoryDb) {
+    // Required lazily so a Supabase deployment never loads the stand-in.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = (memoryGlobal.__hbcGiveawayMemoryModule ??= require("./memory-client") as MemoryModule);
+    memoryGlobal.__hbcGiveawayMemoryDb = new mod.MemoryDb();
+    console.log(`[giveaway store] ${MEMORY_REPO_ENV}=memory — giveaway tables live in this process (env ${env})`);
+  }
+  return memoryGlobal.__hbcGiveawayMemoryDb;
+}
+
 /** The real store for this process, or null when Supabase is not configured. */
 export function giveawayStore(): GiveawayStore | null {
+  const env = giveawayEnv();
+  const db = memoryDb();
+  if (db) {
+    const mod = memoryGlobal.__hbcGiveawayMemoryModule!;
+    return new GiveawayStore(mod.memoryClient(db), env);
+  }
   const client = supabaseAdmin();
   if (!client) return null;
-  return new GiveawayStore(client, giveawayEnv());
+  return new GiveawayStore(client, env);
 }
 
 /** The real store, or a thrown error naming what is missing. */

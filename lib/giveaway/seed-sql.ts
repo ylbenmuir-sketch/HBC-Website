@@ -39,10 +39,11 @@ export function seedSql(): string {
   const drawingRows: string[] = [];
   for (const env of GIVEAWAY_ENVS) {
     for (const d of DRAWINGS) {
-      drawingRows.push(`  (${lit(env)}, ${lit(d.slot)}, ${lit(d.kind)}, ${lit(d.at.toISOString())}) -- ${d.ct}`);
+      // The comma goes BEFORE the comment: a trailing "-- label," swallows it.
+      drawingRows.push(`  (${lit(env)}, ${lit(d.slot)}, ${lit(d.kind)}, ${lit(d.at.toISOString())})`);
     }
   }
-  lines.push(drawingRows.join(",\n"));
+  lines.push(drawingRows.map((row, i) => `${row}${i < drawingRows.length - 1 ? "," : ""} -- ${DRAWINGS[i % DRAWINGS.length].ct}`).join("\n"));
   lines.push("on conflict (env, scheduled_at, kind) do nothing;");
   lines.push(SEED_END);
   return lines.join("\n");
