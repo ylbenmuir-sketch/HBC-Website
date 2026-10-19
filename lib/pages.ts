@@ -281,6 +281,18 @@ export const staticPages: StaticPage[] = [
     crumb: "Privacy",
   },
   {
+    // The 10-year giveaway (GIVEAWAY-PLAN.md). Answers 404 until the
+    // config's notify-me date (lib/giveaway/config.ts → pageMode) and the
+    // sitemap lists it only from then.
+    path: "/10years",
+    title: "Ten Years of Harmonized Brain Centers",
+    description:
+      "Ten years of Harmonized Brain Centers: a week of drawings for Tennessee residents, one tap to enter them all, and a free first visit for everyone who enters.",
+    dateModified: "2026-10-18",
+    type: "WebPage",
+    crumb: "Ten years",
+  },
+  {
     // The text-message program's terms — what a carrier reviewer follows from
     // every opt-in (lib/sms-consent.ts). Indexed and in the sitemap on
     // purpose: a reviewer with no account has to be able to find it.

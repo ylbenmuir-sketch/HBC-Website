@@ -88,7 +88,7 @@ export type HoldDecision = { hold: true } | { hold: false; reason: string };
 
 export function shouldHold(input: {
   type: "consultation" | "guide";
-  source: "form" | "chat";
+  source: "form" | "chat" | "giveaway";
   saved: boolean;
   honeypotFilled: boolean;
   cronSecretSet: boolean;
@@ -97,7 +97,8 @@ export function shouldHold(input: {
   now: Date;
 }): HoldDecision {
   if (input.type !== "consultation") return { hold: false, reason: "not a call request" };
-  if (input.source !== "form") return { hold: false, reason: "chat lead — sent at once" };
+  if (input.source === "chat") return { hold: false, reason: "chat lead — sent at once" };
+  if (input.source === "giveaway") return { hold: false, reason: "10-year offer booking — sent at once" };
   if (!input.saved) return { hold: false, reason: "row not saved — this email is the only copy" };
   // A bot never reaches page two; and the row does not store the trap, so a
   // later send could not show the spam warning. Send it now, flagged.

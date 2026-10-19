@@ -11,6 +11,8 @@
  * To verify a fact: replace `value`, set `verified: true`.
  */
 
+import { CHAT_SUPPRESSION_WINDOW } from "./giveaway/config";
+
 export type Verifiable<T = string> = {
   value: T;
   verified: boolean;
@@ -141,12 +143,23 @@ export const FEATURE_ASSISTANT =
  */
 export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin"] as const;
 
+/**
+ * Routes suppressed only inside a window (decision 14): /10years from the
+ * notify-me date through the offer's end, then the assistant returns. The
+ * window comes from lib/giveaway/config.ts so it cannot drift from the
+ * page's own dates. Evaluated against the real clock on the client, which is
+ * where this runs (components/BottomBarContext.tsx).
+ */
+export const ASSISTANT_SUPPRESSED_WINDOWS: ReadonlyArray<{ route: string; from: Date; to: Date }> = [
+  { route: "/10years", from: CHAT_SUPPRESSION_WINDOW.from, to: CHAT_SUPPRESSION_WINDOW.to },
+];
+
 /** True when the assistant must not render on this pathname. */
-export function assistantSuppressedOn(pathname: string | null): boolean {
+export function assistantSuppressedOn(pathname: string | null, now: Date = new Date()): boolean {
   if (!pathname) return false;
-  return ASSISTANT_SUPPRESSED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  const under = (route: string) => pathname === route || pathname.startsWith(`${route}/`);
+  if (ASSISTANT_SUPPRESSED_ROUTES.some(under)) return true;
+  return ASSISTANT_SUPPRESSED_WINDOWS.some((w) => under(w.route) && now.getTime() >= w.from.getTime() && now.getTime() <= w.to.getTime());
 }
 
 /**

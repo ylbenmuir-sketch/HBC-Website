@@ -35,7 +35,7 @@
 //
 // Resend's REST API over fetch, deliberately without the `resend` SDK.
 
-import { senderAddress, type Recipients } from "./lead-routing";
+import { senderAddress, type LeadSource, type Recipients } from "./lead-routing";
 import { replySubject, threadHeaders } from "./email/format";
 import {
   detailsUpdate,
@@ -183,7 +183,7 @@ export function savedLink(rowId: string | null): SavedLink {
 /* ------------------------------------------------------------------ */
 
 export type LeadDetails = {
-  source: "form" | "chat";
+  source: LeadSource;
   intent: "book" | "more_info";
   /** The saved row's id. Null only for the rescue copy sent when the row
    *  did NOT save — the email then says so at the top. */

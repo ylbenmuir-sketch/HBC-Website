@@ -5,6 +5,11 @@ import { locations } from "@/lib/locations";
 import { staticPages } from "@/lib/pages";
 import { resources, isPublishable, lastChanged } from "@/lib/resources";
 import { team } from "@/lib/team";
+import { pageMode } from "@/lib/giveaway/config";
+
+/** Re-evaluated hourly: /10years joins the sitemap on its config date
+ *  without a deploy (lib/giveaway/config.ts). Everything else is static. */
+export const revalidate = 3600;
 
 /**
  * Every URL carries its own `lastmod`, read from the record that owns the
@@ -34,6 +39,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // (next.config.ts), and a sitemap lists only pages that answer 200.
     ...staticPages
       .filter((p) => SHOW_TEAM || !p.path.startsWith("/about/team"))
+      // /10years answers 404 until notify-me opens; a sitemap lists only
+      // pages that answer 200. Its sub-routes (verify, enter, claim, rules)
+      // are never listed and carry noindex of their own.
+      .filter((p) => p.path !== "/10years" || pageMode(new Date()) !== "hidden")
       .map((p) => ({ path: p.path, lastModified: p.dateModified })),
     ...concerns.map((c) => ({
       path: `/concerns/${c.slug}`,
