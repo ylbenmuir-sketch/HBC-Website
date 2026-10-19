@@ -91,6 +91,7 @@ export default function TenYearsView({ mode, now, card, winners = [] }: { mode: 
           </div>
         </div>
       </section>
+      <HowItWorks mode={mode} now={now} />
       <PrizeLadder mode={mode} now={now} winners={winners} />
       <PhotoStrip />
       <QuestionsRow />
@@ -218,6 +219,48 @@ export function WinnersCard({ winners, notice }: { winners: PublicWinner[]; noti
         {t.talk}
       </a>
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* How it works: three steps, one quiet strip                          */
+/* ------------------------------------------------------------------ */
+
+/** "5 PM", "noon" — the short time with AM/PM in capitals. */
+const shortTime = (d: Drawing) => shortCentralTime(d.at).replace(/\b(am|pm)$/, (m) => m.toUpperCase());
+
+function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
+  const h = t.how;
+  const daily = DRAWINGS.filter((d) => d.kind === "daily");
+  const grand = DRAWINGS.find((d) => d.kind === "grand") ?? DRAWINGS[DRAWINGS.length - 1];
+  const next = mode === "live" ? nextDrawing(now) : null;
+  const step3 = !next
+    ? h.step3Line(shortTime(daily[0]), `${daily[0].dayName.slice(0, 3)}–${daily[daily.length - 1].dayName.slice(0, 3)}`, grand.dayName, shortTime(grand))
+    : next.kind === "grand"
+      ? h.step3LineGrandNext(grand.dayName, shortTime(grand))
+      : h.step3LineLive(`${next.dayName.slice(0, 3)} at ${shortTime(next)}`, grand.dayName, shortTime(grand));
+  const steps = [
+    [h.step1Title, h.step1Line],
+    [h.step2Title, h.step2Line(REFERRAL.referrerBonus)],
+    [h.step3Title, step3],
+  ];
+  return (
+    <section className="ty-how" aria-label={h.title}>
+      <div className="wrap">
+        <ol className="ty-how-steps" data-how>
+          {steps.map(([title, line], i) => (
+            <li key={title}>
+              <span className="ty-how-n" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className="ty-how-text">
+                <b>{title}</b> {line}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
   );
 }
 

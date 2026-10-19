@@ -2281,6 +2281,14 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-winners li:first-child { border-top: 0; padding-top: 0; }
 .ty-winners li[data-state="pending"], .ty-winners li[data-state="reaching"] { color: var(--slate); }
 
+/* How it works: three numbered steps, one quiet strip between two hairlines. */
+.ty-how { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px 0; }
+.ty-how-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 36px; }
+.ty-how-steps li { display: flex; align-items: flex-start; gap: 12px; }
+.ty-how-n { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold-ink); font-family: var(--serif); font-size: 15px; font-weight: 600; line-height: 1; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+.ty-how-text { font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+.ty-how-text b { display: block; font-weight: 600; color: var(--navy); font-size: 15px; }
+
 /* The prize ladder: heading + toggle, then six cards that climb. */
 .ty-prizes { position: relative; padding: 28px 0 24px; }
 /* The toggle's two radios: off-screen but focusable, ahead of .wrap so the
@@ -2440,6 +2448,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-pill label { font-size: 12.5px; padding: 6px 12px; }
   .ty-fields > div:nth-child(3) { grid-column: span 12; }
   .ty-fields > div:nth-child(4) { grid-column: span 6; }
+  .ty-how { padding: 18px 0; }
+  .ty-how-steps { grid-template-columns: 1fr; gap: 14px; }
   .ty-prizes { padding: 24px 0 22px; }
   .ty-prizes-head h2 { font-size: 28px; }
   /* The ladder as a swipe row, the cards still climbing. */

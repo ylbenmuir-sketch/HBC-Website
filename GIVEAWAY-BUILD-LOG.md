@@ -6,6 +6,16 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## /10years, fourth pass: "How it works" strip (Mon Oct 19 2026)
+
+Three numbered steps between the hero and the ladder (`HowItWorks` in
+`TenYearsView.tsx`, `copy.ts` → `tenYears.how`): the referral count, the
+daily time and day span, the grand day and time all from config; in live
+mode step 3 names the next drawing (or "the grand prize" when Saturday is
+next). Quiet: two hairlines, no cards, ~90 px tall at 1440.
+
+---
+
 ## /10years, third pass: the ladder (Mon Oct 19 2026, Ben's third brief)
 
 - **Value first** on every card (`$480` / `$810+` in gold serif, "value" in

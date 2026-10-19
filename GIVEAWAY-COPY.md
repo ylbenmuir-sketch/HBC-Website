@@ -296,6 +296,16 @@ With "You're in": **Your share link** (the link in a field) · button **Copy** �
 
 The Saturday row is labelled *Saturday (grand prize)*. The list shows from close; during the live week the prizes row marks each day "Drawn" instead.
 
+### How it works (a strip between the hero and the ladder)
+
+Three numbered steps, one line each; the counts, days and times are from config.
+
+1. **Enter once.** Get your link and tap to confirm. You're in every drawing.
+2. **Share your link.** Each friend who enters adds *{3}* entries for you.
+3. **Win.** Drawings at *{noon}*, *{Mon–Fri}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call you.
+   - Live, a daily drawing next: Next drawing: *{Tue at noon}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call you.
+   - Live, the grand drawing next: Next: the grand prize, *{Saturday}* at *{5 PM}*. We'll call you.
+
 ### The prize ladder
 
 - **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize, value and breakdown)*

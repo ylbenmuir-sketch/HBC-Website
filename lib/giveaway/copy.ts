@@ -299,6 +299,21 @@ export const PAGES = {
       send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
     },
+    /** "How it works": three steps between the hero and the ladder. Counts, days and times from config. */
+    how: {
+      title: D("How it works"),
+      step1Title: D("Enter once."),
+      step1Line: D("Get your link and tap to confirm. You're in every drawing."),
+      step2Title: D("Share your link."),
+      step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
+      step3Title: D("Win."),
+      /** "Drawings at noon, Mon–Fri. Grand prize Saturday at 5 PM. We'll call you." */
+      step3Line: (dailyTime: string, dailySpan: string, grandDay: string, grandTime: string) => D(`Drawings at ${dailyTime}, ${dailySpan}. Grand prize ${grandDay} at ${grandTime}. We'll call you.`),
+      /** Live, a daily drawing next: "Next drawing: Tue at noon. Grand prize Saturday at 5 PM. We'll call you." */
+      step3LineLive: (nextShort: string, grandDay: string, grandTime: string) => D(`Next drawing: ${nextShort}. Grand prize ${grandDay} at ${grandTime}. We'll call you.`),
+      /** Live, the grand drawing next. */
+      step3LineGrandNext: (grandDay: string, grandTime: string) => D(`Next: the grand prize, ${grandDay} at ${grandTime}. We'll call you.`),
+    },
     /** The prize ladder. */
     prizesTitle: D("The prize ladder"),
     newClients: D("New clients"),
