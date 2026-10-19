@@ -793,10 +793,10 @@ export default function HomePage() {
           Map Shows" scrolls here, and `scroll-margin-top` lands it under the
           sticky header. /brain-map still owns the cluster and the full copy;
           this is the show, that is the page (the "About" link below the
-          buttons). The Results callouts are Verifiables awaiting Sheri
-          (BRAIN_MAP_CALLOUTS): production shows the numbered site and not
-          the sentence until each is verified. BRAIN_MAP_CLAIM keeps its gate,
-          under the caption. */}
+          buttons). The Results callouts are Verifiables (BRAIN_MAP_CALLOUTS),
+          approved by Ben 2026-10-19, so they render in production; flip one
+          to unverified and the numbered site stays while its sentence goes.
+          BRAIN_MAP_CLAIM keeps its gate, under the caption. */}
       <section className="sec home-brain-map" id="brain-map">
         <div className="wrap">
           <BrainMapStage
@@ -854,7 +854,9 @@ export default function HomePage() {
               n: i + 1,
               where: c.where,
               line: verifiedOr(c.line),
-              note: c.line.note,
+              // The gold tag is draft-only; the note is a client prop, so
+              // it is left out of production markup altogether.
+              note: SHOW_DRAFT_CONTENT && !c.line.verified ? c.line.note : undefined,
             }))}
             plan={
               <PhotoFrame

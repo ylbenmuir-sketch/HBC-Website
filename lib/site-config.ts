@@ -1009,10 +1009,10 @@ export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
 /**
  * The homepage Brain Map stage's "Results" callouts (Ben, 2026-10-19): three
  * pattern-based, third-person lines beside numbered sites on the sample heat
- * map. Each is a Verifiable with Sheri's confirmation pending, so production
- * renders the numbered site without its sentence until `verified` flips —
- * the same rule as every other unconfirmed line on the site. The sites
- * are from lib/brain-map-sample.ts; the wording never names a condition.
+ * map. Written as Verifiables so a line can be taken off the page by flipping
+ * `verified` — and approved by Ben the same evening ("everything is approved
+ * for the build"), so all three render in production. The sites are from
+ * lib/brain-map-sample.ts; the wording never names a condition.
  */
 export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
   sites: string[];
@@ -1024,8 +1024,8 @@ export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
     where: "F7",
     line: {
       value: "Running hot here often shows up as a mind that’s hard to switch off.",
-      verified: false,
-      note: "[Confirm wording with Sheri]",
+      verified: true,
+      note: "[Confirm wording]",
     },
   },
   {
@@ -1033,8 +1033,8 @@ export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
     where: "Back of the head (Pz/Oz)",
     line: {
       value: "Running low here often lines up with feeling foggy or flat by afternoon.",
-      verified: false,
-      note: "[Confirm wording with Sheri]",
+      verified: true,
+      note: "[Confirm wording]",
     },
   },
   {
@@ -1042,8 +1042,8 @@ export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
     where: "Fp1/F3",
     line: {
       value: "A little high here can look like overthinking small decisions.",
-      verified: false,
-      note: "[Confirm wording with Sheri]",
+      verified: true,
+      note: "[Confirm wording]",
     },
   },
 ];

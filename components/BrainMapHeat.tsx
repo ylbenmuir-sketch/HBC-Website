@@ -35,7 +35,6 @@ const CY = 296;
 const R = 236;
 const VB_H = CY + R + 40;
 
-const SERIF = "'Cormorant Garamond', Georgia, serif";
 const SANS = "'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 function toSvg(x: number, y: number): [number, number] {

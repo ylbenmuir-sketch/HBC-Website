@@ -31,7 +31,7 @@ function Vertical() {
   // labels read at 14px there (and /brain-map caps the box at 820px so they
   // never balloon).
   const W = 720, H = 450;
-  const L = 56, Rr = 16, T = 58, B = 400;
+  const L = 62, Rr = 16, T = 58, B = 400;
   const plotW = W - L - Rr, plotH = B - T;
   const yOf = (uv: number) => B - (uv / MAX_UV) * plotH;
   const n = BRAIN_MAP_SITES.length;
@@ -50,7 +50,7 @@ function Vertical() {
         <line key={v} x1={L} y1={yOf(v)} x2={W - Rr} y2={yOf(v)} stroke="#8FA75A" strokeWidth="1" strokeDasharray="4 4" opacity="0.7" />
       ))}
       <text x={W - Rr - 8} y={yOf(BRAIN_MAP_TYPICAL_MAX) + 22} textAnchor="end" fontSize="17" fontWeight="500" fill="#596E5B">Typical range {BRAIN_MAP_TYPICAL_MIN}–{BRAIN_MAP_TYPICAL_MAX} µV</text>
-      <text x={16} y={(T + B) / 2} fontSize="17" fill="#5d6873" textAnchor="middle" transform={`rotate(-90 16 ${(T + B) / 2})`}>µV</text>
+      <text x={22} y={(T + B) / 2} fontSize="17" fill="#5d6873" textAnchor="middle" transform={`rotate(-90 22 ${(T + B) / 2})`}>µV</text>
       {BRAIN_MAP_SITES.map((s, i) => {
         const x = L + slot * i + (slot - bw) / 2;
         const y = yOf(s.uv);
