@@ -882,10 +882,10 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "recording",
           "running hot",
         ],
-        text: "Help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
+        text: "LENS Neurofeedback in Nashville & Murfreesboro: Help for anxiety, focus, and sleep — without medication. Your first LENS neurofeedback visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         mirror: [
-          "Help for anxiety, focus, and sleep — without medication.",
-          "Your first visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
+          "LENS Neurofeedback in Nashville & Murfreesboro: Help for anxiety, focus, and sleep — without medication.",
+          "Your first LENS neurofeedback visit starts with a Brain Map: a short recording that shows which areas of your brain are running smoothly, running hot, or running low, and what that means for everyday life.",
         ],
       },
     ],

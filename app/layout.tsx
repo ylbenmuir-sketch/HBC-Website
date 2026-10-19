@@ -96,14 +96,13 @@ export const metadata: Metadata = {
     default: `Help for anxiety, focus, and sleep — ${SITE_NAME}`,
     template: `%s — ${SITE_NAME}`,
   },
-  // The homepage H1 and sub as one sentence, plus the free call. "Gentle" went
-  // from the tagline in Oct 2026 (Ben: no softener in its place), and the cut
-  // left this at 119 characters, so the two cities and the free call — both
-  // concrete, both true — bring it back to 158. The session count is
-  // deliberately not here — metadata has no draft mode, and this is not a
-  // place to stack proof. Same string as the "/" entry in lib/pages.ts.
+  // The homepage H1 as Google reads it (eyebrow included) and the first-visit
+  // line — 146 characters (Ben, 2026-10-19: neurofeedback and both cities up
+  // front, about 150 characters). The free call line went to fit. The session count is deliberately not here —
+  // metadata has no draft mode, and this is not a place to stack proof. Same
+  // string as the "/" entry in lib/pages.ts.
   description:
-    "Help for anxiety, focus, and sleep — starting with a map of your brain. LENS neurofeedback for adults and kids in Nashville and Murfreesboro. First call free.",
+    "LENS neurofeedback in Nashville & Murfreesboro: help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map.",
   // Self-referencing canonical on every page. "./" is relative, so Next
   // resolves it per-route against metadataBase above — one declaration here
   // covers all 25 routes, including the dynamic concern/location/team/article

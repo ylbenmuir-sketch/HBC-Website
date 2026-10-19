@@ -207,6 +207,22 @@ h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
 .eyebrow { font-family: var(--sans); line-height: 1.65; font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--sage-deep); font-weight: 600; display: flex; align-items: center; gap: 14px; }
 .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--gold); }
 .eyebrow.center { justify-content: center; } .eyebrow.center::before { display: none; }
+/* Visually hidden, read by assistive tech and search (the " in " and ":"
+   that make the homepage H1 one sentence). Absolutely positioned, so it
+   takes no room in the eyebrow's flex row. */
+.vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* The homepage eyebrow lives inside the H1 (app/page.tsx). `.eyebrow` already
+   resets the type; this resets what the H1 would otherwise add, and draws the
+   separating dot as generated content — seen, not read. */
+.hero h1 .hero-kicker { margin: 0; text-wrap: initial; }
+/* The gold line never shrinks to make room for the text — it wraps instead,
+   as the standalone eyebrow's did. */
+.hero h1 .hero-kicker::before { flex: none; }
+.hero h1 .hero-kicker-text { position: relative; }
+/* The dot itself; the spaces around it are real, in the markup, so the
+   eyebrow breaks where the old "LENS Neurofeedback · Nashville &
+   Murfreesboro" broke. */
+.hero-kicker-dot::before { content: "\00b7"; }
 .on-dark { color: var(--ivory); } .on-dark .sub { color: rgba(251, 248, 241, 0.68); }
 /* font-family, not just font-style: the italic serif is its own family so
    it can stay out of the preload (app/layout.tsx). Without this the em
@@ -1182,7 +1198,11 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.95) 40%, rgba(21, 34, 48, 0.92) 58%, rgba(21, 34, 48, 0.9) 68%, rgba(21, 34, 48, 0.35) 74%, rgba(21, 34, 48, 0.18) 84%, rgba(21, 34, 48, 0.28) 100%); }
   .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 340px 24px calc(30px + env(safe-area-inset-bottom)); }
   .hero-copy .eyebrow { color: #d3dccf; }
-  .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 18px; text-wrap: initial; }
+  /* margin-top 0, not the 18px this rule carried for years: the copy column
+     is a flex column whose items' margins never collapsed and the measured
+     gap between the eyebrow and the headline was 0 before the eyebrow moved
+     inside the H1 (2026-10-19) — so 0 keeps the headline where it was. */
+  .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 0; text-wrap: initial; }
   .hero h1 em.sage { color: #cbd6c7; }
   .hero .sub { color: rgba(251, 248, 241, 0.86); font-size: 16.5px; line-height: 1.55; max-width: 32ch; margin: 18px 0 28px; }
   .hero .sub .kw { color: var(--ivory); }

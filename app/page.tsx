@@ -312,36 +312,53 @@ export default function HomePage() {
       <section className="hero wrap">
         <div className="hero-grid">
           <div className="rv hero-copy">
-            {/* "LENS Neurofeedback ·" came off the eyebrow 2026-10-19 (Ben):
-                the metro alone. */}
-            <div className="eyebrow">Nashville &amp; Murfreesboro</div>
-            {/* The headline turns on the em dash, and the sage italic carries
+            {/* One H1 that Google and a screen reader read as one sentence
+                (Ben, 2026-10-19): "LENS Neurofeedback in Nashville &
+                Murfreesboro: Help for anxiety, focus, and sleep — without
+                medication." The eyebrow is the H1's first child, styled
+                exactly as the standalone eyebrow was (gold line, small sans
+                caps); " in " and ":" are in the DOM but visually hidden
+                (`.vh`), and the middle dot between the two halves is CSS
+                generated content (`.hero-kicker-dot`), so it is seen and not
+                read. Nothing moved: the eyebrow box and the headline measure
+                the same as before at 1440, 1024, 834, 390 and 320.
+
+                The headline turns on the em dash, and the sage italic carries
                 the pivot — the same shape as "nothing to perform." on
                 /how-lens-works. "without medication." is Ben's wording
                 (2026-10-19, reaffirmed): it was the pivot until 2026-10-15,
                 came off beside /is-lens-safe's "not an alternative to
                 medication", and he chose it back over the two since. The
-                metadata description (app/layout.tsx, lib/pages.ts) kept the
-                2026-10-18 pivot on purpose — Ben's brief left titles and
-                descriptions alone. The chat mirror (lib/chat/site-copy.ts)
-                follows this H1 — edit both. `&nbsp;` keeps the dash with
-                "sleep"; `.tie` keeps the pivot on one line from 641px up
-                (globals.css) — on a phone it may wrap as two words, never
-                mid-word. */}
+                metadata description (app/layout.tsx, lib/pages.ts) and the
+                chat mirror (lib/chat/site-copy.ts) follow this H1 — edit all.
+                `&nbsp;` keeps the dash with "sleep"; `.tie` keeps the pivot
+                on one line from 641px up (globals.css) — on a phone it may
+                wrap as two words, never mid-word. */}
             <h1>
-              Help for anxiety, focus, and sleep&nbsp;&mdash;{" "}
-              <em className="sage">
-                <span className="tie">without medication.</span>
-              </em>
+              <span className="eyebrow hero-kicker">
+                <span className="hero-kicker-text">
+                  LENS Neurofeedback<span className="vh"> in </span>{" "}
+                  <span className="hero-kicker-dot" aria-hidden="true" />{" "}
+                  Nashville &amp; Murfreesboro<span className="vh">:</span>
+                </span>
+              </span>{" "}
+              <span className="hero-h1-text">
+                Help for anxiety, focus, and sleep&nbsp;&mdash;{" "}
+                <em className="sage">
+                  <span className="tie">without medication.</span>
+                </em>
+              </span>
             </h1>
-            {/* What the first visit is, in one sentence (Ben, 2026-10-19).
+            {/* What the first visit is, in one sentence (Ben, 2026-10-19;
+                "LENS neurofeedback" named in it the same day, for search).
                 It replaced the one-line description of the organisation,
                 which /about still carries. Mirrored in
                 lib/chat/site-copy.ts — edit both. */}
             <p className="sub">
-              Your first visit starts with a Brain Map: a short recording that
-              shows which areas of your brain are running smoothly, running
-              hot, or running low, and what that means for everyday life.
+              Your first LENS neurofeedback visit starts with a Brain Map: a
+              short recording that shows which areas of your brain are running
+              smoothly, running hot, or running low, and what that means for
+              everyday life.
             </p>
             {/* One row on a desktop: both buttons, then the HSA/FSA line to
                 the right of the second (Ben, 2026-10-19). When the hero

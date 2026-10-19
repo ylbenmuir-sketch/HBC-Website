@@ -73,8 +73,8 @@ export const staticPages: StaticPage[] = [
     title: "Neurofeedback Therapy in Nashville & Murfreesboro, TN",
     absoluteTitle: true,
     description:
-      "Help for anxiety, focus, and sleep — starting with a map of your brain. LENS neurofeedback for adults and kids in Nashville and Murfreesboro. First call free.",
-    dateModified: "2026-10-18",
+      "LENS neurofeedback in Nashville & Murfreesboro: help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map.",
+    dateModified: "2026-10-19",
     type: "WebPage",
     crumb: "Home",
   },
