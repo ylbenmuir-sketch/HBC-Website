@@ -1,13 +1,16 @@
 # 10-Year Anniversary Giveaway — repo inspection and build plan
 
-Planning only (Ben's brief, 2026-10-15, Tier 4). No code is written for this
-yet. Read with `BUILD-LOG-2026-10-15.md`.
+Planning document (Ben's brief, 2026-10-15, Tier 4). Read with
+`BUILD-LOG-2026-10-15.md` and, once the build starts, `GIVEAWAY-BUILD-LOG.md`.
 
-**Updated 2026-10-18** with Ben's answers to the fourteen open questions
-(§8, "Decisions"). Every other section was rewritten to match, so this file
-is the single source of truth for the build. §10 is a scope check for the
-Nov 6 test run — recommendations only; nothing else in the plan was changed
-because of it.
+**Updated 2026-10-18 (second pass)** with Ben's prize ladder, the
+Saturday grand-only drawing, the claim-deadline rule, the Concierge rule and
+six scope cuts (§8, decisions 15–20). Every other section was rewritten to
+match, so this file is the single source of truth for the build. §10 is the
+scope check for the Nov 6 test run, re-marked after the cuts.
+
+**Updated 2026-10-18 (first pass)** with Ben's answers to the fourteen open
+questions (§8, decisions 1–14).
 
 **Searched for an existing spec first:** nothing. No giveaway, sweepstakes,
 anniversary, `/10years` or drawing notes exist in this repo, the older
@@ -26,22 +29,54 @@ below comes from the brief, Ben's decisions, and what the code already does.
 | **Sun Nov 15, 6:00 pm** | Mon 00:00 | **Entries open.** The "It's live" email goes to verified notify-me signups with a one-tap entry button |
 | **Mon Nov 16, 9:00 am** | 15:00 | One reminder to notify-me signups who have not tapped |
 | **Mon Nov 16 – Fri Nov 20, 12:00 pm** | 18:00 | **Daily drawing**, one a day (five). Ben calls Monday's winner Monday afternoon |
-| **Mon–Fri, afternoon** | | "Today's winner + next drawing + your share link" email to verified entrants |
-| **Sat Nov 21, 5:00 pm** | 23:00 | **Saturday daily AND the grand prize**, drawn together, daily first. Entries close at this moment. Ben (or Sheri) calls both winners that evening |
+| **Mon–Fri, 4:00 pm** | 22:00 | The daily afternoon email to verified entrants: the drawing is done, the next drawing and its prize, your entry count, your share link (no winner name) |
+| **Sat Nov 21, 5:00 pm** | 23:00 | **The grand prize — ONE drawing.** Pool = every valid entry from the whole week, daily winners included. Entries close at this moment. Ben (or Sheri) calls the winner Saturday evening. **Six drawings in all** |
 | **Sun Nov 22** | | Thank-you + offer email to everyone who did not win |
 | **to Sat Dec 5, 11:59 pm** | Dec 6 05:59 | **Thank-you offer** window: book by then, visit any date through **Dec 31**. Offer and codes switch off at this timestamp (config, no deploy) |
+| **Dec 1** | | Offer reminder email — **built after Nov 21**, not part of the Nov 6 run |
 | **after Dec 5** | | `/10years` stays live permanently as a thank-you page (no redirect) |
 
 Also: referral bonus entries (+3 per verified friend, cap 10 friends); an
-admin drawing engine with an audit trail; a lead pipeline from entry to
-attended appointment. **Email only — no SMS anywhere** (Dialpad bans
+admin drawing engine with an audit trail; offer-code redemption tracked from
+entry to booking. **Email only — no SMS anywhere** (Dialpad bans
 sweepstakes and referral traffic). Winners are called: Monday and Saturday
 by Ben (or Sheri), the other days by the front desk. **Both clinics are
 unstaffed on Mondays.**
 
 Note on time: US daylight saving ends **Sun Nov 1, 2026**, so the whole
-giveaway window is CST (UTC−6). Noon CT = **18:00 UTC**; 5:00 pm CT =
-**23:00 UTC**; 6:00 pm CT = **00:00 UTC the next day**.
+giveaway window is CST (UTC−6). Noon CT = **18:00 UTC**; 4:00 pm CT =
+**22:00 UTC**; 5:00 pm CT = **23:00 UTC**; 6:00 pm CT = **00:00 UTC the
+next day**.
+
+### Prizes (decision 16)
+
+One winner per drawing. The winner gets **the HBC prize and that day's
+partner prize**. Every HBC prize has two versions, and the winner's **"I'm
+already an HBC client"** checkbox picks which one:
+
+| Drawing | New client | Current client | Partner |
+|---|---|---|---|
+| Mon | Brain Map + 2 sessions | 2 sessions | Partner 1 (TBD) |
+| Tue | Brain Map + 3 sessions | 3 sessions | Partner 2 (TBD) |
+| Wed | Brain Map + 4 sessions + Hoolest keychain | 4 sessions + Hoolest keychain | Partner 3 (TBD) |
+| Thu | Brain Map + 5 sessions + Hoolest keychain | 5 sessions + Hoolest keychain | Partner 4 (TBD) |
+| Fri | Brain Map + 7 sessions + Hoolest keychain | 7 sessions + Hoolest keychain | Partner 5 (TBD) |
+| **Sat GRAND** | Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
+
+- **Every prize session includes the vibro chair.**
+- Partner prizes are six slots, smallest Monday to biggest Saturday, all
+  "TBD". The page and the emails show a partner prize **only once its name is
+  set in config**; unset = not shown at all (no "TBD" ever renders).
+- **Retail values come from config rates, never hand-typed** (`lib/giveaway/
+  config.ts`): Brain Map $150; session $125; vibro chair $40 per use; Hoolest
+  handheld $429 (**UNCONFIRMED**); Hoolest keychain retail **UNCONFIRMED**
+  (counted as $0 until set). Practitioner cost $35 per session or map — admin
+  cost view only, never shown to the public.
+- Any prize whose **computed retail value is over $600** sets
+  `tax_form_required` on the winner. The claim flow and admin show a **"tax
+  form received"** step for those winners. With the rates above that is
+  every prize from Tuesday's new-client version up; Monday's two versions and
+  Tuesday's current-client version are under.
 
 ---
 
@@ -51,12 +86,12 @@ giveaway window is CST (UTC−6). Noon CT = **18:00 UTC**; 5:00 pm CT =
 |---|---|---|
 | Hosting, crons | Vercel Pro project, production from `main`; `vercel.json` already runs `/api/cron/release-held-leads` **every minute** (Tier 1, 2026-10-15) | Drawings and scheduled emails ride the same per-minute pattern: a schedule table + an idempotent "run what is due" job, so DST and a late tick can't skip or double a draw |
 | Database | Supabase project `brwyfneahhhkymytkvpx` (RLS on, service-role from route handlers only) | New tables, below. Migrations in `supabase/migrations/` |
-| Email | Resend over fetch (`lib/lead-notification.ts`), one branded template (`lib/email/templates.ts`: wordmark, card, footer with the registered identity line, dark mode, one-phone-screen rule), previews via `npm run preview:emails` | Every giveaway email is a new builder on the same `page()`/`section()`/`footer()` pieces. The visitor confirmation (email #1 of the planned sequence) is already built that way |
+| Email | Resend over fetch (`lib/lead-notification.ts`), one branded template (`lib/email/templates.ts`: wordmark, card, footer with the registered identity line, dark mode, one-phone-screen rule), previews via `npm run preview:emails` | Every giveaway email is a new builder on the same `page()`/`section()`/`footer()` pieces (exported from templates.ts for this). Copy lives in one file, `lib/giveaway/copy.ts`, as [DRAFT] until Ben supplies the final words |
 | Staff routing | `lib/lead-routing.ts` (per-center env vars; **no address is ever written in code**) | Offer bookings use the existing per-center routes, no new route (§4). Winner alerts are not leads: they go to two new env vars read the same way (`GIVEAWAY_ALERTS`, `GIVEAWAY_ALERTS_OWNER`, §4) |
-| Leads table | `consultation_requests` (form + chat); held-email + audit columns; `referred_by` (0007) | An offer booking becomes a row here with `source = 'giveaway'` and the office gets the normal lead email, tagged "10 years". Needs one check-constraint change (`source in ('form','chat')` today) |
-| Abuse controls | Honeypot on forms; in-memory rate limit for chat (`lib/chat/rate-limit.ts`) | In-memory is per instance on Vercel — the giveaway needs a **database-backed** limiter (below) |
+| Leads table | `consultation_requests` (form + chat); held-email + audit columns; `referred_by` (0007) | An offer booking becomes a row here with `source = 'giveaway'` and the office gets the normal lead email, tagged "10 years". Migration 0010 adds `'giveaway'` to the source check constraint |
+| Abuse controls | Honeypot on forms; in-memory rate limit for chat (`lib/chat/rate-limit.ts`) | In-memory is per instance on Vercel — the giveaway uses a **database-backed** limiter (`rate_limits`, below) |
 | Test harness | `check:contact` (Chrome over CDP, mock Resend/platform/Dialpad, live DB with fingerprinted real rows), `LEAD_HOLD_ENV`-style env scoping | `check:giveaway` on the same pattern; giveaway rows carry an `env` column so a test run can never draw from or email real entrants |
-| Admin auth | **None on the website.** The platform (`hbc-platform`) uses Clerk for practitioners | See §5 — Supabase Auth email-OTP with a staff allowlist (Ben, Denise, Kylie), not Clerk on the website |
+| Admin auth | **None on the website.** The platform (`hbc-platform`) uses Clerk for practitioners | See §5 — Supabase Auth email-OTP with a staff allowlist seeded from an env var, not Clerk on the website |
 | Chat suppression | `ASSISTANT_SUPPRESSED_ROUTES` in `lib/site-config.ts` — a static list of path prefixes (`/contact`) with no dates | Needs a date-gated entry for `/10years` (§6). Small change, same file |
 | SMS | `lib/sms-confirmation.ts`, `lib/sms-consent.ts` (Dialpad) | **Not used. Not imported. No consent checkbox on any giveaway form.** No SMS abstraction is designed here |
 
@@ -66,81 +101,99 @@ giveaway window is CST (UTC−6). Noon CT = **18:00 UTC**; 5:00 pm CT =
 
 All tables RLS-on with no policies (service role only), all with
 `env text not null` (`production` / `preview` / `local` / `test`) so test
-runs are isolated by construction.
+runs are isolated by construction. Every unique key below includes `env`.
 
 - **`giveaway_people`** — one row per verified person.
   `id, env, email (normalized: lower-case; Gmail dots and +tags folded),
   email_display, first_name, last_name, zip (5 digits, Tennessee), city
   (from ZIP, for the public winner line), nearest_center ('nashville' |
   'murfreesboro', from ZIP), is_existing_client bool (the "I'm already an HBC
-  client" checkbox), age_confirmed bool, rules_accepted_at, rules_version,
-  verified_at, referral_code (unique, short, unguessable),
-  referred_by_person_id, source_page, ip_hash, ua_hash, marketing_opt_in
-  bool + wording + at, unsubscribed_at, created_at`.
+  client" checkbox — picks the prize version and the forward line),
+  age_confirmed bool, rules_accepted_at, rules_version, verified_at,
+  referral_code (unique per env, short, unguessable), referred_by_person_id,
+  source_page, ip_hash, ua_hash, marketing_opt_in bool + wording + at,
+  unsubscribed_at, created_at`. Unique `(env, email)`.
 - **`giveaway_notify`** — notify-me signups before Nov 15. Because the
   "It's live" email has a **one-tap** entry button, the notify-me form
   collects the **full entry set** (name, email, ZIP, 18+, rules accepted,
   existing-client box, optional marketing opt-in) and the row holds it:
-  `email (normalized), fields as above, verified_at, live_token (signed,
-  single-use), sent_live_at, reminded_at, tapped_at, person_id`. The tap
-  converts the row into a `giveaway_people` row + base entry with no second
-  verification. Nobody is entered without their own tap.
+  `email (normalized), fields as above, verified_at, live_token_hash (signed
+  token, single-use), sent_live_at, reminded_at, tapped_at, person_id,
+  unsubscribed_at`. The tap converts the row into a `giveaway_people` row +
+  base entry with no second verification. Nobody is entered without their
+  own tap. Unique `(env, email)`.
 - **`giveaway_entries`** — the ledger of chances. `id, env, person_id, kind
   ('base' | 'early_bird' | 'referral_bonus' | 'referred_bonus' | 'amoe'),
-  referral_person_id, created_at, void_reason`. Weights are row counts;
-  nothing is a mutable counter. One `base` per person for the week; one
-  `early_bird` for a notify-me signup who taps before Monday noon; three
-  `referral_bonus` rows per credited friend (cap: ten friends); one
-  `referred_bonus` for entering via a referral link.
-- **`giveaway_drawings`** — the schedule and the result. `id, env,
-  scheduled_at (timestamptz), prize_id, kind ('daily' | 'grand'), status
-  ('scheduled' | 'drawn' | 'redrawn' | 'void'), pool_snapshot_hash,
-  pool_size, entries_count, seed (crypto random, stored), winner_entry_id,
-  winner_person_id, drawn_at, drawn_by ('cron' | admin user id)`. Unique on
+  referral_person_id, created_at, void_reason, voided_at`. Weights are row
+  counts; nothing is a mutable counter. One `base` per person for the week
+  (unique); one `early_bird` for a notify-me signup who taps before Monday
+  noon (unique); three `referral_bonus` rows per credited friend (cap: ten
+  friends); one `referred_bonus` for entering via a referral link (unique).
+- **`giveaway_prizes`** — **seeded from `lib/giveaway/config.ts`**, two rows
+  per drawing: `env, slot ('mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'grand'),
+  version ('new_client' | 'current_client'), name, description, brain_map
+  bool, sessions int, vibro_chair bool, hoolest_keychain bool,
+  hoolest_handheld bool, partner_services bool, retail_value_usd (computed
+  from the rates), practitioner_cost_usd (admin only), tax_form_required
+  (retail > $600), fulfilment_status`. Unique `(env, slot, version)`. A unit
+  test regenerates the seed from the config and fails if the SQL drifts.
+  Partner prizes live in config only (name null = not shown).
+- **`giveaway_drawings`** — the schedule and the result. `id, env, slot,
+  scheduled_at (timestamptz), kind ('daily' | 'grand'), status ('scheduled' |
+  'drawn' | 'redrawn' | 'void'), pool_snapshot_hash, pool_size,
+  entries_count, seed (crypto random, stored), winner_entry_id,
+  winner_person_id, drawn_at, drawn_by ('cron' | admin email)`. Unique on
   `(env, scheduled_at, kind)` — the idempotency key: a second run finds it
-  drawn and does nothing. Seven rows: six daily (Mon–Fri noon, Sat 5 pm)
-  and one grand (Sat 5 pm, drawn after the daily).
+  drawn and does nothing. **Six rows per env**, seeded from config: five
+  daily (Mon–Fri noon) and one grand (Sat 5 pm).
 - **`giveaway_drawing_pool`** — the frozen pool for each drawing (drawing_id,
   entry_id, person_id). Written in the same transaction as the draw, so the
   result can be re-verified later from the stored seed and pool, and a
-  redraw picks from the same pool.
+  redraw picks from the same pool. Unique `(drawing_id, entry_id)`.
 - **`giveaway_winners`** — one row per drawing result (also the redraw
-  history): `drawing_id, person_id, claim_token, phone, status ('drawn' |
-  'contacted' | 'claimed' | 'unreachable' | 'declined' | 'ineligible' |
-  'redrawn'), claim_deadline_at (draw + 72 h), call_attempts jsonb (when,
-  who, outcome), contacted_at, claimed_at, public_ok bool (default false),
+  history): `env, drawing_id, person_id, prize_id, prize_version
+  ('new_client' | 'current_client', from the person's existing-client box at
+  draw time), claim_token_hash, phone, status ('drawn' | 'contacted' |
+  'claimed' | 'unreachable' | 'declined' | 'ineligible' | 'redrawn'),
+  claim_deadline_at (the rule in §4), call_attempts jsonb (when, who,
+  outcome), contacted_at, claimed_at, public_ok bool (default false),
   public_ok_at, public_label ("Jane D., Franklin" — computed, stored at OK
-  time), pickup_video bool, pickup_notes`.
+  time), tax_form_required bool (from the prize), tax_form_received_at`.
+  No pickup-video fields (cut, decision 15).
 - **`giveaway_audit`** — append-only: every draw, redraw (with reason:
-  unreachable / ineligible / declined), void, admin login, CSV export, entry
-  void, prize edit, public-OK toggle — who, when, what, before/after.
-- **`giveaway_prizes`** — name, description, ARV, which drawing, fulfilment
-  status.
-- **`giveaway_offers`** — one row per person: `person_id, kind
-  ('free_first_visit' | 'friend_pass'), code (personal, unguessable),
-  issued_at, expires_at (Dec 5 23:59 CT), redeemed_at,
-  consultation_request_id, redeemed_center`. `free_first_visit` for every
-  verified entrant, referred friend and verified notify-me signup;
-  `friend_pass` instead when `is_existing_client` is true (one per existing
-  client; the friend who books need not be an entrant).
-- **`giveaway_leads`** (or columns on `giveaway_people`) — the pipeline:
-  `stage ('entered' | 'offer_claimed' | 'call_requested' | 'called' |
-  'brain_map_booked' | 'attended' | 'not_a_fit' | 'no_response')`,
-  `consultation_request_id`, `offer_id`, timestamps per stage, notes.
-- **`rate_limits`** — `(bucket text, key_hash text, window_start, count)` for
-  the database-backed limiter.
+  unreachable / ineligible / declined), void, admin login (code requested,
+  denied, verified, failed), CSV export, entry void, prize edit, public-OK
+  toggle, tax-form received, unsubscribe — who, when, what, before/after.
+- **`giveaway_offers`** — one row per person: `env, person_id, kind
+  ('free_first_visit' — the only kind), code (personal, unguessable, unique
+  per env), issued_at, expires_at (Dec 5 23:59 CT), redeemed_at,
+  consultation_request_id, redeemed_center`. One per verified entrant,
+  referred friend and verified notify-me signup — **existing clients
+  included**: they get the same code, and their emails carry one extra line
+  inviting them to forward it to a friend (decision 15). Redemption is
+  tracked here (code → `consultation_requests` row); there is no separate
+  lead-stage table (cut).
+- **`giveaway_admin_allowlist`** — `env, email, added_at, added_by`. Seeded
+  at runtime from `GIVEAWAY_ADMINS` (never from code), checked on every
+  login. Unique `(env, email)`.
+- **`rate_limits`** — `(env, bucket, key_hash, window_start, count)` for the
+  database-backed limiter, incremented atomically by a SQL function
+  (`giveaway_rate_limit_hit`).
 - **`scheduled_sends`** — the email schedule the per-minute job drains:
   `(env, kind, due_at, person_id | null, sent_at, skipped_reason)`. Holds the
   Sunday "It's live", the Monday 9 am reminder, the daily afternoon emails,
-  the Tuesday "call today" re-send, the Nov 22 thank-you and the Dec 1
-  reminder. Unique on `(env, kind, due_at, person_id)`.
+  the Tuesday "call today" re-send and the Nov 22 thank-you. The Dec 1
+  reminder is added after Nov 21. Unique on `(env, kind, due_at, person_id)`
+  (nulls not distinct).
+- **`consultation_requests`** — the source check constraint gains
+  `'giveaway'` (today `check (source in ('form','chat'))`, migration 0002).
 
 The drawing is a weighted pick from the frozen pool with `crypto.randomInt`
-(Node), seed stored. Eligibility rules (decisions 1, 2, 4): every valid entry
-counts in every drawing still to come; a **daily winner's entries leave the
-pool of later daily drawings** but stay in the grand-prize pool; the grand
-pool is every valid entry from the whole week, referral and early-bird
-bonuses included.
+(Node), seed stored. Eligibility rules (decisions 1, 2, 4, 17): every valid
+entry counts in every drawing still to come; a **daily winner's entries
+leave the pool of later daily drawings** but stay in the grand-prize pool;
+the grand pool is every valid entry from the whole week, referral and
+early-bird bonuses and daily winners included.
 
 ---
 
@@ -150,20 +203,23 @@ bonuses included.
 `lib/giveaway/config.ts` holds every timestamp above as a constant (UTC
 instants with the CT label beside each): notify-me start, entries open,
 each drawing, the daily email time, the Monday reminder, the Tuesday
-re-send, the offer end, the chat-suppression window. The migration seed for
-`giveaway_drawings` and `scheduled_sends` is generated from it, the page's
-on-page Q&A and countdowns read it, and `assistantSuppressedOn()` reads it —
-so a time can only be wrong in one place. The admin dashboard shows a
-warning if a `giveaway_drawings` row and the config disagree.
+re-send, the offer end, the chat-suppression window — plus the prize ladder
+(both versions, the six partner slots), the rates, the claim-deadline rule
+and the offer window. The migration seed for `giveaway_prizes` and
+`giveaway_drawings` is generated from it (a test fails if the SQL drifts),
+the page's on-page Q&A and countdowns read it, the emails read it, and
+`assistantSuppressedOn()` reads it — so a time or a prize can only be wrong
+in one place. The admin dashboard shows a warning if a `giveaway_drawings`
+row and the config disagree.
 
 ### Notify-me (Nov 9 – Nov 15)
-`/10years` in notify-me mode shows the 10-year message, the schedule and the
-**full entry form** (so the Sunday tap can be one tap): first and last name,
-email, ZIP (5 digits), "I'm 18 or older", "I've read the Official Rules"
-(link), optional "I'm already an HBC client", optional marketing opt-in
-(unticked). Honeypot. Submit → verification email → the click sets
-`verified_at`. A non-Tennessee ZIP gets a polite "this one's for Tennessee
-residents" message and no row.
+`/10years` in notify-me mode shows the 10-year message, the schedule, the
+prizes and the **full entry form** (so the Sunday tap can be one tap): first
+and last name, email, ZIP (5 digits), "I'm 18 or older", "I've read the
+Official Rules" (link), optional "I'm already an HBC client", optional
+marketing opt-in (unticked). Honeypot. Submit → verification email → the
+click sets `verified_at`. A non-Tennessee ZIP gets a polite "this one's for
+Tennessee residents" message and no row.
 
 ### Entry (Sun Nov 15 6:00 pm – Sat Nov 21 5:00 pm)
 Same form, now creating entries. No phone field at entry (no SMS, and the
@@ -184,8 +240,11 @@ writes one `early_bird` entry. Monday 9:00 am CT: one reminder to signups
 with no `tapped_at`. The link works all week; after the tap, the ordinary
 "You're in" email follows.
 
-**Existing clients:** the "I'm already an HBC client" box flips the person
-to the friend pass (§ Lead pipeline). They still enter and can still win.
+**Existing clients:** the "I'm already an HBC client" box does two things:
+it picks the **current-client prize version** if they win (§1), and it adds
+one line to their emails — *"Already a client? Forward this to a friend — the
+code works for whoever books with it."* They get the same offer code as
+everyone else. They still enter and can still win.
 
 ### Referral bonus
 When a referred person **verifies**, the referrer gets **three**
@@ -204,27 +263,29 @@ counsel wants one (`kind = 'amoe'`).
 
 ### Drawings (the engine)
 - A `giveaway_drawings` row per slot, seeded from the config: daily at
-  **12:00 pm CT Mon Nov 16 – Fri Nov 20**; Saturday Nov 21 at **5:00 pm CT**
-  two rows, the Saturday daily and the grand prize, run in that order in the
-  same tick.
+  **12:00 pm CT Mon Nov 16 – Fri Nov 20** (five rows), and **one** grand
+  row at **5:00 pm CT Saturday Nov 21**. Six rows. There is no Saturday
+  daily (decision 17).
 - The existing per-minute cron (or a second route on the same schedule) runs
   `runDueDrawings()`: for each `scheduled` row past `scheduled_at` in its env,
   in one transaction: build the pool (all non-void entries; for a **daily**
   drawing minus the entries of anyone who already holds a daily win; for the
-  **grand** drawing, everyone), freeze it, hash it, draw, record winner, write
-  `giveaway_winners` with a 72-hour deadline, audit. Idempotent on the
-  unique key; a missed minute is caught the next.
+  **grand** drawing, everyone), freeze it, hash it, draw, record winner with
+  the **prize version from the person's existing-client box**, set
+  `tax_form_required` from the prize's computed retail value, write
+  `giveaway_winners` with the claim deadline (rule below), audit. Idempotent
+  on the unique key; a missed minute is caught the next.
 - Admin can also press "Draw now" for a slot whose time has passed (audited
   as the admin), and "Redraw" with a required reason. A redraw picks from
   **that drawing's frozen pool**, minus the previous pick and minus anyone
   who has won a daily prize since (daily drawings only).
 - After a draw: **staff alert** — to `GIVEAWAY_ALERTS` (Denise; cc Ben and
   Kylie) for Tue–Fri drawings, to `GIVEAWAY_ALERTS_OWNER` (Ben; cc Denise)
-  for the Monday and both Saturday drawings. Same first-address-is-To,
+  for the Monday and Saturday drawings. Same first-address-is-To,
   rest-are-CC format as the lead routes; both fall back to `LEADS_FALLBACK`
   with a logged warning. Contents: winner's name, email, ZIP + city, the
-  prize, the claim deadline, the admin link. Then the winner email (below).
-  Nothing public until the winner says OK.
+  prize (version named), tax-form flag, the claim deadline, the admin link.
+  Then the winner email (below). Nothing public until the winner says OK.
 
 ### Monday (clinics unstaffed)
 Monday's noon drawing runs. The alert goes to Ben first; **Ben calls the
@@ -238,55 +299,58 @@ the row at send time).
 Winner email at draw time ("You won — we'll call you; tap to give us the
 best number") with the claim link (`/10years/claim/<token>`): one phone
 field, plus a line saying we'll ask on the call whether we may post your
-first name, last initial and city. **Claim window: 72 hours from the draw.**
-Three call attempts, one per day, voicemail each time, logged in admin with
-who and when. Outcome recorded (`claimed`, `declined`, `unreachable`).
-**Unreachable after 72 hours → audited redraw** from that drawing's frozen
-pool. Note the calendar: the Friday noon and Saturday 5 pm windows run
-through Sunday and the unstaffed Monday, so those attempts are Ben's or
-Sheri's; the Saturday window ends Tuesday Nov 24 at 5 pm CT.
+first name, last initial and city. When `tax_form_required`, the email and
+the claim page carry one line saying a tax form is part of claiming, and
+admin shows a **"tax form received"** step for that winner.
+
+**Claim window (decision 18): 72 hours from the draw — except that a
+deadline which would land on a Sunday or a Monday moves to the following
+Tuesday at 5:00 pm CT.** So: Monday's, Tuesday's and Wednesday's winners
+have until noon three days later (Thu, Fri, Sat); Thursday's would land
+Sunday noon → **Tue Nov 24, 5 pm**; Friday's would land Monday noon → **Tue
+Nov 24, 5 pm**; Saturday's grand winner lands **Tue Nov 24, 5 pm** as it is. Three call attempts, one per
+day, voicemail each time, logged in admin with who and when. Outcome
+recorded (`claimed`, `declined`, `unreachable`). **Unreachable after the
+deadline → audited redraw** from that drawing's frozen pool. The Sunday and
+unstaffed Monday calls are Ben's or Sheri's.
 
 ### Public winners list
 On the claim call the winner is asked for the OK; admin has a **"public OK"
-toggle per winner** (audited). The `/10years` winners list and the daily
-email show, per drawing, one of three states: **named** ("Jane D.,
-Franklin" — first name, last initial, city from ZIP) when `public_ok` is on;
-**"[Day]'s winner: claimed ✓"** when contacted or claimed without the OK;
-**"[Day]'s winner has been drawn — we're reaching them now"** before
-contact. Staff may optionally ask for a short phone video at prize pickup
-(never required; `pickup_video` is a note, not a gate).
+toggle per winner** (audited). The `/10years` winners list shows, per
+drawing, one of three states: **named** ("Jane D., Franklin" — first name,
+last initial, city from ZIP) when `public_ok` is on; **"[Day]'s winner:
+claimed ✓"** when contacted or claimed without the OK; **"[Day]'s winner has
+been drawn — we're reaching them now"** before contact. The daily email does
+**not** carry any of this (below).
 
-### Lead pipeline: entry → attended
+### Lead pipeline: entry → booking
 - **The thank-you offer, "Your first visit is on us":** a free Brain Map +
   consultation (normally $150). Must be **booked by Dec 5 at 11:59 pm CT**;
   the visit may be any date through **Dec 31**. **Bonus:** start the
-  12-session package at that first visit and get a **13th session free**
-  ($125 value). One per person, both centers, no cap. **Concierge:** the
-  visit is free, the $100 travel fee still applies (whether the package
-  bonus applies to concierge is the same open fact as `CONCIERGE_PACKAGE` in
-  `lib/site-config.ts` — unconfirmed there today). Goes to all verified
-  entrants, referred friends and verified notify-me signups.
-- **Existing clients** get a **"free first visit for a friend" pass**
-  instead (one per existing client): same terms, the friend books with the
-  client's code. Their emails carry the pass copy, not the free-visit copy.
+  **in-center 12-session package** at that first visit and get a **13th
+  session free** ($125 value). One per person, both centers, no cap.
+  **Concierge (decision 19):** a Concierge booking gets the free first visit
+  (the $100 travel fee still applies) and **no package bonus** — the 13th
+  session applies to the in-center package only. Goes to all verified
+  entrants, referred friends and verified notify-me signups, existing
+  clients included. **Option A (decision 20): the offer stays at full
+  strength as decided; nothing was trimmed for budget.**
 - Every offer carries a **personal code** (`giveaway_offers.code`); the code
   and the offer switch off at the Dec 5 timestamp from the config — the
   claim page then says the window has closed and the normal "Talk with our
   team" button remains.
 - "Book my free visit" from any giveaway email → the existing `/contact`
   flow with `?from=10years&code=<offer>`; the consultation POST validates
-  the code, records `source = 'giveaway'` and `source_page`, and the
-  `giveaway_leads` row moves to `call_requested` (linked to
-  `consultation_requests.id`). **Routing: the existing per-center lead
-  routing, no new route**, with the center chosen from ZIP (nearer of
-  Nashville and Murfreesboro by ZIP centroid; unknown ZIP → today's
-  fallback). The office gets the normal lead email (held/one-email rules
-  apply), subject tagged **"10 years"**, and the booking is tagged "10
-  years" in the platform.
-- Admin moves the stage: `called` → `brain_map_booked` → `attended` (or
-  `not_a_fit` / `no_response`). Funnel counts on the admin dashboard and in
-  a CSV export. (Until the HBC platform is finished, stage updates are manual;
-  later the platform can post them back.)
+  the code, records `source = 'giveaway'` and `source_page`, and stamps the
+  offer row `redeemed_at` + `consultation_request_id` + `redeemed_center`.
+  **Routing: the existing per-center lead routing, no new route**, with the
+  center chosen from ZIP (nearer of Nashville and Murfreesboro by ZIP
+  centroid; unknown ZIP → today's fallback). The office gets the normal lead
+  email (held/one-email rules apply), subject tagged **"10 years"**, and the
+  booking is tagged "10 years" in the platform.
+- **Tracking (decision 15):** redemption counts on the admin dashboard and a
+  **CSV export** (people, entries, offers with redemption, winners). No lead
+  stage board; stages after booking live in the platform.
 
 ### Emails (Resend, the shared template; every one previewed at 390/640)
 1. Notify-me confirmation (verify) ·
@@ -295,34 +359,37 @@ contact. Staff may optionally ask for a short phone video at prize pickup
 3. **Notify-me reminder** (Mon Nov 16, 9:00 am CT, to signups who have not
    tapped) ·
 4. Entry verification ·
-5. "You're in" + your referral link + the thank-you offer (or the friend
-   pass) ·
-6. "A friend entered — +3 entries" (and the friend's "+1 for entering via a
-   link" line in their "You're in") ·
-7. **Daily "Today's winner + next drawing + your share link"** (Mon–Fri
-   afternoon, 4:00 pm CT, to verified entrants; the winner line follows the
-   three states above; Saturday's slot is email 9) ·
-8. Winner (with the claim link) ·
-9. Non-winner thank-you + offer (Sun Nov 22) ·
-10. Offer reminder (Dec 1) ·
-11. Staff: winner drawn ·
-12. Staff: Tuesday "call today" for Monday's winner (skipped if contacted).
-**Marketing emails (2, 3, 7, 9, 10) carry an unsubscribe link** (own
-`/unsubscribe` endpoint writing `unsubscribed_at`; nothing of the kind exists
-on the site today) and the registered identity line (CAN-SPAM). The week's
-emails go to every verified entrant who has not unsubscribed — the rules
-disclose them as part of entering; the separate marketing opt-in box governs
-HBC news after Dec 5. Each email needs a held-for-review copy deck before
-it's built.
+5. "You're in" + your referral link + the thank-you offer (+ the forward
+   line for existing clients; + "+1 for entering via a link" when it applies) ·
+6. **Daily afternoon** (Mon–Fri 4:00 pm CT, to verified entrants) —
+   **simplified (decision 15)**: no winner name, no three-state line. Shape:
+   *"Today's drawing is done and the winner is being called. Next drawing:
+   [day] at noon — [next prize]. You have [N] entries. Share your link to add
+   more."* Friday's names Saturday's grand prize at 5 pm ·
+7. Winner (with the claim link; a tax-form line when required) ·
+8. Non-winner thank-you + offer (Sun Nov 22) ·
+9. Staff: winner drawn ·
+10. Staff: Tuesday "call today" for Monday's winner (skipped if contacted) ·
+11. Offer reminder (Dec 1) — **built after Nov 21**.
+**Marketing emails (2, 3, 6, 8, 11) carry an unsubscribe link** (own
+`/unsubscribe` endpoint writing `unsubscribed_at`, signed token, no login)
+and the registered identity line (CAN-SPAM). The week's emails go to every
+verified entrant who has not unsubscribed — the rules disclose them as part
+of entering; the separate marketing opt-in box governs HBC news after Dec 5.
+All copy lives in `lib/giveaway/copy.ts` as [DRAFT] until Ben approves the
+deck. Cut: the "A friend entered" email (decision 15) — the count is in the
+next daily email and on the page.
 
 ### Anti-fraud and rate limiting
-Database-backed limiter: per IP hash (e.g. 5 entry attempts / hour), per
-email (1 verification email / 10 min), per referral code (the ten-friend
-cap). Double opt-in. Disposable-domain blocklist. Normalized email
-uniqueness (one person, one base entry). Honeypot. Admin "suspicious" view:
-many entries from one IP hash, referral bursts. **No Cloudflare Turnstile**
-(decision 10) — no third party is added, and the privacy policy change in §6
-is about the giveaway data only.
+Database-backed limiter (`rate_limits`): per IP hash (5 entry attempts /
+hour), per email (1 verification email / 10 min), per referral code (a burst
+ceiling; the ten-friend cap is business logic). Double opt-in.
+Disposable-domain blocklist. Normalized email uniqueness (one person, one
+base entry). Honeypot. Admin entries search has a **saved "suspicious"
+filter** (many entries from one IP hash, referral bursts) — no separate
+view (decision 15). **No Cloudflare Turnstile** (decision 10) — no third
+party is added, and the privacy policy change in §6 is about the giveaway
+data only.
 
 ---
 
@@ -330,21 +397,23 @@ is about the giveaway data only.
 
 `/admin/10years` on the website, server-rendered, never cached, `noindex`.
 **Auth: Supabase Auth email one-time code** limited to an allowlist of staff
-emails (a `staff_allowlist` table) — the website already talks to Supabase
-and has no auth library; adding Clerk (the platform's) to the website is a
-bigger dependency for a six-week feature. **Allowlist: Ben, Denise, Kylie**
-(addresses seeded from env, never written in code). Every admin action is
-written to `giveaway_audit` with the staff email.
+emails (`giveaway_admin_allowlist`, seeded at runtime from the
+`GIVEAWAY_ADMINS` env var — never written in code) — the website already
+talks to Supabase and has no auth library; adding Clerk (the platform's) to
+the website is a bigger dependency for a six-week feature. **Allowlist: Ben,
+Denise, Kylie** (decision 9). Every login attempt is written to
+`giveaway_audit` with the staff email. Phase 1 ships the login and an empty
+dashboard shell; the screens come in Phase 3.
 
-Screens: dashboard (entries/day, verified %, referrals, offer claims,
-funnel, a **Franklin-corridor count** from ZIP — the ZIP list is a config
-constant for Ben to confirm: Franklin 37064–37069, Brentwood 37027,
-Nolensville 37135, Thompson's Station 37179, Spring Hill 37174, College
-Grove 37046), drawings (schedule, pool size, Draw now, Redraw with reason,
-audit trail per drawing, re-verify button that recomputes the pick from
-stored seed + pool), winners (claim status, call log with the three
-attempts, **public OK toggle**, pickup notes), entries (search, void with
-reason), leads (stage board), exports (CSV, audited).
+Screens: dashboard (entries/day, verified %, referrals, offer codes issued
+and redeemed, a config-vs-schedule warning), drawings (schedule, pool size,
+Draw now, Redraw with reason, audit trail per drawing, re-verify button that
+recomputes the pick from stored seed + pool), winners (claim status, call log
+with the three attempts, **public OK toggle**, **tax form received** step
+when required, prize version shown), entries (search with the saved
+"suspicious" filter, void with reason), exports (CSV, audited). Cut
+(decision 15): the Franklin-corridor count (ZIP is stored; query it later),
+the lead stage board, the separate suspicious view.
 
 ---
 
@@ -354,18 +423,20 @@ reason), leads (stage board), exports (CSV, audited).
   confirmation, existing-client flag, referral relationships, IP hash), the
   emails and the unsubscribe, retention for giveaway data. No new third
   party (no Turnstile). **Same commit as the feature.**
-- `consultation_requests` source check constraint: add `'giveaway'` (today
-  `check (source in ('form','chat'))`, migration 0002) — decide in Phase 1
-  whether that or `form` + `source_page` + the offer code.
+- `consultation_requests` source check constraint: `'giveaway'` added in
+  migration 0010 (Phase 1). The route's accepted sources and the lead-routing
+  `source` type widen in Phase 3 when the code check lands.
 - `ASSISTANT_SUPPRESSED_ROUTES` (`lib/site-config.ts`): today a static list
   of path prefixes. Becomes entries with an optional window, and `/10years`
   is suppressed **from Nov 9 00:00 CT through Dec 5 11:59 pm CT** (the
   window comes from `lib/giveaway/config.ts`), then the assistant returns.
   During the window the page carries a short **on-page Q&A** instead (how
   entries work, drawing times, how winners are contacted, the thank-you
-  offer), rendered from the same config so times can't drift.
-- Sitemap: `/10years` in; `/10years/claim/*`, `/10years/enter/*`,
-  `/unsubscribe` and `/admin/*` out, `noindex`.
+  offer), rendered from the same config so times can't drift. `/admin` is
+  suppressed always.
+- Sitemap: `/10years` in (once live); `/10years/claim/*`, `/10years/enter/*`,
+  `/unsubscribe` and `/admin/*` out, `noindex`. robots.txt disallows
+  `/admin/`.
 
 ---
 
@@ -373,15 +444,15 @@ reason), leads (stage board), exports (CSV, audited).
 
 | Phase | Done by | Contents |
 |---|---|---|
-| **0 — decisions** | Tue Oct 27 | **Ben's 14 decisions: done (Oct 18, §8).** Still open: counsel returns official rules; prize descriptions and ARVs; email copy decks approved (twelve emails, §4) |
-| **1 — foundations** | Fri Oct 30 | Migration 0010 (applied by Ben or via MCP with permission); `lib/giveaway/config.ts`; env-scoped store; limiter; staff allowlist + admin login; email builders + previews; `/unsubscribe` |
+| **0 — decisions** | Tue Oct 27 | **Ben's 20 decisions: done (Oct 18, §8).** Still open: counsel returns official rules; the two UNCONFIRMED Hoolest retail values; partner names; email copy approved (ten emails, §4) |
+| **1 — foundations** | Fri Oct 30 | Migration 0010 (committed; applied by Ben in the SQL editor if the connector keeps refusing); `lib/giveaway/config.ts` with tests; env-scoped store; limiter; admin allowlist + login + empty shell; email builders + previews, copy in one [DRAFT] file; `/unsubscribe` |
 | **2 — notify-me** | Tue Nov 3 | `/10years` in notify-me mode (date-switched by config, not by deploy) with the full entry form; notify signup + verify; privacy policy update; date-gated chat suppression + on-page Q&A; `check:giveaway` part 1 |
-| **3 — giveaway + engine** | Thu Nov 5 | Entry + double opt-in; one-tap entry from notify-me + early bird; referrals (+3 / +1, cap 10); drawings schedule + `runDueDrawings` on the per-minute cron (daily-winner exclusion, grand pool); `scheduled_sends`; winner claim page + 72-hour window + redraw; public-OK state; admin screens; offer codes (two kinds, Dec 5 cut-off); ZIP → center; lead stages |
-| **4 — test-mode run** | **Fri Nov 6** | A full compressed week on a preview deployment, `env = test`: notify-me → "It's live" tap (early bird) → 6 daily drawings + grand prize scheduled minutes apart → daily emails → winners → a Monday winner marked contacted (Tuesday re-send skipped) → one unreachable → redraw → offer claims (both kinds) → leads to `attended` → Dec 5 cut-off; Resend mocked; Dialpad mock log empty; audit re-verified; then the same checks against production with `env = test` rows only |
+| **3 — giveaway + engine** | Thu Nov 5 | Entry + double opt-in; one-tap entry from notify-me + early bird; referrals (+3 / +1, cap 10); drawings schedule + `runDueDrawings` on the per-minute cron (daily-winner exclusion, grand pool, six drawings); `scheduled_sends`; winner claim page + the deadline rule + tax-form step + redraw; prize version from the existing-client box; public-OK state; admin screens; offer codes (one kind, Dec 5 cut-off); ZIP → center; CSV export |
+| **4 — test-mode run** | **Fri Nov 6** | A full compressed week on a preview deployment, `env = test`: notify-me → "It's live" tap (early bird) → 5 daily drawings + the grand prize scheduled minutes apart → daily emails → winners → a Monday winner marked contacted (Tuesday re-send skipped) → one unreachable → redraw → a >$600 prize's tax-form step → offer code booked through /contact → Dec 5 cut-off; Resend mocked; Dialpad mock log empty; audit re-verified; then the same checks against production with `env = test` rows only |
 | **5 — notify-me live** | **Mon Nov 9** | Switch on; chat hidden on `/10years`; monitor verifications |
-| **6 — giveaway week** | **Sun Nov 15 6 pm – Sat Nov 21 5 pm** | Sunday: "It's live" send. Daily: watch the noon draw, the alert, the 4 pm email; Monday: Ben calls; Tuesday 8:30 re-send if needed; Saturday 5 pm: daily + grand, Ben/Sheri call; redraws as needed |
-| **7 — offer window** | to **Sat Dec 5** | Nov 22 thank-you; reminder Dec 1; pipeline follow-up; the offer and codes close themselves at Dec 5 23:59 CT; chat returns to `/10years` |
-| **8 — wrap-up** | Dec 7 | Funnel report; retention per the rules; `/10years` stays as the permanent thank-you page (10-year message, winners list, "Talk with our team") |
+| **6 — giveaway week** | **Sun Nov 15 6 pm – Sat Nov 21 5 pm** | Sunday: "It's live" send. Daily: watch the noon draw, the alert, the 4 pm email; Monday: Ben calls; Tuesday 8:30 re-send if needed; Saturday 5 pm: the grand prize, Ben/Sheri call; redraws as needed |
+| **7 — offer window** | to **Sat Dec 5** | Nov 22 thank-you; build and send the Dec 1 reminder; redemption follow-up; the offer and codes close themselves at Dec 5 23:59 CT; chat returns to `/10years` |
+| **8 — wrap-up** | Dec 7 | Redemption report; retention per the rules; `/10years` stays as the permanent thank-you page (10-year message, winners list, "Talk with our team") |
 
 The date switches (notify-me → live → closed → thank-you page) are config
 timestamps, so no deploy has to happen at noon on a Monday or at midnight
@@ -403,9 +474,11 @@ on Dec 5.
    some states, e.g. New York and Florida, impose registration and bonding
    for prize values above set thresholds), employee/family exclusions,
    existing clients eligible?
-3. **Prize descriptions and approximate retail values** for each daily
-   drawing and the grand prize; tax note (a prize worth $600+ may mean a
-   1099 — confirm with the accountant).
+3. **Prize descriptions and approximate retail values** — the ladder is
+   decided (§1); still open: the Hoolest handheld ($429, unconfirmed) and
+   keychain retail values, and the six partner names. Tax note: a prize worth
+   $600+ may mean a 1099 — the code flags those winners; confirm the
+   threshold and the form with the accountant.
 4. **Health-service prizes**: if prizes or the thank-you offer are LENS
    services, have counsel confirm the inducement and advertising angle, and
    keep every giveaway word inside the site's existing claim rules (no
@@ -428,6 +501,7 @@ on Dec 5.
    first. Grand prize pool = all valid entries from the whole week,
    including referral bonuses and daily winners. Ben (or Sheri) personally
    calls both Saturday winners that evening.
+   *(Saturday superseded by decision 17: one drawing, the grand prize only.)*
 5. Entries open Sunday Nov 15 at 6:00 pm CT (the "It's live" email goes out
    then). Monday's noon drawing runs; Ben calls the Monday winner Monday
    afternoon. Fallback: front desk calls Tuesday morning; keep the Tuesday
@@ -436,11 +510,14 @@ on Dec 5.
 6. Claim: 72 hours from the draw, 3 call attempts (one per day, voicemail
    each time) plus the winner email with the claim link. Unreachable after
    72 hours → audited redraw from that drawing's frozen pool.
+   *(Deadline refined by decision 18.)*
 7. Winners are announced publicly as first name + last initial + city (city
    from ZIP), only after the winner says OK on the claim call. If not OK,
    show "[Day]'s winner: claimed ✓". Admin gets a "public OK" toggle per
    winner. Staff may optionally ask for a short phone video at prize pickup
    (never required).
+   *(Pickup video cut from the software by decision 15; it stays an
+   operational option with no fields.)*
 8. Thank-you offer, "Your first visit is on us": free Brain Map +
    consultation (normally $150). Must be booked by Dec 5 at 11:59 pm CT; the
    visit itself may be any date through Dec 31. Bonus: start the 12-session
@@ -453,6 +530,8 @@ on Dec 5.
    Add to the entry form: optional checkbox "I'm already an HBC client".
    Checked → that person's emails carry the friend pass, not the free-visit
    offer.
+   *(Friend pass replaced by decision 15; Concierge bonus settled by
+   decision 19; offer strength confirmed by decision 20.)*
 9. Routing: winner alerts to Denise, cc Ben and Kylie. Monday and Saturday
    winners: to Ben first, cc Denise. Offer bookings go through the existing
    per-center lead routing (no new route), tagged "10 years". Use ZIP to
@@ -462,6 +541,8 @@ on Dec 5.
     disposable-domain blocklist, normalized-email uniqueness, the honeypot,
     the 10-friend cap, and the admin "suspicious" view. Remove Turnstile
     from §4 and §6.
+    *(The "suspicious" view became a saved filter in the entries search by
+    decision 15.)*
 11. After Dec 5, /10years stays live permanently as a thank-you page: the
     10-year message, the winners list, the normal "Talk with our team"
     button. The offer turns off automatically at Dec 5 11:59 pm CT (config
@@ -471,6 +552,7 @@ on Dec 5.
     "this one's for Tennessee residents" message; no separate residency
     checkbox. ZIP is also used for center routing, the winner's city, and a
     Franklin-corridor count on the admin dashboard.
+    *(Franklin-corridor count cut by decision 15; ZIP is still stored.)*
 13. Notify-me signups: the Sunday 6 pm "It's live" email has a one-tap entry
     button (details on file, already verified, so no second verification).
     They get +1 early-bird entry if they tap before Monday's noon drawing.
@@ -480,6 +562,58 @@ on Dec 5.
     page gets a short on-page Q&A instead (how entries work, drawing times,
     how winners are contacted, the thank-you offer), driven by the same
     config the drawings use so times can't drift.
+
+**Decisions (Ben, Oct 18 2026, second pass):**
+15. **Scope cuts.** Cut from this build (future campaign): the pickup video
+    fields (`pickup_video`, `pickup_notes`); the Franklin-corridor count on
+    the dashboard (ZIP is stored; query it later); the separate friend-pass
+    offer — existing clients get the **same** free-first-visit code and their
+    emails add one line: *"Already a client? Forward this to a friend — the
+    code works for whoever books with it."* The "I'm already an HBC client"
+    checkbox stays (it also picks the prize version, decision 16). One offer
+    kind only. Cut the lead stage board in admin; keep offer redemption
+    tracking (code → `consultation_requests` row) and a CSV export. Cut the
+    "A friend entered" email. Cut the admin "suspicious" view (a saved filter
+    in the entries search is enough). The Dec 1 offer reminder stays in the
+    plan but is **built after Nov 21**. The daily afternoon email is kept
+    but simplified: no winner name, no three-state winner line — *"Today's
+    drawing is done and the winner is being called. Next drawing: [day] at
+    noon — [next prize]. You have [N] entries. Share your link to add more."*
+    The public winners list on /10years keeps the three states.
+16. **Prizes.** One winner per drawing gets both the HBC prize and that
+    day's partner prize. Each HBC prize has two versions; the winner's "I'm
+    already an HBC client" checkbox picks which: Mon new = Brain Map + 2
+    sessions | current = 2 sessions; Tue new = Brain Map + 3 sessions |
+    current = 3 sessions; Wed new = Brain Map + 4 sessions + Hoolest keychain
+    | current = 4 sessions + Hoolest keychain; Thu new = Brain Map + 5
+    sessions + Hoolest keychain | current = 5 sessions + Hoolest keychain;
+    Fri new = Brain Map + 7 sessions + Hoolest keychain | current = 7
+    sessions + Hoolest keychain; Sat GRAND new = Brain Map + 12 sessions +
+    Hoolest handheld vagus nerve stimulator (to keep) + one service from
+    every partner | current = 13 sessions + the same Hoolest handheld +
+    partner services. Every prize session includes the vibro chair. Partner
+    prizes: Partner 1–6, smallest Monday to biggest Saturday, all "TBD"; the
+    page and emails show a partner prize only once its name is set in
+    config; unset = simply not shown. Retail values come from config rates,
+    never hand-typed: Brain Map $150, session $125, vibro chair $40 per use,
+    Hoolest handheld $429 (UNCONFIRMED), Hoolest keychain retail
+    UNCONFIRMED. Practitioner cost $35 per session/map, for the admin cost
+    view only. Any prize whose computed retail value is over $600 sets
+    `tax_form_required` on the winner; the claim flow and admin show a "tax
+    form received" step for those winners.
+17. **Saturday is ONE drawing**, the grand prize, at 5:00 pm CT (23:00 UTC),
+    pool = every valid entry from the whole week (daily winners included).
+    There is no separate Saturday daily. Six drawings total. Ben (or Sheri)
+    calls that winner Saturday evening.
+18. **Claim deadline:** the 72-hour window still applies, but a winner whose
+    deadline would land on Sunday or Monday (Friday's and Saturday's
+    winners) gets a deadline of the following Tuesday at 5:00 pm CT.
+19. **Concierge:** the 13th-session bonus in the thank-you offer applies to
+    the in-center 12-session package only. A Concierge booking gets the free
+    first visit (travel fee still applies) and no package bonus.
+20. **The thank-you offer stays as decided** (free first visit = Brain Map +
+    consultation, book by Dec 5, visit by Dec 31, 13th session free with the
+    package). **Option A was chosen so the offer stays at full strength.**
 
 ---
 
@@ -499,61 +633,67 @@ on Dec 5.
 - **SMS creeping back in** → the giveaway code imports nothing from
   `lib/sms-*`, no form shows a consent box, and `check:giveaway` asserts the
   Dialpad mock log stays empty for every giveaway path.
-- **The Sunday/Monday gap in the claim window** → Friday's and Saturday's
-  winners are Ben's or Sheri's calls until Tuesday; the admin call log
-  makes that visible.
+- **The Sunday/Monday gap in the claim window** → closed by decision 18:
+  Friday's and Saturday's deadlines move to Tuesday 5 pm. Thursday's
+  (Sunday noon) moves too. The admin call log still shows who called when;
+  the Sunday/Monday attempts are Ben's or Sheri's.
+- **Prize values and the tax flag** → two retail values are unconfirmed, so
+  `tax_form_required` is computed from the rates as they stand; the flag
+  recomputes when the rate changes in config, and the admin shows the value
+  it used. A wrong rate before Nov 16 is a config edit and a deploy.
+- **Supabase Auth email for the admin code** → the project's built-in mailer
+  is rate-limited and may only deliver to project team members; the admin
+  login needs custom SMTP in the Supabase dashboard (Resend's SMTP works)
+  and an email template that prints `{{ .Token }}`. Listed in the Phase 1
+  report.
 
 ---
 
 ## 10. Scope check for Nov 6
 
 Everything in the plan, ranked from **cut first** (top) to **must have**
-(bottom). Size is the build including its `check:giveaway` coverage and
-email preview: S = under half a day, M = one to two days, L = three days or
-more. Recommendations only; nothing above was changed because of this list.
+(bottom), re-marked after decision 15. Size is the build including its
+`check:giveaway` coverage and email preview: S = under half a day, M = one
+to two days, L = three days or more.
 
-| # | Piece | Size | Cut-first reason |
+| # | Piece | Size | Status after decision 15 |
 |---|---|---|---|
-| 1 | Phone video at pickup (`pickup_video`, notes) | S | Operational, not software; a notes field in admin covers it |
-| 2 | Franklin-corridor count on the dashboard | S | Nice-to-know; the ZIP is stored, so the count can be run as SQL any time |
-| 3 | Friend pass for existing clients (second offer kind, checkbox, second email copy) | M | Doubles the offer logic and copy for a group that already knows HBC; an existing client could get the plain offer email with one "share it with a friend" line |
-| 4 | Lead stage board in admin (`called` → `attended`) | M | Manual anyway until the platform posts back; a CSV export with the offer code does the same for December |
-| 5 | Daily afternoon "Today's winner" email (five sends, three-state winner line, copy deck) | M | The share link is already in "You're in"; the public winners list on the page shows the same thing |
-| 6 | Early-bird +1 entry | S | A fourth entry kind and a time comparison for a small nudge; the one-tap button is the real conversion lever |
-| 7 | Monday 9 am notify-me reminder | S | One more scheduled send and copy deck; the "It's live" link works all week anyway |
-| 8 | Offer reminder email, Dec 1 | S | Cheap, but it is a December job and can be built after Nov 21 |
-| 9 | "A friend entered" email | S | The count is visible in the next daily email or on the page |
-| 10 | Admin "suspicious" view | S | The data is in the entries table; a query in the admin entries search covers week one |
-| 11 | Re-verify button (recompute the pick from seed + pool) | S | Cheap given the stored seed; keep if the engine lands early |
-| 12 | On-page Q&A driven by config | S | Cheap and it replaces the chat; keep unless the week is lost |
-| 13 | Public winners list with the three states + public-OK toggle | S | Needed once the first winner says OK; the toggle is one column and one button |
-| 14 | ZIP → nearer center for offer bookings | S | A small table; without it bookings use today's fallback route, which still reaches the office |
-| 15 | Date-gated chat suppression on `/10years` | S | One entry and a window check in `site-config.ts` |
-| 16 | Tuesday 8:30 "call today" re-send, skipped if contacted | S | Part of the scheduled-sends job once that exists |
-| 17 | Offer codes + Dec 5 auto-off + `/contact` code validation + "10 years" tag | M | The whole point of the lead pipeline; without it the offer is a coupon nobody can track |
-| 18 | `/unsubscribe` endpoint + `unsubscribed_at` | S | Required by law for emails 2, 3, 7, 9, 10; must ship with the first marketing send |
-| 19 | Privacy policy update | S | Same commit as the feature |
-| 20 | One-tap entry from notify-me (signed token, full form at notify-me) | M | Decision 13 depends on it; without it notify-me signups re-enter by hand on the form |
-| 21 | Referrals: +3 / +1, cap 10, self-referral voids | M | Core mechanic of the campaign |
-| 22 | Winner claim page, 72-hour window, call log, redraw from the frozen pool | M | Without it winners are tracked in email threads and a redraw is not auditable |
-| 23 | Staff winner alerts (two env vars, To/CC, fallback) | S | Someone has to be told |
-| 24 | Admin login (Supabase OTP + allowlist) + drawings and winners screens | M | No admin means no Draw now, no redraw, no public OK, no contacted mark |
-| 25 | Emails on the shared template: verify, "You're in", winner, staff alert, "It's live", thank-you | M | Six are the floor; each needs a copy deck first |
-| 26 | Drawing engine: schedule rows, `runDueDrawings` on the per-minute cron, frozen pool, daily-winner exclusion, grand pool, audit | L | The giveaway |
-| 27 | Entry form + double opt-in + database limiter + blocklist + normalized uniqueness + honeypot + TN ZIP check | L | No valid entries without it |
-| 28 | Migration 0010, `env` scoping, `lib/giveaway/config.ts`, `scheduled_sends` | M | Everything sits on it |
-| 29 | `check:giveaway` harness (compressed week, Dialpad mock asserted empty) | M | The Nov 6 deliverable is the test run itself |
-| 30 | Notify-me mode on `/10years` (Nov 9) | M | First public date |
+| 1 | Phone video at pickup (`pickup_video`, notes) | S | **Cut** |
+| 2 | Franklin-corridor count on the dashboard | S | **Cut** (ZIP stored) |
+| 3 | Friend pass for existing clients (second offer kind) | M | **Cut** → same code + one forward line |
+| 4 | Lead stage board in admin | M | **Cut** → redemption tracking + CSV |
+| 5 | Daily afternoon email | M→S | **Kept, simplified** (no winner line) |
+| 6 | Early-bird +1 entry | S | Kept |
+| 7 | Monday 9 am notify-me reminder | S | Kept |
+| 8 | Offer reminder email, Dec 1 | S | **After Nov 21** |
+| 9 | "A friend entered" email | S | **Cut** |
+| 10 | Admin "suspicious" view | S | **Cut** → saved filter in entries search |
+| 11 | Re-verify button (recompute the pick from seed + pool) | S | Kept |
+| 12 | On-page Q&A driven by config | S | Kept |
+| 13 | Public winners list with the three states + public-OK toggle | S | Kept |
+| 14 | ZIP → nearer center for offer bookings | S | Kept |
+| 15 | Date-gated chat suppression on `/10years` | S | Kept |
+| 16 | Tuesday 8:30 "call today" re-send, skipped if contacted | S | Kept |
+| 17 | Offer codes + Dec 5 auto-off + `/contact` code validation + "10 years" tag | M | Core |
+| 18 | `/unsubscribe` endpoint + `unsubscribed_at` | S | Core (Phase 1) |
+| 19 | Privacy policy update | S | Core |
+| 20 | One-tap entry from notify-me (signed token, full form at notify-me) | M | Core |
+| 21 | Referrals: +3 / +1, cap 10, self-referral voids | M | Core |
+| 22 | Winner claim page, deadline rule, call log, tax-form step, redraw from the frozen pool | M | Core |
+| 23 | Staff winner alerts (two env vars, To/CC, fallback) | S | Core |
+| 24 | Admin login (Supabase OTP + allowlist) + drawings and winners screens | M | Core (login in Phase 1) |
+| 25 | Emails on the shared template: ten builders, one [DRAFT] copy file | M | Core (Phase 1) |
+| 26 | Drawing engine: six schedule rows, `runDueDrawings` on the per-minute cron, frozen pool, daily-winner exclusion, grand pool, prize version, audit | L | Core |
+| 27 | Entry form + double opt-in + database limiter + blocklist + normalized uniqueness + honeypot + TN ZIP check | L | Core |
+| 28 | Migration 0010, `env` scoping, `lib/giveaway/config.ts`, `scheduled_sends` | M | Core (Phase 1) |
+| 29 | `check:giveaway` harness (compressed week, Dialpad mock asserted empty) | M | Core |
+| 30 | Notify-me mode on `/10years` (Nov 9) | M | Core |
 
-**Is the full plan realistic for a Nov 6 test run?** Not as written. Nov 6
-is nineteen days from today, the site's own DNS cutover is this coming
-Monday, and Phase 0 (counsel's rules, prize ARVs, twelve copy decks) is on
-the critical path and not under the build's control. Rows 17–30 are the
-core: roughly three weeks of focused work for one builder, which is the
-whole window. Rows 1–16 add about a week on top. Recommendation: hold the
-Nov 6 test run to rows 17–30 plus whatever of 11–16 is already done; land
-rows 5–10 by **Fri Nov 13** (before entries open) or cut them; cut rows 1–4
-from this build and revisit for a future campaign. If counsel's rules slip
-past Oct 27, the Nov 6 run still proves the engine with placeholder rules
-text, but the Nov 9 notify-me page cannot ask anyone to accept rules that
-do not exist — that date, not Nov 6, is the one to protect.
+**Is the plan realistic for a Nov 6 test run?** With rows 1–4, 9 and 10 cut
+and 5 simplified, the remaining work is roughly the three weeks of focused
+build the window allows, with Phase 1 landing Oct 18. Phase 0 (counsel's
+rules, the two Hoolest values, partner names, the copy deck) stays on the
+critical path and outside the build's control. If counsel's rules slip past
+Oct 27, the Nov 6 run still proves the engine with placeholder rules text,
+but the Nov 9 notify-me page cannot ask anyone to accept rules that do not
+exist — that date, not Nov 6, is the one to protect.
