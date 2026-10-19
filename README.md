@@ -324,6 +324,10 @@ submission requires Supabase credentials.
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
 | `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and every event is a no-op: `submit_lead_form` + `generate_lead` (a saved call request, form or chat), `contact_link_click` (any `tel:`/`mailto:` tap; location from the nearest `data-link-location`), `guide_download`. Names match the old WordPress site's. Loads in production only: never under `next dev`, never on a Vercel preview (reads `VERCEL_ENV`). Build-time. See `lib/analytics.ts`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing Webmaster "HTML tag" tokens (the `content` value). Each renders its meta tag only when set. Build-time. |
+| `GIVEAWAY_ADMINS` | **10-year giveaway (Phase 1, Oct 2026).** Who may sign in at `/admin/10years`: comma-separated staff addresses, e.g. `ben@…, denise@…, kylie@…` (same format as the `LEADS_*` lists). Read on every sign-in and upserted into `giveaway_admin_allowlist`; no address is written in code. Unset = nobody can sign in. Server-side. |
+| `GIVEAWAY_TOKEN_SECRET` | **10-year giveaway.** Signs the unsubscribe, verification, one-tap and claim links and the admin session cookie (`lib/giveaway/tokens.ts`). Any long random string, 16+ characters — `openssl rand -hex 32`. Unset = `/unsubscribe` answers 503 and admin sign-in refuses. Changing it invalidates every link already sent. Server-side. |
+| `GIVEAWAY_ENV` | **10-year giveaway.** Optional. Which rows this process may touch: `production` / `preview` / `local` / `test`. Defaults from `VERCEL_ENV` (production → production, preview → preview, else local). Every giveaway table has an `env` column and every read and write is scoped to it (`lib/giveaway/store.ts`), so a check run with `GIVEAWAY_ENV=test` can never see or email a real entrant. The same idea as `LEAD_HOLD_ENV`. |
+| `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **10-year giveaway (Phase 3).** Winner alerts: Tue–Fri drawings to the first, Monday and Saturday to the second (first address To, the rest CC; unset → `LEADS_FALLBACK` with a logged warning). Not read yet in Phase 1. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
 ## Supabase setup
@@ -335,6 +339,25 @@ submission requires Supabase credentials.
    run, or `supabase db push` with the CLI). All four are applied to the
    live project as of 2026-10-12.
 3. Copy the project URL and service-role key into `.env.local`.
+4. **Migration `0010_giveaway.sql`** (Oct 2026) creates the 10-year giveaway
+   tables (`GIVEAWAY-PLAN.md` §3): every table with an `env` column, RLS on
+   with no policies, the `giveaway_rate_limit_hit` function, prizes and
+   drawings seeded from `lib/giveaway/config.ts`, and `'giveaway'` added to
+   the `source` check. Additive only; safe to run twice. The Supabase
+   connector has no permission on this project from a session, so apply it
+   by hand: SQL Editor → New query → paste the whole file → Run. Until it is
+   applied, `/admin/10years` sign-in says "not configured" and
+   `/unsubscribe` answers 429/503 (the limiter fails closed) — both say why
+   in the server log.
+5. **Admin sign-in email (Supabase Auth).** `/admin/10years` sends a
+   six-digit code with Supabase Auth's email OTP. Two one-time dashboard
+   settings: Authentication → Email Templates → *Magic Link* must print
+   `{{ .Token }}` (the default prints only a link), and Authentication →
+   SMTP Settings should point at a real sender (Resend's SMTP:
+   `smtp.resend.com`, port 465, user `resend`, password = a Resend API key,
+   from `leads@harmonizedbraincenterstn.com`) — the built-in mailer is
+   rate-limited to a handful an hour and may deliver only to project
+   members, which Denise and Kylie are not.
 
 Submissions land in `public.consultation_requests`
 (`id, created_at, type, helping_who, concerns text[], first_name, phone,

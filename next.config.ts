@@ -350,6 +350,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // The giveaway's staff screens and the unsubscribe endpoint
+      // (GIVEAWAY-PLAN.md §5, §6; 2026-10-18): never cached, never indexed.
+      // The page metadata says noindex too; the header is what a crawler
+      // obeys for a route handler's response and what a CDN obeys for both.
+      ...["/admin/:path*", "/unsubscribe"].map((source) => ({
+        source,
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      })),
     ];
   },
 

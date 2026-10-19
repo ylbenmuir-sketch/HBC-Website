@@ -18,7 +18,7 @@ import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 
 
 export const TOKEN_SECRET_ENV = "GIVEAWAY_TOKEN_SECRET";
 
-export type TokenKind = "unsubscribe" | "verify_notify" | "verify_entry" | "live_tap" | "claim";
+export type TokenKind = "unsubscribe" | "verify_notify" | "verify_entry" | "live_tap" | "claim" | "admin_pending" | "admin_session";
 
 export type TokenPayload = {
   /** kind */

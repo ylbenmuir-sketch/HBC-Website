@@ -30,7 +30,11 @@ import { SITE_URL } from "@/lib/site-config";
  * Oct 2026** — this is a decision, not a default. To reverse it, move
  * those four names to a rule of their own with `disallow: "/"`.
  */
-const DISALLOW = ["/api/", "/guides/"];
+/** `/admin/` (2026-10-18): the giveaway's staff screens, behind a login and
+ *  `noindex`; nothing there is for a crawler. `/unsubscribe` is NOT listed:
+ *  it is noindex via header and absent from the sitemap, and a disallow
+ *  would only hide the noindex from the crawler that already has the URL. */
+const DISALLOW = ["/api/", "/guides/", "/admin/"];
 
 const SEARCH_AND_ANSWER_AGENTS = [
   "OAI-SearchBot",

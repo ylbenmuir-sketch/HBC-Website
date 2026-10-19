@@ -131,11 +131,15 @@ export const FEATURE_ASSISTANT =
  * also offer a chat field under it. Nothing docks on this route: no ask bar,
  * no assistant chunk, no footer reserve.
  *
+ * /admin (2026-10-18): the giveaway's staff screens (GIVEAWAY-PLAN.md §5)
+ * are a tool, not a page a visitor chats on. /10years joins this list in
+ * Phase 2 behind the config dates (lib/giveaway/config.ts).
+ *
  * Path prefixes, matched the way the layout audit matches them: the route
  * itself and anything beneath it. Read by components/BottomBarContext.tsx,
  * which is the one place that decides what is at the bottom of the screen.
  */
-export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact"] as const;
+export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin"] as const;
 
 /** True when the assistant must not render on this pathname. */
 export function assistantSuppressedOn(pathname: string | null): boolean {
