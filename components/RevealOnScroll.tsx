@@ -30,6 +30,24 @@ import { usePathname } from "next/navigation";
  * that is already in the document — the class ships in the markup — so
  * attribute mutations would be records to filter and never records to act on.
  */
+/**
+ * ## Why the threshold is 0, and why there is a scroll fallback
+ *
+ * The observer used `threshold: 0.12` — reveal once 12% of the element is on
+ * screen. That ratio is of the *element's own area*, and some `.rv` elements
+ * are whole sections: /resources' card grid is one `.rv` about 5,700px tall
+ * on a phone. Twelve percent of that is more than a phone screen with the
+ * browser's bars showing, so the callback never fired and iPhone Safari
+ * showed the heading, the intro and a blank page below (Ben, 2026-10-20).
+ * The same arithmetic threatened every tall `.rv` container on the site.
+ *
+ * Now: any pixel of the element inside the viewport reveals it (threshold
+ * 0, the viewport trimmed 6% at the bottom so a reveal still reads as a
+ * reveal), and a passive scroll/resize pass reveals anything whose top has
+ * entered the screen, so even an observer that never reports leaves nothing
+ * hidden. The content is in the HTML either way: without JavaScript there is
+ * no `html.js` and the hidden state is never applied.
+ */
 export default function RevealOnScroll() {
   const pathname = usePathname();
 
@@ -40,22 +58,41 @@ export default function RevealOnScroll() {
       "IntersectionObserver" in window &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    const reveal = (el: Element) => el.classList.add("in");
+
     const io = animate
       ? new IntersectionObserver(
           (entries, observer) => {
             entries.forEach((en) => {
               if (en.isIntersecting) {
-                en.target.classList.add("in");
+                reveal(en.target);
                 observer.unobserve(en.target);
               }
             });
           },
-          { threshold: 0.12 }
+          { threshold: 0, rootMargin: "0px 0px -6% 0px" }
         )
       : null;
 
-    const track = (el: Element) =>
-      io ? io.observe(el) : el.classList.add("in");
+    const track = (el: Element) => (io ? io.observe(el) : reveal(el));
+
+    // The belt to the observer's braces: whatever has scrolled into the
+    // screen is shown, observer or no observer.
+    let frame = 0;
+    const sweep = () => {
+      frame = 0;
+      const limit = window.innerHeight * 0.94;
+      document.querySelectorAll(".rv:not(.in)").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < limit && r.bottom > 0) reveal(el);
+      });
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(sweep);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    const first = window.setTimeout(sweep, 400);
 
     // The root can itself be the `.rv` — a success panel mounts as one node,
     // not as a wrapper around one — so it is tested as well as searched.
@@ -78,6 +115,10 @@ export default function RevealOnScroll() {
     return () => {
       mo.disconnect();
       io?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.clearTimeout(first);
+      if (frame) cancelAnimationFrame(frame);
     };
   }, [pathname]);
 
