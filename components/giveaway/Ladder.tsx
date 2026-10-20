@@ -1,39 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 /**
- * The prize ladder's six cards, each opening to its value breakdown. One
+ * The prize ladder's six steps, each opening to its value breakdown. One
  * open at a time: tap (any device) to open, tap again or tap another to
  * switch; on a device with a real pointer, hovering opens one too, and
- * leaving the ladder closes a hover-opened card (a tapped one stays). The
- * head is a real button (Enter/Space, aria-expanded); the panel is inert
- * while closed.
+ * leaving the ladder closes a hover-opened step (a tapped one stays). The
+ * head is a real button (Enter/Space, aria-expanded, aria-controls); the
+ * panel is inert while closed.
  *
- * Where the panel goes: on a wide screen it is a popover under its card,
- * so the climbing row never changes height; on a phone, where the row
- * swipes sideways and would clip a popover, the open card's breakdown
- * renders as one block under the row instead. The words and numbers are
- * rendered on the server and handed in — this only decides which card is
- * open and where its panel sits.
+ * Two looks, one DOM (Ben, 2026-10-20): the head carries both the climbing
+ * card (`.ty-head-card`, from 768px) and the phone row (`.ty-head-row`:
+ * day, prize in one line, value, a gold bar as long as the day's share of
+ * the grand prize); CSS shows one. The panel is a popover under the card
+ * on a wide screen and opens inline under the row on a phone. The words
+ * and numbers are rendered on the server and handed in — this only decides
+ * which step is open.
  */
-export type LadderCard = { slot: string; className: string; state: string; head: ReactNode; panel: ReactNode };
-
-const NARROW = "(max-width: 760px)";
+export type LadderCard = { slot: string; className: string; state: string; head: ReactNode; row: ReactNode; panel: ReactNode };
 
 export default function Ladder({ cards }: { cards: LadderCard[] }) {
   const [open, setOpen] = useState<string | null>(null);
-  const [narrow, setNarrow] = useState(false);
   const openedBy = useRef<"tap" | "hover" | null>(null);
   const hoverable = () => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-
-  useEffect(() => {
-    const mq = window.matchMedia(NARROW);
-    const sync = () => setNarrow(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
-  }, []);
 
   const tap = (slot: string) => {
     openedBy.current = "tap";
@@ -51,9 +41,6 @@ export default function Ladder({ cards }: { cards: LadderCard[] }) {
     setOpen(null);
   };
 
-  const current = cards.find((c) => c.slot === open) ?? null;
-  const panelId = (slot: string) => (narrow ? "ty-ladder-detail" : `ty-panel-${slot}`);
-
   return (
     <div className="ty-ladder-wrap" onMouseLeave={leave}>
       <ol className="ty-ladder" data-prizes>
@@ -61,26 +48,20 @@ export default function Ladder({ cards }: { cards: LadderCard[] }) {
           const isOpen = open === c.slot;
           return (
             <li key={c.slot} className={c.className} data-state={c.state} data-slot={c.slot} data-open={isOpen ? "" : undefined} onMouseEnter={() => enter(c.slot)}>
-              <button type="button" className="ty-step-head" aria-expanded={isOpen} aria-controls={panelId(c.slot)} onClick={() => tap(c.slot)}>
-                {c.head}
+              <button type="button" className="ty-step-head" aria-expanded={isOpen} aria-controls={`ty-panel-${c.slot}`} onClick={() => tap(c.slot)}>
+                <span className="ty-head-card">{c.head}</span>
+                <span className="ty-head-row">{c.row}</span>
                 <span className="ty-step-more" aria-hidden="true">
                   {isOpen ? "−" : "+"}
                 </span>
               </button>
-              {!narrow && (
-                <div id={`ty-panel-${c.slot}`} className="ty-step-panel" inert={!isOpen}>
-                  <div className="ty-step-panel-in">{c.panel}</div>
-                </div>
-              )}
+              <div id={`ty-panel-${c.slot}`} className="ty-step-panel" inert={!isOpen}>
+                <div className="ty-step-panel-in">{c.panel}</div>
+              </div>
             </li>
           );
         })}
       </ol>
-      {narrow && (
-        <div id="ty-ladder-detail" className={`ty-ladder-detail${current?.className.includes("ty-step-grand") ? " ty-step-grand" : ""}`} data-open={current ? "" : undefined} inert={!current}>
-          <div className="ty-step-panel-in">{current?.panel}</div>
-        </div>
-      )}
     </div>
   );
 }

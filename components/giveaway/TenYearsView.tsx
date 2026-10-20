@@ -2,10 +2,15 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import FAQAccordion from "@/components/FAQAccordion";
 import AssistantOff from "./AssistantOff";
+import ClientChoice from "./ClientChoice";
 import Countdown from "./Countdown";
 import CopyLink from "./CopyLink";
+import EntryBar from "./EntryBar";
 import Ladder from "./Ladder";
+import PathPicker from "./PathPicker";
+import PathProvider from "./PathProvider";
 import Seal from "./Seal";
+import VersionToggle from "./VersionToggle";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
 import {
   CLAIM_WINDOW_MS,
@@ -48,6 +53,12 @@ import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
  * Every prize, value, time and count is read from lib/giveaway/config.ts
  * (and the session count from lib/site-config.ts); every word from
  * lib/giveaway/copy.ts. Styles are the `.ty-` block in app/globals.css.
+ *
+ * Third brief (Ben, 2026-10-20): "10 years." leads the hero; a "Which one
+ * are you?" picker under the lines sets the visit's new/current choice
+ * (PathProvider) that the form's required choice and the ladder's toggle
+ * share; the ladder is a vertical list on phones with a gold bar per day;
+ * a slim entry bar follows the visitor once the form is off screen.
  */
 
 const t = PAGES.tenYears;
@@ -65,38 +76,37 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
   const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
   return (
-    <div className="ty" data-mode={mode}>
-      {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase. */}
-      {(assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />}
-      <section className="ty-hero">
-        <div className="wrap ty-hero-grid">
-          <div className="ty-hero-text">
-            <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
-            <h1>
-              {/* Break after the first sentence, so the headline never splits as "10 / years." */}
-              {headingLines[0]}
-              {headingLines.length > 1 && (
-                <>
-                  <br />
-                  {headingLines.slice(1).join(" ")}
-                </>
-              )}
-            </h1>
-            <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
-            <p className="ty-sub">{sub}</p>
-            {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
-            <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
+    <PathProvider>
+      <div className="ty" data-mode={mode}>
+        {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase. */}
+        {(assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />}
+        <section className="ty-hero">
+          <div className="wrap ty-hero-grid">
+            <div className="ty-hero-text">
+              <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
+              <h1>
+                {/* "10 years." is the focal point, the second sentence half its size under it (Ben, 2026-10-20). */}
+                <span className="ty-h1-years">{headingLines[0]}</span>
+                {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
+              </h1>
+              <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
+              <p className="ty-sub">{sub}</p>
+              <PathPicker label={t.pathLabel} newLabel={t.pathNew} currentLabel={t.pathCurrent} />
+              {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
+              <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
+            </div>
+            <div className="ty-card" id="enter">
+              {card}
+            </div>
           </div>
-          <div className="ty-card" id="enter">
-            {card}
-          </div>
-        </div>
-      </section>
-      <HowItWorks mode={mode} now={now} />
-      <PrizeLadder mode={mode} now={now} winners={winners} />
-      <PhotoStrip />
-      <QuestionsRow />
-    </div>
+        </section>
+        <HowItWorks mode={mode} now={now} />
+        <PrizeLadder mode={mode} now={now} winners={winners} />
+        <PhotoStrip />
+        <QuestionsRow />
+        {open && <EntryBar label={mode === "notify_me" ? t.entryBarNotify : t.entryBarLive} />}
+      </div>
+    </PathProvider>
   );
 }
 
@@ -142,16 +152,13 @@ export function FormCard({ mode, now, refCode, error, showcase = null }: { mode:
           <label htmlFor="website">{t.honeypot}</label>
           <input id="website" name="website" tabIndex={-1} autoComplete="off" />
         </div>
+        <ClientChoice legend={t.clientChoiceLegend} newLabel={t.pathNew} currentLabel={t.pathCurrent} error={t.clientChoiceError} />
         <div className="ty-checks">
           <label className="ty-check">
             <input type="checkbox" name="age_rules" required />
             <span>
               {t.ageRules} <a href="/10years/rules#rules">{t.rulesLink}</a>
             </span>
-          </label>
-          <label className="ty-check">
-            <input type="checkbox" name="existing_client" />
-            <span>{t.existingClient}</span>
           </label>
         </div>
         {refCode && mode === "live" && <p className="ty-ref">{t.refNote}</p>}
@@ -315,6 +322,21 @@ function PrizeWords({ p }: { p: PrizeSpec }) {
 
 const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p), prizeValueIsFloor(p));
 
+/** The phone row's one line: "Brain Map + 4 sessions + pocket stimulator". */
+function rowWords(p: PrizeSpec): string {
+  const parts = [t.prizeWords(p.brainMap, p.sessions)];
+  if (p.hoolestKeychain) parts.push(t.rowDevice.keychain);
+  if (p.hoolestHandheld) parts.push(t.rowDevice.handheld);
+  if (p.partnerServices) parts.push(t.rowPartners);
+  return parts.join(" + ");
+}
+
+/** The gold bar: this day's value as a share of the grand prize's, per version. */
+function barShare(p: PrizeSpec): number {
+  const grand = prizeRetailUsd(prizeFor("grand", p.version));
+  return grand > 0 ? Math.max(6, Math.round((prizeRetailUsd(p) / grand) * 100)) : 100;
+}
+
 /** One row of the expanded card: the part and its value. */
 function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
   const b = t.breakdown;
@@ -403,6 +425,37 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
         )}
       </>
     );
+    // The phone row: day · time, the prize in one line (or the winner), the value, the bar.
+    const row = (
+      <>
+        <span className="ty-row-top">
+          <span className="ty-row-time">
+            {cardTime(d)}
+            {state === "next" && <span className="ty-tag ty-tag-next">{t.nextTag}</span>}
+            {state === "drawn" && !winner && <span className="ty-tag">{t.drawnTag}</span>}
+          </span>
+          {grand && <span className="ty-row-label">{t.grandLabel}</span>}
+        </span>
+        <span className="ty-row-main">
+          {winner ? (
+            <span className="ty-row-words ty-row-winner" data-winner-state={winner.state}>
+              {t.winnerLabel}: {winner.state === "named" ? winner.label : winner.state === "claimed" ? t.cardWinnerClaimed : t.cardWinnerReaching}
+            </span>
+          ) : (
+            <span className="ty-row-words">
+              <Both n={rowWords(pN)} c={rowWords(pC)} />
+            </span>
+          )}
+          <span className="ty-row-usd">
+            <Both n={valueBig(pN)} c={valueBig(pC)} />
+          </span>
+        </span>
+        <span className="ty-row-bar" aria-hidden="true">
+          <span className="ty-row-fill v-new" style={{ width: `${barShare(pN)}%` }} />
+          <span className="ty-row-fill v-cur" style={{ width: `${barShare(pC)}%` }} />
+        </span>
+      </>
+    );
     const panel = (
       <>
         <Both block n={<Breakdown p={pN} thumb={grand} />} c={<Breakdown p={pC} thumb={grand} />} />
@@ -411,13 +464,12 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
         </a>
       </>
     );
-    return { slot: d.slot, className: grand ? "ty-step ty-step-grand" : "ty-step", state, head, panel };
+    return { slot: d.slot, className: grand ? "ty-step ty-step-grand" : "ty-step", state, head, row, panel };
   });
   return (
-    <section className="ty-prizes" aria-labelledby="ty-prizes-h">
-      {/* The toggle is two radios ahead of the row; CSS swaps every .v-new for its .v-cur. No script. */}
-      <input type="radio" name="ty-version" id="ty-v-new" className="ty-v" defaultChecked />
-      <input type="radio" name="ty-version" id="ty-v-cur" className="ty-v" />
+    <section className="ty-prizes" id="ty-prizes" aria-labelledby="ty-prizes-h">
+      {/* The toggle is two radios ahead of the row; CSS swaps every .v-new for its .v-cur. VersionToggle ties them to the visit's choice. */}
+      <VersionToggle />
       <div className="wrap">
         <div className="ty-prizes-head">
           <h2 id="ty-prizes-h">{t.prizesTitle}</h2>

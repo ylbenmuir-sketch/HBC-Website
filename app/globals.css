@@ -2500,14 +2500,27 @@ footer.site.slim a { color: var(--ink); text-decoration: none; display: inline-f
 footer.site.slim a:hover { color: var(--sage-deep); }
 
 /* Hero: words left, the form card right. */
-.ty-hero { padding: 18px 0 36px; }
+.ty-hero { padding: 16px 0 32px; }
 .ty-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 56px; align-items: center; }
-.ty-seal { display: block; width: 118px; height: 118px; margin: 0 0 14px -2px; font-family: var(--sans); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6)); }
+.ty-seal { display: block; width: 112px; height: 112px; margin: 0 0 10px -2px; font-family: var(--sans); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6)); }
 .ty-seal-num { font-family: var(--serif); }
-.ty-hero h1 { font-size: clamp(44px, 4.3vw, 62px); line-height: 1.04; letter-spacing: -0.015em; max-width: none; margin: 0 0 16px; }
+/* The focal point (Ben, 2026-10-20): "10 years." in the brand sage, the
+   second sentence about half its size in navy under it. */
+.ty-hero h1 { display: flex; flex-direction: column; align-items: flex-start; max-width: none; margin: 0 0 14px; line-height: 1; }
+.ty-h1-years { font-size: clamp(96px, 8.6vw, 124px); line-height: 0.95; letter-spacing: -0.025em; color: var(--sage-deep); }
+.ty-h1-rest { font-size: clamp(42px, 4vw, 58px); line-height: 1.05; letter-spacing: -0.015em; color: var(--navy); margin-top: 8px; }
 .ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 8px; letter-spacing: -0.005em; }
 .ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
 .ty-proof { font-size: 13px; color: var(--slate); letter-spacing: 0.04em; margin: 18px 0 0; }
+
+/* "Which one are you?": two equal buttons; the pressed one is navy. */
+.ty-path { margin-top: 18px; }
+.ty-path-label { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 8px; }
+.ty-path-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; }
+.ty-path-btn { font: inherit; font-family: var(--sans); font-weight: 600; font-size: 15px; line-height: 1.3; color: var(--navy); background: #fff; border: 1.5px solid var(--line-control); border-radius: 6px; padding: 12px 14px; min-height: 50px; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s; }
+.ty-path-btn:hover { border-color: var(--navy); }
+.ty-path-btn[aria-pressed="true"] { background: var(--navy); color: var(--ivory); border-color: var(--navy); box-shadow: 0 0 0 3px var(--gold-soft); }
+.ty-path-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* The countdown: four quiet boxes. */
 .ty-count { margin-top: 18px; }
@@ -2531,7 +2544,16 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-fields > div:nth-child(4) { grid-column: span 5; }
 .form.ty-form .ty-fields label { position: absolute; top: 8px; left: 14px; right: 10px; margin: 0; font-size: 10.5px; line-height: 1.2; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 .form.ty-form input:not([type="checkbox"]) { height: 52px; padding: 19px 14px 5px; }
-.ty-checks { display: grid; gap: 6px; margin-top: 14px; }
+/* The required choice: two pills, the radios hidden but focusable (a hidden
+   control cannot be display:none, or the browser cannot report it invalid). */
+.form.ty-form .ty-choice { border: 0; margin: 12px 0 0; padding: 0; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form.ty-form .ty-choice-opt { position: relative; display: block; margin: 0; letter-spacing: 0; text-transform: none; font-weight: 600; }
+.form.ty-form .ty-choice-opt input { position: absolute; top: 50%; left: 50%; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; }
+.ty-choice-opt span { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 9px 10px; border: 1.5px solid var(--line-control); border-radius: 6px; font-size: 14.5px; line-height: 1.25; color: var(--navy); text-align: center; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+.ty-choice-opt:hover span { border-color: var(--navy); }
+.ty-choice-opt input:checked + span { background: var(--navy); color: var(--ivory); border-color: var(--navy); }
+.ty-choice-opt input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ty-checks { display: grid; gap: 6px; margin-top: 12px; }
 .form.ty-form .ty-check, .form.ty-form .ty-optin { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 14.5px; line-height: 1.45; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
 .form.ty-form .ty-check input, .form.ty-form .ty-optin input { width: 18px; height: 18px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
 .ty-check a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
@@ -2560,11 +2582,11 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-how-text b { display: block; font-weight: 600; color: var(--navy); font-size: 15px; }
 
 /* The prize ladder: heading + toggle, then six cards that climb. */
-.ty-prizes { position: relative; padding: 28px 0 24px; }
+.ty-prizes { position: relative; padding: 28px 0 28px; scroll-margin-top: 70px; }
 /* The toggle's two radios: off-screen but focusable, ahead of .wrap so the
    ~ selectors below can reach every value. */
 .ty-v { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
-.ty-prizes-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 22px; }
+.ty-prizes-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 18px; }
 .ty-prizes-head h2 { font-size: 34px; margin: 0; }
 .ty-pill { display: inline-flex; background: var(--ivory-2); border-radius: 999px; padding: 3px; }
 .ty-pill label { font-size: 13.5px; font-weight: 600; color: var(--slate); padding: 6px 16px; border-radius: 999px; cursor: pointer; line-height: 1.4; white-space: nowrap; transition: background 0.2s, color 0.2s; }
@@ -2573,17 +2595,23 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-prizes .v-cur { display: none; }
 #ty-v-cur:checked ~ .wrap .v-new { display: none; }
 #ty-v-cur:checked ~ .wrap .v-cur { display: inline; }
+#ty-v-cur:checked ~ .wrap .ty-row-fill.v-cur { display: block; }
 .ty-ladder { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; align-items: end; }
 .ty-step { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 8px; min-height: var(--step-h, 160px); position: relative; transition: box-shadow 0.2s, border-color 0.2s; }
-/* The steps: each day a little taller than the last, Saturday on top. */
-.ty-step[data-slot="mon"] { --step-h: 176px; }
-.ty-step[data-slot="tue"] { --step-h: 194px; }
-.ty-step[data-slot="wed"] { --step-h: 212px; }
-.ty-step[data-slot="thu"] { --step-h: 230px; }
-.ty-step[data-slot="fri"] { --step-h: 248px; }
-.ty-step[data-slot="grand"] { --step-h: 290px; }
-/* The head is the button: the whole top of the card opens the breakdown. */
+/* The steps: each day a little taller than the last, Saturday on top — a
+   shallower climb than before, so the row carries no tall empty corner
+   above Monday (Ben, 2026-10-20). */
+.ty-step[data-slot="mon"] { --step-h: 196px; }
+.ty-step[data-slot="tue"] { --step-h: 208px; }
+.ty-step[data-slot="wed"] { --step-h: 220px; }
+.ty-step[data-slot="thu"] { --step-h: 232px; }
+.ty-step[data-slot="fri"] { --step-h: 244px; }
+.ty-step[data-slot="grand"] { --step-h: 268px; }
+/* The head is the button: the whole top of the card opens the breakdown.
+   It carries both looks; .ty-head-card from 768px, .ty-head-row below. */
 .ty-step-head { display: flex; flex-direction: column; align-items: flex-start; flex: 1; width: 100%; padding: 14px 16px 12px; margin: 0; background: none; border: 0; border-radius: 8px 8px 0 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.ty-head-card { display: flex; flex-direction: column; align-items: flex-start; flex: 1; width: 100%; }
+.ty-head-row { display: none; }
 .ty-step-head:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 .ty-step-more { position: absolute; top: 10px; right: 12px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--line); color: var(--slate); font-size: 15px; line-height: 1; }
 .ty-step[data-open] .ty-step-more, .ty-step:hover .ty-step-more { border-color: var(--gold); color: var(--gold-ink); }
@@ -2614,12 +2642,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-step[data-open] .ty-step-panel { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
 .ty-step[data-slot="fri"] .ty-step-panel, .ty-step[data-slot="grand"] .ty-step-panel { left: auto; right: 0; }
 .ty-step-grand .ty-step-panel { background: var(--navy); border-color: var(--navy); }
-.ty-ladder-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.22s ease; margin-top: 10px; border-radius: 8px; background: #fff; border: 1px solid transparent; }
-.ty-ladder-detail[data-open] { grid-template-rows: 1fr; border-color: var(--line); }
-.ty-ladder-detail.ty-step-grand { border-color: var(--navy); }
 .ty-step-panel-in { overflow: hidden; min-height: 0; }
 .ty-bd { list-style: none; margin: 0 16px; padding: 12px 0 4px; }
-.ty-ladder-detail .ty-bd { padding-top: 12px; }
 .ty-bd-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; line-height: 1.35; color: var(--ink); padding: 5px 0; }
 .ty-bd-label { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .ty-bd-usd { flex: none; font-variant-numeric: tabular-nums; color: var(--slate); }
@@ -2648,13 +2672,17 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-step-grand .ty-bd-row { color: var(--ivory); }
 .ty-step-grand .ty-bd-total .ty-bd-usd { color: var(--gold-lift); }
 .ty-step-grand .ty-bd-link { color: var(--sage); border-color: rgba(184, 146, 74, 0.5); }
-@media (prefers-reduced-motion: reduce) { .ty-step-panel, .ty-ladder-detail, .ty-step { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .ty-step-panel, .ty-step, .ty-entrybar { transition: none; } }
+
+/* The phone's entry bar: fixed, slim, clear of the iOS toolbar; shown by
+   components/giveaway/EntryBar.tsx once the form card is off screen. */
+.ty-entrybar { display: none; }
 .ty-prizes-note { font-size: 13.5px; line-height: 1.5; color: var(--slate); margin: 16px 0 0; }
 .ty-textlink { color: var(--sage-deep); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .ty-textlink:hover { border-color: var(--gold); }
 
 /* Photos: four rounded frames with short captions. */
-.ty-photos { padding: 20px 0 28px; }
+.ty-photos { padding: 28px 0 28px; border-top: 1px solid var(--line); }
 .ty-photo-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .ty-photo-grid figure { margin: 0; }
 .ty-photo { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: var(--ivory-2); }
@@ -2666,7 +2694,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-photo-grid figcaption { font-family: var(--sans); font-size: 13.5px; letter-spacing: 0; text-transform: none; color: var(--slate); margin-top: 10px; }
 
 /* Three questions, side by side; each opens beneath itself. */
-.ty-qa { padding: 0 0 28px; }
+.ty-qa { padding: 0 0 36px; }
 .ty-qa-row { display: flex; align-items: flex-start; gap: 24px; border-top: 1px solid var(--line); }
 .ty-qa-list { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; align-items: start; }
 .ty-qa details.faq { border-bottom: 0; }
@@ -2691,22 +2719,26 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 @media (max-width: 1060px) {
   header.site.campaign .nav { height: 64px; }
   .ty-hero-grid { grid-template-columns: minmax(0, 1fr) 400px; gap: 40px; }
-  .ty-hero h1 { font-size: 44px; }
+  .ty-h1-years { font-size: 92px; }
+  .ty-h1-rest { font-size: 44px; }
 }
 @media (max-width: 900px) {
   .ty-hero-grid { grid-template-columns: 1fr; gap: 28px; }
-  .ty-hero h1 { max-width: 16ch; }
   .ty-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 760px) {
+@media (max-width: 767px) {
   .nav-campaign { gap: 16px; }
   .nav-explore, .nav-campaign .nav-tel { font-size: 13.5px; }
-  .ty-hero { padding: 20px 0 28px; }
+  .ty-hero { padding: 16px 0 24px; }
   .ty-hero-grid { gap: 22px; }
-  .ty-seal { width: 88px; height: 88px; margin-bottom: 12px; }
-  .ty-hero h1 { font-size: 40px; margin: 0 0 12px; max-width: none; }
+  .ty-seal { width: 96px; height: 96px; margin-bottom: 8px; }
+  .ty-hero h1 { margin: 0 0 12px; }
+  .ty-h1-years { font-size: 68px; }
+  .ty-h1-rest { font-size: 34px; margin-top: 4px; }
   .ty-value { font-size: 20px; }
   .ty-sub { font-size: 16.5px; }
+  .ty-path { margin-top: 16px; }
+  .ty-path-btns { max-width: none; }
   .ty-count { margin-top: 16px; }
   .ty-count-boxes { gap: 6px; }
   .ty-count-box { flex: 1; min-width: 0; padding: 8px 4px 6px; }
@@ -2716,26 +2748,56 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-card { padding: 22px 18px 18px; box-shadow: 0 20px 44px -34px rgba(21, 34, 48, 0.45); }
   .ty-card-title { font-size: 25px; }
   .ty-pill label { font-size: 12.5px; padding: 6px 12px; }
-  .ty-fields > div:nth-child(3) { grid-column: span 12; }
-  .ty-fields > div:nth-child(4) { grid-column: span 6; }
-  .ty-how { padding: 18px 0; }
-  .ty-how-steps { grid-template-columns: 1fr; gap: 14px; }
-  .ty-prizes { padding: 24px 0 22px; }
+  /* The form on a phone: ZIP full width, shorter fields, a tighter rhythm. */
+  .ty-fields { row-gap: 8px; margin-top: 14px; }
+  .ty-fields > div:nth-child(3), .ty-fields > div:nth-child(4) { grid-column: span 12; }
+  .form.ty-form input:not([type="checkbox"]):not([type="radio"]) { height: 48px; padding: 18px 14px 4px; }
+  .form.ty-form .ty-choice { margin-top: 10px; }
+  .ty-choice-opt span { min-height: 44px; font-size: 14px; }
+  .ty-checks { margin-top: 10px; }
+  .ty-submit { margin-top: 12px; }
+  .ty-card { scroll-margin-top: 72px; }
+  .ty-how { padding: 16px 0; }
+  .ty-how-steps { grid-template-columns: 1fr; gap: 12px; }
+  .ty-prizes { padding: 24px 0 24px; scroll-margin-top: 64px; }
+  .ty-prizes-head { margin-bottom: 14px; }
   .ty-prizes-head h2 { font-size: 28px; }
-  /* The ladder as a swipe row, the cards still climbing. */
-  .ty-ladder { display: flex; align-items: flex-end; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 24px; scrollbar-width: none; margin: 0 -24px; padding: 4px 24px; }
-  .ty-ladder::-webkit-scrollbar { display: none; }
-  .ty-step { flex: 0 0 200px; scroll-snap-align: start; }
-  .ty-step[data-slot="mon"] { --step-h: 166px; }
-  .ty-step[data-slot="tue"] { --step-h: 182px; }
-  .ty-step[data-slot="wed"] { --step-h: 198px; }
-  .ty-step[data-slot="thu"] { --step-h: 214px; }
-  .ty-step[data-slot="fri"] { --step-h: 230px; }
-  .ty-step[data-slot="grand"] { --step-h: 270px; }
-  .ty-step-amount { font-size: 38px; }
-  .ty-step-grand .ty-step-amount { font-size: 42px; }
-  .ty-step-panel { display: none; }
-  .ty-photos { padding: 16px 0 24px; }
+  /* The ladder as a vertical list (Ben, 2026-10-20): six rows, Monday at
+     the top, each with its day, the prize in one line, the value, and a
+     gold bar as long as the day's share of the grand prize. */
+  .ty-ladder { display: grid; grid-template-columns: 1fr; gap: 6px; align-items: stretch; margin: 0; padding: 0; }
+  .ty-step { --step-h: auto; min-height: 0; }
+  .ty-head-card { display: none; }
+  .ty-head-row { display: flex; flex-direction: column; gap: 5px; width: 100%; min-width: 0; }
+  .ty-step-head { padding: 11px 42px 11px 14px; border-radius: 8px; }
+  .ty-step-more { top: 50%; right: 12px; transform: translateY(-50%); }
+  .ty-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .ty-row-time { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .ty-row-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-lift); font-weight: 600; }
+  .ty-row-main { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; }
+  .ty-row-words { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.3; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ty-row-winner { color: var(--sage-deep); }
+  .ty-row-usd { flex: none; font-family: var(--serif); font-size: 24px; font-weight: 500; line-height: 1; color: var(--gold-ink); letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
+  .ty-row-bar { display: block; height: 3px; border-radius: 2px; background: var(--ivory-2); overflow: hidden; margin-top: 2px; }
+  .ty-row-fill { display: block; height: 100%; border-radius: 2px; background: var(--gold); }
+  .ty-step[data-state="next"] { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage); }
+  .ty-step[data-state="drawn"] .ty-row-usd { opacity: 0.6; }
+  /* Saturday: navy, gold, a little taller. */
+  .ty-step-grand .ty-step-head { padding-top: 15px; padding-bottom: 15px; }
+  .ty-step-grand .ty-row-time { color: rgba(251, 248, 241, 0.62); }
+  .ty-step-grand .ty-row-words { color: var(--ivory); }
+  .ty-step-grand .ty-row-winner { color: var(--sage); }
+  .ty-step-grand .ty-row-usd { color: var(--gold-lift); font-size: 28px; }
+  .ty-step-grand .ty-row-bar { background: rgba(251, 248, 241, 0.14); }
+  .ty-step-grand .ty-row-fill { background: var(--gold-lift); }
+  /* The breakdown opens inline under its row, one at a time. */
+  .ty-step-panel { position: static; width: auto; display: grid; grid-template-rows: 0fr; opacity: 1; visibility: visible; transform: none; border: 0; border-radius: 0 0 8px 8px; box-shadow: none; background: transparent; transition: grid-template-rows 0.22s ease; }
+  .ty-step[data-open] .ty-step-panel { grid-template-rows: 1fr; }
+  .ty-step-grand .ty-step-panel { background: transparent; }
+  .ty-bd { margin: 0 14px; padding: 2px 0 4px; border-top: 1px solid var(--line); }
+  .ty-step-grand .ty-bd { border-color: rgba(251, 248, 241, 0.2); }
+  .ty-bd-link { margin: 2px 14px 12px; }
+  .ty-photos { padding: 24px 0 24px; }
   .ty-photo-grid { gap: 14px; }
   .ty-photo-grid figcaption { font-size: 12.5px; margin-top: 8px; }
   .ty-qa-row { display: block; border-top: 0; }
@@ -2743,7 +2805,18 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-qa details.faq { border-bottom: 1px solid var(--line); }
   .ty-qa details.faq summary { font-size: 18px; padding: 14px 2px; }
   .ty-qa-row > .ty-textlink { display: inline-block; max-width: none; margin-top: 14px; }
+  .ty-qa { padding-bottom: 28px; }
+  /* Room under the questions for the entry bar while it can show. */
+  .ty[data-mode="notify_me"] .ty-qa, .ty[data-mode="live"] .ty-qa { padding-bottom: calc(28px + 64px + env(safe-area-inset-bottom)); }
+  .ty-entrybar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: rgba(251, 248, 241, 0.96); backdrop-filter: blur(10px); border-top: 1px solid var(--line); transform: translateY(110%); transition: transform 0.28s ease; }
+  .ty-entrybar[data-show] { transform: none; }
+  .ty-entrybar-btn { width: 100%; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
   .slim-row { justify-content: center; text-align: center; }
+}
+@media (max-width: 359px) {
+  .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
+  .ty-h1-years { font-size: 60px; }
+  .ty-h1-rest { font-size: 30px; }
 }
 @media (max-width: 420px) {
   header.site.campaign .nav { padding: 0 16px; gap: 12px; }

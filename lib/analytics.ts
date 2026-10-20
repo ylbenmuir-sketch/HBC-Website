@@ -112,6 +112,7 @@ export type SiteEvent =
     }
   | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
   | { name: "brain_map_jump"; params: { page_path: string } }
+  | { name: "giveaway_path_pick"; params: { choice: "new" | "current"; page_path: string } }
   | { name: "guide_download"; params: { page_path: string } }
   | { name: "page_view"; params: { page_path: string } };
 
@@ -245,6 +246,11 @@ export function brainMapJumpEvent(pagePath: unknown): SiteEvent {
 /** A saved guide sign-up. The page only — never the address. */
 export function trackGuideDownload(pagePath: unknown): void {
   trackEvent({ name: "guide_download", params: { page_path: cleanPath(pagePath) } });
+}
+
+/** /10years's "Which one are you?" pick (Ben, 2026-10-20): the choice is one of two fixed words. */
+export function giveawayPathPickEvent(choice: "new" | "current", pagePath: string): SiteEvent {
+  return { name: "giveaway_path_pick", params: { choice, page_path: cleanPath(pagePath) } };
 }
 
 /**

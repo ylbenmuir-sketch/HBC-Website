@@ -61,6 +61,10 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
   if (mode === "hidden") return { to: "/10years", query: "" };
   if (mode === "closed" || mode === "thank_you") return back("?error=closed");
 
+  // New or current client is a required choice (Ben, 2026-10-20): two
+  // radios named existing_client, "no" | "yes". Nothing picked → back to
+  // the form with the one-line error; the rest is validated in people.ts.
+  if (!/^(yes|no)$/.test(field(form, "existing_client", 3))) return back("?error=client_status");
   const input: SignupInput = {
     firstName: field(form, "first_name", 60),
     lastName: field(form, "last_name", 60),

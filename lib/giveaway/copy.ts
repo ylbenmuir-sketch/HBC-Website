@@ -244,6 +244,23 @@ export const PAGES = {
     sub: (drawings: number, span: string) => D(`${countWord(drawings)} drawings, ${span}. Enter once and you're in every one.`),
     closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
+    /** "Which one are you?" — the path picker under the hero's lines (Ben, 2026-10-20). The two choices are also the form's required client-status choice. */
+    pathLabel: D("Which one are you?"),
+    pathNew: D("I'm new to HBC"),
+    pathCurrent: D("I'm a current client"),
+    /** The form's required choice: the legend assistive tech reads, the error when neither is picked. */
+    clientChoiceLegend: D("New or current client?"),
+    clientChoiceError: D("Pick one so we know which prize version you'd get."),
+    /** The slim bottom bar on phones once the form is off screen. */
+    entryBarNotify: D("Get my entry link"),
+    entryBarLive: D("Enter the giveaway"),
+    /** The share preview (Open Graph). Dates and the total come from config. */
+    og: {
+      title: D("10 Years. A Week of Prizes."),
+      description: (drawings: number, span: string) => D(`${countWord(drawings)} drawings ${span}. One entry gets you into every one.`),
+      years: (years: number) => D(`${years} Years`),
+      value: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes`),
+    },
     /** The countdown. */
     countdownNotify: D("until entries open"),
     countdownLive: D("until the next drawing"),
@@ -299,6 +316,7 @@ export const PAGES = {
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
       send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
+      client_status: D("Pick one so we know which prize version you'd get."),
     },
     /** "How it works": three steps between the hero and the ladder. Counts, days and times from config. */
     how: {
@@ -329,6 +347,9 @@ export const PAGES = {
     deviceBy: (by: string) => D(`by ${by}`),
     deviceKeep: (keep: string) => D(keep),
     partnersLine: D("+ a gift from every partner"),
+    /** The phone ladder's row: the prize in one line, "Brain Map + 4 sessions + pocket stimulator". */
+    rowDevice: { keychain: D("pocket stimulator"), handheld: D("handheld stimulator") },
+    rowPartners: D("partner gifts"),
     /** The value, first and largest: "$480", "$810+" when a part has no price yet; "value" in small caps under it. */
     valueBig: (usd: number, floor: boolean) => D(`$${usd.toLocaleString("en-US")}${floor ? "+" : ""}`),
     valueWord: D("value"),
