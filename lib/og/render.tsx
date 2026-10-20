@@ -23,15 +23,16 @@ import { SITE_NAME } from "../site-config";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-const NAVY = "#1C2B3A";
-const IVORY = "#FBF8F1";
-const GOLD = "#A9853F";
-const GOLD_INK = "#856831";
-const SAGE = "#596E5B";
-const SLATE = "#5D6873";
+export const NAVY = "#1C2B3A";
+export const IVORY = "#FBF8F1";
+export const GOLD = "#A9853F";
+export const GOLD_INK = "#856831";
+export const SAGE = "#596E5B";
+export const SLATE = "#5D6873";
 
 let fontsPromise: Promise<{ serif: ArrayBuffer; sans: ArrayBuffer }> | null = null;
-function fonts() {
+/** The two faces every card is set in; shared with lib/og/ten-years.tsx. */
+export function fonts() {
   if (!fontsPromise) {
     const dir = join(process.cwd(), "lib", "og", "fonts");
     fontsPromise = Promise.all([

@@ -8,6 +8,8 @@ import { PAGES } from "@/lib/giveaway/copy";
 import { showcaseActive, showcaseFor } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
+import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
+import { ogDescription, ogTitle } from "@/lib/og/ten-years";
 import { pageMetadata } from "@/lib/pages";
 
 /**
@@ -41,7 +43,14 @@ import { pageMetadata } from "@/lib/pages";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export const metadata: Metadata = { ...pageMetadata("/10years"), robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  ...pageMetadata("/10years"),
+  robots: { index: false, follow: false },
+  // The share preview (Ben, 2026-10-20): its own title and line over the
+  // shared set; the image is app/10years/opengraph-image.tsx. Still noindex.
+  openGraph: { ...SHARED_OPEN_GRAPH, type: "website", title: ogTitle(), description: ogDescription() },
+  twitter: { card: "summary_large_image", title: ogTitle(), description: ogDescription() },
+};
 
 type Search = { sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[] };
 
