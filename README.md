@@ -85,6 +85,25 @@ The general shape: these two mistakes invalidate results rather than failing
 loudly, so nothing tells you afterwards. Sequence the work instead — finish
 editing, then verify.
 
+### `npm run check:giveaway`
+
+The 10-year giveaway, end to end, compressed into a couple of minutes
+(`scripts/check-giveaway.mjs`; GIVEAWAY-PLAN.md §7 Phase 4). After
+`npm run build` it starts its own server on :3124 with `GIVEAWAY_ENV=test`,
+the giveaway tables in memory (`GIVEAWAY_REPO=memory`), Resend and Dialpad
+mocked, the admin code mocked, and `SUPABASE_URL` emptied so nothing can
+touch the real database. It then moves the giveaway's clock
+(`lib/giveaway/clock.ts`, test env only) through notify-me, the "It's live"
+tap, entries and referrals (self-referral voided, the eleventh friend
+uncredited, the limiter), six drawings (a deliberately skipped cron minute,
+an unreachable winner and a redraw, the tax-form line, the public-OK
+toggle), the daily emails, the thank-you, a code booked through `/contact`,
+an expired code, and unsubscribe — and asserts every pick re-verifies, the
+mock inbox holds exactly the expected emails, and the Dialpad log is empty.
+`--no-browser` skips the 390/1440 page render; `--attach` drives a server
+you started (`CHECK_BASE`); `--db` keeps Supabase for the giveaway tables
+once migration 0010 is applied (env `test` rows only).
+
 ### `npm run check:redirects`
 
 The legacy redirect map in `next.config.ts`, requested row by row against a
@@ -327,7 +346,10 @@ submission requires Supabase credentials.
 | `GIVEAWAY_ADMINS` | **10-year giveaway (Phase 1, Oct 2026).** Who may sign in at `/admin/10years`: comma-separated staff addresses, e.g. `ben@…, denise@…, kylie@…` (same format as the `LEADS_*` lists). Read on every sign-in and upserted into `giveaway_admin_allowlist`; no address is written in code. Unset = nobody can sign in. Server-side. |
 | `GIVEAWAY_TOKEN_SECRET` | **10-year giveaway.** Signs the unsubscribe, verification, one-tap and claim links and the admin session cookie (`lib/giveaway/tokens.ts`). Any long random string, 16+ characters — `openssl rand -hex 32`. Unset = `/unsubscribe` answers 503 and admin sign-in refuses. Changing it invalidates every link already sent. Server-side. |
 | `GIVEAWAY_ENV` | **10-year giveaway.** Optional. Which rows this process may touch: `production` / `preview` / `local` / `test`. Defaults from `VERCEL_ENV` (production → production, preview → preview, else local). Every giveaway table has an `env` column and every read and write is scoped to it (`lib/giveaway/store.ts`), so a check run with `GIVEAWAY_ENV=test` can never see or email a real entrant. The same idea as `LEAD_HOLD_ENV`. |
-| `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **10-year giveaway (Phase 3).** Winner alerts: Tue–Fri drawings to the first, Monday and Saturday to the second (first address To, the rest CC; unset → `LEADS_FALLBACK` with a logged warning). Not read yet in Phase 1. |
+| `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **10-year giveaway.** Winner alerts: Tue–Fri drawings to the first, Monday and Saturday to the second (first address To, the rest CC; unset → `LEADS_FALLBACK` with a logged warning). |
+| `GIVEAWAY_SITE_URL` | **10-year giveaway.** Optional. The origin every giveaway link (verify, one-tap, claim, unsubscribe, share) is built on. Defaults to the canonical site URL; `check:giveaway` points it at its own server. Server-side, read at request time. |
+| `GIVEAWAY_REPO` / `GIVEAWAY_OTP_MOCK_CODE` | **Checks only.** `GIVEAWAY_REPO=memory` keeps the giveaway tables in the server process (`lib/giveaway/memory-client.ts`); `GIVEAWAY_OTP_MOCK_CODE=123456` signs the admin in with that code and sends no email. Both are honoured ONLY when the giveaway env is `local` or `test` and refused, loudly, anywhere else. Never set them on a Vercel deployment. |
+| `CRON_SECRET` | Also protects `/api/cron/giveaway` (every minute: due drawings, then due scheduled emails) and the test-only `/api/giveaway/test-clock`. Unset = the giveaway cron refuses (503) and nothing is drawn or sent. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
 ## Supabase setup

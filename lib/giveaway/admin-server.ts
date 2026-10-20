@@ -7,10 +7,38 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { ADMIN_PATH, PENDING_COOKIE, PENDING_TTL_MS, SESSION_COOKIE, SESSION_TTL_MS, type OtpClient } from "./admin-auth";
+import { giveawayEnv, isTestingEnv } from "./env";
 import { giveawayStore, type GiveawayStore } from "./store";
 import { tokenSecret } from "./tokens";
 
+/**
+ * `GIVEAWAY_OTP_MOCK_CODE=<digits>`: no email is sent and that code signs in
+ * — for check:giveaway, which must never cause a real email. Honoured only
+ * when the giveaway env is local or test; elsewhere it is ignored loudly.
+ */
+export const OTP_MOCK_ENV = "GIVEAWAY_OTP_MOCK_CODE";
+
+function mockOtpClient(): OtpClient | null {
+  const code = process.env[OTP_MOCK_ENV]?.trim();
+  if (!code) return null;
+  if (!isTestingEnv(giveawayEnv())) {
+    console.error(`[giveaway admin] ${OTP_MOCK_ENV} is refused for env "${giveawayEnv()}" — using Supabase Auth`);
+    return null;
+  }
+  return {
+    async signInWithOtp(email) {
+      console.log(`[giveaway admin] MOCK code for ${email} (no email sent)`);
+      return { error: null };
+    },
+    async verifyOtp(email, given) {
+      return given === code ? { email, error: null } : { email: null, error: { message: "mock: wrong code" } };
+    },
+  };
+}
+
 export function otpClient(): OtpClient | null {
+  const mock = mockOtpClient();
+  if (mock) return mock;
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;

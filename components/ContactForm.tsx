@@ -265,12 +265,17 @@ export default function ContactForm({
     setStatus("submitting");
     setErrorMessage("");
     // Read at submit time (not via useSearchParams) so the form prerenders.
-    const from = new URLSearchParams(window.location.search).get("from");
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get("from");
+    // A 10-year giveaway offer code (?from=10years&code=…): the request is
+    // a giveaway booking and the route validates the code.
+    const offerCode = from === "10years" ? params.get("code")?.trim().toUpperCase() ?? null : null;
     try {
       const res = await fetch("/api/consultation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
           // The whole name. The key is the column's name, from before the
           // field asked for first and last together.
           first_name: fullName.trim(),

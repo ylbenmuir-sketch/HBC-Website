@@ -60,9 +60,13 @@ export const LEGACY_ENV = "LEADS_NOTIFY_EMAIL";
 /** The domain verified in Resend. Every notification is sent from it. */
 export const SENDING_DOMAIN = "harmonizedbraincenterstn.com";
 
+/** Where a lead came from: the form, the chat, or the form with a 10-year
+ *  giveaway offer code (GIVEAWAY-PLAN.md §4; the subject says so). */
+export type LeadSource = "form" | "chat" | "giveaway";
+
 export type LeadForRouting = {
   type: "consultation" | "guide";
-  source: "form" | "chat";
+  source: LeadSource;
   /** "book" unless a form says the visitor is not ready to book. */
   intent?: "book" | "more_info" | null;
   /** As submitted: "Nashville", "Concierge / at home", "Not sure yet", a
@@ -188,7 +192,7 @@ const FORM_LABEL: Record<RouteName, string> = {
  */
 export function notificationSubject(input: {
   route: RouteName;
-  source: "form" | "chat";
+  source: LeadSource;
   preferredCenter: string | null;
   name: string | null;
   email: string | null;
@@ -196,7 +200,9 @@ export function notificationSubject(input: {
   const form =
     input.source === "chat" && input.route !== "guide"
       ? `${FORM_LABEL[input.route]} (via chat)`
-      : FORM_LABEL[input.route];
+      : input.source === "giveaway" && input.route !== "guide"
+        ? `${FORM_LABEL[input.route]} (10 years)`
+        : FORM_LABEL[input.route];
   const center =
     input.route === "guide" ? "No center" : input.preferredCenter?.trim() || "No center chosen";
   const who = input.name?.trim() || input.email?.trim() || "No name given";

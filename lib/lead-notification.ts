@@ -36,7 +36,7 @@
 // Resend's REST API over fetch, deliberately without the `resend` SDK.
 
 import { contactMethodLabel } from "./contact-method";
-import { senderAddress, type Recipients } from "./lead-routing";
+import { senderAddress, type LeadSource, type Recipients } from "./lead-routing";
 import { replySubject, threadHeaders } from "./email/format";
 import {
   detailsUpdate,
@@ -66,7 +66,7 @@ export type SendResult =
   | { status: "sent"; messageId: string | null; error: null }
   | { status: "failed" | "not_configured"; messageId: null; error: string };
 
-type Outbound = {
+export type Outbound = {
   to: string | null;
   cc?: string[];
   subject: string;
@@ -81,7 +81,7 @@ type Outbound = {
  * a SendResult for the caller to log against the lead's id and store. No
  * submitted value is put in an error string.
  */
-async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
+export async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return { status: "not_configured", messageId: null, error: "RESEND_API_KEY is not set" };
@@ -184,7 +184,7 @@ export function savedLink(rowId: string | null): SavedLink {
 /* ------------------------------------------------------------------ */
 
 export type LeadDetails = {
-  source: "form" | "chat";
+  source: LeadSource;
   intent: "book" | "more_info";
   /** The saved row's id. Null only for the rescue copy sent when the row
    *  did NOT save — the email then says so at the top. */

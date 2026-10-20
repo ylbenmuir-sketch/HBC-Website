@@ -70,6 +70,8 @@ type BottomBarValue = {
   /** The dock's portal target for the CTA bar's markup. */
   slot: HTMLElement | null;
   setSlot: (el: HTMLElement | null) => void;
+  /** A page → controller: "the assistant is off here" (components/giveaway/AssistantOff.tsx). */
+  setPageSuppressed: (on: boolean) => void;
 };
 
 const BottomBarContext = createContext<BottomBarValue | null>(null);
@@ -123,7 +125,11 @@ export function BottomBarProvider({
    * Client navigation onto and off a suppressed route flips this live.
    */
   const pathname = usePathname();
-  const askAvailable = askEnabled && !assistantSuppressedOn(pathname);
+  // A page can also switch the assistant off for its own reasons — /10years
+  // inside the giveaway window, decided on the server from the giveaway
+  // clock (components/giveaway/AssistantOff.tsx).
+  const [pageSuppressed, setPageSuppressed] = useState(false);
+  const askAvailable = askEnabled && !assistantSuppressedOn(pathname) && !pageSuppressed;
   const [callBars, setCallBars] = useState(0);
   const [callBarActive, setCallBarActive] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
@@ -241,6 +247,7 @@ export function BottomBarProvider({
       docked,
       slot,
       setSlot,
+      setPageSuppressed,
     }),
     [
       active,

@@ -95,6 +95,32 @@ export function spokenCentral(date: Date): string {
   return `${dayName} at ${h12}:${mm} ${hour < 12 ? "am" : "pm"}`;
 }
 
+/** "noon", "5 pm", "6:30 pm" — the time alone, for small labels. */
+export function shortCentralTime(date: Date): string {
+  const { hour, minute } = centralParts(date);
+  if (hour === 12 && minute === 0) return "noon";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour < 12 ? "am" : "pm"}`;
+}
+
+/** "Sunday, Nov 15 at 6 PM" — a date and time, for one-line notices. */
+export function spokenCentralDateTime(date: Date): string {
+  const { weekday, hour, minute } = centralParts(date);
+  const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][weekday];
+  const monthDay = new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: "short", day: "numeric" }).format(date);
+  if (hour === 12 && minute === 0) return `${dayName}, ${monthDay} at noon`;
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${dayName}, ${monthDay} at ${h12}${minute ? `:${String(minute).padStart(2, "0")}` : ""} ${hour < 12 ? "AM" : "PM"}`;
+}
+
+/** "November 16–21" (or "November 30 – December 5") — a span of Central dates; `short` gives "Nov 16–21". */
+export function spokenCentralRange(from: Date, to: Date, style: "long" | "short" = "long"): string {
+  const month = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL_TZ, month: style }).format(d);
+  const a = centralParts(from);
+  const b = centralParts(to);
+  return a.month === b.month ? `${month(from)} ${a.day}–${b.day}` : `${month(from)} ${a.day} – ${month(to)} ${b.day}`;
+}
+
 /* ------------------------------------------------------------------ */
 /* The calendar (§1)                                                   */
 /* ------------------------------------------------------------------ */
@@ -196,10 +222,20 @@ export const RATES = {
   session: { usd: 125, confirmed: true } as Rate,
   /** Per use; every prize session includes the chair. */
   vibroChair: { usd: 40, confirmed: true } as Rate,
-  hoolestHandheld: { usd: 429, confirmed: false, note: "UNCONFIRMED — Ben to confirm the Hoolest handheld retail price" } as Rate,
+  /** Ben's brief of 2026-10-19 states $429 for the page's value tags. */
+  hoolestHandheld: { usd: 429, confirmed: true } as Rate,
   hoolestKeychain: { usd: null, confirmed: false, note: "UNCONFIRMED — Hoolest keychain retail price not yet supplied; counted as $0" } as Rate,
   /** Admin cost view only. Per session or map. */
   practitionerCostPerUnit: { usd: 35, confirmed: true } as Rate,
+} as const;
+
+/**
+ * The devices, by what they are (Ben, 2026-10-19): display names used on
+ * the page, in the emails and in the rules. Never by what they do.
+ */
+export const DEVICES = {
+  handheld: { name: "Handheld vagus nerve stimulator", by: "Hoolest", keep: "yours to keep" },
+  keychain: { name: "Pocket vagus nerve stimulator", by: "Hoolest" },
 } as const;
 
 /** Over this computed retail value a winner needs a tax form (decision 16). */
@@ -276,6 +312,20 @@ export function prizeRetailUsd(p: PrizeSpec, rates = RATES): number {
   return total;
 }
 
+/** True when the retail value is a floor — a part of the prize (the
+ *  keychain) has no price supplied yet, so the page shows "$810+". */
+export function prizeValueIsFloor(p: PrizeSpec, rates = RATES): boolean {
+  return (p.hoolestKeychain && rates.hoolestKeychain.usd == null) || (p.hoolestHandheld && rates.hoolestHandheld.usd == null);
+}
+
+/** The week's prizes in one number: the sum of one version's retail
+ *  values, rounded DOWN to the nearest $1,000 ("Over $6,000 in prizes").
+ *  Never typed; the page and the deck read it from here. */
+export function prizeTotalFloorUsd(version: PrizeVersion = "new_client", rates = RATES): number {
+  const sum = PRIZES.filter((p) => p.version === version).reduce((t, p) => t + prizeRetailUsd(p, rates), 0);
+  return Math.floor(sum / 1000) * 1000;
+}
+
 /** Practitioner cost (admin cost view only): $35 per session and per map. */
 export function prizePractitionerCostUsd(p: PrizeSpec, rates = RATES): number {
   return (p.sessions + (p.brainMap ? 1 : 0)) * usdOf(rates.practitionerCostPerUnit);
@@ -297,29 +347,52 @@ export function prizeUnconfirmedRates(p: PrizeSpec, rates = RATES): string[] {
   return out;
 }
 
-/** The HBC prize in words: "Brain Map + 4 sessions + Hoolest keychain".
- *  The chair is a clause, not an item, so the list reads as Ben wrote it. */
+/** The HBC prize in words: "Brain Map + 4 sessions + Pocket vagus nerve
+ *  stimulator by Hoolest". The chair is a clause, not an item, so the list
+ *  reads as Ben wrote it; the devices read as DEVICES names them. */
 export function prizeName(p: PrizeSpec): string {
   const items: string[] = [];
   if (p.brainMap) items.push("Brain Map");
   items.push(`${p.sessions} sessions`);
-  if (p.hoolestKeychain) items.push("Hoolest keychain");
-  if (p.hoolestHandheld) items.push("Hoolest handheld vagus nerve stimulator (to keep)");
+  if (p.hoolestKeychain) items.push(`${DEVICES.keychain.name} by ${DEVICES.keychain.by}`);
+  if (p.hoolestHandheld) items.push(`${DEVICES.handheld.name} by ${DEVICES.handheld.by} (${DEVICES.handheld.keep})`);
   if (p.partnerServices) items.push("one service from every partner");
   return items.join(" + ");
 }
 
-/** The sentence under the name: "a Brain Map, 4 LENS sessions and a Hoolest
- *  keychain (every session includes the vibro chair)". */
+const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
+/** The sentence under the name: "a Brain Map, 4 LENS sessions and a pocket
+ *  vagus nerve stimulator by Hoolest (every session includes the vibro chair)". */
 export function prizeDescription(p: PrizeSpec): string {
   const items: string[] = [];
   if (p.brainMap) items.push("a Brain Map");
   items.push(`${p.sessions} LENS sessions`);
-  if (p.hoolestKeychain) items.push("a Hoolest keychain");
-  if (p.hoolestHandheld) items.push("a Hoolest handheld vagus nerve stimulator to keep");
+  if (p.hoolestKeychain) items.push(`a ${lower(DEVICES.keychain.name)} by ${DEVICES.keychain.by}`);
+  if (p.hoolestHandheld) items.push(`a ${lower(DEVICES.handheld.name)} by ${DEVICES.handheld.by}, ${DEVICES.handheld.keep}`);
   if (p.partnerServices) items.push("one service from every partner");
   const list = items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
   return p.vibroChair ? `${list} (every session includes the vibro chair)` : list;
+}
+
+/**
+ * The value breakdown behind a prize, one row per part, for the ladder's
+ * expanded card: the map, the sessions, the chair at every session, a
+ * device, a partner's gift. `usd` is null where no price has been supplied
+ * (the keychain today), which is what puts the "+" on the total.
+ */
+export type PrizePart = { kind: "brainMap" | "sessions" | "chair" | "keychain" | "handheld" | "partner"; count: number; usd: number | null; partner?: Partner };
+
+export function prizeBreakdown(p: PrizeSpec, rates = RATES): PrizePart[] {
+  const parts: PrizePart[] = [];
+  if (p.brainMap) parts.push({ kind: "brainMap", count: 1, usd: rates.brainMap.usd });
+  parts.push({ kind: "sessions", count: p.sessions, usd: rates.session.usd == null ? null : p.sessions * rates.session.usd });
+  if (p.vibroChair) parts.push({ kind: "chair", count: p.sessions, usd: rates.vibroChair.usd == null ? null : p.sessions * rates.vibroChair.usd });
+  if (p.hoolestKeychain) parts.push({ kind: "keychain", count: 1, usd: rates.hoolestKeychain.usd });
+  if (p.hoolestHandheld) parts.push({ kind: "handheld", count: 1, usd: rates.hoolestHandheld.usd });
+  const partner = partnerFor(p.slot);
+  if (partner) parts.push({ kind: "partner", count: 1, usd: partner.retailUsd, partner });
+  return parts;
 }
 
 /* ------------------------------------------------------------------ */
@@ -407,6 +480,47 @@ export const REFERRAL = {
   /** Credited friends per referrer; the eleventh credits nothing. */
   friendCap: 10,
 } as const;
+
+/* ------------------------------------------------------------------ */
+/* Eligibility: Tennessee and its neighbours (Ben, 2026-10-19)          */
+/* ------------------------------------------------------------------ */
+
+/** Who may enter: residents of these states, 18+. ONE list — the ZIP
+ *  check (lib/giveaway/zip.ts), the page, the rules and the deck all read
+ *  it. Tennessee first; then its bordering states, clockwise from the north. */
+export const ELIGIBLE_STATES = [
+  { code: "TN", name: "Tennessee" },
+  { code: "KY", name: "Kentucky" },
+  { code: "VA", name: "Virginia" },
+  { code: "NC", name: "North Carolina" },
+  { code: "GA", name: "Georgia" },
+  { code: "AL", name: "Alabama" },
+  { code: "MS", name: "Mississippi" },
+  { code: "AR", name: "Arkansas" },
+  { code: "MO", name: "Missouri" },
+] as const;
+
+export type EligibleStateCode = (typeof ELIGIBLE_STATES)[number]["code"];
+
+export const ELIGIBLE_STATE_CODES: readonly EligibleStateCode[] = ELIGIBLE_STATES.map((s) => s.code);
+
+export function isEligibleStateCode(code: string | null | undefined): code is EligibleStateCode {
+  return (ELIGIBLE_STATE_CODES as readonly string[]).includes(code ?? "");
+}
+
+export function eligibleStateName(code: EligibleStateCode): string {
+  return ELIGIBLE_STATES.find((s) => s.code === code)!.name;
+}
+
+/** "KY, VA, NC, GA, AL, MS, AR, MO" — the neighbours, for a parenthesis. */
+export function neighbourCodes(): string {
+  return ELIGIBLE_STATES.filter((s) => s.code !== "TN").map((s) => s.code).join(", ");
+}
+
+/** "Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)" — the eligibility, in prose. */
+export function eligibilityPhrase(): string {
+  return `Tennessee and neighboring states (${neighbourCodes()})`;
+}
 
 /* ------------------------------------------------------------------ */
 /* Page modes and the chat window (decisions 11, 14)                   */

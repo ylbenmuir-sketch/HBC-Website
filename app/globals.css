@@ -2458,3 +2458,279 @@ body[data-bottombar] footer.site {
   :where(.desk-compact) .form select,
   :where(.desk-compact) .form textarea { padding: 14px 16px; }
 }
+
+/* ── /10years (components/giveaway/TenYearsView.tsx) ─────────────────────
+   Ben, 2026-10-19: an anniversary page. The hero — seal, headline, the
+   week's value, a countdown, the form card — fits the first 1440×900
+   screen; the prize ladder below climbs Monday to Saturday; then photos
+   and three questions. Navy, ivory, sage and gold; serif headings, sans
+   body; premium and calm. The form card is the only box with an edge and a
+   shadow among the hero's elements; Saturday's card is the only dark one. */
+
+/* The quiet header: logo, "Explore HBC", the phone. */
+header.site.campaign { border-bottom-color: transparent; }
+header.site.campaign.scrolled { border-bottom-color: var(--line); }
+header.site.campaign .nav { height: 62px; }
+.nav-campaign { display: flex; align-items: center; gap: 28px; }
+.nav-explore { font-size: 15px; font-weight: 500; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; padding: 4px 0; border-bottom: 1px solid var(--gold-soft); }
+.nav-explore:hover { color: var(--sage-deep); border-color: var(--gold); }
+.nav-campaign .nav-tel { color: var(--navy); font-weight: 500; }
+
+/* The slim footer: one line, on the page's own ground. */
+footer.site.slim { background: transparent; color: var(--slate); padding: 14px 0 16px; font-size: 13px; border-top: 1px solid var(--line); }
+body[data-bottombar] footer.site.slim { padding-bottom: calc(16px + var(--bottombar-h) + env(safe-area-inset-bottom)); }
+.slim-row { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; }
+.slim-row nav { display: flex; gap: 22px; }
+footer.site.slim a { color: var(--ink); text-decoration: none; display: inline-flex; min-height: 24px; align-items: center; }
+footer.site.slim a:hover { color: var(--sage-deep); }
+
+/* Hero: words left, the form card right. */
+.ty-hero { padding: 18px 0 36px; }
+.ty-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 56px; align-items: center; }
+.ty-seal { display: block; width: 118px; height: 118px; margin: 0 0 14px -2px; font-family: var(--sans); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6)); }
+.ty-seal-num { font-family: var(--serif); }
+.ty-hero h1 { font-size: clamp(44px, 4.3vw, 62px); line-height: 1.04; letter-spacing: -0.015em; max-width: none; margin: 0 0 16px; }
+.ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 8px; letter-spacing: -0.005em; }
+.ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
+.ty-proof { font-size: 13px; color: var(--slate); letter-spacing: 0.04em; margin: 18px 0 0; }
+
+/* The countdown: four quiet boxes. */
+.ty-count { margin-top: 18px; }
+.ty-count-boxes { display: flex; gap: 8px; }
+.ty-count-box { display: flex; flex-direction: column; align-items: center; min-width: 66px; padding: 9px 10px 7px; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+.ty-count-n { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; color: var(--navy); font-variant-numeric: tabular-nums; }
+.ty-count-u { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin-top: 5px; }
+.ty-count-label { font-size: 13px; color: var(--slate); margin: 8px 0 0; }
+
+/* The form card. */
+.ty-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 28px 60px -40px rgba(21, 34, 48, 0.4); padding: 24px 30px 20px; }
+.ty-card-title { font-family: var(--serif); font-size: 27px; font-weight: 500; line-height: 1.15; color: var(--navy); margin: 0 0 4px; text-wrap: pretty; }
+.ty-card-line { font-size: 14.5px; line-height: 1.5; color: var(--slate); margin: 0; }
+.ty-error { font-size: 14.5px; line-height: 1.5; color: #9a3b2e; margin: 10px 0 0; }
+.ty-form { margin-top: 4px; }
+/* Each label sits inside its field's box, top-left, and stays there while
+   typing — a real <label>, just not a line of its own. */
+.ty-fields { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 12px; margin-top: 16px; row-gap: 10px; }
+.ty-fields > div { grid-column: span 6; position: relative; }
+.ty-fields > div:nth-child(3) { grid-column: span 7; }
+.ty-fields > div:nth-child(4) { grid-column: span 5; }
+.form.ty-form .ty-fields label { position: absolute; top: 8px; left: 14px; right: 10px; margin: 0; font-size: 10.5px; line-height: 1.2; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.form.ty-form input:not([type="checkbox"]) { height: 52px; padding: 19px 14px 5px; }
+.ty-checks { display: grid; gap: 6px; margin-top: 14px; }
+.form.ty-form .ty-check, .form.ty-form .ty-optin { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 14.5px; line-height: 1.45; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
+.form.ty-form .ty-check input, .form.ty-form .ty-optin input { width: 18px; height: 18px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
+.ty-check a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.ty-ref { font-size: 13.5px; line-height: 1.5; color: var(--sage-deep); margin: 10px 0 -4px; }
+.ty-submit { width: 100%; margin-top: 14px; padding: 13px 24px; min-height: 46px; }
+.form.ty-form .ty-optin { margin-top: 10px; font-size: 13px; color: var(--slate); }
+.form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
+.ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
+.ty-small { font-size: 13px; line-height: 1.5; color: var(--slate); margin: 10px 0 0; }
+.ty-share { margin-top: 18px; }
+.ty-share label { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 6px; }
+.ty-share-row { display: flex; gap: 8px; }
+.ty-share-row input { flex: 1; min-width: 0; border: 1px solid var(--line-control); border-radius: 4px; background: var(--ivory); padding: 11px 12px; font-family: var(--sans); font-size: 15px; color: var(--ink); }
+.ty-share-row .btn { padding: 11px 20px; flex: none; }
+.ty-winners { list-style: none; margin: 14px 0 14px; padding: 0; }
+.ty-winners li { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); }
+.ty-winners li:first-child { border-top: 0; padding-top: 0; }
+.ty-winners li[data-state="pending"], .ty-winners li[data-state="reaching"] { color: var(--slate); }
+
+/* How it works: three numbered steps, one quiet strip between two hairlines. */
+.ty-how { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px 0; }
+.ty-how-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 36px; }
+.ty-how-steps li { display: flex; align-items: flex-start; gap: 12px; }
+.ty-how-n { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold-ink); font-family: var(--serif); font-size: 15px; font-weight: 600; line-height: 1; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+.ty-how-text { font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+.ty-how-text b { display: block; font-weight: 600; color: var(--navy); font-size: 15px; }
+
+/* The prize ladder: heading + toggle, then six cards that climb. */
+.ty-prizes { position: relative; padding: 28px 0 24px; }
+/* The toggle's two radios: off-screen but focusable, ahead of .wrap so the
+   ~ selectors below can reach every value. */
+.ty-v { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.ty-prizes-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 22px; }
+.ty-prizes-head h2 { font-size: 34px; margin: 0; }
+.ty-pill { display: inline-flex; background: var(--ivory-2); border-radius: 999px; padding: 3px; }
+.ty-pill label { font-size: 13.5px; font-weight: 600; color: var(--slate); padding: 6px 16px; border-radius: 999px; cursor: pointer; line-height: 1.4; white-space: nowrap; transition: background 0.2s, color 0.2s; }
+#ty-v-new:checked ~ .wrap label[for="ty-v-new"], #ty-v-cur:checked ~ .wrap label[for="ty-v-cur"] { background: var(--navy); color: var(--ivory); }
+#ty-v-new:focus-visible ~ .wrap label[for="ty-v-new"], #ty-v-cur:focus-visible ~ .wrap label[for="ty-v-cur"] { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ty-prizes .v-cur { display: none; }
+#ty-v-cur:checked ~ .wrap .v-new { display: none; }
+#ty-v-cur:checked ~ .wrap .v-cur { display: inline; }
+.ty-ladder { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.ty-step { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 8px; min-height: var(--step-h, 160px); position: relative; transition: box-shadow 0.2s, border-color 0.2s; }
+/* The steps: each day a little taller than the last, Saturday on top. */
+.ty-step[data-slot="mon"] { --step-h: 176px; }
+.ty-step[data-slot="tue"] { --step-h: 194px; }
+.ty-step[data-slot="wed"] { --step-h: 212px; }
+.ty-step[data-slot="thu"] { --step-h: 230px; }
+.ty-step[data-slot="fri"] { --step-h: 248px; }
+.ty-step[data-slot="grand"] { --step-h: 290px; }
+/* The head is the button: the whole top of the card opens the breakdown. */
+.ty-step-head { display: flex; flex-direction: column; align-items: flex-start; flex: 1; width: 100%; padding: 14px 16px 12px; margin: 0; background: none; border: 0; border-radius: 8px 8px 0 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.ty-step-head:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.ty-step-more { position: absolute; top: 10px; right: 12px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--line); color: var(--slate); font-size: 15px; line-height: 1; }
+.ty-step[data-open] .ty-step-more, .ty-step:hover .ty-step-more { border-color: var(--gold); color: var(--gold-ink); }
+.ty-step-time { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 26px 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ty-step-label { display: block; font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin: 0 0 6px; }
+/* Value first: the amount is the largest thing on the card, "value" in small caps under it. */
+.ty-step-value { display: flex; flex-direction: column; margin: 0 0 8px; }
+.ty-step-amount { font-family: var(--serif); font-size: 42px; font-weight: 500; line-height: 1; color: var(--gold-ink); letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
+.ty-step-valueword { font-family: var(--serif); font-variant: small-caps; font-size: 14px; letter-spacing: 0.14em; color: var(--slate); margin-top: 3px; }
+.ty-step-prize { display: block; font-size: 13.5px; line-height: 1.4; color: var(--ink); margin: auto 0 0; }
+.ty-prize-main { display: block; font-weight: 500; }
+.ty-prize-line { display: block; color: var(--slate); margin-top: 3px; }
+.ty-prize-line small, .ty-bd-label small { font-size: 11.5px; color: var(--slate); }
+.ty-tag { display: inline-block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--slate); background: var(--ivory-2); border-radius: 3px; padding: 3px 7px; }
+.ty-tag-next { color: var(--ivory); background: var(--sage-deep); }
+.ty-step[data-state="next"] { border-color: var(--sage); box-shadow: 0 0 0 2px var(--sage), 0 22px 44px -34px rgba(21, 34, 48, 0.35); }
+.ty-step[data-state="drawn"] { background: var(--ivory-2); }
+.ty-step[data-state="drawn"] .ty-step-amount { opacity: 0.6; }
+.ty-step-winner { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+.ty-step-winner .ty-step-label { color: var(--sage-deep); margin: 0; }
+.ty-step-winner-line { font-family: var(--serif); font-size: 21px; line-height: 1.15; color: var(--navy); }
+.ty-step-winner[data-winner-state="reaching"] .ty-step-winner-line { font-family: var(--sans); font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+/* The breakdown: a popover under its card on a wide screen (the climbing
+   row keeps its height); under the whole row on a phone (components/
+   giveaway/Ladder.tsx decides which). */
+.ty-ladder-wrap { position: relative; }
+.ty-step-panel { position: absolute; top: calc(100% + 8px); left: 0; width: 300px; z-index: 6; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 24px 48px -24px rgba(21, 34, 48, 0.35); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s; }
+.ty-step[data-open] .ty-step-panel { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.ty-step[data-slot="fri"] .ty-step-panel, .ty-step[data-slot="grand"] .ty-step-panel { left: auto; right: 0; }
+.ty-step-grand .ty-step-panel { background: var(--navy); border-color: var(--navy); }
+.ty-ladder-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.22s ease; margin-top: 10px; border-radius: 8px; background: #fff; border: 1px solid transparent; }
+.ty-ladder-detail[data-open] { grid-template-rows: 1fr; border-color: var(--line); }
+.ty-ladder-detail.ty-step-grand { border-color: var(--navy); }
+.ty-step-panel-in { overflow: hidden; min-height: 0; }
+.ty-bd { list-style: none; margin: 0 16px; padding: 12px 0 4px; }
+.ty-ladder-detail .ty-bd { padding-top: 12px; }
+.ty-bd-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; line-height: 1.35; color: var(--ink); padding: 5px 0; }
+.ty-bd-label { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.ty-bd-usd { flex: none; font-variant-numeric: tabular-nums; color: var(--slate); }
+.ty-bd-total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; font-weight: 600; }
+.ty-bd-total .ty-bd-usd { color: var(--gold-ink); font-weight: 600; }
+.ty-bd-thumb { flex: none; width: 40px; height: 40px; border-radius: 6px; overflow: hidden; background: #f2f2f2; }
+.ty-bd-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ty-bd-link { display: inline-block; margin: 4px 16px 14px; font-size: 12.5px; color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.ty-bd-link:hover { border-color: var(--gold); }
+/* Saturday: the navy card with gold accents. */
+.ty-step-grand { background: var(--navy); border-color: var(--navy); color: var(--ivory); }
+.ty-step-grand .ty-step-time { color: rgba(251, 248, 241, 0.62); }
+.ty-step-grand .ty-step-label { color: var(--gold-lift); }
+.ty-step-grand .ty-step-amount { color: var(--gold-lift); font-size: 46px; }
+.ty-step-grand .ty-step-valueword { color: rgba(251, 248, 241, 0.7); }
+.ty-step-grand .ty-step-prize { color: var(--ivory); }
+.ty-step-grand .ty-prize-line, .ty-step-grand .ty-prize-line small, .ty-step-grand .ty-bd-usd, .ty-step-grand .ty-bd-label small { color: rgba(251, 248, 241, 0.72); }
+.ty-step-grand .ty-step-more { border-color: rgba(251, 248, 241, 0.3); color: rgba(251, 248, 241, 0.8); }
+.ty-step-grand[data-open] .ty-step-more, .ty-step-grand:hover .ty-step-more { border-color: var(--gold-lift); color: var(--gold-lift); }
+.ty-step-grand .ty-tag { color: var(--navy); background: var(--ivory); }
+.ty-step-grand .ty-tag-next { color: var(--ivory); background: var(--sage-deep); }
+.ty-step-grand[data-state="drawn"] { background: var(--navy-deep); }
+.ty-step-grand .ty-step-winner-line { color: var(--ivory); }
+.ty-step-grand .ty-step-winner .ty-step-label { color: var(--sage); }
+.ty-step-grand .ty-bd-total { border-color: rgba(251, 248, 241, 0.2); }
+.ty-step-grand .ty-bd-row { color: var(--ivory); }
+.ty-step-grand .ty-bd-total .ty-bd-usd { color: var(--gold-lift); }
+.ty-step-grand .ty-bd-link { color: var(--sage); border-color: rgba(184, 146, 74, 0.5); }
+@media (prefers-reduced-motion: reduce) { .ty-step-panel, .ty-ladder-detail, .ty-step { transition: none; } }
+.ty-prizes-note { font-size: 13.5px; line-height: 1.5; color: var(--slate); margin: 16px 0 0; }
+.ty-textlink { color: var(--sage-deep); font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.ty-textlink:hover { border-color: var(--gold); }
+
+/* Photos: four rounded frames with short captions. */
+.ty-photos { padding: 20px 0 28px; }
+.ty-photo-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.ty-photo-grid figure { margin: 0; }
+.ty-photo { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: var(--ivory-2); }
+.ty-photo img { object-fit: cover; }
+.ty-photo-map img { object-fit: contain; padding: 10px; background: #fff; }
+/* The product shot: contained on the photo's own light grey, so the device is whole and the frame matches its neighbours. */
+.ty-photo-device { background: #f2f2f2; }
+.ty-photo-device img { object-fit: contain; padding: 6%; }
+.ty-photo-grid figcaption { font-family: var(--sans); font-size: 13.5px; letter-spacing: 0; text-transform: none; color: var(--slate); margin-top: 10px; }
+
+/* Three questions, side by side; each opens beneath itself. */
+.ty-qa { padding: 0 0 28px; }
+.ty-qa-row { display: flex; align-items: flex-start; gap: 24px; border-top: 1px solid var(--line); }
+.ty-qa-list { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; align-items: start; }
+.ty-qa details.faq { border-bottom: 0; }
+.ty-qa details.faq summary { font-size: 19px; padding: 16px 2px 12px; gap: 8px; }
+.ty-qa details.faq .a { font-size: 15px; padding: 0 2px 12px; }
+.ty-qa-row > .ty-textlink { font-size: 13.5px; line-height: 1.5; flex: none; max-width: 11.5em; margin-top: 17px; }
+
+/* /10years/rules: the full prize table. */
+.ty-details .ty-eyebrow { margin-bottom: 18px; }
+.ty-eyebrow { font-family: var(--sans); font-size: 12px; line-height: 1.6; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; display: flex; align-items: center; gap: 14px; margin: 0; }
+.ty-eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--gold); }
+.ty-table { width: 100%; border-collapse: collapse; font-size: 15.5px; margin: 8px 0 10px; }
+.ty-table th { text-align: left; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate); font-weight: 600; padding: 8px 12px 8px 0; }
+.ty-table td { padding: 12px 12px 12px 0; border-top: 1px solid var(--line); vertical-align: top; color: var(--ink); }
+.ty-table td span { display: block; font-size: 13.5px; color: var(--slate); }
+.ty-details h2[id], .ty-details h1[id] { scroll-margin-top: 96px; }
+
+@media (max-width: 1200px) {
+  .ty-ladder { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .ty-step { --step-h: auto; }
+}
+@media (max-width: 1060px) {
+  header.site.campaign .nav { height: 64px; }
+  .ty-hero-grid { grid-template-columns: minmax(0, 1fr) 400px; gap: 40px; }
+  .ty-hero h1 { font-size: 44px; }
+}
+@media (max-width: 900px) {
+  .ty-hero-grid { grid-template-columns: 1fr; gap: 28px; }
+  .ty-hero h1 { max-width: 16ch; }
+  .ty-photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .nav-campaign { gap: 16px; }
+  .nav-explore, .nav-campaign .nav-tel { font-size: 13.5px; }
+  .ty-hero { padding: 20px 0 28px; }
+  .ty-hero-grid { gap: 22px; }
+  .ty-seal { width: 88px; height: 88px; margin-bottom: 12px; }
+  .ty-hero h1 { font-size: 40px; margin: 0 0 12px; max-width: none; }
+  .ty-value { font-size: 20px; }
+  .ty-sub { font-size: 16.5px; }
+  .ty-count { margin-top: 16px; }
+  .ty-count-boxes { gap: 6px; }
+  .ty-count-box { flex: 1; min-width: 0; padding: 8px 4px 6px; }
+  .ty-count-n { font-size: 26px; }
+  .ty-count-u { font-size: 10px; letter-spacing: 0.12em; }
+  .ty-proof { font-size: 12.5px; margin-top: 16px; }
+  .ty-card { padding: 22px 18px 18px; box-shadow: 0 20px 44px -34px rgba(21, 34, 48, 0.45); }
+  .ty-card-title { font-size: 25px; }
+  .ty-pill label { font-size: 12.5px; padding: 6px 12px; }
+  .ty-fields > div:nth-child(3) { grid-column: span 12; }
+  .ty-fields > div:nth-child(4) { grid-column: span 6; }
+  .ty-how { padding: 18px 0; }
+  .ty-how-steps { grid-template-columns: 1fr; gap: 14px; }
+  .ty-prizes { padding: 24px 0 22px; }
+  .ty-prizes-head h2 { font-size: 28px; }
+  /* The ladder as a swipe row, the cards still climbing. */
+  .ty-ladder { display: flex; align-items: flex-end; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 24px; scrollbar-width: none; margin: 0 -24px; padding: 4px 24px; }
+  .ty-ladder::-webkit-scrollbar { display: none; }
+  .ty-step { flex: 0 0 200px; scroll-snap-align: start; }
+  .ty-step[data-slot="mon"] { --step-h: 166px; }
+  .ty-step[data-slot="tue"] { --step-h: 182px; }
+  .ty-step[data-slot="wed"] { --step-h: 198px; }
+  .ty-step[data-slot="thu"] { --step-h: 214px; }
+  .ty-step[data-slot="fri"] { --step-h: 230px; }
+  .ty-step[data-slot="grand"] { --step-h: 270px; }
+  .ty-step-amount { font-size: 38px; }
+  .ty-step-grand .ty-step-amount { font-size: 42px; }
+  .ty-step-panel { display: none; }
+  .ty-photos { padding: 16px 0 24px; }
+  .ty-photo-grid { gap: 14px; }
+  .ty-photo-grid figcaption { font-size: 12.5px; margin-top: 8px; }
+  .ty-qa-row { display: block; border-top: 0; }
+  .ty-qa-list { grid-template-columns: 1fr; border-top: 1px solid var(--line); }
+  .ty-qa details.faq { border-bottom: 1px solid var(--line); }
+  .ty-qa details.faq summary { font-size: 18px; padding: 14px 2px; }
+  .ty-qa-row > .ty-textlink { display: inline-block; max-width: none; margin-top: 14px; }
+  .slim-row { justify-content: center; text-align: center; }
+}
+@media (max-width: 420px) {
+  header.site.campaign .nav { padding: 0 16px; gap: 12px; }
+  .nav-campaign { gap: 14px; }
+}

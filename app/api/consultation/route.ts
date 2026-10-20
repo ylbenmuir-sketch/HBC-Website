@@ -17,7 +17,7 @@ import {
 import { shouldEmailVisitor, visitorReplyTo } from "@/lib/email/format";
 import { visitorContent } from "@/lib/email/visitor-content";
 import { GUIDE_TITLE } from "@/lib/site-config";
-import { notificationSubject, routeLead, type Recipients } from "@/lib/lead-routing";
+import { notificationSubject, routeLead, type LeadSource, type Recipients } from "@/lib/lead-routing";
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { PHONE_DISPLAY } from "@/lib/site-config";
@@ -26,6 +26,7 @@ import { capitalizeName } from "@/lib/name-case";
 import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notification";
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
+import { checkOffer, offerRefusalMessage, redeemOffer } from "@/lib/giveaway/offers";
 
 export const runtime = "nodejs";
 
@@ -42,7 +43,7 @@ const SUBMISSION_TYPES = new Set(["consultation", "guide"]);
  * is the whole of what distinguishes the two. Absent means the form, which is
  * what every caller before the assistant existed was.
  */
-const SUBMISSION_SOURCES = new Set(["form", "chat"]);
+const SUBMISSION_SOURCES = new Set(["form", "chat", "giveaway"]);
 
 /**
  * Whether the visitor is ready to book. Absent means "book" — every caller
@@ -55,6 +56,8 @@ const SUBMISSION_INTENTS = new Set(["book", "more_info"]);
 type Payload = {
   type?: unknown;
   source?: unknown;
+  /** The 10-year giveaway offer code (source "giveaway" only). */
+  offer_code?: unknown;
   intent?: unknown;
   helping_who?: unknown;
   concerns?: unknown;
@@ -380,6 +383,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
+  // A 10-year giveaway booking (GIVEAWAY-PLAN.md §4): the code must be one we
+  // issued, unredeemed, inside the offer window. Refused codes say why, so
+  // the visitor can fix the code or book without it. The offer row is
+  // stamped after the lead saves (step 1b below).
+  const offerCode = source === "giveaway" ? str(body.offer_code, 20) : null;
+  const offer = offerCode ? await checkOffer(offerCode) : null;
+  if (source === "giveaway" && (!offer || !offer.ok)) {
+    return NextResponse.json({ error: offerRefusalMessage(offer && !offer.ok ? offer.reason : "unknown") }, { status: 400 });
+  }
+
   // The form and the chat both send first and last in one field under this
   // key — the column is older than the field — and every consumer stores it
   // whole; only the greetings use the first word (lib/first-name.ts).
@@ -427,9 +440,14 @@ export async function POST(request: Request) {
   }
 
   const concerns = concernList(body.concerns);
+  // The nearer center from the entrant's ZIP stands in when a giveaway
+  // booking did not choose one (decision 9).
+  const chosenCenter = str(body.preferred_center, 60);
   const preferredCenter = isGuide
     ? null
-    : (str(body.preferred_center, 60) ?? CENTER_UNSPECIFIED);
+    : offer?.ok && (!chosenCenter || chosenCenter === CENTER_UNSPECIFIED) && offer.nearestCenter
+      ? offer.nearestCenter
+      : (chosenCenter ?? CENTER_UNSPECIFIED);
   const bestTime = str(body.best_time, 40);
   const note = str(body.note, 2000);
   const sourcePage = str(body.source_page, 200);
@@ -508,18 +526,24 @@ export async function POST(request: Request) {
   // whichever delivery had not finished.
   const savedRowId = await saveRow(row);
 
+  // ── 1b. A giveaway booking stamps its offer code as redeemed ────────────
+  if (offer?.ok) {
+    const redeemed = await redeemOffer(offer.offer, { consultationRequestId: savedRowId, center: preferredCenter });
+    if (!redeemed) console.error(`[consultation] offer ${offer.offer.id} could not be marked redeemed (lead ${savedRowId ?? "unsaved"})`);
+  }
+
   // ── 2. Route, then email and platform side by side ─────────────────────
   // Sent whether or not the row saved: when it did not, the email is the
   // rescue copy (it says so at the top) and the visitor is told to call.
   const recipients = routeLead({
     type: isGuide ? "guide" : "consultation",
-    source: source as "form" | "chat",
+    source: source as LeadSource,
     intent: intent as "book" | "more_info",
     preferredCenter,
   });
   const subject = notificationSubject({
     route: recipients.route,
-    source: source as "form" | "chat",
+    source: source as LeadSource,
     preferredCenter,
     name: firstName,
     email,

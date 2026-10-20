@@ -286,7 +286,8 @@ function heading(label: string, badges: BadgeKind[]): string {
 /* ------------------------------------------------------------------ */
 
 export type StaffLead = {
-  source: "form" | "chat";
+  /** "giveaway" = the form with a 10-year offer code; the subject says so. */
+  source: "form" | "chat" | "giveaway";
   intent: "book" | "more_info";
   name: string;
   phone: string | null;

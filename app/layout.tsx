@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SlimFooter from "@/components/SlimFooter";
+import RouteFooter from "@/components/RouteFooter";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
@@ -140,6 +142,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cormorant.variable} ${cormorantItalic.variable} ${dmSans.variable}`}
+      // The inline script below adds `js` to this element before React
+      // hydrates, by design (see the reveal gate). React compares the
+      // attribute and reports a mismatch on every page in development
+      // (the dev overlay's "1 Issue"); the attribute is left as the browser
+      // has it either way, so the warning is the only effect. Suppressed
+      // here, for this one element.
+      suppressHydrationWarning
     >
       <head>
         {/* The `js` class the reveal gate hangs off. Synchronous and first in
@@ -183,7 +192,7 @@ export default function RootLayout({
           <main id="main" tabIndex={-1}>
             {children}
           </main>
-          <Footer />
+          <RouteFooter full={<Footer />} slim={<SlimFooter />} />
           {/* Site assistant — OFF. Renders only with
               NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
               .env.example, not in draft mode, not in dev. Wired in so Ben can

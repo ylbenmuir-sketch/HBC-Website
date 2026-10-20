@@ -58,10 +58,10 @@ already an HBC client"** checkbox picks which one:
 |---|---|---|---|
 | Mon | Brain Map + 2 sessions | 2 sessions | Partner 1 (TBD) |
 | Tue | Brain Map + 3 sessions | 3 sessions | Partner 2 (TBD) |
-| Wed | Brain Map + 4 sessions + Hoolest keychain | 4 sessions + Hoolest keychain | Partner 3 (TBD) |
-| Thu | Brain Map + 5 sessions + Hoolest keychain | 5 sessions + Hoolest keychain | Partner 4 (TBD) |
-| Fri | Brain Map + 7 sessions + Hoolest keychain | 7 sessions + Hoolest keychain | Partner 5 (TBD) |
-| **Sat GRAND** | Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
+| Wed | Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest | 4 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 3 (TBD) |
+| Thu | Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest | 5 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 4 (TBD) |
+| Fri | Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest | 7 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 5 (TBD) |
+| **Sat GRAND** | Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
 
 - **Every prize session includes the vibro chair.**
 - Partner prizes are six slots, smallest Monday to biggest Saturday, all
@@ -105,7 +105,7 @@ runs are isolated by construction. Every unique key below includes `env`.
 
 - **`giveaway_people`** — one row per verified person.
   `id, env, email (normalized: lower-case; Gmail dots and +tags folded),
-  email_display, first_name, last_name, zip (5 digits, Tennessee), city
+  email_display, first_name, last_name, zip (5 digits, an eligible state), city
   (from ZIP, for the public winner line), nearest_center ('nashville' |
   'murfreesboro', from ZIP), is_existing_client bool (the "I'm already an HBC
   client" checkbox — picks the prize version and the forward line),
@@ -218,8 +218,8 @@ prizes and the **full entry form** (so the Sunday tap can be one tap): first
 and last name, email, ZIP (5 digits), "I'm 18 or older", "I've read the
 Official Rules" (link), optional "I'm already an HBC client", optional
 marketing opt-in (unticked). Honeypot. Submit → verification email → the
-click sets `verified_at`. A non-Tennessee ZIP gets a polite "this one's for
-Tennessee residents" message and no row.
+click sets `verified_at`. A ZIP outside the eligible states gets a polite
+"neighbors within driving distance" message and no row.
 
 ### Entry (Sun Nov 15 6:00 pm – Sat Nov 21 5:00 pm)
 Same form, now creating entries. No phone field at entry (no SMS, and the
@@ -470,10 +470,11 @@ on Dec 5.
    entries and referral bonuses work and their caps, odds statement, drawing
    method, winner notification and claim deadline, redraw rules, publicity
    consent, governing law, limitation of liability, privacy link.
-2. **Eligibility**: age (18+?), geography (Tennessee only is the simplest —
-   some states, e.g. New York and Florida, impose registration and bonding
-   for prize values above set thresholds), employee/family exclusions,
-   existing clients eligible?
+2. **Eligibility**: age (18+?), geography (decided 2026-10-19: residents of
+   Tennessee and its bordering states — `ELIGIBLE_STATES` in
+   `lib/giveaway/config.ts`: KY, VA, NC, GA, AL, MS, AR, MO; none of these
+   is a registration-and-bonding state like New York or Florida),
+   employee/family exclusions, existing clients eligible?
 3. **Prize descriptions and approximate retail values** — the ladder is
    decided (§1); still open: the Hoolest handheld ($429, unconfirmed) and
    keychain retail values, and the six partner names. Tax note: a prize worth
@@ -548,10 +549,13 @@ on Dec 5.
     button. The offer turns off automatically at Dec 5 11:59 pm CT (config
     timestamp, no deploy) and codes stop working at the same moment. No
     redirect.
-12. ZIP is collected at entry (5 digits). Non-Tennessee ZIPs get a polite
-    "this one's for Tennessee residents" message; no separate residency
-    checkbox. ZIP is also used for center routing, the winner's city, and a
-    Franklin-corridor count on the admin dashboard.
+12. ZIP is collected at entry (5 digits). A ZIP outside Tennessee and its
+    bordering states (`ELIGIBLE_STATES` in config: KY, VA, NC, GA, AL, MS,
+    AR, MO — Ben, 2026-10-19) gets a polite "neighbors within driving
+    distance of our centers" message; no separate residency checkbox. ZIP
+    is also used for center routing (out of state: the nearer center by
+    the road in), the winner's city (state name when no city is listed),
+    and a Franklin-corridor count on the admin dashboard.
     *(Franklin-corridor count cut by decision 15; ZIP is still stored.)*
 13. Notify-me signups: the Sunday 6 pm "It's live" email has a one-tap entry
     button (details on file, already verified, so no second verification).

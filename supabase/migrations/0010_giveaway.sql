@@ -19,7 +19,6 @@
 -- Apply: Supabase → project HBC-Website (brwyfneahhhkymytkvpx) → SQL Editor
 -- → New query → paste this whole file → Run. Idempotent: safe to run twice.
 
-create extension if not exists pgcrypto;
 
 -- ── People ────────────────────────────────────────────────────────────────
 -- One row per verified person (notify-me signups who tapped, entrants who
@@ -201,7 +200,11 @@ create table if not exists public.giveaway_winners (
   tax_form_received_at timestamptz,
   redraw_reason text,
   redrawn_at timestamptz,
-  notes text
+  notes text,
+  -- The pick is a function of (seed, frozen pool minus pool_excluded), so
+  -- every result — the first draw and each redraw — can be recomputed later.
+  seed text,
+  pool_excluded jsonb not null default '[]'::jsonb
 );
 alter table public.giveaway_winners enable row level security;
 create index if not exists giveaway_winners_drawing_idx on public.giveaway_winners (env, drawing_id);
@@ -323,77 +326,77 @@ values
   ('production', 'mon', 'current_client', '2 sessions', '2 LENS sessions (every session includes the vibro chair)', false, 2, true, false, false, false, 330, 70, false),
   ('production', 'tue', 'new_client', 'Brain Map + 3 sessions', 'a Brain Map and 3 LENS sessions (every session includes the vibro chair)', true, 3, true, false, false, false, 645, 140, true),
   ('production', 'tue', 'current_client', '3 sessions', '3 LENS sessions (every session includes the vibro chair)', false, 3, true, false, false, false, 495, 105, false),
-  ('production', 'wed', 'new_client', 'Brain Map + 4 sessions + Hoolest keychain', 'a Brain Map, 4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
-  ('production', 'wed', 'current_client', '4 sessions + Hoolest keychain', '4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
-  ('production', 'thu', 'new_client', 'Brain Map + 5 sessions + Hoolest keychain', 'a Brain Map, 5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
-  ('production', 'thu', 'current_client', '5 sessions + Hoolest keychain', '5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
-  ('production', 'fri', 'new_client', 'Brain Map + 7 sessions + Hoolest keychain', 'a Brain Map, 7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
-  ('production', 'fri', 'current_client', '7 sessions + Hoolest keychain', '7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
-  ('production', 'grand', 'new_client', 'Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
-  ('production', 'grand', 'current_client', '13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', '13 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
+  ('production', 'wed', 'new_client', 'Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
+  ('production', 'wed', 'current_client', '4 sessions + Pocket vagus nerve stimulator by Hoolest', '4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
+  ('production', 'thu', 'new_client', 'Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
+  ('production', 'thu', 'current_client', '5 sessions + Pocket vagus nerve stimulator by Hoolest', '5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
+  ('production', 'fri', 'new_client', 'Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
+  ('production', 'fri', 'current_client', '7 sessions + Pocket vagus nerve stimulator by Hoolest', '7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
+  ('production', 'grand', 'new_client', 'Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
+  ('production', 'grand', 'current_client', '13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', '13 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
   ('preview', 'mon', 'new_client', 'Brain Map + 2 sessions', 'a Brain Map and 2 LENS sessions (every session includes the vibro chair)', true, 2, true, false, false, false, 480, 105, false),
   ('preview', 'mon', 'current_client', '2 sessions', '2 LENS sessions (every session includes the vibro chair)', false, 2, true, false, false, false, 330, 70, false),
   ('preview', 'tue', 'new_client', 'Brain Map + 3 sessions', 'a Brain Map and 3 LENS sessions (every session includes the vibro chair)', true, 3, true, false, false, false, 645, 140, true),
   ('preview', 'tue', 'current_client', '3 sessions', '3 LENS sessions (every session includes the vibro chair)', false, 3, true, false, false, false, 495, 105, false),
-  ('preview', 'wed', 'new_client', 'Brain Map + 4 sessions + Hoolest keychain', 'a Brain Map, 4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
-  ('preview', 'wed', 'current_client', '4 sessions + Hoolest keychain', '4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
-  ('preview', 'thu', 'new_client', 'Brain Map + 5 sessions + Hoolest keychain', 'a Brain Map, 5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
-  ('preview', 'thu', 'current_client', '5 sessions + Hoolest keychain', '5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
-  ('preview', 'fri', 'new_client', 'Brain Map + 7 sessions + Hoolest keychain', 'a Brain Map, 7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
-  ('preview', 'fri', 'current_client', '7 sessions + Hoolest keychain', '7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
-  ('preview', 'grand', 'new_client', 'Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
-  ('preview', 'grand', 'current_client', '13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', '13 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
+  ('preview', 'wed', 'new_client', 'Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
+  ('preview', 'wed', 'current_client', '4 sessions + Pocket vagus nerve stimulator by Hoolest', '4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
+  ('preview', 'thu', 'new_client', 'Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
+  ('preview', 'thu', 'current_client', '5 sessions + Pocket vagus nerve stimulator by Hoolest', '5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
+  ('preview', 'fri', 'new_client', 'Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
+  ('preview', 'fri', 'current_client', '7 sessions + Pocket vagus nerve stimulator by Hoolest', '7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
+  ('preview', 'grand', 'new_client', 'Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
+  ('preview', 'grand', 'current_client', '13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', '13 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
   ('local', 'mon', 'new_client', 'Brain Map + 2 sessions', 'a Brain Map and 2 LENS sessions (every session includes the vibro chair)', true, 2, true, false, false, false, 480, 105, false),
   ('local', 'mon', 'current_client', '2 sessions', '2 LENS sessions (every session includes the vibro chair)', false, 2, true, false, false, false, 330, 70, false),
   ('local', 'tue', 'new_client', 'Brain Map + 3 sessions', 'a Brain Map and 3 LENS sessions (every session includes the vibro chair)', true, 3, true, false, false, false, 645, 140, true),
   ('local', 'tue', 'current_client', '3 sessions', '3 LENS sessions (every session includes the vibro chair)', false, 3, true, false, false, false, 495, 105, false),
-  ('local', 'wed', 'new_client', 'Brain Map + 4 sessions + Hoolest keychain', 'a Brain Map, 4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
-  ('local', 'wed', 'current_client', '4 sessions + Hoolest keychain', '4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
-  ('local', 'thu', 'new_client', 'Brain Map + 5 sessions + Hoolest keychain', 'a Brain Map, 5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
-  ('local', 'thu', 'current_client', '5 sessions + Hoolest keychain', '5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
-  ('local', 'fri', 'new_client', 'Brain Map + 7 sessions + Hoolest keychain', 'a Brain Map, 7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
-  ('local', 'fri', 'current_client', '7 sessions + Hoolest keychain', '7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
-  ('local', 'grand', 'new_client', 'Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
-  ('local', 'grand', 'current_client', '13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', '13 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
+  ('local', 'wed', 'new_client', 'Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
+  ('local', 'wed', 'current_client', '4 sessions + Pocket vagus nerve stimulator by Hoolest', '4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
+  ('local', 'thu', 'new_client', 'Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
+  ('local', 'thu', 'current_client', '5 sessions + Pocket vagus nerve stimulator by Hoolest', '5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
+  ('local', 'fri', 'new_client', 'Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
+  ('local', 'fri', 'current_client', '7 sessions + Pocket vagus nerve stimulator by Hoolest', '7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
+  ('local', 'grand', 'new_client', 'Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
+  ('local', 'grand', 'current_client', '13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', '13 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true),
   ('test', 'mon', 'new_client', 'Brain Map + 2 sessions', 'a Brain Map and 2 LENS sessions (every session includes the vibro chair)', true, 2, true, false, false, false, 480, 105, false),
   ('test', 'mon', 'current_client', '2 sessions', '2 LENS sessions (every session includes the vibro chair)', false, 2, true, false, false, false, 330, 70, false),
   ('test', 'tue', 'new_client', 'Brain Map + 3 sessions', 'a Brain Map and 3 LENS sessions (every session includes the vibro chair)', true, 3, true, false, false, false, 645, 140, true),
   ('test', 'tue', 'current_client', '3 sessions', '3 LENS sessions (every session includes the vibro chair)', false, 3, true, false, false, false, 495, 105, false),
-  ('test', 'wed', 'new_client', 'Brain Map + 4 sessions + Hoolest keychain', 'a Brain Map, 4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
-  ('test', 'wed', 'current_client', '4 sessions + Hoolest keychain', '4 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
-  ('test', 'thu', 'new_client', 'Brain Map + 5 sessions + Hoolest keychain', 'a Brain Map, 5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
-  ('test', 'thu', 'current_client', '5 sessions + Hoolest keychain', '5 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
-  ('test', 'fri', 'new_client', 'Brain Map + 7 sessions + Hoolest keychain', 'a Brain Map, 7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
-  ('test', 'fri', 'current_client', '7 sessions + Hoolest keychain', '7 LENS sessions and a Hoolest keychain (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
-  ('test', 'grand', 'new_client', 'Brain Map + 12 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
-  ('test', 'grand', 'current_client', '13 sessions + Hoolest handheld vagus nerve stimulator (to keep) + one service from every partner', '13 LENS sessions, a Hoolest handheld vagus nerve stimulator to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true)
+  ('test', 'wed', 'new_client', 'Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 4, true, true, false, false, 810, 175, true),
+  ('test', 'wed', 'current_client', '4 sessions + Pocket vagus nerve stimulator by Hoolest', '4 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 4, true, true, false, false, 660, 140, true),
+  ('test', 'thu', 'new_client', 'Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 5, true, true, false, false, 975, 210, true),
+  ('test', 'thu', 'current_client', '5 sessions + Pocket vagus nerve stimulator by Hoolest', '5 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 5, true, true, false, false, 825, 175, true),
+  ('test', 'fri', 'new_client', 'Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest', 'a Brain Map, 7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', true, 7, true, true, false, false, 1305, 280, true),
+  ('test', 'fri', 'current_client', '7 sessions + Pocket vagus nerve stimulator by Hoolest', '7 LENS sessions and a pocket vagus nerve stimulator by Hoolest (every session includes the vibro chair)', false, 7, true, true, false, false, 1155, 245, true),
+  ('test', 'grand', 'new_client', 'Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', 'a Brain Map, 12 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', true, 12, true, false, true, true, 2559, 455, true),
+  ('test', 'grand', 'current_client', '13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner', '13 LENS sessions, a handheld vagus nerve stimulator by Hoolest, yours to keep and one service from every partner (every session includes the vibro chair)', false, 13, true, false, true, true, 2574, 455, true)
 on conflict (env, slot, version) do nothing;
 
 insert into public.giveaway_drawings (env, slot, kind, scheduled_at)
 values
-  ('production', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('production', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('production', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('production', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('production', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('production', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('preview', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('preview', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('preview', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('preview', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('preview', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('preview', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('local', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('local', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('local', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('local', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('local', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
-  ('local', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT,
-  ('test', 'mon', 'daily', '2026-11-16T18:00:00.000Z') -- Mon Nov 16, 12:00 PM CT,
-  ('test', 'tue', 'daily', '2026-11-17T18:00:00.000Z') -- Tue Nov 17, 12:00 PM CT,
-  ('test', 'wed', 'daily', '2026-11-18T18:00:00.000Z') -- Wed Nov 18, 12:00 PM CT,
-  ('test', 'thu', 'daily', '2026-11-19T18:00:00.000Z') -- Thu Nov 19, 12:00 PM CT,
-  ('test', 'fri', 'daily', '2026-11-20T18:00:00.000Z') -- Fri Nov 20, 12:00 PM CT,
+  ('production', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('production', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('production', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('production', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('production', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('production', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('preview', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('preview', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('preview', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('preview', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('preview', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('preview', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('local', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('local', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('local', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('local', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('local', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
+  ('local', 'grand', 'grand', '2026-11-21T23:00:00.000Z'), -- Sat Nov 21, 5:00 PM CT
+  ('test', 'mon', 'daily', '2026-11-16T18:00:00.000Z'), -- Mon Nov 16, 12:00 PM CT
+  ('test', 'tue', 'daily', '2026-11-17T18:00:00.000Z'), -- Tue Nov 17, 12:00 PM CT
+  ('test', 'wed', 'daily', '2026-11-18T18:00:00.000Z'), -- Wed Nov 18, 12:00 PM CT
+  ('test', 'thu', 'daily', '2026-11-19T18:00:00.000Z'), -- Thu Nov 19, 12:00 PM CT
+  ('test', 'fri', 'daily', '2026-11-20T18:00:00.000Z'), -- Fri Nov 20, 12:00 PM CT
   ('test', 'grand', 'grand', '2026-11-21T23:00:00.000Z') -- Sat Nov 21, 5:00 PM CT
 on conflict (env, scheduled_at, kind) do nothing;
 -- END generated from lib/giveaway/config.ts
