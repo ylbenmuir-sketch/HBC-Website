@@ -132,6 +132,29 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /**
+   * The "See If It's a Fit" buttons in the chrome, desktop and drawer.
+   * On every other page they are plain links to /contact. On /contact
+   * itself a link to the current page does nothing — the drawer stayed open
+   * and the tap looked dead (Ben, 2026-10-20) — so there the click closes
+   * the drawer and scrolls to the form (#send-a-message carries the
+   * header offset). The drawer closes either way; the pathname effect only
+   * fires when the route actually changes.
+   */
+  const onContactCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setOpen(false);
+    if (pathname !== "/contact") return;
+    const target = document.getElementById("send-a-message");
+    if (!target) return;
+    e.preventDefault();
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // After the drawer's scroll lock lifts (the effect above runs on the
+    // next render), so the page can move.
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  };
+
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
   // About is lit on /resources too, now that Resources lives in its menu.
@@ -258,7 +281,7 @@ export default function Header() {
             {PHONE_DISPLAY}
           </a>
         )}
-        <ChromeLink className="nav-cta" href="/contact">
+        <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
           See If It&rsquo;s a Fit
         </ChromeLink>
         <button
@@ -339,7 +362,7 @@ export default function Header() {
             ))}
           </nav>
           <div className="d-cta">
-            <ChromeLink className="nav-cta" href="/contact">
+            <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
               See If It&rsquo;s a Fit
             </ChromeLink>
             {SHOW_PHONE && (
