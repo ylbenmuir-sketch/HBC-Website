@@ -110,7 +110,7 @@ export const staticPages: StaticPage[] = [
     // /concerns/children-school.
     description:
       "LENS neurofeedback for children and teens — homework battles, meltdowns, hard transitions, sensory overwhelm. Nothing a child has to get right.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
     type: "CollectionPage",
     crumb: "Children & families",
   },
@@ -119,7 +119,7 @@ export const staticPages: StaticPage[] = [
     title: "LENS Neurofeedback",
     description:
       "LENS — the Low Energy Neurofeedback System — passive, brief sessions with nothing to practice, at our Nashville and Murfreesboro centers. What it is, and who it's for.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "LENS neurofeedback",
   },
@@ -130,7 +130,7 @@ export const staticPages: StaticPage[] = [
       "LENS stands for Low Energy Neurofeedback System. The whole idea without the jargon — and exactly what a session feels like from the chair.",
     // New opening (shift gears / stuck / where LENS fits) and the sample
     // brain map in the photo row, 2026-10-16.
-    dateModified: "2026-10-16",
+    dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "How LENS works",
   },
@@ -158,7 +158,7 @@ export const staticPages: StaticPage[] = [
     title: "Your First Visit",
     description:
       "No clipboard queue, no waiting-room limbo, no surprises. The first visit at Harmonized Brain Centers, minute by minute, for adults and for children.",
-    dateModified: "2026-10-13",
+    dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "Your first visit",
   },
@@ -220,7 +220,7 @@ export const staticPages: StaticPage[] = [
     title: "Client Stories",
     description:
       "No miracle stories — just the specific, daily-life changes clients report at check-in. Individual experiences vary, and we'd rather understate than oversell.",
-    dateModified: "2026-09-01",
+    dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "Client stories",
   },
@@ -230,7 +230,7 @@ export const staticPages: StaticPage[] = [
     // 149 chars: the topics the fourteen answers actually cover.
     description:
       "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
     type: "FAQPage",
     crumb: "FAQ",
   },
@@ -263,9 +263,20 @@ export const staticPages: StaticPage[] = [
     title: "Resources",
     description:
       "Plain-language guides for parents and adults — written by our practitioners, reviewed against our no-hype standard.",
-    dateModified: "2026-08-23",
+    dateModified: "2026-10-20",
     type: "CollectionPage",
     crumb: "Resources",
+  },
+  {
+    // The video hub (VIDEO-MAP.md). Each video's own page is
+    // /videos/<slug>, built from lib/videos.ts, and dated there.
+    path: "/videos",
+    title: "Videos: LENS Neurofeedback, Explained",
+    description:
+      "Client stories, short answers about LENS neurofeedback, and The Hopeful Brain conversations — videos from Harmonized Brain Centers in Nashville & Murfreesboro.",
+    dateModified: "2026-10-20",
+    type: "CollectionPage",
+    crumb: "Videos",
   },
   {
     path: "/privacy-policy",

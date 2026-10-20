@@ -63,6 +63,8 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: SEARCH_AND_ANSWER_AGENTS, allow: "/", disallow: DISALLOW },
       { userAgent: TRAINING_AGENTS, allow: "/", disallow: DISALLOW },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    // The video sitemap (2026-10-20) lists each watch page with its video;
+    // sitemap.xml lists the same pages as pages.
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/video-sitemap.xml`],
   };
 }

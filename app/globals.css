@@ -2023,6 +2023,42 @@ body[data-bottombar] footer.site {
 }
 
 /* ============================================================
+   VIDEOS — app/videos (hub + watch pages), components/VideoCard.tsx,
+   components/VideoBand.tsx
+   The watch page is the video: title, then the player at full column
+   width, both inside the first screen at 1440×900 and 390×844. The cards
+   are .res-card with a 16:9 poster in place of the 210px photo.
+   ============================================================ */
+/* Tighter top than .sec-tight: at 1440×900 the player has to clear the
+   ask bar, not just the fold. */
+.sec-tight.watch { padding-top: 36px; }
+.watch .wrap { max-width: 1088px; }
+.watch h1 { font-size: clamp(32px, 3.6vw, 48px); line-height: 1.15; margin: 16px 0 26px; max-width: 30ch; }
+.watch-stage { max-width: 1000px; }
+.watch-body { max-width: 760px; margin-top: 28px; }
+.watch-body .meta { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin-bottom: 18px; }
+.watch-body .lede { font-size: 20px; color: var(--ink); line-height: 1.6; margin: 0; }
+.vid-card .ph { position: relative; height: auto; aspect-ratio: 16 / 9; background: var(--navy); }
+.vid-card .body { padding: 22px 24px 26px; }
+.vid-card h2, .vid-card h3 { font-size: 21px; }
+.vid-card-play { position: absolute; left: 16px; bottom: 16px; width: 40px; height: 40px; border-radius: 50%; background: var(--ivory); color: var(--navy); display: grid; place-items: center; box-shadow: 0 0 0 1px var(--gold), 0 6px 18px rgba(21, 34, 48, 0.3); }
+.vid-card-play svg { margin-left: 2px; }
+.vid-card:hover h2, .vid-card:hover h3 { text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px; }
+.vid-shelf { scroll-margin-top: 96px; }
+.vid-shelf .res-grid + .related, .watch + .sec .related { margin-top: 30px; }
+.video-band .related { margin-top: 22px; }
+.story-videos { margin-top: 88px; }
+.story-videos .related { margin-top: 30px; }
+@media (max-width: 640px) { .story-videos { margin-top: 64px; } }
+.video-band-block { max-width: 900px; margin-top: 64px; }
+@media (max-width: 640px) { .video-band-block { margin-top: 48px; } }
+@media (max-width: 640px) {
+  .sec-tight.watch { padding-top: 28px; }
+  .watch h1 { margin: 12px 0 18px; }
+  .watch-body .lede { font-size: 18px; }
+}
+
+/* ============================================================
    CONTACT FORM, THREE STEPS — components/ContactForm.tsx
    Step one is the ask and has to fit above the fold on a desktop, so
    /contact alone runs a tighter hero and section, and the card's own

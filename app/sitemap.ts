@@ -5,6 +5,7 @@ import { locations } from "@/lib/locations";
 import { staticPages } from "@/lib/pages";
 import { resources, isPublishable, lastChanged } from "@/lib/resources";
 import { team } from "@/lib/team";
+import { VIDEO_PAGES_DATE, videoPath, videos } from "@/lib/videos";
 
 /** Never in the sitemap, whatever answers there: the giveaway page is a
  *  hidden page (Ben, 2026-10-19 — noindex, disallowed, linked from
@@ -65,6 +66,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
         path: `/resources/${r.slug}`,
         lastModified: lastChanged(r),
       })),
+    // One watch page per video. Their videos are listed again, with the
+    // video fields Google reads, in /video-sitemap.xml.
+    ...videos.map((v) => ({ path: videoPath(v), lastModified: VIDEO_PAGES_DATE })),
   ];
 
   return entries.map(({ path, lastModified }) => ({
