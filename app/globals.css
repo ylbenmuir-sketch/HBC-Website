@@ -1224,6 +1224,10 @@ html.js .rv.in { opacity: 1; transform: none; }
      the full column width is text. At 320 it wraps to two lines, cleanly. */
   .hero-copy .eyebrow { color: #d3dccf; font-size: 10.5px; letter-spacing: 0.06em; }
   .hero-copy .eyebrow::before { display: none; }
+  /* The smaller eyebrow's line box is 17px, and the headline's first line
+     box reaches 5px above its glyphs; 6px apart keeps the two boxes from
+     touching (check:layout) without a visible gap. */
+  .hero h1 .hero-kicker { margin-bottom: 6px; }
   /* margin-top 0, not the 18px this rule carried for years: the copy column
      is a flex column whose items' margins never collapsed and the measured
      gap between the eyebrow and the headline was 0 before the eyebrow moved

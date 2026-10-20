@@ -27,7 +27,10 @@ async function probePort(port, timeoutMs = 500) {
   }
 }
 
-export async function launch({ port = 9333 } = {}) {
+/** The debugging port: CDP_PORT in the environment, else 9333. Two sessions
+ *  on one machine (two worktrees, each running a check) must not share it —
+ *  each one's cleanup kills the Chrome on its port. */
+export async function launch({ port = Number(process.env.CDP_PORT) || 9333 } = {}) {
   // Preflight: anything already answering on this port is a browser from a
   // previous run that never reached close().
   //
