@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import PhotoFrame from "@/components/PhotoFrame";
 import BrainMapStage from "@/components/BrainMapStage";
+import BrandName from "@/components/BrandName";
 import BrainMapHeat from "@/components/BrainMapHeat";
 import BrainMapBars from "@/components/BrainMapBars";
 import { fmtUv, meanUv } from "@/lib/brain-map-sample";
@@ -839,8 +840,8 @@ export default function HomePage() {
                 title: "Plan.",
                 text: (
                   <>
-                    Your practitioner builds a plan from your map using the
-                    Harmonized Method, our proprietary process, built in-house
+                    Your practitioner builds a plan from your map using the{" "}
+                    <BrandName />, our proprietary process, built in-house
                     from the ground up and refined over {STAT_SESSIONS.value}{" "}
                     LENS sessions. Sessions are brief and passive. LENS gives
                     the brain gentle feedback and lets it do the adjusting.{" "}
