@@ -354,7 +354,8 @@ const nextConfig: NextConfig = {
       // (GIVEAWAY-PLAN.md §5, §6; 2026-10-18): never cached, never indexed.
       // The page metadata says noindex too; the header is what a crawler
       // obeys for a route handler's response and what a CDN obeys for both.
-      ...["/admin/:path*", "/unsubscribe"].map((source) => ({
+      // `/10years` (2026-10-19): a hidden page — see app/robots.ts.
+      ...["/admin/:path*", "/unsubscribe", "/10years", "/10years/:path*"].map((source) => ({
         source,
         headers: [
           { key: "Cache-Control", value: "no-store, max-age=0" },

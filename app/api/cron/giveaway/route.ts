@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { giveawayNow } from "@/lib/giveaway/clock";
+import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { runDueDrawings } from "@/lib/giveaway/drawings";
 import { liveNotifier, sendDeps } from "@/lib/giveaway/notify";
 import { runDueSends, scheduleJobs } from "@/lib/giveaway/sends";
@@ -18,6 +19,9 @@ export const maxDuration = 60;
  * like /api/cron/release-held-leads (lib/release-job.ts).
  */
 export async function GET(request: Request) {
+  // Engine off (lib/giveaway/engine.ts): nothing is drawn, scheduled or
+  // sent, and no giveaway table is queried — 0010 may not be applied.
+  if (!giveawayEngineEnabled()) return NextResponse.json({ ok: true, engine: "off" });
   const secret = process.env.CRON_SECRET?.trim();
   if (!secret) {
     console.error("[giveaway cron] CRON_SECRET is not set — refusing (nothing is drawn or sent until it is)");

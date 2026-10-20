@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { giveawayNow } from "@/lib/giveaway/clock";
+import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { formatCentralLabel, pageMode, prizeName, prizeFor } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { drawingById, winnerByToken } from "@/lib/giveaway/drawings";
@@ -17,6 +18,8 @@ export const runtime = "nodejs";
 export const metadata: Metadata = { title: "Claim your prize", robots: { index: false, follow: false } };
 
 export default async function ClaimPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ done?: string; error?: string }> }) {
+  // Not a page at all while the engine is off (lib/giveaway/engine.ts).
+  if (!giveawayEngineEnabled()) notFound();
   const now = giveawayNow();
   if (pageMode(now) === "hidden") notFound();
   const { token } = await params;

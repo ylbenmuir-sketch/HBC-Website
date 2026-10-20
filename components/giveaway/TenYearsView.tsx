@@ -58,7 +58,7 @@ const WEEK_YEAR = centralParts(DRAWINGS[0].at).year;
 const headingLines = t.heading.split(/(?<=\.)\s+/);
 const YEARS = WEEK_YEAR - ESTABLISHED_YEAR.value;
 
-export default function TenYearsView({ mode, now, card, winners = [] }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[] }) {
+export default function TenYearsView({ mode, now, card, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
   const total = prizeTotalFloorUsd("new_client");
   const open = mode === "notify_me" || mode === "live";
   const next = nextDrawing(now);
@@ -66,8 +66,8 @@ export default function TenYearsView({ mode, now, card, winners = [] }: { mode: 
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
   return (
     <div className="ty" data-mode={mode}>
-      {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts). */}
-      {assistantSuppressedByGiveaway(now) && <AssistantOff />}
+      {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase. */}
+      {(assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />}
       <section className="ty-hero">
         <div className="wrap ty-hero-grid">
           <div className="ty-hero-text">
@@ -104,7 +104,8 @@ export default function TenYearsView({ mode, now, card, winners = [] }: { mode: 
 /* The cards                                                           */
 /* ------------------------------------------------------------------ */
 
-export function FormCard({ mode, now, refCode, error }: { mode: "notify_me" | "live"; now: Date; refCode: string; error: string | null }) {
+/** `showcase` is the ?mode= value while the page is the showcase (lib/giveaway/showcase.ts): the submit then carries it, so the success message lands on the same stage. */
+export function FormCard({ mode, now, refCode, error, showcase = null }: { mode: "notify_me" | "live"; now: Date; refCode: string; error: string | null; showcase?: string | null }) {
   const next = nextDrawing(now) ?? DRAWINGS[0];
   return (
     <>
@@ -115,7 +116,7 @@ export function FormCard({ mode, now, refCode, error }: { mode: "notify_me" | "l
           {error}
         </p>
       )}
-      <form method="post" action="/10years/signup" className="form ty-form">
+      <form method="post" action={showcase ? `/10years/signup?mode=${encodeURIComponent(showcase)}` : "/10years/signup"} className="form ty-form">
         <input type="hidden" name="ref" value={refCode} />
         <input type="hidden" name="source_page" value="/10years" />
         <div className="ty-fields">

@@ -34,7 +34,11 @@ import { SITE_URL } from "@/lib/site-config";
  *  `noindex`; nothing there is for a crawler. `/unsubscribe` is NOT listed:
  *  it is noindex via header and absent from the sitemap, and a disallow
  *  would only hide the noindex from the crawler that already has the URL. */
-const DISALLOW = ["/api/", "/guides/", "/admin/"];
+/** `/10years` (2026-10-19): the giveaway page is live as a HIDDEN page —
+ *  anyone with the link sees it, nobody finds it. `noindex, nofollow` on
+ *  the page and in the header, absent from the sitemap, and disallowed here
+ *  (a prefix, so the sub-routes go with it). */
+const DISALLOW = ["/api/", "/guides/", "/admin/", "/10years"];
 
 const SEARCH_AND_ANSWER_AGENTS = [
   "OAI-SearchBot",

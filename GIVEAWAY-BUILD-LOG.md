@@ -6,6 +6,47 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## Live as a hidden page; the engine switch (Mon Oct 19 2026, evening)
+
+Ben's brief: `/10years` goes live on the real site TODAY as a hidden page
+— anyone with the link sees it, nobody can find it — with the giveaway
+itself switched off. `giveaway-build` was merged into `main` (one import
+conflict in `lib/lead-notification.ts`, both kept; main's hero / CTA /
+contact / Brain Map work untouched) and these landed on top:
+
+- **`GIVEAWAY_ENGINE_ENABLED`** (`lib/giveaway/engine.ts`), off when
+  unset. Off: `/api/cron/giveaway` answers 200 at once (before the secret
+  check) and queries nothing — 0010 is not applied; no scheduled send;
+  `/admin/10years/*` (a layout + every handler), `/10years/{claim,enter,
+  verify}` and the claim submit answer 404; `/unsubscribe` → its
+  "unavailable" message (503); a `/contact` offer code is refused without
+  a lookup. The lead cron and the rest of the site never read the flag.
+- **The showcase** (`lib/giveaway/showcase.ts`): while the engine is off,
+  and before Nov 9 with it on, `/10years` renders the notify-me stage;
+  `?mode=live | closed | thanks` the others, each with a fixed "now"
+  (Nov 10 / Wed Nov 18 10 am / Nov 23 / Dec 10, CT). Forms post to
+  `/10years/signup?mode=…` and get `?mode=…&sent=1` back without the body
+  being read; winners are six made-up neighbours (Monday named, Tuesday
+  "claimed", the rest pending in the live stage). No banner. The assistant
+  is off on the page and on `/10years/rules` in the showcase whatever the
+  date. On Nov 9 the showcase ends on its own ONLY if the engine is on.
+- **[DRAFT] tags hidden while the engine is off** (`hideDraftTags`), in
+  production too — Ben's "all [DRAFT] tags hidden". `COPY_IS_DRAFT` and
+  the sender's refusal are unchanged; with the engine on, production
+  shows the tags again until the copy is final.
+- **Hidden**: `robots: noindex, nofollow` on the page + `X-Robots-Tag`
+  for `/10years` and `/10years/*` (next.config.ts), `Disallow: /10years`
+  in robots.txt, `/10years*` and `/admin*` never in the sitemap (which is
+  static again). No link anywhere: nav, footer, homepage, chat, sitemap.
+- `check:giveaway` now starts an engine-off server first (no store at
+  all) and proves the showcase and every 404/200 above, then runs the
+  week with the engine on; "today" with the engine on is the showcase,
+  and the sitemap never lists the page. `lib/giveaway/showcase.test.mjs`
+  covers the switch, the mode map, the nows and the sample winners.
+- Turning the engine on: README → "10-year giveaway: turning the engine
+  on" (0010, token secret, admins + Supabase Auth SMTP/template, alerts,
+  CRON_SECRET, final copy, `check:giveaway -- --db`, un-hide if wanted).
+
 ## Eligibility opened to the bordering states (Mon Oct 19 2026)
 
 `ELIGIBLE_STATES` in `lib/giveaway/config.ts` (TN + KY, VA, NC, GA, AL, MS,

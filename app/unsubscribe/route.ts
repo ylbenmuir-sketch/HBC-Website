@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { audit } from "@/lib/giveaway/audit";
 import { PAGES } from "@/lib/giveaway/copy";
+import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { clientAddress, rateLimit, supabaseCounter } from "@/lib/giveaway/rate-limit";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { sha256Hex, tokenSecret, verifyToken } from "@/lib/giveaway/tokens";
@@ -39,6 +40,9 @@ export async function POST(request: Request) {
 }
 
 async function handle(request: Request, token: string | null): Promise<Response> {
+  // While the engine is off no giveaway email has gone out, so no token is
+  // valid; the tables may not exist, so none is looked up.
+  if (!giveawayEngineEnabled()) return html(PAGES.unsubscribe.unavailable, 503);
   const store = giveawayStore();
   let secret: string;
   try {

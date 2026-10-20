@@ -21,10 +21,17 @@
  * "person", since the limiter and the self-referral rule read them) and a
  * headless Chrome for the page itself:
  *
- *   today            /10years is a 404; /admin/10years is noindex + no-store
+ *   engine OFF       first, on a server of its own with GIVEAWAY_ENGINE_ENABLED
+ *                    unset and no store at all: /10years is the hidden showcase
+ *                    (200, noindex, no [DRAFT], every ?mode=), its form
+ *                    "succeeds" and writes nothing, the cron answers 200 and
+ *                    touches nothing, admin / claim / enter / verify are 404,
+ *                    /unsubscribe says unavailable, the rest of the site works
+ *   today            engine on: /10years is still the showcase before Nov 9;
+ *                    /admin/10years is noindex + no-store
  *   Nov 10           notify-me: three signups (one from Kentucky) + an Ohio ZIP refused +
  *                    a honeypot swallowed; three verification emails; links
- *                    clicked (one twice); /10years now in the sitemap
+ *                    clicked (one twice); /10years still never in the sitemap
  *   Nov 15 6 pm      cron → "It's live" to the three; A taps Sunday night
  *                    (early bird), B taps Monday afternoon (no early bird),
  *                    C never taps; Monday 9 am reminder to B and C
@@ -86,10 +93,14 @@ const SMS_LOG = process.env.MOCK_SMS_LOG ?? join(work, "sms.jsonl");
 const PLATFORM_LOG = process.env.MOCK_PLATFORM_LOG ?? join(work, "platform.jsonl");
 
 let server = null;
-async function startServer() {
+/** `overrides` win over everything; a value of undefined deletes the key. */
+async function startServer(overrides = {}) {
   const env = {
     ...process.env,
     PORT: String(PORT),
+    // The real engine: the check drives the whole week. The engine-off
+    // server (engineOffChecks) overrides this.
+    GIVEAWAY_ENGINE_ENABLED: "1",
     NODE_OPTIONS: "--import ./scripts/contact-flow/mock-resend.mjs",
     MOCK_RESEND_LOG: RESEND_LOG,
     MOCK_SMS_LOG: SMS_LOG,
@@ -121,6 +132,10 @@ async function startServer() {
     // `next start` fills unset keys from .env.local.
     env.SUPABASE_URL = "";
     env.SUPABASE_SERVICE_ROLE_KEY = "";
+  }
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v === undefined) delete env[k];
+    else env[k] = v;
   }
   server = spawn("npx", ["next", "start", "-p", String(PORT)], { cwd: ROOT, env, stdio: ["ignore", "pipe", "pipe"] });
   const logPath = join(work, "server.log");
@@ -263,21 +278,34 @@ async function adminLogin() {
 
 let logPath = null;
 try {
-  if (!ATTACH) logPath = await startServer();
+  if (!ATTACH) {
+    // The engine-off server first: no store of any kind (GIVEAWAY_REPO
+    // emptied too), so anything that reached for one would show as an
+    // error, not a success.
+    logPath = await startServer({ GIVEAWAY_ENGINE_ENABLED: "", GIVEAWAY_REPO: "" });
+    await engineOffChecks();
+    server.kill("SIGTERM");
+    await sleep(800);
+    server = null;
+    logPath = await startServer();
+  }
   const info = await (await fetch(`${BASE}/api/giveaway/test-clock`, { headers: cronAuth })).json();
   if (info.env !== "test" && info.env !== "local") throw new Error(`server env is "${info.env}" — refusing to run against it`);
   console.log(`check:giveaway against ${BASE} (env ${info.env}, ${info.memory ? "in-memory tables" : "database"}; logs in ${work})`);
   await resetAll();
   mark = emails().length;
 
-  /* ── today: hidden ──────────────────────────────────────────────────── */
-  section("Today (Oct 2026): nothing is public");
-  expect("/10years answers 404", (await get("/10years")).status === 404);
+  /* ── today: the showcase, engine on ─────────────────────────────────── */
+  section("Today (Oct 2026), engine on: /10years is still the showcase before Nov 9");
+  const todayPage = await get("/10years");
+  expect("/10years answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
+  expect("/10years is noindex (header and meta)", /noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
   expect("/10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
-  expect("/10years/rules answers 404", (await get("/10years/rules")).status === 404);
+  expect("/10years/rules answers 200 (the showcase links to it)", (await get("/10years/rules")).status === 200);
   const site = await get("/sitemap.xml");
   expect("sitemap has no /10years, /unsubscribe or /admin", !/10years|unsubscribe|\/admin/.test(site.text));
-  expect("robots.txt disallows /admin/", /Disallow: \/admin\//.test((await get("/robots.txt")).text));
+  const robots = (await get("/robots.txt")).text;
+  expect("robots.txt disallows /admin/ and /10years", /Disallow: \/admin\//.test(robots) && /Disallow: \/10years/.test(robots));
   const admin = await get("/admin/10years");
   expect("/admin/10years answers 200, noindex, no-store", admin.status === 200 && /noindex/.test(admin.headers.get("x-robots-tag") ?? "") && /no-store/.test(admin.headers.get("cache-control") ?? ""));
 
@@ -285,11 +313,11 @@ try {
   section("Nov 10: notify-me");
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
-  expect("/10years answers 200 in notify-me mode", page.status === 200 && page.text.includes('action="/10years/signup"') && /Send me my entry link/.test(page.text), String(page.status));
+  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Send me my entry link/.test(page.text), String(page.status));
   // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
-  expect("sitemap now lists /10years", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text));
+  expect("sitemap still never lists /10years (a hidden page, Ben 2026-10-19)", !/10years/.test((await get("/sitemap.xml")).text));
   const A = person("A", "alice.notify@example.test");
   // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES).
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
@@ -624,6 +652,63 @@ if (failures.length) {
 }
 rmSync(work, { recursive: true, force: true });
 console.log("✓ check:giveaway: the whole week ran end to end; no real email, no text, no production row.");
+
+/* ── engine off: the hidden showcase and nothing else ──────────────────── */
+
+async function engineOffChecks() {
+  section("Engine OFF (GIVEAWAY_ENGINE_ENABLED unset, no store): the hidden showcase");
+  const before = emails().length;
+  const home = await get("/10years");
+  expect("off: /10years answers 200", home.status === 200, String(home.status));
+  expect("off: it is the notify-me stage, form posting with ?mode=notify", home.text.includes('data-mode="notify_me"') && home.text.includes('action="/10years/signup?mode=notify"'));
+  expect("off: noindex, nofollow — header and meta", /noindex, nofollow/.test(home.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex, nofollow"/.test(home.text));
+  expect("off: no [DRAFT] tag on the page", !home.text.includes("[DRAFT]"));
+  expect("off: the assistant is off (page marker)", /data-assistant-off/.test(home.text));
+  expect("off: no preview banner", !/preview|showcase/i.test(home.text.replace(/<script[\s\S]*?<\/script>/g, "")));
+  const live = await get("/10years?mode=live");
+  expect("off: ?mode=live shows the live stage with sample winners on the drawn days", live.status === 200 && live.text.includes('data-mode="live"') && /Sarah K\., Franklin/.test(live.text) && live.text.includes('action="/10years/signup?mode=live"'));
+  const closed = await get("/10years?mode=closed");
+  expect("off: ?mode=closed shows the winners card with six sample people", closed.status === 200 && closed.text.includes('data-mode="closed"') && /Daniel O\., Clarksville/.test(closed.text) && !closed.text.includes("/10years/signup"));
+  const thanks = await get("/10years?mode=thanks");
+  expect("off: ?mode=thanks shows the thank-you stage", thanks.status === 200 && thanks.text.includes('data-mode="thank_you"') && /data-assistant-off/.test(thanks.text));
+  expect("off: an unknown ?mode= is notify-me", (await get("/10years?mode=whatever")).text.includes('data-mode="notify_me"'));
+  expect("off: /10years/rules answers 200, noindex, assistant off", await get("/10years/rules").then((r) => r.status === 200 && /noindex/.test(r.headers.get("x-robots-tag") ?? "") && /data-assistant-off/.test(r.text)));
+  // The form: a normal success, no row (there is no store to write to — a
+  // write would have answered ?error=unavailable), no email.
+  const P = person("showcase", "showcase@example.test");
+  const notify = await postForm("/10years/signup?mode=notify", { first_name: "Show", last_name: "Case", email: P.email, zip: "37064", age_rules: "on" }, P);
+  expect("off: the notify-me form → 303 to ?mode=notify&sent=1", notify.status === 303 && /\/10years\?mode=notify&sent=1$/.test(notify.location), `${notify.status} ${notify.location}`);
+  const liveForm = await postForm("/10years/signup?mode=live", { first_name: "Show", last_name: "Case", email: P.email, zip: "37064", age_rules: "on" }, P);
+  expect("off: the live form → 303 to ?mode=live&sent=1", liveForm.status === 303 && /\/10years\?mode=live&sent=1$/.test(liveForm.location), `${liveForm.status} ${liveForm.location}`);
+  const sent = await get("/10years?mode=live&sent=1");
+  expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /Check your inbox/.test(sent.text));
+  expect("off: no email was sent", emails().length === before, `${emails().length - before} sent`);
+  // Everything the engine owns is gone.
+  expect("off: /10years/verify?t=x answers 404", (await get("/10years/verify?t=x")).status === 404);
+  expect("off: /10years/enter/x answers 404", (await get("/10years/enter/x")).status === 404);
+  expect("off: /10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
+  expect("off: POST /10years/claim/x/submit answers 404", (await postForm("/10years/claim/x/submit", { phone: "6155550100" }, P)).status === 404);
+  expect("off: /admin/10years answers 404", (await get("/admin/10years")).status === 404);
+  expect("off: /admin/10years/winners answers 404", (await get("/admin/10years/winners")).status === 404);
+  expect("off: POST /admin/10years/request-code answers 404", (await postForm("/admin/10years/request-code", { email: ADMIN_EMAIL }, P)).status === 404);
+  expect("off: POST /admin/10years/actions/draw answers 404", (await postForm("/admin/10years/actions/draw", { slot: "mon" }, P)).status === 404);
+  const unsub = await get("/unsubscribe?t=x");
+  expect("off: /unsubscribe shows its unavailable message (503)", unsub.status === 503 && /isn.t available right now/.test(unsub.text), String(unsub.status));
+  const cronNoAuth = await fetch(`${BASE}/api/cron/giveaway`);
+  const cronBody = await cronNoAuth.json().catch(() => ({}));
+  expect("off: the giveaway cron answers 200 at once, engine off, even unauthenticated", cronNoAuth.status === 200 && cronBody.engine === "off" && cronBody.ok === true, `${cronNoAuth.status} ${JSON.stringify(cronBody)}`);
+  const cronAuthed = await fetch(`${BASE}/api/cron/giveaway`, { headers: cronAuth });
+  expect("off: … and with the secret", cronAuthed.status === 200 && (await cronAuthed.json()).engine === "off");
+  // The rest of the site is untouched.
+  expect("off: the lead cron still exists (not 404)", (await fetch(`${BASE}/api/cron/release-held-leads`, { headers: cronAuth })).status !== 404);
+  expect("off: / answers 200 with no link to /10years", await get("/").then((r) => r.status === 200 && !/href="\/10years/.test(r.text)));
+  expect("off: /contact answers 200 with no link to /10years", await get("/contact").then((r) => r.status === 200 && !/href="\/10years/.test(r.text)));
+  expect("off: sitemap has no /10years or /admin", !/10years|\/admin/.test((await get("/sitemap.xml")).text));
+  expect("off: robots.txt disallows /10years", /Disallow: \/10years/.test((await get("/robots.txt")).text));
+  // A /contact booking with a giveaway code is refused without a lookup (no table to look in).
+  const offer = await fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "content-type": "application/json", ...headersFor(P) }, body: JSON.stringify({ source: "giveaway", offer_code: "10Y-ABC123", first_name: "Show Case", phone: "6155550100", email: P.email, preferred_center: "Nashville", contact_method: "call", sms_consent: false }) });
+  expect("off: a /contact offer code is refused (400, 'isn't one we recognise')", offer.status === 400 && /recognise/.test(JSON.stringify(await offer.json().catch(() => ({})))), String(offer.status));
+}
 
 /* ── admin actions (the screens' route names) ──────────────────────────── */
 

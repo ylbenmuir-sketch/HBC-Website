@@ -281,9 +281,10 @@ export const staticPages: StaticPage[] = [
     crumb: "Privacy",
   },
   {
-    // The 10-year giveaway (GIVEAWAY-PLAN.md). Answers 404 until the
-    // config's notify-me date (lib/giveaway/config.ts → pageMode) and the
-    // sitemap lists it only from then.
+    // The 10-year giveaway (GIVEAWAY-PLAN.md). A HIDDEN page (Ben,
+    // 2026-10-19): noindex, disallowed in robots.txt, never in the sitemap
+    // (app/sitemap.ts), linked from nowhere. Registered here for its title,
+    // description and WebPage node only.
     path: "/10years",
     title: "Ten Years of Harmonized Brain Centers",
     description:

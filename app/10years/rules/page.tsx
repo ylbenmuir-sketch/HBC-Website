@@ -7,6 +7,7 @@ import { DRAWINGS, OFFER, REFERRAL, RULES_VERSION, SCHEDULE, eligibilityPhrase, 
 import { PAGES } from "@/lib/giveaway/copy";
 import { hideDraftTags } from "@/lib/giveaway/draft";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
+import { showcaseActive } from "@/lib/giveaway/showcase";
 import AssistantOff from "@/components/giveaway/AssistantOff";
 import { DBA_SENTENCE, LEGAL_ENTITY, REGISTERED_ADDRESS_LINE } from "@/lib/sms-identity";
 
@@ -24,13 +25,15 @@ export const runtime = "nodejs";
 export const metadata: Metadata = { title: "Prize details and Official Rules — 10-year giveaway", robots: { index: false, follow: true } };
 
 export default function RulesPage() {
-  if (pageMode(giveawayNow()) === "hidden") notFound();
+  // The /10years page links here, so the showcase (lib/giveaway/showcase.ts) needs it too.
+  const showcase = showcaseActive();
+  if (!showcase && pageMode(giveawayNow()) === "hidden") notFound();
   const D = (s: string) => (hideDraftTags() ? s : `[DRAFT — counsel to replace] ${s}`);
   const t = PAGES.tenYears;
   const q = giveawayQuestions();
   return (
     <section className="page-hero ty-details">
-      {assistantSuppressedByGiveaway() && <AssistantOff />}
+      {(showcase || assistantSuppressedByGiveaway()) && <AssistantOff />}
       <div className="wrap article policy" style={{ maxWidth: 760 }}>
         <p className="ty-eyebrow">{t.eyebrow}</p>
         <h1 id="prizes" style={{ fontSize: 36 }}>

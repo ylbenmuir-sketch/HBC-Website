@@ -9,6 +9,7 @@
 
 import { giveawayNow } from "./clock";
 import { offerOpen } from "./config";
+import { giveawayEngineEnabled } from "./engine";
 import type { OfferRow, PersonRow } from "./rows";
 import { giveawayStore, type GiveawayStore } from "./store";
 import { audit } from "./audit";
@@ -20,6 +21,8 @@ export type OfferCheck =
 export const OFFER_CODE_SHAPE = /^10Y-[A-Z0-9]{6}$/;
 
 export async function checkOffer(code: string, now = giveawayNow(), store: GiveawayStore | null = giveawayStore()): Promise<OfferCheck> {
+  // No code has been issued while the engine is off, and the table may not exist.
+  if (!giveawayEngineEnabled()) return { ok: false, reason: "unknown" };
   if (!store) return { ok: false, reason: "unavailable" };
   const c = code.trim().toUpperCase();
   if (!OFFER_CODE_SHAPE.test(c)) return { ok: false, reason: "unknown" };

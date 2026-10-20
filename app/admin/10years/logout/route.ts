@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { engineOffResponse, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { ADMIN_PATH, PENDING_COOKIE, SESSION_COOKIE, currentAdmin } from "@/lib/giveaway/admin-auth";
 import { adminDeps, clearedCookie } from "@/lib/giveaway/admin-server";
 import { audit } from "@/lib/giveaway/audit";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Sign out: delete both cookies; audited when there was a session. */
 export async function POST(request: Request) {
+  if (!giveawayEngineEnabled()) return engineOffResponse();
   const res = NextResponse.redirect(new URL(ADMIN_PATH, request.url), 303);
   res.cookies.set(clearedCookie(SESSION_COOKIE));
   res.cookies.set(clearedCookie(PENDING_COOKIE));

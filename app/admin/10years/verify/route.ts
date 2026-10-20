@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { engineOffResponse, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { ADMIN_PATH, PENDING_COOKIE, pendingEmail, verifyCode } from "@/lib/giveaway/admin-auth";
 import { adminDeps, clearedCookie, sessionCookie } from "@/lib/giveaway/admin-server";
 import { clientAddress } from "@/lib/giveaway/rate-limit";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Step two: the code → a 12-hour session cookie. */
 export async function POST(request: Request) {
+  if (!giveawayEngineEnabled()) return engineOffResponse();
   const ready = adminDeps();
   const redirect = (query: string) => NextResponse.redirect(new URL(`${ADMIN_PATH}${query}`, request.url), 303);
   if (!ready.ok) return redirect("?error=missing");

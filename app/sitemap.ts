@@ -5,12 +5,13 @@ import { locations } from "@/lib/locations";
 import { staticPages } from "@/lib/pages";
 import { resources, isPublishable, lastChanged } from "@/lib/resources";
 import { team } from "@/lib/team";
-import { pageMode } from "@/lib/giveaway/config";
-import { giveawayNow } from "@/lib/giveaway/clock";
 
-/** Rendered per request (it is a few dozen records): /10years joins the
- *  sitemap on its config date without a deploy (lib/giveaway/config.ts). */
-export const dynamic = "force-dynamic";
+/** Never in the sitemap, whatever answers there: the giveaway page is a
+ *  hidden page (Ben, 2026-10-19 — noindex, disallowed, linked from
+ *  nowhere) and /admin is staff-only. Prefix matches, so every sub-route
+ *  (verify, enter, claim, rules; the admin screens) goes with them. */
+const NEVER_LISTED = ["/10years", "/admin"];
+const neverListed = (path: string) => NEVER_LISTED.some((p) => path === p || path.startsWith(`${p}/`));
 
 /**
  * Every URL carries its own `lastmod`, read from the record that owns the
@@ -40,10 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // (next.config.ts), and a sitemap lists only pages that answer 200.
     ...staticPages
       .filter((p) => SHOW_TEAM || !p.path.startsWith("/about/team"))
-      // /10years answers 404 until notify-me opens; a sitemap lists only
-      // pages that answer 200. Its sub-routes (verify, enter, claim, rules)
-      // are never listed and carry noindex of their own.
-      .filter((p) => p.path !== "/10years" || pageMode(giveawayNow()) !== "hidden")
+      .filter((p) => !neverListed(p.path))
       .map((p) => ({ path: p.path, lastModified: p.dateModified })),
     ...concerns.map((c) => ({
       path: `/concerns/${c.slug}`,

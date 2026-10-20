@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ADMIN_PATH, SESSION_COOKIE, currentAdmin } from "@/lib/giveaway/admin-auth";
 import { adminDeps } from "@/lib/giveaway/admin-server";
+import { engineOffResponse, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import type { GiveawayStore } from "@/lib/giveaway/store";
 
 /**
@@ -12,6 +13,7 @@ import type { GiveawayStore } from "@/lib/giveaway/store";
 export type ActionContext = { store: GiveawayStore; admin: string; form: FormData | null };
 
 export async function requireAdminAction(request: Request): Promise<{ ok: true; ctx: ActionContext } | { ok: false; response: NextResponse }> {
+  if (!giveawayEngineEnabled()) return { ok: false, response: new NextResponse(engineOffResponse().body, engineOffResponse()) };
   const ready = adminDeps();
   if (!ready.ok) return { ok: false, response: NextResponse.redirect(new URL(`${ADMIN_PATH}?error=missing`, request.url), 303) };
   const cookieHeader = request.headers.get("cookie") ?? "";

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import TenYearsView, { MessageCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
+import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { pageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { handleVerify } from "@/lib/giveaway/web";
@@ -12,6 +13,8 @@ export const runtime = "nodejs";
 export const metadata: Metadata = { title: "Confirming your email", robots: { index: false, follow: false } };
 
 export default async function VerifyPage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
+  // Not a page at all while the engine is off (lib/giveaway/engine.ts).
+  if (!giveawayEngineEnabled()) notFound();
   const now = giveawayNow();
   const mode = pageMode(now);
   if (mode === "hidden") notFound();
