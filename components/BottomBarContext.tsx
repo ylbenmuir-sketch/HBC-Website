@@ -136,6 +136,14 @@ export function BottomBarProvider({
   const [assistantRequest, setAssistantRequest] =
     useState<AssistantRequest | null>(null);
   const [compact, setCompact] = useState(false);
+  /**
+   * On a phone the ask bar stays off while the homepage hero is on screen
+   * (Ben, 2026-10-20): the hero's copy runs to the foot of the first screen
+   * and the bar was covering its chips and HSA line. True only under 760px,
+   * only on a route with a `.home .hero`, and only while any of it is in
+   * view; once it has scrolled past, the bar behaves as before.
+   */
+  const [heroCovers, setHeroCovers] = useState(false);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const nonce = useRef(0);
 
@@ -161,9 +169,34 @@ export function BottomBarProvider({
     ? "none"
     : callBarActive
       ? "call"
-      : askAvailable
+      : askAvailable && !heroCovers
         ? "ask"
         : "none";
+
+  useEffect(() => {
+    const hero = document.querySelector(".home .hero");
+    if (!hero) {
+      setHeroCovers(false);
+      return;
+    }
+    const mq = window.matchMedia("(max-width: 760px)");
+    let inView = false;
+    const apply = () => setHeroCovers(mq.matches && inView);
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        apply();
+      },
+      { threshold: 0 }
+    );
+    io.observe(hero);
+    mq.addEventListener("change", apply);
+    return () => {
+      io.disconnect();
+      mq.removeEventListener("change", apply);
+      setHeroCovers(false);
+    };
+  }, [pathname]);
 
   /**
    * Reserve the dock's height at the end of the page so a fixed bar never

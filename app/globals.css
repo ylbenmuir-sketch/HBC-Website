@@ -395,6 +395,13 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .hero { padding: 100px 0 0; }
 .hero-grid { display: grid; grid-template-columns: 1.06fr 0.94fr; gap: 76px; align-items: center; }
 .hero .sub { margin: 24px 0 38px; }
+/* Two sentences under the H1, one per width (Ben, 2026-10-20): the longer
+   one from 761px up, the shorter one under it. */
+.hero .sub-m { display: none; }
+@media (max-width: 760px) {
+  .hero .sub-desk { display: none; }
+  .hero .sub-m { display: block; }
+}
 /* One row on a desktop (Ben, 2026-10-19): the two buttons, then the HSA/FSA
    line to the right of the second. Both wrap when the column is narrow. */
 .hero-ctas { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
@@ -1212,7 +1219,11 @@ html.js .rv.in { opacity: 1; transform: none; }
      run at 390 and 320 — every run clears AA on its worst pixel. */
   .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.95) 40%, rgba(21, 34, 48, 0.92) 58%, rgba(21, 34, 48, 0.9) 68%, rgba(21, 34, 48, 0.35) 74%, rgba(21, 34, 48, 0.18) 84%, rgba(21, 34, 48, 0.28) 100%); }
   .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 340px 24px calc(30px + env(safe-area-inset-bottom)); }
-  .hero-copy .eyebrow { color: #d3dccf; }
+  /* One line at 390 and 360 (Ben, 2026-10-20): the 45-character eyebrow
+     needs 305px at 10.5px/0.06em; the gold line and its gap (40px) go, so
+     the full column width is text. At 320 it wraps to two lines, cleanly. */
+  .hero-copy .eyebrow { color: #d3dccf; font-size: 10.5px; letter-spacing: 0.06em; }
+  .hero-copy .eyebrow::before { display: none; }
   /* margin-top 0, not the 18px this rule carried for years: the copy column
      is a flex column whose items' margins never collapsed and the measured
      gap between the eyebrow and the headline was 0 before the eyebrow moved

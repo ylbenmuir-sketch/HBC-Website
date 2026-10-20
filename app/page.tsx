@@ -358,11 +358,20 @@ export default function HomePage() {
                 It replaced the one-line description of the organisation,
                 which /about still carries. Mirrored in
                 lib/chat/site-copy.ts — edit both. */}
-            <p className="sub">
+            <p className="sub sub-desk">
               Your first LENS neurofeedback visit starts with a Brain Map: a
               short recording that shows which areas of your brain are running
               smoothly, running hot, or running low, and what that means for
               everyday life.
+            </p>
+            {/* The phone's shorter sentence (Ben, 2026-10-20) — the same
+                claim in fewer words, still naming LENS neurofeedback for the
+                mobile index. One of the two is shown per width (globals.css
+                `.sub-desk` / `.sub-m`); the H1 is not repeated. */}
+            <p className="sub sub-m">
+              Start with a Brain Map: a short LENS neurofeedback recording that
+              shows which areas of your brain run hot, run low, or sit right in
+              range.
             </p>
             {/* One row on a desktop: both buttons, then the HSA/FSA line to
                 the right of the second (Ben, 2026-10-19). When the hero
