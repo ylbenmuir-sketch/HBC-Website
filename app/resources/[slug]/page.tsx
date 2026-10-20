@@ -6,6 +6,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn } from "@/components/Buttons";
 import ReadMore from "@/components/ReadMore";
+import VideoBand from "@/components/VideoBand";
 import { SHARED_OPEN_GRAPH_WITHOUT_IMAGES } from "@/lib/metadata";
 import PageSchema from "@/components/PageSchema";
 import { articleSchema } from "@/lib/schema";
@@ -19,6 +20,7 @@ import {
   lastChanged,
 } from "@/lib/resources";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
+import { videoForPage } from "@/lib/videos";
 
 export function generateStaticParams() {
   // Draft articles build in draft mode only.
@@ -78,6 +80,8 @@ export default async function ArticlePage({
     { label: "Resources", href: "/resources" },
     { label: article.crumbLabel },
   ];
+  // Its one video, after the body (lib/videos.ts → `home`).
+  const video = videoForPage(`/resources/${article.slug}`);
 
   return (
     <>
@@ -190,6 +194,7 @@ export default async function ArticlePage({
               }
             })}
           </div>
+          {video && <VideoBand video={video} />}
         </div>
       </section>
 

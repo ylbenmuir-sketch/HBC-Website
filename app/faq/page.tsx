@@ -1,4 +1,6 @@
 import Link from "next/link";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
@@ -58,6 +60,9 @@ const faqs: FaqItem[] = SITE_FAQS.map((faq) => ({
     ) : undefined),
 }));
 
+/** The page's one video, below the fold (lib/videos.ts → `home`). */
+const VIDEO = videoForPage("/faq");
+
 export default function FaqPage() {
   const trail = hubTrail("/faq");
   return (
@@ -87,6 +92,7 @@ export default function FaqPage() {
               Still skeptical? What we can and can&rsquo;t tell you
             </Btn>
           </div>
+          {VIDEO && <VideoBand video={VIDEO} />}
         </div>
       </section>
       <FinalCTA />

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import BrainMapHeat from "@/components/BrainMapHeat";
 import Link from "next/link";
 import PhotoFrame from "@/components/PhotoFrame";
@@ -60,6 +62,9 @@ const stuckPatterns = [
     line: "Tired all day, then can’t power down at night.",
   },
 ];
+
+/** The page's one video, below the fold (lib/videos.ts → `home`). */
+const VIDEO = videoForPage("/how-lens-works");
 
 export default function HowLensWorksPage() {
   const trail = hubTrail("/how-lens-works");
@@ -218,6 +223,11 @@ export default function HowLensWorksPage() {
             />
           </div>
         </div>
+        {VIDEO && (
+          <div className="wrap">
+            <VideoBand video={VIDEO} />
+          </div>
+        )}
       </section>
 
       <section className="sec sec-ivory2">

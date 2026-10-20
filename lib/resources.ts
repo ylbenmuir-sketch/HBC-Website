@@ -910,6 +910,8 @@ export const resources: Resource[] = [
     slug: "lens-and-medication",
     cluster: "focus",
     datePublished: "2026-08-23",
+    // The client video and the prescriber line under it (2026-10-20).
+    dateModified: "2026-10-20",
     // Held for Ben's read while it was the one article whose whole subject is
     // the boundary around medication. Read and approved as written, Aug 2026 —
     // the hold is gone, the copy is unchanged.

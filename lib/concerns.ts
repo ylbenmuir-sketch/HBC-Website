@@ -328,7 +328,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for anxiety and nervous-system overload — for people whose bodies stay on alert long after the moment has passed.",
     guideHeading: "Why calm doesn't hold.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
   },
   {
     slug: "focus-adhd",
@@ -384,7 +384,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for focus, ADHD, and follow-through — for kids and adults who try hard and still struggle to stay on task.",
     guideHeading: "Why trying harder stops working.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-20",
   },
   {
     slug: "sleep",
@@ -472,7 +472,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for sleep difficulties — for minds that won't shut off at night and mornings that never feel rested.",
     guideHeading: "Why eight hours isn't rest.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-20",
   },
   {
     slug: "emotional-regulation",
@@ -528,7 +528,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for emotional regulation — for kids (and adults) who become overwhelmed quickly and recover slowly.",
     guideHeading: "Why it isn't discipline.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
   },
   {
     slug: "brain-fog",
@@ -584,7 +584,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for brain fog, memory, and mental fatigue — for thinking that feels slow, cloudy, or spent by mid-afternoon.",
     guideHeading: "Why the fog comes and goes.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-20",
   },
   {
     slug: "stress-resilience",
@@ -640,7 +640,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback support for stress and resilience — for people functioning near burnout whose rest no longer restores.",
     guideHeading: "Why the same week lands differently.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-20",
   },
   {
     slug: "children-school",
@@ -871,7 +871,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "LENS neurofeedback in Nashville for musicians, executives and athletes after peak performance — people who used to work at a level they can't reach now.",
     guideHeading: "Why handling it got harder.",
-    dateModified: "2026-10-15",
+    dateModified: "2026-10-20",
   },
   {
     /*
@@ -1022,7 +1022,7 @@ export const concerns: Concern[] = [
       // page of all pages.
       "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. If your injury is recent, see a doctor first.",
     guideHeading: "Why these problems travel together.",
-    dateModified: "2026-10-10",
+    dateModified: "2026-10-20",
   },
   {
     /*
@@ -1260,7 +1260,7 @@ export const concerns: Concern[] = [
     metaDescription:
       "We don't treat depression. People come to us for low mood and lost motivation alongside the care they already have — therapy, a doctor, a prescriber. Middle TN.",
     guideHeading: "Why flat days and poor sleep travel together.",
-    dateModified: "2026-10-11",
+    dateModified: "2026-10-20",
   },
 ];
 

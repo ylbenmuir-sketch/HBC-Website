@@ -72,6 +72,13 @@ export default function ResourcesPage() {
               </Link>
             ))}
           </div>
+          {/* The other half of the learning center (2026-10-20). */}
+          <div className="related rv" style={{ marginTop: 40 }}>
+            <Link href="/videos">
+              Prefer to watch? Client stories and short answers, on video{" "}
+              <span className="arrow">&rarr;</span>
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -12,9 +12,11 @@ import GuideCta from "@/components/GuideCta";
 import { Btn, TalkCta } from "@/components/Buttons";
 import PageSchema from "@/components/PageSchema";
 import ReadMore from "@/components/ReadMore";
+import VideoBand from "@/components/VideoBand";
 import { concerns, getConcern } from "@/lib/concerns";
 import { articlesForConcern } from "@/lib/resources";
 import { faqQuestions } from "@/lib/schema";
+import { videoForPage } from "@/lib/videos";
 
 export function generateStaticParams() {
   return concerns.map((c) => ({ slug: c.slug }));
@@ -57,6 +59,9 @@ export default async function ConcernPage({
   // their own handoff blocks, so the loop cannot half-close — see
   // articlesForConcern in lib/resources.ts.
   const reading = articlesForConcern(concern.slug);
+  // Its one video, after the body copy — below the fold on every viewport
+  // (lib/videos.ts → `home`, VIDEO-MAP.md).
+  const video = videoForPage(`/concerns/${concern.slug}`);
   const trail = [
     { label: "What We Help With", href: "/what-we-help-with" },
     { label: concern.title },
@@ -222,6 +227,7 @@ export default async function ConcernPage({
                 </div>
               )}
               <LimitLine crisis={concern.crisisLine} className="rv" />
+              {video && <VideoBand video={video} />}
             </div>
           </section>
 
@@ -267,6 +273,11 @@ export default async function ConcernPage({
               <LimitLine crisis={concern.crisisLine} />
             </div>
           </div>
+          {video && (
+            <div className="wrap">
+              <VideoBand video={video} />
+            </div>
+          )}
         </section>
       )}
 

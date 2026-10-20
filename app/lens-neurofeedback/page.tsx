@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import PhotoFrame from "@/components/PhotoFrame";
 import ConcernCard from "@/components/ConcernCard";
 import Quote from "@/components/Quote";
@@ -177,6 +179,9 @@ const concernCards = [
   },
 ];
 
+/** The page's one video, below the fold (lib/videos.ts → `home`). */
+const VIDEO = videoForPage("/lens-neurofeedback");
+
 export default function LensNeurofeedbackPage() {
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
   const sessionCount = verifiedOr(STAT_SESSIONS);
@@ -269,6 +274,11 @@ export default function LensNeurofeedbackPage() {
             </p>
           </div>
         </div>
+        {VIDEO && (
+          <div className="wrap">
+            <VideoBand video={VIDEO} />
+          </div>
+        )}
       </section>
 
       {/* §3 — the differentiator, drawn entirely by describing LENS.

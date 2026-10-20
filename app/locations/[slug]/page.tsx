@@ -1,4 +1,6 @@
 import Link from "next/link";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -99,6 +101,8 @@ export default async function LocationPage({
 }) {
   const location = getLocation((await params).slug);
   if (!location) notFound();
+  // Its one video, after the intro (lib/videos.ts → `home`).
+  const video = videoForPage(`/locations/${location.slug}`);
 
   const addressConfirmed = hasConfirmedAddress(location);
   const showAddressLine = addressConfirmed || SHOW_DRAFT_CONTENT;
@@ -427,6 +431,7 @@ export default async function LocationPage({
                 </Btn>
               </div>
             </div>
+            {video && <VideoBand video={video} />}
           </div>
         </section>
       )}

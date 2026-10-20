@@ -37,6 +37,7 @@ const groups = [
       { label: "Your first visit", href: "/first-visit" },
       { label: "FAQ", href: "/faq" },
       { label: "Resources", href: "/resources" },
+      { label: "Videos", href: "/videos" },
       { label: "Client stories", href: "/stories" },
     ],
   },

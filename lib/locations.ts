@@ -519,7 +519,7 @@ export const locations: Location[] = [
     metaTitle: "LENS Neurofeedback in Nashville, TN",
     metaDescription:
       "LENS neurofeedback in Nashville, TN — gentle, passive sessions Tuesday through Saturday, just off I-24 at Thompson Lane. The first call is free.",
-    dateModified: "2026-10-12",
+    dateModified: "2026-10-20",
   },
   {
     slug: "murfreesboro",

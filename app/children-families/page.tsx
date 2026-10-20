@@ -1,4 +1,6 @@
 import LimitLine from "@/components/LimitLine";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import type { Metadata } from "next";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PhotoFrame from "@/components/PhotoFrame";
@@ -10,6 +12,9 @@ import PageSchema from "@/components/PageSchema";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/children-families");
+
+/** The page's one video, below the fold (lib/videos.ts → `home`). */
+const VIDEO = videoForPage("/children-families");
 
 export default function ChildrenFamiliesPage() {
   const trail = [
@@ -84,6 +89,11 @@ export default function ChildrenFamiliesPage() {
             <LimitLine />
           </div>
         </div>
+        {VIDEO && (
+          <div className="wrap">
+            <VideoBand video={VIDEO} />
+          </div>
+        )}
       </section>
 
       <section className="sec sec-ivory2">

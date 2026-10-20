@@ -1,4 +1,6 @@
-import { HAS_STORY_VIDEOS } from "@/lib/videos";
+import Link from "next/link";
+import VideoCard from "@/components/VideoCard";
+import { HAS_STORY_VIDEOS, videos } from "@/lib/videos";
 import { Fragment } from "react";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
@@ -30,6 +32,7 @@ export default function StoriesPage() {
   // for design review; those are gone now that verified ones exist, and the
   // grid simply renders however many there are rather than being padded.
   const stories = VERIFIED_TESTIMONIALS;
+  const storyVideos = videos.filter((v) => v.story);
   return (
     <>
       <PageSchema path="/stories" breadcrumb={trail} />
@@ -127,6 +130,26 @@ export default function StoriesPage() {
                   <span>Client interviews in their own words</span>
                 </div>
               )}
+            </div>
+          )}
+          {/* The video stories themselves — the badge above promises them
+              (2026-10-20). Each card opens the video's own page. */}
+          {HAS_STORY_VIDEOS && (
+            <div className="story-videos">
+              <div className="sec-head rv">
+                <div className="eyebrow">Video stories</div>
+                <h2>Clients, in their own words.</h2>
+              </div>
+              <div className="res-grid vid-grid rv">
+                {storyVideos.map((v) => (
+                  <VideoCard key={v.id} video={v} />
+                ))}
+              </div>
+              <div className="related rv">
+                <Link href="/videos">
+                  All videos <span className="arrow">&rarr;</span>
+                </Link>
+              </div>
             </div>
           )}
         </div>

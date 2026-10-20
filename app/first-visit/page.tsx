@@ -1,4 +1,6 @@
 import WhatItTakes from "@/components/WhatItTakes";
+import VideoBand from "@/components/VideoBand";
+import { videoForPage } from "@/lib/videos";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
@@ -54,6 +56,9 @@ const fiveParts = [
     p: "Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
   },
 ];
+
+/** The page's one video, below the fold (lib/videos.ts → `home`). */
+const VIDEO = videoForPage("/first-visit");
 
 export default function FirstVisitPage() {
   const trail = hubTrail("/first-visit");
@@ -116,6 +121,11 @@ export default function FirstVisitPage() {
             ))}
           </div>
         </div>
+        {VIDEO && (
+          <div className="wrap">
+            <VideoBand video={VIDEO} />
+          </div>
+        )}
       </section>
 
       <section className="sec sec-ivory2">
