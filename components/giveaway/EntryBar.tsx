@@ -14,9 +14,14 @@ export default function EntryBar({ label }: { label: string }) {
   useEffect(() => {
     const card = document.getElementById("enter");
     if (!card || typeof IntersectionObserver === "undefined") return;
+    // The slim footer pads itself above the bar while this is mounted (globals.css).
+    document.body.setAttribute("data-entrybar", "");
     const io = new IntersectionObserver(([e]) => setShow(!e.isIntersecting), { threshold: 0.05 });
     io.observe(card);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      document.body.removeAttribute("data-entrybar");
+    };
   }, []);
   const go = () => {
     document.getElementById("enter")?.scrollIntoView({ behavior: "smooth", block: "start" });

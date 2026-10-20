@@ -47,8 +47,9 @@ export const metadata: Metadata = {
   ...pageMetadata("/10years"),
   robots: { index: false, follow: false },
   // The share preview (Ben, 2026-10-20): its own title and line over the
-  // shared set; the image is app/10years/opengraph-image.tsx. Still noindex.
-  openGraph: { ...SHARED_OPEN_GRAPH, type: "website", title: ogTitle(), description: ogDescription() },
+  // shared set, WITHOUT its default image — an `images` set here would
+  // beat the file-based card, app/10years/opengraph-image.tsx. Still noindex.
+  openGraph: { ...(({ images: _default, ...rest }) => (void _default, rest))(SHARED_OPEN_GRAPH), type: "website", title: ogTitle(), description: ogDescription() },
   twitter: { card: "summary_large_image", title: ogTitle(), description: ogDescription() },
 };
 

@@ -303,8 +303,8 @@ try {
   // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
   const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
   expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
-  const refPage = await get("/10years?ref=HBC-TEST01");
-  expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPage.text)?.[1] ?? "x") === ogUrl);
+  const refPreview = await get("/10years?ref=HBC-TEST01");
+  expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPreview.text)?.[1] ?? "x") === ogUrl);
   const og = await fetch(`${BASE}/10years/opengraph-image`);
   expect("the card renders (200, image/png, 1200×630 declared)", og.status === 200 && /image\/png/.test(og.headers.get("content-type") ?? "") && /og:image:width" content="1200"/.test(todayPage.text), String(og.status));
   expect("/10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
@@ -793,11 +793,12 @@ async function browserChecks() {
         expect(`${mode} at ${width}: no ask bar on the page`, !askBar);
         // "Which one are you?" (Ben, 2026-10-20): the pick sets the ladder's toggle and the form's choice, and survives a reload.
         await page.eval("document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]').click()");
-        await sleep(400);
+        await sleep(1400); // the smooth scroll to the ladder takes most of a second on a phone-length page
         const picked = await page.eval("(() => { const b = document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]'); return b.getAttribute('aria-pressed') === 'true' && document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked; })()");
         expect(`${mode} at ${width}: picking "current client" sets the button, the ladder toggle and the form choice`, picked);
-        const scrolledToLadder = await page.eval("Math.abs(document.getElementById('ty-prizes').getBoundingClientRect().top) < 120");
-        expect(`${mode} at ${width}: the pick scrolls to the ladder`, scrolledToLadder);
+        const ladderTop = await page.eval("Math.round(document.getElementById('ty-prizes').getBoundingClientRect().top)");
+        const scrolledToLadder = ladderTop > -40 && ladderTop < 120;
+        expect(`${mode} at ${width}: the pick scrolls to the ladder`, scrolledToLadder, `top=${ladderTop}`);
         await page.goto(`${BASE}/10years`, { settle: 300 });
         const kept = await page.eval("document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked");
         expect(`${mode} at ${width}: the choice is remembered for the visit`, kept);

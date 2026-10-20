@@ -6,6 +6,69 @@ stand**, then the **Questions for Ben**. The spec is `GIVEAWAY-PLAN.md`.
 
 ---
 
+## /10years polish, third brief (Tue Oct 20 2026)
+
+Ben's brief: polish the page, especially on phone; keep showcase mode,
+the engine-off behaviour, noindex and every config-driven value. Main
+1ff54e3, ced9b08, 5c0f5d1 and the follow-up.
+
+- **Hero focal point.** "10 years." is the dominant element in the brand
+  sage (`--sage-deep`; 68px on phones, 96–124px on desktop, 60px under
+  360px); "A week of prizes." under it, about half the size, navy. The
+  seal is 96px on phones, 112px on desktop.
+- **"Which one are you?"** (`PathPicker`, `PathProvider`): two equal
+  buttons under the value and drawings lines, stacked under 360px. A tap
+  sets the visit's choice (sessionStorage `hbc10y.path`, try/catch), the
+  ladder's version, the form's choice, highlights, reports GA
+  `giveaway_path_pick` {choice: new|current} and smooth-scrolls to the
+  ladder (`#ty-prizes`, scroll-margin-top clears the sticky header). The
+  ladder's New/Current toggle (`VersionToggle`) and the form's choice
+  (`ClientChoice`) share the same state both ways. Nothing is picked
+  until the visitor picks.
+- **Form.** The "already a client" checkbox is a required two-way
+  choice, two radios named `existing_client` = `no` | `yes` (what
+  people.ts already read via `checked()`); the browser prompt is the
+  page's own sentence and the route refuses a signup without one
+  (`?error=client_status`). Phone: ZIP full width, 48px fields, tighter
+  rhythm; labels stay (z-index above the input, no pointer-events: none
+  — a label click focuses its field anyway).
+- **Phone ladder (<768px).** The swipe row is gone. Six rows Monday →
+  Saturday: day · time, the prize in one line (`rowWords`, ellipsis —
+  Ben: "truncate gracefully"), the value in gold serif, and a gold bar
+  as long as the day's share of the grand prize (`barShare`, per
+  version). Saturday navy, gold, taller, "Grand prize". A row opens its
+  breakdown inline (grid 0fr→1fr, visibility hidden when closed, inert,
+  aria-expanded/aria-controls; one at a time — Ladder.tsx no longer has
+  a narrow mode: the head carries both looks, CSS shows one). Live mode:
+  next row "Next" + sage outline; drawn rows show the winner line.
+  Desktop keeps the climbing cards with a shallower climb (204→266px).
+- **Entry bar** (`EntryBar`): phone-only fixed bar, "Get my entry link"
+  / "Enter the giveaway", shown by IntersectionObserver whenever the form
+  card is off screen (above OR below — so it also shows on the first
+  screen, where the card is below the fold; my call), hidden while the
+  card is in view, not rendered in closed/thank-you. Safe-area padding;
+  `body[data-entrybar]` pads the slim footer above it.
+- **Spacing.** Section paddings evened (hero 16/32, how 18, prizes 28,
+  photos 28 with a hairline, Q&A 36); photos and Q&A share the `.wrap`
+  gutters; nothing touches the edges at 390 or 320 (at 320 the campaign
+  header hides the phone number — it clipped — and keeps "Explore HBC" on
+  one line).
+- **Share preview.** `app/10years/opengraph-image.tsx` + `twitter-image.tsx`
+  → `lib/og/ten-years.tsx` (seal, "10 Years", "A week of prizes.",
+  "Over $6,000 in prizes", brand foot, the description line), 1200×630,
+  static at build. og:title "10 Years. A Week of Prizes.", og:description
+  "Six drawings Nov 16–21. One entry gets you into every one." (count and
+  dates from config). The page's openGraph spreads SHARED_OPEN_GRAPH
+  WITHOUT its `images` (an explicit set beats the file-based card).
+  Referral links share it. Still noindex.
+- **Checks.** check:giveaway 208/208 (picker → toggle + form, remembered
+  across a reload, toggle → form, entry bar hide/show at 390, vertical
+  ladder, climbing bars, client_status, og:image + referral + PNG).
+  check:layout grew `--also /10years,/10years/rules`: clean except the
+  deliberate one-line truncation on the phone rows, which the probe
+  counts as clipped text (33 findings at 320/390/414, all
+  `.ty-row-words`). Screens: giveaway-screens/third-pass/.
+
 ## Live as a hidden page; the engine switch (Mon Oct 19 2026, evening)
 
 Ben's brief: `/10years` goes live on the real site TODAY as a hidden page

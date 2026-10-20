@@ -25,7 +25,7 @@ export async function renderTenYearsCard() {
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: IVORY, padding: "56px 72px 52px", fontFamily: "DM Sans", color: NAVY }}>
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
           {/* The seal: gold rings, the number in the serif, the years and the span around it. */}
           <div style={{ width: 214, height: 214, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 107, border: `2px solid ${GOLD}`, position: "relative", flexShrink: 0 }}>
             <div style={{ position: "absolute", top: 6, left: 6, right: 6, bottom: 6, borderRadius: 101, border: `1px solid ${GOLD}` }} />
