@@ -560,7 +560,11 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; align-items: center; }
 .lens-seq { border-top: 1px solid var(--line); }
 .lens-seq .row { display: flex; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
-.lens-seq .n { font-family: var(--serif); font-size: 22px; color: var(--gold-ink); min-width: 34px; }
+/* Step numerals sitewide: lining figures in a small gold circle (the serif's
+   old-style figures read "1" as "I" and dropped the "3" — Ben, 2026-10-19).
+   `.n-dash` is the team page's "—" rows, which keep the plain mark. */
+.lens-seq .n { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--ivory); font-family: var(--sans); font-variant-numeric: lining-nums; font-weight: 600; font-size: 14px; line-height: 1; display: inline-grid; place-items: center; margin-right: 6px; align-self: flex-start; margin-top: 2px; }
+.lens-seq .n.n-dash { width: auto; height: auto; background: none; color: var(--gold-ink); font-family: var(--serif); font-size: 22px; min-width: 34px; margin: 0; display: block; align-self: baseline; }
 /* Row headings are h3 under a section h2, and h4 where the block nests one
    level deeper (the contact confirmation card). Both are styled here, and
    font-family/line-height are stated so the h3 doesn't inherit the serif face
@@ -579,13 +583,13 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .sec-navy .lens-seq p { color: rgba(251, 248, 241, 0.7); }
 /* The numeral beside it, for the same reason: --gold-ink is text for light
    grounds and falls to 2.76 on navy. */
-.sec-navy .lens-seq .n { color: var(--gold-lift); }
+.sec-navy .lens-seq .n { background: var(--gold-lift); color: var(--navy); }
 .wave { display: block; margin: 34px 0 8px; max-width: 100%; height: auto; }
 
 /* journey steps (5) */
 .journey { display: grid; grid-template-columns: repeat(var(--journey-cols, 5), 1fr); gap: 40px; margin-top: 76px; position: relative; }
 .journey::before { content: ""; position: absolute; top: 29px; left: 5%; right: 5%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-soft) 10%, var(--gold-soft) 90%, transparent); }
-.jstep .n { width: 58px; height: 58px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 24px; color: var(--gold-lift); background: var(--navy); position: relative; margin-bottom: 24px; }
+.jstep .n { width: 58px; height: 58px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--sans); font-variant-numeric: lining-nums; font-weight: 600; font-size: 20px; color: var(--gold-lift); background: var(--navy); position: relative; margin-bottom: 24px; }
 .jstep h3 { color: var(--ivory); font-size: 22px; font-weight: 500; margin-bottom: 8px; }
 .jstep p { font-size: 14.5px; color: rgba(251, 248, 241, 0.66); }
 
@@ -2149,99 +2153,121 @@ body[data-bottombar] footer.site {
    site's phone breakpoint) it stacks over the copy at container width. */
 /* ============================================================
    THE BRAIN MAP STAGE — components/BrainMapStage.tsx (Ben, 2026-10-19).
-   Desktop: steps left (2fr), one visual panel right (3fr), about one screen
-   tall. Under 1024px: head, a segmented tab bar, the panel, the active
-   step's text, the buttons. Grid areas carry the two orders from one DOM.
+   Desktop: steps left (2fr), one fixed-height visual panel right (3fr),
+   about one screen tall. Under 1024px: head, a segmented tab bar, the
+   active step's card, the panel, the buttons. Grid areas carry the two
+   orders from one DOM.
    ============================================================ */
 .home-brain-map { scroll-margin-top: 84px; }
-.home-brain-map.sec { padding: 88px 0 96px; }
+.home-brain-map.sec { padding: 80px 0 88px; }
 .bms { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-areas: "head stage" "tabs stage" "actions stage"; grid-template-rows: auto auto 1fr; column-gap: 56px; align-items: start; }
 .bms-head { grid-area: head; }
 .bms-tabs { grid-area: tabs; }
 .bms-stage { grid-area: stage; }
 .bms-actions-wrap { grid-area: actions; }
-.bms-text-m { display: none; }
-.bms-head h2 { margin: 22px 0 26px; max-width: 15ch; }
-.bms-tabs { display: flex; flex-direction: column; gap: 6px; margin: 0 0 0 -16px; padding: 0; }
-.bms-tab { display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 12px; align-items: baseline; text-align: left; width: 100%; background: none; border: 0; border-left: 3px solid transparent; padding: 16px 18px 16px 14px; border-radius: 0 6px 6px 0; cursor: pointer; font-family: inherit; color: var(--navy); transition: background 0.2s, border-color 0.2s; }
+.bms-card-m { display: none; }
+.bms-head h2 { margin: 18px 0 20px; max-width: 20ch; }
+.bms-tabs { display: flex; flex-direction: column; gap: 4px; margin: 0 0 0 -16px; padding: 0; scroll-margin-top: 80px; }
+.bms-tab { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 14px; align-items: center; text-align: left; width: 100%; background: none; border: 0; border-left: 3px solid transparent; padding: 13px 18px 13px 14px; border-radius: 0 6px 6px 0; cursor: pointer; font-family: inherit; color: var(--navy); transition: background 0.25s, border-color 0.25s; }
 .bms-tab:hover { background: rgba(255, 255, 255, 0.6); }
 .bms-tab[aria-selected="true"] { background: #fff; border-left-color: var(--sage-deep); box-shadow: 0 14px 34px -26px rgba(21, 34, 48, 0.4); cursor: default; }
 .bms-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.bms-n { font-family: var(--serif); font-size: 36px; line-height: 1; color: var(--gold-ink); font-weight: 500; }
-.bms-t { font-family: var(--serif); font-size: 27px; line-height: 1.15; font-weight: 600; }
-.bms-x { grid-column: 2; display: none; margin-top: 8px; font-family: var(--sans); font-size: 16.5px; line-height: 1.62; color: var(--ink); font-weight: 400; }
-.bms-tab[aria-selected="true"] .bms-x { display: block; }
-.bms-x em.sage, .bms-text-m em.sage { display: block; margin-top: 10px; font-family: var(--serif); font-size: 22px; font-weight: 500; }
-.bms-actions-wrap { margin-top: 30px; }
+/* Step numerals: lining figures in a gold circle (the serif's old-style
+   figures read "1" as "I" and dropped the "3" — Ben, 2026-10-19). */
+.bms-n { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--ivory); font-family: var(--sans); font-variant-numeric: lining-nums; font-weight: 600; font-size: 14px; line-height: 1; display: inline-grid; place-items: center; flex: none; }
+.bms-t { font-family: var(--serif); font-size: 25px; line-height: 1.15; font-weight: 600; }
+.bms-x { grid-column: 2; display: block; margin-top: 6px; font-family: var(--sans); font-size: 15.5px; line-height: 1.55; color: var(--ink); font-weight: 400; transition: color 0.25s; }
+.bms-tab:not([aria-selected="true"]) .bms-x { color: var(--slate); }
+.bms-x em.sage, .bms-card-m em.sage { display: block; margin-top: 8px; font-family: var(--serif); font-size: 21px; font-weight: 500; color: var(--sage-deep); }
+/* The auto-advance line: fills under the active row over the 7 s. */
+.bms-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--sage); transform-origin: left; transform: scaleX(0); animation: bms-fill 7s linear forwards; }
+@keyframes bms-fill { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .bms-progress { display: none; } }
+.bms-actions-wrap { margin-top: 22px; }
 .bms-actions { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
 .bms-about { display: inline-block; margin-top: 18px; font-size: 15px; color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .bms-about:hover { border-color: var(--gold); }
-.bms-frame { position: relative; display: grid; background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.bms-panel { grid-area: 1 / 1; min-width: 0; padding: 30px 30px 26px; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; display: flex; flex-direction: column; justify-content: center; }
-.bms-panel > * { width: 100%; }
+/* A fixed height on a desktop, so nothing below moves when the step does. */
+.bms-frame { position: relative; display: grid; height: 700px; background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.bms-panel { grid-area: 1 / 1; min-width: 0; height: 100%; padding: 28px 30px 24px; opacity: 0; visibility: hidden; transition: opacity 0.45s ease, visibility 0.45s; display: flex; flex-direction: column; justify-content: center; }
 .bms-panel.is-active { opacity: 1; visibility: visible; }
 @media (prefers-reduced-motion: reduce) { .bms-panel { transition: none; } }
-.bms-scan { position: relative; padding-top: 44px; }
+.bms-panel > * { width: 100%; flex: none; }
+.bms-panel > .bms-plan { flex: 1 1 auto; }
+.bms-scan { position: relative; }
 .bms-toggle { position: absolute; top: 0; right: 0; display: inline-flex; border: 1px solid var(--line); border-radius: 100px; background: var(--ivory); padding: 3px; z-index: 2; }
 .bms-toggle button { border: 0; background: none; font-family: var(--sans); font-weight: 600; font-size: 14px; color: var(--slate); padding: 8px 16px; border-radius: 100px; cursor: pointer; }
 .bms-toggle button[aria-pressed="true"] { background: var(--navy); color: var(--ivory); }
 .bms-toggle button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.bms-soon { position: absolute; top: 6px; left: 0; z-index: 2; font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-ink); background: var(--ivory); border: 1px solid var(--line); border-radius: 100px; padding: 7px 11px; }
-.bms-heat { max-width: 580px; margin: 0 auto; }
-.bms-bars { padding-top: 6px; }
-/* Results: the same heat map at the Scan panel's size, the three callouts
-   in a row beneath it (one column under 1024px). */
-.bms-heat-results { max-width: 500px; }
-.bms-callouts { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.bms-callout { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 15px; line-height: 1.5; color: var(--ink); }
-.bms-callout-n { width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--ivory); font-family: var(--serif); font-weight: 700; font-size: 17px; display: grid; place-items: center; }
-.bms-callout b { display: block; color: var(--navy); font-weight: 600; margin-bottom: 2px; }
-.bms-plan .ph { border-radius: 4px; }
-.bms-plan-labels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; align-items: center; justify-content: center; }
-.bms-plan-labels span { font-family: var(--sans); font-weight: 500; font-size: 14.5px; color: var(--navy); background: var(--ivory); border: 1px solid var(--line); border-radius: 100px; padding: 8px 14px; }
+.bms-heat { max-width: 540px; margin: 0 auto; }
+.bms-bars { padding-top: 48px; }
+.bms-scanline { margin: 14px 0 0; text-align: center; font-size: 14.5px; color: var(--slate); }
+/* Results: the heat map at the Scan panel's size, the three callouts in a
+   row beneath it (one column under 1024px). */
+.bms-heat-results { max-width: 400px; }
+.bms-callouts { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.bms-callout { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 15px; line-height: 1.5; color: var(--ink); }
+.bms-callout-n { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--ivory); font-family: var(--sans); font-variant-numeric: lining-nums; font-weight: 600; font-size: 14px; display: grid; place-items: center; }
+.bms-callout b { display: block; color: var(--navy); font-weight: 600; margin-bottom: 3px; }
+/* Plan: the photo fills the panel, the three chips on one line under it. */
+.bms-plan { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.bms-plan .ph { flex: 1 1 auto; min-height: 0; height: auto !important; border-radius: 4px; }
+.bms-plan-labels { display: flex; flex-wrap: nowrap; gap: 8px; margin-top: 16px; align-items: center; justify-content: center; }
+.bms-plan-labels span { font-family: var(--sans); font-weight: 500; font-size: 14.5px; color: var(--navy); background: var(--ivory); border: 1px solid var(--line); border-radius: 100px; padding: 8px 14px; white-space: nowrap; }
 .bms-plan-labels .sep { border: 0; background: none; color: var(--gold); padding: 0 2px; font-size: 18px; }
 .bms-caption { margin: 14px 0 0; font-size: 14px; line-height: 1.55; color: var(--slate); text-align: center; }
 @media (max-width: 1023px) {
   .home-brain-map.sec { padding: 72px 0 80px; }
-  .bms { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "tabs" "stage" "text" "actions"; grid-template-rows: none; row-gap: 0; }
-  .bms-text-m { grid-area: text; display: block; font-size: 16.5px; line-height: 1.62; color: var(--ink); margin: 22px 0 0; }
+  .bms { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "tabs" "card" "stage" "actions"; grid-template-rows: none; row-gap: 0; }
   .bms-head h2 { margin-bottom: 22px; }
-  .bms-tabs { flex-direction: row; gap: 0; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--ivory); }
-  .bms-tab { flex: 1 1 0; min-width: 0; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: center; justify-items: start; padding: 13px 10px; border-left: 0; border-bottom: 3px solid transparent; border-radius: 0; }
+  .bms-tabs { flex-direction: row; gap: 0; margin: 0 0 14px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--ivory); scroll-margin-top: 76px; }
+  .bms-tab { flex: 1 1 0; min-width: 0; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: center; justify-items: start; padding: 12px 10px; border-left: 0; border-bottom: 3px solid transparent; border-radius: 0; }
   .bms-tab + .bms-tab { border-left: 1px solid var(--line); }
   .bms-tab[aria-selected="true"] { border-bottom-color: var(--sage-deep); box-shadow: none; }
-  .bms-n { font-size: 22px; }
-  .bms-t { font-size: 18px; }
-  .bms-x { display: none !important; }
+  .bms-tab .bms-n { width: 24px; height: 24px; font-size: 12.5px; }
+  .bms-tab .bms-t { font-size: 18px; }
+  .bms-tab .bms-x, .bms-progress { display: none !important; }
+  /* The active step's card: the desktop row's treatment, in the flow. */
+  .bms-card-m { grid-area: card; display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; align-items: center; background: #fff; border-left: 3px solid var(--sage-deep); border-radius: 0 6px 6px 0; box-shadow: 0 14px 34px -26px rgba(21, 34, 48, 0.4); padding: 18px 18px 16px 16px; margin: 0 0 18px; }
+  .bms-card-m .bms-t { font-size: 24px; }
+  .bms-card-m .bms-x { grid-column: 2; margin-top: 8px; font-size: 16.5px; line-height: 1.62; color: var(--ink); }
+  .bms-next { grid-column: 2; justify-self: start; margin-top: 12px; background: none; border: 0; padding: 4px 0; font-family: var(--sans); font-weight: 600; font-size: 15px; color: var(--sage-deep); cursor: pointer; border-bottom: 1px solid var(--gold-soft); }
   .bms-actions-wrap { margin-top: 26px; }
   .bms-actions { flex-direction: column; align-items: stretch; gap: 10px; }
   .bms-actions .btn-primary { width: 100%; }
   .bms-actions .btn-ghost { align-self: center; }
-  /* Under 1024px the frame is as tall as the active panel, not the tallest
-     of the three — a phone has no room for a stable-height stage. */
-  .bms-panel { padding: 16px 14px 14px; }
+  /* Under 1024px the frame is as tall as the active panel. */
+  .bms-frame { height: auto; }
+  .bms-panel { height: auto; padding: 16px 14px 14px; }
   .bms-panel:not(.is-active) { display: none; }
   .bms-scan { padding-top: 48px; }
-  .bms-heat { max-width: none; }
-  .bms-heat-results { max-width: none; }
+  .bms-heat, .bms-heat-results { max-width: none; }
   .bms-callouts { grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 18px; }
   .bms-callout { font-size: 15.5px; }
+  .bms-plan { flex: none; }
+  .bms-plan .ph { aspect-ratio: 16 / 11; flex: none; }
+  .bms-plan-labels { flex-wrap: wrap; }
 }
 @media (max-width: 400px) {
-  .bms-t { font-size: 16.5px; }
-  .bms-n { font-size: 20px; }
-  .bms-tab { padding: 12px 6px; column-gap: 6px; }
+  .bms-tab .bms-t { font-size: 16.5px; }
+  .bms-tab { padding: 11px 6px; column-gap: 6px; }
   .bms-panel { padding: 12px 10px 12px; }
 }
-/* The legend both charts share (components/BrainMapHeat.tsx → BrainMapLegend):
-   HTML, 14.5px at every width. */
 /* The heat map's numbered callouts (Results): HTML badges over the drawing,
-   positioned by percentage so they follow their site at any width, offset a
-   fixed 20px up and outward so the number never covers the site label. */
+   centred on the site (or between a pair) by percentage, letting taps
+   through to the site beneath. */
 .bmh { position: relative; }
 .bmh-badges { list-style: none; margin: 0; padding: 0; }
-.bmh-badge { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--ivory); border: 2px solid var(--ivory); box-shadow: 0 2px 8px rgba(21, 34, 48, 0.25); font-family: var(--serif); font-weight: 700; font-size: 16px; line-height: 26px; text-align: center; transform: translate(-50%, -50%) translate(-32px, 0); }
-.bmh-badge.is-right { transform: translate(-50%, -50%) translate(32px, 0); }
+.bmh-badge { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: var(--ivory); border: 2px solid var(--ivory); box-shadow: 0 2px 8px rgba(21, 34, 48, 0.3); font-family: var(--sans); font-variant-numeric: lining-nums; font-weight: 700; font-size: 14px; line-height: 26px; text-align: center; transform: translate(-50%, -50%); pointer-events: none; }
+@media (max-width: 1023px) { .bmh-badge { width: 26px; height: 26px; line-height: 22px; font-size: 12.5px; } }
+/* Sites: focusable; the tooltip (components/HeatTooltips.tsx) sits over the dot. */
+.bmh-site { cursor: pointer; outline: none; }
+.bmh-site:focus-visible circle { stroke: var(--gold); stroke-width: 3; }
+.bmh-tip { position: absolute; z-index: 3; transform: translate(-50%, calc(-100% - 10px)); background: var(--navy); color: var(--ivory); font-family: var(--sans); font-size: 13.5px; font-weight: 500; white-space: nowrap; padding: 6px 10px; border-radius: 4px; box-shadow: 0 6px 18px -8px rgba(21, 34, 48, 0.5); pointer-events: none; }
+.bmh-tip::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; background: var(--navy); transform: translateX(-50%) rotate(45deg); }
+@media (max-width: 1023px) { .bmh-svg .bmh-label { font-size: 20px; } }
+/* The legend both charts share (components/BrainMapHeat.tsx → BrainMapLegend):
+   HTML, 14.5px at every width. */
 .bm-legend { margin-top: 14px; }
 .bm-legend-scale { position: relative; height: 38px; max-width: 360px; margin: 0 auto 6px; }
 .bm-legend-bar { position: absolute; left: 0; right: 0; top: 0; height: 12px; border-radius: 6px; background: linear-gradient(to right, #4F7FAE 0%, #8DB0CB 24%, #A9C3B0 32%, #8FA75A 50%, #CBC26A 72%, #E2A15C 82%, #D2693B 100%); }
@@ -2250,17 +2276,11 @@ body[data-bottombar] footer.site {
 .bm-legend-bands { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; font-family: var(--sans); font-size: 14.5px; font-weight: 500; color: var(--ink); }
 .bm-legend-bands li { display: inline-flex; align-items: center; gap: 8px; }
 .bm-legend-bands i { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
-@media (max-width: 1023px) { .bmh-svg .bmh-site { font-size: 27px; } }
 .bmc-box .bmb-v { max-width: 820px; margin: 0 auto; }
-/* /how-lens-works: the heat map at the trio's 280px height, head only. */
 .hlw-heat { display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; padding: 10px; min-width: 0; }
 .hlw-heat .bmh { height: 100%; max-width: 100%; display: flex; justify-content: center; }
-/* Never wider than the tile: at 320px the head's own width (291px) would
-   push the figure past the viewport, so width is capped and the SVG
-   letterboxes inside its 280px height. */
 .hlw-heat .bmh-svg { height: 100%; width: auto; max-width: 100%; }
 .trio-photos > figure { min-width: 0; }
-/* the hero's "See What a Brain Map Shows ↓" */
 .hero-jump-arrow { display: inline-block; }
 
 .bm-soon { display: flex; gap: 40px; align-items: center; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }

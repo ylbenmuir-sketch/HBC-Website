@@ -1,29 +1,33 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import ConfirmTag from "./ConfirmTag";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 /**
- * The homepage Brain Map section as a 1-2-3 stage (Ben, 2026-10-19): three
- * steps — Scan, Results, Plan — and one large visual panel that changes with
- * the step. Step 1 is active on load; a click or arrow key switches; nothing
- * auto-advances. Desktop puts the steps on the left as large rows and the
- * panel on the right; under 1024px the steps are a segmented tab bar, the
- * panel follows, then the active step's text, then the buttons.
+ * The homepage Brain Map section as a 1-2-3 stage (Ben, 2026-10-19): Scan,
+ * Results, Plan, and one visual panel that changes with the step.
  *
- * Accessibility: the WAI-ARIA tabs pattern — role=tablist/tab/tabpanel,
- * aria-selected, roving tabindex, Left/Right/Up/Down/Home/End — with the
- * inactive panels `hidden` from the tree (`inert` + aria-hidden) and
- * crossfaded by CSS; prefers-reduced-motion drops the fade. The Map|Bars
- * pill on the Scan panel is two aria-pressed buttons.
+ * Desktop (≥1024px): the three steps are rows on the left with all three
+ * texts visible — the active one on a white card with the sage rule, the
+ * others lighter — and a fixed-height panel on the right that crossfades.
+ * It advances itself every 7 s (a thin sage line fills under the active
+ * step) while at least half the section is in view, stops for good on any
+ * hover, click or focus inside it, and never runs under
+ * prefers-reduced-motion.
  *
- * Everything with copy or data arrives as props from the server page
- * (app/page.tsx): the step text, the heat map and bars (server-rendered SVG
- * from lib/brain-map-sample.ts), the gated Results callouts, the Plan photo
- * and the buttons. This file owns only the interaction.
+ * Phone and tablet (<1024px): eyebrow, H2, a segmented tab bar, the active
+ * step's text card (with a "Next: … →" link that switches the tab and
+ * brings the bar back into view), then the visual, caption and buttons. No
+ * auto-advance.
+ *
+ * WAI-ARIA tabs: role=tablist/tab/tabpanel, aria-selected, roving tabindex,
+ * arrow keys, Home/End; inactive panels are inert and aria-hidden. Copy,
+ * data and visuals arrive as props from app/page.tsx — this file owns the
+ * interaction only.
  */
 export type StageStep = { title: string; text: ReactNode };
-export type StageCallout = { n: number; where: string; line: string | null; note?: string };
+export type StageCallout = { n: number; head: string; text: string };
+
+const ADVANCE_MS = 7000;
 
 export default function BrainMapStage({
   head,
@@ -32,11 +36,11 @@ export default function BrainMapStage({
   bars,
   resultsHeat,
   callouts,
+  scanLine,
   plan,
   actions,
   about,
   caption,
-  heatLive,
 }: {
   head: ReactNode;
   steps: [StageStep, StageStep, StageStep];
@@ -44,19 +48,60 @@ export default function BrainMapStage({
   bars: ReactNode;
   resultsHeat: ReactNode;
   callouts: StageCallout[];
+  /** The quiet line under the Scan visual. */
+  scanLine: ReactNode;
   plan: ReactNode;
   actions: ReactNode;
   about: ReactNode;
+  /** Shown under the visual on Scan and Results; its space is kept on Plan. */
   caption: ReactNode;
-  /** BRAIN_MAP_HEATMAP_LIVE: when false the Map view wears a "Coming soon" tag. */
-  heatLive: boolean;
 }) {
   const [active, setActive] = useState(0);
   const [view, setView] = useState<"map" | "bars">("map");
+  // Auto-advance: on until the visitor touches the section.
+  const [auto, setAuto] = useState(true);
+  const [inView, setInView] = useState(false);
+  const [canAuto, setCanAuto] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const base = useId();
   const tabId = (i: number) => `${base}-tab-${i}`;
   const panelId = (i: number) => `${base}-panel-${i}`;
+
+  // Desktop, motion allowed, and the section at least half in view.
+  useEffect(() => {
+    const desk = window.matchMedia("(min-width: 1024px)");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setCanAuto(desk.matches && !reduce.matches);
+    update();
+    desk.addEventListener("change", update);
+    reduce.addEventListener("change", update);
+    const el = root.current;
+    const io = el
+      ? new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.5 })
+      : null;
+    if (el && io) io.observe(el);
+    return () => {
+      desk.removeEventListener("change", update);
+      reduce.removeEventListener("change", update);
+      io?.disconnect();
+    };
+  }, []);
+
+  const running = auto && canAuto && inView;
+  useEffect(() => {
+    if (!running) return;
+    const t = window.setTimeout(() => setActive((i) => (i + 1) % steps.length), ADVANCE_MS);
+    return () => window.clearTimeout(t);
+  }, [running, active, steps.length]);
+
+  const stop = () => setAuto(false);
+
+  const go = (i: number) => {
+    stop();
+    setActive(i);
+  };
 
   const onKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     const n = steps.length;
@@ -67,18 +112,24 @@ export default function BrainMapStage({
     else if (e.key === "End") next = n - 1;
     if (next === null) return;
     e.preventDefault();
-    setActive(next);
+    go(next);
     tabRefs.current[next]?.focus();
+  };
+
+  // The phone card's "Next: … →": switch, then bring the tab bar back up.
+  const next = (i: number) => {
+    go(i);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    tabsRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
   };
 
   const panels: ReactNode[] = [
     <div className="bms-scan" key="scan">
-      {!heatLive && view === "map" && <span className="bms-soon">Coming soon</span>}
       <div className="bms-toggle" role="group" aria-label="Show the sample as">
-        <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>
+        <button type="button" aria-pressed={view === "map"} onClick={() => { stop(); setView("map"); }}>
           Map
         </button>
-        <button type="button" aria-pressed={view === "bars"} onClick={() => setView("bars")}>
+        <button type="button" aria-pressed={view === "bars"} onClick={() => { stop(); setView("bars"); }}>
           Bars
         </button>
       </div>
@@ -88,6 +139,7 @@ export default function BrainMapStage({
       <div className="bms-bars" hidden={view !== "bars"}>
         {bars}
       </div>
+      <p className="bms-scanline">{scanLine}</p>
     </div>,
     <div className="bms-results" key="results">
       <div className="bms-heat bms-heat-results">{resultsHeat}</div>
@@ -98,13 +150,8 @@ export default function BrainMapStage({
               {c.n}
             </span>
             <span>
-              <b>{c.where}</b>
-              {c.line && (
-                <>
-                  {c.line}
-                  {c.note && <ConfirmTag>{c.note}</ConfirmTag>}
-                </>
-              )}
+              <b>{c.head}</b>
+              {c.text}
             </span>
           </li>
         ))}
@@ -114,23 +161,25 @@ export default function BrainMapStage({
       {plan}
       <div className="bms-plan-labels" aria-label="Your map, then your plan, then brief, passive sessions">
         <span>Your map</span>
-        <span className="sep" aria-hidden="true">
-          →
-        </span>
+        <span className="sep" aria-hidden="true">→</span>
         <span>Your plan</span>
-        <span className="sep" aria-hidden="true">
-          →
-        </span>
+        <span className="sep" aria-hidden="true">→</span>
         <span>Brief, passive sessions</span>
       </div>
     </div>,
   ];
 
   return (
-    <div className="bms">
+    <div
+      ref={root}
+      className={`bms${running ? " is-auto" : ""}`}
+      onPointerOver={stop}
+      onClickCapture={stop}
+      onFocusCapture={stop}
+    >
       <div className="bms-head">{head}</div>
 
-      <div className="bms-tabs" role="tablist" aria-label="The Brain Map in three steps" aria-orientation="vertical">
+      <div ref={tabsRef} className="bms-tabs" role="tablist" aria-label="The Brain Map in three steps" aria-orientation="vertical">
         {steps.map((s, i) => (
           <button
             key={s.title}
@@ -144,7 +193,7 @@ export default function BrainMapStage({
             aria-selected={active === i}
             aria-controls={panelId(i)}
             tabIndex={active === i ? 0 : -1}
-            onClick={() => setActive(i)}
+            onClick={() => go(i)}
             onKeyDown={(e) => onKey(e, i)}
           >
             <span className="bms-n" aria-hidden="true">
@@ -152,8 +201,22 @@ export default function BrainMapStage({
             </span>
             <span className="bms-t">{s.title}</span>
             <span className="bms-x">{s.text}</span>
+            {running && active === i && <span className="bms-progress" aria-hidden="true" key={`p-${i}`} />}
           </button>
         ))}
+      </div>
+
+      {/* The active step on a card, for the stacked layout only (hidden from
+          1024px up, where the text sits in its row). */}
+      <div className="bms-card-m" aria-hidden="true">
+        <span className="bms-n">{active + 1}</span>
+        <span className="bms-t">{steps[active].title}</span>
+        <div className="bms-x">{steps[active].text}</div>
+        {active < steps.length - 1 && (
+          <button type="button" className="bms-next" onClick={() => next(active + 1)} tabIndex={-1}>
+            Next: {steps[active + 1].title.replace(/\.$/, "")} →
+          </button>
+        )}
       </div>
 
       <div className="bms-stage">
@@ -172,13 +235,9 @@ export default function BrainMapStage({
             </div>
           ))}
         </div>
-        <p className="bms-caption">{caption}</p>
-      </div>
-
-      {/* The active step's text, for the stacked layout only (CSS hides it
-          from 1024px up, where the text sits inside the active row). */}
-      <div className="bms-text-m" aria-hidden="true">
-        {steps[active].text}
+        <p className="bms-caption" style={{ visibility: active === 2 ? "hidden" : "visible" }}>
+          {caption}
+        </p>
       </div>
 
       <div className="bms-actions-wrap">

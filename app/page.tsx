@@ -8,6 +8,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import BrainMapStage from "@/components/BrainMapStage";
 import BrainMapHeat from "@/components/BrainMapHeat";
 import BrainMapBars from "@/components/BrainMapBars";
+import { fmtUv, meanUv } from "@/lib/brain-map-sample";
 import ProofBand from "@/components/ProofBand";
 import ConcernCard from "@/components/ConcernCard";
 import ConcernRail from "@/components/ConcernRail";
@@ -31,8 +32,6 @@ import {
 import { practitionerBandStat } from "@/lib/team";
 import {
   BRAIN_MAP_CALLOUTS,
-  BRAIN_MAP_CLAIM,
-  BRAIN_MAP_HEATMAP_LIVE,
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   COURSE_VARIES_NOTE,
@@ -298,7 +297,6 @@ export default function HomePage() {
   const nashvilleHours = hoursSummary(nashville);
   const murfreesboroHours = hoursSummary(murfreesboro);
   const startTiming = verifiedOr(START_TIMING);
-  const brainMapClaim = verifiedOr(BRAIN_MAP_CLAIM);
   const founderQuote = verifiedOr(FOUNDER_QUOTE);
   const sessionCount = verifiedOr(STAT_SESSIONS);
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
@@ -793,14 +791,14 @@ export default function HomePage() {
           Map Shows" scrolls here, and `scroll-margin-top` lands it under the
           sticky header. /brain-map still owns the cluster and the full copy;
           this is the show, that is the page (the "About" link below the
-          buttons). The Results callouts are Verifiables (BRAIN_MAP_CALLOUTS),
-          approved by Ben 2026-10-19, so they render in production; flip one
-          to unverified and the numbered site stays while its sentence goes.
-          BRAIN_MAP_CLAIM keeps its gate, under the caption. */}
+          buttons). Every line here is approved copy (Ben, 2026-10-19, with
+          clinical authority for HBC) — no confirmation gates or notes in
+          this section; the Results callouts are BRAIN_MAP_CALLOUTS with
+          their microvolt values read from the dataset. The caption is Ben's
+          exact line; BRAIN_MAP_CLAIM is not appended to it. */}
       <section className="sec home-brain-map" id="brain-map">
         <div className="wrap">
           <BrainMapStage
-            heatLive={BRAIN_MAP_HEATMAP_LIVE}
             head={
               <>
                 <div className="eyebrow">{BRAIN_MAP_NAME}</div>
@@ -850,21 +848,25 @@ export default function HomePage() {
                 callouts={BRAIN_MAP_CALLOUTS.map((c, i) => ({ n: i + 1, sites: c.sites }))}
               />
             }
+            // "F7 · Left frontal · 41 µV · Higher" — the value is the
+            // dataset's (the mean for a pair), never typed.
             callouts={BRAIN_MAP_CALLOUTS.map((c, i) => ({
               n: i + 1,
-              where: c.where,
-              line: verifiedOr(c.line),
-              // The gold tag is draft-only; the note is a client prop, so
-              // it is left out of production markup altogether.
-              note: SHOW_DRAFT_CONTENT && !c.line.verified ? c.line.note : undefined,
+              head: `${c.sites.join(" / ")} · ${c.region} · ${fmtUv(meanUv(c.sites))} · ${c.band}`,
+              text: c.sentence,
             }))}
+            scanLine={
+              <>
+                {BRAIN_MAP_POINTS} sites &middot; Passive, nothing to do &middot;
+                Not a diagnosis
+              </>
+            }
             plan={
               <PhotoFrame
-                src="/images/session-room.jpg"
-                alt="A session room at Harmonized Brain Centers: a reclining session chair by a bright window, string lights along the wall, children's drawings pinned beside it"
-                position="center 55%"
-                aspect="16 / 10"
-                style={{ height: "auto" }}
+                src="/images/session-wide.jpg"
+                alt="A LENS session in progress at Harmonized Brain Centers: a practitioner places a small sensor behind a seated client's ear while he looks ahead, a bright window behind them"
+                position="60% 35%"
+                className="bms-plan-ph"
                 sizes="(max-width: 1023px) calc(100vw - 72px), 720px"
               />
             }
@@ -883,13 +885,6 @@ export default function HomePage() {
               <>
                 A sample Brain Map &mdash; {BRAIN_MAP_POINTS} sites, measured in
                 microvolts. Not a diagnosis.
-                {brainMapClaim && (
-                  <>
-                    {" "}
-                    {brainMapClaim}
-                    <ConfirmTag>{BRAIN_MAP_CLAIM.note!}</ConfirmTag>
-                  </>
-                )}
               </>
             }
           />

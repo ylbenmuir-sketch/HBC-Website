@@ -108,21 +108,21 @@ export default async function PractitionerPage({
             <h2 className="eyebrow">At a glance</h2>
             <div className="lens-seq" style={{ marginTop: 20 }}>
               <div className="row">
-                <div className="n">—</div>
+                <div className="n n-dash">—</div>
                 <div>
                   <h3>Training</h3>
                   <p>{profile.glance.training}</p>
                 </div>
               </div>
               <div className="row">
-                <div className="n">—</div>
+                <div className="n n-dash">—</div>
                 <div>
                   <h3>Works most with</h3>
                   <p>{profile.glance.worksWith}</p>
                 </div>
               </div>
               <div className="row">
-                <div className="n">—</div>
+                <div className="n n-dash">—</div>
                 <div>
                   <h3>Location</h3>
                   <p>{profile.glance.location}</p>

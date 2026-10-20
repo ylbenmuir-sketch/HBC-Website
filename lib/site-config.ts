@@ -1007,44 +1007,40 @@ export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
 };
 
 /**
- * The homepage Brain Map stage's "Results" callouts (Ben, 2026-10-19): three
- * pattern-based, third-person lines beside numbered sites on the sample heat
- * map. Written as Verifiables so a line can be taken off the page by flipping
- * `verified` — and approved by Ben the same evening ("everything is approved
- * for the build"), so all three render in production. The sites are from
- * lib/brain-map-sample.ts; the wording never names a condition.
+ * The homepage Brain Map stage's "Results" callouts — approved copy (Ben,
+ * 2026-10-19, who holds clinical authority for HBC; no confirmation gate).
+ * Each names one or two sites from lib/brain-map-sample.ts, the region in
+ * plain words, the band word the line reads with, and one pattern-based,
+ * third-person sentence that never names a condition. The microvolt value
+ * is not typed here: app/page.tsx reads it from the dataset (the mean, for
+ * a pair) so the line can never disagree with the map.
  */
 export const BRAIN_MAP_CALLOUTS: ReadonlyArray<{
   sites: string[];
-  where: string;
-  line: Verifiable;
+  region: string;
+  band: string;
+  sentence: string;
 }> = [
   {
     sites: ["F7"],
-    where: "F7",
-    line: {
-      value: "Running hot here often shows up as a mind that’s hard to switch off.",
-      verified: true,
-      note: "[Confirm wording]",
-    },
+    region: "Left frontal",
+    band: "Higher",
+    sentence:
+      "This area helps organize thoughts and language. When it runs high, people often describe racing thoughts or trouble winding down.",
   },
   {
     sites: ["Pz", "Oz"],
-    where: "Back of the head (Pz/Oz)",
-    line: {
-      value: "Running low here often lines up with feeling foggy or flat by afternoon.",
-      verified: true,
-      note: "[Confirm wording]",
-    },
+    region: "Back of the head",
+    band: "Lower",
+    sentence:
+      "These areas help process what’s seen and taken in. When they run low, people often describe brain fog or an afternoon slump.",
   },
   {
     sites: ["Fp1", "F3"],
-    where: "Fp1/F3",
-    line: {
-      value: "A little high here can look like overthinking small decisions.",
-      verified: true,
-      note: "[Confirm wording]",
-    },
+    region: "Left prefrontal",
+    band: "Upper range",
+    sentence:
+      "These areas are involved in planning and decision-making. Running a little high here often goes with second-guessing and overthinking.",
   },
 ];
 
