@@ -2,7 +2,7 @@
 
 import ChromeLink from "./ChromeLink";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { LogoMark, LogoName } from "./Logo";
 import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE, SHOW_TEAM } from "@/lib/site-config";
 
@@ -42,6 +42,10 @@ const aboutLinks = [
   { label: "Our founder", href: "/about/founder" },
   // Off with the team pages while SHOW_TEAM is (lib/site-config.ts).
   ...(SHOW_TEAM ? [{ label: "Our team", href: "/about/team" }] : []),
+  // Client stories and Videos (Ben, 2026-10-20). /stories is in no other
+  // part of the nav; /videos is the hub of lib/videos.ts.
+  { label: "Client stories", href: "/stories" },
+  { label: "Videos", href: "/videos" },
   { label: "Resources", href: "/resources" },
 ];
 
@@ -52,7 +56,10 @@ const topLinks: { label: string; href: string; menu?: typeof aboutLinks }[] = [
   { label: "Locations", href: "/locations" },
 ];
 
-const drawerLinks = [...topLinks, { label: "Resources", href: "/resources" }];
+/** The drawer's flat rows. About is not one of them: it is an accordion
+ *  holding the same aboutLinks as the desktop menu (2026-10-20), so
+ *  Resources no longer needs a row of its own. */
+const drawerLinks = topLinks.filter((l) => !l.menu);
 
 function isHelpActive(pathname: string) {
   return (
@@ -71,10 +78,14 @@ export default function Header() {
   // time. Both reset when the drawer closes so it always opens collapsed.
   const [wwhOpen, setWwhOpen] = useState(false);
   const [wwhSection, setWwhSection] = useState<"adults" | "children" | null>(null);
+  // The drawer's About accordion — one of the two open at a time, so the
+  // drawer stays one screen at 320px.
+  const [aboutOpen, setAboutOpen] = useState(false);
   useEffect(() => {
     if (!open) {
       setWwhOpen(false);
       setWwhSection(null);
+      setAboutOpen(false);
     }
   }, [open]);
   const [scrolled, setScrolled] = useState(false);
@@ -266,7 +277,12 @@ export default function Header() {
                 <div className="mega mega-sm">
                   <div className="col">
                     {l.menu.map((m) => (
-                      <ChromeLink key={m.href} href={m.href}>
+                      <ChromeLink
+                        key={m.href}
+                        href={m.href}
+                        className={active(m.href) ? "active" : undefined}
+                        aria-current={active(m.href) ? "page" : undefined}
+                      >
                         {m.label}
                       </ChromeLink>
                     ))}
@@ -312,7 +328,10 @@ export default function Header() {
                 className="d-top d-acc-btn"
                 aria-expanded={wwhOpen}
                 aria-controls="d-wwh"
-                onClick={() => setWwhOpen((v) => !v)}
+                onClick={() => {
+                  setWwhOpen((v) => !v);
+                  setAboutOpen(false);
+                }}
               >
                 What We Help With
                 <span className="d-sign" aria-hidden="true">{wwhOpen ? "−" : "+"}</span>
@@ -356,9 +375,44 @@ export default function Header() {
               </div>
             </div>
             {drawerLinks.map((l) => (
-              <ChromeLink key={l.href} className="d-top" href={l.href}>
-                {l.label}
-              </ChromeLink>
+              <Fragment key={l.href}>
+                <ChromeLink className="d-top" href={l.href}>
+                  {l.label}
+                </ChromeLink>
+                {/* About sits where it sits on desktop: after Your First
+                    Visit, before Locations. */}
+                {l.href === "/first-visit" && (
+                  <div className="d-acc">
+                    <button
+                      type="button"
+                      className="d-top d-acc-btn"
+                      aria-expanded={aboutOpen}
+                      aria-controls="d-about"
+                      onClick={() => {
+                        setAboutOpen((v) => !v);
+                        setWwhOpen(false);
+                      }}
+                    >
+                      About
+                      <span className="d-sign" aria-hidden="true">{aboutOpen ? "−" : "+"}</span>
+                    </button>
+                    <div id="d-about" className="d-acc-panel" hidden={!aboutOpen}>
+                      <div className="d-sec-panel">
+                        {aboutLinks.map((m) => (
+                          <ChromeLink
+                            key={m.href}
+                            href={m.href}
+                            className={active(m.href) ? "active" : undefined}
+                            aria-current={active(m.href) ? "page" : undefined}
+                          >
+                            {m.label}
+                          </ChromeLink>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Fragment>
             ))}
           </nav>
           <div className="d-cta">

@@ -325,6 +325,9 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
 .mega .h5 { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin-bottom: 14px; }
 .mega a { display: block; color: var(--ink); text-decoration: none; font-size: 15px; padding: 7px 0; }
 .mega a:hover { color: var(--sage-deep); }
+/* The current page in a menu — /videos and every /videos/<slug> light
+   Videos (and About above it). Same colour as hover, nothing else moves. */
+.mega a.active { color: var(--sage-deep); }
 .mega .col { min-width: 200px; }
 
 /* mobile drawer (the mockups simply hide .nav-links below 1060px;
@@ -352,6 +355,7 @@ header.site { position: sticky; top: 0; background: rgba(251, 248, 241, 0.95); b
   .drawer .d-sec-panel { padding: 0 0 10px 14px; }
   .drawer .d-sec-panel a { display: block; color: var(--ink); text-decoration: none; font-size: 16px; padding: 7px 0; }
   .drawer .d-sec-panel a.d-all { color: var(--sage-deep); font-weight: 500; }
+  .drawer .d-sec-panel a.active { color: var(--sage-deep); }
   .drawer .d-hub { display: block; color: var(--slate); text-decoration: none; font-size: 14.5px; padding: 10px 0 8px; }
   .drawer [hidden] { display: none !important; }
   .drawer .d-cta { margin-top: 26px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
