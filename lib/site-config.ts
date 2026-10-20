@@ -961,12 +961,10 @@ export const TRAINING_CLAIM =
  *    "impulse control", "emotional regulation", "sensory sensitivity". Label
  *    the graphic in those words and it agrees with the page it sits on.
  *
- * Where the renders sit (Oct 2026): the bar chart Ben supplied
- * (public/images/brain-map-chart.svg, inlined as components/BrainMapChart.tsx)
- * is the primary image on /brain-map and the homepage, because it is what a
- * client receives today; the corrected heat map (/images/brain-map-heat.png)
- * renders beneath it as a coming-soon preview. BRAIN_MAP_HEATMAP_LIVE below
- * swaps them back. /brain-map renders the PlaceholderPlate for the lobe
+ * Where the renders sit (2026-10-20): the heat map and the bar chart, both
+ * drawn from lib/brain-map-sample.ts, behind one Map / Bars toggle
+ * (components/BrainMapViews.tsx) on the homepage stage and the /brain-map
+ * hero. /brain-map renders the PlaceholderPlate for the lobe
  * graphic beside the four-site section (moved there from /how-lens-works,
  * Oct 2026): items 3 and 4 above are unfixed because that asset has not been
  * supplied. The older bar graph (/images/brain-map-bars.png) is in the repo
@@ -983,42 +981,6 @@ export const BRAIN_MAP_CLAIM: Verifiable = {
   value:
     "As far as we know, no other LENS practice in the country puts it in your hands.",
   verified: false,
-  note: "[Confirm basis for the claim]",
-};
-
-/**
- * BRAIN MAP IMAGERY — the temporary swap (Ben, 2026-10-13).
- *
- * What a client receives today is the bar chart: amplitude at each of the
- * BRAIN_MAP_POINTS sites. The head-shaped heat map is the software that is
- * still coming. So the chart is the primary image in the "what you walk away
- * with" block on the homepage and /brain-map, and the heat map is a
- * coming-soon preview beneath it — one component decides this,
- * components/BrainMapFigure.tsx, and this constant is its only input.
- *
- * **When the heat-map software ships, set this to `true`.** The heat map
- * returns as the primary image on both pages, the coming-soon block (and
- * BRAIN_MAP_HEATMAP_CLAIM with it) disappears, and the chart goes with it.
- * Nothing else needs touching; the build-time check below stops asking for
- * the claim the same moment. README → "The Brain Map imagery" has the
- * procedure.
- */
-export const BRAIN_MAP_HEATMAP_LIVE = false;
-
-/**
- * The coming-soon line's claim. Confirmed by Ben (2026-10-13) in this exact
- * wording — "the only", not "the first" — so it ships in production. It
- * stays a `Verifiable` so that flipping `verified` back to false takes the
- * sentence off both pages and fails the REQUIRE_VERIFIED_CONTENT build in
- * one move; the line it follows ("Your brain in full color — the same
- * recording, mapped.") reads complete without it. Only rendered while
- * BRAIN_MAP_HEATMAP_LIVE is false — the block it sits in is the coming-soon
- * preview. Still the one superlative on the site that BRAIN_MAP_CLAIM's
- * note warns against: approved wording, do not tighten or extend it.
- */
-export const BRAIN_MAP_HEATMAP_CLAIM: Verifiable = {
-  value: "The only LENS practice in the country to show it this way.",
-  verified: true,
   note: "[Confirm basis for the claim]",
 };
 

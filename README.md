@@ -1171,7 +1171,7 @@ or work through the files below:
 
 | File | Placeholders to replace |
 | --- | --- |
-| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, the five concierge facts (`CONCIERGE_*`), the two Brain Map claims (`BRAIN_MAP_CLAIM`, `BRAIN_MAP_HEATMAP_CLAIM`) |
+| `lib/site-config.ts` | Phone number (display + tel:), Trisha Yearwood name/likeness approval, founder quote sign-off, Google rating + review count, response-time promise, first-visit duration, session length, pricing, HSA/FSA + insurance policy, the five concierge facts (`CONCIERGE_*`), the Brain Map claim (`BRAIN_MAP_CLAIM`) |
 | `lib/locations.ts` | Franklin street address + ZIP (Nashville and Murfreesboro are confirmed; a confirmed address also unlocks `geo` and `hasMap` in the LocalBusiness JSON-LD, so add `geo` coordinates when Franklin's lands), Murfreesboro parking note, Franklin opening date, practitioner name lists, "getting here" directions, communities-served lists |
 | `lib/team.ts` | Practitioner names, bios, certifications, focus areas, schedules; coordinator name; Franklin opening date |
 | `lib/resources.ts` | Article bylines (`[Practitioner name]`, `[Month Year]`) and the `[Draft…]`/`[Body copy…]` article bodies (homework-battles included) |
@@ -1195,38 +1195,23 @@ Also replace when assets exist:
   `lib/locations.ts`, 2026-10-14) — its job is recognition, not decoration, so
   it sits beside "Getting here" rather than in the hero.
 
-## The Brain Map imagery (temporary swap)
+## The Brain Map imagery
 
-The "what you walk away with" block on `/` and the `/brain-map` hero render
-through one component, `components/BrainMapFigure.tsx`, whose only input is
-`BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts`.
+The homepage Brain Map stage (`components/BrainMapStage.tsx`, Scan panel)
+and the `/brain-map` hero (`components/BrainMapFigure.tsx`) render the same
+thing through one component, `components/BrainMapViews.tsx`: the heat map
+(`components/BrainMapHeat.tsx` — painted field with 3 µV isolines, 21 site
+dots with labels and hover/tap/focus tooltips, legend) with a Map / Bars
+toggle to the bar chart (`components/BrainMapBars.tsx` — upright from 760px,
+sideways below, all 21 bars legible at 320). Both draw from the one sample
+dataset, `lib/brain-map-sample.ts`, so the pages cannot disagree. On
+`/brain-map` the frame is the stage's width and padding, and the caption is
+the stage's: "A sample Brain Map — 21 sites, measured in microvolts. Not a
+diagnosis."
 
-**Today (`false`).** The primary image is the bar chart a client actually
-receives, `components/BrainMapBars.tsx`, drawn from the one sample dataset
-in `lib/brain-map-sample.ts` (21 sites, µV values; the heat map
-`components/BrainMapHeat.tsx` and the homepage stage draw from the same
-file, so the visuals cannot disagree — 2026-10-19). Caption: "A sample
-recording — 21 sites, measured in microvolts. Not a diagnosis." The chart
-has an upright and a sideways drawing of the same data and shows one per
-width (sideways under 760px), so all 21 bars and their labels are legible
-on a phone and nothing scrolls. Beneath it the heat map
-(the SVG, not the retired `/images/brain-map-heat.png`) is a coming-soon block: the render at 40% of
-the content width beside the copy (full width above it on phones), at full
-opacity — Ben, 2026-10-13: the eyebrow says "not yet", dimming it only made
-it look worse — eyebrow "COMING SOON", line "Your brain in full color — the
-same recording, mapped.", followed by `BRAIN_MAP_HEATMAP_CLAIM` — confirmed
-by Ben on 2026-10-13 as "The only LENS practice in the country to show it
-this way." and rendering in production (flip `verified` back to false and
-it goes `[CONFIRM]` in draft, absent in production, and the build's
-`REQUIRE_VERIFIED_CONTENT` check asks for it again while the block renders).
-The section headline, the recording-and-plan copy and the free-call CTA sit
-above and are unchanged; the block never competes with them.
-
-**When the software ships.** Set `BRAIN_MAP_HEATMAP_LIVE = true`. The heat
-map returns as the primary image on both pages (preloaded on `/brain-map`
-again), the coming-soon block and its claim disappear, the chart leaves with
-them, and the build stops asking for the claim. Then re-run `check:cwv` on
-`/` and `/brain-map` — the heat map is an LCP image, the inline chart is not.
+The heat map went live on 2026-10-20 (Ben). The coming-soon block that sat
+under the bar chart, the `BRAIN_MAP_HEATMAP_LIVE` switch and the claim the
+block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
 
 ## Compliance guardrails
 

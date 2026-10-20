@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import BrainMapViews from "./BrainMapViews";
 
 /**
  * The homepage Brain Map section as a 1-2-3 stage (Ben, 2026-10-19): Scan,
@@ -57,7 +58,6 @@ export default function BrainMapStage({
   caption: ReactNode;
 }) {
   const [active, setActive] = useState(0);
-  const [view, setView] = useState<"map" | "bars">("map");
   // Auto-advance: on until the visitor touches the section.
   const [auto, setAuto] = useState(true);
   const [inView, setInView] = useState(false);
@@ -124,23 +124,9 @@ export default function BrainMapStage({
   };
 
   const panels: ReactNode[] = [
-    <div className="bms-scan" key="scan">
-      <div className="bms-toggle" role="group" aria-label="Show the sample as">
-        <button type="button" aria-pressed={view === "map"} onClick={() => { stop(); setView("map"); }}>
-          Map
-        </button>
-        <button type="button" aria-pressed={view === "bars"} onClick={() => { stop(); setView("bars"); }}>
-          Bars
-        </button>
-      </div>
-      <div className="bms-heat" hidden={view !== "map"}>
-        {heat}
-      </div>
-      <div className="bms-bars" hidden={view !== "bars"}>
-        {bars}
-      </div>
+    <BrainMapViews key="scan" heat={heat} bars={bars} onChoose={stop}>
       <p className="bms-scanline">{scanLine}</p>
-    </div>,
+    </BrainMapViews>,
     <div className="bms-results" key="results">
       <div className="bms-heat bms-heat-results">{resultsHeat}</div>
       <ol className="bms-callouts">

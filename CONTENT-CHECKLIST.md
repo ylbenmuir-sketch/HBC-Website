@@ -277,17 +277,12 @@ Needed shots — real, documentary, naturally lit, multi-location, not one perso
       since 2026-10-15)
 - [ ] Franklin: exterior or architectural concept
 - [ ] Equipment detail · welcoming arrival experience
-- [x] **Harmonized Brain Map — heat-map render** (homepage Brain Map section
-      and `/brain-map`) — `/images/brain-map-heat.png`, shipped with the
-      corrected Phase 7.5 legend ("Lower amplitude / Typical range / Higher
-      amplitude"). Since Oct 2026 it renders as a **coming-soon preview**
-      under the bar chart (`/images/brain-map-chart.svg`, inlined as
-      `components/BrainMapChart.tsx`), which is what a client receives today.
-      `BRAIN_MAP_HEATMAP_LIVE` in `lib/site-config.ts` swaps them back when
-      the software ships — README → "The Brain Map imagery".
-- [x] **`BRAIN_MAP_HEATMAP_CLAIM`** — "The only LENS practice in the country
-      to show it this way." in the coming-soon block. Confirmed by Ben
-      (2026-10-13) in that wording; renders in production.
+- [x] **Harmonized Brain Map — heat map and bar chart** (homepage Brain Map
+      stage and `/brain-map`) — both drawn from `lib/brain-map-sample.ts`
+      behind one Map / Bars toggle (`components/BrainMapViews.tsx`). Live on
+      both pages since 2026-10-20; the coming-soon block and its claim
+      (`BRAIN_MAP_HEATMAP_CLAIM`) are retired — README → "The Brain Map
+      imagery".
 - [ ] **Brain lobe function diagram** (`/how-lens-works`) — still a
       `PlaceholderPlate`. Fix the F3/F8 mislabel, the empty Frontal Lobe
       bullet, and the diagnostic electrode labels first — see Phase 7.5.

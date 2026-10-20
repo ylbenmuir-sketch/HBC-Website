@@ -1020,15 +1020,9 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // page:first-visit:insurance is back in the index.
   "app/first-visit/page.tsx": {},
   // /brain-map (Oct 2026). BRAIN_MAP_CLAIM and its tag stayed on the
-  // homepage; this page renders none. The coming-soon block's tag is in the
-  // shared figure component, listed below.
+  // homepage; this page renders none, and neither does its figure
+  // (components/BrainMapFigure.tsx) since the heat map went live.
   "app/brain-map/page.tsx": {},
-  // components/BrainMapFigure.tsx (Oct 2026) renders the heat-map preview's
-  // claim on both the homepage and /brain-map. No passage carries it: the
-  // coming-soon line is a preview of software, not a fact about the service.
-  "components/BrainMapFigure.tsx": {
-    "BRAIN_MAP_HEATMAP_CLAIM.note!": "not indexed — the coming-soon claim is in no passage",
-  },
   // Ben confirmed the training and review process; page:about:training carries
   // his approved wording and is back in the index.
   "app/about/page.tsx": {},
