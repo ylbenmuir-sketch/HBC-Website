@@ -2253,9 +2253,13 @@ body[data-bottombar] footer.site {
 @media (max-width: 1023px) { .bmh-svg .bmh-site { font-size: 27px; } }
 .bmc-box .bmb-v { max-width: 820px; margin: 0 auto; }
 /* /how-lens-works: the heat map at the trio's 280px height, head only. */
-.hlw-heat { display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; padding: 10px; }
-.hlw-heat .bmh { height: 100%; }
-.hlw-heat .bmh-svg { height: 100%; width: auto; }
+.hlw-heat { display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; padding: 10px; min-width: 0; }
+.hlw-heat .bmh { height: 100%; max-width: 100%; display: flex; justify-content: center; }
+/* Never wider than the tile: at 320px the head's own width (291px) would
+   push the figure past the viewport, so width is capped and the SVG
+   letterboxes inside its 280px height. */
+.hlw-heat .bmh-svg { height: 100%; width: auto; max-width: 100%; }
+.trio-photos > figure { min-width: 0; }
 /* the hero's "See What a Brain Map Shows ↓" */
 .hero-jump-arrow { display: inline-block; }
 
