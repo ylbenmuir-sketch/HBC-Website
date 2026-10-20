@@ -6,6 +6,7 @@
  *   CHECK_BASE=http://localhost:3000 npm run check:layout
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --widths 390
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --routes /locations
+ *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --also /10years,/10years/rules
  *
  * Needs Google Chrome installed; it drives a headless instance over the
  * DevTools protocol (scripts/layout/cdp.mjs) with no npm dependency.
@@ -91,6 +92,15 @@ const ROUTE_FILTERS = (argValue("--routes") ?? "")
   .filter(Boolean)
   .map((p) => (p.startsWith("/") ? p : `/${p}`))
   .map((p) => (p.length > 1 ? p.replace(/\/+$/, "") : p));
+
+/** Routes the sitemap does not list but the sweep should still cover —
+ *  `--also /10years,/10years/rules` (the hidden giveaway page, 2026-10-20).
+ *  Appended to the sitemap's list; `--routes` filters apply to them too. */
+const ALSO_ROUTES = (argValue("--also") ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((p) => (p.startsWith("/") ? p : `/${p}`));
 
 /** A prefix covers the route itself and everything beneath it — `/locations`
  *  selects `/locations` and `/locations/nashville`, but not `/locations-map`. */
@@ -184,7 +194,7 @@ async function routes() {
   const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
     .map((m) => new URL(m[1]).pathname)
     .map((p) => (p.length > 1 ? p.replace(/\/$/, "") : p));
-  return [...new Set(paths)].sort();
+  return [...new Set([...paths, ...ALSO_ROUTES])].sort();
 }
 
 const all = await routes();
@@ -204,7 +214,7 @@ if (list.length === 0) {
 console.log(
   ROUTE_FILTERS.length > 0
     ? `${list.length} of ${all.length} route(s) matching ${ROUTE_FILTERS.join(", ")} × ${WIDTHS.join(", ")}px\n`
-    : `${list.length} route(s) from ${BASE}/sitemap.xml × ${WIDTHS.join(", ")}px\n`
+    : `${list.length} route(s) from ${BASE}/sitemap.xml${ALSO_ROUTES.length ? ` + ${ALSO_ROUTES.join(", ")}` : ""} × ${WIDTHS.join(", ")}px\n`
 );
 
 // Every way launch() fails is a condition the person running this can fix —

@@ -300,6 +300,13 @@ try {
   const todayPage = await get("/10years");
   expect("/10years answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
   expect("/10years is noindex (header and meta)", /noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
+  // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
+  const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
+  expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
+  const refPage = await get("/10years?ref=HBC-TEST01");
+  expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPage.text)?.[1] ?? "x") === ogUrl);
+  const og = await fetch(`${BASE}/10years/opengraph-image`);
+  expect("the card renders (200, image/png, 1200×630 declared)", og.status === 200 && /image\/png/.test(og.headers.get("content-type") ?? "") && /og:image:width" content="1200"/.test(todayPage.text), String(og.status));
   expect("/10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
   expect("/10years/rules answers 200 (the showcase links to it)", (await get("/10years/rules")).status === 200);
   const site = await get("/sitemap.xml");
@@ -322,7 +329,14 @@ try {
   // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES).
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
   const Cc = person("C", "cara.notify@example.test");
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...(p.existing ? { existing_client: "on" } : {}), ...extra });
+  // New or current client is a required two-way choice (Ben, 2026-10-20): "yes" | "no".
+  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", existing_client: p.existing ? "yes" : "no", ...extra });
+  {
+    const { existing_client: _omit, ...noChoice } = signupFields(person("nochoice", "nochoice@example.test"));
+    void _omit;
+    const r = await postForm("/10years/signup", noChoice, person("nochoice2", "nochoice@example.test"));
+    expect("a signup with neither client option → ?error=client_status", /\?error=client_status$/.test(r.location), r.location);
+  }
   for (const p of [A, B, Cc]) {
     const r = await postForm("/10years/signup", signupFields(p), p);
     expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
@@ -777,6 +791,34 @@ async function browserChecks() {
         expect(`${mode} at ${width}: the countdown is on the page`, counting);
         const askBar = await page.eval("Boolean(document.querySelector('.askbar, [class*=\"askbar\"]'))");
         expect(`${mode} at ${width}: no ask bar on the page`, !askBar);
+        // "Which one are you?" (Ben, 2026-10-20): the pick sets the ladder's toggle and the form's choice, and survives a reload.
+        await page.eval("document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]').click()");
+        await sleep(400);
+        const picked = await page.eval("(() => { const b = document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]'); return b.getAttribute('aria-pressed') === 'true' && document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked; })()");
+        expect(`${mode} at ${width}: picking "current client" sets the button, the ladder toggle and the form choice`, picked);
+        const scrolledToLadder = await page.eval("Math.abs(document.getElementById('ty-prizes').getBoundingClientRect().top) < 120");
+        expect(`${mode} at ${width}: the pick scrolls to the ladder`, scrolledToLadder);
+        await page.goto(`${BASE}/10years`, { settle: 300 });
+        const kept = await page.eval("document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked");
+        expect(`${mode} at ${width}: the choice is remembered for the visit`, kept);
+        // The ladder's toggle moves the form's choice back the other way.
+        await page.eval("document.getElementById('ty-v-new').click()");
+        await sleep(200);
+        expect(`${mode} at ${width}: the ladder toggle moves the form choice too`, await page.eval("document.querySelector('[data-client-choice] input[value=\"no\"]').checked"));
+        if (width === 390) {
+          // The entry bar: off while the form card is on screen, on once it is past (Ben, 2026-10-20).
+          await page.eval("document.getElementById('enter').scrollIntoView({ block: 'start' })");
+          await sleep(500);
+          const hiddenAtForm = await page.eval("!document.querySelector('[data-entry-bar]').hasAttribute('data-show')");
+          await page.eval("window.scrollTo(0, document.body.scrollHeight)");
+          await sleep(600);
+          const shownBelow = await page.eval("(() => { const b = document.querySelector('[data-entry-bar]'); return b.hasAttribute('data-show') && b.getBoundingClientRect().bottom <= innerHeight + 1 && b.getBoundingClientRect().height > 40; })()");
+          expect(`${mode} at 390: the entry bar hides at the form and shows past it`, hiddenAtForm && shownBelow, `hiddenAtForm=${hiddenAtForm} shownBelow=${shownBelow}`);
+          const noSwipe = await page.eval("getComputedStyle(document.querySelector('.ty-ladder')).overflowX !== 'auto' && document.querySelector('.ty-ladder').scrollWidth <= document.querySelector('.ty-ladder').clientWidth + 1");
+          expect(`${mode} at 390: the ladder is a vertical list (no swipe row)`, noSwipe);
+          const bars = await page.eval("[...document.querySelectorAll('.ty-step')].map(li => Math.round(li.querySelector('.ty-row-fill.v-new').getBoundingClientRect().width))");
+          expect(`${mode} at 390: the gold bars climb Monday → Saturday (${bars.join(" < ")})`, bars.every((w, i) => i === 0 || w >= bars[i - 1]) && bars[5] > bars[0]);
+        }
         // The ladder opens: tap Monday's head → aria-expanded, a Total line; tap Saturday → one open at a time.
         await page.eval("document.querySelector('.ty-step[data-slot=\"mon\"] .ty-step-head').click()");
         await sleep(350);
