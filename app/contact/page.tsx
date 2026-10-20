@@ -11,7 +11,10 @@ import PageSchema from "@/components/PageSchema";
 export const metadata: Metadata = pageMetadata("/contact");
 
 /** The first-visit video the form shows once the call is requested — step
- *  three of components/ContactForm.tsx — and the page's VideoObject. */
+ *  three of components/ContactForm.tsx. No VideoObject here (2026-10-20):
+ *  the video appears only after a submit, so a crawler never sees it on
+ *  this page, and its watch page (/videos/your-first-appointment) is the
+ *  one URL its markup lives on. */
 const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
 
 export default function ContactPage() {
@@ -37,7 +40,7 @@ export default function ContactPage() {
     // `desk-compact`: this page keeps the ~90% desktop scale the rest of the
     // site gave back (Ben, 2026-10-15) — see the end of globals.css.
     <div className="desk-compact">
-      <PageSchema path="/contact" breadcrumb={trail} video={FIRST_VISIT_VIDEO} />
+      <PageSchema path="/contact" breadcrumb={trail} />
       <Breadcrumbs trail={trail} />
       {/* `compact`: the form's first step has to sit above the fold on a
           desktop, so this hero and the section below it run tighter than the

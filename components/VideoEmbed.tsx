@@ -43,10 +43,19 @@ import {
 export default function VideoEmbed({
   video,
   sizes = "(max-width: 1060px) 100vw, 50vw",
+  priority = false,
+  caption = true,
 }: {
   video: Video;
   /** next/image `sizes` for the poster — match the rendered column. */
   sizes?: string;
+  /** Preload the poster. Only on a watch page, where the video is the page
+   *  and its poster the LCP element; everywhere else it sits below the
+   *  fold and loads lazily. */
+  priority?: boolean;
+  /** The title strip under the stage. Off on a watch page, whose H1 is the
+   *  title and whose meta line carries the running time. */
+  caption?: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
   const player = useRef<HTMLIFrameElement>(null);
@@ -79,7 +88,7 @@ export default function VideoEmbed({
           <>
             {/* Decorative: the caption names the video and the button is
                 labelled, so the poster adds nothing a reader needs. */}
-            <Image src={video.posterPath} alt="" fill sizes={sizes} />
+            <Image src={video.posterPath} alt="" fill sizes={sizes} priority={priority} />
             <button
               type="button"
               className="video-play"
@@ -98,19 +107,21 @@ export default function VideoEmbed({
           </>
         )}
       </div>
-      <figcaption className="video-caption">
-        <span className="video-title">{video.title}</span>
-        {(duration || tags.length > 0) && (
-          <span className="video-meta">
-            {duration}
-            {tags.map((tag) => (
-              <ConfirmTag key={tag} style={{ marginLeft: duration ? 10 : 0 }}>
-                {tag}
-              </ConfirmTag>
-            ))}
-          </span>
-        )}
-      </figcaption>
+      {caption && (
+        <figcaption className="video-caption">
+          <span className="video-title">{video.title}</span>
+          {(duration || tags.length > 0) && (
+            <span className="video-meta">
+              {duration}
+              {tags.map((tag) => (
+                <ConfirmTag key={tag} style={{ marginLeft: duration ? 10 : 0 }}>
+                  {tag}
+                </ConfirmTag>
+              ))}
+            </span>
+          )}
+        </figcaption>
+      )}
     </figure>
   );
 }

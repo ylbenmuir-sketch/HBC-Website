@@ -49,6 +49,7 @@ import {
   isoDuration,
   videoDuration,
   videoUploadDate,
+  watchUrl,
 } from "./videos";
 import {
   ESTABLISHED_YEAR,
@@ -591,8 +592,10 @@ export function videoRef(path: string, video: Video) {
  * rich result, so until Ben confirms it this node describes the video
  * without qualifying for that treatment; that is the right trade.
  *
- * No `contentUrl`: the site does not host the media file. `publisher` is the
- * one Organization, typed, which is what the channel it was published on is.
+ * `contentUrl` is the YouTube watch page (Ben, 2026-10-20): the site hosts no
+ * media file, and the watch URL is the public address of the recording.
+ * `publisher` is the one Organization, typed, which is what the channel it
+ * was published on is.
  */
 export function videoObjectSchema(path: string, video: Video) {
   const seconds = videoDuration(video);
@@ -602,6 +605,7 @@ export function videoObjectSchema(path: string, video: Video) {
     description: video.description,
     thumbnailUrl: [abs(video.posterPath)],
     embedUrl: embedUrl(video),
+    contentUrl: watchUrl(video),
     inLanguage: "en-US",
     publisher: orgRef(),
     ...(uploadDate ? { uploadDate } : {}),

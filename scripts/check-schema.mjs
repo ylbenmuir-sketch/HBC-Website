@@ -28,8 +28,12 @@
  *    and `duration`, when present, are ISO 8601; when absent — they are
  *    Verifiables nobody has confirmed — the run says so, because Google
  *    needs `uploadDate` for the video rich result and silence here is how
- *    that stays unnoticed. No field may be an empty string. A page node
- *    that carries `video` must point at a VideoObject in its own graph.
+ *    that stays unnoticed. `contentUrl` is the YouTube watch URL of the
+ *    same id. No field may be an empty string. A page node that carries
+ *    `video` must point at a VideoObject in its own graph.
+ * 8. Every watch page (`/videos/<slug>`) carries exactly one VideoObject,
+ *    with `uploadDate`, `duration`, `contentUrl`, `thumbnailUrl` and
+ *    `embedUrl` all present, and its page node's `video` points at it.
  *
  * It does not validate against schema.org's vocabulary; the Rich Results
  * Test and the Schema Markup Validator do that on a live URL (SEO-AUDIT-3
@@ -134,7 +138,12 @@ for (const canonical of urls) {
     }
     if (node.uploadDate === undefined) notes.push(`${route}: ${where} carries no uploadDate (unverified in lib/site-config.ts) — Google needs it for the video rich result`);
     if (node.duration === undefined) notes.push(`${route}: ${where} carries no duration (unverified in lib/site-config.ts)`);
-    if (node.contentUrl !== undefined) fail(`${where}: contentUrl is set, but the site hosts no media file`);
+    // contentUrl is the YouTube watch page of the same recording (Ben,
+    // 2026-10-20) — never a file on this origin, never a different video.
+    const vid = node.embedUrl?.match(/\/embed\/([A-Za-z0-9_-]{11})/)?.[1];
+    if (node.contentUrl !== `https://www.youtube.com/watch?v=${vid}`) {
+      fail(`${where}: contentUrl ${JSON.stringify(node.contentUrl)} is not the YouTube watch URL of the embedded video`);
+    }
     for (const thumb of [].concat(node.thumbnailUrl ?? [])) {
       if (!String(thumb).startsWith(`${origin}/`)) {
         fail(`${where}: thumbnailUrl ${thumb} is not on this origin — posters are committed, never fetched from a third party`);
@@ -145,6 +154,16 @@ for (const canonical of urls) {
         fail(`${where}: thumbnailUrl ${thumb} → HTTP ${asset.status} ${asset.type}; the poster is not being served`);
       }
     }
+  }
+  // Rule 8 — a watch page is the video's listing: exactly one VideoObject,
+  // complete, and the page node points at it.
+  if (/^\/videos\/[^/]+$/.test(route)) {
+    const vids = graph.filter((n) => n["@type"] === "VideoObject");
+    if (vids.length !== 1) fail(`watch page carries ${vids.length} VideoObjects, wanted 1`);
+    for (const field of ["uploadDate", "duration", "contentUrl", "thumbnailUrl", "embedUrl"]) {
+      if (vids[0] && vids[0][field] === undefined) fail(`watch page VideoObject has no ${field}`);
+    }
+    if (!pageNode?.video) fail("watch page node carries no `video`");
   }
   if (pageNode?.video) {
     const target = graph.find((n) => n["@type"] === "VideoObject" && n["@id"] === pageNode.video["@id"]);

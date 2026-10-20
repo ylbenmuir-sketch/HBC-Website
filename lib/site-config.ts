@@ -1150,9 +1150,11 @@ export const VIDEO_APPOINTMENT_ONE_DURATION: Verifiable<number | null> = {
   note: "[Confirm video running time, in seconds]",
 };
 export const VIDEO_APPOINTMENT_ONE_UPLOAD_DATE: Verifiable<string | null> = {
-  value: "2025-04-30",
+  // The full timestamp from the video's own watch page (2026-10-20), which
+  // is the same day Ben confirmed with the offset Google asks for.
+  value: "2025-04-30T12:20:24-07:00",
   verified: true,
-  note: "[Confirm video upload date, YYYY-MM-DD]",
+  note: "[Confirm video upload date]",
 };
 
 /* ------------------------------------------------------------------ */
