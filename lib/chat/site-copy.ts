@@ -1034,7 +1034,9 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   "app/about/page.tsx": {},
   "app/page.tsx": {
     "START_TIMING.note!": "not indexed — no passage carries the start-timing claim",
-    "BRAIN_MAP_CLAIM.note!": "not indexed — the differentiator claim is in no passage",
+    // BRAIN_MAP_CLAIM.note! left this list 2026-10-19: the Brain Map stage no
+    // longer appends the claim to its caption (app/page.tsx), so the homepage
+    // renders no tag for it. The claim is still in no passage.
     "FOUNDER_QUOTE.note!": "not indexed — the founder quote is in no passage",
     "FOUNDER_LAST_NAME.note!": "Verifiable-gated — and verified; FOUNDER_DISPLAY_NAME is not indexed regardless",
     "FRANKLIN_OPENING.note!": "Verifiable-gated — location:franklin:coming-soon omits the date by construction",
