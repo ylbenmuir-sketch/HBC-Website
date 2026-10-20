@@ -132,6 +132,37 @@ export function uvAt(x: number, y: number): number {
   return num / den;
 }
 
+/** A site by its label. */
+export function siteById(id: string): BrainMapSite {
+  const s = BRAIN_MAP_SITES.find((x) => x.id === id);
+  if (!s) throw new Error(`Unknown Brain Map site: ${id}`);
+  return s;
+}
+
+/** Mean amplitude of one or more sites. */
+export function meanUv(ids: readonly string[]): number {
+  return ids.reduce((a, id) => a + siteById(id).uv, 0) / ids.length;
+}
+
+/** "41 µV" — the number as a whole microvolt, the way the copy reads it. */
+export function fmtUv(uv: number): string {
+  return `${Math.round(uv)} µV`;
+}
+
+/**
+ * A short fingerprint of the values, for the field raster's URL
+ * (/brain-map-field.png?v=…): a change to any number changes the URL, so no
+ * cache can serve yesterday's picture of today's data.
+ */
+export const BRAIN_MAP_SAMPLE_VERSION: string = (() => {
+  let h = 0x811c9dc5;
+  for (const ch of BRAIN_MAP_SITES.map((s) => `${s.id}:${s.uv}`).join(";")) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(36);
+})();
+
 /** The sites in a band, in montage order. */
 export function sitesIn(band: BrainMapBand): BrainMapSite[] {
   return BRAIN_MAP_SITES.filter((s) => bandOf(s.uv) === band);
