@@ -425,16 +425,21 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
         )}
       </>
     );
-    // The phone row: day · time, the prize in one line (or the winner), the value, the bar.
+    // The phone row: day · time and the value on the first line, the prize
+    // in plain words under them wrapping to a second line when it must
+    // (never cut — Ben, 2026-10-20), then the bar.
     const row = (
       <>
         <span className="ty-row-top">
           <span className="ty-row-time">
             {cardTime(d)}
+            {grand && <span className="ty-row-label">{t.grandLabel}</span>}
             {state === "next" && <span className="ty-tag ty-tag-next">{t.nextTag}</span>}
             {state === "drawn" && !winner && <span className="ty-tag">{t.drawnTag}</span>}
           </span>
-          {grand && <span className="ty-row-label">{t.grandLabel}</span>}
+          <span className="ty-row-usd">
+            <Both n={valueBig(pN)} c={valueBig(pC)} />
+          </span>
         </span>
         <span className="ty-row-main">
           {winner ? (
@@ -446,9 +451,6 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
               <Both n={rowWords(pN)} c={rowWords(pC)} />
             </span>
           )}
-          <span className="ty-row-usd">
-            <Both n={valueBig(pN)} c={valueBig(pC)} />
-          </span>
         </span>
         <span className="ty-row-bar" aria-hidden="true">
           <span className="ty-row-fill v-new" style={{ width: `${barShare(pN)}%` }} />

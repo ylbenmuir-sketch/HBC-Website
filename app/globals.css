@@ -2774,11 +2774,13 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-head-row { display: flex; flex-direction: column; gap: 5px; width: 100%; min-width: 0; }
   .ty-step-head { position: relative; padding: 11px 42px 11px 14px; border-radius: 8px; }
   .ty-step-more { top: 50%; right: 12px; transform: translateY(-50%); }
-  .ty-row-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .ty-row-time { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  /* First line: the day (and its tags) left, the value right. The words
+     take the full width under them and wrap rather than cut (Ben). */
+  .ty-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ty-row-time { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
   .ty-row-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-lift); font-weight: 600; }
-  .ty-row-main { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; }
-  .ty-row-words { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.3; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ty-row-main { display: block; min-width: 0; }
+  .ty-row-words { display: block; min-width: 0; font-size: 14.5px; line-height: 1.3; font-weight: 500; color: var(--ink); text-wrap: pretty; overflow-wrap: anywhere; }
   .ty-row-winner { color: var(--sage-deep); }
   .ty-row-usd { flex: none; font-family: var(--serif); font-size: 24px; font-weight: 500; line-height: 1; color: var(--gold-ink); letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
   .ty-row-bar { display: block; height: 3px; border-radius: 2px; background: var(--ivory-2); overflow: hidden; margin-top: 2px; }
@@ -2790,7 +2792,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-step-grand .ty-row-time { color: rgba(251, 248, 241, 0.62); }
   .ty-step-grand .ty-row-words { color: var(--ivory); }
   .ty-step-grand .ty-row-winner { color: var(--sage); }
-  .ty-step-grand .ty-row-usd { color: var(--gold-lift); font-size: 28px; }
+  .ty-step-grand .ty-row-usd { color: var(--gold-lift); font-size: 26px; }
   .ty-step-grand .ty-row-bar { background: rgba(251, 248, 241, 0.14); }
   .ty-step-grand .ty-row-fill { background: var(--gold-lift); }
   /* The breakdown opens inline under its row, one at a time. */
@@ -2821,6 +2823,14 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
   .ty-h1-years { font-size: 60px; }
   .ty-h1-rest { font-size: 30px; }
+  /* The ladder rows at 320: the grand row's label stays on the day's line and its words fit two lines. */
+  .ty-step-head { padding-right: 36px; }
+  .ty-row-words { font-size: 13.5px; }
+  .ty-step-grand .ty-row-words { font-size: 13px; letter-spacing: -0.01em; }
+  .ty-row-time { gap: 4px 6px; font-size: 10px; letter-spacing: 0.12em; }
+  .ty-row-label { font-size: 9px; letter-spacing: 0.1em; }
+  .ty-row-usd { font-size: 22px; }
+  .ty-step-grand .ty-row-usd { font-size: 24px; }
   /* The quiet header at 320: "Explore HBC" on one line; the number (which
      the form's page does not lead with) steps aside rather than clip. */
   .nav-explore { white-space: nowrap; }
