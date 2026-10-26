@@ -108,7 +108,7 @@ export type SiteEvent =
   | { name: "generate_lead"; params: LeadParams }
   | {
       name: "contact_link_click";
-      params: { link_type: "phone" | "email" | "sms"; location: LinkLocation; page_path: string };
+      params: { link_type: "phone" | "email" | "text"; location: LinkLocation; page_path: string };
     }
   | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
   | { name: "brain_map_jump"; params: { page_path: string } }
@@ -231,7 +231,8 @@ export function leadEvents(lead: {
 
 /**
  * The click event for a link, or null when it is not a `tel:`, `mailto:` or
- * `sms:` (the /contact "Text us" option, Ben 2026-10-19). Only the scheme is
+ * `sms:` (the /contact "Text us" option, Ben 2026-10-19; reported as
+ * link_type "text", Ben 2026-10-26). Only the scheme is
  * read from the href — the number or address never leaves this function.
  * `location` comes from the nearest `data-link-location`
  * (components/Analytics.tsx); anything not on the list reports as "other".
@@ -248,7 +249,7 @@ export function contactLinkEvent(
     : scheme.startsWith("mailto:")
       ? "email"
       : scheme.startsWith("sms:")
-        ? "sms"
+        ? "text"
         : null;
   if (!linkType) return null;
   return {
