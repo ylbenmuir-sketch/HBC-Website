@@ -2,7 +2,10 @@ import { NextResponse, after } from "next/server";
 import { forwardInquiry } from "@/lib/inquiry-intake";
 import { rfcMessageIdOf, sendDetailsUpdate, type SendResult } from "@/lib/lead-notification";
 import { notificationSubject, routeLead, type RouteName } from "@/lib/lead-routing";
-import { HELPING_OPTIONS, concernList, str, supabaseAdmin } from "@/lib/consultation";
+import { HELPING_OPTIONS, concernList, isContactMethod, str, supabaseAdmin } from "@/lib/consultation";
+import { TIME_OPTIONS, isHeardAbout } from "@/lib/lead-options";
+import { CONSENT_TEXT_MAX } from "@/lib/sms-consent";
+import { sendConfirmationText } from "@/lib/sms-confirmation";
 import { onPageTwoSaved, type HoldState } from "@/lib/held-notification";
 import { sendHeldRow, supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
@@ -19,10 +22,15 @@ export const runtime = "nodejs";
  *
  * ## What it can change, and what it cannot
  *
- * Exactly four columns — `helping_who`, `concerns`, `note`, `referred_by` —
- * and a body naming any other key is refused outright, so this endpoint cannot be used
- * to change a name, a phone number, a center or a time after the email that
- * carried them has gone. Only `type = 'consultation'` rows from the form are
+ * Step two's answers (Ben, 2026-10-26) — `helping_who`, `concerns`,
+ * `best_time`, `contact_method`, `heard_about`, `referred_by`, the text
+ * consent (`sms_consent` true + the `sms_consent_text` shown; the server
+ * stamps the time) — and `note`, which older open tabs still send. A body
+ * naming any other key is refused outright, so this endpoint cannot be used
+ * to change a name, a phone number, an email or a center after the email
+ * that carried them has gone. A consent tick is a yes only: it can never be
+ * withdrawn here (STOP does that), never applies to a row without a phone,
+ * and sends the confirmation text the first time it lands. Only `type = 'consultation'` rows from the form are
  * touched: a chat row has these answers already and no browser was ever
  * handed its id.
  *
@@ -49,7 +57,26 @@ export const runtime = "nodejs";
  * existed" from "not yours".
  */
 
-const PATCHABLE = new Set(["helping_who", "concerns", "note", "referred_by"]);
+const PATCHABLE = new Set([
+  "helping_who",
+  "concerns",
+  "note",
+  "referred_by",
+  "best_time",
+  "contact_method",
+  "heard_about",
+  "sms_consent",
+  "sms_consent_text",
+]);
+
+/** PostgREST's "no such column" for one named column (see the POST). */
+function isMissingColumn(error: { code?: string; message?: string }, column: string): boolean {
+  return (
+    (error.code === "PGRST204" || error.code === "42703") &&
+    typeof error.message === "string" &&
+    error.message.includes(column)
+  );
+}
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -66,7 +93,9 @@ type UpdatedRow = {
   contact_method?: string | null;
   note: string | null;
   referred_by: string | null;
-  /** Read, never written here — carried to the re-post (NO_TEXT_CONSENT_LINE). */
+  /** Absent until migration 0012 is applied. */
+  heard_about?: string | null;
+  /** Carried to the re-post (NO_TEXT_CONSENT_LINE) and the emails. */
   sms_consent: boolean | null;
   source_page: string | null;
   notify_route: string | null;
@@ -95,8 +124,12 @@ async function emailDetails(row: UpdatedRow, supabase: NonNullable<ReturnType<ty
     concerns: row.concerns ?? [],
     note: row.note,
     referredBy: row.referred_by,
+    heardAbout: row.heard_about ?? null,
+    bestTime: row.best_time,
+    contactMethod: row.contact_method ?? null,
+    smsConsent: row.sms_consent === true,
   };
-  if (!details.helpingWho && !details.concerns.length && !details.note && !details.referredBy) return;
+  if (Object.values(details).every((v) => !v || (Array.isArray(v) && v.length === 0))) return;
 
   // The recipients the original went to, as recorded; recomputed only for a
   // row from before the notify_* columns.
@@ -151,6 +184,7 @@ async function emailDetails(row: UpdatedRow, supabase: NonNullable<ReturnType<ty
         contactMethod: row.contact_method ?? null,
         note: row.note,
         referredBy: row.referred_by,
+        heardAbout: row.heard_about ?? null,
         sourcePage: row.source_page,
         smsConsent: row.sms_consent === true,
         honeypotFilled: false,
@@ -212,6 +246,12 @@ export async function PATCH(
     concerns?: string[];
     note?: string | null;
     referred_by?: string | null;
+    best_time?: string;
+    contact_method?: string;
+    heard_about?: string;
+    sms_consent?: true;
+    sms_consent_text?: string;
+    sms_consent_at?: string;
   } = {};
 
   if ("helping_who" in fields) {
@@ -252,6 +292,36 @@ export async function PATCH(
     }
     update.referred_by = str(fields.referred_by, 200);
   }
+  if ("best_time" in fields) {
+    const bestTime = str(fields.best_time, 40);
+    if (!bestTime || !(TIME_OPTIONS as readonly string[]).includes(bestTime)) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    update.best_time = bestTime;
+  }
+  if ("contact_method" in fields) {
+    if (!isContactMethod(fields.contact_method)) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    update.contact_method = fields.contact_method;
+  }
+  if ("heard_about" in fields) {
+    if (!isHeardAbout(fields.heard_about)) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    update.heard_about = fields.heard_about;
+  }
+  // Text consent: a literal true WITH the wording she was shown, or nothing.
+  // The time is the server's, at the moment the tick arrived.
+  if ("sms_consent" in fields || "sms_consent_text" in fields) {
+    const consentText = str(fields.sms_consent_text, CONSENT_TEXT_MAX);
+    if (fields.sms_consent !== true || !consentText) {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
+    update.sms_consent = true;
+    update.sms_consent_text = consentText;
+    update.sms_consent_at = new Date().toISOString();
+  }
 
   const supabase = supabaseAdmin();
   if (!supabase) {
@@ -264,17 +334,43 @@ export async function PATCH(
     );
   }
 
+  // The consent is about a number: no phone on the row, no consent stored.
+  // And a yes that is already on the row is not a new yes (no second text).
+  let consentIsNew = false;
+  if (update.sms_consent) {
+    const { data: before } = await supabase
+      .from("consultation_requests")
+      .select("phone, sms_consent")
+      .eq("id", id)
+      .maybeSingle();
+    if (!before?.phone?.trim() || before.sms_consent === true) {
+      delete update.sms_consent;
+      delete update.sms_consent_text;
+      delete update.sms_consent_at;
+    } else {
+      consentIsNew = true;
+    }
+  }
+
   let row: UpdatedRow | null = null;
   try {
-    const { data, error } = await supabase
-      .from("consultation_requests")
-      .update(update)
-      .eq("id", id)
-      .eq("type", "consultation")
-      .eq("source", "form")
-      .select(
-        ROW_COLUMNS
-      );
+    const write = (values: typeof update) =>
+      supabase
+        .from("consultation_requests")
+        .update(values)
+        .eq("id", id)
+        .eq("type", "consultation")
+        .eq("source", "form")
+        .select(ROW_COLUMNS);
+    let { data, error } = await write(update);
+    // heard_about (0012) may not exist yet: save everything else rather than
+    // nothing, and say what to apply.
+    if (error && "heard_about" in update && isMissingColumn(error, "heard_about")) {
+      console.error("[details] heard_about column missing — migration 0012 is not applied; saving the rest without it.");
+      const { heard_about: _dropped, ...rest } = update;
+      void _dropped;
+      ({ data, error } = await write(rest));
+    }
     if (error) {
       // `message` and `code` only — never `details`, where Postgres echoes values.
       console.error(
@@ -307,6 +403,10 @@ export async function PATCH(
       "concerns" in update && `concerns×${update.concerns?.length ?? 0}`,
       "note" in update && (update.note ? "note" : "note cleared"),
       "referred_by" in update && (update.referred_by ? "referred_by" : "referred_by cleared"),
+      "best_time" in update && "best_time",
+      "contact_method" in update && "contact_method",
+      "heard_about" in update && "heard_about",
+      "sms_consent" in update && "sms_consent",
     ]
       .filter(Boolean)
       .join(", ")}`
@@ -352,11 +452,23 @@ export async function PATCH(
   }
   after(sweepDue);
 
+  // The confirmation text, on the first yes — the consent box lives on step
+  // two now, so this is where the opt-in arrives. Awaited, never thrown.
+  if (consentIsNew && row.sms_consent === true && row.first_name && row.phone?.trim()) {
+    await sendConfirmationText({
+      name: row.first_name,
+      phone: row.phone,
+      preferredCenter: row.preferred_center,
+      honeypot: "",
+      leadId: row.id,
+    });
+  }
+
   // The enriched inquiry, re-posted as a labelled update. Awaited, never
   // thrown; forwardInquiry logs its own outcome. No honeypot at this step —
   // the bot field lives on step one, which a bot that got this far already
   // passed.
-  if (row.first_name && row.phone) {
+  if (row.first_name && row.phone?.trim()) {
     await forwardInquiry({
       helpingWho: row.helping_who,
       concerns: row.concerns ?? [],
@@ -368,6 +480,7 @@ export async function PATCH(
       contactMethod: row.contact_method ?? null,
       note: row.note,
       referredBy: row.referred_by,
+      heardAbout: row.heard_about ?? null,
       website: "",
       update: true,
       smsConsent: row.sms_consent === true,

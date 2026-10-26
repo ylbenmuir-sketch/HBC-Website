@@ -137,6 +137,8 @@ export type HeldRow = {
   concerns: string[] | null;
   note: string | null;
   referred_by: string | null;
+  /** Absent until migration 0012 is applied — the store selects `*`. */
+  heard_about?: string | null;
   source_page: string | null;
   sms_consent: boolean | null;
   notify_route: string | null;
@@ -186,8 +188,8 @@ export function recipientsOf(row: HeldRow): Recipients | null {
   };
 }
 
-export function hasDetails(row: Pick<HeldRow, "helping_who" | "concerns" | "note" | "referred_by">): boolean {
-  return Boolean(row.helping_who || (row.concerns ?? []).length || row.note || row.referred_by);
+export function hasDetails(row: Pick<HeldRow, "helping_who" | "concerns" | "note" | "referred_by" | "heard_about">): boolean {
+  return Boolean(row.helping_who || (row.concerns ?? []).length || row.note || row.referred_by || row.heard_about);
 }
 
 /* ------------------------------------------------------------------ */

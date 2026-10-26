@@ -114,7 +114,54 @@ export type SiteEvent =
   | { name: "brain_map_jump"; params: { page_path: string } }
   | { name: "giveaway_path_pick"; params: { choice: "new" | "current"; page_path: string } }
   | { name: "guide_download"; params: { page_path: string } }
-  | { name: "page_view"; params: { page_path: string } };
+  | { name: "page_view"; params: { page_path: string } }
+  | { name: FunnelStep; params: FunnelParams };
+
+/**
+ * The contact form's funnel (Ben, 2026-10-26), fired by the form itself so
+ * every page that embeds it reports the same steps. None is a Key event —
+ * `submit_lead_form` (sent alongside `step1_success`) stays the one Key
+ * event. Parameters are fixed values only.
+ *
+ * GA4's enhanced measurement has its own automatic `form_start` (Admin →
+ * Data streams → Enhanced measurement → Form interactions). With that switch
+ * on, `form_start` counts twice; switch it off so this one is the only one.
+ */
+export const FUNNEL_STEPS = [
+  "contact_view",
+  "form_start",
+  "step1_submit_attempt",
+  "step1_success",
+  "step1_error",
+  "step2_success",
+  "step2_skipped",
+] as const;
+export type FunnelStep = (typeof FUNNEL_STEPS)[number];
+
+/** Why step one did not go through — the form's own checks, then the route. */
+export const STEP1_ERROR_REASONS = [
+  "missing_name",
+  "missing_contact",
+  "bad_phone",
+  "bad_email",
+  "missing_center",
+  "server_rejected",
+  "server_error",
+  "network",
+] as const;
+export type Step1ErrorReason = (typeof STEP1_ERROR_REASONS)[number];
+
+/** How a visitor left step two without saving it. */
+export const STEP2_SKIP_METHODS = ["skip_link", "empty_submit", "left_page"] as const;
+export type Step2SkipMethod = (typeof STEP2_SKIP_METHODS)[number];
+
+type FunnelParams = {
+  form: "contact";
+  page_path: string;
+  reason?: Step1ErrorReason;
+  method?: Step2SkipMethod;
+  center?: LeadCenter;
+};
 
 /**
  * The path alone: no query string, no fragment. A path on this site never
@@ -223,6 +270,40 @@ export function trackLeadSaved(lead: {
   pagePath: unknown;
 }): void {
   for (const event of leadEvents(lead)) trackEvent(event);
+}
+
+/**
+ * One funnel event. `reason` (step1_error), `method` (step2_skipped) and
+ * `center` (step1_success) are mapped onto their fixed lists; nothing else
+ * passes through.
+ */
+export function funnelEvent(
+  step: FunnelStep,
+  pagePath: unknown,
+  extra: { reason?: unknown; method?: unknown; center?: unknown } = {}
+): SiteEvent {
+  const params: FunnelParams = { form: "contact", page_path: cleanPath(pagePath) };
+  if (step === "step1_error") {
+    params.reason = (STEP1_ERROR_REASONS as readonly unknown[]).includes(extra.reason)
+      ? (extra.reason as Step1ErrorReason)
+      : "server_error";
+  }
+  if (step === "step2_skipped") {
+    params.method = (STEP2_SKIP_METHODS as readonly unknown[]).includes(extra.method)
+      ? (extra.method as Step2SkipMethod)
+      : "skip_link";
+  }
+  if (step === "step1_success" && extra.center !== undefined) params.center = leadCenter(extra.center);
+  return { name: step, params };
+}
+
+/** Fire one funnel event (a no-op until GA4 is configured). */
+export function trackFunnel(
+  step: FunnelStep,
+  pagePath: unknown,
+  extra?: { reason?: unknown; method?: unknown; center?: unknown }
+): void {
+  trackEvent(funnelEvent(step, pagePath, extra));
 }
 
 /** A hero concern chip tap: the fixed label and the page, nothing else. */

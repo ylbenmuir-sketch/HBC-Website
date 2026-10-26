@@ -126,6 +126,9 @@ export type InquiryForward = {
    *  so it rides in the message as a labelled line — ahead of her note, so
    *  the 2,000-character cap can only ever cut the note. */
   referredBy?: string | null;
+  /** "How did you hear about us?" (form step two, lib/lead-options.ts) —
+   *  a labelled line, like the referral. */
+  heardAbout?: string | null;
   /** The honeypot, verbatim. Humans leave it empty; the platform stores a
    *  non-empty one flagged as spam and still answers 201, so a bot learns
    *  nothing from the response. Never used to reject anything here. */
@@ -195,6 +198,7 @@ function buildBody(input: InquiryForward): Record<string, unknown> | null {
     input.smsConsent ? null : NO_TEXT_CONSENT_LINE,
     contactMethodLabel(input.contactMethod) ? `Best way to reach them: ${contactMethodLabel(input.contactMethod)}` : null,
     input.referredBy?.trim() ? `Referred by: ${input.referredBy.trim()}` : null,
+    input.heardAbout?.trim() ? `Heard about us: ${input.heardAbout.trim()}` : null,
     input.note?.trim() || null,
   ]
     .filter((line): line is string => line !== null)

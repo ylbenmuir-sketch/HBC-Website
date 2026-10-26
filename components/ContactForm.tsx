@@ -4,11 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
-import { CONTACT_METHODS, CONTACT_METHOD_LABELS, type ContactMethod } from "@/lib/contact-method";
-import { consultationSaved, trackLeadSaved } from "@/lib/analytics";
+import { CONTACT_METHOD_LABELS, type ContactMethod } from "@/lib/contact-method";
+import {
+  consultationSaved,
+  trackFunnel,
+  trackLeadSaved,
+  type Step1ErrorReason,
+  type Step2SkipMethod,
+} from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
 import { capitalizeName } from "@/lib/name-case";
 import { FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
+import {
+  HEARD_ABOUT_OPTIONS,
+  TIME_OPTIONS,
+  isReferral,
+  looksLikeEmail,
+  looksLikeUsPhone,
+} from "@/lib/lead-options";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
 import ScannerText from "./ScannerText";
@@ -16,68 +29,55 @@ import ScannerText from "./ScannerText";
 /**
  * The contact form, in three steps.
  *
- *   1. **Request your free call** ("Send My Request" on the button — Ben,
- *      2026-10-19, no promise in button text) — name (first and last, one field), phone,
- *      email, best way to reach them (Call · Text · Email, Ben 2026-10-19),
- *      preferred center, best time. All but the time are required.
- *      Submit saves the row; nothing after this step is needed for the
- *      office to make the call. The office's email is held (Ben,
- *      2026-10-15) so it goes once, carrying step two: on Save, on Skip, or
- *      after two minutes (lib/held-notification.ts).
- *   2. **Context** — who the call is for, what's bringing them in, a note,
- *      and who referred them (optional). PATCHes the row step one created
- *      (one lead, one record). Presented
- *      as part of the process, not as something skippable: no "these are
- *      optional" panel, no ghost button. The exit is a quiet "Skip for now"
- *      text link under the save button — someone who will not answer must
- *      still be able to leave, they are just not invited to (Ben,
- *      2026-10-13). Both exits land on step three.
- *   3. **The confirmation** — "Thanks, Ben. We'll call you soon.", the
+ *   1. **The request** (Ben, 2026-10-26) — first name, a phone OR an email
+ *      (either one; the phone in any common US format), the center
+ *      (Nashville · Murfreesboro · Not sure, nothing preselected), and two
+ *      optional lines: "Who referred you?" and "Anything we should know?".
+ *      Nothing else is asked before the lead exists. "Send My Request" saves
+ *      the row and starts the office's email (held so it can carry step two —
+ *      lib/held-notification.ts: it goes on Save, on Skip, or at two
+ *      minutes, whichever is first).
+ *
+ *      Why this short: leads fell ~75% after launch. The old WordPress form
+ *      took a name, a phone or an email, a location, "How did you hear about
+ *      us?" and an optional message; the new one asked for a full name, a
+ *      phone AND an email and a Call/Text/Email choice before anything was
+ *      saved. About three in four old leads were referrals (doctors,
+ *      providers, friends) who typed who sent them, so the referral line is
+ *      on step one.
+ *   2. **Optional details** — "Got it — we'll reach out soon. A few optional
+ *      details help us prepare:" who it's for, what's going on, best time,
+ *      best way to reach them, the text-message consent (only when a phone
+ *      was given), and how they heard about us — with "Who referred you?"
+ *      again when a referral is chosen and step one's line was blank. PATCHes
+ *      the same row. "Skip for now" releases the held email at once.
+ *   3. **The confirmation** — "Thanks, Ben. We'll reach out soon.", the
  *      first-visit video, "Free call, no obligation." and both centers'
- *      numbers, tap-to-call. Nothing else (Ben, 2026-10-14): it has to fit a
- *      390×844 phone screen without scrolling. The page has no second
- *      column; this card is the page.
- *
- * The order is the point. The old single form asked "who are we helping?"
- * and "what's bringing you in?" before it asked for a phone number, so a
- * parent who got as far as the chips and stopped left nothing behind. Now
- * the ask is first and short, and everything else is asked of someone whose
- * call is already requested.
- *
- * ## The name
- *
- * One field, first and last, stored whole (the `first_name` column and wire
- * key predate the change and still carry it). Every greeting — the step-two
- * headline, the step-three thank-you, the confirmation text — uses the first
- * word only (lib/first-name.ts): "Hi Ben," not "Hi Ben Muir,". The route
- * capitalizes the name on save (lib/name-case.ts), and the greetings here
- * use the same helper, so "ben muir" is greeted as "Ben" — never lowered.
+ *      numbers. It has to fit a 390×844 phone screen without scrolling.
  *
  * ## Texts are opt-in
  *
- * Step one carries the one consent point for texts on the form: a checkbox
- * under the phone and email row, unchecked, with every disclosure the carriers require in its own label
- * (lib/sms-consent.ts) and the request going through whether or not it is
- * ticked. Unticked means no text at all — not even the confirmation. The
- * route records the wording shown and, on a yes, the time.
+ * The one consent point for texts on the form is the step-two checkbox,
+ * shown only when a phone was given: unchecked, the wording unchanged
+ * (lib/sms-consent.ts), and nothing is texted unless it is ticked — not even
+ * the confirmation. The route records the wording shown and, on a yes, the
+ * time; the confirmation text goes on that yes.
  *
- * ## Step two never shows before the row exists
+ * ## The funnel
  *
- * Step one's response carries the row id. Without one — the row failed to
- * save but the email or the platform took the lead, so the visitor still
- * hears "received" — there is no row to add to, and the form goes straight
- * to step three. The context questions are not worth a second insert.
+ * contact_view (mount), form_start (first focus in step one),
+ * step1_submit_attempt, step1_success (+ the Key event submit_lead_form and
+ * generate_lead), step1_error {reason}, step2_success, step2_skipped
+ * {method} — lib/analytics.ts. Fired here, so any page that embeds the form
+ * reports the same steps.
  *
  * ## The reveal gate
  *
  * Steps two and three mount after the observer that reveals `.rv` elements
  * ran for this route. components/RevealOnScroll.tsx watches the DOM for
  * exactly this (the MutationObserver there), so a late-mounting panel is
- * observed when it arrives rather than staying at opacity 0 — the bug that
- * once made the guide form's success state invisible. Each panel also
- * scrolls itself into view and takes focus on its heading: the viewport may
- * be sitting at the bottom of the form that just vanished, and a screen
- * reader needs to be told where the page went.
+ * observed when it arrives rather than staying at opacity 0. Each panel also
+ * scrolls itself into view and takes focus on its heading.
  */
 
 const HELPING_OPTIONS = ["Myself", "My child", "Someone else"];
@@ -90,38 +90,35 @@ const CONCERN_OPTIONS = [
   "Brain fog",
   "Something else",
 ];
-// "Not sure yet" leads the list and is the default, so a visitor who skips the
-// question is not silently filed under Nashville — unsure leads go to the
-// default inbox and text from the default line (lib/center-routing.ts).
-// Location pages override the default via ?center= (see CENTER_BY_SLUG).
-//
-// No Franklin option (Ben, 2026-10-13). There was a "Franklin waitlist" entry;
-// it is gone because someone interested in Franklin should book Nashville or
-// Murfreesboro now, not wait — a Franklin line here cost a booking today. The
-// Franklin page says the same and sends its visitors to this form with no
-// center preselected. Do not add it back as a waitlist, a "notify me", or an
-// email capture; it returns as a plain center the day the doors open.
-const CENTER_OPTIONS = [
-  "Not sure yet",
-  "Nashville",
-  "Murfreesboro",
-  "Concierge / at home",
-];
-// "Any time" first and default: the question is optional, and an answer that
-// says so is better than a window the visitor did not actually choose.
-const TIME_OPTIONS = ["Any time", "Mornings", "Afternoons", "Evenings"];
 
 /**
- * `?center=<slug>` → the matching option. Location pages link here with their
- * own slug so a visitor who came from /locations/murfreesboro sees
- * Murfreesboro preselected instead of "Not sure yet" — and the lead then
- * routes to the Murfreesboro inbox (lib/lead-routing.ts). Unknown or
- * absent values leave the default alone.
+ * The centers, as chips. Required, nothing preselected (Ben, 2026-10-26).
+ * "Not sure" saves as "Not sure yet" — the value the chat and the router
+ * already use for unsure (lib/consultation.ts → CENTER_UNSPECIFIED).
+ *
+ * No Franklin option (Ben, 2026-10-13): someone interested in Franklin should
+ * book Nashville or Murfreesboro now, not wait. It returns as a plain center
+ * the day the doors open.
  */
-const CENTER_BY_SLUG: Record<string, string> = {
-  nashville: "Nashville",
-  murfreesboro: "Murfreesboro",
-  concierge: "Concierge / at home",
+type CenterChoice = { id: string; label: string; value: string };
+const CENTER_CHOICES: CenterChoice[] = [
+  { id: "nashville", label: "Nashville", value: "Nashville" },
+  { id: "murfreesboro", label: "Murfreesboro", value: "Murfreesboro" },
+  { id: "not-sure", label: "Not sure", value: "Not sure yet" },
+];
+/** Shown only when the concierge page sends a visitor here, so a home-visit
+ *  request still routes to the concierge inbox. */
+const CONCIERGE_CHOICE: CenterChoice = { id: "concierge", label: "Concierge / at home", value: "Concierge / at home" };
+
+/**
+ * `?center=<slug>` → that center preselected. Location pages link here with
+ * their own slug; the lead then routes to that center's inbox
+ * (lib/lead-routing.ts). Unknown or absent values leave nothing chosen.
+ */
+const CENTER_BY_SLUG: Record<string, CenterChoice> = {
+  nashville: CENTER_CHOICES[0],
+  murfreesboro: CENTER_CHOICES[1],
+  concierge: CONCIERGE_CHOICE,
 };
 
 export type CenterPhone = { name: string; phone: { display: string; tel: string } };
@@ -146,9 +143,7 @@ const OPTIONAL_STYLE = {
  * heading, so a keyboard or screen-reader user lands on the new step and a
  * sighted one is not left looking at the space below where the form was.
  *
- * The heading is an H2: the card sits directly under the page's H1, and an
- * H3 here was a heading-order skip (axe, Lighthouse). Sized to the H3 scale
- * by hand so the card does not shout.
+ * The heading is an H2: the card sits directly under the page's H1.
  */
 function StepPanel({
   eyebrow,
@@ -188,6 +183,46 @@ function StepPanel({
   );
 }
 
+/** A row of single-choice chips (role=radio buttons). */
+function ChoiceChips<T extends string>({
+  labelId,
+  idPrefix,
+  options,
+  value,
+  onChange,
+  required = false,
+}: {
+  labelId: string;
+  idPrefix: string;
+  options: Array<{ id: string; label: string; value: T }>;
+  value: T | null;
+  onChange: (v: T) => void;
+  required?: boolean;
+}) {
+  return (
+    <div
+      className="chips reach-chips"
+      role="radiogroup"
+      aria-labelledby={labelId}
+      aria-required={required || undefined}
+    >
+      {options.map((o) => (
+        <button
+          key={o.id}
+          id={`${idPrefix}-${o.id}`}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          className={`chip${value === o.value ? " on" : ""}`}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function ContactForm({
   centerPhones = [],
   video,
@@ -200,70 +235,110 @@ export default function ContactForm({
   const pathname = usePathname();
 
   // Step one.
-  const [fullName, setFullName] = useState("");
+  const [givenName, setGivenName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [preferredCenter, setPreferredCenter] = useState(CENTER_OPTIONS[0]);
-  const [bestTime, setBestTime] = useState(TIME_OPTIONS[0]);
-  // "Best way to reach you" — required, nothing preselected: an answer the
-  // visitor did not give is not an answer. Saved to contact_method (0011).
+  const [preferredCenter, setPreferredCenter] = useState<string | null>(null);
+  const [showConcierge, setShowConcierge] = useState(false);
+  const [referredBy, setReferredBy] = useState("");
+  const [note, setNote] = useState("");
+  // The honeypot. Real visitors never see this field and so always submit it
+  // empty; scripted spam fills every input it finds. Passed straight through
+  // to the platform, which classifies it — nothing here rejects on it.
+  const [website, setWebsite] = useState("");
+
+  // Step two. Nothing preselected: an answer the visitor did not give is not
+  // an answer.
+  const [helpingWho, setHelpingWho] = useState<string | null>(null);
+  const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
+  const [bestTime, setBestTime] = useState<string | null>(null);
   const [contactMethod, setContactMethod] = useState<ContactMethod | null>(null);
   // Unchecked by default, and never required (lib/sms-consent.ts).
   const [smsConsent, setSmsConsent] = useState(false);
-  // The honeypot. Real visitors never see this field and so always submit it
-  // empty; scripted spam fills every input it finds. The value is passed
-  // straight through to the platform, which classifies it — nothing on the
-  // site rejects a submission because of it.
-  const [website, setWebsite] = useState("");
-
-  // Step two. Nothing pre-selected: an answer the visitor did not give is not
-  // an answer, and "My child" as a default was filing adults under it.
-  const [helpingWho, setHelpingWho] = useState<string | null>(null);
-  const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
-  const [note, setNote] = useState("");
-  const [referredBy, setReferredBy] = useState("");
+  const [heardAbout, setHeardAbout] = useState("");
+  const [laterReferral, setLaterReferral] = useState("");
 
   const [step, setStep] = useState<"one" | "two" | "three">("one");
   const [rowId, setRowId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [invalidField, setInvalidField] = useState<string | null>(null);
 
-  // Read on mount (not via useSearchParams) so the form still prerenders.
+  // What step one actually sent, for step two's choices.
+  const sentPhone = useRef(false);
+  const sentEmail = useRef(false);
+  const sentReferral = useRef(false);
+
+  // Funnel bookkeeping: form_start once, step two's outcome once.
+  const started = useRef(false);
+  const stepTwoDone = useRef(false);
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
   useEffect(() => {
-    const slug = new URLSearchParams(window.location.search)
-      .get("center")
-      ?.trim()
-      .toLowerCase();
+    trackFunnel("contact_view", window.location.pathname);
+    // Read on mount (not via useSearchParams) so the form still prerenders.
+    const slug = new URLSearchParams(window.location.search).get("center")?.trim().toLowerCase();
     const match = slug ? CENTER_BY_SLUG[slug] : undefined;
-    if (match) setPreferredCenter(match);
+    if (match) {
+      setPreferredCenter(match.value);
+      if (match === CONCIERGE_CHOICE) setShowConcierge(true);
+    }
+  }, []);
+
+  // Leaving the page with step two open and unanswered is a skip too. The
+  // held email goes at two minutes regardless (lib/held-notification.ts).
+  useEffect(() => {
+    const onHide = () => {
+      if (stepRef.current === "two" && !stepTwoDone.current) {
+        stepTwoDone.current = true;
+        trackFunnel("step2_skipped", window.location.pathname, { method: "left_page" });
+      }
+    };
+    window.addEventListener("pagehide", onHide);
+    return () => window.removeEventListener("pagehide", onHide);
   }, []);
 
   const toggleConcern = (c: string) =>
-    setSelectedConcerns((prev) =>
-      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
-    );
+    setSelectedConcerns((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  /* ── Step one: save the callback, send the lead ─────────────────────── */
-  async function requestCall(e: React.FormEvent) {
+  function onFirstFocus() {
+    if (started.current) return;
+    started.current = true;
+    trackFunnel("form_start", pathname);
+  }
+
+  function refuse(reason: Step1ErrorReason, message: string, field: string | null) {
+    trackFunnel("step1_error", pathname, { reason });
+    setErrorMessage(message);
+    setInvalidField(field);
+    setStatus("error");
+    if (field) document.getElementById(field)?.focus();
+  }
+
+  /* ── Step one: save the request, start the lead ────────────────────── */
+  async function sendRequest(e: React.FormEvent) {
     e.preventDefault();
-    if (!fullName.trim() || !phone.trim() || !email.trim()) {
-      setErrorMessage("Please add your name, phone number and email so we can reach you.");
-      setStatus("error");
-      return;
+    trackFunnel("step1_submit_attempt", pathname);
+    const name = givenName.trim();
+    const tel = phone.trim();
+    const mail = email.trim();
+    if (!name) return refuse("missing_name", "Please add your first name.", "first-name");
+    if (!tel && !mail) {
+      return refuse("missing_contact", "Please add a phone number or an email so we can reach you.", "phone");
     }
-    // The same loose shape the route checks — a sanity check, not RFC 5322.
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setErrorMessage("That email address doesn't look right — please check it.");
-      setStatus("error");
-      return;
+    if (tel && !looksLikeUsPhone(tel)) {
+      return refuse("bad_phone", "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
     }
-    if (!contactMethod) {
-      setErrorMessage("Please choose the best way to reach you — call, text or email.");
-      setStatus("error");
-      return;
+    if (mail && !looksLikeEmail(mail)) {
+      return refuse("bad_email", "That email address doesn't look right — please check it.", "email");
+    }
+    if (!preferredCenter) {
+      return refuse("missing_center", "Please choose a center — or Not sure.", `center-${CENTER_CHOICES[0].id}`);
     }
     setStatus("submitting");
     setErrorMessage("");
+    setInvalidField(null);
     // Read at submit time (not via useSearchParams) so the form prerenders.
     const params = new URLSearchParams(window.location.search);
     const from = params.get("from");
@@ -276,96 +351,105 @@ export default function ContactForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
-          // The whole name. The key is the column's name, from before the
-          // field asked for first and last together.
-          first_name: fullName.trim(),
-          phone: phone.trim(),
-          email: email.trim(),
+          // The key is the column's name, from before the form asked for the
+          // first name alone.
+          first_name: name,
+          ...(tel ? { phone: tel } : {}),
+          ...(mail ? { email: mail } : {}),
           preferred_center: preferredCenter,
-          best_time: bestTime,
-          contact_method: contactMethod,
+          ...(referredBy.trim() ? { referred_by: referredBy.trim() } : {}),
+          ...(note.trim() ? { note: note.trim() } : {}),
           website,
           source_page: from || pathname,
-          sms_consent: smsConsent,
-          // The wording beside the box, sent ticked or not — the row keeps
-          // what she was offered, not only what she said.
-          sms_consent_text: FORM_CONSENT_TEXT,
         }),
       });
       const data = (await res.json().catch(() => null)) as
         | { ok?: boolean; id?: string | null; error?: string }
         | null;
-      if (!res.ok) throw new Error(data?.error ?? "Something went wrong.");
+      if (!res.ok) {
+        trackFunnel("step1_error", pathname, { reason: res.status >= 500 ? "server_error" : "server_rejected" });
+        setErrorMessage(data?.error ?? `We couldn't send your request. Please try again, or call us at ${PHONE_DISPLAY}.`);
+        setStatus("error");
+        return;
+      }
 
-      // The lead events (submit_lead_form + generate_lead) — which center
-      // and which page, never the name, phone or email. Only on the route's
-      // own "saved", and here, when the lead exists, not after the optional
-      // step. A no-op until GA4 is configured (lib/analytics.ts).
+      // The Key event (submit_lead_form + generate_lead) on the route's own
+      // "saved" — which center and which page, never anything typed.
       if (consultationSaved(res.ok, data)) {
+        trackFunnel("step1_success", pathname, { center: preferredCenter });
         trackLeadSaved({ source: "form", center: preferredCenter, pagePath: pathname });
       }
 
+      sentPhone.current = Boolean(tel);
+      sentEmail.current = Boolean(mail);
+      sentReferral.current = Boolean(referredBy.trim());
       setStatus("idle");
-      // The lead landed. Step two needs a row to add to; without an id (the
-      // row did not save but another destination took the request) there is
-      // nothing to PATCH, and she goes straight to the video.
+      // Step two needs a row to add to; without an id there is nothing to
+      // PATCH, and she goes straight to the confirmation.
       if (typeof data?.id === "string" && data.id) {
         setRowId(data.id);
         setStep("two");
       } else {
         setStep("three");
       }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error && err.message !== "Failed to fetch"
-          ? err.message
-          : "We couldn't send your request. Please try again, or call us."
-      );
+    } catch {
+      trackFunnel("step1_error", pathname, { reason: "network" });
+      setErrorMessage(`We couldn't send your request. Please try again, or call us at ${PHONE_DISPLAY}.`);
       setStatus("error");
     }
   }
 
+  const askLaterReferral = isReferral(heardAbout) && !sentReferral.current;
+
   /* ── Step two: add to the saved row, or don't ──────────────────────── */
   async function saveDetails(e: React.FormEvent) {
     e.preventDefault();
-    const trimmedNote = note.trim();
-    const trimmedReferral = referredBy.trim();
-    const nothingToSave =
-      !helpingWho && selectedConcerns.length === 0 && !trimmedNote && !trimmedReferral;
-    if (nothingToSave || !rowId) {
-      skip();
+    const referral = askLaterReferral ? laterReferral.trim() : "";
+    const body: Record<string, unknown> = {
+      ...(helpingWho ? { helping_who: helpingWho } : {}),
+      ...(selectedConcerns.length > 0 ? { concerns: selectedConcerns } : {}),
+      ...(bestTime ? { best_time: bestTime } : {}),
+      ...(contactMethod ? { contact_method: contactMethod } : {}),
+      // Only a tick is sent, with the wording she was shown.
+      ...(sentPhone.current && smsConsent ? { sms_consent: true, sms_consent_text: FORM_CONSENT_TEXT } : {}),
+      ...(heardAbout ? { heard_about: heardAbout } : {}),
+      ...(referral ? { referred_by: referral } : {}),
+    };
+    if (Object.keys(body).length === 0 || !rowId) {
+      skip("empty_submit");
       return;
     }
     setStatus("submitting");
+    let saved = false;
     try {
       const res = await fetch(`/api/consultation/${rowId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(helpingWho ? { helping_who: helpingWho } : {}),
-          ...(selectedConcerns.length > 0 ? { concerns: selectedConcerns } : {}),
-          ...(trimmedNote ? { note: trimmedNote } : {}),
-          ...(trimmedReferral ? { referred_by: trimmedReferral } : {}),
-        }),
+        body: JSON.stringify(body),
       });
+      saved = res.ok;
       if (!res.ok) console.warn(`[contact] step two not saved (${res.status})`);
     } catch {
       console.warn("[contact] step two not saved (network)");
     }
-    // Either way: the call is requested, and the next thing she sees says so.
-    // A failed step two is not mentioned there (Ben, 2026-10-14: the
-    // confirmation is exactly four things) — the answers were optional, the
-    // call is already requested, and the office asks on the phone.
+    stepTwoDone.current = true;
+    if (saved) trackFunnel("step2_success", pathname);
+    // Either way: the request is in, and the next thing she sees says so.
+    // A failed step two is not mentioned — the answers were optional, and
+    // the office asks on the phone. (The held email still goes at two
+    // minutes with step one's answers.)
     setStatus("idle");
     setStep("three");
   }
 
   /* ── Skip: send the held staff email now, then the confirmation ────── */
-  // Step one HELD the office's email (lib/held-notification.ts) so it can
-  // carry page two. Skipping tells the server to send it now rather than at
-  // the two-minute mark. Fire-and-forget with keepalive: the visitor never
-  // waits on it, and if it never arrives the release job sends it anyway.
-  function skip() {
+  // Fire-and-forget with keepalive: the visitor never waits on it, and if it
+  // never arrives the release job sends it at two minutes anyway.
+  function skip(method: Step2SkipMethod) {
+    if (!stepTwoDone.current) {
+      stepTwoDone.current = true;
+      trackFunnel("step2_skipped", pathname, { method });
+    }
     if (rowId) {
       fetch(`/api/consultation/${rowId}/release`, { method: "POST", keepalive: true }).catch(() => {
         console.warn("[contact] skip not reported (network) — the office is emailed at two minutes");
@@ -374,28 +458,24 @@ export default function ContactForm({
     setStep("three");
   }
 
-  // For greetings only — "Hi Ben," never "Hi Ben Muir,". Capitalized the way
-  // the route saves it, so "ben" is greeted as "Ben".
-  const name = firstName(capitalizeName(fullName));
+  // For greetings only. Capitalized the way the route saves it.
+  const name = firstName(capitalizeName(givenName));
 
   /* ── Step three ─────────────────────────────────────────────────────── */
-  // Exactly four things, and nothing else (Ben, 2026-10-14): the headline,
-  // the video, one line about the call, one line with both numbers. It must
-  // fit a 390×844 phone screen without scrolling — check:contact measures it.
-  // No eyebrow, no "what happens next", no "helpful to have ready".
+  // Exactly four things (Ben, 2026-10-14): the headline, the video, one line
+  // about the call, one line with both numbers. It must fit 390×844.
   if (step === "three") {
     const lines = centerPhones.length > 0
       ? centerPhones
       : [{ name: "", phone: { display: PHONE_DISPLAY, tel: PHONE_TEL } }];
     return (
       // Keyed, so this mounts as a new element rather than React reusing
-      // step two's: a reused node would keep step two's scroll and focus
-      // (the effect runs on mount only) and, its className changing, lose
-      // the `in` class RevealOnScroll added — invisible at opacity 0.
+      // step two's (which would keep its scroll and lose RevealOnScroll's
+      // `in` class — invisible at opacity 0).
       <StepPanel
         key="three"
         className="form-done"
-        heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll call you soon.</>}
+        heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll reach out soon.</>}
       >
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
         <p className="done-line">Free call, no obligation.</p>
@@ -415,35 +495,24 @@ export default function ContactForm({
 
   /* ── Step two ───────────────────────────────────────────────────────── */
   if (step === "two") {
+    const reachOptions = (["call", "text", "email"] as const)
+      .filter((m) => (m === "email" ? sentEmail.current : sentPhone.current))
+      .map((m) => ({ id: m, label: CONTACT_METHOD_LABELS[m], value: m }));
     return (
-      <StepPanel
-        key="two"
-        heading={<>Got it{name ? `, ${name}` : ""}. A few quick questions.</>}
-      >
-        {/* No "these questions are optional" panel here, on purpose: the
-            lead is already saved and delivered before this renders, but the
-            questions should read as part of the process. The exit is the
-            quiet link under the button, not an invitation. */}
-        <form className="form" onSubmit={saveDetails} noValidate>
-          <label id="helping-label">Who are we helping?</label>
-          <div className="chips" role="radiogroup" aria-labelledby="helping-label">
-            {HELPING_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                role="radio"
-                aria-checked={helpingWho === opt}
-                className={`chip${helpingWho === opt ? " on" : ""}`}
-                onClick={() => setHelpingWho(opt)}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
+      <StepPanel key="two" heading={<>Got it &mdash; we&rsquo;ll reach out soon.</>}>
+        <p className="step-two-lead">A few optional details help us prepare:</p>
+        <form className="form form-compact" onSubmit={saveDetails} noValidate>
+          <label id="helping-label">Who is this for?</label>
+          <ChoiceChips
+            labelId="helping-label"
+            idPrefix="helping"
+            options={HELPING_OPTIONS.map((o) => ({ id: o.toLowerCase().replace(/\s+/g, "-"), label: o, value: o }))}
+            value={helpingWho}
+            onChange={setHelpingWho}
+          />
 
           <label id="concerns-label">
-            What&rsquo;s bringing you in?{" "}
-            <span style={OPTIONAL_STYLE}>(choose any)</span>
+            What&rsquo;s going on? <span style={OPTIONAL_STYLE}>(choose any)</span>
           </label>
           <div className="chips" aria-labelledby="concerns-label">
             {CONCERN_OPTIONS.map((opt) => (
@@ -459,41 +528,90 @@ export default function ContactForm({
             ))}
           </div>
 
-          <label htmlFor="note">In your own words</label>
-          <textarea
-            id="note"
-            placeholder="Mornings are hard, homework is a battle, and he's starting to say he's 'just bad at school'…"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+          <label id="time-label">Best time to reach you</label>
+          <ChoiceChips
+            labelId="time-label"
+            idPrefix="time"
+            options={TIME_OPTIONS.map((o) => ({ id: o.toLowerCase().replace(/\s+/g, "-"), label: o, value: o as string }))}
+            value={bestTime}
+            onChange={setBestTime}
           />
 
-          {/* Optional, like everything on this step; saved to referred_by
-              (migration 0007). Not marked "(optional)" — nothing on this
-              step is, by design (Ben, 2026-10-13). */}
-          <label htmlFor="referred-by">Who referred you?</label>
-          <input
-            id="referred-by"
-            name="referred_by"
-            autoComplete="off"
-            maxLength={200}
-            value={referredBy}
-            onChange={(e) => setReferredBy(e.target.value)}
-          />
+          {reachOptions.length > 1 && (
+            <>
+              <label id="reach-label">Best way to reach you</label>
+              <ChoiceChips
+                labelId="reach-label"
+                idPrefix="reach"
+                options={reachOptions}
+                value={contactMethod}
+                onChange={setContactMethod}
+              />
+            </>
+          )}
+
+          {/* Text-message consent — only when there is a number to text.
+              Everything a carrier reviewer looks for is in the label; the
+              links open a new tab so the half-filled step is not lost. */}
+          {sentPhone.current && (
+            <>
+              <div className="sms-consent">
+                <input
+                  id="sms-consent"
+                  name="sms_consent"
+                  type="checkbox"
+                  checked={smsConsent}
+                  onChange={(e) => setSmsConsent(e.target.checked)}
+                />
+                <label htmlFor="sms-consent">
+                  {FORM_CONSENT_PARTS.map((part, i) =>
+                    typeof part === "string" ? (
+                      <ScannerText key={i} text={part} />
+                    ) : (
+                      <a key={i} href={part.href} target="_blank" rel="noopener">
+                        {part.label}
+                      </a>
+                    )
+                  )}
+                </label>
+              </div>
+              {contactMethod === "text" && !smsConsent && (
+                <p className="micro reach-note">To text you, we need the box above ticked.</p>
+              )}
+            </>
+          )}
+
+          <label htmlFor="heard-about">How did you hear about us?</label>
+          <select id="heard-about" value={heardAbout} onChange={(e) => setHeardAbout(e.target.value)}>
+            <option value="">Choose one</option>
+            {HEARD_ABOUT_OPTIONS.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
+          </select>
+
+          {askLaterReferral && (
+            <>
+              <label htmlFor="later-referral">Who referred you?</label>
+              <input
+                id="later-referral"
+                name="referred_by"
+                autoComplete="off"
+                maxLength={200}
+                placeholder="A doctor, a practice, a friend…"
+                value={laterReferral}
+                onChange={(e) => setLaterReferral(e.target.value)}
+              />
+            </>
+          )}
 
           <div className="form-exits">
-            <button
-              className="btn btn-primary"
-              type="submit"
-              disabled={status === "submitting"}
-            >
-              {status === "submitting" ? "Sending…" : "Send My Request"}
+            <button className="btn btn-primary" type="submit" disabled={status === "submitting"}>
+              {status === "submitting" ? "Sending…" : "Send These Details"}
             </button>
-            {/* The exit. Small and low-contrast by design — present for
-                the person who will not answer, not offered to everyone. */}
             <button
               className="form-skip"
               type="button"
-              onClick={skip}
+              onClick={() => skip("skip_link")}
               disabled={status === "submitting"}
             >
               Skip for now
@@ -505,28 +623,34 @@ export default function ContactForm({
   }
 
   /* ── Step one ───────────────────────────────────────────────────────── */
+  const centerOptions = showConcierge ? [...CENTER_CHOICES, CONCIERGE_CHOICE] : CENTER_CHOICES;
+  const invalid = (id: string) => (invalidField === id ? true : undefined);
   return (
     <form
       className="form form-compact rv form-card"
       style={CARD_STYLE}
-      onSubmit={requestCall}
+      onSubmit={sendRequest}
+      onFocus={onFirstFocus}
       noValidate
     >
       <div className="eyebrow">Request your free call</div>
 
-      {/* One name field, first and last, on its own row: a full name needs
-          the width, and phone and email pair naturally beneath it. */}
-      <label htmlFor="name">Your name</label>
+      <label htmlFor="first-name">First name</label>
       <input
-        id="name"
-        name="name"
-        placeholder="Sarah Mitchell"
-        autoComplete="name"
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
+        id="first-name"
+        name="first_name"
+        placeholder="Sarah"
+        autoComplete="given-name"
+        autoCapitalize="words"
+        value={givenName}
+        onChange={(e) => setGivenName(e.target.value)}
+        aria-invalid={invalid("first-name")}
         required
       />
 
+      <p className="micro either-note" id="reach-either">
+        A phone number or an email &mdash; either one is fine.
+      </p>
       <div className="two">
         <div>
           <label htmlFor="phone">Phone</label>
@@ -534,11 +658,13 @@ export default function ContactForm({
             id="phone"
             name="phone"
             type="tel"
+            inputMode="tel"
             placeholder="(615) 555-0134"
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            required
+            aria-describedby="reach-either"
+            aria-invalid={invalid("phone")}
           />
         </div>
         <div>
@@ -547,99 +673,52 @@ export default function ContactForm({
             id="email"
             name="email"
             type="email"
+            inputMode="email"
             placeholder="sarah@example.com"
             autoComplete="email"
+            autoCapitalize="off"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
+            aria-describedby="reach-either"
+            aria-invalid={invalid("email")}
           />
         </div>
       </div>
 
-      {/* Text-message consent, directly under the phone number it is about —
-          compliance scanners weight how close the consent sits to the number
-          input, and a reader should not have to connect the two across the
-          center and time row. Everything a carrier reviewer looks for is in
-          the label itself; the links are to the full terms, not to the
-          disclosures. They open a new tab so a half-filled form is not lost
-          to reading them. Server-rendered with the rest of step one, so it is
-          in the raw HTML a scanner fetches. */}
-      <div className="sms-consent">
-        <input
-          id="sms-consent"
-          name="sms_consent"
-          type="checkbox"
-          checked={smsConsent}
-          onChange={(e) => setSmsConsent(e.target.checked)}
-        />
-        <label htmlFor="sms-consent">
-          {FORM_CONSENT_PARTS.map((part, i) =>
-            // ScannerText: the "&" in "Msg & data rates" reaches the raw
-            // HTML as itself, for scanners that match bytes.
-            typeof part === "string" ? (
-              <ScannerText key={i} text={part} />
-            ) : (
-              <a key={i} href={part.href} target="_blank" rel="noopener">
-                {part.label}
-              </a>
-            )
-          )}
-        </label>
-      </div>
+      <label id="center-label">Which center?</label>
+      <ChoiceChips
+        labelId="center-label"
+        idPrefix="center"
+        options={centerOptions}
+        value={preferredCenter}
+        onChange={(v) => setPreferredCenter(v)}
+        required
+      />
 
-      {/* Required (Ben, 2026-10-19). Below the consent box so that box stays
-          directly under the phone number it is about. Choosing "Text" does
-          not tick the box — consent is her action, not an inference — so a
-          quiet line says what texting needs when it is unticked. The consent
-          wording itself is untouched. */}
-      <label id="reach-label">Best way to reach you</label>
-      <div className="chips reach-chips" role="radiogroup" aria-labelledby="reach-label" aria-required="true">
-        {CONTACT_METHODS.map((m) => (
-          <button
-            key={m}
-            id={`reach-${m}`}
-            type="button"
-            role="radio"
-            aria-checked={contactMethod === m}
-            className={`chip${contactMethod === m ? " on" : ""}`}
-            onClick={() => setContactMethod(m)}
-          >
-            {CONTACT_METHOD_LABELS[m]}
-          </button>
-        ))}
-      </div>
-      {contactMethod === "text" && !smsConsent && (
-        <p className="micro reach-note">To text you, we need the box above ticked.</p>
-      )}
+      <label htmlFor="referred-by">
+        Who referred you? <span style={OPTIONAL_STYLE}>(optional)</span>
+      </label>
+      <input
+        id="referred-by"
+        name="referred_by"
+        autoComplete="off"
+        maxLength={200}
+        placeholder="A doctor, a practice, a friend…"
+        value={referredBy}
+        onChange={(e) => setReferredBy(e.target.value)}
+      />
 
-      <div className="two">
-        <div>
-          <label htmlFor="preferred-center">Preferred center</label>
-          <select
-            id="preferred-center"
-            value={preferredCenter}
-            onChange={(e) => setPreferredCenter(e.target.value)}
-          >
-            {CENTER_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="best-time">
-            Best time to call <span style={OPTIONAL_STYLE}>(optional)</span>
-          </label>
-          <select
-            id="best-time"
-            value={bestTime}
-            onChange={(e) => setBestTime(e.target.value)}
-          >
-            {TIME_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <label htmlFor="note">
+        Anything we should know? <span style={OPTIONAL_STYLE}>(optional)</span>
+      </label>
+      <input
+        id="note"
+        name="note"
+        autoComplete="off"
+        maxLength={500}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
 
       {/*
         Hidden from real users three ways, because one is not reliable:
@@ -672,10 +751,7 @@ export default function ContactForm({
       </div>
 
       {status === "error" && (
-        <p
-          role="alert"
-          style={{ color: "#9a3b2e", fontSize: 14.5, marginTop: 16 }}
-        >
+        <p role="alert" style={{ color: "#9a3b2e", fontSize: 14.5, marginTop: 16 }}>
           {errorMessage}
         </p>
       )}
@@ -688,12 +764,6 @@ export default function ContactForm({
       >
         {status === "submitting" ? "Sending…" : "Send My Request"}
       </button>
-      {/* The privacy link sits here, on the sentence that is already about
-          what happens to what she sends us, rather than in a separate line of
-          fine print. This is the one form on the site that collects a name
-          and a phone number, so it is the one place a person might reasonably
-          want to check before pressing the button — and the footer is a long
-          way from a submit button. */}
       <p className="micro" style={{ textAlign: "center" }}>
         No payment details, no intake forms today. We never share your
         information, and there&rsquo;s no obligation after we talk.{" "}
@@ -702,4 +772,3 @@ export default function ContactForm({
     </form>
   );
 }
-

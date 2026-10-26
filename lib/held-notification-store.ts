@@ -173,6 +173,7 @@ export function leadFromRow(row: HeldRow, route: string | null): LeadDetails {
     contactMethod: row.contact_method ?? null,
     note: row.note,
     referredBy: row.referred_by,
+    heardAbout: row.heard_about ?? null,
     sourcePage: row.source_page,
     smsConsent: row.sms_consent === true,
     // Never held when the trap was filled (shouldHold), so always false here.

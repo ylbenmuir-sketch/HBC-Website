@@ -27,6 +27,7 @@ import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notificatio
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
 import { checkOffer, offerRefusalMessage, redeemOffer } from "@/lib/giveaway/offers";
+import { looksLikeEmail } from "@/lib/lead-options";
 
 export const runtime = "nodejs";
 
@@ -70,6 +71,8 @@ type Payload = {
    *  Required on the form (it enforces that), never sent by the chat. */
   contact_method?: unknown;
   note?: unknown;
+  /** "Who referred you?" — optional, on the form's first step. */
+  referred_by?: unknown;
   source_page?: unknown;
   /** True only when she ticked the box (form) or said yes (chat). */
   sms_consent?: unknown;
@@ -78,12 +81,6 @@ type Payload = {
   /** The honeypot (see the read in the handler) — hidden from real visitors. */
   website?: unknown;
 };
-
-/** Deliberately loose — a sanity check, not RFC 5322. The address is proven by
- *  delivery, not by a regex, and over-strict patterns reject valid addresses. */
-function looksLikeEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
 
 /* ------------------------------------------------------------------ */
 /* The destinations                                                    */
@@ -152,6 +149,27 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
     // PostgREST refuses the whole insert with PGRST204 ("Could not find the
     // 'contact_method' column"). The lead must not be the thing lost, so the
     // insert is retried once without it and the log says what to apply.
+    // An email-only lead before migration 0012: the 0004 shape check still
+    // requires a phone. The lead must not be lost, so it is saved with an
+    // empty phone (not null — the check reads NOT NULL) and the log says what
+    // to apply. Nothing downstream treats "" as a number.
+    if (
+      error &&
+      error.code === "23514" &&
+      typeof error.message === "string" &&
+      error.message.includes("consultation_requests_shape_check") &&
+      values.phone == null &&
+      values.email
+    ) {
+      console.error(
+        "[destination: supabase] email-only lead refused by the old shape check — migration 0012 is not applied; saving with an empty phone."
+      );
+      ({ data, error } = await supabase
+        .from("consultation_requests")
+        .insert({ ...values, phone: "" })
+        .select("id")
+        .single());
+    }
     if (error && "contact_method" in values && isMissingColumn(error, "contact_method")) {
       console.error(
         "[destination: supabase] contact_method column missing — migration 0011 is not applied; saving the lead without it."
@@ -352,11 +370,13 @@ async function confirmToVisitor(
 }
 
 /**
- * POST — a new request. For the contact form this is **step one**: name,
- * phone, email, best way to reach them, preferred center, best time. The row is saved
- * and the lead email sent here, before the form shows anything else; the
- * optional second step (who the call is for, concerns, a note) PATCHes the
- * row whose id this returns. The chat sends everything in one POST, with
+ * POST — a new request. For the contact form this is **step one** (Ben,
+ * 2026-10-26): first name, a phone or an email, the center, and optionally
+ * who referred them and a one-line note. The row is saved and the lead email
+ * started here (held for step two — lib/held-notification.ts), before the
+ * form shows anything else; the optional second step (who it's for,
+ * concerns, best time, best way to reach them, text consent, how they heard
+ * about us) PATCHes the row whose id this returns. The chat sends everything in one POST, with
  * `helping_who` already answered.
  */
 export async function POST(request: Request) {
@@ -419,16 +439,18 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-  } else if (!firstName || !phone) {
+  } else if (source === "chat" ? !firstName || !phone : !firstName || (!phone && !email)) {
+    // The form (and a giveaway booking through it) needs a first name and a
+    // phone OR an email — either one (Ben, 2026-10-26; the old site's form
+    // took either, and the new one losing that cost leads). The chat always
+    // collects a number and is held to it.
     return NextResponse.json(
-      { error: "Please add your name and a phone number so we can call you." },
-      { status: 400 }
-    );
-  } else if (source === "form" && !email) {
-    // Required on the form since 2026-10-13 (Ben). The chat does not ask
-    // for an address and is not held to it.
-    return NextResponse.json(
-      { error: "Please add your email address so we can reach you." },
+      {
+        error:
+          source === "chat"
+            ? "Please add your name and a phone number so we can call you."
+            : "Please add your first name and a phone number or an email so we can reach you.",
+      },
       { status: 400 }
     );
   }
@@ -450,6 +472,7 @@ export async function POST(request: Request) {
       : (chosenCenter ?? CENTER_UNSPECIFIED);
   const bestTime = str(body.best_time, 40);
   const note = str(body.note, 2000);
+  const referredBy = isGuide ? null : str(body.referred_by, 200);
   const sourcePage = str(body.source_page, 200);
 
   // "Best way to reach you" (lib/contact-method.ts). The form requires it
@@ -492,6 +515,8 @@ export async function POST(request: Request) {
     // leave the column out, and a guide/chat row never carries it.
     ...(contactMethod ? { contact_method: contactMethod } : {}),
     note: isGuide ? null : note,
+    // Only when given: referred_by (0007) is a step-one answer now too.
+    ...(referredBy ? { referred_by: referredBy } : {}),
     source_page: sourcePage,
     sms_consent: smsConsent,
     sms_consent_text: smsConsentText,
@@ -515,6 +540,7 @@ export async function POST(request: Request) {
           bestTime,
           contactMethod,
           note,
+          referredBy,
           website: honeypot,
           smsConsent,
         }
@@ -564,6 +590,7 @@ export async function POST(request: Request) {
         bestTime,
         contactMethod,
         note,
+        referredBy,
         sourcePage,
         smsConsent,
         honeypotFilled: honeypot.trim().length > 0,

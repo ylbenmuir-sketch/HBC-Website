@@ -203,6 +203,8 @@ export type LeadDetails = {
   contactMethod?: string | null;
   note: string | null;
   referredBy?: string | null;
+  /** "How did you hear about us?" — form step two (lib/lead-options.ts). */
+  heardAbout?: string | null;
   sourcePage: string | null;
   /** Whether she agreed to texts (lib/sms-consent.ts). */
   smsConsent: boolean;
@@ -222,6 +224,8 @@ function staffLead(lead: LeadDetails): StaffLead {
     contactMethod: contactMethodLabel(lead.contactMethod),
     smsConsent: lead.smsConsent,
     sourcePage: lead.sourcePage,
+    referredBy: lead.referredBy?.trim() || null,
+    heardAbout: lead.heardAbout?.trim() || null,
     details: {
       helpingWho: lead.helpingWho,
       concerns: lead.concerns,

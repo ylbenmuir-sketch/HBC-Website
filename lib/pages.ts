@@ -251,10 +251,10 @@ export const staticPages: StaticPage[] = [
   {
     path: "/contact",
     title: "Talk With Our Team",
-    // 150 chars: the H1's ask, the two centers and the no-referral fact.
+    // The H1's ask, the two centers and the no-referral fact (2026-10-26).
     description:
-      "Start with a free call. Tell us where to reach you and a real person from your nearest center — Nashville or Murfreesboro — calls you. No referral needed.",
-    dateModified: "2026-10-13",
+      "Let’s get you started. Send your name and a phone number or email, and someone from our Nashville or Murfreesboro center reaches out. No referral needed.",
+    dateModified: "2026-10-26",
     type: "ContactPage",
     crumb: "Contact",
   },

@@ -2118,6 +2118,12 @@ body[data-bottombar] footer.site {
 .form-compact label { margin: 11px 0 6px; }
 .form-compact input, .form-compact select { padding: 12px 16px; }
 .form-compact .micro { margin-top: 10px; }
+/* The short step one (2026-10-26): "phone or email" is said once, above the
+   pair, in the caption's place rather than as a third label. */
+.form-compact .either-note { margin: 14px 0 -4px; }
+/* Step two's "A few optional details help us prepare:" under its heading. */
+.step-two-lead { margin: -8px 0 4px; color: var(--slate); font-size: 15.5px; }
+.form [aria-invalid="true"] { border-color: #9a3b2e; }
 /* The one column. The form card was 1.1fr of a two-column grid (~560px at
    the 1200px wrap) with "What happens next" beside it; that column is gone,
    so the card is centred at a touch more than its old width rather than

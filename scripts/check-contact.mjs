@@ -18,17 +18,23 @@
  *     CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
  *
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
- * 768px and 1440px:
+ * 768px and 1440px — the short step one (Ben, 2026-10-26): first name, a
+ * phone OR an email, the center (required, nothing preselected), and the
+ * optional "Who referred you?" and "Anything we should know?":
  *
- *   save   step one → step two (with "Who referred you?") → "Save these
- *          details" → the confirmation
- *   skip   step one → step two → "Skip for now" → the confirmation; once
- *          more at 390×844, where the confirmation must fit the screen
- *          with no scrolling (Ben, 2026-10-14)
- *   leave  step one → close the tab (once, at 390px), after first trying
- *          to submit without an email and with a malformed one. Its name
- *          is typed in lower case, and must be saved and greeted
- *          capitalized (lib/name-case.ts)
+ *   save   step one (phone + email, referral, note) → step two (who, concerns,
+ *          time, Text, the consent box ticked, "How did you hear") → "Send
+ *          These Details" → the confirmation
+ *   skip   step one (phone + email only) → step two → "Skip for now" → the
+ *          confirmation; once more at 390×844, where the confirmation must
+ *          fit the screen with no scrolling (Ben, 2026-10-14)
+ *   leave  step one with a PHONE ONLY → close the tab on step two (once, at
+ *          390px), after first trying to submit with neither a phone nor an
+ *          email, a malformed phone, and no center. Its name is typed in
+ *          lower case, and must be saved and greeted capitalized
+ *   email  step one with an EMAIL ONLY (390px) → step two shows no consent
+ *          box and no reach choice; a referral answer reveals "Who referred
+ *          you?" there → save
  *
  * and, without a browser, two real conversations with the assistant's
  * six-step booking flow over /api/chat (needs a build with
@@ -42,8 +48,8 @@
  *
  * ## Text consent (lib/sms-consent.ts, A2P 10DLC)
  *
- * The save paths and the leave path tick the consent box; the skip paths
- * leave it unticked. Every lead is checked both ways: the box is present
+ * The box is on step two now (Ben, 2026-10-26), shown only when a phone was
+ * given. The save paths tick it; the skip and leave paths never reach it. Every lead is checked both ways: the box is present
  * under the phone row, unchecked on load, its label is the exact wording;
  * the row records consent, the wording shown and (only on a yes) the time;
  * the email's "Texts:" line and the platform's no-consent line agree with it;
@@ -95,7 +101,7 @@
  *
  * ## It writes to the database
  *
- * Eleven rows, named `E2E-<run>-<Path>-<width> Tester` — the chat's are
+ * Twelve rows, named `E2E-<run>-<Path>-<width> Tester` — the chat's are
  * `Etoe<run as letters>Yes|No Chat`, because the chat reads a name as
  * letters only — phone 0000000000, and two chat_sessions rows. The same preflight as scripts/chat-checklist.mjs:
  * CHECK_CONTACT_ALLOW_PROJECT must name the exact project ref in
@@ -264,9 +270,9 @@ const CONSENT_SENTENCE = "I agree to receive texts from Harmonized Brain Centers
 const FORM_CONSENT_TEXT = `${CONSENT_SENTENCE} SMS Terms · Privacy Policy`;
 const CHAT_CONSENT_QUESTION = "Can Harmonized Brain Centers also text you about your appointment and inquiry? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way. SMS Terms: /sms-terms · Privacy Policy: /privacy-policy";
 /** The carriers' required phrases, each of which must reach the raw HTML
- *  of /contact as one unbroken string. */
+ *  of /sms-terms as one unbroken string. (The form's consent box is on step
+ *  two since 2026-10-26, so /contact's raw HTML no longer carries it.) */
 const REQUIRED_PHRASES = [
-  CONSENT_SENTENCE,
   "Harmonized Brain Centers",
   "Msg frequency varies.",
   "Msg & data rates may apply.",
@@ -295,21 +301,28 @@ function expect(label, ok, detail = "") {
 }
 
 /** The row for a submission: exactly one, with the columns step one wrote. */
-async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), source = "form", bestTime = "Any time", sourcePage = "/contact", consent, consentText = FORM_CONSENT_TEXT }) {
+async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), phone = "0000000000", source = "form", bestTime = null, contactMethod = null, heardAbout = null, sourcePage = "/contact", consent, consentText = consent ? FORM_CONSENT_TEXT : null }) {
   const rows = await rowsNamed(name);
   expect(`${name}: exactly one row`, rows.length === 1, `${rows.length} row(s)`);
   const r = rows[0];
   if (!r) return null;
   created.push(r.id);
   expect(`${name}: type/source`, r.type === "consultation" && r.source === source, `${r.type}/${r.source}`);
-  expect(`${name}: phone saved`, r.phone === "0000000000", r.phone);
+  // An email-only lead: phone null once migration 0012 is applied, "" before
+  // it (the route's fallback for the old shape check — see saveRow).
+  if (phone === null) {
+    expect(`${name}: no phone saved (null, or "" before migration 0012)`, r.phone === null || r.phone === "", JSON.stringify(r.phone));
+    if (r.phone === "") console.log(`  · ${name}: saved with phone "" — migration 0012 is not applied on this database`);
+  } else {
+    expect(`${name}: phone saved`, r.phone === phone, r.phone);
+  }
   expect(`${name}: preferred_center = ${JSON.stringify(center)}`, r.preferred_center === center, String(r.preferred_center));
   expect(`${name}: best_time = ${JSON.stringify(bestTime)}`, r.best_time === bestTime, String(r.best_time));
   // contact_method (migration 0011): "call" on every form row — stepOne
   // chooses Call — and null on a chat row. Skipped, and said so, on a
   // database where 0011 is not applied yet (the route then saves without it).
   if ("contact_method" in r) {
-    const want = source === "form" ? "call" : null;
+    const want = source === "form" ? contactMethod : null;
     expect(`${name}: contact_method = ${JSON.stringify(want)}`, r.contact_method === want, String(r.contact_method));
   } else {
     console.log(`  · ${name}: contact_method not checked — migration 0011 is not applied on this database`);
@@ -320,8 +333,13 @@ async function expectRow(name, { center, helpingWho, concerns, note, referredBy 
   expect(`${name}: concerns = ${JSON.stringify(concerns)}`, JSON.stringify(r.concerns) === JSON.stringify(concerns), JSON.stringify(r.concerns));
   expect(`${name}: note = ${JSON.stringify(note)}`, r.note === note, String(r.note));
   expect(`${name}: referred_by = ${JSON.stringify(referredBy)}`, r.referred_by === referredBy, String(r.referred_by));
+  if ("heard_about" in r) {
+    expect(`${name}: heard_about = ${JSON.stringify(heardAbout)}`, r.heard_about === heardAbout, String(r.heard_about));
+  } else {
+    console.log(`  · ${name}: heard_about not checked — migration 0012 is not applied on this database`);
+  }
   expect(`${name}: sms_consent = ${consent}`, r.sms_consent === consent, String(r.sms_consent));
-  expect(`${name}: sms_consent_text is the exact wording shown`, r.sms_consent_text === consentText, JSON.stringify(r.sms_consent_text));
+  expect(`${name}: sms_consent_text is ${consentText ? "the exact wording shown" : "null (never shown at step one)"}`, r.sms_consent_text === consentText, JSON.stringify(r.sms_consent_text));
   const at = r.sms_consent_at ? Date.parse(r.sms_consent_at) : null;
   expect(
     `${name}: sms_consent_at ${consent ? "stamped within the last 10 minutes" : "null"}`,
@@ -340,7 +358,7 @@ const routeOf = (center, source) => routeLead({ type: "consultation", source, pr
  * from "Harmonized Brain Centers", carrying the lead and pointing at the row;
  * and the row records the Message-ID it was delivered with.
  */
-function expectEmail(name, row, { center, consent, source = "the contact form" }) {
+function expectEmail(name, row, { center, consent, source = "the contact form", phone = true, email = true, referredBy = null, heardAbout = null }) {
   const channel = source === "the contact form" ? "form" : "chat";
   const inbox = inboxFor(center, channel);
   const list = emailsNaming(name);
@@ -353,8 +371,12 @@ function expectEmail(name, row, { center, consent, source = "the contact form" }
   expect(`${name}: email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
   expect(`${name}: email has the branded HTML and a plain-text twin`, html.startsWith("<!doctype html>") && html.includes("BRAIN CENTERS") && text.length > 0);
   expect(`${name}: email's first line says "New call request"${channel === "chat" ? " … via chat" : ""}`, text.startsWith("NEW CALL REQUEST · ") && text.split("\n")[0].includes("via chat") === (channel === "chat"), JSON.stringify(text.split("\n")[0]));
-  expect(`${name}: email carries the name whole and the phone formatted`, text.includes(`\n${name}\n`) && text.includes("(000) 000-0000"), JSON.stringify(text.slice(0, 200)));
-  expect(`${name}: email has Call (tel:) and Reply (mailto:) buttons`, /href="tel:\+10000000000"[^>]*>Call</.test(html) && /href="mailto:[^"]+"[^>]*>Reply</.test(html));
+  expect(`${name}: email carries the name whole${phone ? " and the phone formatted" : ""}`, text.includes(`\n${name}\n`) && text.includes("(000) 000-0000") === phone, JSON.stringify(text.slice(0, 200)));
+  expect(`${name}: email has ${phone ? "a Call (tel:)" : "no Call"} and ${email ? "a Reply (mailto:)" : "no Reply"} button`, /href="tel:\+10000000000"[^>]*>Call</.test(html) === phone && /href="mailto:[^"]+"[^>]*>Reply</.test(html) === email);
+  if (channel === "form") {
+    const [, l1, l2] = text.split("\n");
+    expect(`${name}: "Referred by" and "Heard about us" are the email's first lines (Ben, 2026-10-26)`, l1 === `Referred by: ${referredBy ?? "Not given"}`.replace("Referred by: ", "Referred by:".padEnd(13)) && l2 === `Heard about us: ${heardAbout ?? "Not given"}`, JSON.stringify([l1, l2]));
+  }
   if (row) expect(`${name}: email points at the saved row`, /^Open saved request: \S+$/m.test(text) && text.includes(row.id));
   expect(`${name}: footer has no routing rule and no request id line`, !/Routed by|rule:|^Request /m.test(text + html), JSON.stringify(text.slice(-200)));
   expect(`${name}: email went to ${inbox}`, JSON.stringify(e.body.to).includes(inbox), JSON.stringify(e.body.to));
@@ -382,10 +404,10 @@ function expectVisitorEmail(name, address, { center, source = "form" }) {
   if (!e) return;
   const route = routeOf(center, source);
   const line = route === "nashville" || route === "murfreesboro"
-    ? `Someone from our ${route === "nashville" ? "Nashville" : "Murfreesboro"} center will call.`
-    : "Someone from our team will call.";
+    ? `Someone from our ${route === "nashville" ? "Nashville" : "Murfreesboro"} center will reach out.`
+    : "Someone from our team will reach out.";
   const tel = route === "murfreesboro" ? "tel:+16152032650" : "tel:+16153318762";
-  expect(`${name}: visitor email says "Thanks, ${firstWord(name)}. We’ll call you soon." and "${line}"`, e.body.text.startsWith(`Thanks, ${firstWord(name)}. We’ll call you soon.\n${line}`), JSON.stringify(e.body.text.slice(0, 120)));
+  expect(`${name}: visitor email says "Thanks, ${firstWord(name)}. We’ll reach out soon." and "${line}"`, e.body.text.startsWith(`Thanks, ${firstWord(name)}. We’ll reach out soon.\n${line}`), JSON.stringify(e.body.text.slice(0, 120)));
   expect(`${name}: visitor email Reply-To is ${inboxFor(center, source)} (the route's first address)`, e.body.reply_to === inboxFor(center, source), String(e.body.reply_to));
   expect(`${name}: visitor email has the center's tap-to-call, and the video as a hosted thumbnail linked to /watch/first-visit`, e.body.html.includes(`href="${tel}"`) && /<a href="[^"]*\/watch\/first-visit"[^>]*><img src="[^"]*\/email\/first-visit\.jpg"/.test(e.body.html) && e.body.html.includes("Watch: what your first visit looks like") && !e.body.html.includes("youtube.com"));
   expect(`${name}: visitor email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
@@ -401,7 +423,7 @@ function expectUpdateEmail(name, row, { center, note, referredBy }) {
   expect(`${name}: update subject is "Re: " + the original's`, u.body.subject === `Re: ${original.body.subject}`, u.body.subject);
   expect(`${name}: update goes to the original's recipients`, JSON.stringify(u.body.to) === JSON.stringify(original.body.to) && JSON.stringify(u.body.cc ?? []) === JSON.stringify(original.body.cc ?? []), JSON.stringify([u.body.to, original.body.to]));
   expect(`${name}: update's In-Reply-To and References name the original's Message-ID`, u.body.headers?.["In-Reply-To"] === row.notify_rfc_message_id && u.body.headers?.References === row.notify_rfc_message_id && Boolean(row.notify_rfc_message_id), JSON.stringify([u.body.headers, row.notify_rfc_message_id]));
-  expect(`${name}: update carries the answers`, u.body.text.startsWith(`DETAILS ADDED · ${center}`) && u.body.text.includes(note) && (referredBy === null || u.body.text.includes(`Referred by: ${referredBy}`)), JSON.stringify(u.body.text.slice(0, 300)));
+  expect(`${name}: update carries the answers`, u.body.text.startsWith(`DETAILS ADDED · ${center}`) && (!note || u.body.text.includes(note)) && (referredBy === null || u.body.text.includes(`Referred by: ${referredBy}`)), JSON.stringify(u.body.text.slice(0, 300)));
 }
 
 /**
@@ -461,13 +483,17 @@ function expectForward(name, { center, consent, whoFor = null, updated = null })
     expect(`${name}: update post is labelled, first line`, String(second.body.message ?? "").startsWith(UPDATE_LINE), JSON.stringify(second.body.message));
     expect(`${name}: update post whoFor = ${updated.whoFor}`, second.body.whoFor === updated.whoFor, second.body.whoFor);
     expect(`${name}: update post concerns = ${JSON.stringify(updated.concerns)}`, JSON.stringify(second.body.concerns) === JSON.stringify(updated.concerns), JSON.stringify(second.body.concerns));
-    expect(`${name}: update post carries the note`, String(second.body.message ?? "").endsWith(updated.note), JSON.stringify(second.body.message));
+    if (updated.note) expect(`${name}: update post carries the note`, String(second.body.message ?? "").endsWith(updated.note), JSON.stringify(second.body.message));
     if (updated.referredBy) {
       expect(`${name}: update post carries "Referred by:"`, String(second.body.message ?? "").includes(`Referred by: ${updated.referredBy}`), JSON.stringify(second.body.message));
     }
     expect(`${name}: update post carries no not-given flag`, !String(second.body.message ?? "").includes(NOT_GIVEN_LINE));
-    expect(`${name}: update post keeps the consent answer`, consent === !String(second.body.message ?? "").includes(NO_TEXT_CONSENT_LINE), JSON.stringify(second.body.message));
-    expect(`${name}: update post keeps name/phone/center/time`, second.body.firstName === name && second.body.phone === "0000000000" && second.body.preferredCenter === center && second.body.bestTimeToCall === first.body.bestTimeToCall, JSON.stringify(second.body));
+    const consentNow = updated.consent ?? consent;
+    expect(`${name}: update post carries the consent answer as it is now (${consentNow ? "yes" : "no"})`, consentNow === !String(second.body.message ?? "").includes(NO_TEXT_CONSENT_LINE), JSON.stringify(second.body.message));
+    if (updated.heardAbout) {
+      expect(`${name}: update post carries "Heard about us:"`, String(second.body.message ?? "").includes(`Heard about us: ${updated.heardAbout}`), JSON.stringify(second.body.message));
+    }
+    expect(`${name}: update post keeps name/phone/center`, second.body.firstName === name && second.body.phone === "0000000000" && second.body.preferredCenter === center, JSON.stringify(second.body));
   }
 }
 
@@ -568,39 +594,41 @@ async function waitPanel(page, heading, timeout = 8000) {
   })()`);
 }
 
-/** Step two as the visitor sees it: greeting, no reassurance panel, the exit. */
-async function expectStepTwo(page, name, two) {
+/** Step two as the visitor sees it (Ben, 2026-10-26): the headline and the
+ *  "optional details" line, the questions, and the quiet exit. */
+async function expectStepTwo(page, name, two, { phone = true, email = true } = {}) {
   expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
-  expect(`${name}: step two headline is "Got it, ${firstWord(name)}. A few quick questions."`, two?.text === `Got it, ${firstWord(name)}. A few quick questions.`, JSON.stringify(two?.text));
-  const eyebrow = await page.eval(`document.querySelector(".form-step .eyebrow")?.textContent ?? null`);
-  expect(`${name}: step two has no "Request received" label`, eyebrow === null, JSON.stringify(eyebrow));
+  expect(`${name}: step two headline is "Got it — we’ll reach out soon."`, two?.text === "Got it — we’ll reach out soon.", JSON.stringify(two?.text));
   const look = JSON.parse(await page.eval(`JSON.stringify((() => {
     const panel = document.querySelector(".form-step");
     const skip = panel.querySelector(".form-skip");
-    const noteLabel = panel.querySelector('label[for="note"]');
-    const refLabel = panel.querySelector('label[for="referred-by"]');
-    const ref = panel.querySelector("#referred-by");
     return {
-      medicalLine: panel.textContent.includes("Please avoid sharing detailed medical information"),
-      noteHint: !!panel.querySelector("#note-hint"),
-      refLabel: refLabel?.textContent.trim() ?? null,
-      refAfterNote: !!(ref && panel.querySelector("#note") && (panel.querySelector("#note").compareDocumentPosition(ref) & Node.DOCUMENT_POSITION_FOLLOWING)),
-      refRequired: ref?.required ?? null,
-      sage: panel.querySelectorAll(".note-sage").length,
-      optionalWords: (panel.textContent.match(/optional/gi) ?? []).length,
-      noteLabel: noteLabel?.textContent.trim() ?? null,
-      skip: skip ? { text: skip.textContent.trim(), size: parseFloat(getComputedStyle(skip).fontSize), color: getComputedStyle(skip).color, visible: skip.getBoundingClientRect().height > 0 } : null,
+      lead: panel.querySelector(".step-two-lead")?.textContent.trim() ?? null,
+      eyebrow: panel.querySelectorAll(".eyebrow").length,
+      helping: panel.querySelectorAll("#helping-label + .chips [role=radio]").length,
+      concerns: !!panel.querySelector("#concerns-label"),
+      times: [...panel.querySelectorAll("button[id^=time-]")].map((b) => b.textContent.trim()),
+      reach: [...panel.querySelectorAll("[id^=reach-]")].filter((b) => b.tagName === "BUTTON").map((b) => b.textContent.trim()),
+      consent: !!panel.querySelector("#sms-consent"),
+      heard: [...(panel.querySelector("#heard-about")?.options ?? [])].map((o) => o.textContent),
+      laterReferral: !!panel.querySelector("#later-referral"),
+      required: panel.querySelectorAll("[required], [aria-required=true]").length,
+      selected: panel.querySelectorAll("[aria-checked=true], [aria-pressed=true]").length,
+      skip: skip ? { text: skip.textContent.trim(), size: parseFloat(getComputedStyle(skip).fontSize), visible: skip.getBoundingClientRect().height > 0 } : null,
     };
   })())`));
-  expect(`${name}: step two has no reassurance panel and never says "optional"`, look.sage === 0 && look.optionalWords === 0, JSON.stringify(look));
-  expect(`${name}: note label is "In your own words", nothing after it`, look.noteLabel === "In your own words", JSON.stringify(look.noteLabel));
-  expect(`${name}: the "avoid sharing detailed medical information" line is gone`, !look.medicalLine && !look.noteHint, JSON.stringify(look));
-  expect(`${name}: "Who referred you?" is under "In your own words", not required`, look.refLabel === "Who referred you?" && look.refAfterNote && look.refRequired === false, JSON.stringify(look));
+  expect(`${name}: step two says "A few optional details help us prepare:"`, look.lead === "A few optional details help us prepare:", JSON.stringify(look.lead));
+  expect(`${name}: step two asks who, what, and when — nothing required, nothing preselected`, look.helping === 3 && look.concerns && JSON.stringify(look.times) === JSON.stringify(["Any time", "Mornings", "Afternoons", "Evenings"]) && look.required === 0 && look.selected === 0 && look.eyebrow === 0, JSON.stringify(look));
+  const wantReach = [...(phone ? ["Call", "Text"] : []), ...(email ? ["Email"] : [])];
+  expect(`${name}: best way to reach is ${wantReach.length > 1 ? wantReach.join("/") : "not asked (one way given)"}`, JSON.stringify(look.reach) === JSON.stringify(wantReach.length > 1 ? wantReach : []), JSON.stringify(look.reach));
+  expect(`${name}: the consent box is ${phone ? "there (a phone was given)" : "absent (no phone)"}`, look.consent === phone, JSON.stringify(look.consent));
+  expect(`${name}: "How did you hear about us?" has the seven answers`, JSON.stringify(look.heard) === JSON.stringify(["Choose one", "Google search", "Referral from a friend or family", "Referral from a doctor or provider", "Instagram", "Facebook", "TikTok", "Other"]), JSON.stringify(look.heard));
+  expect(`${name}: "Who referred you?" is not asked on step two until a referral is chosen`, look.laterReferral === false);
   expect(`${name}: "Skip for now" is there, small and quiet`, look.skip?.text === "Skip for now" && look.skip.visible && look.skip.size <= 14, JSON.stringify(look.skip));
 }
 
 /** The confirmation's headline: the first word of the name, capitalized. */
-const CONFIRM_HEADING = (name) => `Thanks, ${firstWord(name)}. We’ll call you soon.`;
+const CONFIRM_HEADING = (name) => `Thanks, ${firstWord(name)}. We’ll reach out soon.`;
 
 /**
  * Step three is exactly four things (Ben, 2026-10-14): the headline, the
@@ -652,15 +680,20 @@ async function expectConfirmationFits(page, name) {
   expect(`${name}: the whole confirmation fits ${m.w}×${m.h} with no scrolling (card ${m.top}–${m.bottom}, visible ${m.ceiling}–${m.floor})`, m.w === 390 && m.h === 844 && m.top >= m.ceiling && m.bottom <= m.floor, JSON.stringify(m));
 }
 
-/** The raw HTML of /contact, no JavaScript: what a carrier's scanner reads. */
+/** The raw HTML, no JavaScript: what a crawler or a carrier's scanner reads. */
 async function rawHtml() {
-  console.log(`\n▸ /contact raw HTML (no JavaScript)`);
-  const html = await fetch(`${BASE}/contact`).then((r) => r.text());
+  console.log(`\n▸ raw HTML (no JavaScript)`);
+  const terms = await fetch(`${BASE}/sms-terms`).then((r) => r.text());
   for (const phrase of REQUIRED_PHRASES) {
-    expect(`raw HTML carries ${JSON.stringify(phrase.length > 60 ? `${phrase.slice(0, 57)}…` : phrase)} unbroken`, html.includes(phrase));
+    expect(`/sms-terms raw HTML carries ${JSON.stringify(phrase)} unbroken`, terms.includes(phrase));
   }
-  expect("raw HTML no longer carries the old consent wording", !html.includes("Yes, text me appointment and inquiry updates"));
-  expect("raw HTML: the consent box is unticked", /<input[^>]*id="sms-consent"[^>]*>/.test(html) && !/<input[^>]*id="sms-consent"[^>]*checked/.test(html));
+  const html = await fetch(`${BASE}/contact`).then((r) => r.text());
+  expect("/contact raw HTML: H1 is \"Let’s get you started\"", /<h1[^>]*>Let(’|&#x27;|&rsquo;)s get you started<\/h1>/.test(html), (html.match(/<h1[^>]*>.*?<\/h1>/) ?? [""])[0]);
+  for (const id of ["first-name", "phone", "email", "center-nashville", "center-murfreesboro", "center-not-sure", "referred-by", "note"]) {
+    expect(`/contact raw HTML: step one has #${id}`, html.includes(`id="${id}"`));
+  }
+  expect("/contact raw HTML: no center is preselected", !/id="center-[a-z-]+"[^>]*aria-checked="true"/.test(html) && !/aria-checked="true"[^>]*id="center-/.test(html));
+  expect("/contact raw HTML: step one asks nothing else (no consent box, no reach or time choice)", !html.includes('id="sms-consent"') && !html.includes('id="reach-') && !html.includes('id="best-time"'));
 }
 
 /**
@@ -672,7 +705,7 @@ async function consentBox(page, name, tick) {
     const box = document.querySelector("#sms-consent");
     const wrap = box?.closest(".sms-consent");
     const label = document.querySelector('label[for="sms-consent"]');
-    const prev = wrap?.previousElementSibling;
+    void wrap;
     return {
       present: !!box,
       type: box?.type ?? null,
@@ -680,35 +713,53 @@ async function consentBox(page, name, tick) {
       required: box?.required ?? null,
       label: label?.textContent ?? null,
       hrefs: [...(label?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href")),
-      underPhone: !!prev?.querySelector("#phone"),
+      onStepTwo: !!box?.closest(".form-step"),
     };
   })())`));
-  expect(`${name}: consent box present, a checkbox, unchecked on load, not required`, look.present && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
+  expect(`${name}: consent box on step two, a checkbox, unchecked, not required`, look.present && look.onStepTwo && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
   expect(`${name}: consent label is the exact wording`, look.label === FORM_CONSENT_TEXT, JSON.stringify(look.label));
   expect(`${name}: consent label links /sms-terms and /privacy-policy`, JSON.stringify(look.hrefs) === JSON.stringify(["/sms-terms", "/privacy-policy"]), JSON.stringify(look.hrefs));
-  expect(`${name}: consent box sits directly under the phone row`, look.underPhone, JSON.stringify(look));
   if (tick) {
     const r = await page.eval(`(() => { const b = document.querySelector("#sms-consent"); b.click(); return b.checked ? "ok" : "click did not check it"; })()`);
     if (r !== "ok") throw new Error(r);
   }
 }
 
-async function stepOne(page, width, name, { email = emailFor(name), center = "Not sure yet", consent = false, typed = name, height = width <= 400 ? 700 : 900 } = {}) {
+const CENTER_CHIP = { Nashville: "#center-nashville", Murfreesboro: "#center-murfreesboro", "Not sure yet": "#center-not-sure" };
+
+/**
+ * Step one (Ben, 2026-10-26): first name, phone and/or email, the optional
+ * referral and note, then — after checking the form refuses a missing
+ * center — the center chip, and "Send My Request".
+ */
+async function stepOne(page, width, name, { phone = true, email = emailFor(name), center = "Not sure yet", referral = null, note = null, typed = name, height = width <= 400 ? 700 : 900 } = {}) {
   await page.setViewport(width, height);
   await page.goto(`${BASE}/contact`, { settle: 400 });
-  await consentBox(page, name, consent);
   // goto() stamps `in` on every .rv that exists at load; the panels this
   // check cares about do not exist yet, so the reveal gate is still real.
-  for (const [sel, val] of [["#name", typed], ["#phone", "0000000000"], ["#email", email], ["#preferred-center", center]]) {
+  const fields = [["#first-name", typed], ...(phone ? [["#phone", "0000000000"]] : []), ...(email ? [["#email", email]] : []), ...(referral ? [["#referred-by", referral]] : []), ...(note ? [["#note", note]] : [])];
+  for (const [sel, val] of fields) {
     const r = await page.eval(setValue(sel, val));
     if (r !== "ok") throw new Error(r);
   }
-  // "Best way to reach you" is required (2026-10-19): without a choice the
-  // form refuses in the browser, then Call is chosen and saved as "call".
+  const look = JSON.parse(await page.eval(`JSON.stringify((() => {
+    const f = document.querySelector("form.form-card");
+    return {
+      labels: [...f.querySelectorAll("label")].filter((l) => !l.closest("[aria-hidden=true]")).map((l) => l.textContent.trim()),
+      required: [...f.querySelectorAll("[required], [aria-required=true]")].map((e) => e.id || e.getAttribute("aria-labelledby")),
+      centers: [...f.querySelectorAll("[id^=center-][role=radio]")].map((b) => [b.textContent.trim(), b.getAttribute("aria-checked")]),
+      button: f.querySelector("button[type=submit]")?.textContent.trim(),
+    };
+  })())`));
+  expect(`${name}: step one is first name, phone, email, center, "Who referred you? (optional)", "Anything we should know? (optional)"`, JSON.stringify(look.labels) === JSON.stringify(["First name", "Phone", "Email", "Which center?", "Who referred you? (optional)", "Anything we should know? (optional)"]), JSON.stringify(look.labels));
+  expect(`${name}: step one requires only the name and the center (phone/email checked as either-or)`, JSON.stringify(look.required) === JSON.stringify(["first-name", "center-label"]), JSON.stringify(look.required));
+  expect(`${name}: centers are Nashville · Murfreesboro · Not sure, none preselected`, JSON.stringify(look.centers) === JSON.stringify([["Nashville", "false"], ["Murfreesboro", "false"], ["Not sure", "false"]]), JSON.stringify(look.centers));
+  expect(`${name}: the button reads "Send My Request"`, look.button === "Send My Request", String(look.button));
   const refused = await submitAndReadAlert(page);
-  expect(`${name}: submitting without a reach choice is refused in the browser`, /best way to reach/i.test(refused ?? ""), JSON.stringify(refused));
-  const reach = await page.eval(`(() => { const b = document.querySelector("#reach-call"); if (!b) return "no #reach-call"; b.click(); return b.getAttribute("aria-checked") === "true" ? "ok" : "not checked"; })()`);
-  if (reach !== "ok") throw new Error(reach);
+  expect(`${name}: submitting without a center is refused in the browser`, /choose a center/i.test(refused ?? ""), JSON.stringify(refused));
+  const chip = await page.eval(`(() => { const b = document.querySelector(${JSON.stringify(CENTER_CHIP[center])}); if (!b) return "no chip"; b.click(); return "ok"; })()`);
+  if (chip !== "ok") throw new Error(chip);
+  await sleep(100);
   const r = await page.eval(clickText("Send My Request"));
   if (r !== "ok") throw new Error(r);
 }
@@ -721,16 +772,16 @@ async function submitAndReadAlert(page) {
   return page.eval(`(() => document.querySelector('form [role="alert"]')?.textContent.trim() ?? null)()`);
 }
 
+const SAVE_NOTE = "E2E note — bedtime is the hard part.";
+const SAVE_REFERRAL = "E2E referral — Dr. Smith";
+
 async function pathSave(page, width) {
   const name = `E2E-${RUN}-Save-${width} Tester`;
   console.log(`\n▸ save path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { center: "Murfreesboro", consent: true });
-  const two = await waitPanel(page, "A few quick questions");
+  await stepOne(page, width, name, { center: "Murfreesboro", referral: SAVE_REFERRAL, note: SAVE_NOTE });
+  const two = await waitPanel(page, "reach out soon");
   await expectStepTwo(page, name, two);
   expect(`${name}: step two heading took focus`, two?.focused === true);
-  // Nothing pre-selected.
-  const pre = await page.eval(`JSON.stringify({ radios: [...document.querySelectorAll('[role=radio][aria-checked=true]')].length, pressed: [...document.querySelectorAll('[aria-pressed=true]')].length })`);
-  expect(`${name}: step two starts with nothing selected`, pre === '{"radios":0,"pressed":0}', pre);
   // The row exists before step two is shown.
   const rowsNow = await rowsNamed(name);
   expect(`${name}: row saved before step two was shown`, rowsNow.length === 1, `${rowsNow.length} row(s)`);
@@ -738,15 +789,19 @@ async function pathSave(page, width) {
   if (HOLD) expect(`${name}: staff email HELD — none before step two`, emailsNow.length === 0, `${emailsNow.length} email(s)`);
   else expect(`${name}: lead email sent before step two was shown (release job not running → fail-safe)`, emailsNow.length === 1, `${emailsNow.length} email(s)`);
   expect(`${name}: platform forwarded before step two was shown`, forwardsNaming(name).length === 1, `${forwardsNaming(name).length} post(s)`);
+  expectNoText(name, "step one (no consent asked there)");
 
-  for (const t of ["My child"]) await page.eval(clickText(t));
-  for (const t of ["Sleep", "Focus & ADHD"]) await page.eval(clickText(t));
-  await page.eval(setValue("#note", "E2E note — bedtime is the hard part."));
-  await page.eval(setValue("#referred-by", "E2E referral — Dr. Smith"));
-  // Step two's submit carries the same label as step one's (2026-10-19);
-  // the step-one form is gone by now, so the first match is step two's.
-  await page.eval(clickText("Send My Request"));
-  const three = await waitPanel(page, "We’ll call you soon.");
+  for (const t of ["My child", "Sleep", "Focus & ADHD", "Evenings", "Text"]) {
+    const r = await page.eval(clickText(t));
+    if (r !== "ok") throw new Error(r);
+  }
+  await consentBox(page, name, true);
+  await page.eval(setValue("#heard-about", "Referral from a doctor or provider"));
+  await sleep(100);
+  const later = await page.eval(`!!document.querySelector("#later-referral")`);
+  expect(`${name}: a referral answer does NOT re-ask "Who referred you?" when step one answered it`, later === false);
+  await page.eval(clickText("Send These Details"));
+  const three = await waitPanel(page, "We’ll reach out soon.");
   expect(`${name}: confirmation mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
   const readVideo = () => page.eval(`JSON.stringify((() => { const b = document.querySelector(".video-play"); const img = document.querySelector(".video-stage img"); return { button: !!b, label: b?.getAttribute("aria-label"), poster: img?.currentSrc ?? null, posterLoaded: img ? img.complete && img.naturalWidth > 0 : false, iframes: document.querySelectorAll("iframe").length, phones: [...document.querySelectorAll(".form-step .done-phones a[href^='tel:']")].length }; })())`);
   let video = await readVideo();
@@ -761,50 +816,51 @@ async function pathSave(page, width) {
   await expectConfirmation(page, name);
   await sleep(300);
   if (HOLD) await waitFor(() => emailsNaming(name).length > 0, 10_000);
-  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith", consent: true });
-  // Routing (lib/lead-routing.ts): a Murfreesboro lead goes to
-  // LEADS_MURFREESBORO, falling back to LEADS_FALLBACK then
-  // LEADS_NOTIFY_EMAIL; its text comes from DIALPAD_SMS_FROM_MURFREESBORO
-  // (lib/center-routing.ts). Pass the server's values to this check so it
-  // can say which it expects.
-  expectEmail(name, row, { center: "Murfreesboro", consent: true });
+  const row = await expectRow(name, { center: "Murfreesboro", helpingWho: "My child", concerns: ["Sleep", "Focus & ADHD"], note: SAVE_NOTE, referredBy: SAVE_REFERRAL, bestTime: "Evenings", contactMethod: "text", heardAbout: "Referral from a doctor or provider", consent: true });
+  const heard = row && "heard_about" in row ? "Referral from a doctor or provider" : null;
+  if (HOLD) {
+    // One email, sent on the save, carrying page two — no "Details added".
+    expectEmail(name, row, { center: "Murfreesboro", consent: true, referredBy: SAVE_REFERRAL, heardAbout: heard });
+  } else {
+    // Fail-safe: the step-one email carries step one only.
+    expectEmail(name, row, { center: "Murfreesboro", consent: false, referredBy: SAVE_REFERRAL, heardAbout: null });
+  }
   expect(`${name}: still exactly one notification after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
   if (row && HOLD) {
-    // One email, sent on the save, carrying page two — no "Details added".
     await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
     expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
     const text = emailsNaming(name)[0]?.body?.text ?? "";
-    expect(`${name}: the one email carries page two`, text.includes("What they told us") && text.includes("E2E note — bedtime is the hard part.") && text.includes("Referred by: E2E referral — Dr. Smith"), JSON.stringify(text.slice(0, 400)));
+    expect(`${name}: the one email carries page two`, text.includes("What they told us") && text.includes(SAVE_NOTE) && text.includes("Evenings") && text.includes("Best way to reach them: Text"), JSON.stringify(text.slice(0, 500)));
     expect(`${name}: no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
     await expectReleasedBy(name, row.id, "page_two");
   } else if (row) {
     const rec = await expectEmailRecords(name, row.id, { visitor: "sent", details: "sent" });
     expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
-    if (rec) expectUpdateEmail(name, rec, { center: "Murfreesboro", note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith" });
+    if (rec) expectUpdateEmail(name, rec, { center: "Murfreesboro", note: SAVE_NOTE, referredBy: SAVE_REFERRAL });
   }
+  // The box was ticked on step two: the confirmation text goes then, once.
   expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
-  expect(`${name}: still exactly one text after step two`, textsNaming(name).length === 1, `${textsNaming(name).length}`);
-  expectForward(name, { center: "Murfreesboro", consent: true, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: "E2E note — bedtime is the hard part.", referredBy: "E2E referral — Dr. Smith" } });
+  expectForward(name, { center: "Murfreesboro", consent: false, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: SAVE_NOTE, referredBy: SAVE_REFERRAL, heardAbout: heard, consent: true } });
   return { name, row };
 }
 
 async function pathSkip(page, width, height) {
   const name = `E2E-${RUN}-Skip-${width}${height ? `x${height}` : ""} Tester`;
   console.log(`\n▸ skip path @ ${width}${height ? `×${height}` : ""}px — ${name}`);
-  await stepOne(page, width, name, { center: "Nashville", consent: false, ...(height ? { height } : {}) });
-  const two = await waitPanel(page, "A few quick questions");
+  await stepOne(page, width, name, { center: "Nashville", ...(height ? { height } : {}) });
+  const two = await waitPanel(page, "reach out soon");
   await expectStepTwo(page, name, two);
   // The quiet exit: the .form-skip link, not a button labelled anything else.
   const skipped = await page.eval(`(() => { const b = document.querySelector(".form-step .form-skip"); if (!b) return "missing .form-skip"; b.click(); return "ok"; })()`);
   expect(`${name}: the "Skip for now" link is clickable`, skipped === "ok", skipped);
-  const three = await waitPanel(page, "We’ll call you soon.");
+  const three = await waitPanel(page, "We’ll reach out soon.");
   expect(`${name}: confirmation mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
   await expectConfirmation(page, name);
   if (height) await expectConfirmationFits(page, name);
   await sleep(300);
   if (HOLD) {
     const got = await waitFor(() => emailsNaming(name).length > 0, 8_000);
-    expect(`${name}: "Skip for now" sends the held email at once`, Boolean(got));
+    expect(`${name}: "Skip for now" sends the held email at once, with step one only`, Boolean(got));
   }
   const row = await expectRow(name, { center: "Nashville", helpingWho: null, concerns: [], note: null, consent: false });
   expectEmail(name, row, { center: "Nashville", consent: false });
@@ -812,61 +868,81 @@ async function pathSkip(page, width, height) {
   if (row && HOLD) await expectReleasedBy(name, row.id, "skip");
   expectVisitorEmail(name, emailFor(name), { center: "Nashville" });
   expect(`${name}: "Skip for now" sends no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
-  // The skip path reaches the platform: step one is the lead.
   expectForward(name, { center: "Nashville", consent: false });
-  // The box was left unticked: the lead lands everywhere else, and no text.
-  expectNoText(name, "an unticked consent box");
+  expectNoText(name, "a skipped step two (the consent box never ticked)");
   return { name, row };
 }
 
+/** Phone only, typed lower case, refusals first, then the tab closes on step two. */
 async function pathLeave(chrome, width) {
   // Typed in lower case; saved and greeted capitalized (lib/name-case.ts).
   const typed = `E2E-${RUN}-leave-${width} tester`;
   const name = capitalizeName(typed);
   expect(`capitalizeName(${JSON.stringify(typed)}) is ${JSON.stringify(`E2E-${RUN}-Leave-${width} Tester`)}`, name === `E2E-${RUN}-Leave-${width} Tester`, name);
-  console.log(`\n▸ leave path @ ${width}px — typed ${JSON.stringify(typed)}`);
+  console.log(`\n▸ leave path (phone only) @ ${width}px — typed ${JSON.stringify(typed)}`);
   const page = await chrome.newPage();
   await page.init();
-  // First the form's own refusals, in the browser: no email, then a bad one.
-  // Neither may reach the server — the row count at the end says so.
+  // First the form's own refusals, in the browser. None may reach the server.
   await page.setViewport(width, 700);
   await page.goto(`${BASE}/contact`, { settle: 400 });
-  for (const [sel, val] of [["#name", typed], ["#phone", "0000000000"], ["#preferred-center", "Not sure yet"]]) {
-    const r = await page.eval(setValue(sel, val));
-    if (r !== "ok") throw new Error(r);
-  }
-  const look = JSON.parse(await page.eval(`JSON.stringify((() => {
-    const email = document.querySelector("#email");
-    const label = document.querySelector('label[for="email"]');
-    const form = email?.closest("form");
-    return { required: email?.required ?? null, type: email?.type ?? null, label: label?.textContent.trim() ?? null, mentionsOptionalEmail: /add an email address|email\s*\(optional\)/i.test(form?.textContent ?? ""), disclosure: !!document.querySelector(".form-disclose"), inRowWithPhone: email?.parentElement?.parentElement === document.querySelector("#phone")?.parentElement?.parentElement };
-  })())`));
-  expect(`${name}: email is a required, visible field beside phone, and nothing calls it optional`, look.required === true && look.type === "email" && look.label === "Email" && !look.mentionsOptionalEmail && !look.disclosure && look.inRowWithPhone, JSON.stringify(look));
-  const noEmail = await submitAndReadAlert(page);
-  expect(`${name}: submitting without an email is refused in the browser`, /email/i.test(noEmail ?? ""), JSON.stringify(noEmail));
+  await page.eval(setValue("#first-name", typed));
+  await page.eval(`document.querySelector("#center-not-sure").click()`);
+  const neither = await submitAndReadAlert(page);
+  expect(`${name}: neither a phone nor an email is refused in the browser`, /phone number or an email/i.test(neither ?? ""), JSON.stringify(neither));
+  await page.eval(setValue("#phone", "555-01"));
+  const badPhone = await submitAndReadAlert(page);
+  expect(`${name}: a malformed phone is refused in the browser`, /phone number doesn.t look right/i.test(badPhone ?? ""), JSON.stringify(badPhone));
+  await page.eval(setValue("#phone", ""));
   await page.eval(setValue("#email", "not-an-address"));
   const badEmail = await submitAndReadAlert(page);
-  expect(`${name}: a malformed email is refused in the browser`, /doesn.t look right/i.test(badEmail ?? ""), JSON.stringify(badEmail));
+  expect(`${name}: a malformed email is refused in the browser`, /email address doesn.t look right/i.test(badEmail ?? ""), JSON.stringify(badEmail));
   expect(`${name}: the refusals wrote nothing`, (await rowsNamed(name)).length === 0 && (await rowsNamed(typed)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0);
-  // Then the real thing, with the box ticked.
-  await stepOne(page, width, name, { consent: true, typed, email: emailFor(name) });
-  const two = await waitPanel(page, "A few quick questions");
-  expect(`${name}: step two shown (then the tab closes)`, two?.opacity === 1, JSON.stringify(two));
-  expect(`${name}: step two greets the lower-case name capitalized`, two?.text?.startsWith(`Got it, ${firstWord(name)}.`), JSON.stringify(two?.text));
+  // Then the real thing: a phone, no email.
+  await stepOne(page, width, name, { typed, email: null });
+  const two = await waitPanel(page, "reach out soon");
+  await expectStepTwo(page, name, two, { phone: true, email: false });
   await page.close();
   await sleep(500);
   if (HOLD) {
     expect(`${name}: tab closed on step two — nothing sent yet (held)`, emailsNaming(name).length === 0, `${emailsNaming(name).length}`);
     const got = await waitFor(() => emailsNaming(name).length > 0, HOLD_WAIT_MS);
-    expect(`${name}: the release job sends it at the hold mark`, Boolean(got));
+    expect(`${name}: the release job sends it at the hold mark, with step one only`, Boolean(got));
   }
-  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, consent: true });
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, email: null, consent: false });
   if (row && HOLD) await expectReleasedBy(name, row.id, ["cron", "sweep"]);
-  expectEmail(name, row, { center: "Not sure yet", consent: true });
-  if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: null });
+  expectEmail(name, row, { center: "Not sure yet", consent: false, email: false });
+  if (row) await expectEmailRecords(name, row.id, { visitor: null, details: null });
+  expect(`${name}: no visitor email (no address given)`, emails().filter((e) => e.body?.subject === VISITOR_SUBJECT && JSON.stringify(e.body.to).includes(firstWord(name).toLowerCase())).length === 0);
+  expectForward(name, { center: "Not sure yet", consent: false });
+  expectNoText(name, "a phone with no consent given");
+}
+
+/** Email only: no consent box, no reach choice; a referral answer asks "Who referred you?". */
+async function pathEmailOnly(page, width) {
+  const name = `E2E-${RUN}-Email-${width} Tester`;
+  console.log(`\n▸ email-only path @ ${width}px — ${name}`);
+  await stepOne(page, width, name, { phone: false, center: "Not sure yet" });
+  const two = await waitPanel(page, "reach out soon");
+  await expectStepTwo(page, name, two, { phone: false, email: true });
+  await page.eval(setValue("#heard-about", "Referral from a friend or family"));
+  await sleep(150);
+  const later = await page.eval(`(() => { const i = document.querySelector("#later-referral"); return i ? document.querySelector('label[for="later-referral"]')?.textContent.trim() ?? "no label" : null; })()`);
+  expect(`${name}: a referral answer asks "Who referred you?" when step one left it blank`, later === "Who referred you?", JSON.stringify(later));
+  const LATER = "E2E later referral — Aunt May";
+  await page.eval(setValue("#later-referral", LATER));
+  await page.eval(clickText("Send These Details"));
+  await waitPanel(page, "We’ll reach out soon.");
+  await sleep(300);
+  if (HOLD) await waitFor(() => emailsNaming(name).length > 0, 10_000);
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, phone: null, referredBy: LATER, heardAbout: "Referral from a friend or family", consent: false });
+  const heard = row && "heard_about" in row ? "Referral from a friend or family" : null;
+  expectEmail(name, row, { center: "Not sure yet", consent: false, phone: false, ...(HOLD ? { referredBy: LATER, heardAbout: heard } : {}) });
+  if (row) await expectEmailRecords(name, row.id, { visitor: "sent", details: HOLD ? null : "sent" });
+  if (row && HOLD) await expectReleasedBy(name, row.id, "page_two");
   expectVisitorEmail(name, emailFor(name), { center: "Not sure yet" });
-  expectForward(name, { center: "Not sure yet", consent: true });
-  expectText(name, {});
+  // The platform contract needs a phone: an email-only lead is the email's alone.
+  expect(`${name}: no platform post (the contract needs a phone)`, forwardsNaming(name).length === 0, `${forwardsNaming(name).length} post(s)`);
+  expectNoText(name, "an email-only lead");
 }
 
 /**
@@ -1096,10 +1172,12 @@ async function guideDownload() {
 async function postRefusals() {
   console.log(`\n▸ POST refusals`);
   const name = `E2E-${RUN}-Refused-0 Tester`;
-  const post = (payload) => fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", ...payload }) }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
+  const post = (payload) => fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "consultation", source: "form", first_name: name, preferred_center: "Nashville", website: "", source_page: "/contact", ...payload }) }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
   const missing = await post({});
-  expect("POST from the form without an email is refused (400), and says so", missing.status === 400 && /email/i.test(missing.body?.error ?? ""), JSON.stringify(missing));
-  const bad = await post({ email: "not-an-address" });
+  expect("POST from the form with neither a phone nor an email is refused (400), and says so", missing.status === 400 && /phone number or an email/i.test(missing.body?.error ?? ""), JSON.stringify(missing));
+  const noName = await post({ first_name: "", phone: "0000000000" });
+  expect("POST from the form without a name is refused (400)", noName.status === 400, JSON.stringify(noName));
+  const bad = await post({ phone: "0000000000", email: "not-an-address" });
   expect("POST with a malformed email is refused (400)", bad.status === 400 && /doesn't look right/.test(bad.body?.error ?? ""), JSON.stringify(bad));
   await sleep(200);
   expect("refused POSTs wrote no row, sent no email, no post, no text", (await rowsNamed(name)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0 && textsNaming(name).length === 0);
@@ -1111,13 +1189,18 @@ async function patchRefusals(row) {
   expect("PATCH with phone is refused (400)", (await patch(row.id, { phone: "1111111111" })) === 400);
   expect("PATCH with first_name is refused (400)", (await patch(row.id, { first_name: "Mallory", note: "x" })) === 400);
   expect("PATCH with preferred_center is refused (400)", (await patch(row.id, { preferred_center: "Nashville" })) === 400);
-  expect("PATCH with best_time is refused (400)", (await patch(row.id, { best_time: "Evenings" })) === 400);
+  expect("PATCH with email is refused (400)", (await patch(row.id, { email: "mallory@example.test" })) === 400);
+  expect("PATCH with an unknown best_time is refused (400)", (await patch(row.id, { best_time: "Midnight" })) === 400);
+  expect("PATCH with an unknown contact_method is refused (400)", (await patch(row.id, { contact_method: "fax" })) === 400);
+  expect("PATCH with an unknown heard_about is refused (400)", (await patch(row.id, { heard_about: "Myspace" })) === 400);
+  expect("PATCH with sms_consent but no wording is refused (400)", (await patch(row.id, { sms_consent: true })) === 400);
+  expect("PATCH withdrawing sms_consent is refused (400)", (await patch(row.id, { sms_consent: false, sms_consent_text: "x" })) === 400);
   expect("PATCH with an unknown helping_who is refused (400)", (await patch(row.id, { helping_who: "My dog" })) === 400);
   expect("PATCH with an empty body is refused (400)", (await patch(row.id, {})) === 400);
   expect("PATCH to an unknown id answers 404", (await patch("00000000-0000-4000-8000-000000000000", { note: "x" })) === 404);
   expect("PATCH to a non-uuid answers 404", (await patch("not-a-uuid", { note: "x" })) === 404);
-  const [after] = await rest(`consultation_requests?id=eq.${row.id}&select=phone,first_name,preferred_center,best_time`);
-  expect("refused PATCHes changed nothing", after.phone === "0000000000" && after.first_name === row.first_name && after.preferred_center === row.preferred_center && after.best_time === row.best_time, JSON.stringify(after));
+  const [after] = await rest(`consultation_requests?id=eq.${row.id}&select=phone,email,first_name,preferred_center,best_time,contact_method,sms_consent`);
+  expect("refused PATCHes changed nothing", after.phone === "0000000000" && after.email === row.email && after.first_name === row.first_name && after.preferred_center === row.preferred_center && after.best_time === row.best_time && after.contact_method === row.contact_method && after.sms_consent === row.sms_consent, JSON.stringify(after));
   expect("refused PATCHes posted nothing to the platform", forwardsNaming(row.first_name).length === 2, `${forwardsNaming(row.first_name).length} post(s)`);
 }
 
@@ -1186,6 +1269,7 @@ try {
     await pathSkip(page, width);
   }
   await pathSkip(page, 390, 844);
+  await pathEmailOnly(page, 390);
   await pathLeave(chrome, 390);
   await chatConversation(true, 1);
   const chatRow = await chatConversation(false, 2);
@@ -1244,4 +1328,4 @@ if (failures.length > 0) {
   for (const f of failures) console.log(`  • ${f}`);
   process.exit(1);
 }
-console.log("✓ contact flow: the consent sentence unbroken in the raw HTML; three form paths and two six-step chat bookings, one row, one email and one lead post each; a text only where the box was ticked or the chat said yes, none otherwise; names capitalized, first-word greetings, the referral saved, the quiet skip, the four-part confirmation fitting 390×844, every late panel revealed, the video plays; existing rows untouched.");
+console.log("✓ contact flow: the short step one (name, phone OR email, center); the carrier phrases unbroken on /sms-terms; four form paths and two six-step chat bookings, one row, one email and one lead post each; a text only where the box was ticked or the chat said yes, none otherwise; names capitalized, first-word greetings, the referral saved, the quiet skip, the four-part confirmation fitting 390×844, every late panel revealed, the video plays; existing rows untouched.");

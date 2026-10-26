@@ -146,12 +146,11 @@ function toldUs(title: string, details: Details): string {
   if (details.note) {
     lines.push(`<div class="hbc-text" style="font-family:${SANS};font-size:14px;line-height:1.45;color:${C.ink};padding:4px 0 2px;"><span class="hbc-muted" style="color:${C.slate};">In their own words:</span><br>&ldquo;${esc(details.note).replace(/\n/g, "<br>")}&rdquo;</div>`);
   }
-  if (details.referredBy) row("Referred by:", esc(details.referredBy));
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:4px;"><tr><td class="hbc-panel" style="background:${C.ivory};border:1px solid ${C.line};border-radius:6px;padding:10px 12px;" bgcolor="${C.ivory}"><div class="hbc-panel-title" style="font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${C.sageDeep};padding-bottom:4px;">${esc(title)}</div>${lines.join("")}</td></tr></table>`;
 }
 
 function hasDetails(d: Details): boolean {
-  return Boolean(d.helpingWho || d.concerns.length || d.note || d.referredBy);
+  return Boolean(d.helpingWho || d.concerns.length || d.note);
 }
 
 /** A row of the card. */
@@ -233,7 +232,7 @@ export function textOf(lines: Array<string | null | false | undefined>): string 
 }
 
 function textLabel(label: string, value: string): string {
-  return `${label.padEnd(13)}${value}`;
+  return `${label.padEnd(Math.max(13, label.length + 1))}${value}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -300,9 +299,32 @@ export type StaffLead = {
   contactMethod: string | null;
   smsConsent: boolean;
   sourcePage: string | null;
+  /** "Who referred you?" (step one, or step two when a referral is picked)
+   *  and "How did you hear about us?" (step two). Shown at the TOP of both
+   *  staff emails, given or not (Ben, 2026-10-26: Denise sees where the lead
+   *  came from first). Falls back to details.referredBy for older callers. */
+  referredBy?: string | null;
+  heardAbout?: string | null;
   details: Details;
   honeypotFilled: boolean;
 };
+
+/** Where the lead came from: two lines, always, "Not given" when blank. */
+function sourceLines(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details">): Array<[string, string]> {
+  return [
+    ["Referred by:", lead.referredBy?.trim() || lead.details.referredBy?.trim() || "Not given"],
+    ["Heard about us:", lead.heardAbout?.trim() || "Not given"],
+  ];
+}
+
+function sourceBlock(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details">): string {
+  return sourceLines(lead)
+    .map(([label, value]) => {
+      const given = value !== "Not given";
+      return `<div class="hbc-text" style="font-family:${SANS};font-size:15px;line-height:1.45;color:${C.navy};"><span class="hbc-muted" style="color:${C.slate};">${esc(label)}</span> ${given ? `<b>${esc(value)}</b>` : `<span class="hbc-muted" style="color:${C.slate};">Not given</span>`}</div>`;
+    })
+    .join("");
+}
 
 /** The one plain line at the top of the lead: how she asked to be reached. */
 function reachLine(lead: Pick<StaffLead, "contactMethod">): string | null {
@@ -332,7 +354,8 @@ export function staffNotification(input: {
     lead.honeypotFilled
       ? section(`<div style="font-family:${SANS};font-size:12px;color:${C.alert};">Spam check: the hidden field was filled in — probably a bot.</div>`, "4px 20px 0")
       : null,
-    reachLine(lead) ? section(reachLine(lead) as string, "10px 20px 0") : null,
+    section(sourceBlock(lead), "8px 20px 0"),
+    reachLine(lead) ? section(reachLine(lead) as string, "8px 20px 0") : null,
     section(personBlock(lead), "8px 20px 0"),
     section(
       factGrid([
@@ -357,6 +380,7 @@ export function staffNotification(input: {
     saved ? null : "",
     `${title.toUpperCase()} · ${badges.join(" · ")}`,
     lead.honeypotFilled ? "Spam check: the hidden field was filled in — probably a bot." : null,
+    ...sourceLines(lead).map(([label, value]) => textLabel(label, value)),
     lead.contactMethod ? `Best way to reach them: ${lead.contactMethod}` : null,
     "",
     lead.name,
@@ -371,7 +395,6 @@ export function staffNotification(input: {
     d.helpingWho ? textLabel("For:", d.helpingWho) : null,
     d.concerns.length ? textLabel("Concerns:", d.concerns.join(", ")) : null,
     d.note ? `In their own words:\n${d.note}` : null,
-    d.referredBy ? textLabel("Referred by:", d.referredBy) : null,
     "",
     saved ? `Open saved request: ${saved.url}` : null,
     `Received ${formatCentral(now)}`,
@@ -402,7 +425,8 @@ export function detailsUpdate(input: {
   const d = lead.details;
   const rows = [
     section(heading("Details added", [center]), "14px 20px 0"),
-    originalSent || !reachLine(lead) ? null : section(reachLine(lead) as string, "10px 20px 0"),
+    section(sourceBlock(lead), "8px 20px 0"),
+    !reachLine(lead) ? null : section(reachLine(lead) as string, "8px 20px 0"),
     section(
       originalSent
         ? `<div class="hbc-name" style="font-family:${SANS};font-size:20px;font-weight:700;color:${C.navy};line-height:1.25;">${esc(lead.name)}</div><div class="hbc-muted" style="font-family:${SANS};font-size:13px;color:${C.slate};padding-top:2px;">Added to the call request above, from the contact form&rsquo;s second page.</div>`
@@ -420,7 +444,7 @@ export function detailsUpdate(input: {
           ]),
           "14px 20px 0"
         ),
-    section(toldUs("What they told us", d), "12px 20px 0"),
+    hasDetails(d) ? section(toldUs("What they told us", d), "12px 20px 0") : null,
     `<tr><td style="height:14px;font-size:0;line-height:0;">&nbsp;</td></tr>`,
     footer(
       [
@@ -433,7 +457,8 @@ export function detailsUpdate(input: {
 
   const text = textOf([
     `DETAILS ADDED · ${center}`,
-    originalSent || !lead.contactMethod ? null : `Best way to reach them: ${lead.contactMethod}`,
+    ...sourceLines(lead).map(([label, value]) => textLabel(label, value)),
+    !lead.contactMethod ? null : `Best way to reach them: ${lead.contactMethod}`,
     "",
     lead.name,
     originalSent ? "Added to the call request above, from the contact form's second page." : [lead.phone ? displayPhone(lead.phone) : null, lead.email].filter(Boolean).join(" · "),
@@ -442,12 +467,11 @@ export function detailsUpdate(input: {
     originalSent ? null : textLabel("Best time:", lead.bestTime?.trim() || "Not given"),
     originalSent ? null : textLabel("Texts OK?:", lead.smsConsent ? "Yes" : "No — call or email only"),
     originalSent ? null : textLabel("Came from:", lead.sourcePage?.trim() || "Not recorded"),
-    "",
-    "What they told us",
+    hasDetails(d) ? "" : null,
+    hasDetails(d) ? "What they told us" : null,
     d.helpingWho ? textLabel("For:", d.helpingWho) : null,
     d.concerns.length ? textLabel("Concerns:", d.concerns.join(", ")) : null,
     d.note ? `In their own words:\n${d.note}` : null,
-    d.referredBy ? textLabel("Referred by:", d.referredBy) : null,
     "",
     saved ? `Open saved request: ${saved.url}` : null,
     `Received ${formatCentral(now)}`,
@@ -471,8 +495,8 @@ export const VISITOR_SUBJECT = "We got your request — Harmonized Brain Centers
 export function centerCallLine(route: string): string {
   const c = centerBadge(route);
   return c === "Nashville" || c === "Murfreesboro"
-    ? `Someone from our ${c} center will call.`
-    : "Someone from our team will call.";
+    ? `Someone from our ${c} center will reach out.`
+    : "Someone from our team will reach out.";
 }
 
 /** The caption under the video, e.g. "Watch: what your first visit looks like · 0:48". */
@@ -485,7 +509,7 @@ export function videoCaption(duration: string | null): string {
  * pieces are the template's own (Ben, 2026-10-15). In this order, and
  * nothing else; it fits one phone screen:
  *
- *   wordmark → "Thanks, Sarah. We'll call you soon." → who will call →
+ *   wordmark → "Thanks, Sarah. We'll reach out soon." → who will reach out →
  *   the video, full width, play button baked into the picture, captioned →
  *   "Want to talk now?" and the center's call button → the footer.
  *
@@ -506,7 +530,7 @@ export function visitorConfirmation(input: {
   siteUrl: string;
 }): Rendered {
   const { firstName, route, centerPhone, video, identityLine, siteUrl } = input;
-  const greet = `Thanks${firstName ? `, ${firstName}` : ""}. We\u2019ll call you soon.`;
+  const greet = `Thanks${firstName ? `, ${firstName}` : ""}. We\u2019ll reach out soon.`;
   const line = centerCallLine(route);
   const caption = videoCaption(video.duration);
   const rows = [

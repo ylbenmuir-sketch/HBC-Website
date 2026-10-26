@@ -48,14 +48,12 @@ export default function ContactPage() {
       <section className="page-hero center compact">
         <div className="wrap rv">
           <div className="eyebrow">Talk with our team</div>
-          {/* The form's first step asks only where to reach her; "what's
-              going on" is step two's question now, so the H1 asks for the
-              call and nothing else (Ben, 2026-10-13). */}
-          <h1>Start with a free call.</h1>
+          {/* Ben, 2026-10-26: the short step one asks for a name and a way
+              to reach her, so the H1 and the line under it say exactly that. */}
+          <h1>Let&rsquo;s get you started</h1>
           <p className="sub" style={{ maxWidth: "60ch" }}>
-            Tell us where to reach you. We&rsquo;ll call, answer your
-            questions, and tell you honestly whether LENS is a fit &mdash; you
-            decide what comes next.
+            Send your name and number. We&rsquo;ll reach out to answer your
+            questions and find a time that works.
           </p>
         </div>
       </section>
@@ -85,7 +83,7 @@ export default function ContactPage() {
               <a className="contact-way" href="#send-a-message">
                 <span className="contact-way-title">Send a message</span>
                 <span className="contact-way-detail">The form below</span>
-                <span className="contact-way-hint">We call you back</span>
+                <span className="contact-way-hint">We reach out to you</span>
               </a>
             </div>
             <p className="contact-ways-line">
