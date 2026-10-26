@@ -74,6 +74,21 @@ const ROWS = [
   ["/schedule", "/contact", 301],
   ["/book", "/contact", 301],
   ["/free-consultation", "/contact", 301],
+  // Ben, 2026-10-26. /contactus and /contact_us: real 404s in the production
+  // logs since launch. The rest: guessed booking URLs, none a page on the
+  // old site.
+  ["/contactus", "/contact", 301],
+  ["/contact_us", "/contact", 301],
+  ["/contact-us-2", "/contact", 301],
+  ["/get-started", "/contact", 301],
+  ["/appointment", "/contact", 301],
+  ["/appointments", "/contact", 301],
+  ["/book-now", "/contact", 301],
+  ["/book-a-consultation", "/contact", 301],
+  ["/schedule-appointment", "/contact", 301],
+  ["/request-appointment", "/contact", 301],
+  ["/consultation", "/contact", 301],
+  ["/free-call", "/contact", 301],
   ["/contact", "/contact", "self"],
   ["/what-we-help-with-1", "/what-we-help-with", 301],
   ["/concerns", "/what-we-help-with", 301],

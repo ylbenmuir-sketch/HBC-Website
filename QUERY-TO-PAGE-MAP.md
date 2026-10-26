@@ -200,6 +200,8 @@ the inherited surface on day one rather than carrying it over.
 | `/contact/` | `/contact` | ✅ — the trailing-slash catch-all (308), one hop |
 | `/phoneschedule/`, `/new-client-intake-form/`, `/refer-a-friend/` | `/contact/` | ✅ — the old site's booking/intake pages (`/refer-a-friend/` is the P6 default) |
 | `/contact-us/`, `/schedule/`, `/book/`, `/free-consultation/` | `/contact/` | ✅ — **Ben, Oct 14 2026.** Never pages on the old site (404 there); guessed URLs people and directories type |
+| `/contactus/`, `/contact_us/` | `/contact/` | ✅ — **Ben, Oct 26 2026.** Real 404s in the production logs since launch (Oct 18) |
+| `/get-started/`, `/contact-us-2/`, `/appointment/`, `/appointments/`, `/book-now/`, `/book-a-consultation/`, `/schedule-appointment/`, `/request-appointment/`, `/consultation/`, `/free-call/` | `/contact/` | ✅ — **Ben, Oct 26 2026.** Guessed booking URLs for referral sources and provider offices; none was a page on the old site (Wayback page sitemaps 2023/2024 list only `/contact/` and `/new-client-intake-form/`) |
 
 ### The three decisions, and the reasoning behind each
 

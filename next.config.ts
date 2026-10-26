@@ -207,6 +207,35 @@ const nextConfig: NextConfig = {
       // what old bookmarks and directory listings guess, so they land on the
       // form rather than the 404.
       ...to(["/contact-us", "/schedule", "/book", "/free-consultation"], "/contact"),
+      // More of the same (Ben, 2026-10-26: referral sources and provider
+      // offices still send people to old-looking URLs). /contactus and
+      // /contact_us are real 404s from the production logs since launch;
+      // /get-started was on Ben's required list. The rest are the common
+      // booking slugs a WordPress theme or a directory listing guesses, plus
+      // /free-call (the site's own name for the consultation) and
+      // /contact-us-2 (WordPress's duplicate-slug suffix, which this site's
+      // own sitemaps show it used: /what-we-help-with-1, the `-2` posts).
+      // None was ever a page on the old site (Wayback's page sitemaps,
+      // 2023 and 2024, list /contact/ and /new-client-intake-form/ only), and
+      // none is a route in app/. Bare /contact stays the page; /contact/ is
+      // the catch-all's 308, one hop.
+      ...to(
+        [
+          "/contactus",
+          "/contact_us",
+          "/contact-us-2",
+          "/get-started",
+          "/appointment",
+          "/appointments",
+          "/book-now",
+          "/book-a-consultation",
+          "/schedule-appointment",
+          "/request-appointment",
+          "/consultation",
+          "/free-call",
+        ],
+        "/contact"
+      ),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),
