@@ -98,7 +98,7 @@ export default function MobileCtaBar() {
   return createPortal(
     <div className="cta-bar" aria-hidden={!show}>
       <Link className="cta-bar-btn" href="/contact" tabIndex={show ? 0 : -1}>
-        See If It&rsquo;s a Fit
+        Get Started
       </Link>
       {SHOW_PHONE && (
         <a

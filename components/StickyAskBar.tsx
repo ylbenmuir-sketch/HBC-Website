@@ -10,7 +10,7 @@ import { useBottomBar } from "./BottomBarContext";
  * It replaces the floating "Have a question?" launcher pill. The pill asked a
  * question and offered a button; this offers the thing a visitor actually
  * wants, which is somewhere to put the question they already have. It is
- * deliberately quieter than the hero's "See If It’s a Fit": cream ground,
+ * deliberately quieter than the hero's "Get Started": cream ground,
  * sage accents, no navy fill and no gold. Gold is the primary-CTA accent and
  * does not appear here — the one exception is the sitewide focus ring, which
  * is a site-wide accessibility convention rather than an accent, and is worth

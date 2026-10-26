@@ -9,7 +9,7 @@ import Quote from "@/components/Quote";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
-import { Btn, TalkCta } from "@/components/Buttons";
+import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
 import PageSchema from "@/components/PageSchema";
 import ReadMore from "@/components/ReadMore";
 import VideoBand from "@/components/VideoBand";
@@ -138,6 +138,7 @@ export default async function ConcernPage({
               <Btn href="/how-lens-works" variant="ghost" arrow>
                 How LENS works
               </Btn>
+              <CtaReassure />
             </div>
           </div>
         </section>
@@ -156,6 +157,7 @@ export default async function ConcernPage({
                 <Btn href="/how-lens-works" variant="ghost" arrow>
                   How LENS works
                 </Btn>
+                <CtaReassure />
               </div>
             </div>
             <div className="rv">

@@ -415,6 +415,15 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 /* The HSA/FSA line: small print weight, not a button. */
 .hero-hsa { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15.5px; color: var(--slate); white-space: nowrap; }
 .hero-hsa-check { flex: none; width: 16px; height: 16px; color: var(--gold-ink); }
+/* "No pressure. We'll reach out…" — the muted line under "Get Started" (Ben,
+   2026-10-26; components/Buttons.tsx `CtaReassure`), on the homepage hero and
+   the concern-page heroes. Inside a `.hero-ctas` flex row it takes a row of
+   its own (flex-basis 100%), pulled up 12px so it reads with the buttons
+   rather than as the next item (22px row gap → 10px). One line from 1061px
+   up: 467px at 14.5px; the narrowest desktop copy column is 522px (1061).
+   --slate on --ivory is 5.4:1. The phone homepage hero, where it sits on the
+   navy scrim, recolours it below (≤760px). */
+.cta-reassure { flex-basis: 100%; margin: -12px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--slate); }
 /* "What brings you in?" — a small grey label and eight quiet pill links to the
    concern pages (components/HeroConcernChips.tsx). Quieter than both buttons:
    thin border, ivory ground, small type. They wrap; nothing scrolls sideways. */
@@ -429,6 +438,11 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 @media (min-width: 1061px) {
   .hero-copy { padding-bottom: 28px; }
   .hero-media { align-self: end; }
+  /* The reassurance row (2026-10-26) cost the hero ~34px, which put the last
+     chip row 1px under the resting Ask bar at 1440×900 (its top is y=828).
+     The HSA line closes up under it (22px → 14px), with the 10px above the
+     reassurance line, to give 10px back: the chips end at ~819 there. */
+  .cta-reassure + .hero-hsa { margin-top: -8px; }
 }
 /* The headline about 17% under the base h1 from 1024px up (Ben, 2026-10-18):
    at 5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
@@ -949,6 +963,10 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero-ctas { display: contents; }
   .hero-chips { order: 1; }
   .hero-hsa { order: 2; margin-top: 20px; }
+  /* No flex row to pull it into here: `.hero-ctas` is `display: contents`
+     (homepage: an item of the copy column, after the buttons and before the
+     chips; concern pages: a block after the inline buttons). */
+  .cta-reassure { margin-top: 14px; }
   .trio-quotes { grid-template-columns: 1fr; }
   .half-row { grid-template-columns: 1fr; }
   .steps4 { grid-template-columns: 1fr 1fr; }
@@ -1220,8 +1238,15 @@ html.js .rv.in { opacity: 1; transform: none; }
      (≥74%), 0.9 by the eyebrow (68%), and 0.97 under the chips and the HSA
      line at the foot (Ben, 2026-10-19: legibility over the photo where the
      chips sit). Checked by sampling the rendered background under every text
-     run at 390 and 320 — every run clears AA on its worst pixel. */
-  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(21, 34, 48, 0.97) 0%, rgba(21, 34, 48, 0.95) 40%, rgba(21, 34, 48, 0.92) 58%, rgba(21, 34, 48, 0.9) 68%, rgba(21, 34, 48, 0.35) 74%, rgba(21, 34, 48, 0.18) 84%, rgba(21, 34, 48, 0.28) 100%); }
+     run at 390 and 320 — every run clears AA on its worst pixel.
+     The stops are pixels from the top, not percentages of the hero (2026-10-26):
+     the photo and the eyebrow are placed from the top, so a percentage stop
+     slid down the faces every time copy was added below them. These are the
+     percentage stops as they fell on the 1016px hero at 390 (16/26/32/42/60%
+     from the top), so 390 renders as it did before the reassurance line;
+     narrower and wider phones now share 390's stops (at 320 the 0.9 stop had
+     been at 341px, level with the eyebrow; it is now 325px, above it). */
+  .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(21, 34, 48, 0.28) 0, rgba(21, 34, 48, 0.18) 162.6px, rgba(21, 34, 48, 0.35) 264.3px, rgba(21, 34, 48, 0.9) 325.2px, rgba(21, 34, 48, 0.92) 426.9px, rgba(21, 34, 48, 0.95) 609.8px, rgba(21, 34, 48, 0.97) 100%); }
   .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 340px 24px calc(30px + env(safe-area-inset-bottom)); }
   /* One line at 390 and 360 (Ben, 2026-10-20): the 45-character eyebrow
      needs 305px at 10.5px/0.06em; the gold line and its gap (40px) go, so
@@ -1255,6 +1280,11 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero-chip:hover { background: #fff; }
   .hero-hsa { align-self: center; margin-top: 18px; font-size: 15px; color: rgba(251, 248, 241, 0.9); }
   .hero-hsa-check { color: var(--gold-lift); }
+  /* Centred under the centred "See What a Brain Map Shows ↓", which already
+     carries 14px of padding below its text — so no margin of its own, and
+     the hero grows by exactly this line's height (two lines at 390). It sits
+     below the photo's 700px, on the plain navy: 0.8 ivory there is ~10:1. */
+  .hero-copy .cta-reassure { align-self: center; text-align: center; max-width: 34ch; margin-top: 0; font-size: 14px; color: rgba(251, 248, 241, 0.8); }
 
   /* ---- proof: a compact 2×2, significant but brief ---- */
   .proof, .home .proof { margin-top: 0; }
@@ -1704,7 +1734,7 @@ body[data-menu-open] .assistant { opacity: 0; visibility: hidden; pointer-events
    Colours are existing tokens only. Ink on cream — --ivory-2
    ground, --ivory field, --slate placeholder, --sage-deep accent —
    which puts the ask bar a clear step below the navy of the hero's
-   "See If It’s a Fit". No gold: gold is the primary-CTA accent
+   "Get Started". No gold: gold is the primary-CTA accent
    and this is deliberately not one. The single exception is the
    sitewide focus ring, which is an accessibility convention rather
    than an accent and is worth more as one consistent ring across

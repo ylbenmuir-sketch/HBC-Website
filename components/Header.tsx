@@ -144,7 +144,7 @@ export default function Header() {
   }, []);
 
   /**
-   * The "See If It's a Fit" buttons in the chrome, desktop and drawer.
+   * The "Get Started" buttons in the chrome, desktop and drawer.
    * On every other page they are plain links to /contact. On /contact
    * itself a link to the current page does nothing — the drawer stayed open
    * and the tap looked dead (Ben, 2026-10-20) — so there the click closes
@@ -298,7 +298,7 @@ export default function Header() {
           </a>
         )}
         <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
-          See If It&rsquo;s a Fit
+          Get Started
         </ChromeLink>
         <button
           className={`nav-burger${open ? " is-open" : ""}`}
@@ -417,7 +417,7 @@ export default function Header() {
           </nav>
           <div className="d-cta">
             <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
-              See If It&rsquo;s a Fit
+              Get Started
             </ChromeLink>
             {SHOW_PHONE && (
               <a className="nav-tel" href={`tel:${PHONE_TEL}`}>

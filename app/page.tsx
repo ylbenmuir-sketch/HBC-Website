@@ -19,7 +19,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
 import MobileCtaBar from "@/components/MobileCtaBar";
-import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, BrainMapCta, CtaReassure, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
 import HeroConcernChips from "@/components/HeroConcernChips";
@@ -387,6 +387,12 @@ export default function HomePage() {
                     2026-10-19). The priced BrainMapCta lives in the stage. */}
                 <HeroBrainMapJump />
               </div>
+              {/* What "Get Started" leads to, under the buttons (Ben,
+                  2026-10-26). Its own row on a desktop; on a phone it sits
+                  between the buttons and the chips (globals.css
+                  `.cta-reassure`). The same line is under TalkCta on the
+                  concern pages. */}
+              <CtaReassure />
               {/* One quiet line, not a button (Ben, 2026-10-16): a long-time
                   referral partner had only just learned we take HSA/FSA. */}
               <p className="hero-hsa">

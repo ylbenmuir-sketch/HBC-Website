@@ -1,5 +1,6 @@
 /**
- * check:cta — every "See If It's a Fit" on a phone actually goes somewhere.
+ * check:cta — every "Get Started" (the primary CTA, TalkCta, since 2026-10-26)
+ * on a phone actually goes somewhere.
  *
  *   npm run build && npx next start -p 3123
  *   CHECK_BASE=http://127.0.0.1:3123 npm run check:cta
@@ -7,13 +8,13 @@
  * In a headless Chrome at 390×844 (scripts/layout/cdp.mjs), with real touch
  * events at each button's centre, not element.click():
  *
- *   1. On /: open the menu drawer, tap its "See If It's a Fit" → the page
+ *   1. On /: open the menu drawer, tap its "Get Started" → the page
  *      navigates to /contact and the drawer is closed.
  *   2. On /contact: open the drawer, tap it → still /contact, the drawer is
  *      closed, and the form section (#send-a-message) is at the top of the
  *      screen (under the header offset). This was the dead tap of
  *      2026-10-20: a link to the page you are already on.
- *   3. On /: every other "See If It's a Fit" — the hero, the Brain Map
+ *   3. On /: every other "Get Started" — the hero, the Brain Map
  *      stage, the final band, the sticky bottom bar once the hero has
  *      scrolled past — tapped in turn, each landing on /contact.
  *
@@ -22,7 +23,7 @@
 import { launch } from "./layout/cdp.mjs";
 
 const BASE = (process.env.CHECK_BASE ?? "http://127.0.0.1:3123").replace(/\/$/, "");
-const LABEL = "See If It\u2019s a Fit";
+const LABEL = "Get Started";
 const failures = [];
 const expect = (label, ok, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${label}${ok || !detail ? "" : ` — ${detail}`}`);
@@ -72,7 +73,7 @@ expect("contact: drawer closed after the tap", !(await drawerOpen()));
 const formTop = await page.eval(`Math.round(document.getElementById("send-a-message").getBoundingClientRect().top)`);
 expect("contact: form section scrolled to the top of the screen", formTop >= -4 && formTop <= 130, `top ${formTop}px`);
 
-// 3. every other "See If It's a Fit" on the homepage
+// 3. every other "Get Started" on the homepage
 await page.goto(`${BASE}/`, { settle: 900 });
 // Every rendered one outside the drawer and the bottom bar (the desktop
 // header button is display:none at this width and is skipped).
@@ -104,5 +105,5 @@ if (barOn) {
 }
 
 await chrome.close();
-console.log(failures.length ? `\n✗ ${failures.length} failure(s)` : `\n✓ every "See If It's a Fit" works at 390`);
+console.log(failures.length ? `\n✗ ${failures.length} failure(s)` : `\n✓ every "Get Started" works at 390`);
 process.exit(failures.length ? 1 : 0);

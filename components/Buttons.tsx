@@ -48,8 +48,9 @@ export function Btn({
 }
 
 /**
- * Primary CTA — the only booking CTA sitewide. Always "See If It’s a Fit"
- * → /contact (it read "Get a Free Call Today" until 2026-10-19, Ben). `href` exists for one reason: a location page passes
+ * Primary CTA — the only booking CTA sitewide. Always "Get Started"
+ * → /contact (Ben, 2026-10-26; earlier labels are listed in README.md under
+ * "Compliance guardrails"). `href` exists for one reason: a location page passes
  * `/contact?center=<slug>` so its own center is preselected on the form.
  */
 export function TalkCta({
@@ -63,8 +64,23 @@ export function TalkCta({
 }) {
   return (
     <Btn href={href} variant={variant} style={style}>
-      See If It&rsquo;s a Fit
+      Get Started
     </Btn>
+  );
+}
+
+/**
+ * The small muted line under TalkCta that says what happens after the tap
+ * (Ben, 2026-10-26): the homepage hero and both concern-page heroes. Placed
+ * inside a `.hero-ctas` row; `.cta-reassure` in globals.css gives it a row of
+ * its own on a desktop and its phone colours over the homepage scrim.
+ */
+export function CtaReassure() {
+  return (
+    <p className="cta-reassure">
+      No pressure. We&rsquo;ll reach out to answer your questions and find a
+      time.
+    </p>
   );
 }
 
