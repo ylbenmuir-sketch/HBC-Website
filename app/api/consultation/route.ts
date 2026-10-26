@@ -490,7 +490,8 @@ export async function POST(request: Request) {
   // the record — and the time is the server's, at the moment the request
   // that carried her answer arrived, never a time the browser sent.
   const smsConsentText = isGuide ? null : str(body.sms_consent_text, CONSENT_TEXT_MAX);
-  const smsConsent = !isGuide && body.sms_consent === true && smsConsentText !== null;
+  // And only with a number to text: a tick beside an empty phone field is no.
+  const smsConsent = !isGuide && body.sms_consent === true && smsConsentText !== null && phone !== null;
 
   // The honeypot, read raw rather than through str(): empty is the normal
   // human answer, and str() maps empty to null. It is never used to reject

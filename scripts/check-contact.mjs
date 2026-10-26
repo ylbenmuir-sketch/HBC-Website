@@ -48,8 +48,10 @@
  *
  * ## Text consent (lib/sms-consent.ts, A2P 10DLC)
  *
- * The box is on step two now (Ben, 2026-10-26), shown only when a phone was
- * given. The save paths tick it; the skip and leave paths never reach it. Every lead is checked both ways: the box is present
+ * The box is on step one, directly under the phone field, always rendered
+ * (Ben, 2026-10-26 — back from step two for the carrier review). The save
+ * and leave paths tick it; the skip path does not; the email-only path ticks
+ * it with no phone, which must count as no. Every lead is checked both ways: the box is present
  * under the phone row, unchecked on load, its label is the exact wording;
  * the row records consent, the wording shown and (only on a yes) the time;
  * the email's "Texts:" line and the platform's no-consent line agree with it;
@@ -270,9 +272,9 @@ const CONSENT_SENTENCE = "I agree to receive texts from Harmonized Brain Centers
 const FORM_CONSENT_TEXT = `${CONSENT_SENTENCE} SMS Terms · Privacy Policy`;
 const CHAT_CONSENT_QUESTION = "Can Harmonized Brain Centers also text you about your appointment and inquiry? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way. SMS Terms: /sms-terms · Privacy Policy: /privacy-policy";
 /** The carriers' required phrases, each of which must reach the raw HTML
- *  of /sms-terms as one unbroken string. (The form's consent box is on step
- *  two since 2026-10-26, so /contact's raw HTML no longer carries it.) */
+ *  of /contact as one unbroken string (and, the sentence aside, /sms-terms). */
 const REQUIRED_PHRASES = [
+  CONSENT_SENTENCE,
   "Harmonized Brain Centers",
   "Msg frequency varies.",
   "Msg & data rates may apply.",
@@ -301,7 +303,7 @@ function expect(label, ok, detail = "") {
 }
 
 /** The row for a submission: exactly one, with the columns step one wrote. */
-async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), phone = "0000000000", source = "form", bestTime = null, contactMethod = null, heardAbout = null, sourcePage = "/contact", consent, consentText = consent ? FORM_CONSENT_TEXT : null }) {
+async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), phone = "0000000000", source = "form", bestTime = null, contactMethod = null, heardAbout = null, sourcePage = "/contact", consent, consentText = FORM_CONSENT_TEXT }) {
   const rows = await rowsNamed(name);
   expect(`${name}: exactly one row`, rows.length === 1, `${rows.length} row(s)`);
   const r = rows[0];
@@ -339,7 +341,7 @@ async function expectRow(name, { center, helpingWho, concerns, note, referredBy 
     console.log(`  · ${name}: heard_about not checked — migration 0012 is not applied on this database`);
   }
   expect(`${name}: sms_consent = ${consent}`, r.sms_consent === consent, String(r.sms_consent));
-  expect(`${name}: sms_consent_text is ${consentText ? "the exact wording shown" : "null (never shown at step one)"}`, r.sms_consent_text === consentText, JSON.stringify(r.sms_consent_text));
+  expect(`${name}: sms_consent_text is the exact wording shown`, r.sms_consent_text === consentText, JSON.stringify(r.sms_consent_text));
   const at = r.sms_consent_at ? Date.parse(r.sms_consent_at) : null;
   expect(
     `${name}: sms_consent_at ${consent ? "stamped within the last 10 minutes" : "null"}`,
@@ -596,7 +598,7 @@ async function waitPanel(page, heading, timeout = 8000) {
 
 /** Step two as the visitor sees it (Ben, 2026-10-26): the headline and the
  *  "optional details" line, the questions, and the quiet exit. */
-async function expectStepTwo(page, name, two, { phone = true, email = true } = {}) {
+async function expectStepTwo(page, name, two, { phone = true, email = true, consent = false } = {}) {
   expect(`${name}: step two mounts and reveals (opacity 1, .in)`, two?.opacity === 1 && two.hasIn, JSON.stringify(two));
   expect(`${name}: step two headline is "Got it — we’ll reach out soon."`, two?.text === "Got it — we’ll reach out soon.", JSON.stringify(two?.text));
   const look = JSON.parse(await page.eval(`JSON.stringify((() => {
@@ -619,9 +621,10 @@ async function expectStepTwo(page, name, two, { phone = true, email = true } = {
   })())`));
   expect(`${name}: step two says "A few optional details help us prepare:"`, look.lead === "A few optional details help us prepare:", JSON.stringify(look.lead));
   expect(`${name}: step two asks who, what, and when — nothing required, nothing preselected`, look.helping === 3 && look.concerns && JSON.stringify(look.times) === JSON.stringify(["Any time", "Mornings", "Afternoons", "Evenings"]) && look.required === 0 && look.selected === 0 && look.eyebrow === 0, JSON.stringify(look));
-  const wantReach = [...(phone ? ["Call", "Text"] : []), ...(email ? ["Email"] : [])];
+  // "Text" only with the step-one consent: without it the office cannot text.
+  const wantReach = [...(phone ? ["Call"] : []), ...(phone && consent ? ["Text"] : []), ...(email ? ["Email"] : [])];
   expect(`${name}: best way to reach is ${wantReach.length > 1 ? wantReach.join("/") : "not asked (one way given)"}`, JSON.stringify(look.reach) === JSON.stringify(wantReach.length > 1 ? wantReach : []), JSON.stringify(look.reach));
-  expect(`${name}: the consent box is ${phone ? "there (a phone was given)" : "absent (no phone)"}`, look.consent === phone, JSON.stringify(look.consent));
+  expect(`${name}: no consent box on step two (it is on step one)`, look.consent === false, JSON.stringify(look.consent));
   expect(`${name}: "How did you hear about us?" has the seven answers`, JSON.stringify(look.heard) === JSON.stringify(["Choose one", "Google search", "Referral from a friend or family", "Referral from a doctor or provider", "Instagram", "Facebook", "TikTok", "Other"]), JSON.stringify(look.heard));
   expect(`${name}: "Who referred you?" is not asked on step two until a referral is chosen`, look.laterReferral === false);
   expect(`${name}: "Skip for now" is there, small and quiet`, look.skip?.text === "Skip for now" && look.skip.visible && look.skip.size <= 14, JSON.stringify(look.skip));
@@ -684,16 +687,21 @@ async function expectConfirmationFits(page, name) {
 async function rawHtml() {
   console.log(`\n▸ raw HTML (no JavaScript)`);
   const terms = await fetch(`${BASE}/sms-terms`).then((r) => r.text());
-  for (const phrase of REQUIRED_PHRASES) {
+  for (const phrase of REQUIRED_PHRASES.slice(1)) {
     expect(`/sms-terms raw HTML carries ${JSON.stringify(phrase)} unbroken`, terms.includes(phrase));
   }
   const html = await fetch(`${BASE}/contact`).then((r) => r.text());
+  for (const phrase of REQUIRED_PHRASES) {
+    expect(`/contact raw HTML carries ${JSON.stringify(phrase.length > 60 ? `${phrase.slice(0, 57)}…` : phrase)} unbroken`, html.includes(phrase));
+  }
+  expect("/contact raw HTML: the consent box is there, unticked, linking /sms-terms and /privacy-policy", /<input[^>]*id="sms-consent"[^>]*>/.test(html) && !/<input[^>]*id="sms-consent"[^>]*checked/.test(html) && /<label for="sms-consent">[\s\S]*?href="\/sms-terms"[\s\S]*?href="\/privacy-policy"[\s\S]*?<\/label>/.test(html));
+  expect("/contact raw HTML: the consent box comes right after the phone input", /<input[^>]*id="phone"[^>]*\/?>\s*<div class="sms-consent[^"]*">\s*<input[^>]*id="sms-consent"/.test(html));
   expect("/contact raw HTML: H1 is \"Let’s get you started\"", /<h1[^>]*>Let(’|&#x27;|&rsquo;)s get you started<\/h1>/.test(html), (html.match(/<h1[^>]*>.*?<\/h1>/) ?? [""])[0]);
   for (const id of ["first-name", "phone", "email", "center-nashville", "center-murfreesboro", "center-not-sure", "referred-by", "note"]) {
     expect(`/contact raw HTML: step one has #${id}`, html.includes(`id="${id}"`));
   }
   expect("/contact raw HTML: no center is preselected", !/id="center-[a-z-]+"[^>]*aria-checked="true"/.test(html) && !/aria-checked="true"[^>]*id="center-/.test(html));
-  expect("/contact raw HTML: step one asks nothing else (no consent box, no reach or time choice)", !html.includes('id="sms-consent"') && !html.includes('id="reach-call"') && !html.includes('id="reach-text"') && !html.includes('id="best-time"'));
+  expect("/contact raw HTML: step one asks nothing else (no reach or time choice)", !html.includes('id="reach-call"') && !html.includes('id="reach-text"') && !html.includes('id="best-time"'));
 }
 
 /**
@@ -705,7 +713,6 @@ async function consentBox(page, name, tick) {
     const box = document.querySelector("#sms-consent");
     const wrap = box?.closest(".sms-consent");
     const label = document.querySelector('label[for="sms-consent"]');
-    void wrap;
     return {
       present: !!box,
       type: box?.type ?? null,
@@ -713,10 +720,11 @@ async function consentBox(page, name, tick) {
       required: box?.required ?? null,
       label: label?.textContent ?? null,
       hrefs: [...(label?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href")),
-      onStepTwo: !!box?.closest(".form-step"),
+      underPhone: wrap?.previousElementSibling?.id === "phone" && !box?.closest(".form-step"),
     };
   })())`));
-  expect(`${name}: consent box on step two, a checkbox, unchecked, not required`, look.present && look.onStepTwo && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
+  expect(`${name}: consent box on step one, a checkbox, unchecked, not required`, look.present && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
+  expect(`${name}: consent box sits directly under the phone field`, look.underPhone, JSON.stringify(look));
   expect(`${name}: consent label is the exact wording`, look.label === FORM_CONSENT_TEXT, JSON.stringify(look.label));
   expect(`${name}: consent label links /sms-terms and /privacy-policy`, JSON.stringify(look.hrefs) === JSON.stringify(["/sms-terms", "/privacy-policy"]), JSON.stringify(look.hrefs));
   if (tick) {
@@ -732,7 +740,7 @@ const CENTER_CHIP = { Nashville: "#center-nashville", Murfreesboro: "#center-mur
  * referral and note, then — after checking the form refuses a missing
  * center — the center chip, and "Send My Request".
  */
-async function stepOne(page, width, name, { phone = true, email = emailFor(name), center = "Not sure yet", referral = null, note = null, typed = name, height = width <= 400 ? 700 : 900 } = {}) {
+async function stepOne(page, width, name, { phone = true, email = emailFor(name), center = "Not sure yet", referral = null, note = null, consent = false, typed = name, height = width <= 400 ? 700 : 900 } = {}) {
   await page.setViewport(width, height);
   await page.goto(`${BASE}/contact`, { settle: 400 });
   // goto() stamps `in` on every .rv that exists at load; the panels this
@@ -745,7 +753,7 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
   const look = JSON.parse(await page.eval(`JSON.stringify((() => {
     const f = document.querySelector("form.form-card");
     return {
-      labels: [...f.querySelectorAll("label")].filter((l) => !l.closest("[aria-hidden=true]")).map((l) => l.textContent.trim()),
+      labels: [...f.querySelectorAll("label")].filter((l) => !l.closest("[aria-hidden=true]") && l.htmlFor !== "sms-consent").map((l) => l.textContent.trim()),
       required: [...f.querySelectorAll("[required], [aria-required=true]")].map((e) => e.id || e.getAttribute("aria-labelledby")),
       centers: [...f.querySelectorAll("[id^=center-][role=radio]")].map((b) => [b.textContent.trim(), b.getAttribute("aria-checked")]),
       button: f.querySelector("button[type=submit]")?.textContent.trim(),
@@ -755,6 +763,7 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
   expect(`${name}: step one requires only the name and the center (phone/email checked as either-or)`, JSON.stringify(look.required) === JSON.stringify(["first-name", "center-label"]), JSON.stringify(look.required));
   expect(`${name}: centers are Nashville · Murfreesboro · Not sure, none preselected`, JSON.stringify(look.centers) === JSON.stringify([["Nashville", "false"], ["Murfreesboro", "false"], ["Not sure", "false"]]), JSON.stringify(look.centers));
   expect(`${name}: the button reads "Send My Request"`, look.button === "Send My Request", String(look.button));
+  await consentBox(page, name, consent);
   const refused = await submitAndReadAlert(page);
   expect(`${name}: submitting without a center is refused in the browser`, /choose a center/i.test(refused ?? ""), JSON.stringify(refused));
   const chip = await page.eval(`(() => { const b = document.querySelector(${JSON.stringify(CENTER_CHIP[center])}); if (!b) return "no chip"; b.click(); return "ok"; })()`);
@@ -778,9 +787,9 @@ const SAVE_REFERRAL = "E2E referral — Dr. Smith";
 async function pathSave(page, width) {
   const name = `E2E-${RUN}-Save-${width} Tester`;
   console.log(`\n▸ save path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { center: "Murfreesboro", referral: SAVE_REFERRAL, note: SAVE_NOTE });
+  await stepOne(page, width, name, { center: "Murfreesboro", referral: SAVE_REFERRAL, note: SAVE_NOTE, consent: true });
   const two = await waitPanel(page, "reach out soon");
-  await expectStepTwo(page, name, two);
+  await expectStepTwo(page, name, two, { consent: true });
   expect(`${name}: step two heading took focus`, two?.focused === true);
   // The row exists before step two is shown.
   const rowsNow = await rowsNamed(name);
@@ -789,13 +798,13 @@ async function pathSave(page, width) {
   if (HOLD) expect(`${name}: staff email HELD — none before step two`, emailsNow.length === 0, `${emailsNow.length} email(s)`);
   else expect(`${name}: lead email sent before step two was shown (release job not running → fail-safe)`, emailsNow.length === 1, `${emailsNow.length} email(s)`);
   expect(`${name}: platform forwarded before step two was shown`, forwardsNaming(name).length === 1, `${forwardsNaming(name).length} post(s)`);
-  expectNoText(name, "step one (no consent asked there)");
+  await waitFor(() => textsNaming(name).length > 0, 5_000);
+  expect(`${name}: the confirmation text went at step one (box ticked)`, textsNaming(name).length === 1, `${textsNaming(name).length}`);
 
   for (const t of ["My child", "Sleep", "Focus & ADHD", "Evenings", "Text"]) {
     const r = await page.eval(clickText(t));
     if (r !== "ok") throw new Error(r);
   }
-  await consentBox(page, name, true);
   await page.eval(setValue("#heard-about", "Referral from a doctor or provider"));
   await sleep(100);
   const later = await page.eval(`!!document.querySelector("#later-referral")`);
@@ -823,7 +832,7 @@ async function pathSave(page, width) {
     expectEmail(name, row, { center: "Murfreesboro", consent: true, referredBy: SAVE_REFERRAL, heardAbout: heard });
   } else {
     // Fail-safe: the step-one email carries step one only.
-    expectEmail(name, row, { center: "Murfreesboro", consent: false, referredBy: SAVE_REFERRAL, heardAbout: null });
+    expectEmail(name, row, { center: "Murfreesboro", consent: true, referredBy: SAVE_REFERRAL, heardAbout: null });
   }
   expect(`${name}: still exactly one notification after step two`, emailsNaming(name).length === 1, `${emailsNaming(name).length}`);
   if (row && HOLD) {
@@ -838,9 +847,9 @@ async function pathSave(page, width) {
     expectVisitorEmail(name, emailFor(name), { center: "Murfreesboro" });
     if (rec) expectUpdateEmail(name, rec, { center: "Murfreesboro", note: SAVE_NOTE, referredBy: SAVE_REFERRAL });
   }
-  // The box was ticked on step two: the confirmation text goes then, once.
+  // The box was ticked on step one: one confirmation text, nothing more.
   expectText(name, { from: env.DIALPAD_SMS_FROM_MURFREESBORO ?? env.DIALPAD_SMS_FROM ?? "+16155550100" });
-  expectForward(name, { center: "Murfreesboro", consent: false, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: SAVE_NOTE, referredBy: SAVE_REFERRAL, heardAbout: heard, consent: true } });
+  expectForward(name, { center: "Murfreesboro", consent: true, updated: { whoFor: "my_child", concerns: ["sleep", "focus_adhd"], note: SAVE_NOTE, referredBy: SAVE_REFERRAL, heardAbout: heard, consent: true } });
   return { name, row };
 }
 
@@ -869,7 +878,7 @@ async function pathSkip(page, width, height) {
   expectVisitorEmail(name, emailFor(name), { center: "Nashville" });
   expect(`${name}: "Skip for now" sends no "Details added" email`, updatesNaming(name).length === 0, `${updatesNaming(name).length}`);
   expectForward(name, { center: "Nashville", consent: false });
-  expectNoText(name, "a skipped step two (the consent box never ticked)");
+  expectNoText(name, "an unticked consent box");
   return { name, row };
 }
 
@@ -897,10 +906,10 @@ async function pathLeave(chrome, width) {
   const badEmail = await submitAndReadAlert(page);
   expect(`${name}: a malformed email is refused in the browser`, /email address doesn.t look right/i.test(badEmail ?? ""), JSON.stringify(badEmail));
   expect(`${name}: the refusals wrote nothing`, (await rowsNamed(name)).length === 0 && (await rowsNamed(typed)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0);
-  // Then the real thing: a phone, no email.
-  await stepOne(page, width, name, { typed, email: null });
+  // Then the real thing: a phone, no email, the box ticked.
+  await stepOne(page, width, name, { typed, email: null, consent: true });
   const two = await waitPanel(page, "reach out soon");
-  await expectStepTwo(page, name, two, { phone: true, email: false });
+  await expectStepTwo(page, name, two, { phone: true, email: false, consent: true });
   await page.close();
   await sleep(500);
   if (HOLD) {
@@ -908,20 +917,21 @@ async function pathLeave(chrome, width) {
     const got = await waitFor(() => emailsNaming(name).length > 0, HOLD_WAIT_MS);
     expect(`${name}: the release job sends it at the hold mark, with step one only`, Boolean(got));
   }
-  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, email: null, consent: false });
+  const row = await expectRow(name, { center: "Not sure yet", helpingWho: null, concerns: [], note: null, email: null, consent: true });
   if (row && HOLD) await expectReleasedBy(name, row.id, ["cron", "sweep"]);
-  expectEmail(name, row, { center: "Not sure yet", consent: false, email: false });
+  expectEmail(name, row, { center: "Not sure yet", consent: true, email: false });
   if (row) await expectEmailRecords(name, row.id, { visitor: null, details: null });
   expect(`${name}: no visitor email (no address given)`, emails().filter((e) => e.body?.subject === VISITOR_SUBJECT && JSON.stringify(e.body.to).includes(firstWord(name).toLowerCase())).length === 0);
-  expectForward(name, { center: "Not sure yet", consent: false });
-  expectNoText(name, "a phone with no consent given");
+  expectForward(name, { center: "Not sure yet", consent: true });
+  expectText(name, {});
 }
 
 /** Email only: no consent box, no reach choice; a referral answer asks "Who referred you?". */
 async function pathEmailOnly(page, width) {
   const name = `E2E-${RUN}-Email-${width} Tester`;
   console.log(`\n▸ email-only path @ ${width}px — ${name}`);
-  await stepOne(page, width, name, { phone: false, center: "Not sure yet" });
+  // The box ticked with no phone typed: not a yes.
+  await stepOne(page, width, name, { phone: false, center: "Not sure yet", consent: true });
   const two = await waitPanel(page, "reach out soon");
   await expectStepTwo(page, name, two, { phone: false, email: true });
   await page.eval(setValue("#heard-about", "Referral from a friend or family"));
@@ -942,7 +952,7 @@ async function pathEmailOnly(page, width) {
   expectVisitorEmail(name, emailFor(name), { center: "Not sure yet" });
   // The platform contract needs a phone: an email-only lead is the email's alone.
   expect(`${name}: no platform post (the contract needs a phone)`, forwardsNaming(name).length === 0, `${forwardsNaming(name).length} post(s)`);
-  expectNoText(name, "an email-only lead");
+  expectNoText(name, "an email-only lead (box ticked, no number)");
 }
 
 /**

@@ -47,8 +47,7 @@ import ScannerText from "./ScannerText";
  *      on step one.
  *   2. **Optional details** — "Got it — we'll reach out soon. A few optional
  *      details help us prepare:" who it's for, what's going on, best time,
- *      best way to reach them, the text-message consent (only when a phone
- *      was given), and how they heard about us — with "Who referred you?"
+ *      best way to reach them, and how they heard about us — with "Who referred you?"
  *      again when a referral is chosen and step one's line was blank. PATCHes
  *      the same row. "Skip for now" releases the held email at once.
  *   3. **The confirmation** — "Thanks, Ben. We'll reach out soon.", the
@@ -57,11 +56,14 @@ import ScannerText from "./ScannerText";
  *
  * ## Texts are opt-in
  *
- * The one consent point for texts on the form is the step-two checkbox,
- * shown only when a phone was given: unchecked, the wording unchanged
- * (lib/sms-consent.ts), and nothing is texted unless it is ticked — not even
- * the confirmation. The route records the wording shown and, on a yes, the
- * time; the confirmation text goes on that yes.
+ * The one consent point for texts on the form is the step-one checkbox
+ * directly under the phone field (Ben, 2026-10-26 — back from step two for
+ * A2P 10DLC: Dialpad's carrier review reads it in /contact's server-rendered
+ * HTML, so it is always rendered, never hidden until a number is typed).
+ * Unchecked, optional, the wording unchanged (lib/sms-consent.ts), and
+ * nothing is texted unless it is ticked — not even the confirmation. A tick
+ * with no phone typed is not sent. The route records the wording shown and,
+ * on a yes, the time; the confirmation text goes on that yes.
  *
  * ## The funnel
  *
@@ -242,6 +244,8 @@ export default function ContactForm({
   const [showConcierge, setShowConcierge] = useState(false);
   const [referredBy, setReferredBy] = useState("");
   const [note, setNote] = useState("");
+  // Unchecked by default, and never required (lib/sms-consent.ts).
+  const [smsConsent, setSmsConsent] = useState(false);
   // The honeypot. Real visitors never see this field and so always submit it
   // empty; scripted spam fills every input it finds. Passed straight through
   // to the platform, which classifies it — nothing here rejects on it.
@@ -253,8 +257,6 @@ export default function ContactForm({
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [bestTime, setBestTime] = useState<string | null>(null);
   const [contactMethod, setContactMethod] = useState<ContactMethod | null>(null);
-  // Unchecked by default, and never required (lib/sms-consent.ts).
-  const [smsConsent, setSmsConsent] = useState(false);
   const [heardAbout, setHeardAbout] = useState("");
   const [laterReferral, setLaterReferral] = useState("");
 
@@ -268,6 +270,7 @@ export default function ContactForm({
   const sentPhone = useRef(false);
   const sentEmail = useRef(false);
   const sentReferral = useRef(false);
+  const sentConsent = useRef(false);
 
   // Funnel bookkeeping: form_start once, step two's outcome once.
   const started = useRef(false);
@@ -361,6 +364,10 @@ export default function ContactForm({
           ...(note.trim() ? { note: note.trim() } : {}),
           website,
           source_page: from || pathname,
+          // A yes only with a number to text. The wording is sent ticked or
+          // not — the row keeps what she was offered, not only what she said.
+          sms_consent: Boolean(tel) && smsConsent,
+          sms_consent_text: FORM_CONSENT_TEXT,
         }),
       });
       const data = (await res.json().catch(() => null)) as
@@ -383,6 +390,7 @@ export default function ContactForm({
       sentPhone.current = Boolean(tel);
       sentEmail.current = Boolean(mail);
       sentReferral.current = Boolean(referredBy.trim());
+      sentConsent.current = Boolean(tel) && smsConsent;
       setStatus("idle");
       // Step two needs a row to add to; without an id there is nothing to
       // PATCH, and she goes straight to the confirmation.
@@ -410,8 +418,6 @@ export default function ContactForm({
       ...(selectedConcerns.length > 0 ? { concerns: selectedConcerns } : {}),
       ...(bestTime ? { best_time: bestTime } : {}),
       ...(contactMethod ? { contact_method: contactMethod } : {}),
-      // Only a tick is sent, with the wording she was shown.
-      ...(sentPhone.current && smsConsent ? { sms_consent: true, sms_consent_text: FORM_CONSENT_TEXT } : {}),
       ...(heardAbout ? { heard_about: heardAbout } : {}),
       ...(referral ? { referred_by: referral } : {}),
     };
@@ -495,8 +501,10 @@ export default function ContactForm({
 
   /* ── Step two ───────────────────────────────────────────────────────── */
   if (step === "two") {
+    // "Text" only when she agreed to texts on step one: without that tick
+    // the office cannot text her, so it is not offered.
     const reachOptions = (["call", "text", "email"] as const)
-      .filter((m) => (m === "email" ? sentEmail.current : sentPhone.current))
+      .filter((m) => (m === "email" ? sentEmail.current : m === "text" ? sentConsent.current : sentPhone.current))
       .map((m) => ({ id: m, label: CONTACT_METHOD_LABELS[m], value: m }));
     return (
       <StepPanel key="two" heading={<>Got it &mdash; we&rsquo;ll reach out soon.</>}>
@@ -547,37 +555,6 @@ export default function ContactForm({
                 value={contactMethod}
                 onChange={setContactMethod}
               />
-            </>
-          )}
-
-          {/* Text-message consent — only when there is a number to text.
-              Everything a carrier reviewer looks for is in the label; the
-              links open a new tab so the half-filled step is not lost. */}
-          {sentPhone.current && (
-            <>
-              <div className="sms-consent">
-                <input
-                  id="sms-consent"
-                  name="sms_consent"
-                  type="checkbox"
-                  checked={smsConsent}
-                  onChange={(e) => setSmsConsent(e.target.checked)}
-                />
-                <label htmlFor="sms-consent">
-                  {FORM_CONSENT_PARTS.map((part, i) =>
-                    typeof part === "string" ? (
-                      <ScannerText key={i} text={part} />
-                    ) : (
-                      <a key={i} href={part.href} target="_blank" rel="noopener">
-                        {part.label}
-                      </a>
-                    )
-                  )}
-                </label>
-              </div>
-              {contactMethod === "text" && !smsConsent && (
-                <p className="micro reach-note">To text you, we need the box above ticked.</p>
-              )}
             </>
           )}
 
@@ -651,39 +628,64 @@ export default function ContactForm({
       <p className="micro either-note" id="reach-either">
         A phone number or an email &mdash; either one is fine.
       </p>
-      <div className="two">
-        <div>
-          <label htmlFor="phone">Phone</label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            placeholder="(615) 555-0134"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            aria-describedby="reach-either"
-            aria-invalid={invalid("phone")}
-          />
-        </div>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            inputMode="email"
-            placeholder="sarah@example.com"
-            autoComplete="email"
-            autoCapitalize="off"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-describedby="reach-either"
-            aria-invalid={invalid("email")}
-          />
-        </div>
+      <label htmlFor="phone">Phone</label>
+      <input
+        id="phone"
+        name="phone"
+        type="tel"
+        inputMode="tel"
+        placeholder="(615) 555-0134"
+        autoComplete="tel"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        aria-describedby="reach-either"
+        aria-invalid={invalid("phone")}
+      />
+
+      {/* Text-message consent, directly under the phone number it is about
+          (A2P 10DLC: carrier scanners weight how close it sits to the number
+          input, and read it in the server-rendered HTML — so it is always
+          rendered, quieter until a number is typed). Everything a reviewer
+          looks for is in the label itself; the links open a new tab so a
+          half-filled form is not lost. Optional: the request goes through
+          ticked or not. */}
+      <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
+        <input
+          id="sms-consent"
+          name="sms_consent"
+          type="checkbox"
+          checked={smsConsent}
+          onChange={(e) => setSmsConsent(e.target.checked)}
+        />
+        <label htmlFor="sms-consent">
+          {FORM_CONSENT_PARTS.map((part, i) =>
+            // ScannerText: the "&" in "Msg & data rates" reaches the raw
+            // HTML as itself, for scanners that match bytes.
+            typeof part === "string" ? (
+              <ScannerText key={i} text={part} />
+            ) : (
+              <a key={i} href={part.href} target="_blank" rel="noopener">
+                {part.label}
+              </a>
+            )
+          )}
+        </label>
       </div>
+
+      <label htmlFor="email">Email</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        inputMode="email"
+        placeholder="sarah@example.com"
+        autoComplete="email"
+        autoCapitalize="off"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        aria-describedby="reach-either"
+        aria-invalid={invalid("email")}
+      />
 
       <label id="center-label">Which center?</label>
       <ChoiceChips

@@ -2174,6 +2174,9 @@ body[data-bottombar] footer.site {
    white is 5.69:1. The label is the hit area, so the 20px box is not the
    whole target. */
 .form .sms-consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; }
+/* Until a phone number is typed the box is quieter (Ben, 2026-10-26) — the
+   checkbox only; the wording keeps its full contrast for readers and scanners. */
+.form .sms-consent-idle input[type="checkbox"] { opacity: 0.45; }
 .form .sms-consent input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
 .form .sms-consent label { display: block; margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); cursor: pointer; }
 .form .sms-consent a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
