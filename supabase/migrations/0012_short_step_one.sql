@@ -14,9 +14,9 @@
 --    there. Additive and nullable: older rows, chat rows and skipped
 --    questions read null.
 --
--- The route saves every lead without this applied when it can: a refusal for
--- heard_about alone is retried without the column (logged). An email-only
--- lead cannot be saved until (1) is applied.
+-- Applied to the live project by Ben on 2026-10-26. Before it was, the route
+-- saved an email-only lead with phone "" and a step-two save without
+-- heard_about (both logged); those fallbacks stay for any database without it.
 
 alter table public.consultation_requests
   drop constraint if exists consultation_requests_shape_check;
