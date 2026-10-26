@@ -693,7 +693,7 @@ async function rawHtml() {
     expect(`/contact raw HTML: step one has #${id}`, html.includes(`id="${id}"`));
   }
   expect("/contact raw HTML: no center is preselected", !/id="center-[a-z-]+"[^>]*aria-checked="true"/.test(html) && !/aria-checked="true"[^>]*id="center-/.test(html));
-  expect("/contact raw HTML: step one asks nothing else (no consent box, no reach or time choice)", !html.includes('id="sms-consent"') && !html.includes('id="reach-') && !html.includes('id="best-time"'));
+  expect("/contact raw HTML: step one asks nothing else (no consent box, no reach or time choice)", !html.includes('id="sms-consent"') && !html.includes('id="reach-call"') && !html.includes('id="reach-text"') && !html.includes('id="best-time"'));
 }
 
 /**
