@@ -29,7 +29,8 @@ import ScannerText from "./ScannerText";
 /**
  * The contact form, in three steps.
  *
- *   1. **The request** (Ben, 2026-10-26) — first name, a phone OR an email
+ *   1. **The request** (Ben, 2026-10-26) — name (first and last in one field,
+ *      "Sarah Smith" — Ben, 2026-10-27), a phone OR an email
  *      (either one; the phone in any common US format), the center
  *      (Nashville · Murfreesboro · Not sure, nothing preselected), and two
  *      optional lines: "Who referred you?" and "Anything we should know?".
@@ -326,7 +327,7 @@ export default function ContactForm({
     const name = givenName.trim();
     const tel = phone.trim();
     const mail = email.trim();
-    if (!name) return refuse("missing_name", "Please add your first name.", "first-name");
+    if (!name) return refuse("missing_name", "Please add your name.", "first-name");
     if (!tel && !mail) {
       return refuse("missing_contact", "Please add a phone number or an email so we can reach you.", "phone");
     }
@@ -354,8 +355,7 @@ export default function ContactForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
-          // The key is the column's name, from before the form asked for the
-          // first name alone.
+          // The whole name, first and last; the key is the column's name.
           first_name: name,
           ...(tel ? { phone: tel } : {}),
           ...(mail ? { email: mail } : {}),
@@ -612,12 +612,14 @@ export default function ContactForm({
     >
       <div className="eyebrow">Request your free call</div>
 
-      <label htmlFor="first-name">First name</label>
+      {/* One field, first and last (Ben, 2026-10-27); stored whole, greeted
+          by the first word (lib/first-name.ts). The id predates the change. */}
+      <label htmlFor="first-name">Name</label>
       <input
         id="first-name"
         name="first_name"
-        placeholder="Sarah"
-        autoComplete="given-name"
+        placeholder="Sarah Smith"
+        autoComplete="name"
         autoCapitalize="words"
         value={givenName}
         onChange={(e) => setGivenName(e.target.value)}

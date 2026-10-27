@@ -371,7 +371,7 @@ async function confirmToVisitor(
 
 /**
  * POST — a new request. For the contact form this is **step one** (Ben,
- * 2026-10-26): first name, a phone or an email, the center, and optionally
+ * 2026-10-26): a name (first and last, one field), a phone or an email, the center, and optionally
  * who referred them and a one-line note. The row is saved and the lead email
  * started here (held for step two — lib/held-notification.ts), before the
  * form shows anything else; the optional second step (who it's for,
@@ -440,7 +440,7 @@ export async function POST(request: Request) {
       );
     }
   } else if (source === "chat" ? !firstName || !phone : !firstName || (!phone && !email)) {
-    // The form (and a giveaway booking through it) needs a first name and a
+    // The form (and a giveaway booking through it) needs a name and a
     // phone OR an email — either one (Ben, 2026-10-26; the old site's form
     // took either, and the new one losing that cost leads). The chat always
     // collects a number and is held to it.
@@ -449,7 +449,7 @@ export async function POST(request: Request) {
         error:
           source === "chat"
             ? "Please add your name and a phone number so we can call you."
-            : "Please add your first name and a phone number or an email so we can reach you.",
+            : "Please add your name and a phone number or an email so we can reach you.",
       },
       { status: 400 }
     );

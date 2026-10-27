@@ -18,7 +18,7 @@
  *     CHECK_CONTACT_ALLOW_PROJECT=<project ref> npm run check:contact
  *
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
- * 768px and 1440px — the short step one (Ben, 2026-10-26): first name, a
+ * 768px and 1440px — the short step one (Ben, 2026-10-26): name, a
  * phone OR an email, the center (required, nothing preselected), and the
  * optional "Who referred you?" and "Anything we should know?":
  *
@@ -736,7 +736,7 @@ async function consentBox(page, name, tick) {
 const CENTER_CHIP = { Nashville: "#center-nashville", Murfreesboro: "#center-murfreesboro", "Not sure yet": "#center-not-sure" };
 
 /**
- * Step one (Ben, 2026-10-26): first name, phone and/or email, the optional
+ * Step one (Ben, 2026-10-26): name, phone and/or email, the optional
  * referral and note, then — after checking the form refuses a missing
  * center — the center chip, and "Send My Request".
  */
@@ -759,7 +759,7 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
       button: f.querySelector("button[type=submit]")?.textContent.trim(),
     };
   })())`));
-  expect(`${name}: step one is first name, phone, email, center, "Who referred you? (optional)", "Anything we should know? (optional)"`, JSON.stringify(look.labels) === JSON.stringify(["First name", "Phone", "Email", "Which center?", "Who referred you? (optional)", "Anything we should know? (optional)"]), JSON.stringify(look.labels));
+  expect(`${name}: step one is name, phone, email, center, "Who referred you? (optional)", "Anything we should know? (optional)"`, JSON.stringify(look.labels) === JSON.stringify(["Name", "Phone", "Email", "Which center?", "Who referred you? (optional)", "Anything we should know? (optional)"]), JSON.stringify(look.labels));
   expect(`${name}: step one requires only the name and the center (phone/email checked as either-or)`, JSON.stringify(look.required) === JSON.stringify(["first-name", "center-label"]), JSON.stringify(look.required));
   expect(`${name}: centers are Nashville · Murfreesboro · Not sure, none preselected`, JSON.stringify(look.centers) === JSON.stringify([["Nashville", "false"], ["Murfreesboro", "false"], ["Not sure", "false"]]), JSON.stringify(look.centers));
   expect(`${name}: the button reads "Send My Request"`, look.button === "Send My Request", String(look.button));
