@@ -48,6 +48,27 @@ const PRODUCTION_DEPLOY =
 /** True when the GA4 tag is configured and may load — production only. */
 export const ANALYTICS_ENABLED = GA_ID.length > 0 && PRODUCTION_DEPLOY;
 
+/**
+ * The hostnames GA may run on (Ben, 2026-10-30). The Production deployment
+ * is also reachable at its *.vercel.app alias, and a visit there is not a
+ * visitor; ANALYTICS_ENABLED is decided at build time and cannot see the
+ * host, so the tag and every event also check this at runtime
+ * (components/Analytics.tsx, trackEvent). Previews already fail
+ * ANALYTICS_ENABLED and make no GA request at all.
+ */
+export const ANALYTICS_HOSTS = ["harmonizedbraincenterstn.com", "www.harmonizedbraincenterstn.com"] as const;
+
+export function analyticsAllowedHost(hostname: unknown): boolean {
+  return typeof hostname === "string" && (ANALYTICS_HOSTS as readonly string[]).includes(hostname.toLowerCase());
+}
+
+/** ANALYTICS_ENABLED and, in a browser, on one of ANALYTICS_HOSTS. */
+export function analyticsActive(): boolean {
+  if (!ANALYTICS_ENABLED) return false;
+  if (typeof window === "undefined") return false;
+  return analyticsAllowedHost(window.location.hostname);
+}
+
 type Gtag = (...args: unknown[]) => void;
 
 declare global {
@@ -80,6 +101,7 @@ export const LINK_LOCATIONS = [
   "location page",
   "confirmation",
   "contact options",
+  "mobile bar",
   "other",
 ] as const;
 
@@ -342,10 +364,8 @@ export function giveawayPathPickEvent(choice: "new" | "current", pagePath: strin
  * because measurement did.
  */
 export function trackEvent(event: SiteEvent): void {
-  if (!ANALYTICS_ENABLED) return;
-  if (typeof window === "undefined" || typeof window.gtag !== "function") {
-    return;
-  }
+  if (!analyticsActive()) return;
+  if (typeof window.gtag !== "function") return;
   try {
     window.gtag("event", event.name, event.params);
   } catch {

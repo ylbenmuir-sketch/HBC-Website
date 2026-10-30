@@ -96,7 +96,7 @@ export default function MobileCtaBar() {
   if (!slot) return null;
 
   return createPortal(
-    <div className="cta-bar" aria-hidden={!show}>
+    <div className="cta-bar" aria-hidden={!show} data-link-location="mobile bar">
       <Link className="cta-bar-btn" href="/contact" tabIndex={show ? 0 : -1}>
         Get Started
       </Link>
