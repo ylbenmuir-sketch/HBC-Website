@@ -24,8 +24,12 @@ function legacyPattern(sources: string[]): string {
       source
         .replace(/^\//, "")
         .replace(/\/:path\*$/, "\u0000")
+        // A single named segment, with or without its own pattern
+        // (":n(\\d+)", ":slug"): one path segment in the lookahead.
+        .replace(/:[A-Za-z]+(?:\([^)]*\))?/g, "\u0001")
         .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         .replace("\u0000", "(?:/[^/]+)*")
+        .replace(/\u0001/g, "[^/]+")
     )
     .join("|");
 }
@@ -239,6 +243,17 @@ const nextConfig: NextConfig = {
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),
+      // WordPress's remaining archive shapes (Ben, 2026-10-30), each one hop:
+      // the author archive (Ben's own → the founder page, anyone else → About),
+      // paged blog indexes, and the per-post / comments feeds. The old
+      // "Attention concerns" page is the focus & ADHD concern. The brain-map
+      // post has no /resources article; /brain-map is its subject exactly.
+      ...to(["/author/ben"], "/about/founder"),
+      ...to(["/author/:path*"], "/about"),
+      ...to(["/attention-concerns"], "/concerns/focus-adhd"),
+      ...to(["/post/how-to-read-a-lens-neurofeedback-brain-map"], "/brain-map"),
+      ...to(["/page/:n(\\d+)", "/blog/page/:n(\\d+)"], "/resources"),
+      ...to(["/comments/feed", "/:slug/feed"], "/resources"),
       // The parent of eleven live URLs 404'd (SEO-AUDIT-3 §2.4).
       ...to(["/concerns"], "/what-we-help-with"),
 
@@ -330,6 +345,15 @@ const nextConfig: NextConfig = {
             }));
           })()),
 
+      // WordPress's admin and login URLs answer 410 (Ben, 2026-10-30) — the
+      // rewrite below; listed here so their slash forms skip the 308 and
+      // reach it in one hop. (Vercel's firewall answers these 403 before the
+      // app does; the 410 is what the app says when it is asked.)
+      ...(() => {
+        legacy.push("/wp-admin", "/wp-admin/:path*", "/wp-login.php");
+        return [];
+      })(),
+
       // Last: the trailing-slash normalisation Next used to do first, at the
       // 308 it used. The lookahead steps around the 410 paths: redirects run
       // before rewrites, so without it `/vibro-acoustic-chair/` was a 308 to
@@ -405,6 +429,11 @@ const nextConfig: NextConfig = {
       // - WordPress's numeric auto-slugs (`/6200-2/`): 34 of the 56 posts.
       //   Nothing to carry over, so they are retired by pattern.
       { source: `/:gone(${GONE_PATTERN})`, destination: "/api/gone" },
+      // WordPress's admin and login (Ben, 2026-10-30): gone, not redirected,
+      // so nothing here can loop back to itself.
+      { source: "/wp-admin", destination: "/api/gone" },
+      { source: "/wp-admin/:path*", destination: "/api/gone" },
+      { source: "/wp-login.php", destination: "/api/gone" },
     ];
   },
 };
