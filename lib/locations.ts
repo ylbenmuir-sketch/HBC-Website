@@ -582,14 +582,13 @@ export const locations: Location[] = [
     hero: {
       eyebrow: "Murfreesboro, Tennessee",
       /**
-       * Built on the catchment rather than the calendar, which is the axis
-       * Nashville's H1 does not use. "The same standard of care, closer to
-       * home" said nothing a search could find and, worse, framed this center
-       * as the satellite of the other one.
+       * Plain city + state, the way people search (Ben, 2026-10-30). The
+       * earlier "for Rutherford County — in downtown Murfreesboro" buried the
+       * city; the county still appears in the body copy below.
        */
-      titleLead: "LENS neurofeedback for ",
-      titleAccent: "Rutherford County",
-      titleTail: " — in downtown Murfreesboro.",
+      titleLead: "LENS neurofeedback in ",
+      titleAccent: "Murfreesboro",
+      titleTail: ", TN",
       sub: "Passive, brief sessions for adults, children, and families from Smyrna to Shelbyville — in a calm center a few minutes off I-24, near Broad Street.",
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
