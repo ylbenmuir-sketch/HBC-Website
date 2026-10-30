@@ -68,11 +68,29 @@ import ScannerText from "./ScannerText";
  *
  * ## The funnel
  *
- * contact_view (mount), form_start (first focus in step one),
+ * contact_view (mount), form_start (the first touch of anything in step one —
+ * a focus, a tap on a center chip, a keystroke, an autofill; see
+ * onFirstInteraction),
  * step1_submit_attempt, step1_success (+ the Key event submit_lead_form and
  * generate_lead), step1_error {reason}, step2_success, step2_skipped
  * {method} — lib/analytics.ts. Fired here, so any page that embeds the form
  * reports the same steps.
+ *
+ * ## No JavaScript, or JavaScript that never arrived
+ *
+ * The form is a real HTML form: `action="/api/consultation"` and
+ * `method="post"`, so a browser with scripting off — or one where the bundle
+ * failed and React never attached onSubmit — still posts step one. The route
+ * reads the form encoding, saves the same row, and answers with a redirect
+ * to /contact/sent (or /contact/not-sent) instead of JSON (2026-10-30; before
+ * this, a submit without JavaScript was a GET of /contact with every typed
+ * value in the query string, and nothing was saved). The chips are buttons,
+ * so without scripting the center is "Not sure yet" — the hidden
+ * preferred_center input mirrors the React state and is empty otherwise.
+ * Step one also carries `above-fold`: the card is never hidden behind the
+ * reveal animation (globals.css → `html.js .rv.above-fold`), so it is on
+ * screen from first paint rather than ~1 s after hydration (2 s on a slow
+ * connection, measured 2026-10-30), and still there if hydration fails.
  *
  * ## The reveal gate
  *
@@ -306,7 +324,13 @@ export default function ContactForm({
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  function onFirstFocus() {
+  // The first touch of anything in step one, whatever form it takes. Focus
+  // alone missed real starts: WebKit (iPhone and Mac Safari) does not focus a
+  // <button> on tap, so a visitor whose first move was a center chip was not
+  // counted; a browser autofill fires input events without a focus; a
+  // pointer on a field arrives before its focus. Verified on production
+  // 2026-10-30: a chip tap alone sent no form_start.
+  function onFirstInteraction() {
     if (started.current) return;
     started.current = true;
     trackFunnel("form_start", pathname);
@@ -604,13 +628,24 @@ export default function ContactForm({
   const invalid = (id: string) => (invalidField === id ? true : undefined);
   return (
     <form
-      className="form form-compact rv form-card"
+      className="form form-compact rv above-fold form-card"
       style={CARD_STYLE}
+      action="/api/consultation"
+      method="post"
       onSubmit={sendRequest}
-      onFocus={onFirstFocus}
+      onFocus={onFirstInteraction}
+      onPointerDown={onFirstInteraction}
+      onInput={onFirstInteraction}
+      onClick={onFirstInteraction}
       noValidate
     >
       <div className="eyebrow">Request your free call</div>
+      {/* For the no-JavaScript post only (see the file comment): the JSON
+          submit builds its own body. The center mirrors the chips' state;
+          the wording is the same constant the JSON path sends. */}
+      <input type="hidden" name="preferred_center" value={preferredCenter ?? ""} />
+      <input type="hidden" name="sms_consent_text" value={FORM_CONSENT_TEXT} />
+      <input type="hidden" name="source_page" value={pathname} />
 
       {/* One field, first and last (Ben, 2026-10-27); stored whole, greeted
           by the first word (lib/first-name.ts). The id predates the change. */}

@@ -114,6 +114,8 @@ export async function POST(request: Request) {
   // 1. Rate limit (§6).
   const limit = checkRateLimit(clientKey(request));
   if (!limit.allowed) {
+    // Logged so a refused person is visible server-side (never the address).
+    console.warn(`[chat] rate limited — retry after ${limit.retryAfterSeconds} s`);
     return NextResponse.json(
       { error: "You’re sending messages faster than I can answer. Try again in a moment." },
       { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }

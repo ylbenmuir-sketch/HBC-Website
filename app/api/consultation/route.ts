@@ -369,6 +369,59 @@ async function confirmToVisitor(
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Two encodings, one handler                                          */
+/* ------------------------------------------------------------------ */
+/**
+ * The form posts JSON from its submit handler. Without JavaScript — or when
+ * the bundle never attached that handler — the browser posts the same fields
+ * form-encoded to the form's `action`, which is this route
+ * (components/ContactForm.tsx, "No JavaScript"). That post is answered with
+ * a redirect to a page, never JSON: /contact/sent on a saved row,
+ * /contact/not-sent otherwise. Every refusal, either encoding, is logged
+ * with its status and message (never a submitted value), so a rejected
+ * person is always visible server-side.
+ */
+function isFormEncoded(request: Request): boolean {
+  const type = request.headers.get("content-type")?.toLowerCase() ?? "";
+  return type.includes("application/x-www-form-urlencoded") || type.includes("multipart/form-data");
+}
+
+async function formPayload(request: Request): Promise<Payload> {
+  const form = await request.formData();
+  const field = (name: string): string | undefined => {
+    const value = form.get(name);
+    return typeof value === "string" ? value : undefined;
+  };
+  const consent = field("sms_consent");
+  return {
+    first_name: field("first_name"),
+    phone: field("phone"),
+    email: field("email"),
+    preferred_center: field("preferred_center") || undefined,
+    referred_by: field("referred_by"),
+    note: field("note"),
+    website: field("website") ?? "",
+    source_page: field("source_page"),
+    sms_consent_text: field("sms_consent_text"),
+    // A ticked checkbox posts "on"; an unticked one posts nothing.
+    sms_consent: consent === "on" || consent === "true",
+  };
+}
+
+function reply(
+  htmlForm: boolean,
+  request: Request,
+  body: { ok?: boolean; id?: string | null; error?: string },
+  init: { status: number }
+): NextResponse {
+  if (init.status >= 400) {
+    console.warn(`[submission] refused ${init.status}${htmlForm ? " (html form post)" : ""}: ${body.error ?? "no message"}`);
+  }
+  if (!htmlForm) return NextResponse.json(body, init);
+  return NextResponse.redirect(new URL(init.status < 300 ? "/contact/sent" : "/contact/not-sent", request.url), 303);
+}
+
 /**
  * POST — a new request. For the contact form this is **step one** (Ben,
  * 2026-10-26): a name (first and last, one field), a phone or an email, the center, and optionally
@@ -380,27 +433,28 @@ async function confirmToVisitor(
  * `helping_who` already answered.
  */
 export async function POST(request: Request) {
+  const htmlForm = isFormEncoded(request);
   let body: Payload;
   try {
-    body = await request.json();
+    body = htmlForm ? await formPayload(request) : await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
 
   const type = str(body.type, 20) ?? "consultation";
   if (!SUBMISSION_TYPES.has(type)) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
   const isGuide = type === "guide";
 
   const source = str(body.source, 20) ?? "form";
   if (!SUBMISSION_SOURCES.has(source)) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
 
   const intent = str(body.intent, 20) ?? "book";
   if (!SUBMISSION_INTENTS.has(intent)) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
 
   // A 10-year giveaway booking (GIVEAWAY-PLAN.md §4): the code must be one we
@@ -410,7 +464,7 @@ export async function POST(request: Request) {
   const offerCode = source === "giveaway" ? str(body.offer_code, 20) : null;
   const offer = offerCode ? await checkOffer(offerCode) : null;
   if (source === "giveaway" && (!offer || !offer.ok)) {
-    return NextResponse.json({ error: offerRefusalMessage(offer && !offer.ok ? offer.reason : "unknown") }, { status: 400 });
+    return reply(htmlForm, request, { error: offerRefusalMessage(offer && !offer.ok ? offer.reason : "unknown") }, { status: 400 });
   }
 
   // The form and the chat both send first and last in one field under this
@@ -425,7 +479,7 @@ export async function POST(request: Request) {
   const email = str(body.email, 200);
 
   if (email && !looksLikeEmail(email)) {
-    return NextResponse.json(
+    return reply(htmlForm, request, 
       { error: "That email address doesn't look right." },
       { status: 400 }
     );
@@ -434,7 +488,7 @@ export async function POST(request: Request) {
   if (isGuide) {
     // A guide signup is only ever an address — nothing else is collected.
     if (!email) {
-      return NextResponse.json(
+      return reply(htmlForm, request, 
         { error: "Please add an email address to get the guide." },
         { status: 400 }
       );
@@ -444,7 +498,7 @@ export async function POST(request: Request) {
     // phone OR an email — either one (Ben, 2026-10-26; the old site's form
     // took either, and the new one losing that cost leads). The chat always
     // collects a number and is held to it.
-    return NextResponse.json(
+    return reply(htmlForm, request, 
       {
         error:
           source === "chat"
@@ -458,7 +512,7 @@ export async function POST(request: Request) {
   // Optional on a consultation (the form asks it in step two), but when it is
   // sent it has to be one of the three the row and the platform understand.
   if (helpingWho && !HELPING_OPTIONS.has(helpingWho)) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
 
   const concerns = concernList(body.concerns);
@@ -479,7 +533,7 @@ export async function POST(request: Request) {
   // and sends one of three values; the chat never sends the key. Anything
   // else is a malformed request, not a lead.
   if (body.contact_method !== undefined && body.contact_method !== null && !isContactMethod(body.contact_method)) {
-    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
   const contactMethod = !isGuide && isContactMethod(body.contact_method) ? body.contact_method : null;
 
@@ -628,7 +682,7 @@ export async function POST(request: Request) {
         notified?.status === "sent" ? `sent (resend_id=${notified.messageId ?? "?"}, route=${recipients.route})` : `NOT sent (${notified?.error ?? "not attempted"})`
       }${inquiry ? `, platform ${forwarded ? "accepted" : "NOT accepted"}` : ""}. Check the Supabase project (paused?).`
     );
-    return NextResponse.json(
+    return reply(htmlForm, request, 
       {
         error: `We couldn't send your request just now. Please try again in a moment — or call us at ${PHONE_DISPLAY} and we'll take it down over the phone.`,
       },
@@ -647,6 +701,9 @@ export async function POST(request: Request) {
   // which is only true once the record does. Side by side, awaited (a
   // serverless runtime may stop the moment the response returns), and
   // neither can change the response.
+  if (email && !isGuide && honeypot.trim().length > 0) {
+    console.warn(`[destination: visitor email] skipped lead=${savedRowId} — spam trap filled; the office copy is flagged instead`);
+  }
   await Promise.all([
     email &&
     shouldEmailVisitor({
@@ -675,5 +732,5 @@ export async function POST(request: Request) {
 
   // The id is what the form's second step needs, and nothing else: an
   // unguessable uuid v4 that names one row and can change three columns of it.
-  return NextResponse.json({ ok: true, id: savedRowId }, { status: 201 });
+  return reply(htmlForm, request, { ok: true, id: savedRowId }, { status: 201 });
 }

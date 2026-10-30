@@ -488,6 +488,20 @@ number, so anyone who stopped at the chips left nothing behind. Now:
    with no scrolling; `check:contact` measures it. Both exits from step two
    land here. The page is one centered column (`.form-solo`).
 
+**Without JavaScript** (2026-10-30) the form is still a form: `action="/api/
+consultation"` + `method="post"`. The route reads a form-encoded body, saves
+the same step-one row (the center is "Not sure yet" — the chips are buttons),
+and answers 303 to `/contact/sent` or `/contact/not-sent` (two static pages,
+noindex, not in the sitemap) instead of JSON. Before this a submit with no
+script was a GET of /contact with the typed values in the query string and
+nothing saved. The same path catches a bundle that never hydrated. Step one
+also carries `above-fold`, so it is on screen from first paint instead of
+~1 s after hydration (2 s on a slow connection, measured on production). The
+route logs every refusal (`[submission] refused <status>: <message>`, never a
+value), and `form_start` fires on the first focus, pointer, click or input
+anywhere in step one — WebKit does not focus a tapped `<button>`, so a visitor
+whose first move was a center chip used to go uncounted.
+
 When step two is **saved** (never on Skip), a "Details added" email goes to
 the same recipients as the lead email, with the same subject plus "Re: " and
 In-Reply-To / References naming the lead email's Message-ID, so it lands in
