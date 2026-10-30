@@ -36,6 +36,22 @@ export default function ContactPage() {
       return phone ? [{ name: l.name, phone }] : [];
     });
 
+  // "Whatever's easiest… Or email …" — rendered twice, one copy per
+  // breakpoint (desktop: under the three cards; phone: under the form).
+  const waysLine = (
+    <>
+      Whatever&rsquo;s easiest for you. A real person&nbsp;answers.
+      {SHOW_EMAIL && (
+        <>
+          {" "}
+          <span className="contact-ways-email">
+            Or email <a href={`mailto:${EMAIL_ADDRESS}`}>{EMAIL_ADDRESS}</a>.
+          </span>
+        </>
+      )}
+    </>
+  );
+
   return (
     // `desk-compact`: this page keeps the ~90% desktop scale the rest of the
     // site gave back (Ben, 2026-10-15) — see the end of globals.css.
@@ -58,8 +74,12 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Three ways in, side by side (stacked on phones), before the form
-          (Ben, 2026-10-19): text, call, or the form. The main line for both
+      {/* Three ways in, side by side, before the form (Ben, 2026-10-19): text,
+          call, or the form. On phones (Ben, 2026-10-30) only Text and Call
+          remain, as one compact row, the form card starts right under them
+          (the form IS the third way), and the "Or email" line moves below the
+          form — so the Name field is on the first screen at 390×844. The
+          desktop layout is unchanged; globals.css → `.contact-way-form`. The main line for both
           — the center lines stay on step three. The sms: link is a real link
           everywhere; on a desktop, where sms: mostly does nothing, the card
           shows the number with "Text this number" (CSS swaps the hint).
@@ -80,23 +100,13 @@ export default function ContactPage() {
                 <span className="contact-way-detail">{PHONE_DISPLAY}</span>
                 <span className="contact-way-hint">Tap to call</span>
               </a>
-              <a className="contact-way" href="#send-a-message">
+              <a className="contact-way contact-way-form" href="#send-a-message">
                 <span className="contact-way-title">Send a message</span>
                 <span className="contact-way-detail">The form below</span>
                 <span className="contact-way-hint">We reach out to you</span>
               </a>
             </div>
-            <p className="contact-ways-line">
-              Whatever&rsquo;s easiest for you. A real person&nbsp;answers.
-              {SHOW_EMAIL && (
-                <>
-                  {" "}
-                  <span className="contact-ways-email">
-                    Or email <a href={`mailto:${EMAIL_ADDRESS}`}>{EMAIL_ADDRESS}</a>.
-                  </span>
-                </>
-              )}
-            </p>
+            <p className="contact-ways-line contact-ways-line-desk">{waysLine}</p>
           </div>
         </section>
       )}
@@ -117,6 +127,12 @@ export default function ContactPage() {
             centerPhones={centerPhones}
             video={FIRST_VISIT_VIDEO}
           />
+          {/* Phones only: the same line, under the form (Ben, 2026-10-30). */}
+          {SHOW_PHONE && (
+            <p className="contact-ways-line contact-ways-line-phone" data-link-location="contact options">
+              {waysLine}
+            </p>
+          )}
         </div>
       </section>
     </div>

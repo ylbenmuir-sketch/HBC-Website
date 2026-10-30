@@ -812,7 +812,10 @@ details.faq .a a { color: var(--sage-deep); }
 /* Was #a6adb4 — 2.27:1 on the white field, under 4.5:1 and the faintest type
    on the site. --slate is 5.69:1 there, and is already what the ask bar's
    placeholder uses, so every placeholder now reads as the same field. */
-.form input::placeholder, .form textarea::placeholder { color: var(--slate); }
+/* Lighter than typed text (Ben, 2026-10-30): a placeholder at the field's
+   own ink read as a pre-filled answer. Name, phone and email carry none now;
+   the ones that remain ("A doctor, a practice, a friend…") sit at ~60%. */
+.form input::placeholder, .form textarea::placeholder { color: var(--slate); opacity: 0.6; }
 .form .two { display: flex; gap: 16px; } .form .two > div { flex: 1; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip { border: 1px solid var(--line); border-radius: 100px; padding: 11px 18px; font-size: 14px; color: var(--ink); background: #fff; cursor: pointer; font-family: var(--sans); }
@@ -2136,10 +2139,21 @@ body[data-bottombar] footer.site {
 .contact-ways-line { margin: 14px 0 0; text-align: center; font-size: 15px; color: var(--slate); }
 .contact-ways-line a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .contact-ways-line a:hover { border-color: var(--gold); }
-@media (max-width: 640px) {
-  .contact-ways { grid-template-columns: 1fr; gap: 10px; }
-  .contact-way { flex-direction: row; justify-content: space-between; flex-wrap: wrap; text-align: left; padding: 14px 16px; gap: 2px 12px; }
-  .contact-way-title { flex: 1 1 100%; }
+/* Phones (Ben, 2026-10-30): Text and Call as one compact two-up row under
+   the hero; the "Send a message" card and the "Whatever's easiest" line leave
+   this block (the form is the third way, and the line reappears under the
+   form as `.contact-ways-line-phone`). Measured at 390×844: the Name field's
+   bottom edge sits well inside the first screen. */
+.contact-ways-line-phone { display: none; }
+@media (max-width: 767px) {
+  .contact-ways-sec { padding: 14px 0 0; }
+  .contact-ways { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .contact-way { padding: 12px 8px 11px; gap: 2px; }
+  .contact-way-title { font-size: 15px; }
+  .contact-way-detail { font-size: 14px; }
+  .contact-way-hint { display: none; }
+  .contact-way-form, .contact-ways-line-desk { display: none; }
+  .contact-ways-line-phone { display: block; margin: 20px 0 0; }
   .contact-ways-email { display: block; margin-top: 4px; }
 }
 /* "Best way to reach you" — the step-two chip pattern on step one. */
@@ -2192,9 +2206,9 @@ body[data-bottombar] footer.site {
 .form-done .done-line { margin: 16px 0 0; font-size: 15.5px; line-height: 1.55; color: var(--slate); }
 .form-done .done-line + .done-line { margin-top: 8px; }
 .form-done .done-phones a { color: var(--navy); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-soft); white-space: nowrap; }
-@media (max-width: 640px) {
-  .page-hero.compact { padding: 36px 0 28px; }
-  .sec.sec-form { padding-top: 40px; }
+@media (max-width: 767px) {
+  .page-hero.compact { padding: 26px 0 18px; }
+  .sec.sec-form { padding-top: 14px; }
 }
 
 /* ── The Brain Map figure (components/BrainMapFigure.tsx) ──────────────────

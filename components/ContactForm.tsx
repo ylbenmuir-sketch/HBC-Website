@@ -29,8 +29,9 @@ import ScannerText from "./ScannerText";
 /**
  * The contact form, in three steps.
  *
- *   1. **The request** (Ben, 2026-10-26) — name (first and last in one field,
- *      "Sarah Smith" — Ben, 2026-10-27), a phone OR an email
+ *   1. **The request** (Ben, 2026-10-26) — name (first and last in one field;
+ *      no example text in it, the phone or the email — Ben, 2026-10-30: a
+ *      placeholder at the field's ink read as pre-filled), a phone OR an email
  *      (either one; the phone in any common US format), the center
  *      (Nashville · Murfreesboro · Not sure, nothing preselected), and two
  *      optional lines: "Who referred you?" and "Anything we should know?".
@@ -653,7 +654,6 @@ export default function ContactForm({
       <input
         id="first-name"
         name="first_name"
-        placeholder="Sarah Smith"
         autoComplete="name"
         autoCapitalize="words"
         value={givenName}
@@ -671,7 +671,6 @@ export default function ContactForm({
         name="phone"
         type="tel"
         inputMode="tel"
-        placeholder="(615) 555-0134"
         autoComplete="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
@@ -715,7 +714,6 @@ export default function ContactForm({
         name="email"
         type="email"
         inputMode="email"
-        placeholder="sarah@example.com"
         autoComplete="email"
         autoCapitalize="off"
         value={email}
