@@ -14,6 +14,7 @@ import PageSchema from "@/components/PageSchema";
 import ReadMore from "@/components/ReadMore";
 import VideoBand from "@/components/VideoBand";
 import { concerns, getConcern } from "@/lib/concerns";
+import { EXPERIENCES_DISCLAIMER, storyForConcern } from "@/lib/site-config";
 import { articlesForConcern } from "@/lib/resources";
 import { faqQuestions } from "@/lib/schema";
 import { videoForPage } from "@/lib/videos";
@@ -62,6 +63,10 @@ export default async function ConcernPage({
   // Its one video, after the body copy — below the fold on every viewport
   // (lib/videos.ts → `home`, VIDEO-MAP.md).
   const video = videoForPage(`/concerns/${concern.slug}`);
+  // One client story in the client's own words, where one matches this
+  // concern (lib/site-config.ts → storyForConcern); null means the section
+  // is simply not there.
+  const story = storyForConcern(concern.slug);
   const trail = [
     { label: "What We Help With", href: "/what-we-help-with" },
     { label: concern.title },
@@ -285,6 +290,35 @@ export default async function ConcernPage({
 
       {/* Both bands drop whole when a concern ships without the copy for them,
           heading included — see `goalsHeading` in lib/concerns.ts. */}
+      {/* A matching client story, after the section on how LENS helps and
+          before the goals (Ben, 2026-11-02), then the primary ask. The quote
+          is the one /stories publishes — same words, same name. */}
+      {story && (
+        <section className="sec concern-story">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="sec-head rv" style={{ marginBottom: 26 }}>
+              <div className="eyebrow">A client&rsquo;s own words</div>
+            </div>
+            <div className="rv">
+              <Quote
+                theme={story.theme}
+                text={story.text}
+                attribution={
+                  story.firstName
+                    ? `${story.firstName} ${story.lastInitial ?? ""} · ${story.relationship}`
+                    : story.relationship
+                }
+                place={story.city}
+              />
+              <p className="sample-note" style={{ marginTop: 14 }}>{EXPERIENCES_DISCLAIMER}</p>
+              <div className="hero-ctas" style={{ marginTop: 26 }}>
+                <TalkCta />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {concern.goals.length > 0 && (
         <section className="sec sec-ivory2">
           <div className="wrap">
