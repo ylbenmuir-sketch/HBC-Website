@@ -337,6 +337,8 @@ submission requires Supabase credentials.
 | `SUPABASE_LEADS_TABLE_ID` | Optional. The `consultation_requests` table's id in the Supabase dashboard, for the emails' "Open saved request" button. Defaults to the live project's (17487). |
 | `DIALPAD_API_KEY` | Optional. Dialpad company API key used by `lib/sms-confirmation.ts` to text the visitor one confirmation after a consultation request lands. Unset = no text. |
 | `DIALPAD_SMS_FROM` + `_NASHVILLE` / `_MURFREESBORO` / `_FRANKLIN` | The E.164 line the text is sent from, per center, with the un-suffixed one as the default. Same routing rule as the lead email. Requires Dialpad's A2P 10DLC registration to be approved. |
+| `DIALPAD_STATS_API_KEY` | **Phone stats only** (`/api/internal/phone-stats`). A separate Dialpad key, read-only use, with the List calls scope (`calls:list`). Never the confirmation-text key. Server-side only, never logged. Unset = the endpoint answers 503. See "Phone stats for reporting". |
+| `PHONE_STATS_TOKEN` | The bearer token the reporting bot sends to `/api/internal/phone-stats`. 64 hex characters (`openssl rand -hex 32`). Unset = 503. Production only. |
 | `BOOKING_CALENDAR_URL` | **Not read since 2026-10-14.** It was the "Pick a time for your call" link on the contact form's confirmation card; that card is now four fixed things (Ben) and the link is gone. Safe to leave set or remove. |
 | `NEXT_PUBLIC_FEATURE_CELEBRITY` | `true` renders the Trisha Yearwood band under the hero. Read at **build** time (`NEXT_PUBLIC_*` is inlined), so production needs it set in the deploy environment *and* a redeploy. Permissions below still apply. |
 | `NEXT_PUBLIC_FEATURE_ASSISTANT` | `true` renders the site assistant and enables `/api/chat`. **Unset, and shipping unset** — see "Site assistant" below. Build-time, like the flag above. |
@@ -1257,6 +1259,49 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
 - The Trisha Yearwood video (`https://www.youtube.com/shorts/fhmoa68_uHY`)
   has embedding disabled — it must stay a thumbnail linking out, never an
   iframe.
+
+## Phone stats for reporting
+
+`GET /api/internal/phone-stats?from=YYYY-MM-DD&to=YYYY-MM-DD` gives an
+outside reporting bot daily Dialpad **counts** — never a number, name, call
+id, message, recording, transcript or recap. Code: `lib/phone-stats.ts`
+(counting, and the privacy rule) and `app/api/internal/phone-stats/route.ts`
+(auth, cache); `npm test` includes the proof that nothing but counts gets out.
+
+- **Range:** America/Chicago days, inclusive, up to 120 per request, none
+  after today.
+- **Returns:** `generated_at`, `timezone`, `from`, `to`, `notes` (fixed
+  sentences about gaps and definitions), and `rows` — one per day per center
+  (`nashville`, `murfreesboro`, `other` = any other Dialpad line) with
+  `calls_inbound`, `calls_inbound_answered`, `calls_inbound_missed` (includes
+  voicemail and hang-ups), `calls_outbound`, `texts_inbound`,
+  `texts_outbound`, `unique_inbound_callers` and
+  `first_time_inbound_callers` (always null: deriving it would mean keeping
+  caller numbers). A count Dialpad would not give is null and a note says why.
+- **Auth:** `Authorization: Bearer <PHONE_STATS_TOKEN>`; `?token=` also works
+  for bots that cannot set headers, but it lands in Vercel's request logs, so
+  prefer the header. Wrong or missing → 401; either env var unset → 503;
+  30 requests an hour per address (per instance) → 429.
+- **Dialpad reads:** calls from List calls (`GET /api/v2/call`, scope
+  `calls:list`); texts from the stats export (`POST /api/v2/stats`,
+  records/texts — creates an export, changes nothing), which Dialpad gates
+  behind `message_content_export:all`. Without that scope texts are null.
+- **Cache:** each day's counts sit in Vercel's runtime cache for 6 hours (today
+  15 minutes), so the bot cannot make the site hammer Dialpad. A day Dialpad
+  failed on is not cached.
+- Not indexed (`X-Robots-Tag`, and `/api/` is disallowed in robots.txt), not
+  in the sitemap, and no GA — it is JSON, with no page or tag.
+
+**Rotate `PHONE_STATS_TOKEN`:** `openssl rand -hex 32` → Vercel → Project →
+Settings → Environment Variables → `PHONE_STATS_TOKEN` (Production) → Edit →
+paste → Save → Deployments → latest production → ⋯ → Redeploy. Give the bot
+the new value; the old one stops working with that deploy.
+
+**Revoke the Dialpad key:** Dialpad → Admin Settings → My Company →
+Authentication → API Keys → delete the stats key. The endpoint then answers
+with nulls and a note ("Dialpad rejected DIALPAD_STATS_API_KEY") until a new key is set in
+`DIALPAD_STATS_API_KEY` and the site redeployed. The confirmation-text key
+(`DIALPAD_API_KEY`) is separate and unaffected.
 
 ## Deploying to Vercel
 
