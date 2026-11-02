@@ -2247,16 +2247,12 @@ body[data-bottombar] footer.site {
    messages" on touch screens. */
 .contact-ways-sec { padding: 28px 0 0; }
 .contact-ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.contact-way { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px; padding: 18px 12px 16px; background: #fff; border: 1px solid var(--line); border-radius: 4px; text-decoration: none; color: var(--navy); transition: border-color 0.2s, background 0.2s; }
+/* Icon + "Text us" / "Call us" / "Send a message", nothing else (Ben,
+   2026-11-02): the number stays in the header. Equal widths, one line. */
+.contact-way { display: flex; flex-direction: row; align-items: center; justify-content: center; text-align: center; gap: 8px; min-height: 52px; padding: 14px 10px; background: #fff; border: 1px solid var(--line); border-radius: 4px; text-decoration: none; color: var(--navy); white-space: nowrap; transition: border-color 0.2s, background 0.2s; }
 .contact-way:hover { border-color: var(--sage-deep); }
+.contact-way svg { flex: none; width: 20px; height: 20px; }
 .contact-way-title { font-family: var(--sans); font-weight: 600; font-size: 16px; color: var(--navy); }
-.contact-way-detail { font-family: var(--sans); font-size: 14.5px; color: var(--ink); }
-.contact-way-hint { font-family: var(--sans); font-size: 12px; color: var(--slate); letter-spacing: 0.02em; }
-.contact-way-hint-touch { display: none; }
-@media (hover: none) and (pointer: coarse) {
-  .contact-way-hint-desk { display: none; }
-  .contact-way-hint-touch { display: inline; }
-}
 .contact-ways-line { margin: 14px 0 0; text-align: center; font-size: 15px; color: var(--slate); }
 .contact-ways-line a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .contact-ways-line a:hover { border-color: var(--gold); }
@@ -2269,10 +2265,8 @@ body[data-bottombar] footer.site {
 @media (max-width: 767px) {
   .contact-ways-sec { padding: 14px 0 0; }
   .contact-ways { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .contact-way { padding: 12px 8px 11px; gap: 2px; }
+  .contact-way { padding: 12px 8px; min-height: 48px; gap: 8px; }
   .contact-way-title { font-size: 15px; }
-  .contact-way-detail { font-size: 14px; }
-  .contact-way-hint { display: none; }
   .contact-way-form, .contact-ways-line-desk { display: none; }
   .contact-ways-line-phone { display: block; margin: 20px 0 0; }
   .contact-ways-email { display: block; margin-top: 4px; }
@@ -2308,13 +2302,17 @@ body[data-bottombar] footer.site {
    is a sentence a person has to be able to read, not a caption. Slate on
    white is 5.69:1. The label is the hit area, so the 20px box is not the
    whole target. */
-.form .sms-consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; }
+.form .sms-consent { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 12px; align-items: center; margin-top: 16px; }
 /* Until a phone number is typed the box is quieter (Ben, 2026-10-26) — the
    checkbox only; the wording keeps its full contrast for readers and scanners. */
 .form .sms-consent-idle input[type="checkbox"] { opacity: 0.45; }
-.form .sms-consent input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
-.form .sms-consent label { display: block; margin: 0; font-size: 13px; line-height: 1.5; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); cursor: pointer; }
-.form .sms-consent a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.form .sms-consent input[type="checkbox"] { width: 20px; height: 20px; margin: 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
+/* The label is the tap target (Ben, 2026-11-02): 44px tall, the box centred
+   on it. Sentence case, body size and colour — a sentence, not a caption. */
+.form .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 16px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
+/* The disclosure, under the label and aligned with its text, not the box. */
+.form .sms-consent-note { grid-column: 2; margin: 0; font-size: 13px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--slate); }
+.form .sms-consent a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 2px; }
 .form-skip:disabled { opacity: 0.5; cursor: default; }
 /* Step panels mount after a submit and may land with the viewport scrolled
    past their top; scrollIntoView() targets this margin so the sticky header
@@ -2661,26 +2659,28 @@ body[data-bottombar] footer.site {
   .desk-compact .page-hero.compact .sub { display: none; }
   .desk-compact .contact-ways-sec { padding: 10px 0 0; }
   .desk-compact .contact-ways { gap: 8px; }
-  .desk-compact .contact-way { flex-direction: row; justify-content: center; gap: 6px; padding: 11px 6px; }
-  .desk-compact .contact-way-title { font-size: 14px; }
-  .desk-compact .contact-way-title::after { content: ":"; }
-  .desk-compact .contact-way-detail { font-size: 14px; }
+  .desk-compact .contact-way { padding: 10px 6px; min-height: 44px; line-height: 1.2; }
+  .desk-compact .contact-way-title { font-size: 15px; }
   .desk-compact .sec.sec-form { padding-top: 10px; }
   .desk-compact .form-card { padding: 14px 16px 14px !important; }
   .desk-compact form.form-card > .eyebrow { display: none; }
-  .desk-compact .form-compact label { margin: 6px 0 3px; font-size: 11px; letter-spacing: 0.12em; }
+  .desk-compact .form-compact label { margin: 6px 0 3px; font-size: 11px; letter-spacing: 0.12em; line-height: 1.2; }
   .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
-  .desk-compact .form-compact input:not([type="checkbox"]), .desk-compact .form-compact select { padding: 10px 14px; font-size: 16px; min-height: 44px; }
+  .desk-compact .form-compact input:not([type="checkbox"]), .desk-compact .form-compact select { padding: 10px 14px; font-size: 16px; line-height: 1.3; min-height: 44px; }
   .desk-compact .form-compact .either-note { display: none; }
-  .desk-compact .form .sms-consent { margin-top: 6px; gap: 8px; }
-  .desk-compact .form .sms-consent label { font-size: 12.5px; line-height: 1.35; margin: 0; }
+  /* The consent label keeps its sentence styling here: the caption rule
+     above (11px, tracked) is later than the base rule and the same
+     specificity, so every property it sets is reset. */
+  .desk-compact .form .sms-consent { margin-top: 8px; column-gap: 12px; }
+  .desk-compact .form .sms-consent label { margin: 0; font-size: 15px; line-height: 1.35; letter-spacing: 0; }
+  .desk-compact .form .sms-consent-note { font-size: 12px; }
   .desk-compact .reach-chips { gap: 6px; flex-wrap: nowrap; }
   .desk-compact .reach-chips .chip { padding: 9px 12px; font-size: 13.5px; flex: 1 1 0; text-align: center; white-space: nowrap; }
   /* 320px: three chips in 258px — "Not sure" overflowed the viewport by 4px (check:layout). */
   @media (max-width: 359px) {
     .desk-compact .reach-chips .chip { padding: 9px 6px; font-size: 13px; min-width: 0; }
   }
-  .desk-compact form.form-card button[type="submit"] { margin-top: 10px !important; padding: 13px 20px; min-height: 48px; }
+  .desk-compact form.form-card button[type="submit"] { margin-top: 8px !important; padding: 12px 20px; line-height: 1.3; min-height: 48px; }
   .desk-compact form.form-card .micro { margin-top: 10px; font-size: 12.5px; }
 }
 

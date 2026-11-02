@@ -266,16 +266,26 @@ function segments(text) {
 
 /* ── the consent wording (lib/sms-consent.ts), as a reader sees it ─────── */
 
-// Ben's sentence for the Dialpad registration (2026-10-14), spelled out
-// rather than imported, so a change to it has to be made twice on purpose.
-// Straight apostrophe in "we'll" — character for character.
-const CONSENT_SENTENCE = "I agree to receive texts from Harmonized Brain Centers at this number about my appointment and inquiry. Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way.";
-const FORM_CONSENT_TEXT = `${CONSENT_SENTENCE} SMS Terms · Privacy Policy`;
+// Ben's label and disclosure (2026-11-02), spelled out rather than imported,
+// so a change to them has to be made twice on purpose.
+const CONSENT_LABEL = "Text me updates about my request";
+const CONSENT_SENTENCE = "Optional. Texts from Harmonized Brain Centers about your inquiry and appointments. Msg frequency varies; msg & data rates may apply. Reply HELP for help, STOP to opt out.";
+const FORM_CONSENT_TEXT = `${CONSENT_LABEL} — ${CONSENT_SENTENCE} SMS Terms · Privacy Policy`;
 const CHAT_CONSENT_QUESTION = "Can Harmonized Brain Centers also text you about your appointment and inquiry? Msg frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. Optional — we'll call you either way. SMS Terms: /sms-terms · Privacy Policy: /privacy-policy";
 /** The carriers' required phrases, each of which must reach the raw HTML
- *  of /contact as one unbroken string (and, the sentence aside, /sms-terms). */
+ *  of /contact as one unbroken string — the form's label and disclosure
+ *  (Ben's wording, 2026-11-02: semicolon, lower-case "msg", "opt out"),
+ *  then the brand and the three disclosures as the form spells them. */
 const REQUIRED_PHRASES = [
+  CONSENT_LABEL,
   CONSENT_SENTENCE,
+  "Harmonized Brain Centers",
+  "Msg frequency varies",
+  "msg & data rates may apply",
+  "Reply HELP for help, STOP to opt out",
+];
+/** The same disclosures on /sms-terms, in the SMS_* constants' own forms. */
+const TERMS_PHRASES = [
   "Harmonized Brain Centers",
   "Msg frequency varies.",
   "Msg & data rates may apply.",
@@ -688,15 +698,15 @@ async function expectConfirmationFits(page, name) {
 async function rawHtml() {
   console.log(`\n▸ raw HTML (no JavaScript)`);
   const terms = await fetch(`${BASE}/sms-terms`).then((r) => r.text());
-  for (const phrase of REQUIRED_PHRASES.slice(1)) {
+  for (const phrase of TERMS_PHRASES) {
     expect(`/sms-terms raw HTML carries ${JSON.stringify(phrase)} unbroken`, terms.includes(phrase));
   }
   const html = await fetch(`${BASE}/contact`).then((r) => r.text());
   for (const phrase of REQUIRED_PHRASES) {
     expect(`/contact raw HTML carries ${JSON.stringify(phrase.length > 60 ? `${phrase.slice(0, 57)}…` : phrase)} unbroken`, html.includes(phrase));
   }
-  expect("/contact raw HTML: the consent box is there, unticked, linking /sms-terms and /privacy-policy", /<input[^>]*id="sms-consent"[^>]*>/.test(html) && !/<input[^>]*id="sms-consent"[^>]*checked/.test(html) && /<label for="sms-consent">[\s\S]*?href="\/sms-terms"[\s\S]*?href="\/privacy-policy"[\s\S]*?<\/label>/.test(html));
-  expect("/contact raw HTML: the consent box comes right after the phone input", /<input[^>]*id="phone"[^>]*\/?>\s*<div class="sms-consent[^"]*">\s*<input[^>]*id="sms-consent"/.test(html));
+  expect("/contact raw HTML: the consent box is there, unticked, not required, its disclosure linking /sms-terms and /privacy-policy", /<input[^>]*id="sms-consent"[^>]*>/.test(html) && !/<input[^>]*id="sms-consent"[^>]*(checked|required)/.test(html) && /<label for="sms-consent">[^<]*<\/label><p class="sms-consent-note"[^>]*>[\s\S]*?href="\/sms-terms"[\s\S]*?href="\/privacy-policy"[\s\S]*?<\/p>/.test(html));
+  expect("/contact raw HTML: the consent box comes right after the referral input, before the button (Ben, 2026-11-02)", /<input[^>]*id="referred-by"[^>]*\/?>\s*<div class="sms-consent[^"]*">\s*<input[^>]*id="sms-consent"/.test(html));
   expect("/contact raw HTML: H1 is \"Let’s get you started\"", /<h1[^>]*>Let(’|&#x27;|&rsquo;)s get you started<\/h1>/.test(html), (html.match(/<h1[^>]*>.*?<\/h1>/) ?? [""])[0]);
   // "note" is a step-two field since 2026-11-02 (Ben), so it is not in the server HTML.
   for (const id of ["first-name", "phone", "email", "center-nashville", "center-murfreesboro", "center-not-sure", "referred-by"]) {
@@ -707,28 +717,33 @@ async function rawHtml() {
 }
 
 /**
- * The consent box as the visitor finds it: under the phone row, unchecked,
- * the exact wording in its label, links to both pages. Then tick it or not.
+ * The consent box as the visitor finds it: last before the button (Ben,
+ * 2026-11-02), unchecked, the label and the disclosure the exact wording,
+ * links to both pages, the label at least 44px tall. Then tick it or not.
  */
 async function consentBox(page, name, tick) {
   const look = JSON.parse(await page.eval(`JSON.stringify((() => {
     const box = document.querySelector("#sms-consent");
     const wrap = box?.closest(".sms-consent");
     const label = document.querySelector('label[for="sms-consent"]');
+    const note = document.getElementById("sms-consent-note");
     return {
       present: !!box,
       type: box?.type ?? null,
       checked: box?.checked ?? null,
       required: box?.required ?? null,
       label: label?.textContent ?? null,
-      hrefs: [...(label?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href")),
-      underPhone: wrap?.previousElementSibling?.id === "phone" && !box?.closest(".form-step"),
+      note: note?.textContent ?? null,
+      labelHeight: label ? label.getBoundingClientRect().height : 0,
+      hrefs: [...(note?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href")),
+      lastBeforeButton: wrap?.previousElementSibling?.id === "referred-by" && !box?.closest(".form-step"),
     };
   })())`));
   expect(`${name}: consent box on step one, a checkbox, unchecked, not required`, look.present && look.type === "checkbox" && look.checked === false && look.required === false, JSON.stringify(look));
-  expect(`${name}: consent box sits directly under the phone field`, look.underPhone, JSON.stringify(look));
-  expect(`${name}: consent label is the exact wording`, look.label === FORM_CONSENT_TEXT, JSON.stringify(look.label));
-  expect(`${name}: consent label links /sms-terms and /privacy-policy`, JSON.stringify(look.hrefs) === JSON.stringify(["/sms-terms", "/privacy-policy"]), JSON.stringify(look.hrefs));
+  expect(`${name}: consent box is the last field, right after the referral`, look.lastBeforeButton, JSON.stringify(look));
+  expect(`${name}: consent label + disclosure are the exact wording`, `${look.label} — ${look.note}` === FORM_CONSENT_TEXT, JSON.stringify([look.label, look.note]));
+  expect(`${name}: consent label is a 44px tap target`, look.labelHeight >= 44, String(look.labelHeight));
+  expect(`${name}: consent disclosure links /sms-terms and /privacy-policy`, JSON.stringify(look.hrefs) === JSON.stringify(["/sms-terms", "/privacy-policy"]), JSON.stringify(look.hrefs));
   if (tick) {
     const r = await page.eval(`(() => { const b = document.querySelector("#sms-consent"); b.click(); return b.checked ? "ok" : "click did not check it"; })()`);
     if (r !== "ok") throw new Error(r);

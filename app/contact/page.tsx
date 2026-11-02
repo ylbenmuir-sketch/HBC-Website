@@ -82,29 +82,41 @@ export default function ContactPage() {
           form — so the Name field is on the first screen at 390×844. The
           desktop layout is unchanged; globals.css → `.contact-way-form`. The main line for both
           — the center lines stay on step three. The sms: link is a real link
-          everywhere; on a desktop, where sms: mostly does nothing, the card
-          shows the number with "Text this number" (CSS swaps the hint).
-          Every tap here reports contact_link_click with location
+          everywhere. Every tap here reports contact_link_click with location
           "contact_page" (components/Analytics.tsx). */}
       {SHOW_PHONE && (
         <section className="contact-ways-sec">
           <div className="wrap form-solo" data-link-location="contact_page">
+            {/* Icon + "Text us" / "Call us", no number (Ben, 2026-11-02):
+                the number is in the header. Same sms:/tel: links to the main
+                line as before — the center lines stay on step three — and
+                the same contact_link_click (location contact_page, link_type
+                text/phone). The icons are the phone action bar's. */}
             <div className="contact-ways">
-              <a className="contact-way" href={`sms:${PHONE_TEL}`}>
+              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text ${PHONE_DISPLAY}`}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 <span className="contact-way-title">Text us</span>
-                <span className="contact-way-detail">{PHONE_DISPLAY}</span>
-                <span className="contact-way-hint contact-way-hint-desk">Text this number</span>
-                <span className="contact-way-hint contact-way-hint-touch">Opens your messages</span>
               </a>
-              <a className="contact-way" href={`tel:${PHONE_TEL}`}>
+              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 <span className="contact-way-title">Call us</span>
-                <span className="contact-way-detail">{PHONE_DISPLAY}</span>
-                <span className="contact-way-hint">Tap to call</span>
               </a>
               <a className="contact-way contact-way-form" href="#send-a-message">
                 <span className="contact-way-title">Send a message</span>
-                <span className="contact-way-detail">The form below</span>
-                <span className="contact-way-hint">We reach out to you</span>
               </a>
             </div>
             <p className="contact-ways-line contact-ways-line-desk">{waysLine}</p>

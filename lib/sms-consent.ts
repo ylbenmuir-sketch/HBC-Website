@@ -69,27 +69,26 @@ export const SMS_OPT_IN_DATA_SENTENCE =
 export type ConsentPart = string | { href: string; label: string };
 
 /**
- * The consent sentence, exactly as Ben wrote it for the Dialpad registration
- * (2026-10-14) — character for character, straight apostrophe included,
- * because the registration quotes it and a reviewer compares the two. It is
- * the contact form's checkbox label and, minus its first clause, the chat's
- * question. Change it here and nowhere else, and re-register when you do.
- *
- * One string, rendered as one text node (components/ScannerText.tsx), so it
- * reaches the raw HTML unbroken for scanners that match bytes.
+ * The contact form's checkbox (Ben, 2026-11-02): a short label on the box
+ * and the full disclosure directly under it, both always visible, both in
+ * the server-rendered HTML, the box unticked and never required. Together
+ * they replace the one long sentence that was the label until 2026-11-02;
+ * the chat's question below keeps its own wording. Each is one string,
+ * rendered as one text node (components/ScannerText.tsx), so it reaches the
+ * raw HTML unbroken for scanners that match bytes. Change them here and
+ * nowhere else, and re-check the Dialpad registration when you do.
  */
-export const CONSENT_SENTENCE =
-  `I agree to receive texts from ${DBA_NAME} at this number about my appointment and inquiry. ` +
-  `${SMS_FREQUENCY} ${SMS_RATES} ${SMS_HELP_STOP} ` +
-  `Optional — we'll call you either way.`;
+export const FORM_CONSENT_LABEL = "Text me updates about my request";
+export const FORM_CONSENT_DISCLOSURE =
+  `Optional. Texts from ${DBA_NAME} about your inquiry and appointments. ` +
+  `Msg frequency varies; msg & data rates may apply. Reply HELP for help, STOP to opt out.`;
 
 /**
- * The contact form's checkbox. Unchecked by default; the form submits either
- * way. Everything a reviewer looks for is in the visible label — nothing is
- * behind the links except the full terms.
+ * The disclosure under the label, with its two links. Everything a reviewer
+ * looks for is visible — nothing is behind the links except the full terms.
  */
 export const FORM_CONSENT_PARTS: ConsentPart[] = [
-  `${CONSENT_SENTENCE} `,
+  `${FORM_CONSENT_DISCLOSURE} `,
   { href: SMS_TERMS_PATH, label: "SMS Terms" },
   " · ",
   { href: PRIVACY_PATH, label: "Privacy Policy" },
@@ -100,7 +99,12 @@ export function consentPlainText(parts: ConsentPart[]): string {
   return parts.map((p) => (typeof p === "string" ? p : p.label)).join("");
 }
 
-export const FORM_CONSENT_TEXT = consentPlainText(FORM_CONSENT_PARTS);
+/**
+ * What the row records as the wording shown (`sms_consent_text`): the label,
+ * then the disclosure as a reader sees it. The dash is the join; neither
+ * string carries it.
+ */
+export const FORM_CONSENT_TEXT = `${FORM_CONSENT_LABEL} — ${consentPlainText(FORM_CONSENT_PARTS)}`;
 
 /**
  * The assistant's consent question (lib/chat/booking.ts). The chat cannot

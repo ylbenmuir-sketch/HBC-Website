@@ -14,7 +14,7 @@ import {
 } from "@/lib/analytics";
 import { firstName } from "@/lib/first-name";
 import { capitalizeName } from "@/lib/name-case";
-import { FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
+import { FORM_CONSENT_LABEL, FORM_CONSENT_PARTS, FORM_CONSENT_TEXT } from "@/lib/sms-consent";
 import {
   HEARD_ABOUT_OPTIONS,
   TIME_OPTIONS,
@@ -58,11 +58,13 @@ import ScannerText from "./ScannerText";
  *
  * ## Texts are opt-in
  *
- * The one consent point for texts on the form is the step-one checkbox
- * directly under the phone field (Ben, 2026-10-26 — back from step two for
- * A2P 10DLC: Dialpad's carrier review reads it in /contact's server-rendered
- * HTML, so it is always rendered, never hidden until a number is typed).
- * Unchecked, optional, the wording unchanged (lib/sms-consent.ts), and
+ * The one consent point for texts on the form is the step-one checkbox,
+ * the last thing before "Send My Request" (Ben, 2026-11-02; it sat under
+ * the phone field from 2026-10-26, back from step two for A2P 10DLC:
+ * Dialpad's carrier review reads it in /contact's server-rendered HTML, so
+ * it is always rendered, never hidden until a number is typed). A short
+ * label on the box, the full disclosure under it (lib/sms-consent.ts),
+ * unchecked, optional, and
  * nothing is texted unless it is ticked — not even the confirmation. A tick
  * with no phone typed is not sent. The route records the wording shown and,
  * on a yes, the time; the confirmation text goes on that yes.
@@ -694,36 +696,6 @@ export default function ContactForm({
         aria-invalid={invalid("phone")}
       />
 
-      {/* Text-message consent, directly under the phone number it is about
-          (A2P 10DLC: carrier scanners weight how close it sits to the number
-          input, and read it in the server-rendered HTML — so it is always
-          rendered, quieter until a number is typed). Everything a reviewer
-          looks for is in the label itself; the links open a new tab so a
-          half-filled form is not lost. Optional: the request goes through
-          ticked or not. */}
-      <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
-        <input
-          id="sms-consent"
-          name="sms_consent"
-          type="checkbox"
-          checked={smsConsent}
-          onChange={(e) => setSmsConsent(e.target.checked)}
-        />
-        <label htmlFor="sms-consent">
-          {FORM_CONSENT_PARTS.map((part, i) =>
-            // ScannerText: the "&" in "Msg & data rates" reaches the raw
-            // HTML as itself, for scanners that match bytes.
-            typeof part === "string" ? (
-              <ScannerText key={i} text={part} />
-            ) : (
-              <a key={i} href={part.href} target="_blank" rel="noopener">
-                {part.label}
-              </a>
-            )
-          )}
-        </label>
-      </div>
-
       <label htmlFor="email">Email</label>
       <input
         id="email"
@@ -761,6 +733,38 @@ export default function ContactForm({
         onChange={(e) => setReferredBy(e.target.value)}
       />
 
+      {/* Text-message consent, last before the button (Ben, 2026-11-02).
+          A2P 10DLC: carrier reviewers read it in the server-rendered HTML,
+          so it is always rendered — quieter until a number is typed, never
+          hidden. The box and its short label are one 44px tap target; the
+          full disclosure sits under the label, left-aligned with it. The
+          links open a new tab so a half-filled form is not lost. Optional:
+          the request goes through ticked or not, and a tick with no phone
+          is a no. */}
+      <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
+        <input
+          id="sms-consent"
+          name="sms_consent"
+          type="checkbox"
+          checked={smsConsent}
+          onChange={(e) => setSmsConsent(e.target.checked)}
+          aria-describedby="sms-consent-note"
+        />
+        <label htmlFor="sms-consent">{FORM_CONSENT_LABEL}</label>
+        <p className="sms-consent-note" id="sms-consent-note">
+          {FORM_CONSENT_PARTS.map((part, i) =>
+            // ScannerText: the "&" in "msg & data rates" reaches the raw
+            // HTML as itself, for scanners that match bytes.
+            typeof part === "string" ? (
+              <ScannerText key={i} text={part} />
+            ) : (
+              <a key={i} href={part.href} target="_blank" rel="noopener">
+                {part.label}
+              </a>
+            )
+          )}
+        </p>
+      </div>
 
       {/*
         Hidden from real users three ways, because one is not reliable:
