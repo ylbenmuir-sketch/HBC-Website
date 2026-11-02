@@ -6,6 +6,8 @@ import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { practitionerBandStat } from "@/lib/team";
 import {
+  AMEN_PARTNER,
+  AMEN_PARTNER_ENABLED,
   FOUNDER_DISPLAY_NAME,
   PHYSICIAN_REFERRALS,
   SHOW_TEAM,
@@ -119,6 +121,9 @@ export default function AboutPage() {
                 practice ever read. Approved copy, interpolated from
                 site-config so this page and that one cannot come apart. */}
             <p>{PHYSICIAN_REFERRALS}</p>
+            {/* The one approved sentence about Amen Clinics (Ben,
+                2026-11-02), beside the other referral fact. */}
+            {AMEN_PARTNER_ENABLED && <p>{AMEN_PARTNER.sentence}</p>}
             <Btn href="/about/founder" variant="ghost" arrow>
               The founder&rsquo;s story
             </Btn>

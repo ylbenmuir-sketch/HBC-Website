@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import PartnerBadge from "@/components/PartnerBadge";
 import PhotoFrame from "@/components/PhotoFrame";
 import BrainMapStage from "@/components/BrainMapStage";
 import BrandName from "@/components/BrandName";
@@ -31,6 +32,7 @@ import {
 } from "@/lib/locations";
 import { practitionerBandStat } from "@/lib/team";
 import {
+  AMEN_PARTNER_ENABLED,
   BRAIN_MAP_CALLOUTS,
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
@@ -499,9 +501,24 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* The Amen Clinics referral-partner strip (Ben, 2026-11-02): one
+          quiet, centered line directly under the hero, above "What brings
+          you in?" — on a phone that is the chips section, on a desktop the
+          chips are in the hero and the proof band follows. The hero's own
+          Get Started is untouched either way. Light background, nothing to
+          compete with the asks around it
+          (components/PartnerBadge.tsx, globals.css `.partner-strip`). */}
+      {AMEN_PARTNER_ENABLED && (
+        <section className="partner-strip">
+          <div className="wrap">
+            <PartnerBadge location="home_strip" />
+          </div>
+        </section>
+      )}
+
       {/* "What brings you in?" as its own section on a phone (Ben,
           2026-11-02): the eight chips in a two-column grid right after the
-          hero, so the hero itself is one action, one reassurance, one proof.
+          hero (and the partner strip), so the hero itself is one action, one reassurance, one proof.
           `display: none` from 761px up, where the chips are inside the hero
           (globals.css `.concern-chips-sec`). The same links and the same
           concern_chip_click event either way. */}

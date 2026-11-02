@@ -999,6 +999,32 @@ export const PHYSICIAN_REFERRALS =
   "standing referral list.";
 
 /* ------------------------------------------------------------------ */
+/* Referral partner (Amen Clinics)                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * HBC is a referral partner of Amen Clinics, with permission to say so
+ * (Ben, 2026-11-02). `line` is the approved wording and the only claim the
+ * site makes about the relationship: never "endorsed by", "certified",
+ * "recommends", "refers all", and never anything that reads as HBC being
+ * part of Amen. The logo is Amen's own, used as supplied — original colors,
+ * not recolored, cropped or redrawn (components/PartnerBadge.tsx).
+ *
+ * `url` is empty for now; once it is set, the badge links there in a new
+ * tab and reports partner_badge_click (lib/analytics.ts).
+ */
+export const AMEN_PARTNER_ENABLED =
+  process.env.NEXT_PUBLIC_AMEN_PARTNER_ENABLED !== "false";
+export const AMEN_PARTNER = {
+  name: "Amen Clinics",
+  line: "A referral partner of Amen Clinics",
+  /** The one body-copy sentence (/about, /first-visit). */
+  sentence: "HBC is a referral partner of Amen Clinics.",
+  logo: { src: "/partners/amen-clinics.png", width: 800, height: 299 },
+  url: "",
+} as const;
+
+/* ------------------------------------------------------------------ */
 /* Privacy notice (/privacy-policy)                                    */
 /* ------------------------------------------------------------------ */
 

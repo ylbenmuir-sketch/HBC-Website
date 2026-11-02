@@ -647,6 +647,21 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .founder-note cite { display: block; font-family: var(--sans); font-style: normal; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin-top: 14px; }
 .founder-note cite a { color: var(--sage-deep); }
 
+/* The Amen Clinics referral-partner badge (components/PartnerBadge.tsx):
+   logo + the one approved line, inline, centered. Logo 28px tall here,
+   24px on phones (below). `.partner-strip` is the homepage band under the
+   hero: slim, on the page's own ivory, a hairline above and below so it
+   reads as a quiet note and not a section. `.partner-badge-small` is the
+   /contact version under the form. The logo keeps its own colors — never
+   filtered, never recolored. */
+.partner-strip { padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
+.partner-badge { display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--slate); font-size: 14px; letter-spacing: 0.01em; text-decoration: none; }
+.partner-badge-logo { height: 28px; width: auto; flex: none; }
+.partner-badge-line { white-space: nowrap; }
+a.partner-badge:hover .partner-badge-line { color: var(--navy); }
+.partner-badge-small { margin-top: 28px; font-size: 13px; gap: 12px; }
+.partner-badge-small .partner-badge-logo { height: 24px; }
+
 /* quotes / stories */
 .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
 .quote { background: var(--ivory); border: 1px solid var(--line); border-radius: 4px; padding: 44px 46px; box-shadow: 0 20px 44px -36px rgba(28, 43, 58, 0.3); }
@@ -1342,6 +1357,11 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero-proof-long { display: none; }
   .hero-proof-short { display: inline; }
   .hero-proof-star { color: var(--gold-lift); }
+
+  /* The partner strip on a phone: 24px logo, 13px line, a little tighter. */
+  .partner-strip { padding: 18px 0; }
+  .partner-badge { gap: 12px; font-size: 13px; }
+  .partner-badge-logo { height: 24px; }
 
   /* ---- "What brings you in?" — the chips' own section after the hero
      (components/HeroConcernChips.tsx `variant="section"`): a real heading,

@@ -6,6 +6,8 @@ import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
 import { Btn, TalkCta } from "@/components/Buttons";
 import {
+  AMEN_PARTNER,
+  AMEN_PARTNER_ENABLED,
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
@@ -178,6 +180,9 @@ export default function FirstVisitPage() {
                 you slept and felt at the next visit &mdash; that&rsquo;s the
                 data that shapes your plan.
               </p>
+              {/* The one approved sentence about Amen Clinics (Ben,
+                  2026-11-02), with the card about what comes after. */}
+              {AMEN_PARTNER_ENABLED && <p>{AMEN_PARTNER.sentence}</p>}
             </div>
           </div>
           {/* This page received five inbound contextual links and passed one

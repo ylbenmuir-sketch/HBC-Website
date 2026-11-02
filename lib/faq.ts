@@ -1,4 +1,6 @@
 import {
+  AFTER_SESSION_REPORT,
+  AMEN_PARTNER_ENABLED,
   BRAIN_MAP_PRICE,
   COURSE_VARIES_NOTE,
   FIRST_VISIT_DURATION,
@@ -10,7 +12,6 @@ import {
   PACKAGE_PRICE,
   PACKAGE_SAVING,
   PACKAGE_SESSIONS,
-  AFTER_SESSION_REPORT,
   RISK_REVERSAL,
   SESSION_LENGTH,
   SESSION_PRICE,
@@ -145,6 +146,16 @@ export const SITE_FAQS: SiteFaq[] = [
     q: "Can I continue seeing my doctor or therapist?",
     a: "Please do. LENS is routinely used alongside other care, and we're glad to coordinate with providers you already trust. We never advise on medication.",
   },
+  // The approved answer and nothing more (Ben, 2026-11-02); see
+  // AMEN_PARTNER in lib/site-config.ts.
+  ...(AMEN_PARTNER_ENABLED
+    ? [
+        {
+          q: "Do you work with Amen Clinics?",
+          a: "Yes. Harmonized Brain Centers is a referral partner of Amen Clinics.",
+        },
+      ]
+    : []),
   {
     q: "What does it cost?",
     a: `The phone call is free. The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep. Regular sessions are ${SESSION_PRICE}, and a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE} — ${PACKAGE_SAVING} less than paying per session. ${PACKAGE_NOTE}`,

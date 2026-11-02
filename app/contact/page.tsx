@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
+import PartnerBadge from "@/components/PartnerBadge";
 import { getVideo } from "@/lib/videos";
 import { locationPhone, locations } from "@/lib/locations";
 import { EMAIL_ADDRESS, PHONE_DISPLAY, PHONE_TEL, SHOW_EMAIL, SHOW_PHONE } from "@/lib/site-config";
@@ -133,6 +134,11 @@ export default function ContactPage() {
               {waysLine}
             </p>
           )}
+          {/* The Amen Clinics referral-partner badge, small, with the
+              reassurance lines under the form (Ben, 2026-11-02) — below
+              the form on every width, so step one's first screen at
+              390×844 does not move (components/PartnerBadge.tsx). */}
+          <PartnerBadge location="contact_page" size="small" />
         </div>
       </section>
     </div>

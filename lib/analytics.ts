@@ -144,6 +144,9 @@ export const CONCERN_CHIPS = [
   "Migraines",
 ] as const;
 export type ConcernChip = (typeof CONCERN_CHIPS)[number];
+/** Where a partner badge sits (components/PartnerBadge.tsx); snake_case like LINK_LOCATIONS. */
+export const PARTNER_BADGE_LOCATIONS = ["home_strip", "contact_page"] as const;
+export type PartnerBadgeLocation = (typeof PARTNER_BADGE_LOCATIONS)[number];
 export type LinkLocation = (typeof LINK_LOCATIONS)[number];
 
 type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
@@ -159,6 +162,10 @@ export type SiteEvent =
   | { name: "brain_map_jump"; params: { page_path: string } }
   | { name: "giveaway_path_pick"; params: { choice: "new" | "current"; page_path: string } }
   | { name: "guide_download"; params: { page_path: string } }
+  | {
+      name: "partner_badge_click";
+      params: { partner: "amen_clinics"; location: PartnerBadgeLocation; page_path: string };
+    }
   | { name: "page_view"; params: { page_path: string } }
   | { name: FunnelStep; params: FunnelParams };
 
@@ -371,6 +378,20 @@ export function brainMapJumpEvent(pagePath: unknown): SiteEvent {
 }
 
 /** A saved guide sign-up. The page only — never the address. */
+/**
+ * A tap on a linked partner badge (components/PartnerBadge.tsx). Fixed
+ * values only: the partner's slug and the badge's location.
+ */
+export function partnerBadgeEvent(
+  location: PartnerBadgeLocation,
+  pagePath: unknown,
+): SiteEvent {
+  return {
+    name: "partner_badge_click",
+    params: { partner: "amen_clinics", location, page_path: cleanPath(pagePath) },
+  };
+}
+
 export function trackGuideDownload(pagePath: unknown): void {
   trackEvent({ name: "guide_download", params: { page_path: cleanPath(pagePath) } });
 }
