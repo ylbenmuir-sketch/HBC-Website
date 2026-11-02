@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { SHOW_DRAFT_CONTENT } from "@/lib/site-config";
 
 /**
@@ -16,6 +16,7 @@ export default function Quote({
   footerStyle,
   attributionStyle,
   textStyle,
+  lead,
 }: {
   theme: string;
   text: string;
@@ -27,11 +28,14 @@ export default function Quote({
   footerStyle?: CSSProperties;
   attributionStyle?: CSSProperties;
   textStyle?: CSSProperties;
+  /** Rendered between the theme line and the quote (the Google stars). */
+  lead?: ReactNode;
 }) {
   if (sample && !SHOW_DRAFT_CONTENT) return null;
   return (
     <div className="quote" style={style}>
       <div className="theme">{theme}</div>
+      {lead}
       <p style={textStyle}>&ldquo;{text}&rdquo;</p>
       {attribution && (
         <footer style={footerStyle}>

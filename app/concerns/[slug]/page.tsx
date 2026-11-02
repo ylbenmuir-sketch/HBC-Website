@@ -8,6 +8,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import Quote from "@/components/Quote";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
+import GoogleReviewQuote from "@/components/GoogleReviewQuote";
 import GuideCta from "@/components/GuideCta";
 import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
 import PageSchema from "@/components/PageSchema";
@@ -63,10 +64,12 @@ export default async function ConcernPage({
   // Its one video, after the body copy — below the fold on every viewport
   // (lib/videos.ts → `home`, VIDEO-MAP.md).
   const video = videoForPage(`/concerns/${concern.slug}`);
-  // One client story in the client's own words, where one matches this
-  // concern (lib/site-config.ts → storyForConcern); null means the section
-  // is simply not there.
+  // One story in the client's own words, where one matches this concern
+  // (lib/site-config.ts → storyForConcern): a permissioned client story on
+  // three concerns, a labelled Google review on the other nine (Ben,
+  // 2026-11-02). Null means the section is simply not there.
   const story = storyForConcern(concern.slug);
+  const isGoogle = story?.source === "google";
   const trail = [
     { label: "What We Help With", href: "/what-we-help-with" },
     { label: concern.title },
@@ -297,19 +300,25 @@ export default async function ConcernPage({
         <section className="sec concern-story">
           <div className="wrap" style={{ maxWidth: 820 }}>
             <div className="sec-head rv" style={{ marginBottom: 26 }}>
-              <div className="eyebrow">A client&rsquo;s own words</div>
+              <div className="eyebrow">
+                {isGoogle ? "From our Google reviews" : "A client’s own words"}
+              </div>
             </div>
             <div className="rv">
-              <Quote
-                theme={story.theme}
-                text={story.text}
-                attribution={
-                  story.firstName
-                    ? `${story.firstName} ${story.lastInitial ?? ""} · ${story.relationship}`
-                    : story.relationship
-                }
-                place={story.city}
-              />
+              {isGoogle ? (
+                <GoogleReviewQuote review={story} />
+              ) : (
+                <Quote
+                  theme={story.theme}
+                  text={story.text}
+                  attribution={
+                    story.firstName
+                      ? `${story.firstName} ${story.lastInitial ?? ""} · ${story.relationship}`
+                      : story.relationship
+                  }
+                  place={story.city}
+                />
+              )}
               <p className="sample-note" style={{ marginTop: 14 }}>{EXPERIENCES_DISCLAIMER}</p>
               <div className="hero-ctas" style={{ marginTop: 26 }}>
                 <TalkCta />

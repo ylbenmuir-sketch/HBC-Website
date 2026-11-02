@@ -445,6 +445,14 @@ export type Testimonial = {
   videoUrl?: string;
   /** Sample copy renders in dev only; only verified quotes ship. */
   verified: boolean;
+  /**
+   * Where the words come from. `client` (the default) is a story given to us
+   * with written permission; `google` is a public Google review, labelled as
+   * one wherever it renders, with a link to the center's listing.
+   */
+  source?: "client" | "google";
+  /** For a Google review: the center whose listing it is on (lib/locations.ts slug). */
+  center?: "nashville" | "murfreesboro";
 };
 
 /**
@@ -500,13 +508,126 @@ export const TESTIMONIALS: Testimonial[] = [
 export const VERIFIED_TESTIMONIALS = TESTIMONIALS.filter((t) => t.verified);
 
 /**
+ * Google reviews quoted on the concern pages (Ben, 2026-11-02): one per
+ * concern, in the same slot as the client stories above and with the same
+ * component, labelled "Google review" with the display name and the center.
+ * Each is quoted EXACTLY as the review reads — spelling, punctuation and the
+ * "--" included; "…" only where Ben's list has it. Not part of TESTIMONIALS,
+ * so the homepage and /stories trio (written-permission stories only) does
+ * not change. The link under each goes to the center's listing
+ * (lib/locations.ts → reviewReadUrl), never to a URL made up here.
+ */
+export const GOOGLE_REVIEW_QUOTES: Testimonial[] = [
+  {
+    theme: "Anxiety · Adults",
+    text: "After only a few sessions I felt my anxiety levels come down. The negative voices quieted. The brain fog lifted. I felt able to manage stress better, felt more focused, clearer and had more energy.",
+    relationship: "Google review",
+    firstName: "Trisha",
+    center: "murfreesboro",
+    concernCategory: "anxiety",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Sleep · Adults",
+    text: "I'm less stressed, I sleep like a baby -- zero insomnia. I get the best REM sleep and never have any trouble falling back to sleep if I have to wake up for a nighttime restroom break in the middle of the night.",
+    relationship: "Google review",
+    firstName: "Lori",
+    lastInitial: "F.",
+    center: "nashville",
+    concernCategory: "sleep",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Stress & resilience · Adults",
+    text: "…It has enabled me to navigate life's circumstances and give me a much needed ability to handle stress.",
+    relationship: "Google review",
+    firstName: "Lou",
+    lastInitial: "W.",
+    center: "nashville",
+    concernCategory: "stress-resilience",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Children & school",
+    text: "The change in executive functioning for this child is night and day. He used to struggle to execute a two step direction (get your socks and shoes on) and get distracted between the two.",
+    relationship: "Google review",
+    firstName: "Marjorie",
+    lastInitial: "H.",
+    center: "nashville",
+    concernCategory: "children-school",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Trauma · Adults",
+    text: "…I feel more grounded and calmer, and have a sense of well-being that I have never before experienced. I am happier, more balanced and am learning to trust myself and my decision-making ability.",
+    relationship: "Google review",
+    firstName: "Diana",
+    lastInitial: "P.",
+    center: "nashville",
+    concernCategory: "trauma",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Performance · Adults",
+    text: "…I have focus, attention, and action. I'm no longer stuck. I am sleeping better and more energy throughout the day. And my business and relationships are thriving.",
+    relationship: "Google review",
+    firstName: "Tracy",
+    lastInitial: "D.",
+    center: "nashville",
+    concernCategory: "performance",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Concussion · Adults",
+    text: "I saw a concussion specialist for a year, tried physiotherapy, cognitive therapy, and other treatments. NOTHING has made as much of a difference as LENS neurofeedback has!",
+    relationship: "Google review",
+    firstName: "Tiffany",
+    lastInitial: "R.",
+    center: "nashville",
+    concernCategory: "concussion",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Migraines · Adults",
+    text: "Since starting treatment, I've noticed improved focus, better sleep, fewer headaches, and reduced anxiety—I simply feel healthier overall.",
+    relationship: "Google review",
+    firstName: "Jessica",
+    lastInitial: "A.",
+    center: "nashville",
+    concernCategory: "migraines",
+    source: "google",
+    verified: true,
+  },
+  {
+    theme: "Depression · Adults",
+    text: "I came to Harmonized Brain Center feeling hope/helpless. I have experienced breakthrough in cognitive improvements from brain fog & depression and have new hope/joy in life.",
+    relationship: "Google review",
+    firstName: "Mackenzie",
+    lastInitial: "L.",
+    center: "nashville",
+    concernCategory: "depression",
+    source: "google",
+    verified: true,
+  },
+];
+
+/**
  * The one published story a concern page shows after its "How LENS may
  * help" section (Ben, 2026-11-02): same wording, same name, pulled from the
  * stories above — never written for the page. Matched by hand, not by
  * `concernCategory` alone, because Andreanna's story is about a child's
  * self-regulation as much as about focus, and Ben asked for a match, not a
- * tag. A concern with no honest match gets nothing (the page checks for
- * null), and the report lists it.
+ * tag. The nine concerns without a client story each show one Google review
+ * instead (GOOGLE_REVIEW_QUOTES, matched by `concernCategory`; Ben,
+ * 2026-11-02). A concern with neither gets nothing (the page checks for
+ * null).
  */
 const STORY_FOR_CONCERN: Record<string, string> = {
   "focus-adhd": "Andreanna",
@@ -515,8 +636,8 @@ const STORY_FOR_CONCERN: Record<string, string> = {
 };
 export function storyForConcern(slug: string): Testimonial | null {
   const name = STORY_FOR_CONCERN[slug];
-  if (!name) return null;
-  return VERIFIED_TESTIMONIALS.find((t) => t.firstName === name) ?? null;
+  if (name) return VERIFIED_TESTIMONIALS.find((t) => t.firstName === name) ?? null;
+  return GOOGLE_REVIEW_QUOTES.find((t) => t.concernCategory === slug) ?? null;
 }
 
 export const SAMPLE_QUOTES_NOTE =
