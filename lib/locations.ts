@@ -4,6 +4,7 @@ import {
   FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
   PHONE,
+  REVIEW_COUNTS,
   SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   SHOW_REVIEWS,
@@ -401,7 +402,7 @@ export const locations: Location[] = [
       note: "[Confirm hours]",
     },
     /** Confirmed by Ben — 144 reviews, none rated below five. */
-    reviewCount: 144,
+    reviewCount: REVIEW_COUNTS.nashville,
     /** CID 690359003920868215. Opened and confirmed by Ben. */
     reviewReadUrl: "https://www.google.com/maps?cid=690359003920868215",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
@@ -432,7 +433,7 @@ export const locations: Location[] = [
       titleLead: "LENS neurofeedback in ",
       titleAccent: "Nashville",
       titleTail: " — Tuesday through Saturday.",
-      sub: "Passive, brief sessions for adults, children, and families across Davidson County and the towns around it — in a calm center just off I-24, with Saturday mornings on the schedule.",
+      sub: "Neurofeedback in Nashville for adults, children, and families across Davidson County — passive, brief sessions in a calm center just off I-24, with Saturday mornings on the schedule.",
       arrivalLines: ["Private lot on site,", "free for clients"],
     },
     image: { src: "/images/session-room.jpg", position: "center 55%" },
@@ -559,7 +560,7 @@ export const locations: Location[] = [
      * reader the number is a weakness before they had decided that themselves.
      * Fifteen unbroken five-star reviews is a strong fact on its own terms.
      */
-    reviewCount: 15,
+    reviewCount: REVIEW_COUNTS.murfreesboro,
     /** CID 978389547119317468. Opened and confirmed by Ben. */
     reviewReadUrl: "https://www.google.com/maps?cid=978389547119317468",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
@@ -709,7 +710,7 @@ export const locations: Location[] = [
       "How much LENS helps varies from person to person, and it isn't a replacement for care you're already getting. A call is the fastest way to find out whether it fits, and which of our two centers is easier for you to reach.",
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
     metaDescription:
-      "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children, and families across Rutherford County. The first call is free.",
+      "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children and families across Rutherford County. First call free.",
     dateModified: "2026-10-14",
   },
   {

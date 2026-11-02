@@ -157,6 +157,15 @@ export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin"] as const;
  */
 export const ASSISTANT_SUPPRESSED_WINDOW = { route: "/10years", from: CHAT_SUPPRESSION_WINDOW.from, to: CHAT_SUPPRESSION_WINDOW.to } as const;
 
+/**
+ * Routes the phone's action bar (components/MobileActionBar.tsx) stays off:
+ * /contact has its own Text/Call row (Ben, 2026-11-02), and /admin and
+ * /10years are the two routes the assistant already leaves alone — the
+ * giveaway page has its own entry bar at the foot of the screen, and the
+ * staff screens are a tool. Path prefixes, matched like the list above.
+ */
+export const MOBILE_BAR_SUPPRESSED_ROUTES = ["/contact", "/admin", "/10years"] as const;
+
 /** True when the assistant must not render on this pathname, whatever the date. */
 export function assistantSuppressedOn(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -243,6 +252,16 @@ export const GUIDE_DOWNLOAD_NAME = "Harmonized-Why-Regulation-Fails.pdf";
 /* ------------------------------------------------------------------ */
 
 export const FOUNDER_FIRST_NAME = "Sheri";
+
+/**
+ * The one switch for the rewritten founder page (components/FounderStory.tsx,
+ * Ben 2026-11-02). False: the live /about/founder is untouched and the new
+ * page lives only at /about/founder/draft (noindex, disallowed, off the
+ * sitemap, unlinked, no GA) for Sheri to read. True — "publish the founder
+ * page" — /about/founder renders the new story and the draft URL redirects
+ * there permanently. Nothing else changes.
+ */
+export const FOUNDER_PAGE_PUBLISHED = false;
 /** Founder surname — confirmed by Ben. */
 export const FOUNDER_LAST_NAME: Verifiable = {
   value: "Rowney",
@@ -386,6 +405,33 @@ export const REVIEWS: Verifiable<{ rating: string }> = {
  */
 export const SHOW_REVIEWS = REVIEWS.verified || SHOW_DRAFT_CONTENT;
 
+/**
+ * The per-center Google review counts — Ben, 2026-11-02: Nashville 145,
+ * Murfreesboro 16. lib/locations.ts reads each center's figure from here
+ * (it cannot be the other way round: locations.ts imports this file), so the
+ * two location pages, the sitewide total and the proof line all come from
+ * one place.
+ */
+export const REVIEW_COUNTS = { nashville: 145, murfreesboro: 16 } as const;
+
+/**
+ * The rounded figure the proof surfaces print — "5.0★ from 160+ Google
+ * reviews" (Ben, 2026-11-02: not an exact count). Update when Google reviews
+ * pass the next round number. The per-center lines on the location pages
+ * keep their exact counts, because each one links to the listing it counts.
+ */
+export const REVIEW_COUNT_ROUNDED = "160+";
+
+/**
+ * The one-line proof under the homepage hero and on the founder page (Ben,
+ * 2026-11-02): the rating, the rounded review count, and the session count
+ * since the founding year. Three facts, each from its own constant above or
+ * below, so the line can never disagree with the bands. `PROOF_LINE_SHORT`
+ * is the phone width's version, keeping both facts.
+ */
+export const PROOF_LINE = `${REVIEWS.value.rating}★ from ${REVIEW_COUNT_ROUNDED} Google reviews · ${STAT_SESSIONS.value} LENS sessions since ${ESTABLISHED_YEAR.value}`;
+export const PROOF_LINE_SHORT = `${REVIEWS.value.rating}★ · ${REVIEW_COUNT_ROUNDED} Google reviews · ${STAT_SESSIONS.value} sessions since ${ESTABLISHED_YEAR.value}`;
+
 export type Testimonial = {
   theme: string;
   text: string;
@@ -452,6 +498,26 @@ export const TESTIMONIALS: Testimonial[] = [
 ];
 
 export const VERIFIED_TESTIMONIALS = TESTIMONIALS.filter((t) => t.verified);
+
+/**
+ * The one published story a concern page shows after its "How LENS may
+ * help" section (Ben, 2026-11-02): same wording, same name, pulled from the
+ * stories above — never written for the page. Matched by hand, not by
+ * `concernCategory` alone, because Andreanna's story is about a child's
+ * self-regulation as much as about focus, and Ben asked for a match, not a
+ * tag. A concern with no honest match gets nothing (the page checks for
+ * null), and the report lists it.
+ */
+const STORY_FOR_CONCERN: Record<string, string> = {
+  "focus-adhd": "Andreanna",
+  "emotional-regulation": "Andreanna",
+  "brain-fog": "Rachel",
+};
+export function storyForConcern(slug: string): Testimonial | null {
+  const name = STORY_FOR_CONCERN[slug];
+  if (!name) return null;
+  return VERIFIED_TESTIMONIALS.find((t) => t.firstName === name) ?? null;
+}
 
 export const SAMPLE_QUOTES_NOTE =
   "Sample copy for design review — will not render in production. Replace with verified client quotes.";

@@ -84,10 +84,10 @@ export default function ContactPage() {
           everywhere; on a desktop, where sms: mostly does nothing, the card
           shows the number with "Text this number" (CSS swaps the hint).
           Every tap here reports contact_link_click with location
-          "contact options" (components/Analytics.tsx). */}
+          "contact_page" (components/Analytics.tsx). */}
       {SHOW_PHONE && (
         <section className="contact-ways-sec">
-          <div className="wrap form-solo" data-link-location="contact options">
+          <div className="wrap form-solo" data-link-location="contact_page">
             <div className="contact-ways">
               <a className="contact-way" href={`sms:${PHONE_TEL}`}>
                 <span className="contact-way-title">Text us</span>
@@ -129,7 +129,7 @@ export default function ContactPage() {
           />
           {/* Phones only: the same line, under the form (Ben, 2026-10-30). */}
           {SHOW_PHONE && (
-            <p className="contact-ways-line contact-ways-line-phone" data-link-location="contact options">
+            <p className="contact-ways-line contact-ways-line-phone" data-link-location="contact_page">
               {waysLine}
             </p>
           )}

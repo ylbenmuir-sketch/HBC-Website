@@ -58,6 +58,18 @@ export const ANALYTICS_ENABLED = GA_ID.length > 0 && PRODUCTION_DEPLOY;
  */
 export const ANALYTICS_HOSTS = ["harmonizedbraincenterstn.com", "www.harmonizedbraincenterstn.com"] as const;
 
+/**
+ * Paths GA never sees (Ben, 2026-11-02): the founder page's review draft.
+ * Checked at runtime with the host, so neither the tag nor any event is
+ * sent from them. Prefixes, like ASSISTANT_SUPPRESSED_ROUTES.
+ */
+export const ANALYTICS_EXCLUDED_PATHS = ["/about/founder/draft"] as const;
+
+export function analyticsExcludedPath(pathname: unknown): boolean {
+  if (typeof pathname !== "string") return false;
+  return ANALYTICS_EXCLUDED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export function analyticsAllowedHost(hostname: unknown): boolean {
   return typeof hostname === "string" && (ANALYTICS_HOSTS as readonly string[]).includes(hostname.toLowerCase());
 }
@@ -66,6 +78,7 @@ export function analyticsAllowedHost(hostname: unknown): boolean {
 export function analyticsActive(): boolean {
   if (!ANALYTICS_ENABLED) return false;
   if (typeof window === "undefined") return false;
+  if (analyticsExcludedPath(window.location.pathname)) return false;
   return analyticsAllowedHost(window.location.hostname);
 }
 
@@ -94,14 +107,24 @@ export const LEAD_CENTERS = ["Nashville", "Murfreesboro", "Concierge", "Not sure
 export type LeadCenter = (typeof LEAD_CENTERS)[number];
 export type LeadSource = "form" | "chat";
 
+/**
+ * Where a `tel:` / `sms:` / `mailto:` tap happened — lowercase snake_case,
+ * every one (Ben, 2026-11-02). Renamed that day from the spaced values the
+ * site shipped with: "mobile bar" → mobile_bar, "contact options" →
+ * contact_page, "location page" → location_hero; "hero" (never attached to
+ * anything) became home_hero; the drawer, which used to report as part of
+ * the header, now reports as drawer. A value with a space never reaches GA
+ * again — contactLinkEvent maps anything off this list onto "other".
+ */
 export const LINK_LOCATIONS = [
   "header",
+  "drawer",
   "footer",
-  "hero",
-  "location page",
+  "home_hero",
+  "location_hero",
+  "contact_page",
   "confirmation",
-  "contact options",
-  "mobile bar",
+  "mobile_bar",
   "other",
 ] as const;
 
