@@ -116,9 +116,12 @@ export const staticPages: StaticPage[] = [
   },
   {
     path: "/lens-neurofeedback",
-    title: "LENS Neurofeedback",
+    // "LENS neurofeedback" and "LENS therapy" in the title (Ben, 2026-11-02:
+    // the unbranded terms the page should rank for). Absolute: 49 characters.
+    title: "LENS Neurofeedback & LENS Therapy in Nashville, TN",
+    absoluteTitle: true,
     description:
-      "LENS — the Low Energy Neurofeedback System — passive, brief sessions with nothing to practice, at our Nashville and Murfreesboro centers. What it is, and who it's for.",
+      "LENS neurofeedback — some call it LENS therapy — is passive and brief, with nothing to practice. What it is, who it's for, Nashville & Murfreesboro.",
     dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "LENS neurofeedback",
@@ -142,13 +145,14 @@ export const staticPages: StaticPage[] = [
     // with (brain map / qEEG / EEG — QUERY-TO-PAGE-MAP.md); "qEEG" stays in
     // the body, as a word people search rather than a thing we call ours.
     // 57 chars.
-    title: "Brain Map & EEG Recording in Nashville & Murfreesboro, TN",
+    // "Brain mapping in Nashville" (Ben, 2026-11-02), 51 characters.
+    title: "Brain Mapping in Nashville: The Harmonized Brain Map",
     absoluteTitle: true,
     // 158 chars. The boundary leads — "a recording, not a test" is the rule
     // the page is written under, and the one sentence that must survive
     // truncation.
     description:
-      "The Harmonized Brain Map is a 21-point recording of brain activity — a recording that guides a plan, not a test. What it involves, what it costs, and what it can't tell you.",
+      "Brain mapping in Nashville & Murfreesboro: a 21-point recording of brain activity that guides your plan — not a test. What it involves and what it costs.",
     dateModified: "2026-10-13",
     type: "WebPage",
     crumb: "The Brain Map",
@@ -206,11 +210,11 @@ export const staticPages: StaticPage[] = [
     path: "/concierge",
     // The three queries the page is built to own — mobile, in-home,
     // neurofeedback — and the service's name. Absolute; 60 chars exactly.
-    title: "Concierge LENS: In-Home & Mobile Neurofeedback, Nashville TN",
+    title: "In-Home LENS Neurofeedback: Concierge Visits, Nashville TN",
     absoluteTitle: true,
     // The founder, the price rule, the family framing. Interpolates the
     // surcharge so the description cannot disagree with the page.
-    description: `Our founder brings LENS neurofeedback to your home or business — center rates plus ${usd(CONCIERGE_SURCHARGE_USD)} per person, per session, for one person or the whole family in one visit.`,
+    description: `Our founder brings LENS neurofeedback to your home or office — center rates plus ${usd(CONCIERGE_SURCHARGE_USD)} per person, per session. One person or the whole family.`,
     dateModified: "2026-10-11",
     type: "WebPage",
     crumb: "Concierge",
@@ -219,7 +223,7 @@ export const staticPages: StaticPage[] = [
     path: "/stories",
     title: "Client Stories",
     description:
-      "No miracle stories — just the specific, daily-life changes clients report at check-in. Individual experiences vary, and we'd rather understate than oversell.",
+      "No miracle stories — the specific, daily-life changes clients report at check-in, plus 160+ public Google reviews. We'd rather understate than oversell.",
     dateModified: "2026-10-20",
     type: "WebPage",
     crumb: "Client stories",
@@ -239,11 +243,11 @@ export const staticPages: StaticPage[] = [
     // The skepticism cluster's own words — safe, legit, worth it — as the
     // question the page answers. Absolute: the brand suffix would put it
     // past 60. 57 chars.
-    title: "Is LENS Neurofeedback Safe, Legit, or Worth It? Middle TN",
+    title: "Is LENS Neurofeedback Safe, Legit or Worth It? Middle TN",
     absoluteTitle: true,
     // 157 chars. The four sections, in order, and the posture: disclosure.
     description:
-      "What we can and can't tell you about LENS: what the signal is, what a session feels like, what this site refuses to claim, and where the public Google reviews are.",
+      "What we can and can't tell you about LENS: what the signal is, what a session feels like, what we refuse to claim, and where the public Google reviews are.",
     dateModified: "2026-10-11",
     type: "FAQPage",
     crumb: "Is LENS safe?",
@@ -271,9 +275,10 @@ export const staticPages: StaticPage[] = [
     // The video hub (VIDEO-MAP.md). Each video's own page is
     // /videos/<slug>, built from lib/videos.ts, and dated there.
     path: "/videos",
-    title: "Videos: LENS Neurofeedback, Explained",
+    title: "LENS Neurofeedback Videos: Stories & Explainers",
+    absoluteTitle: true,
     description:
-      "Client stories, short answers about LENS neurofeedback, and The Hopeful Brain conversations — videos from Harmonized Brain Centers in Nashville & Murfreesboro.",
+      "Client stories, short answers about LENS neurofeedback, and The Hopeful Brain conversations — from Harmonized Brain Centers in Nashville & Murfreesboro.",
     dateModified: "2026-10-20",
     type: "CollectionPage",
     crumb: "Videos",
@@ -282,7 +287,7 @@ export const staticPages: StaticPage[] = [
     path: "/privacy-policy",
     title: "Privacy",
     description:
-      "We don’t sell what you tell us, and we never share it with anyone for their marketing. Your phone number and text-message consent are never shared with third parties.",
+      "We don’t sell what you tell us, and we never share it with anyone for their marketing. Your number and text consent never go to third parties.",
     // 2026-10-15: rewritten from the code — every field, every service, the
     // emails, the assistant's session, YouTube, the two carrier sentences.
     // 2026-10-18: every consent-conditioned sharing clause removed (Dialpad's
@@ -311,7 +316,7 @@ export const staticPages: StaticPage[] = [
     path: "/sms-terms",
     title: "Text Message Terms",
     description:
-      "How Harmonized Brain Centers texts you about your call and appointments: what the messages are, how often, what they cost, and how to get help or stop them.",
+      "How Harmonized Brain Centers texts you about your call and appointments: what the messages are, how often, what they cost, and how to stop them.",
     dateModified: "2026-10-14",
     type: "WebPage",
     crumb: "Text message terms",

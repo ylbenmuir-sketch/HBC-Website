@@ -1525,7 +1525,7 @@ export const resources: Resource[] = [
       "Describe the gap between how shows used to go and how they go now. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
     metaTitle: "Stage Nerves Getting Worse? What’s Changed, for Musicians",
     metaDescription:
-      "Pre-show nerves that used to sharpen you now arrive earlier and cost more. A plain look, for working musicians in Nashville, at why — and what tends to help.",
+      "Pre-show nerves that used to sharpen you now arrive earlier and cost more. A plain look, for working musicians in Nashville, at why — and what helps.",
   },
   {
     // Feeds /concerns/migraines. Targets the long-tail "what to ask before

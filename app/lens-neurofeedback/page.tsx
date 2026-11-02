@@ -9,7 +9,7 @@ import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
-import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import { serviceRef, serviceSchema } from "@/lib/schema";
 import { locations, hoursSummary } from "@/lib/locations";
 import {
@@ -209,16 +209,16 @@ export default function LensNeurofeedbackPage() {
           <div className="rv">
             <div className="eyebrow">LENS neurofeedback</div>
             <h1>
-              What LENS neurofeedback is, and{" "}
+              What LENS neurofeedback (LENS therapy) is, and{" "}
               <em className="sage">who it&rsquo;s for.</em>
             </h1>
             <p className="sub">
-              LENS stands for Low Energy Neurofeedback System &mdash; passive,
-              brief, and with nothing to practice between visits.
+              LENS stands for Low Energy Neurofeedback System &mdash; some
+              people call it LENS therapy &mdash; passive, brief, and with
+              nothing to practice between visits.
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
-              <BrainMapCta />
             </div>
             <p className="micro">
               Nashville &amp; Murfreesboro

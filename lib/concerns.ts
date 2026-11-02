@@ -865,7 +865,7 @@ export const concerns: Concern[] = [
     related: ["brain-fog", "stress-resilience", "focus-adhd"],
     // Names the three groups (Ben, 2026-10-15) — the queries are
     // "neurofeedback for musicians / executives / athletes".
-    metaTitle: "Neurofeedback for Musicians, Executives & Athletes in Nashville",
+    metaTitle: "Nashville Neurofeedback for Musicians, Executives & Athletes",
     // "peak performance" lives here, in a decline frame — the query is
     // targeted without the title or the page promising the peak.
     metaDescription:
@@ -1020,7 +1020,7 @@ export const concerns: Concern[] = [
       // goes: it now has four other homes (see PHYSICIAN_REFERRALS), and the
       // doctor-first sentence is the one that must survive truncation on this
       // page of all pages.
-      "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. If your injury is recent, see a doctor first.",
+      "LENS neurofeedback in Middle Tennessee for people cleared after a concussion or TBI who still aren't themselves. Recent injury? See a doctor first.",
     guideHeading: "Why these problems travel together.",
     dateModified: "2026-10-20",
   },
@@ -1145,7 +1145,7 @@ export const concerns: Concern[] = [
     // 160 chars. The boundary sentence leads so it survives truncation —
     // this page of all pages, concussion's reasoning.
     metaDescription:
-      "We don't treat migraines. People come to us after they've tried a lot of other things — often under a doctor's care, often after a concussion. Middle Tennessee.",
+      "We don't treat migraines. People come to us after they've tried a lot of other things — often under a doctor's care, often after a concussion. Middle TN.",
     guideHeading: "Why the same systems keep coming up.",
     dateModified: "2026-10-10",
   },
@@ -1258,7 +1258,7 @@ export const concerns: Concern[] = [
     metaTitle: "Low Mood, Depression & LENS Neurofeedback in Middle TN",
     // 156 chars. The boundary sentence leads so it survives truncation.
     metaDescription:
-      "We don't treat depression. People come to us for low mood and lost motivation alongside the care they already have — therapy, a doctor, a prescriber. Middle TN.",
+      "We don't treat depression. People come to us for low mood and lost motivation alongside the care they already have — therapy, a doctor, a prescriber.",
     guideHeading: "Why flat days and poor sleep travel together.",
     dateModified: "2026-10-20",
   },

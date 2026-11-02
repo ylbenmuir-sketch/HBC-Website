@@ -655,14 +655,14 @@ export const MIRRORED_PAGES: MirroredPage[] = [
           "pressure",
           "decide",
         ],
-        text: "The first appointment, in five parts. You're greeted by name: Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time. We talk first: What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose. A gentle baseline recording: Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan. Your plan, explained plainly: What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered. You decide — without pressure: Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
+        text: "The first appointment, in five parts. You're greeted by name: Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time. We talk first: What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose. A gentle baseline recording: Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan. Your plan, explained plainly: What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered. You decide — without pressure: Start that week, think it over, or decide it's not for you. No pressure to buy a package, no countdown offers, no follow-up pestering.",
         mirror: [
           "The first appointment, in five parts.",
           "Someone is expecting you. Hot tea or hot chocolate, a comfortable seat — and a parent stays with a child the whole time.",
           "What's going on, what you've tried, what you're hoping changes. This is the longest part on purpose.",
           "Small sensors take brief readings at a series of points — nothing invasive, nothing to feel. The recording helps guide the initial conversation and your starting plan.",
           "What we noticed, what we'd suggest, what it costs, and what we'd track — in plain language, with every question answered.",
-          "Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
+          "Start that week, think it over, or decide it's not for you. No pressure to buy a package, no countdown offers, no follow-up pestering.",
         ],
       },
       {

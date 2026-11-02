@@ -4,7 +4,7 @@ import { videoForPage } from "@/lib/videos";
 import type { Metadata } from "next";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
-import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
@@ -53,7 +53,9 @@ const fiveParts = [
   {
     n: "5",
     h: "You decide — without pressure",
-    p: "Start that week, think it over, or decide it's not for you. No packages, no countdown offers, no follow-up pestering.",
+    // "No packages" (until 2026-11-02) sat on the same page as the
+    // 12-session package price; what is true is that nobody is pushed into one.
+    p: "Start that week, think it over, or decide it's not for you. No pressure to buy a package, no countdown offers, no follow-up pestering.",
   },
 ];
 
@@ -78,7 +80,6 @@ export default function FirstVisitPage() {
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
-              <BrainMapCta />
             </div>
             <p className="micro">
               Plan for {FIRST_VISIT_DURATION} &middot; Nothing to prepare or

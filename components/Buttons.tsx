@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
-import { BRAIN_MAP_PRICE } from "@/lib/site-config";
 
 type BtnVariant = "primary" | "invert" | "ghost" | "outline";
 
@@ -84,30 +83,12 @@ export function CtaReassure() {
   );
 }
 
-/**
- * Secondary CTA — the priced first visit, for visitors who arrive already sold.
- * Appears in exactly five places: the homepage hero, /lens-neurofeedback,
- * /brain-map, /first-visit, and /how-lens-works. (The homepage Brain Map
- * section held a slot until /brain-map took the copy, Oct 2026; the
- * /lens-neurofeedback hero had one since that page shipped, which the old
- * "four" never counted.) It never appears without TalkCta beside it, and
- * never replaces it: the free call stays the primary ask everywhere. The
- * label was "Book Your Brain Map — $150" until 2026-10-19 (Ben).
- *
- * Destination is /contact, same as the primary — there is no booking system
- * yet, so this names the priced step rather than competing for a different
- * conversion path.
+/*
+ * BrainMapCta ("Book a First Visit — $150", and "Book Your Brain Map — $150"
+ * before 2026-10-19) was retired on 2026-11-02 (Ben): it opened the same
+ * free-call form as TalkCta, so the label promised a booking the tap did not
+ * make, and it put a dollar amount in a button. The prices live in body copy
+ * now — /first-visit's cost card, /brain-map's "What it costs",
+ * /lens-neurofeedback's first-visit step, the FAQ — after the value they
+ * price. Every button that opens the form says "Get Started".
  */
-export function BrainMapCta({
-  variant = "ghost",
-  style,
-}: {
-  variant?: BtnVariant;
-  style?: CSSProperties;
-}) {
-  return (
-    <Btn href="/contact" variant={variant} style={style}>
-      Book a First Visit &mdash; {BRAIN_MAP_PRICE}
-    </Btn>
-  );
-}

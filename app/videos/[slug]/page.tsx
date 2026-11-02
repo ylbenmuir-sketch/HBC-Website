@@ -42,7 +42,10 @@ export async function generateMetadata({
   const video = getVideoBySlug((await params).slug);
   if (!video) return {};
   return {
-    title: video.title,
+    // Absolute: with the "— Harmonized Brain Centers" template every video
+    // title ran past 60 characters (2026-11-02). `seoTitle` where the
+    // video's own title is itself too long.
+    title: { absolute: video.seoTitle ?? video.title },
     description: video.description,
     // Spread, not replaced — see the note on the article route. The poster
     // is the card: it is the frame a visitor will see on the page.

@@ -5,7 +5,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
-import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import { LENS_IS_NOT } from "@/lib/lens";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 import {
@@ -95,7 +95,8 @@ export default function BrainMapPage() {
               <em className="sage">not a test.</em>
             </h1>
             <p className="sub">
-              On your first visit we record electrical activity at{" "}
+              Brain mapping in Nashville and Murfreesboro starts here: on
+              your first visit we record electrical activity at{" "}
               {BRAIN_MAP_POINTS} points across your head, turn it into a map
               you can actually read, and build your written plan from it.
               Here&rsquo;s exactly what that involves, what it costs, and what
@@ -103,11 +104,11 @@ export default function BrainMapPage() {
             </p>
             <div className="hero-ctas" style={{ marginTop: 34 }}>
               <TalkCta />
-              <BrainMapCta />
             </div>
+            {/* No price in the hero (Ben, 2026-11-02): it moved to "What it
+                costs" below, after the page has said what the recording is. */}
             <p className="micro">
-              {BRAIN_MAP_PRICE} &middot; Plan for {FIRST_VISIT_DURATION}{" "}
-              &middot; It is your first visit
+              Plan for {FIRST_VISIT_DURATION} &middot; It is your first visit
             </p>
           </div>
           <div className="rv">
@@ -264,7 +265,8 @@ export default function BrainMapPage() {
             <div className="care">
               <h3>What it costs</h3>
               <p>
-                Regular sessions are {SESSION_PRICE} and run{" "}
+                {BRAIN_MAP_NAME} &mdash; your first visit &mdash; is{" "}
+                {BRAIN_MAP_PRICE}. Regular sessions are {SESSION_PRICE} and run{" "}
                 {SESSION_LENGTH.value}. The full price list, including the
                 package, is on{" "}
                 <Link href="/first-visit">Your First Visit</Link>.

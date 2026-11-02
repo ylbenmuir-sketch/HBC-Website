@@ -30,12 +30,17 @@ compositions), so desktop rendering is untouched. Key pieces:
 - **Bottom bar dock** — one fixed footprint, two bars, one controller.
   `components/BottomBarContext.tsx` decides which is in it; the bars only
   report their state to it. See "The bottom of the screen" below.
-  - **Sticky CTA** — `components/MobileCtaBar.tsx` (homepage, ≤760px only);
-    same "Get Started" → `/contact` ask, retiring near the final CTA band.
+  - **Phone action bar** — `components/MobileActionBar.tsx` (every route
+    but `/contact`, `/admin` and `/10years`; <768px only; since
+    2026-11-02): Call · Text us · Get Started, plus a chat button that opens
+    the assistant where it exists. Visible from the first frame. The number
+    is the main line everywhere except `/locations/murfreesboro`.
   - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route but
-    `/contact`, every width, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a field
-    that opens the site assistant with whatever was typed into it. See
-    `ASSISTANT_SUPPRESSED_ROUTES` under "The bottom of the screen".
+    `/contact`, 768px and up, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a
+    field that opens the site assistant with whatever was typed into it.
+    On a phone the action bar holds the footprint and the chat button
+    stands in for it. See `ASSISTANT_SUPPRESSED_ROUTES` and
+    `MOBILE_BAR_SUPPRESSED_ROUTES` under "The bottom of the screen".
 - Motion (drawer stagger, sticky-bar entrance, reveals) is gated behind
   `prefers-reduced-motion` like everything else.
 
@@ -846,9 +851,10 @@ safety change — `lib/chat/safety.ts`, `refusals.ts` and the 988 block on
 
 ## The bottom of the screen
 
-Two things want to be anchored to the bottom of the viewport — the homepage's
-"Get Started" bar and the sticky ask bar that opens the site
-assistant — and they must never be there together.
+Two things want to be anchored to the bottom of the viewport — the phone's
+Call · Text · Get Started bar (every route, <768px) and the sticky ask bar
+that opens the site assistant (768px up) — and they must never be there
+together.
 
 They used to settle it between themselves, with a pair of CSS rules pointing
 at each other: `MobileCtaBar` marked `body[data-cta-bar]` and a rule stood the
@@ -876,10 +882,14 @@ state, not two elements fighting. Both stay in the DOM (`visibility`, never
 under a bar. Under `prefers-reduced-motion` the swap is instant and the ask
 bar's placeholder stops rotating.
 
-If the CTA bar's breakpoint moves, move it in both places: `CALL_BAR_QUERY` in
-`MobileCtaBar.tsx` and the `@media (max-width: 760px)` block in `globals.css`
-that gives `.cta-bar` its `display: flex`. The two disagreeing is an invisible
-bug, not a visual one — the ask bar simply stops existing on the homepage.
+If the action bar's breakpoint moves, move it in both places: `MOBILE_BAR_QUERY`
+in `MobileActionBar.tsx` and the `@media (max-width: 767px)` block in
+`globals.css` that gives `.cta-bar` its `display: flex`. The two disagreeing is
+an invisible bug, not a visual one — the ask bar simply stops existing on a
+phone, or the action bar claims a footprint nobody can see. The bar registers
+with the controller only while it is in range, so a desktop with the
+assistant flag off reserves nothing. `MOBILE_BAR_SUPPRESSED_ROUTES` in
+`lib/site-config.ts` (`/contact`, `/admin`, `/10years`) is where it stays off.
 
 ### Routes the assistant stays off
 
@@ -1237,14 +1247,24 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   cure / prevent language) anywhere.
 - Primary CTA everywhere is **"Get Started" → `/contact`** since 2026-10-26 (was "See If It’s a Fit" 2026-10-19 to 2026-10-26, and "Get a Free Call Today" before that)
   (`TalkCta` in `components/Buttons.tsx`). Don't introduce competing CTAs.
-- One secondary CTA exists: **"Book a First Visit — $150"** (`BrainMapCta`; was "Book Your Brain Map — $150" until 2026-10-19),
-  the priced first visit, for visitors who arrive already sold. It appears in
-  exactly five places — the homepage hero, `/lens-neurofeedback`,
-  `/brain-map`, `/first-visit`, and `/how-lens-works` — always beside
-  `TalkCta`, never instead of it, and it points at the same `/contact`
-  destination. (The count was "four" until Oct 2026, which had been untrue
-  since `/lens-neurofeedback` shipped with one in its hero; the homepage
-  Brain Map section gave its slot to `/brain-map`.) Don't add a sixth.
+- **No priced button, anywhere** (Ben, 2026-11-02). The secondary
+  "Book a First Visit — $150" (`BrainMapCta`; "Book Your Brain Map — $150"
+  before 2026-10-19) was retired: it opened the same free-call form as
+  `TalkCta`, so it promised a booking the tap did not make, and it put a
+  dollar amount in a button. No dollar amounts in heroes or CTA labels; no
+  guarantee, refund or countdown language. Prices live in body copy after
+  the value they price: `/first-visit`'s cost section and card, `/brain-map`'s
+  "What it costs", `/lens-neurofeedback`'s first-visit step, FAQ 12.
+- **`contact_link_click` locations are lowercase snake_case** (Ben,
+  2026-11-02): `header`, `drawer`, `footer`, `home_hero`, `location_hero`,
+  `contact_page`, `confirmation`, `mobile_bar`, `other` — `LINK_LOCATIONS`
+  in `lib/analytics.ts`, tested. A `data-link-location` with a space reports
+  as `other`.
+- **The founder page draft**: `/about/founder/draft` renders
+  `components/FounderStory.tsx` while `FOUNDER_PAGE_PUBLISHED`
+  (`lib/site-config.ts`) is false — noindex, disallowed in robots.txt, off
+  the sitemap, linked from nowhere, excluded from GA. Set it true to publish:
+  `/about/founder` renders the new story and the draft URL 308s there.
 - One transitional CTA exists: `components/GuideCta.tsx` ("Not ready to
   call?"), an email capture for visitors who aren't calling today. It sits
   below the `FinalCTA` band on `/`, `/resources`, and `/concerns/[slug]`,

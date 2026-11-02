@@ -5,7 +5,7 @@ import BrainMapHeat from "@/components/BrainMapHeat";
 import Link from "next/link";
 import PhotoFrame from "@/components/PhotoFrame";
 import FinalCTA from "@/components/FinalCTA";
-import { Btn, BrainMapCta, TalkCta } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import { LENS_IS, LENS_IS_NOT } from "@/lib/lens";
 import { BRAIN_MAP_POINTS, SESSION_LENGTH } from "@/lib/site-config";
 import { hubTrail, pageMetadata } from "@/lib/pages";
@@ -89,7 +89,6 @@ export default function HowLensWorksPage() {
             style={{ marginTop: 34, justifyContent: "center" }}
           >
             <TalkCta />
-            <BrainMapCta />
           </div>
           <div style={{ maxWidth: 880, margin: "52px auto 0" }}>
             <svg viewBox="0 0 900 90" fill="none" width="100%" aria-hidden="true">

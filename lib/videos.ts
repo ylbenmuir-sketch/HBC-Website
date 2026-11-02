@@ -71,6 +71,12 @@ export const VIDEO_GROUPS: { key: VideoGroup; eyebrow: string; heading: string; 
 export type VideoLink = { label: string; href: string };
 
 export type Video = {
+  /**
+   * A shorter <title> for a video whose YouTube title runs past 60
+   * characters (2026-11-02). The H1, the schema name and the card keep the
+   * video's own title; only the browser tab and the search snippet use this.
+   */
+  seoTitle?: string;
   /** The YouTube video id — `youtube.com/watch?v=<id>`. */
   id: string;
   /** The watch page: `/videos/<slug>`. */
@@ -196,6 +202,7 @@ export const videos: Video[] = [
     // The YouTube title opens "Life-Changing Transformation:"; the label
     // drops that prefix and keeps the client's own words (VIDEO-MAP.md flag 3).
     title: "How LENS Neurofeedback Helped Me Ditch Antidepressants After 20 Years",
+    seoTitle: "Off Antidepressants After 20 Years: A LENS Story",
     sourceTitle:
       "Life-Changing Transformation: How LENS Neurofeedback Helped Me Ditch Antidepressants After 20 Years",
     description:
@@ -217,6 +224,7 @@ export const videos: Video[] = [
     id: "fEEIHDzeMEw",
     slug: "after-32-surgeries",
     title: "How She Overcame 32 Surgeries to Dominate Real Estate with LENS",
+    seoTitle: "After 32 Surgeries: A Real Estate Agent's LENS Story",
     sourceTitle: "How She Overcame 32 Surgeries to Dominate Real Estate with LENS",
     description:
       "A real estate agent who has been through thirty-two surgeries talks about stress, focus and her work since starting LENS.",
@@ -261,7 +269,7 @@ export const videos: Video[] = [
     title: "When the Brain Feels Out of Balance",
     sourceTitle: "When the Brain Feels Out of Balance",
     description:
-      "The first episode of The Hopeful Brain: a conversation about what it looks like when a child's or adult's brain is overloaded, and why it shows up differently in everyone.",
+      "The first episode of The Hopeful Brain: what it looks like when a child's or adult's brain is overloaded, and why it shows up differently in everyone.",
     durationSeconds: seconds(284),
     uploadDate: published("2026-03-11T21:47:50-07:00"),
     posterPath: "/images/videos/CnQgJRqFDEo.jpg",
@@ -279,7 +287,7 @@ export const videos: Video[] = [
     title: "Understanding the ADHD Brain",
     sourceTitle: "Understanding the ADHD Brain",
     description:
-      "An episode of The Hopeful Brain on how the ADHD brain handles stimulation, why settling can be hard, and what families miss when they look only at behavior.",
+      "The Hopeful Brain on how the ADHD brain handles stimulation, why settling can be hard, and what families miss when they look only at behavior.",
     durationSeconds: seconds(309),
     uploadDate: published("2026-03-11T21:47:39-07:00"),
     posterPath: "/images/videos/9_3_EByrX6A.jpg",
@@ -297,7 +305,7 @@ export const videos: Video[] = [
     title: "What Is Low Energy Neurofeedback — And How Is It Different?",
     sourceTitle: "What Is Low Energy Neurofeedback — And How Is It Different?",
     description:
-      "An episode of The Hopeful Brain explaining low energy neurofeedback in plain terms: how it differs from traditional neurofeedback and what a session feels like.",
+      "The Hopeful Brain explains low energy neurofeedback in plain terms: how it differs from traditional neurofeedback and what a session feels like.",
     durationSeconds: seconds(278),
     uploadDate: published("2026-03-13T04:15:59-07:00"),
     posterPath: "/images/videos/YX4yNxhdnUM.jpg",
@@ -315,7 +323,7 @@ export const videos: Video[] = [
     title: "How Neurofeedback Helps Reset the Brain",
     sourceTitle: "How Neurofeedback Helps Reset the Brain",
     description:
-      "An episode of The Hopeful Brain on what it means to “reset” the brain, what people tend to notice first, and why changes show up in daily life rather than during sessions.",
+      "The Hopeful Brain on what it means to “reset” the brain, what people tend to notice first, and why changes show up in daily life, not during sessions.",
     durationSeconds: seconds(315),
     uploadDate: published("2026-03-16T04:13:28-07:00"),
     posterPath: "/images/videos/THKM7Euo9Uo.jpg",
@@ -335,7 +343,7 @@ export const videos: Video[] = [
     title: "Find Yourself Again with LENS at Harmonized Brain Centers",
     sourceTitle: "Find Yourself Again with LENS at Harmonized Brain Centers",
     description:
-      "An introduction to Harmonized Brain Centers: how brainwaves and stress affect the brain, what LENS neurofeedback is, who it is for and how the process works.",
+      "An introduction to Harmonized Brain Centers: how brainwaves and stress affect the brain, what LENS neurofeedback is, who it's for and how it works.",
     durationSeconds: seconds(138),
     uploadDate: published("2025-02-21T07:59:20-08:00"),
     posterPath: "/images/videos/6Pm8eiJR38A.jpg",
