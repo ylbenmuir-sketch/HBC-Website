@@ -25,6 +25,15 @@ compositions), so desktop rendering is untouched. Key pieces:
 - **Hero** — copy and photo share one grid cell on phones (image layered
   behind a scrim, copy pinned to the base). `.m-only`/`.d-only` spans swap
   the short mobile eyebrow/sub for the desktop copy.
+- **Phone homepage hero** (<761px; Ben, 2026-11-02) — one action, one
+  reassurance, one proof: eyebrow + H1, sentence, Get Started, "Free
+  10-minute call · No pressure · HSA & FSA accepted", the one-line proof
+  (`PROOF_LINE_SHORT`, gold star, sized to the width so it never wraps),
+  then "See What a Brain Map Shows ↓" as a plain link. The "No pressure…"
+  paragraph, the HSA/FSA row, the "Or call" line and the chips are hidden
+  there; the chips are their own "What brings you in?" section right after
+  the hero (`HeroConcernChips variant="section"`, a two-column grid of 44px
+  chips). The desktop hero is untouched. Spacing scale 8 / 16 / 24 / 32px.
 - **PhotoFrame** — optional `positionMobile` (per-crop art direction via the
   `--ph-pos-m` custom property) and `aspect` props; desktop callers unchanged.
 - **Bottom bar dock** — one fixed footprint, two bars, one controller.
@@ -34,7 +43,11 @@ compositions), so desktop rendering is untouched. Key pieces:
     but `/contact`, `/admin` and `/10years`; <768px only; since
     2026-11-02): Call · Text us · Get Started, plus a chat button that opens
     the assistant where it exists. Visible from the first frame. The number
-    is the main line everywhere except `/locations/murfreesboro`.
+    is the main line everywhere except `/locations/murfreesboro`. Call,
+    Text us and the chat button are a fixed 56px each and Get Started
+    takes the rest, so all four fit from 320px up with the chat button
+    whole (Ben, 2026-11-02); the dock's layer pads for the safe-area
+    insets on every side.
   - **Sticky ask bar** — `components/StickyAskBar.tsx` (every route but
     `/contact`, 768px and up, behind `NEXT_PUBLIC_FEATURE_ASSISTANT`); a
     field that opens the site assistant with whatever was typed into it.

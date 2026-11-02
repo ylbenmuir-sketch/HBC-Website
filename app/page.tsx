@@ -313,6 +313,17 @@ export default function HomePage() {
   // also removes the non-null assertion the old two-part gate needed.
   const reviewCount = combinedReviewCount();
   const showReviewBand = reviewCount !== null;
+  // The phone's proof line, split at the star so the star can be gold
+  // (globals.css `.hero-proof-star`) while the text stays PROOF_LINE_SHORT
+  // verbatim. Split once, on the first star; the string is "5.0★ · …".
+  const starAt = PROOF_LINE_SHORT.indexOf("★");
+  const proofShortParts =
+    starAt === -1
+      ? { before: PROOF_LINE_SHORT, after: "" }
+      : {
+          before: PROOF_LINE_SHORT.slice(0, starAt),
+          after: PROOF_LINE_SHORT.slice(starAt + 1),
+        };
 
   return (
     <div className="home">
@@ -384,6 +395,15 @@ export default function HomePage() {
                 copy column orders its children: buttons, chips, HSA line —
                 then the photo on a tablet, or over the photo on a phone,
                 where the copy sits on the scrim (globals.css ≤760px). */}
+            {/* The phone hero is one action, one reassurance, one proof
+                (Ben, 2026-11-02): eyebrow + H1, sentence, Get Started, the
+                one-line reassurance, the proof line, then "See What a Brain
+                Map Shows ↓" as a plain link. Nothing else — the "No
+                pressure…" paragraph, the HSA/FSA row, the "Or call" line
+                and the chips are `display: none` under 761px, and the chips
+                have their own section right after the hero there. The DOM
+                order below is the desktop's; the phone reorders it with
+                `order` in the `.hero-copy` column (globals.css ≤760px). */}
             <div className="hero-ctas">
               <div className="hero-btns">
                 <TalkCta />
@@ -391,24 +411,41 @@ export default function HomePage() {
                     2026-10-19). */}
                 <HeroBrainMapJump />
               </div>
+              {/* Phones only: the reassurance line directly under Get
+                  Started (Ben, 2026-11-02), standing in for both the
+                  "No pressure…" paragraph and the HSA/FSA row below. */}
+              <p className="hero-reassure-m">
+                <span>Free 10-minute call ·</span> <span>No pressure ·</span>{" "}
+                <span>{HSA_FSA_ACCEPTED}</span>
+              </p>
               {/* What "Get Started" leads to, under the buttons (Ben,
-                  2026-10-26). Its own row on a desktop; on a phone it sits
-                  between the buttons and the chips (globals.css
-                  `.cta-reassure`). The same line is under TalkCta on the
-                  concern pages. */}
+                  2026-10-26). Its own row on a desktop; hidden on a phone,
+                  where `.hero-reassure-m` says it in one line. The same
+                  line is under TalkCta on the concern pages. */}
               <CtaReassure />
               {/* One compact proof line (Ben, 2026-11-02): the rating, the
                   rounded review count, the session count since the founding
                   year — PROOF_LINE in lib/site-config.ts, where every number
                   in it lives. The phone reads the shorter form of the same
-                  three facts (globals.css `.hero-proof-short`). */}
+                  three facts on one line with a gold star (globals.css
+                  `.hero-proof-short`, `.hero-proof-star`). */}
               <p className="hero-proof">
                 <span className="hero-proof-long">{PROOF_LINE}</span>
-                <span className="hero-proof-short">{PROOF_LINE_SHORT}</span>
+                <span className="hero-proof-short">
+                  {proofShortParts.before}
+                  <span className="hero-proof-star" aria-hidden="true">
+                    ★
+                  </span>
+                  <span className="vh">★</span>
+                  {proofShortParts.after}
+                </span>
               </p>
-              {/* Phones only: the number itself, as a call and a text (Ben,
-                  2026-11-02). Reports contact_link_click with location
-                  "home_hero". `display: none` from 768px up. */}
+              {/* The number itself, as a call and a text (Ben, 2026-11-02),
+                  reporting contact_link_click with location "home_hero".
+                  Not shown at any width since 2026-11-02 (Ben): the header
+                  and the phone's action bar already carry Call and Text.
+                  Kept in the markup with its location so it can come back
+                  with one CSS rule. */}
               {SHOW_PHONE && (
                 <p className="hero-phone" data-link-location="home_hero">
                   Or call <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
@@ -417,12 +454,16 @@ export default function HomePage() {
                 </p>
               )}
               {/* One quiet line, not a button (Ben, 2026-10-16): a long-time
-                  referral partner had only just learned we take HSA/FSA. */}
+                  referral partner had only just learned we take HSA/FSA.
+                  Desktop and tablet; the phone folds it into
+                  `.hero-reassure-m`. */}
               <p className="hero-hsa">
                 <CheckIcon className="hero-hsa-check" />
                 {HSA_FSA_ACCEPTED}
               </p>
             </div>
+            {/* In the hero from 761px up; under that the same chips are the
+                section right after the hero (`variant="section"`, below). */}
             <HeroConcernChips />
           </div>
           <div className="rv hero-media">
@@ -458,6 +499,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* "What brings you in?" as its own section on a phone (Ben,
+          2026-11-02): the eight chips in a two-column grid right after the
+          hero, so the hero itself is one action, one reassurance, one proof.
+          `display: none` from 761px up, where the chips are inside the hero
+          (globals.css `.concern-chips-sec`). The same links and the same
+          concern_chip_click event either way. */}
+      <HeroConcernChips variant="section" />
 
       {/* Trisha Yearwood band — CONDITIONAL FEATURE. Renders only while
           FEATURE_CELEBRITY is true (draft mode, or the env flag once every

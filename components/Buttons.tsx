@@ -72,7 +72,8 @@ export function TalkCta({
  * The small muted line under TalkCta that says what happens after the tap
  * (Ben, 2026-10-26): the homepage hero and both concern-page heroes. Placed
  * inside a `.hero-ctas` row; `.cta-reassure` in globals.css gives it a row of
- * its own on a desktop and its phone colours over the homepage scrim.
+ * its own on a desktop. On a phone the homepage hero hides it and shows its
+ * one-line `.hero-reassure-m` instead (Ben, 2026-11-02; app/page.tsx).
  */
 export function CtaReassure() {
   return (

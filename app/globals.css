@@ -429,6 +429,10 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    short one on a phone. The phone-only "Or call" line follows it. */
 .hero-proof { flex-basis: 100%; margin: 0; font-size: 14px; line-height: 1.5; color: var(--slate); font-weight: 500; letter-spacing: 0.005em; }
 .hero-proof-short, .hero-phone { display: none; }
+/* Phone-only pieces of the homepage hero (Ben, 2026-11-02): the one-line
+   reassurance under Get Started and the "What brings you in?" section that
+   follows the hero. Both `display: none` here; the ≤760px block shows them. */
+.hero-reassure-m, .concern-chips-sec { display: none; }
 /* "What brings you in?" — a small grey label and eight quiet pill links to the
    concern pages (components/HeroConcernChips.tsx). Quieter than both buttons:
    thin border, ivory ground, small type. They wrap; nothing scrolls sideways. */
@@ -1213,9 +1217,14 @@ html.js .rv.in { opacity: 1; transform: none; }
 
   /* ---- cinematic hero: layered image, scrim, editorial type ----
      The photo behind the copy under a navy scrim. Retired for a stacked
-     hero for one build on 2026-10-19 and restored the same day (Ben), now
-     carrying the longer copy: eyebrow, H1, sentence, both buttons, the
-     "What brings you in?" chips, the HSA line. The desktop is untouched. */
+     hero for one build on 2026-10-19 and restored the same day (Ben).
+     Trimmed to one action, one reassurance, one proof on 2026-11-02 (Ben):
+     eyebrow + H1, sentence, Get Started, the one-line reassurance, the
+     proof line, then "See What a Brain Map Shows ↓" as a plain link. The
+     "No pressure…" paragraph, the HSA/FSA row, the "Or call" line and the
+     chips are hidden here; the chips have their own section after the hero
+     (`.concern-chips-sec`, below). One spacing scale: 8 / 16 / 24 / 32px.
+     The desktop is untouched. */
   .hero, .home .hero { padding: 0; }
   /* The location hero, tightened from the top so its links clear the resting
      Ask bar at load (Ben, 2026-10-16). At 390×844 the bar's top edge is
@@ -1273,7 +1282,7 @@ html.js .rv.in { opacity: 1; transform: none; }
      frame at y=782, and at 340 the hero's "Get Started" ended at 793, under
      it. 40px up puts the button's bottom at ~753; the eyebrow still sits
      below the daughter's chin (the faces end at ~210px of the 700px photo). */
-  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 300px 24px calc(30px + env(safe-area-inset-bottom)); }
+  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 300px 24px calc(20px + env(safe-area-inset-bottom)); }
   /* One line at 390 and 360 (Ben, 2026-10-20): the 45-character eyebrow
      needs 305px at 10.5px/0.06em; the gold line and its gap (40px) go, so
      the full column width is text. At 320 it wraps to two lines, cleanly. */
@@ -1289,35 +1298,55 @@ html.js .rv.in { opacity: 1; transform: none; }
      inside the H1 (2026-10-19) — so 0 keeps the headline where it was. */
   .hero h1 { color: var(--ivory); font-size: clamp(40px, 12.5vw, 56px); line-height: 1.04; margin-top: 0; text-wrap: initial; }
   .hero h1 em.sage { color: #cbd6c7; }
-  .hero .sub { color: rgba(251, 248, 241, 0.86); font-size: 16.5px; line-height: 1.55; max-width: 32ch; margin: 18px 0 28px; }
+  /* 32px under the sentence (the scale's largest step) before Get Started. */
+  .hero .sub { color: rgba(251, 248, 241, 0.86); font-size: 16.5px; line-height: 1.55; max-width: 32ch; margin: 18px 0 32px; }
   .hero .sub .kw { color: var(--ivory); }
   /* `.hero-ctas` is `display: contents` from 1060px down (the stacking rule
-     above), so these style its two children directly. */
-  .hero-btns { flex-direction: column; align-items: stretch; align-self: stretch; gap: 6px; }
-  .hero .btn-primary { background: var(--ivory); color: var(--navy); width: 100%; }
+     above), and here `.hero-btns` dissolves too, so every piece is an item
+     of the `.hero-copy` column and `order` puts the phone's sequence
+     together: Get Started (1), the reassurance line (2), the proof line
+     (3), the Brain Map link (4). The H1 and the sentence keep order 0. */
+  .hero-btns { display: contents; }
+  .hero .btn-primary { order: 1; align-self: stretch; background: var(--ivory); color: var(--navy); width: 100%; }
   .hero .btn-primary:active { background: #fff; }
+  /* "See What a Brain Map Shows ↓" as a plain text link, not button weight
+     (Ben, 2026-11-02): no gold rule, 15px at 500, a hairline underline in
+     the gold the arrow carries. 12px of padding each side of the text keeps
+     a 45px tap target; with the 12px margin the visible gap from the proof
+     line is the scale's 24px. The hero ends 20px + 12px = 32px under it. */
   .hero .btn-ghost { color: rgba(251, 248, 241, 0.9); border-bottom: 0; align-self: center; font-size: 15px; padding: 14px 4px; }
+  .hero .hero-jump { order: 4; margin-top: 12px; padding: 12px 0; min-height: 0; font-weight: 500; letter-spacing: 0; text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: var(--gold-lift); text-underline-offset: 5px; }
   .hero .btn-ghost .arrow { color: var(--gold); }
-  /* The chips over the photo: fully opaque ivory, the thin border, navy
-     text — their own contrast, whatever the photo does behind them. */
-  .hero-chips { margin-top: 18px; }
-  .hero-chips-label { color: rgba(251, 248, 241, 0.86); }
-  .hero-chip { background: var(--ivory); border-color: rgba(251, 248, 241, 0.55); }
-  .hero-chip:hover { background: #fff; }
-  .hero-hsa { align-self: center; margin-top: 18px; font-size: 15px; color: rgba(251, 248, 241, 0.9); }
-  .hero-hsa-check { color: var(--gold-lift); }
-  /* Centred under the centred "See What a Brain Map Shows ↓", which already
-     carries 14px of padding below its text — so no margin of its own, and
-     the hero grows by exactly this line's height (two lines at 390). It sits
-     below the photo's 700px, on the plain navy: 0.8 ivory there is ~10:1. */
-  .hero-copy .cta-reassure { align-self: center; text-align: center; max-width: 34ch; margin-top: 0; font-size: 14px; color: rgba(251, 248, 241, 0.8); }
-  /* The proof and phone lines over the scrim: centred under the reassurance
-     line, ivory at the same 0.8–0.9 the HSA line uses (≥ AA on the navy). */
-  .hero-copy .hero-proof { align-self: center; text-align: center; margin-top: 10px; font-size: 13.5px; color: rgba(251, 248, 241, 0.9); }
+  /* The hero's chips, the HSA/FSA row, the "No pressure…" paragraph and the
+     "Or call" line are off the phone hero (Ben, 2026-11-02). The chips are
+     the section below; the other three are one line, `.hero-reassure-m`.
+     `.hero-phone` keeps its markup and location for a one-rule return. */
+  .hero .hero-chips, .hero-hsa, .hero-copy .cta-reassure, .hero-phone { display: none; }
+  /* The reassurance line, 8px under Get Started: 14px, muted, centred. At
+     14px it is 358px wide, so it is one line from 430 and two balanced
+     lines at 390 and 360; each phrase is a nowrap span, so it only ever
+     breaks at a separator. */
+  .hero-reassure-m { display: block; order: 2; align-self: center; text-align: center; margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: rgba(251, 248, 241, 0.8); text-wrap: balance; }
+  .hero-reassure-m span { white-space: nowrap; }
+  /* The proof line, 24px under the reassurance: one line, never two (Ben,
+     2026-11-02), so it is `nowrap` and sized to the width — 56 characters of
+     DM Sans need 27.9px of width per px of font size, and the line may use
+     16px gutters where the rest of the copy keeps 24: 14px from 430 up,
+     13px at 390, 12px at 360, 11.5px at 320. Gold star (`.hero-proof-star`). */
+  .hero-copy .hero-proof { order: 3; align-self: center; text-align: center; margin: 24px -8px 0; max-width: none; white-space: nowrap; font-size: clamp(11px, 3.3vw, 14px); letter-spacing: 0; color: rgba(251, 248, 241, 0.9); }
   .hero-proof-long { display: none; }
   .hero-proof-short { display: inline; }
-  .hero-phone { display: block; align-self: center; text-align: center; margin: 6px 0 0; font-size: 15px; color: rgba(251, 248, 241, 0.86); }
-  .hero-phone a { color: var(--ivory); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-lift); padding: 8px 0; }
+  .hero-proof-star { color: var(--gold-lift); }
+
+  /* ---- "What brings you in?" — the chips' own section after the hero
+     (components/HeroConcernChips.tsx `variant="section"`): a real heading,
+     a two-column grid of full-width chips at least 44px tall, 12px apart,
+     32px of padding above and below. Hidden from 761px up, where the chips
+     are inside the hero. */
+  .concern-chips-sec { display: block; padding: 32px 0; }
+  .concern-chips-h { font-size: 24px; line-height: 1.2; margin: 0 0 16px; }
+  .concern-chips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .concern-chips-grid .hero-chip { min-height: 44px; width: 100%; justify-content: center; padding: 10px 12px; font-size: 14.5px; }
 
   /* ---- proof: a compact 2×2, significant but brief ---- */
   .proof, .home .proof { margin-top: 0; }
@@ -1512,18 +1541,22 @@ html.js .rv.in { opacity: 1; transform: none; }
    (--bottombar-h), which is what the footer reserves — so the bar covers
    nothing permanently. The dock's layer owns the show/hide fade. */
 @media (max-width: 767px) {
-  .cta-bar { display: flex; width: 100%; gap: 8px; align-items: stretch; }
-  .cta-bar-act { flex: none; min-width: 64px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 10px; background: var(--ivory); color: var(--navy); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 1; text-decoration: none; border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); white-space: nowrap; }
+  /* Four items that always fit (Ben, 2026-11-02; the chat button was cut
+     off at the right edge on a 360px phone): Call, Text us and the chat
+     button are a fixed 56px each, Get Started takes the rest and may shrink
+     (`min-width: 0`), and the bar can never be wider than its layer. At 360
+     with 12px gutters that is 336 − 3×56 − 3×8 = 144px for Get Started,
+     whose label is ~95px at 15.5px; at 320 it is 104px with 6px gaps. */
+  .cta-bar { display: flex; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; gap: 8px; align-items: stretch; }
+  .cta-bar-act { flex: none; width: 56px; min-width: 0; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; background: var(--ivory); color: var(--navy); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 1; text-decoration: none; border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); white-space: nowrap; box-sizing: border-box; }
   .cta-bar-act:active { background: #fff; }
-  .cta-bar-btn { flex: 1; display: flex; align-items: center; justify-content: center; height: 52px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15.5px; letter-spacing: 0.01em; text-decoration: none; border-radius: 3px; border: 1px solid rgba(251, 248, 241, 0.28); box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.6); white-space: nowrap; }
+  .cta-bar-btn { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; height: 52px; padding: 0 6px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15.5px; letter-spacing: 0.01em; text-decoration: none; border-radius: 3px; border: 1px solid rgba(251, 248, 241, 0.28); box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.6); white-space: nowrap; overflow: hidden; box-sizing: border-box; }
   .cta-bar-btn:active { background: var(--navy-deep); }
-  .cta-bar-chat { flex: none; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--sage-deep); border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); cursor: pointer; padding: 0; }
+  .cta-bar-chat { flex: none; width: 56px; min-width: 0; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--sage-deep); border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); cursor: pointer; padding: 0; box-sizing: border-box; }
   .cta-bar-chat:active { background: var(--ivory); }
-  /* 320px: 12px gutters leave 296px — the two labelled actions give up
-     their side padding and the Get Started keeps what is left. */
+  /* 320px: 12px gutters leave 296px — tighter gaps, one size down. */
   @media (max-width: 359px) {
     .cta-bar { gap: 6px; }
-    .cta-bar-act { min-width: 56px; padding: 0 6px; }
     .cta-bar-btn { font-size: 14.5px; }
   }
 }
@@ -1544,6 +1577,12 @@ html.js .rv.in { opacity: 1; transform: none; }
 /* very narrow phones (≤360px): protect the headline + rail cards */
 @media (max-width: 360px) {
   .hero h1 { font-size: 38px; }
+  /* 360×780 (Ben, 2026-11-02): the action bar's top edge is y=718 and the
+     hero's Get Started ended at 724. The copy starts 20px higher (280, not
+     300) and the scrim's pixel stops move up with it, so the eyebrow sits on
+     the same 0.67 navy it does at 390; the button now ends at ~704. */
+  .hero-copy { padding-top: 280px; }
+  .hero-scrim { background: linear-gradient(to bottom, rgba(21, 34, 48, 0.28) 0, rgba(21, 34, 48, 0.18) 142.6px, rgba(21, 34, 48, 0.35) 244.3px, rgba(21, 34, 48, 0.9) 305.2px, rgba(21, 34, 48, 0.92) 406.9px, rgba(21, 34, 48, 0.95) 589.8px, rgba(21, 34, 48, 0.97) 100%); }
   .home .ccard { flex-basis: 88%; }
   .celeb-quote { font-size: 25px; }
 }
@@ -1840,7 +1879,7 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
 /* -- the CTA bar's layer -------------------------------------------------
    The same 12px gutters and 10px lift the bar gave itself when it was
    positioning itself, so nothing about how it looks has changed. */
-.callbar-layer { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+.callbar-layer { padding: 10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left)); }
 /* The CTA bar's hit area is the bar, not the strip — it is two buttons on a
    transparent ground, and the 12px gutters either side of them belong to
    whatever is behind. (The ask bar is the opposite case: its strip is opaque
