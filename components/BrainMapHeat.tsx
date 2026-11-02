@@ -1,5 +1,6 @@
 import { useId } from "react";
 import HeatTooltips from "./HeatTooltips";
+import HeatField from "./HeatField";
 import {
   BRAIN_MAP_BAND_COLORS,
   BRAIN_MAP_BAND_LABELS,
@@ -52,10 +53,13 @@ export default function BrainMapHeat({
   callouts = [],
   className = "",
   legend = true,
+  eager = false,
 }: {
   callouts?: HeatCallout[];
   className?: string;
   legend?: boolean;
+  /** Fetch the painted field at once rather than when the chart nears the viewport (components/HeatField.tsx). Nothing renders one in a first screen today. */
+  eager?: boolean;
 }) {
   // SVG ids are document-wide and several heat maps share a page.
   const clipId = `bmh-head-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
@@ -93,8 +97,9 @@ export default function BrainMapHeat({
         <path d={`M ${CX - R + 6} ${CY - 30} q -34 30 0 60`} fill="none" stroke="#1C2B3A" strokeWidth="2" strokeLinecap="round" />
         <path d={`M ${CX + R - 6} ${CY - 30} q 34 30 0 60`} fill="none" stroke="#1C2B3A" strokeWidth="2" strokeLinecap="round" />
         <path d={`M ${CX - 24} ${CY - R + 7} L ${CX} ${CY - R - 28} L ${CX + 24} ${CY - R + 7}`} fill="#FBF8F1" stroke="#1C2B3A" strokeWidth="2" strokeLinejoin="round" />
-        <image
+        <HeatField
           href={`/brain-map-field.png?v=${BRAIN_MAP_SAMPLE_VERSION}`}
+          eager={eager}
           x={CX - R}
           y={CY - R}
           width={R * 2}
