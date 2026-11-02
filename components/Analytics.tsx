@@ -39,9 +39,11 @@ export default function Analytics() {
   const lastPath = useRef<string | null>(null);
   const [active, setActive] = useState(false);
 
+  // Re-read per route: an excluded path (ANALYTICS_EXCLUDED_PATHS) turns the
+  // tag off while it is on screen and back on when the visitor leaves it.
   useEffect(() => {
     setActive(analyticsActive());
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!active) return;

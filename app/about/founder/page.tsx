@@ -12,11 +12,16 @@ import {
   SHOW_TEAM,
 } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
+import FounderStory from "@/components/FounderStory";
+import { FOUNDER_PAGE_PUBLISHED } from "@/lib/site-config";
 
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/about/founder");
 
 export default function FounderPage() {
+  // The rewritten page, once Ben says "publish the founder page" — see
+  // FOUNDER_PAGE_PUBLISHED. Until then the page below is exactly as it was.
+  if (FOUNDER_PAGE_PUBLISHED) return <FounderStory />;
   const trail = [{ label: "About", href: "/about" }, { label: "Our founder" }];
   return (
     <>

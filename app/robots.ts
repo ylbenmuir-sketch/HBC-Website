@@ -38,7 +38,7 @@ import { SITE_URL } from "@/lib/site-config";
  *  anyone with the link sees it, nobody finds it. `noindex, nofollow` on
  *  the page and in the header, absent from the sitemap, and disallowed here
  *  (a prefix, so the sub-routes go with it). */
-const DISALLOW = ["/api/", "/guides/", "/admin/", "/10years"];
+const DISALLOW = ["/api/", "/guides/", "/admin/", "/10years", "/about/founder/draft"];
 
 const SEARCH_AND_ANSWER_AGENTS = [
   "OAI-SearchBot",
