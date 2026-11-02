@@ -135,6 +135,10 @@ export default async function LocationPage({
   const contactHref = location.comingSoon
     ? "/contact"
     : `/contact?center=${location.slug}`;
+  // The open center a coming-soon page points at: Nashville (the one whose
+  // communities list already includes Franklin's towns).
+  const nearest = location.comingSoon ? getLocation("nashville") ?? null : null;
+  const nearestPhone = nearest ? locationPhone(nearest) : null;
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
@@ -204,7 +208,7 @@ export default async function LocationPage({
         ]}
       />
       <Breadcrumbs trail={trail} />
-      <section className="page-hero loc-hero">
+      <section className={`page-hero loc-hero${location.comingSoon ? " loc-hero-soon" : ""}`}>
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">
             <div className="eyebrow">{location.hero.eyebrow}</div>
@@ -224,12 +228,19 @@ export default async function LocationPage({
               {location.hero.titleTail}
             </h1>
             <p className="sub">{location.hero.sub}</p>
-            <div className="hero-ctas loc-hero-ctas" data-link-location="location page">
+            <div className="hero-ctas loc-hero-ctas" data-link-location="location_hero">
               <TalkCta href={contactHref} />
               {phone && (
-                <Btn href={`tel:${phone.tel}`} variant="ghost">
-                  Call {phone.display}
-                </Btn>
+                <>
+                  <Btn href={`tel:${phone.tel}`} variant="ghost">
+                    Call {phone.display}
+                  </Btn>
+                  {/* Text, beside Call (Ben, 2026-11-02): sms: to this
+                      center's own line — both lines accept texts. */}
+                  <Btn href={`sms:${phone.tel}`} variant="ghost" external>
+                    Text {phone.display}
+                  </Btn>
+                </>
               )}
             </div>
             {/* This center's own reviews, beside this center's own CTA — the
@@ -392,6 +403,39 @@ export default async function LocationPage({
           (QUERY-TO-PAGE-MAP.md rule 1). What is genuinely local — who walks
           into *this* center — is the middle paragraph, and it is the one that
           differs most between the two pages. */}
+      {/* The coming-soon center's first section (Ben, 2026-11-02): Franklin
+          is not open, so the page's one job is to send a Williamson County
+          visitor to the open center that is a short drive away — with the
+          form, and Nashville's own Call and Text. No drive time is stated:
+          none is recorded anywhere in the repo, and a number here would be
+          an invented one. Everything below this section is as it was. */}
+      {location.comingSoon && nearest && (
+        <section className="sec sec-tight coming-soon-next">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="rv">
+              <div className="eyebrow">Until we open</div>
+              <h2 style={{ margin: "22px 0 16px" }}>
+                {location.name} is coming soon. Until then, our {nearest.name}{" "}
+                center is a short drive away.
+              </h2>
+              <div className="hero-ctas" style={{ marginTop: 26 }} data-link-location="location_hero">
+                <TalkCta href={`/contact?center=${nearest.slug}`} />
+                {nearestPhone && (
+                  <>
+                    <Btn href={`tel:${nearestPhone.tel}`} variant="ghost">
+                      Call {nearestPhone.display}
+                    </Btn>
+                    <Btn href={`sms:${nearestPhone.tel}`} variant="ghost" external>
+                      Text {nearestPhone.display}
+                    </Btn>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {location.intro && (
         <section className="sec">
           <div className="wrap" style={{ maxWidth: 820 }}>
