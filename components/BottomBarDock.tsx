@@ -20,10 +20,10 @@ import StickyAskBar from "./StickyAskBar";
  * at the one moment that costs no layout shift (see its `Geometry` note).
  * This element carries no state class.
  *
- * The CTA bar's markup is not rendered here. MobileCtaBar still owns it, and
- * still mounts on the homepage only — it portals into the slot below, so the
- * bar keeps its own scroll logic and its own route scope while giving up the
- * decision about whether it is on screen. That decision is BottomBarContext's.
+ * The CTA bar's markup is not rendered here. MobileActionBar owns it (every
+ * route but its suppressed ones, phones only) — it portals into the slot
+ * below, so the bar keeps its own route scope while giving up the decision
+ * about whether it is on screen. That decision is BottomBarContext's.
  *
  * Whether an ask bar exists on this route is the controller's too
  * (`askAvailable`: the flag, minus the routes in ASSISTANT_SUPPRESSED_ROUTES).

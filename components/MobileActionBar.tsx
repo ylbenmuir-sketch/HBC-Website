@@ -3,119 +3,140 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE } from "@/lib/site-config";
+import { usePathname } from "next/navigation";
+import {
+  MOBILE_BAR_SUPPRESSED_ROUTES,
+  PHONE_DISPLAY,
+  PHONE_TEL,
+  SHOW_PHONE,
+} from "@/lib/site-config";
+import { getLocation, locationPhone } from "@/lib/locations";
 import { useBottomBar } from "./BottomBarContext";
 
 /**
- * Restrained sticky bottom CTA, phones only (≤760px via CSS).
- * 52px tall plus safe-area padding. Appears once the hero has scrolled out of
- * view and retires while the end-of-page CTA band or footer is on screen, so
- * it never doubles the same ask; globals.css also hides the whole dock while
- * the menu drawer is open (body[data-menu-open]).
+ * The phone's one action bar, on every route (Ben, 2026-11-02): Call ·
+ * Text us · Get Started, plus a small chat button that opens the site
+ * assistant where the assistant exists. It replaced two bars that each
+ * covered half the site — the homepage's "Get Started" bar, which appeared
+ * only once the hero had scrolled past, and the interior routes' "Ask us"
+ * bar — with one that is there from the first frame.
  *
- * It no longer decides whether anything else is allowed on screen. It reports
- * "I am showing" to BottomBarContext and renders its markup into
- * BottomBarDock's shared footprint; the controller works out that the ask bar
- * must yield, and the dock crossfades the two in place. This bar always wins
- * that tie — it is the primary conversion path — but it wins it in one
- * reducer now rather than in a pair of CSS rules that pointed at each other.
+ * Phones only (<768px, read here as MOBILE_BAR_QUERY and declared again as
+ * the `@media (max-width: 767px)` block in globals.css that gives `.cta-bar`
+ * its `display: flex`; move both or neither). Above that the dock behaves as
+ * it always did: the ask bar, behind its flag, on every route but the
+ * suppressed ones. Not on /contact, which has its own Text/Call row, and
+ * not on /admin or /10years, which have no business with a call bar
+ * (MOBILE_BAR_SUPPRESSED_ROUTES in lib/site-config.ts).
  *
- * The width gate is read here as well as declared in CSS. `.cta-bar` is
- * `display: none` above 760px, and a bar that cannot be seen must not be
- * telling the controller it owns the bottom of the screen — that would blank
- * the ask bar across the whole homepage at tablet and desktop widths for a
- * bar nobody can see. The media query and the JS have to agree, so they are
- * stated together: CALL_BAR_QUERY below, and the `@media (max-width: 760px)`
- * block in globals.css that gives `.cta-bar` its `display: flex`. The two
- * disagreeing is not a visual bug, it is an invisible one — the ask bar
- * simply stops existing on the homepage — so if the breakpoint moves, move
- * both.
+ * The number is the main line everywhere except the Murfreesboro page,
+ * where it is that center's (lib/locations.ts is the source of truth for
+ * both). Both links accept texts. Every tap reports contact_link_click with
+ * location "mobile_bar" (components/Analytics.tsx reads the attribute).
+ *
+ * It does not decide whether it is on screen. It registers with
+ * BottomBarContext while it is in range and the route allows it, reports
+ * "showing", and renders into BottomBarDock's shared footprint, where the
+ * controller gives it the "call" slot — which always wins over the ask bar
+ * and yields only to the open assistant panel. The footer's reserve
+ * (`body[data-bottombar]`, globals.css) is the bar's own height, so the
+ * last line of every page can still be scrolled out from under it.
  */
-const CALL_BAR_QUERY = "(max-width: 760px)";
+const MOBILE_BAR_QUERY = "(max-width: 767px)";
 
-export default function MobileCtaBar() {
-  const { registerCallBar, setCallBarActive, slot } = useBottomBar();
-  const [scrolledIn, setScrolledIn] = useState(false);
+function suppressedOn(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return MOBILE_BAR_SUPPRESSED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+/** The number this route calls and texts: Murfreesboro's on its own page, the main line everywhere else. */
+function phoneFor(pathname: string | null): { display: string; tel: string } {
+  const match = pathname?.match(/^\/locations\/([^/]+)/);
+  const location = match ? getLocation(match[1]) : undefined;
+  const own = location && location.slug === "murfreesboro" ? locationPhone(location) : null;
+  return own ?? { display: PHONE_DISPLAY, tel: PHONE_TEL };
+}
+
+export default function MobileActionBar() {
+  const pathname = usePathname();
+  const { registerCallBar, setCallBarActive, slot, askAvailable, openAssistant } = useBottomBar();
   const [inRange, setInRange] = useState(false);
-  const show = scrolledIn && inRange;
-
-  // Tell the controller this route has a CTA bar at all, so the dock renders
-  // and the footer reserves its height even while the bar is scrolled out.
-  useEffect(() => registerCallBar(), [registerCallBar]);
+  const allowed = !suppressedOn(pathname);
+  const show = inRange && allowed;
 
   useEffect(() => {
-    const mq = window.matchMedia(CALL_BAR_QUERY);
+    const mq = window.matchMedia(MOBILE_BAR_QUERY);
     const apply = () => setInRange(mq.matches);
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
 
+  // Registered only while it can be seen, so a desktop with the assistant
+  // flag off does not reserve a footprint for a bar that is display:none.
   useEffect(() => {
-    const hero = document.querySelector(".hero");
-    const end = document.querySelector(".final");
-    const update = () => {
-      const heroGone = hero
-        ? hero.getBoundingClientRect().bottom < 0
-        : window.scrollY > 400;
-      // retire the bar once the end-of-page CTA band (and the footer after
-      // it) approaches — they repeat the same ask
-      const beforeEnd = end
-        ? end.getBoundingClientRect().top > window.innerHeight * 0.8
-        : true;
-      setScrolledIn(heroGone && beforeEnd);
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
+    if (!show) return;
+    return registerCallBar();
+  }, [show, registerCallBar]);
 
   useEffect(() => {
     setCallBarActive(show);
     return () => setCallBarActive(false);
   }, [show, setCallBarActive]);
 
-  // Kept only so the old launcher's yield rule still works if the launcher is
-  // switched back on (SiteAssistant's SHOW_LEGACY_LAUNCHER). The controller
-  // above is what the current bars read; nothing in the new dock consults
-  // this attribute.
-  useEffect(() => {
-    if (show) document.body.dataset.ctaBar = "on";
-    else delete document.body.dataset.ctaBar;
-    return () => {
-      delete document.body.dataset.ctaBar;
-    };
-  }, [show]);
-
-  // The dock's slot only exists after it has rendered, which is a beat after
-  // registerCallBar above on a route where nothing else docks.
-  if (!slot) return null;
+  if (!slot || !show) return null;
+  const phone = phoneFor(pathname);
 
   return createPortal(
-    <div className="cta-bar" aria-hidden={!show} data-link-location="mobile bar">
-      <Link className="cta-bar-btn" href="/contact" tabIndex={show ? 0 : -1}>
+    <div className="cta-bar" data-link-location="mobile_bar">
+      {SHOW_PHONE && (
+        <>
+          <a className="cta-bar-act" href={`tel:${phone.tel}`} aria-label={`Call ${phone.display}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Call</span>
+          </a>
+          <a className="cta-bar-act" href={`sms:${phone.tel}`} aria-label={`Text ${phone.display}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Text us</span>
+          </a>
+        </>
+      )}
+      <Link className="cta-bar-btn" href="/contact">
         Get Started
       </Link>
-      {SHOW_PHONE && (
-        <a
-          className="cta-bar-tel"
-          href={`tel:${PHONE_TEL}`}
-          tabIndex={show ? 0 : -1}
-          aria-label={`Call ${PHONE_DISPLAY}`}
+      {askAvailable && (
+        <button
+          type="button"
+          className="cta-bar-chat"
+          aria-label="Ask us a question"
+          onClick={() => openAssistant("")}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
-              d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+              d="M12 4c-4.4 0-8 3.1-8 7 0 2.2 1.2 4.1 3 5.4V20l3.3-2.1c.5.1 1.1.1 1.7.1 4.4 0 8-3.1 8-7s-3.6-7-8-7z"
               stroke="currentColor"
               strokeWidth="1.6"
               strokeLinejoin="round"
             />
+            <path d="M8.5 11h7M8.5 8.5h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
-        </a>
+        </button>
       )}
     </div>,
     slot

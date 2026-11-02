@@ -300,6 +300,25 @@ export default function Header() {
         <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
           Get Started
         </ChromeLink>
+        {/* The phone on a phone (Ben, 2026-11-02): a tappable tel: link in
+            the header itself, outside the hamburger, where `.nav > .nav-tel`
+            is hidden (under 1060px). Icon and number; the number steps
+            aside under 400px, where the logo and the burger leave no room
+            for it, and the aria-label still says it. Reports
+            contact_link_click with location "header" like the desktop one. */}
+        {SHOW_PHONE && (
+          <a className="nav-tel-m" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>{PHONE_DISPLAY}</span>
+          </a>
+        )}
         <button
           className={`nav-burger${open ? " is-open" : ""}`}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -312,7 +331,7 @@ export default function Header() {
           <span />
         </button>
       </div>
-      <div id="mobile-drawer" className={`drawer${open ? " open" : ""}`}>
+      <div id="mobile-drawer" className={`drawer${open ? " open" : ""}`} data-link-location="drawer">
         <div className="d-inner">
           <nav className="d-nav" aria-label="Mobile">
             {/* An accordion, not a link plus an always-open list (Ben,

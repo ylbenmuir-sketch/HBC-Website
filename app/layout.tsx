@@ -7,6 +7,7 @@ import RouteFooter from "@/components/RouteFooter";
 import RevealOnScroll from "@/components/RevealOnScroll";
 import { BottomBarProvider } from "@/components/BottomBarContext";
 import BottomBarDock from "@/components/BottomBarDock";
+import MobileActionBar from "@/components/MobileActionBar";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import Analytics from "@/components/Analytics";
 import AssistantLoader from "@/components/AssistantLoader";
@@ -164,16 +165,14 @@ export default function RootLayout({
         />
       </head>
       {/* The dock's footprint, reserved in the server-rendered HTML rather than
-          by an effect after hydration. BottomBarProvider still sets and clears
-          this attribute — it has to, for the homepage CTA bar, which mounts on
-          one route and is not known here — but when the assistant flag is on
-          the dock is docked from the first frame, and the footer's reserve
-          should be there from the first frame too. Applied at hydration it
-          moved the end of every page. See the reserve block in globals.css.
-          A route in ASSISTANT_SUPPRESSED_ROUTES (/contact) still gets it
-          here — this layout cannot see the route — and the provider clears
-          it at hydration, below the fold. */}
-      <body data-bottombar={FEATURE_ASSISTANT ? "on" : undefined}>
+          by an effect after hydration: since 2026-11-02 the phone action bar
+          is on every route from the first frame, so the footer's reserve is
+          there from the first frame too. BottomBarProvider still owns the
+          attribute — it clears it on a route where nothing docks (/contact,
+          /admin, /10years with the assistant off too; and any desktop with
+          the assistant flag off), which happens at hydration, below the
+          fold. See the reserve block in globals.css. */}
+      <body data-bottombar="on">
         {/* One controller for everything anchored to the bottom of the
             viewport — the sticky ask bar, the homepage CTA bar, and the
             assistant panel that retires both. See BottomBarContext. */}
@@ -213,6 +212,10 @@ export default function RootLayout({
               the bar exists on *this* route is the provider's call (the flag
               minus ASSISTANT_SUPPRESSED_ROUTES), read from context. */}
           <BottomBarDock />
+          {/* The phone's Call · Text · Get Started bar, every route but the
+              ones in MOBILE_BAR_SUPPRESSED_ROUTES; it portals into the dock
+              above and takes its "call" slot. Desktop is untouched. */}
+          <MobileActionBar />
           {/* GA4, inert until NEXT_PUBLIC_GA_ID is set — lib/analytics.ts. */}
           <Analytics />
         </BottomBarProvider>

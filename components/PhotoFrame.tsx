@@ -39,6 +39,7 @@ export default function PhotoFrame({
   style,
   sizes = "(max-width: 1060px) 100vw, 50vw",
   priority = false,
+  quality,
 }: {
   src: string;
   alt: string;
@@ -52,6 +53,8 @@ export default function PhotoFrame({
   style?: CSSProperties;
   sizes?: string;
   priority?: boolean;
+  /** next/image quality (default 75). The homepage hero passes 62: a photo behind a navy scrim, where the bytes were the LCP (perf pass, 2026-11-02). */
+  quality?: number;
 }) {
   return (
     <div
@@ -71,6 +74,7 @@ export default function PhotoFrame({
         fill
         sizes={sizes}
         priority={priority}
+        quality={quality}
         fetchPriority={priority ? "high" : undefined}
         style={{
           objectFit: "cover",

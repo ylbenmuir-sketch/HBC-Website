@@ -18,8 +18,7 @@ import LocationCard from "@/components/LocationCard";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
-import MobileCtaBar from "@/components/MobileCtaBar";
-import { Btn, BrainMapCta, CtaReassure, TalkCta } from "@/components/Buttons";
+import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
 import HeroConcernChips from "@/components/HeroConcernChips";
@@ -55,6 +54,11 @@ import {
   TRISHA_VIDEO_URL,
   VERIFIED_TESTIMONIALS,
   verifiedOr,
+  PHONE_DISPLAY,
+  PHONE_TEL,
+  PROOF_LINE,
+  PROOF_LINE_SHORT,
+  SHOW_PHONE,
 } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
 import PageSchema from "@/components/PageSchema";
@@ -384,7 +388,7 @@ export default function HomePage() {
               <div className="hero-btns">
                 <TalkCta />
                 {/* "See What a Brain Map Shows ↓" → #brain-map (Ben,
-                    2026-10-19). The priced BrainMapCta lives in the stage. */}
+                    2026-10-19). */}
                 <HeroBrainMapJump />
               </div>
               {/* What "Get Started" leads to, under the buttons (Ben,
@@ -393,6 +397,25 @@ export default function HomePage() {
                   `.cta-reassure`). The same line is under TalkCta on the
                   concern pages. */}
               <CtaReassure />
+              {/* One compact proof line (Ben, 2026-11-02): the rating, the
+                  rounded review count, the session count since the founding
+                  year — PROOF_LINE in lib/site-config.ts, where every number
+                  in it lives. The phone reads the shorter form of the same
+                  three facts (globals.css `.hero-proof-short`). */}
+              <p className="hero-proof">
+                <span className="hero-proof-long">{PROOF_LINE}</span>
+                <span className="hero-proof-short">{PROOF_LINE_SHORT}</span>
+              </p>
+              {/* Phones only: the number itself, as a call and a text (Ben,
+                  2026-11-02). Reports contact_link_click with location
+                  "home_hero". `display: none` from 768px up. */}
+              {SHOW_PHONE && (
+                <p className="hero-phone" data-link-location="home_hero">
+                  Or call <a href={`tel:${PHONE_TEL}`}>{PHONE_DISPLAY}</a>
+                  {" · "}
+                  <a href={`sms:${PHONE_TEL}`}>text us</a>
+                </p>
+              )}
               {/* One quiet line, not a button (Ben, 2026-10-16): a long-time
                   referral partner had only just learned we take HSA/FSA. */}
               <p className="hero-hsa">
@@ -427,6 +450,7 @@ export default function HomePage() {
               className="hero-ph"
               sizes="(max-width: 1060px) 100vw, 47vw"
               priority
+              quality={62}
             />
             {/* Phones only (globals.css ≤760px): the navy scrim the copy
                 sits on. `display: none` everywhere else. */}
@@ -886,12 +910,7 @@ export default function HomePage() {
                 sizes="(max-width: 1023px) calc(100vw - 72px), 720px"
               />
             }
-            actions={
-              <>
-                <TalkCta />
-                <BrainMapCta />
-              </>
-            }
+            actions={<TalkCta />}
             about={
               <Link href="/brain-map" className="bms-about">
                 About the Harmonized Brain Map &rarr;
@@ -1090,7 +1109,6 @@ export default function HomePage() {
 
       <FinalCTA />
       <GuideCta headingLead="Four problems, one explanation. Read" />
-      <MobileCtaBar />
     </div>
   );
 }

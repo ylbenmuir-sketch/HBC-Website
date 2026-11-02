@@ -424,6 +424,11 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
    --slate on --ivory is 5.4:1. The phone homepage hero, where it sits on the
    navy scrim, recolours it below (≤760px). */
 .cta-reassure { flex-basis: 100%; margin: -12px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+/* The proof line under the hero buttons (app/page.tsx, PROOF_LINE): its own
+   row like .cta-reassure, one size down, the long form on a desktop and the
+   short one on a phone. The phone-only "Or call" line follows it. */
+.hero-proof { flex-basis: 100%; margin: 0; font-size: 14px; line-height: 1.5; color: var(--slate); font-weight: 500; letter-spacing: 0.005em; }
+.hero-proof-short, .hero-phone { display: none; }
 /* "What brings you in?" — a small grey label and eight quiet pill links to the
    concern pages (components/HeroConcernChips.tsx). Quieter than both buttons:
    thin border, ivory ground, small type. They wrap; nothing scrolls sideways. */
@@ -694,6 +699,15 @@ details.faq .a a { color: var(--sage-deep); }
 .page-hero.center { text-align: center; }
 /* /locations/[slug]. The phone values sit in the 760px block. */
 .loc-hero-ctas { margin-top: 34px; }
+/* 1440×900 (2026-11-02): Nashville's "Get Started" ended at 933px, 33 past
+   the fold, under a three-line H1. The row comes up and the sub tightens
+   so the primary ask is in the first screen on every open center's page. */
+@media (min-width: 1024px) {
+  .loc-hero { padding-top: 56px; }
+  .loc-hero h1 { font-size: clamp(40px, 4.2vw, 60px); }
+  .loc-hero-ctas { margin-top: 22px; }
+  .loc-hero .sub { margin-top: 14px; }
+}
 .loc-hero-reviews { margin-top: 18px; }
 .page-hero.center h1 { margin-left: auto; margin-right: auto; }
 .page-hero.center .sub { margin-left: auto; margin-right: auto; }
@@ -1087,7 +1101,7 @@ html.js .rv.in { opacity: 1; transform: none; }
    5.4vw that passes the 511px column at 1349px — measured, not derived). */
 .br-wide { display: none; }
 @media (min-width: 1349px) { .br-wide { display: inline; } }
-.cta-bar { display: none; }
+.cta-bar { display: none; } /* phones only — the <768px block below */
 
 /* -- premium compact header (tablet + phone) -- */
 @media (max-width: 1060px) {
@@ -1211,6 +1225,11 @@ html.js .rv.in { opacity: 1; transform: none; }
      viewport, so the space has to come from above. The 96px over the eyebrow
      was the empty part. */
   .loc-hero { padding-top: 20px; }
+  /* A coming-soon center has no photo, only the 560px placeholder plate; on
+     a phone it stood between the hero and the "Until we open" section
+     (Ben, 2026-11-02: that section belongs near the top). Desktop keeps the
+     plate beside the copy. */
+  .loc-hero-soon .plate { display: none; }
   .loc-hero h1 { margin-top: 16px; }
   .loc-hero-ctas { margin-top: 24px; }
   .loc-hero-reviews { margin-top: 12px; }
@@ -1250,7 +1269,11 @@ html.js .rv.in { opacity: 1; transform: none; }
      narrower and wider phones now share 390's stops (at 320 the 0.9 stop had
      been at 341px, level with the eyebrow; it is now 325px, above it). */
   .hero-scrim { display: block; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(21, 34, 48, 0.28) 0, rgba(21, 34, 48, 0.18) 162.6px, rgba(21, 34, 48, 0.35) 264.3px, rgba(21, 34, 48, 0.9) 325.2px, rgba(21, 34, 48, 0.92) 426.9px, rgba(21, 34, 48, 0.95) 609.8px, rgba(21, 34, 48, 0.97) 100%); }
-  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 340px 24px calc(30px + env(safe-area-inset-bottom)); }
+  /* 300px, not 340 (2026-11-02): the action bar is on screen from the first
+     frame at y=782, and at 340 the hero's "Get Started" ended at 793, under
+     it. 40px up puts the button's bottom at ~753; the eyebrow still sits
+     below the daughter's chin (the faces end at ~210px of the 700px photo). */
+  .hero-copy { z-index: 2; align-self: end; display: flex; flex-direction: column; align-items: flex-start; padding: 300px 24px calc(30px + env(safe-area-inset-bottom)); }
   /* One line at 390 and 360 (Ben, 2026-10-20): the 45-character eyebrow
      needs 305px at 10.5px/0.06em; the gold line and its gap (40px) go, so
      the full column width is text. At 320 it wraps to two lines, cleanly. */
@@ -1288,6 +1311,13 @@ html.js .rv.in { opacity: 1; transform: none; }
      the hero grows by exactly this line's height (two lines at 390). It sits
      below the photo's 700px, on the plain navy: 0.8 ivory there is ~10:1. */
   .hero-copy .cta-reassure { align-self: center; text-align: center; max-width: 34ch; margin-top: 0; font-size: 14px; color: rgba(251, 248, 241, 0.8); }
+  /* The proof and phone lines over the scrim: centred under the reassurance
+     line, ivory at the same 0.8–0.9 the HSA line uses (≥ AA on the navy). */
+  .hero-copy .hero-proof { align-self: center; text-align: center; margin-top: 10px; font-size: 13.5px; color: rgba(251, 248, 241, 0.9); }
+  .hero-proof-long { display: none; }
+  .hero-proof-short { display: inline; }
+  .hero-phone { display: block; align-self: center; text-align: center; margin: 6px 0 0; font-size: 15px; color: rgba(251, 248, 241, 0.86); }
+  .hero-phone a { color: var(--ivory); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--gold-lift); padding: 8px 0; }
 
   /* ---- proof: a compact 2×2, significant but brief ---- */
   .proof, .home .proof { margin-top: 0; }
@@ -1474,16 +1504,41 @@ html.js .rv.in { opacity: 1; transform: none; }
   .foot-grid a { padding: 10px 0; font-size: 15px; }
   .disclaimer { padding-top: 24px; }
 
-  /* ---- sticky bottom CTA (52px + safe area; hides under the open menu) ---- */
-  .cta-bar { display: flex; position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 40; gap: 10px; opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; }
-  .cta-bar.show { opacity: 1; transform: none; pointer-events: auto; }
-  body[data-menu-open] .cta-bar { opacity: 0; transform: translateY(14px); pointer-events: none; }
+}
+
+/* ---- the phone action bar: Call · Text us · Get Started · chat (<768px) ----
+   components/MobileActionBar.tsx reads the same breakpoint (MOBILE_BAR_QUERY);
+   move both or neither. 52px controls inside the dock's 72px footprint
+   (--bottombar-h), which is what the footer reserves — so the bar covers
+   nothing permanently. The dock's layer owns the show/hide fade. */
+@media (max-width: 767px) {
+  .cta-bar { display: flex; width: 100%; gap: 8px; align-items: stretch; }
+  .cta-bar-act { flex: none; min-width: 64px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 10px; background: var(--ivory); color: var(--navy); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 1; text-decoration: none; border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); white-space: nowrap; }
+  .cta-bar-act:active { background: #fff; }
   .cta-bar-btn { flex: 1; display: flex; align-items: center; justify-content: center; height: 52px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15.5px; letter-spacing: 0.01em; text-decoration: none; border-radius: 3px; border: 1px solid rgba(251, 248, 241, 0.28); box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.6); white-space: nowrap; }
   .cta-bar-btn:active { background: var(--navy-deep); }
-  .cta-bar-tel { flex: none; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--ivory); color: var(--navy); border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); }
+  .cta-bar-chat { flex: none; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--sage-deep); border: 1px solid var(--line); border-radius: 3px; box-shadow: 0 18px 40px -18px rgba(21, 34, 48, 0.35); cursor: pointer; padding: 0; }
+  .cta-bar-chat:active { background: var(--ivory); }
+  /* 320px: 12px gutters leave 296px — the two labelled actions give up
+     their side padding and the Get Started keeps what is left. */
+  @media (max-width: 359px) {
+    .cta-bar { gap: 6px; }
+    .cta-bar-act { min-width: 56px; padding: 0 6px; }
+    .cta-bar-btn { font-size: 14.5px; }
+  }
 }
-@media (prefers-reduced-motion: reduce) {
-  .cta-bar { transition: none; }
+
+/* ---- the phone's header number (components/Header.tsx .nav-tel-m) ----
+   Shown exactly where `.nav > .nav-tel` is hidden (under 1060px). Pushed to
+   the right edge beside the burger with the same 44px hit height. */
+.nav-tel-m { display: none; }
+@media (max-width: 1060px) {
+  .nav-tel-m { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; min-height: 44px; padding: 0 8px; font-size: 14px; font-weight: 600; color: var(--navy); text-decoration: none; white-space: nowrap; letter-spacing: 0.01em; }
+  .nav-tel-m svg { flex: none; color: var(--sage-deep); }
+}
+@media (max-width: 359px) {
+  .nav-tel-m span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .nav-tel-m { padding: 0 10px; }
 }
 
 /* very narrow phones (≤360px): protect the headline + rail cards */
@@ -1682,7 +1737,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   body[data-cta-bar]:not([data-assistant-open]) .assistant-launcher { opacity: 0; visibility: hidden; transform: translateY(8px); pointer-events: none; }
   /* Outside .assistant* by necessity: this is the other half of the same
      bargain. Mirrors the existing body[data-menu-open] rule on .cta-bar. */
-  body[data-assistant-open] .cta-bar { opacity: 0; transform: translateY(14px); pointer-events: none; }
+  body[data-assistant-open] .cta-bar { opacity: 0; pointer-events: none; }
 
   /* Full-height sheet. Height comes from the *visual* viewport (SiteAssistant
      keeps --assistant-vh in step with window.visualViewport) so the composer
@@ -1802,6 +1857,8 @@ body[data-menu-open] .bottombar { opacity: 0; visibility: hidden; pointer-events
      width where it cannot be seen. */
   opacity: 1; transform: none; pointer-events: auto; transition: none;
 }
+/* The layer shows the bar; the bar's own hit areas are its four controls. */
+.callbar-layer[data-on="true"] .cta-bar > * { pointer-events: auto; }
 
 /* -- the ask bar's layer -------------------------------------------------
    Full-bleed cream with a hairline above it, so it reads as the page's own
@@ -2521,6 +2578,43 @@ body[data-bottombar] footer.site {
 /* The About menu: one column of links, the What We Help With panel's look. */
 .mega.mega-sm { min-width: 0; padding: 22px 28px; gap: 0; }
 .mega.mega-sm .col { min-width: 180px; }
+
+/* ── /contact on a phone: step one on one screen (Ben, 2026-11-02) ────────
+   At 390×844 "Send My Request" sat at 1,271px with the consent box at 743;
+   everything from the name to the button, consent included, now fits in the
+   first screen (measured: the button's bottom edge at ≤ 840). The hero's
+   sub goes (the card's own eyebrow says the same), the Text/Call cards drop
+   to one line each, the card's eyebrow and the either-or note are hidden,
+   the fields are 44px, the chips one row, the consent text 12.5px — still
+   in the server HTML, still beside the phone field. Scoped to the page's own
+   `.desk-compact` wrapper and to phones; nothing at 768px and up changes. */
+@media (max-width: 767px) {
+  .desk-compact .crumb { padding-top: 10px; padding-bottom: 4px; }
+  .desk-compact .page-hero.compact { padding: 8px 0 6px; }
+  /* The eyebrow ("Talk with our team") goes with the sub: the H1 says it. */
+  .desk-compact .page-hero.compact .eyebrow { display: none; }
+  .desk-compact .page-hero.compact h1 { font-size: 31px; margin: 0 auto; }
+  .desk-compact .page-hero.compact .sub { display: none; }
+  .desk-compact .contact-ways-sec { padding: 10px 0 0; }
+  .desk-compact .contact-ways { gap: 8px; }
+  .desk-compact .contact-way { flex-direction: row; justify-content: center; gap: 6px; padding: 11px 6px; }
+  .desk-compact .contact-way-title { font-size: 14px; }
+  .desk-compact .contact-way-title::after { content: ":"; }
+  .desk-compact .contact-way-detail { font-size: 14px; }
+  .desk-compact .sec.sec-form { padding-top: 10px; }
+  .desk-compact .form-card { padding: 14px 16px 14px !important; }
+  .desk-compact form.form-card > .eyebrow { display: none; }
+  .desk-compact .form-compact label { margin: 6px 0 3px; font-size: 11px; letter-spacing: 0.12em; }
+  .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
+  .desk-compact .form-compact input:not([type="checkbox"]), .desk-compact .form-compact select { padding: 10px 14px; font-size: 16px; min-height: 44px; }
+  .desk-compact .form-compact .either-note { display: none; }
+  .desk-compact .form .sms-consent { margin-top: 6px; gap: 8px; }
+  .desk-compact .form .sms-consent label { font-size: 12.5px; line-height: 1.35; margin: 0; }
+  .desk-compact .reach-chips { gap: 6px; flex-wrap: nowrap; }
+  .desk-compact .reach-chips .chip { padding: 9px 12px; font-size: 13.5px; flex: 1 1 0; text-align: center; white-space: nowrap; }
+  .desk-compact form.form-card button[type="submit"] { margin-top: 10px !important; padding: 13px 20px; min-height: 48px; }
+  .desk-compact form.form-card .micro { margin-top: 10px; font-size: 12.5px; }
+}
 
 /* ── /contact keeps the compact desktop scale (Ben, 2026-10-15) ──────────
    The ~90% desktop scale from the first build of the day was too much for
