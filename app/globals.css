@@ -648,19 +648,52 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
 .founder-note cite a { color: var(--sage-deep); }
 
 /* The Amen Clinics referral-partner badge (components/PartnerBadge.tsx):
-   logo + the one approved line, inline, centered. Logo 28px tall here,
-   24px on phones (below). `.partner-strip` is the homepage band under the
-   hero: slim, on the page's own ivory, a hairline above and below so it
-   reads as a quiet note and not a section. `.partner-badge-small` is the
-   /contact version under the form. The logo keeps its own colors — never
-   filtered, never recolored. */
-.partner-strip { padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
-.partner-badge { display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--slate); font-size: 14px; letter-spacing: 0.01em; text-decoration: none; }
-.partner-badge-logo { height: 28px; width: auto; flex: none; }
+   the logo as supplied, in its own colors, 40px tall beside the one line
+   from 768px up (Ben, 2026-11-02: the first 28px was too small to notice).
+   Under 768px it stacks — the logo centred on top at 42px, the line centred
+   under it at 15.5px, 24px above and below — on the homepage strip and the
+   /contact badge alike. `.partner-strip` is the homepage band under the
+   hero: light, hairlined, a quiet note and not a section. `.partner-badge-
+   small` is the /contact placement under the form. */
+.partner-strip { padding: 24px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--ivory); }
+.partner-badge { display: flex; align-items: center; justify-content: center; gap: 16px; color: var(--slate); font-size: 15px; letter-spacing: 0.01em; text-decoration: none; }
+.partner-badge-logo { height: 40px; width: auto; flex: none; }
 .partner-badge-line { white-space: nowrap; }
 a.partner-badge:hover .partner-badge-line { color: var(--navy); }
-.partner-badge-small { margin-top: 28px; font-size: 13px; gap: 12px; }
-.partner-badge-small .partner-badge-logo { height: 24px; }
+.partner-badge-small { margin-top: 32px; }
+@media (max-width: 767px) {
+  .partner-strip { padding: 24px 0; }
+  .partner-badge { flex-direction: column; gap: 12px; font-size: 15.5px; line-height: 1.4; text-align: center; }
+  .partner-badge-logo { height: 42px; }
+  .partner-badge-line { white-space: normal; }
+  .partner-badge-small { margin-top: 28px; }
+}
+
+/* The compact review at the top of a concern page (components/
+   CompactReview.tsx, Ben 2026-11-02): stars, one or two sentences in the
+   quote's serif italic, one attribution line; a gold hairline down the left
+   so it reads as a quotation and not as the intro continuing. Sits between
+   the intro sentence and Get Started. */
+.compact-review { margin: 24px 0 0; padding: 2px 0 2px 18px; border-left: 2px solid var(--gold-soft); max-width: 60ch; }
+.compact-review .google-review-stars { font-size: 15px; margin: 0 0 8px; }
+.compact-review blockquote { margin: 0; }
+.compact-review p { font-family: var(--serif-italic); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--navy); margin: 0; }
+.compact-review figcaption { margin-top: 8px; font-size: 13px; line-height: 1.4; color: var(--slate); font-weight: 600; letter-spacing: 0.01em; text-transform: none; }
+@media (max-width: 760px) {
+  .compact-review { margin: 14px 0 16px; padding-left: 14px; }
+  .compact-review p { font-size: 16.5px; }
+  .compact-review figcaption { font-size: 12.5px; }
+  /* The concern hero on a phone (app/concerns/[slug]/page.tsx): the H1,
+     the compact review and Get Started share the first screen at 390×844
+     on every concern (Ben, 2026-11-02), the depression page's four-line
+     H1 and eight-line intro included — so the top padding, the H1's
+     size and margins and the intro's measure are one step tighter here
+     than the generic .page-hero. The phone action bar covers the bottom
+     72px, so the button has to end above ~770. */
+  .page-hero.concern-hero { padding-top: 32px; }
+  .page-hero.concern-hero h1 { font-size: 40px; line-height: 1.1; margin: 14px 0 14px; }
+  .page-hero.concern-hero .sub { font-size: 16px; line-height: 1.5; }
+}
 
 /* quotes / stories */
 .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
@@ -1357,11 +1390,6 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero-proof-long { display: none; }
   .hero-proof-short { display: inline; }
   .hero-proof-star { color: var(--gold-lift); }
-
-  /* The partner strip on a phone: 24px logo, 13px line, a little tighter. */
-  .partner-strip { padding: 18px 0; }
-  .partner-badge { gap: 12px; font-size: 13px; }
-  .partner-badge-logo { height: 24px; }
 
   /* ---- "What brings you in?" — the chips' own section after the hero
      (components/HeroConcernChips.tsx `variant="section"`): a real heading,

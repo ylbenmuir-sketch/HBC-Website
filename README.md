@@ -859,8 +859,10 @@ age") and goes where it was softening a description of the service. The
 assistant follows the same rule: a limitation sentence belongs on a question
 about limits, safety, claims or medication, and on nothing else
 (`lib/chat/answer.ts`, "The limit, and where it goes"). None of this is a
-safety change — `lib/chat/safety.ts`, `refusals.ts` and the 988 block on
-`/concerns/depression` are untouched by it.
+safety change — `lib/chat/safety.ts` and `refusals.ts` are untouched by it.
+(The 988 block `/concerns/depression` carried at the time was removed on
+2026-11-02 with every other page-level crisis line; the assistant's own crisis
+response is the one that remains.)
 
 ## The bottom of the screen
 

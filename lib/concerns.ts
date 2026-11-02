@@ -130,18 +130,13 @@ export type Concern = {
    * page.
    */
   medicalFirst?: {
-    /** "If your head injury was recent, start with a doctor…" */
-    urgent: string;
     /**
-     * Render `urgent` before the eyebrow and the H1, not after the lead.
-     *
-     * Concussion and migraines put the block between the lead and the CTAs,
-     * which is "before anything inviting a call". /concerns/depression puts
-     * it before anything at all: the visitor it is written for may be in
-     * crisis, and for them the 988 line is the page. Nothing — not the
-     * headline, not the sub — reads ahead of it.
+     * "If your head injury was recent, start with a doctor…" — concussion
+     * and migraines. Absent on depression (Ben, 2026-11-02: no crisis box
+     * anywhere on the site; the chat assistant's own safety response in
+     * lib/chat/safety.ts is the one exception and is unchanged).
      */
-    aboveHeadline?: boolean;
+    urgent?: string;
     /** "This page is for later…" — what precedes the `recognize` list. */
     laterLead: string;
     /** "That gap — medically cleared, functionally not yourself…" */
@@ -175,8 +170,6 @@ export type Concern = {
    * concern's own words.
    */
   howHelp: { p1: string; p2: string; note: string };
-  /** Adds "If you're in crisis, call or text 988." after the limit line. */
-  crisisLine?: boolean;
   goals: string[]; // "Common goal" quote cards
   faqs: ConcernFaq[];
   /** `alt` when the photo needs its own words; the page falls back to the
@@ -1156,12 +1149,12 @@ export const concerns: Concern[] = [
      * reaches may be in crisis. The rules it is written under, from Ben's
      * brief — read them before editing a word:
      *
-     * - **Urgent routing comes before anything else.** `aboveHeadline`
-     *   renders the 988 block ahead of the eyebrow and the H1, styled up
-     *   (`.medical-first`), never as a footnote. It names 988, the text
-     *   line and 911 plainly. The assistant's crisis stop (lib/chat/
-     *   safety.ts) carries the same numbers and fires before retrieval, so
-     *   no passage of this page is ever the answer to a crisis message.
+     * - **No crisis box on the page** (Ben, 2026-11-02). The 988 block
+     *   that opened this page and the sentence after the limit line are
+     *   gone, site-wide. The assistant's crisis stop (lib/chat/safety.ts)
+     *   still carries 988, 741741 and 911 and fires before retrieval, so a
+     *   crisis message typed into the chat gets that response and never a
+     *   passage of this page.
      * - **"Alongside", said directly.** LENS is never an alternative to
      *   antidepressants or to therapy. The sub, the gap paragraph, the
      *   approach, the note and FAQ 1 all say it runs alongside that care,
@@ -1192,14 +1185,8 @@ export const concerns: Concern[] = [
     heroEyebrow: "Alongside your care",
     heroSub:
       "Days that feel flat. Getting started on anything feels heavier than it should. You're functioning, and you're stuck — and you may already be seeing someone about it. LENS neurofeedback here runs alongside that care, never instead of it. This page is about who comes in, not about what would happen for you.",
-    crisisLine: true,
     medicalFirst: {
-      aboveHeadline: true,
-      // The same numbers as CRISIS_REPLY in lib/chat/safety.ts, in the same
-      // order: 988, the text line, 911. Edit one and the other moves in the
-      // same commit.
-      urgent:
-        "If you're thinking about ending your life, or you're worried you might hurt yourself, call or text 988 — the Suicide & Crisis Lifeline — now, any hour, or text HOME to 741741. If you or someone with you is in immediate danger, call 911. Nothing on this page comes before that, and we'd tell you the same thing on the phone.",
+      // No `urgent` block (Ben, 2026-11-02) — see the note above.
       laterLead:
         "This page is for the long stretch. Low mood a doctor or a therapist may already know about, that has been part of life for a while:",
       // Ben's framing — build the page around this, don't soften it.

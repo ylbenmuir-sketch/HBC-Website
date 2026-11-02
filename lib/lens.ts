@@ -38,10 +38,3 @@ export const LENS_IS_NOT = [
  */
 export const LENS_LIMIT_LINE =
   "LENS is a wellness service. It works alongside — never in place of — your doctor, therapist, or school supports.";
-
-/**
- * Follows LENS_LIMIT_LINE on the depression page and the depression article
- * only. The full 988 / 741741 / 911 block above the depression page's H1 is
- * separate and unchanged.
- */
-export const CRISIS_LINE = "If you’re in crisis, call or text 988.";

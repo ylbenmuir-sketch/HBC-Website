@@ -295,7 +295,7 @@ export type Resource = {
 /**
  * The closing line of every article — the shared one-line limit (Ben,
  * 2026-10-16), which replaced the boxed "educational, not medical advice"
- * notes. The depression article adds the 988 sentence after it.
+ * notes.
  */
 const ARTICLE_NOTE = LENS_LIMIT_LINE;
 
@@ -310,7 +310,7 @@ const STANDARD_FINAL_SUB =
   "Tell us what’s going on. We’ll listen, answer honestly, and tell you plainly whether LENS is a fit — on the phone, before you book anything.";
 
 import { SHOW_DRAFT_CONTENT, isDraftText } from "./site-config";
-import { CRISIS_LINE, LENS_LIMIT_LINE } from "./lens";
+import { LENS_LIMIT_LINE } from "./lens";
 
 /**
  * A resource is publishable once its lede and body carry no [draft] notes.
@@ -1230,9 +1230,9 @@ export const resources: Resource[] = [
     // takes children-school's. "Depression" is on none of the four ranking
     // surfaces: the concern page owns `low mood` / `neurofeedback for
     // depression`, and `depression treatment/therapy/cure` is Do-not-target.
-    // The concern page's rules apply here too: 988 first in the body, LENS
-    // alongside antidepressants and therapy and never instead, no outcome
-    // language at all (so no "clients commonly report" sentence).
+    // The concern page's rules apply here too: LENS alongside
+    // antidepressants and therapy and never instead, no outcome language at
+    // all (so no "clients commonly report" sentence).
     slug: "when-everything-feels-like-effort",
     cluster: null,
     datePublished: "2026-10-15",
@@ -1241,17 +1241,13 @@ export const resources: Resource[] = [
     crumbLabel: "When everything feels like effort",
     excerpt: "The dishes, the email, the call back — and why effort isn’t what’s missing.",
     image: { src: "/images/article-getting-started.jpg", position: "center 35%", alt: "A man at a wooden table looking down at an open notebook, a pen across the page and a closed laptop beside him" },
-    // No figure (see `image`): the 988 line follows the lede directly.
+    // No figure (see `image`): the body follows the lede directly.
     readTime: "5 min read",
     byline: HBC_BYLINE,
     lede: "The call you meant to return on Monday. The dishes. The email that needs two lines. None of it is hard, and all of it feels like lifting something heavy. You’re functioning — going to work, showing up — and underneath it the days have gone flat.",
     body: [
-      // The 988 line opens the body, right under the lede, as one plain
-      // sentence in the muted limit-line style — no box (Ben, 2026-10-18,
-      // moving it up from the end, where it followed the limit line). It
-      // appears once. The full 988 / 741741 / 911 block stays above the
-      // depression page's H1, and the assistant's crisis stop is unchanged.
-      { type: "note", text: CRISIS_LINE },
+      // No 988 line here any more (Ben, 2026-11-02: no crisis lines on any
+      // page; the chat assistant's own safety response is the exception).
       { type: "h2", text: "It isn’t laziness, and you already suspected that" },
       {
         type: "p",

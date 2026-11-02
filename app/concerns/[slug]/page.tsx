@@ -8,6 +8,7 @@ import PlaceholderPlate from "@/components/PlaceholderPlate";
 import Quote from "@/components/Quote";
 import FAQAccordion from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
+import CompactReview from "@/components/CompactReview";
 import GoogleReviewQuote from "@/components/GoogleReviewQuote";
 import GuideCta from "@/components/GuideCta";
 import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
@@ -96,26 +97,21 @@ export default async function ConcernPage({
       />
       <Breadcrumbs trail={trail} />
 
+      {/* The opening, both layouts (Ben, 2026-11-02): eyebrow, H1, the intro
+          sentence, then — where the concern has a quote — the compact review
+          (components/CompactReview.tsx) and Get Started directly under it,
+          so the H1, the review and the button share the first screen at
+          390×844. The full card keeps its place further down. */}
       {medical ? (
         /* The medical-first hero (concussion, migraines, depression).
 
-           One column, no photo, and the CTAs *below* the block rather than
-           above it. That order is the whole point: a visitor who hit their
-           head on Saturday should reach "start with a doctor" before they
-           reach anything inviting them to call us. The block is also the
-           widest and darkest text on the page — see `.medical-first` — because
-           a warning styled like a footnote is read like one. */
-        <section className="page-hero">
+           One column, no photo. The "start with a doctor" block follows the
+           opening and the CTAs, styled as the widest and darkest text on the
+           page — see `.medical-first` — because a warning styled like a
+           footnote is read like one. Depression carries no `urgent` block
+           (Ben, 2026-11-02): its opening runs straight into the lead. */
+        <section className="page-hero concern-hero">
           <div className="wrap" style={{ maxWidth: 860 }}>
-            {/* /concerns/depression: the block renders before the eyebrow
-                and the H1, because for the visitor it is written for the
-                988 line is the page. See `aboveHeadline` in lib/concerns.ts. */}
-            {medical.aboveHeadline && (
-              <div className="medical-first rv" style={{ marginTop: 0, marginBottom: 40 }}>
-                <p>{medical.urgent}</p>
-              </div>
-            )}
-
             <div className="rv">
               <div className="eyebrow">{concern.heroEyebrow}</div>
               <h1 style={{ maxWidth: "none" }}>
@@ -123,9 +119,17 @@ export default async function ConcernPage({
                 <em className="sage">{concern.titleAccent}</em>
               </h1>
               <p className="sub">{concern.heroSub}</p>
+              {story && <CompactReview review={story} />}
+              <div className="hero-ctas" style={{ marginTop: story ? 26 : 34 }}>
+                <TalkCta />
+                <Btn href="/how-lens-works" variant="ghost" arrow>
+                  How LENS works
+                </Btn>
+                <CtaReassure />
+              </div>
             </div>
 
-            {!medical.aboveHeadline && (
+            {medical.urgent && (
               <div className="medical-first rv">
                 <p>{medical.urgent}</p>
               </div>
@@ -140,18 +144,10 @@ export default async function ConcernPage({
               </ul>
               <p>{medical.gap}</p>
             </div>
-
-            <div className="hero-ctas rv" style={{ marginTop: 38 }}>
-              <TalkCta />
-              <Btn href="/how-lens-works" variant="ghost" arrow>
-                How LENS works
-              </Btn>
-              <CtaReassure />
-            </div>
           </div>
         </section>
       ) : (
-        <section className="page-hero">
+        <section className="page-hero concern-hero">
           <div className="wrap split" style={{ alignItems: "center" }}>
             <div className="rv">
               <div className="eyebrow">Concern &middot; {concern.who}</div>
@@ -160,7 +156,8 @@ export default async function ConcernPage({
                 <em className="sage">{concern.titleAccent}</em>
               </h1>
               <p className="sub">{concern.heroSub}</p>
-              <div className="hero-ctas" style={{ marginTop: 34 }}>
+              {story && <CompactReview review={story} />}
+              <div className="hero-ctas" style={{ marginTop: story ? 26 : 34 }}>
                 <TalkCta />
                 <Btn href="/how-lens-works" variant="ghost" arrow>
                   How LENS works
@@ -168,6 +165,8 @@ export default async function ConcernPage({
                 <CtaReassure />
               </div>
             </div>
+            {/* The photo: beside the copy on a desktop, after it — under
+                Get Started — once the grid stacks (globals.css ≤1060px). */}
             <div className="rv">
               {/* The LCP element on this template (SEO-AUDIT-3 §2.5). It
                   shipped `loading="lazy"` — a second of load delay before the
@@ -236,7 +235,7 @@ export default async function ConcernPage({
                   </Btn>
                 </div>
               )}
-              <LimitLine crisis={concern.crisisLine} className="rv" />
+              <LimitLine className="rv" />
               {video && <VideoBand video={video} />}
             </div>
           </section>
@@ -280,7 +279,7 @@ export default async function ConcernPage({
               <p className="sub" style={{ fontSize: 16 }}>
                 {concern.howHelp.p2}
               </p>
-              <LimitLine crisis={concern.crisisLine} />
+              <LimitLine />
             </div>
           </div>
           {video && (
@@ -293,9 +292,11 @@ export default async function ConcernPage({
 
       {/* Both bands drop whole when a concern ships without the copy for them,
           heading included — see `goalsHeading` in lib/concerns.ts. */}
-      {/* A matching client story, after the section on how LENS helps and
-          before the goals (Ben, 2026-11-02), then the primary ask. The quote
-          is the one /stories publishes — same words, same name. */}
+      {/* The full review or client story, after the section on how LENS
+          helps and before the goals (Ben, 2026-11-02), then the primary ask
+          again — more than a screen below the hero's. The quote is the one
+          /stories publishes — same words, same name; the compact card in
+          the hero is its opening sentences. */}
       {story && (
         <section className="sec concern-story">
           <div className="wrap" style={{ maxWidth: 820 }}>

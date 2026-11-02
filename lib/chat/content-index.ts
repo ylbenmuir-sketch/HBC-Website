@@ -498,14 +498,14 @@ const LOCATION_KEYWORDS = [
 const MEDICAL_FIRST_QUESTIONS: Record<string, string> = {
   concussion: "Is it too soon to come in after a head injury?",
   migraines: "When is a headache an emergency?",
-  // The 988 block. A crisis message never reaches retrieval (safety.ts
-  // stops the turn first), so this question is for the visitor asking
-  // *about* the line — and if a phrasing the check does not catch ever
-  // lands here, the passage it retrieves is the one that says 988.
+  // Depression has no `urgent` block since 2026-11-02 (no crisis box on
+  // the page; a crisis message never reaches retrieval — safety.ts stops
+  // the turn first). The passage is the lead and the gap paragraph: who
+  // comes in, and that care already underway continues exactly as it is.
   //
   // No "I'm": the tokenizer keeps it as `im`, and at question weight it
   // made this passage the top answer to "I'm stuck" — a signs line.
-  depression: "Where do I turn in a crisis right now?",
+  depression: "Does LENS run alongside antidepressants and therapy?",
 };
 
 function concernPassages(c: Concern): Passage[] {
@@ -540,7 +540,9 @@ function concernPassages(c: Concern): Passage[] {
               ...keywords,
               "recent", "urgent", "emergency", "doctor", "first", "later",
             ],
-            text: `${c.medicalFirst.urgent} ${c.medicalFirst.laterLead} ${c.medicalFirst.gap}`,
+            text: [c.medicalFirst.urgent, c.medicalFirst.laterLead, c.medicalFirst.gap]
+              .filter(Boolean)
+              .join(" "),
           },
         ]
       : []),

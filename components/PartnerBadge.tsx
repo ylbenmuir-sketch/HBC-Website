@@ -5,10 +5,11 @@ import { AMEN_PARTNER, AMEN_PARTNER_ENABLED } from "@/lib/site-config";
 
 /**
  * The Amen Clinics referral-partner badge (Ben, 2026-11-02): the logo as
- * supplied, in its own colors, at a modest height — 24px on phones, 28px
- * from 761px up (globals.css `.partner-badge`) — beside the one approved
- * line. Two sizes: `strip` is the homepage band under the hero, `small`
- * sits on /contact. Nothing renders while AMEN_PARTNER_ENABLED is off.
+ * supplied, in its own colors — 40px tall beside the one approved line from
+ * 768px up; under 768px it stacks, the logo centred on top at 42px and the
+ * line under it (globals.css `.partner-badge`). Two placements: `strip` is
+ * the homepage band under the hero, `small` sits under the /contact form.
+ * Nothing renders while AMEN_PARTNER_ENABLED is off.
  *
  * No link until AMEN_PARTNER.url is set in lib/site-config.ts; then the
  * whole badge links out in a new tab and reports partner_badge_click
@@ -31,9 +32,9 @@ export default function PartnerBadge({
         alt={AMEN_PARTNER.name}
         width={logo.width}
         height={logo.height}
-        // 28px tall at the logo's 800:299 ratio is 75px wide; ask for the
-        // 2x-and-change rendition rather than a hero-sized one.
-        sizes="160px"
+        // 42px tall at the logo's 800:299 ratio is 112px wide; ask for the
+        // 2x rendition (256) rather than a hero-sized one.
+        sizes="120px"
       />
       <span className="partner-badge-line">{AMEN_PARTNER.line}</span>
     </>
