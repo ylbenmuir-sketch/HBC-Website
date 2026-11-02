@@ -2612,6 +2612,10 @@ body[data-bottombar] footer.site {
   .desk-compact .form .sms-consent label { font-size: 12.5px; line-height: 1.35; margin: 0; }
   .desk-compact .reach-chips { gap: 6px; flex-wrap: nowrap; }
   .desk-compact .reach-chips .chip { padding: 9px 12px; font-size: 13.5px; flex: 1 1 0; text-align: center; white-space: nowrap; }
+  /* 320px: three chips in 258px — "Not sure" overflowed the viewport by 4px (check:layout). */
+  @media (max-width: 359px) {
+    .desk-compact .reach-chips .chip { padding: 9px 6px; font-size: 13px; min-width: 0; }
+  }
   .desk-compact form.form-card button[type="submit"] { margin-top: 10px !important; padding: 13px 20px; min-height: 48px; }
   .desk-compact form.form-card .micro { margin-top: 10px; font-size: 12.5px; }
 }
