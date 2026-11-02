@@ -7,6 +7,7 @@ import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
+import { TalkCta } from "@/components/Buttons";
 import { Btn } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import FaqHashOpener from "@/components/FaqHashOpener";
@@ -79,6 +80,10 @@ export default function FaqPage() {
             Including the ones people are hesitant to ask. If yours isn&rsquo;t
             here, call &mdash; a real person answers during business hours.
           </p>
+          {/* The primary ask in the first screen (Ben, 2026-11-02). */}
+          <div className="hero-ctas" style={{ marginTop: 30, justifyContent: "center" }}>
+            <TalkCta />
+          </div>
         </div>
       </section>
       <section className="sec">

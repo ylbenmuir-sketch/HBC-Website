@@ -3,7 +3,7 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import ProofBand from "@/components/ProofBand";
 import FinalCTA from "@/components/FinalCTA";
-import { Btn } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import { practitionerBandStat } from "@/lib/team";
 import {
   FOUNDER_DISPLAY_NAME,
@@ -50,6 +50,10 @@ export default function AboutPage() {
             {sessionCount && <>, and {sessionCount} sessions of experience</>}
             .
           </p>
+          {/* The primary ask in the first screen (Ben, 2026-11-02). */}
+          <div className="hero-ctas" style={{ marginTop: 30, justifyContent: "center" }}>
+            <TalkCta />
+          </div>
         </div>
       </section>
 
