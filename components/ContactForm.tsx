@@ -386,7 +386,6 @@ export default function ContactForm({
           ...(mail ? { email: mail } : {}),
           preferred_center: preferredCenter,
           ...(referredBy.trim() ? { referred_by: referredBy.trim() } : {}),
-          ...(note.trim() ? { note: note.trim() } : {}),
           website,
           source_page: from || pathname,
           // A yes only with a number to text. The wording is sent ticked or
@@ -445,6 +444,7 @@ export default function ContactForm({
       ...(contactMethod ? { contact_method: contactMethod } : {}),
       ...(heardAbout ? { heard_about: heardAbout } : {}),
       ...(referral ? { referred_by: referral } : {}),
+      ...(note.trim() ? { note: note.trim() } : {}),
     };
     if (Object.keys(body).length === 0 || !rowId) {
       skip("empty_submit");
@@ -590,6 +590,22 @@ export default function ContactForm({
               <option key={opt}>{opt}</option>
             ))}
           </select>
+
+          {/* "Anything we should know?" lives here since 2026-11-02 (Ben):
+              step one has to fit a 390×844 screen whole, and this is the
+              one field that was optional and long. Saved by the PATCH with
+              the rest of step two. */}
+          <label htmlFor="note">
+            Anything we should know? <span style={OPTIONAL_STYLE}>(optional)</span>
+          </label>
+          <input
+            id="note"
+            name="note"
+            autoComplete="off"
+            maxLength={500}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
 
           {askLaterReferral && (
             <>
@@ -745,17 +761,6 @@ export default function ContactForm({
         onChange={(e) => setReferredBy(e.target.value)}
       />
 
-      <label htmlFor="note">
-        Anything we should know? <span style={OPTIONAL_STYLE}>(optional)</span>
-      </label>
-      <input
-        id="note"
-        name="note"
-        autoComplete="off"
-        maxLength={500}
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-      />
 
       {/*
         Hidden from real users three ways, because one is not reliable:

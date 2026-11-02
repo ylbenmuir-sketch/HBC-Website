@@ -20,7 +20,8 @@
  * What it drives, in a headless Chrome (scripts/layout/cdp.mjs), at 320px,
  * 768px and 1440px — the short step one (Ben, 2026-10-26): name, a
  * phone OR an email, the center (required, nothing preselected), and the
- * optional "Who referred you?" and "Anything we should know?":
+ * optional "Who referred you?" ("Anything we should know?" is on step two
+ * since 2026-11-02):
  *
  *   save   step one (phone + email, referral, note) → step two (who, concerns,
  *          time, Text, the consent box ticked, "How did you hear") → "Send
@@ -697,7 +698,8 @@ async function rawHtml() {
   expect("/contact raw HTML: the consent box is there, unticked, linking /sms-terms and /privacy-policy", /<input[^>]*id="sms-consent"[^>]*>/.test(html) && !/<input[^>]*id="sms-consent"[^>]*checked/.test(html) && /<label for="sms-consent">[\s\S]*?href="\/sms-terms"[\s\S]*?href="\/privacy-policy"[\s\S]*?<\/label>/.test(html));
   expect("/contact raw HTML: the consent box comes right after the phone input", /<input[^>]*id="phone"[^>]*\/?>\s*<div class="sms-consent[^"]*">\s*<input[^>]*id="sms-consent"/.test(html));
   expect("/contact raw HTML: H1 is \"Let’s get you started\"", /<h1[^>]*>Let(’|&#x27;|&rsquo;)s get you started<\/h1>/.test(html), (html.match(/<h1[^>]*>.*?<\/h1>/) ?? [""])[0]);
-  for (const id of ["first-name", "phone", "email", "center-nashville", "center-murfreesboro", "center-not-sure", "referred-by", "note"]) {
+  // "note" is a step-two field since 2026-11-02 (Ben), so it is not in the server HTML.
+  for (const id of ["first-name", "phone", "email", "center-nashville", "center-murfreesboro", "center-not-sure", "referred-by"]) {
     expect(`/contact raw HTML: step one has #${id}`, html.includes(`id="${id}"`));
   }
   expect("/contact raw HTML: no center is preselected", !/id="center-[a-z-]+"[^>]*aria-checked="true"/.test(html) && !/aria-checked="true"[^>]*id="center-/.test(html));
@@ -745,7 +747,9 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
   await page.goto(`${BASE}/contact`, { settle: 400 });
   // goto() stamps `in` on every .rv that exists at load; the panels this
   // check cares about do not exist yet, so the reveal gate is still real.
-  const fields = [["#first-name", typed], ...(phone ? [["#phone", "0000000000"]] : []), ...(email ? [["#email", email]] : []), ...(referral ? [["#referred-by", referral]] : []), ...(note ? [["#note", note]] : [])];
+  // `note` is accepted for the callers' sake and typed on step two now (pathSave).
+  void note;
+  const fields = [["#first-name", typed], ...(phone ? [["#phone", "0000000000"]] : []), ...(email ? [["#email", email]] : []), ...(referral ? [["#referred-by", referral]] : [])];
   for (const [sel, val] of fields) {
     const r = await page.eval(setValue(sel, val));
     if (r !== "ok") throw new Error(r);
@@ -759,7 +763,8 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
       button: f.querySelector("button[type=submit]")?.textContent.trim(),
     };
   })())`));
-  expect(`${name}: step one is name, phone, email, center, "Who referred you? (optional)", "Anything we should know? (optional)"`, JSON.stringify(look.labels) === JSON.stringify(["Name", "Phone", "Email", "Which center?", "Who referred you? (optional)", "Anything we should know? (optional)"]), JSON.stringify(look.labels));
+  // "Anything we should know?" moved to step two on 2026-11-02 (Ben): step one fits a 390×844 screen whole.
+  expect(`${name}: step one is name, phone, email, center, "Who referred you? (optional)"`, JSON.stringify(look.labels) === JSON.stringify(["Name", "Phone", "Email", "Which center?", "Who referred you? (optional)"]), JSON.stringify(look.labels));
   expect(`${name}: step one requires only the name and the center (phone/email checked as either-or)`, JSON.stringify(look.required) === JSON.stringify(["first-name", "center-label"]), JSON.stringify(look.required));
   expect(`${name}: centers are Nashville · Murfreesboro · Not sure, none preselected`, JSON.stringify(look.centers) === JSON.stringify([["Nashville", "false"], ["Murfreesboro", "false"], ["Not sure", "false"]]), JSON.stringify(look.centers));
   expect(`${name}: the button reads "Send My Request"`, look.button === "Send My Request", String(look.button));
@@ -809,6 +814,9 @@ async function pathSave(page, width) {
   await sleep(100);
   const later = await page.eval(`!!document.querySelector("#later-referral")`);
   expect(`${name}: a referral answer does NOT re-ask "Who referred you?" when step one answered it`, later === false);
+  // "Anything we should know?" is a step-two field since 2026-11-02.
+  const noted = await page.eval(setValue("#note", SAVE_NOTE));
+  if (noted !== "ok") throw new Error(noted);
   await page.eval(clickText("Send These Details"));
   const three = await waitPanel(page, "We’ll reach out soon.");
   expect(`${name}: confirmation mounts and reveals (opacity 1, .in)`, three?.opacity === 1 && three.hasIn, JSON.stringify(three));
