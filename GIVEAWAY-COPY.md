@@ -28,7 +28,8 @@ changed there; nothing else moves.
 the reveal, **Sat Nov 21, 7:00 PM CT** (`GIFT_REVEAL_AT` in config): no
 page, email or meta line before then names it — the page and emails tease
 "a 10-year thank-you gift" instead, and the reveal email names it. The
-Hoolest handheld is **$399** (Hoolest's published price; was $429). The
+Prizes are the new ladder (Ben, 2026-11-03 — see "The prize ladder" below):
+one prize per drawing, $5,537.60 in all, "Over $5,500 in prizes". The
 tax-form threshold is **$2,000** per person for 2026 (was $600 per prize).
 Partner prizes and the pocket device read **TBD** and are out of every sum.
 
@@ -153,7 +154,7 @@ get shorter but not longer.
 - **Footer:** identity line · marketing line · Unsubscribe.
 - **From config:** next drawing's day, time and prize (reader's version), the reader's entry count.
 - Heading, body and count line follow the shape in decision 15 word for word; no winner name anywhere.
-- Filled example, Friday's email to a current client: Subject "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)" · Body "Next drawing: Saturday at 5:00 pm — 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)."
+- Filled example, Friday's email: Subject "Saturday's grand prize: Brain Map + 12 LENS sessions + Hoolest VeRelief + …" · Body "Next drawing: Saturday at 5:00 pm — …"
 
 ### 7. Winner *(transactional; the moment they are drawn)*
 
@@ -169,7 +170,7 @@ get shorter but not longer.
 - **Button:** Claim my prize
 - **Footer:** identity line · transactional line.
 - **From config:** day name, prize in the winner's version, the claim deadline (72 h, or the following Tuesday 5:00 pm CT when it would land on a Sunday or Monday), the tax flag.
-- Filled example, the grand prize to a current client: "Your prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)." · "…give us the best number by Tue Nov 24, 5:00 PM CT…" · tax line shown.
+- Filled example, the grand prize: "Your prize: Brain Map + 12 LENS sessions + Hoolest VeRelief + a vibro chair session with each of the 12 sessions + 3 Assisted Lymphatic Therapy sessions with Victoria Bailey of Envision Thermography & Wellness + 3 BrainMD bottles." · "Redeemed directly with Envision Thermography & Wellness, valid through *{TBD}*." · "Already an HBC client? You'll receive a Brain Map gift certificate to give to someone new in place of your own Brain Map. We'll sort it out on the call." · tax line shown.
 
 ### 8. The reveal: thank-you + gift *(marketing; Sat Nov 21, 7:00 PM CT, to every verified, subscribed entrant — winners included)*
 
@@ -234,15 +235,15 @@ show the same page with the result in the card.
 
 - **Seal** *(gold, pure SVG)*: top arc *{10}* YEARS · bottom arc *{2016–2026}* · the number in the middle. Years = the drawing year minus `ESTABLISHED_YEAR` (site-config).
 - **H1:** 10 years. A week of prizes. *(breaks after the first sentence)*
-- **Value line (notify-me, live):** Over $*{6,000}* in prizes. One entry.
-- **Value line (closed, thank-you):** Over $*{6,000}* in prizes.
+- **Value line (notify-me, live):** Over $*{5,500}* in prizes. One entry.
+- **Value line (closed, thank-you):** Over $*{5,500}* in prizes.
 - **Gift tease (notify-me, live; under the value line):** Every entrant receives a 10-year thank-you gift, revealed Saturday night.
 - **Line (notify-me, live):** *{Six}* drawings, *{Nov 16–21}*. Enter once and you're in every one.
 - **Line (closed):** Entries are closed. Thank you, neighbors.
 - **Line (thank-you page):** Here's who won our anniversary week.
 - **Countdown** *(notify-me, live only)*: four boxes labelled **days · hrs · min · sec**, then **until entries open** (notify-me, to the entries-open time) or **until the next drawing** (live, to the next drawing). Ticks from the server's clock.
 - **Proof line:** *{10}* years · *{140,000+}* sessions · Nashville & Murfreesboro *(the count is `STAT_SESSIONS`)*
-- The total is the sum of the six new-client prize values from config ($6,744 today; $6,009 if every winner is a current client), rounded down to the nearest $1,000 — never typed. A unit test fails if the smallest total drops under $6,000.
+- The total is the sum of the six prize values from config ($5,537.60), rounded down to the nearest $500 — never typed. A unit test fails if it drops under $5,500. The banner and the share card carry no amount; the OG card's line is the same "Over $5,500 in prizes".
 
 ### The form card — notify-me (Nov 9 – Nov 15)
 
@@ -333,18 +334,26 @@ Three numbered steps, one line each; the counts, days and times are from config.
    - Live, a daily drawing next: Next drawing: *{Tue at noon}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call you.
    - Live, the grand drawing next: Next: the grand prize, *{Saturday}* at *{5 PM}*. We'll call you.
 
-### The prize ladder
+### The prize ladder *(Ben, 2026-11-03: one prize per drawing)*
 
-- **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize, value and breakdown)*
-- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), then the value first and largest — **$*{480}*** (exactly the sum of the priced lines; no "+") with **value** in small caps under it — then the prize in plain words.
-- **Prize words:** *{Brain Map + }{2} sessions* · + Pocket vagus nerve stimulator *by Hoolest* · + Handheld vagus nerve stimulator *by Hoolest · yours to keep* *(each line only while the prize in config includes it; the device names are `DEVICES` in config and read the same in the emails and the rules)*
-- **Saturday** *(the navy card)*: the label **Grand prize**, then the same.
-- **Partner line** *(when named in config)*: Plus from *{partner}*: *{prize}*
-- **Live tags:** Next (the next drawing's card, sage outline) · Drawn (a drawn day with no winner row yet).
-- **A drawn day in live mode** shows **Winner** and one of: *{Jane D., Franklin}* · Claimed ✓ · Drawn, we're reaching them now.
-- **Every card opens** (tap anywhere; hover on desktop; Enter/Space) to its value breakdown, one line per part from config:
-  **Brain Map** · $*{150}* — ***{2}* LENS sessions** · $*{250}* — **Vibro chair with each session (*{2}* × $*{40}*)** · $*{80}* — **Pocket vagus nerve stimulator** *by Hoolest* · value TBD *(no price supplied yet; out of the total)* — **Handheld vagus nerve stimulator** *by Hoolest · yours to keep* · $*{399}* *(with the product photo beside it on Saturday)* — **Partner prize** · TBD *(every drawing; "Gift from *{partner}*" once named; out of the total)* — then **Total** · **$*{480}*** in bold, and the link **What's a Brain Map?** *(to /brain-map, new tab)*. Monday new client reads $150 + $250 + $80 = $480; Saturday new client $150 + $1,500 + $480 + $399 = $2,529; Saturday current client $1,625 + $520 + $399 = $2,544.
-- **Under the row:** Every session includes the vibro chair.
+- **Heading:** The prize ladder. No new/current toggle: one prize per drawing.
+- Six cards climbing Monday to Saturday (a vertical list of rows on phones). Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}* + **Grand prize**), the value first and largest with **value** under it, then the prize in plain words.
+
+| Drawing | Prize | Value |
+|---|---|---|
+| Mon · noon | Brain Map + 1 BrainMD supplement bottle | $194.95 |
+| Tue · noon | Brain Map + Skye Chiropractic gift ($250) + 1 BrainMD bottle | $444.95 |
+| Wed · noon | Brain Map + 3 LENS sessions + 1 BrainMD bottle | $569.95 |
+| Thu · noon | Brain Map + 3 LENS sessions + Hoolest Mini vagus nerve stimulator ($99) + 1 BrainMD bottle | $668.95 |
+| Fri · noon | Brain Map + 3 LENS sessions + a 90-minute one-to-one Women's Health & Life Coaching session with Amabel Luers of Be Well with Amabel ($250) + 1 BrainMD bottle — *the winner may gift this session to a woman of their choice* | $819.95 |
+| Sat · 5 PM (grand) | Brain Map + 12 LENS sessions + Hoolest VeRelief vagus nerve stimulator ($199) + a vibro chair session with each of the 12 sessions ($480) + 3 Assisted Lymphatic Therapy sessions with Victoria Bailey of Envision Thermography & Wellness ($375) + 3 BrainMD bottles ($134.85) | $2,838.85 |
+| | **All six** | **$5,537.60** |
+
+- **Rates (config):** Brain Map $150 · LENS session $125 · BrainMD bottle $44.95 (retail) · vibro chair $40 per session · Hoolest Mini $99 · Hoolest VeRelief $199.
+- **Every card opens** to its breakdown, one line per part with its value, then **Total**. A partner gift's line says **Redeemed directly with the partner · valid through *{TBD}*** (dates in `PARTNER_GIFTS`, supplied by Ben), plus the Friday gifting line.
+- **Under the row:** Partner gifts are redeemed directly with the partner. Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map.
+- **Gift codes** (one per day, for tracking): GIFT-MON, GIFT-TUE, GIFT-WED, GIFT-THU, GIFT-FRI, GIFT-SAT. /contact accepts them ("Your Brain Map gift certificate *{GIFT-MON}* is ready — it books a Brain Map."); the lead email is tagged "(10 years)" and shows "10-year code: *{GIFT-MON}* (Brain Map gift certificate)". The site never decides who is a current client — staff ask on the winner call; the staff winner alert says "Current client? Ask on the call. If so, their Brain Map becomes gift certificate *{GIFT-MON}*, to give to someone new."
+- **The form asks nothing about new or current** any more; the "Which one are you?" picker is gone.
 
 ### Photos
 
@@ -410,7 +419,7 @@ numbered sections:
 5. **How to enter** — the form, the email confirmation, one person one address
 6. **Bonus entries** — early bird (confirm before *{Mon Nov 16, 12:00 PM CT}*: +1); friends (+3 / +1, cap 10); most entries any one person can hold: *{33}*
 7. **Drawings and odds** — the six times; random by computer, recorded; daily winners stay in the grand pool
-8. **Prizes and their value** — the per-part rates ($150 · $125 · $40 chair per session · Hoolest $399, its published price); pocket device and partner prizes TBD and out of every total; the week's ARV *{$6,009}*–*{$6,744}*
+8. **Prizes and their value** — the per-part rates (Brain Map $150 · LENS session $125 · vibro chair $40 per session · BrainMD bottle $44.95 · Hoolest Mini $99 · Hoolest VeRelief $199 · the three partner gifts); total ARV *{$5,537.60}*; "Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map."; partner gifts redeemed directly with the partner, valid through *{TBD}*
 9. **Prize conditions** — at either center by appointment, used by *{Monday, May 31, 2027}* (`PRIZE_USE_BY` — **unconfirmed, Ben to confirm**), no transfer or cash, no health-outcome claim
 10. **Winner notification and claim** — **by email only**; 72 hours, Sun/Mon → Tue 5 PM CT; alternate drawn
 11. **Taxes** — $2,000 or more per person in 2026 → W-9 and 1099; "Accountant to confirm." shows until `TAX_THRESHOLD_CONFIRMED` is true
@@ -427,7 +436,7 @@ numbered sections:
 1. ~~Two buttons in "You're in".~~ Resolved by rev 2: the free visit left
    that email (it is revealed Saturday night), so it has one button.
 2. **Grand-prize subject length.** Friday's daily email subject is the prize
-   name: "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)" (about 90
+   name — the grand prize's is now over 200 characters (the full partner gift name) (phones show ~40
    characters; phones show ~40). A shorter *display* name for the grand
    prize would need a config change, not a copy change.
 3. **Typed days and counts.** "Monday's prize" (It's-live subject),
@@ -440,7 +449,7 @@ numbered sections:
    wanted on the page too.
 5. **Marketing opt-in wording** ("Email me HBC news after the giveaway") is
    §8 legal item 5 — yours or counsel's to settle.
-6. **Device names** (Ben, 2026-10-19) are `DEVICES` in config — "Handheld
-   vagus nerve stimulator by Hoolest (yours to keep)" and "Pocket vagus nerve
-   stimulator by Hoolest" — and appear in prize lists on the page, in the
-   emails and in the rules. They name what the device is, never what it does.
+6. **Device names** are `DEVICES` in config — "Hoolest Mini vagus nerve
+   stimulator", "Hoolest VeRelief vagus nerve stimulator", "BrainMD supplement
+   bottle" — and appear in prize lists on the page, in the emails and in the
+   rules. They name what the product is, never what it does.

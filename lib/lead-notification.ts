@@ -210,6 +210,9 @@ export type LeadDetails = {
   smsConsent: boolean;
   /** The hidden spam-trap field was filled in — almost certainly a bot. */
   honeypotFilled: boolean;
+  /** A 10-year giveaway booking's code (10Y-… thank-you visit, or a
+   *  GIFT-MON…GIFT-SAT Brain Map gift certificate), shown to staff. */
+  giveawayCode?: string | null;
 };
 
 function staffLead(lead: LeadDetails): StaffLead {
@@ -233,6 +236,7 @@ function staffLead(lead: LeadDetails): StaffLead {
       referredBy: lead.referredBy ?? null,
     },
     honeypotFilled: lead.honeypotFilled,
+    giveawayCode: lead.giveawayCode ?? null,
   };
 }
 

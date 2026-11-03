@@ -27,7 +27,6 @@ export function liveNotifier(store: GiveawayStore, now: () => Date, log: Pick<Co
       const alert = staffWinnerAlertEmail({
         drawing: d,
         winner: { name: `${r.person.first_name} ${r.person.last_name}`, email: r.person.email_display, zip: r.person.zip, city: r.person.city },
-        version: r.winner.prize_version,
         claimDeadline: deadline,
         taxFormRequired: r.winner.tax_form_required,
         adminUrl: adminLink(`/winners`),
@@ -45,7 +44,6 @@ export function liveNotifier(store: GiveawayStore, now: () => Date, log: Pick<Co
         const email = winnerEmail({
           firstName: r.person.first_name,
           drawing: d,
-          version: r.winner.prize_version,
           claimUrl: `${siteUrl()}${PATHS.claim}/${encodeURIComponent(r.claimToken)}`,
           claimDeadline: deadline,
           taxFormRequired: r.winner.tax_form_required,

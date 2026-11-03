@@ -326,6 +326,17 @@ try {
   const og = await fetch(`${BASE}/10years/opengraph-image`);
   expect("the card renders (200, image/png, 1200×630 declared)", og.status === 200 && /image\/png/.test(og.headers.get("content-type") ?? "") && /og:image:width" content="1200"/.test(todayPage.text), String(og.status));
   expect("/10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
+  // The prize ladder (Ben, 2026-11-03): six values, one prize each, "Over $5,500".
+  {
+    const visible = todayPage.text.replace(/<script[\s\S]*?<\/script>/g, "");
+    const want = ["$194.95", "$444.95", "$569.95", "$668.95", "$819.95", "$2,838.85"];
+    expect("the ladder shows the six new values", want.every((v) => visible.includes(v)), want.filter((v) => !visible.includes(v)).join(" "));
+    expect("the headline reads Over $5,500 in prizes", /Over \$5,500 in prizes/.test(visible));
+    const rules = (await get("/10years/rules")).text.replace(/<script[\s\S]*?<\/script>/g, "");
+    const old = /\$6,000|\$6,744|\$6,009|\$2,529|\$2,544|\$399|\$429|Partner prize|keychain|Pocket vagus|Handheld vagus|New client|Current client</;
+    expect("no old prize item or value on the page or the rules", !old.test(visible) && !old.test(rules), (visible.match(old) ?? rules.match(old) ?? [""])[0]);
+    expect("the rules show the total $5,537.60 and Ben's current-client sentence", /\$5,537\.60/.test(rules) && /Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map\./.test(rules));
+  }
   expect("/10years/rules answers 200 (the showcase links to it)", (await get("/10years/rules")).status === 200);
   const site = await get("/sitemap.xml");
   expect("sitemap has no /10years, /unsubscribe or /admin", !/10years|unsubscribe|\/admin/.test(site.text));
@@ -369,13 +380,9 @@ try {
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
   const Cc = person("C", "cara.notify@example.test");
   // New or current client is a required two-way choice (Ben, 2026-10-20): "yes" | "no".
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", existing_client: p.existing ? "yes" : "no", ...extra });
-  {
-    const { existing_client: _omit, ...noChoice } = signupFields(person("nochoice", "nochoice@example.test"));
-    void _omit;
-    const r = await postForm("/10years/signup", noChoice, person("nochoice2", "nochoice@example.test"));
-    expect("a signup with neither client option → ?error=client_status", /\?error=client_status$/.test(r.location), r.location);
-  }
+  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...extra });
+  // One prize per drawing (Ben, 2026-11-03): the form asks nothing about new or current.
+  expect("the entry form has no new/current question", !/name="existing_client"|data-client-choice|data-path-picker/.test((await get("/10years")).text));
   for (const p of [A, B, Cc]) {
     const r = await postForm("/10years/signup", signupFields(p), p);
     expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
@@ -529,7 +536,7 @@ try {
   let winners = await dump("giveaway_winners");
   const monWinner = winners.find((w) => w.status === "drawn");
   const monPerson = peopleNow.find((p) => p.id === monWinner.person_id);
-  expect("Monday winner's prize version follows the existing-client box", monWinner.prize_version === (monPerson.is_existing_client ? "current_client" : "new_client"));
+  expect("Monday winner's prize row is the one standard prize (no versions)", monWinner.prize_version === "new_client" && Boolean(monPerson));
   // The claim page.
   const claimPath = new URL(linkIn(winMon, "/10years/claim/")).pathname;
   const claimPage = await get(claimPath, A);
@@ -577,10 +584,10 @@ try {
   expect("Monday's winner is absent from Tuesday's frozen pool", !tuePool.some((p) => p.person_id === monWinner.person_id));
   const winTue = fresh.find((e) => /You won Tuesday/.test(e.body.subject));
   const tuePrize = (await dump("giveaway_prizes")).find((p) => p.id === tueWinner.prize_id);
-  expect("the tax-form line appears exactly when the prize is over $600", Boolean(winTue) && /tax form/.test(winTue.body.text) === tuePrize.tax_form_required, `${tuePrize.name} $${tuePrize.retail_value_usd}`);
+  expect("the tax-form line appears exactly when the prize reaches $2,000 (per person)", Boolean(winTue) && /tax form/.test(winTue.body.text) === tuePrize.tax_form_required, `${tuePrize.name} $${tuePrize.retail_value_usd}`);
   if (tuePrize.tax_form_required) {
     const tax = await adminPost(`/admin/10years/actions/winner`, { winner_id: tueWinner.id, kind: "tax_form_received", on: "1" });
-    expect("admin: tax form received toggled on Tuesday's >$600 prize", tax.status === 303 && !/error/.test(tax.location), tax.location);
+    expect("admin: tax form received toggled on Tuesday's prize", tax.status === 303 && !/error/.test(tax.location), tax.location);
     expect("the winner row records tax_form_received_at", (await dump("giveaway_winners")).find((w) => w.id === tueWinner.id).tax_form_received_at !== null);
   }
   await clock(C.drawing("tue").dailyEmailAt);
@@ -693,6 +700,18 @@ try {
   expect("giveaway path, a used code: the banner says so", /data-state="redeemed"/.test((await get(`/contact?from=10years&code=${dCode}`)).text));
   b = await booking("10Y-NOPE00");
   expect("an unknown code is refused", b.status === 400);
+  // A prize's Brain Map gift certificate (Ben, 2026-11-03): GIFT-MON … GIFT-SAT.
+  {
+    const visible = (h) => h.replace(/<script[\s\S]*?<\/script>/g, "");
+    expect("/contact?from=10years&code=GIFT-MON: the gift-certificate banner", /data-state="ok"/.test((await get("/contact?from=10years&code=GIFT-MON")).text) && /gift certificate GIFT-MON is ready/.test(visible((await get("/contact?from=10years&code=GIFT-MON")).text)));
+    newEmails();
+    const g = await booking("GIFT-MON", "Nashville");
+    const gj = await g.json().catch(() => null);
+    expect(USE_DB ? "a GIFT-MON booking is accepted" : "a GIFT-MON booking is accepted (502 = no database to save the row)", USE_DB ? g.ok : g.status === 502, `${g.status} ${JSON.stringify(gj)}`);
+    const lead = newEmails().find((e) => /free call request \(10 years\)/.test(e.body.subject));
+    expect("its lead email is tagged (10 years) and shows the code", Boolean(lead) && /GIFT-MON \(Brain Map gift certificate\)/.test(lead.body.text), lead?.body.subject ?? "no lead email");
+    expect("an unknown GIFT- code is refused", (await booking("GIFT-SUN")).status === 400);
+  }
   // P1-4: the Dec 1 9 am reminder — verified, subscribed, unredeemed only, once.
   {
     const offersNow = await dump("giveaway_offers");
@@ -807,8 +826,8 @@ async function engineOffChecks() {
     const rules = (await get("/10years/rules")).text;
     expect("off: the rules have no placeholder, no counsel, no brackets in the rules text", !/placeholder|counsel/i.test(rules) && !/\[(DRAFT|CONFIRM)/.test(rules));
     expect("off: the rules carry their own meta description", /name="description" content="Official Rules and prize details for the Harmonized Brain Centers 10-year giveaway/.test(rules));
-    expect("off: the rules table's totals equal config (grand $2,529 / $2,544; Monday $480 / $330)", /data-arv="2529"/.test(rules) && /data-arv="2544"/.test(rules) && /data-arv="480"/.test(rules) && /data-arv="330"/.test(rules));
-    expect("off: the rules show the vibro chair as 2 × $40, the pocket device value TBD, partners TBD", /Vibro chair with each session \(2[\s ]×[\s ]\$40\)/.test(rules) && /value TBD/.test(rules) && />TBD</.test(rules));
+    expect("off: the rules table's totals equal config ($194.95 … $2,838.85)", ["194.95", "444.95", "569.95", "668.95", "819.95", "2838.85"].every((v) => rules.includes(`data-arv="${v}"`)), (rules.match(/data-arv="[^"]+"/g) ?? []).join(" "));
+    expect("off: the rules show the vibro chair as 12 × $40, partner gifts redeemed with the partner (valid through TBD), BrainMD at $44.95", /Vibro chair with each session \(12[\s\u00a0]×[\s\u00a0]\$40\)/.test(rules) && /Redeemed directly with the partner · valid through TBD/.test(rules) && /3 BrainMD supplement bottles \(\$44\.95 each\)/.test(rules));
   }
   expect("off: no [DRAFT] tag on the page", !home.text.includes("[DRAFT]"));
   expect("off: the assistant is off (page marker)", /data-assistant-off/.test(home.text));
@@ -930,21 +949,8 @@ async function browserChecks() {
         expect(`${mode} at ${width}: the countdown is on the page`, counting);
         const askBar = await page.eval("Boolean(document.querySelector('.askbar, [class*=\"askbar\"]'))");
         expect(`${mode} at ${width}: no ask bar on the page`, !askBar);
-        // "Which one are you?" (Ben, 2026-10-20): the pick sets the ladder's toggle and the form's choice, and survives a reload.
-        await page.eval("document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]').click()");
-        await sleep(1400); // the smooth scroll to the ladder takes most of a second on a phone-length page
-        const picked = await page.eval("(() => { const b = document.querySelector('[data-path-picker] button[data-choice=\"current_client\"]'); return b.getAttribute('aria-pressed') === 'true' && document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked; })()");
-        expect(`${mode} at ${width}: picking "current client" sets the button, the ladder toggle and the form choice`, picked);
-        const ladderTop = await page.eval("Math.round(document.getElementById('ty-prizes').getBoundingClientRect().top)");
-        const scrolledToLadder = ladderTop > -40 && ladderTop < 120;
-        expect(`${mode} at ${width}: the pick scrolls to the ladder`, scrolledToLadder, `top=${ladderTop}`);
-        await page.goto(`${BASE}/10years`, { settle: 300 });
-        const kept = await page.eval("document.getElementById('ty-v-cur').checked && document.querySelector('[data-client-choice] input[value=\"yes\"]').checked");
-        expect(`${mode} at ${width}: the choice is remembered for the visit`, kept);
-        // The ladder's toggle moves the form's choice back the other way.
-        await page.eval("document.getElementById('ty-v-new').click()");
-        await sleep(200);
-        expect(`${mode} at ${width}: the ladder toggle moves the form choice too`, await page.eval("document.querySelector('[data-client-choice] input[value=\"no\"]').checked"));
+        // One prize per drawing (Ben, 2026-11-03): no picker, no toggle, no client choice.
+        expect(`${mode} at ${width}: no "Which one are you?" picker, ladder toggle or client choice`, await page.eval("!document.querySelector('[data-path-picker], #ty-v-cur, #ty-v-new, [data-client-choice]')"));
         if (width === 390) {
           // The entry bar: off while the form card is on screen, on once it is past (Ben, 2026-10-20).
           await page.eval("document.getElementById('enter').scrollIntoView({ block: 'start' })");
@@ -956,7 +962,7 @@ async function browserChecks() {
           expect(`${mode} at 390: the entry bar hides at the form and shows past it`, hiddenAtForm && shownBelow, `hiddenAtForm=${hiddenAtForm} shownBelow=${shownBelow}`);
           const noSwipe = await page.eval("getComputedStyle(document.querySelector('.ty-ladder')).overflowX !== 'auto' && document.querySelector('.ty-ladder').scrollWidth <= document.querySelector('.ty-ladder').clientWidth + 1");
           expect(`${mode} at 390: the ladder is a vertical list (no swipe row)`, noSwipe);
-          const bars = await page.eval("[...document.querySelectorAll('.ty-step')].map(li => Math.round(li.querySelector('.ty-row-fill.v-new').getBoundingClientRect().width))");
+          const bars = await page.eval("[...document.querySelectorAll('.ty-step')].map(li => Math.round(li.querySelector('.ty-row-fill').getBoundingClientRect().width))");
           expect(`${mode} at 390: the gold bars climb Monday → Saturday (${bars.join(" < ")})`, bars.every((w, i) => i === 0 || w >= bars[i - 1]) && bars[5] > bars[0]);
         }
         // The ladder opens: tap Monday's head → aria-expanded, a Total line; tap Saturday → one open at a time.
@@ -975,7 +981,7 @@ async function browserChecks() {
           // Measure the copy as it will ship: this run shows "[DRAFT] " on every string (the subject checks need it).
           await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); })()");
           await sleep(100);
-          const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: getComputedStyle(document.querySelector('[data-path-picker]')).display })"));
+          const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none' })"));
           expect(`${mode} at 390×844: email field and button above the fold (email ${fold.email}px, button ${fold.submit}px); the hero picker is hidden`, fold.email <= 844 && fold.submit <= 844 && fold.picker === "none", JSON.stringify(fold));
         }
         if (width === 1440) {
@@ -990,7 +996,7 @@ async function browserChecks() {
     await clock(ct(2026, 11, 23, 10));
     await page.setViewport(390, 844);
     await page.goto(`${BASE}/10years?code=10Y-ABC123`, { settle: 300 });
-    const gift = JSON.parse(await page.eval("JSON.stringify({ btn: Math.ceil(document.querySelector('[data-claim-gift]')?.getBoundingClientRect().bottom ?? 9999), href: document.querySelector('[data-claim-gift]')?.getAttribute('href'), first: Boolean(document.querySelector('[data-gift-first] + .ty-winners-title + [data-winners]')), picker: getComputedStyle(document.querySelector('[data-path-picker]')).display })"));
+    const gift = JSON.parse(await page.eval("JSON.stringify({ btn: Math.ceil(document.querySelector('[data-claim-gift]')?.getBoundingClientRect().bottom ?? 9999), href: document.querySelector('[data-claim-gift]')?.getAttribute('href'), first: Boolean(document.querySelector('[data-gift-first] + .ty-winners-title + [data-winners]')), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none' })"));
     expect(`closed after the reveal at 390×844: "Claim my gift" above the fold (${gift.btn}px), gift first then the winners, picker hidden`, gift.btn <= 844 && gift.first && gift.picker === "none", JSON.stringify(gift));
     expect("the claim button carries the code the visitor arrived with", gift.href === "/contact?from=10years&code=10Y-ABC123", gift.href);
   } finally {

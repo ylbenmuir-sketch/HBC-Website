@@ -24,7 +24,7 @@
  */
 
 import { audit } from "./audit";
-import { DRAWINGS, SCHEDULE, drawing, drawingAfter, prizeVersionFor, type Drawing } from "./config";
+import { DRAWINGS, SCHEDULE, drawing, drawingAfter, type Drawing } from "./config";
 import { dailyAfternoonEmail, giftReminderEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, tuesdayCallTodayEmail, type Email, type Footing } from "./emails";
 import { entryCount } from "./people";
 import { type NotifyRow, type PersonRow, type ScheduledSendRow, type WinnerRow } from "./rows";
@@ -155,7 +155,7 @@ async function notifyJob(store: GiveawayStore, job: ScheduledSendRow, kind: "its
       continue;
     }
     const footing = deps.footingFor(n.email, true);
-    const input = { firstName: n.first_name, isExistingClient: n.is_existing_client, enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
+    const input = { firstName: n.first_name, enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
     const email = kind === "its_live" ? itsLiveEmail(input) : mondayReminderEmail(input);
     const r = await deps.send({ to: n.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
@@ -187,7 +187,7 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
       continue;
     }
     const footing = deps.footingFor(p.email, true);
-    const email = dailyAfternoonEmail({ isExistingClient: p.is_existing_client, nextDrawing: next, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
+    const email = dailyAfternoonEmail({ nextDrawing: next, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
     if (r.ok) out.sent++;
@@ -211,7 +211,7 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     const { data: offer } = await store.select("giveaway_offers", "code").eq("person_id", p.id).maybeSingle();
     const code = (offer as { code: string } | null)?.code ?? "";
     const footing = deps.footingFor(p.email, true);
-    const email = thankYouEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
+    const email = thankYouEmail({ firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
     if (r.ok) out.sent++;
@@ -238,7 +238,7 @@ async function giftReminderJob(store: GiveawayStore, job: ScheduledSendRow, kind
       continue;
     }
     const footing = deps.footingFor(p.email, true);
-    const email = giftReminderEmail({ kind: kind === "gift_reminder" ? "reminder" : "last_call", firstName: p.first_name, isExistingClient: p.is_existing_client, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
+    const email = giftReminderEmail({ kind: kind === "gift_reminder" ? "reminder" : "last_call", firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
     if (r.ok) out.sent++;
@@ -261,7 +261,6 @@ async function tuesdayJob(store: GiveawayStore, job: ScheduledSendRow, now: Date
   const email = tuesdayCallTodayEmail({
     drawing: drawing("mon"),
     winner: { name: `${person.first_name} ${person.last_name}`, email: person.email_display, zip: person.zip, city: person.city },
-    version: winner.prize_version,
     claimDeadline: new Date(winner.claim_deadline_at),
     adminUrl: deps.links.adminUrl,
     now,
@@ -279,4 +278,4 @@ export async function jobStatus(store: GiveawayStore): Promise<Array<{ kind: str
     .map((job) => ({ kind: job.kind, due_at: job.due_at, sent_at: job.sent_at, skipped_reason: job.skipped_reason, error: job.error, receipts: rows.filter((r) => r.kind === job.kind && (r.person_id || r.notify_id) && r.sent_at).length }));
 }
 
-export { DRAWINGS, prizeVersionFor };
+export { DRAWINGS };

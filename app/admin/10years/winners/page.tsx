@@ -5,7 +5,7 @@ import { ACTIONS, AdminShell, Flash, fmtAt, muted, requireAdminPage, smallBtn, s
 
 /**
  * /admin/10years/winners — every current winner (status != redrawn), then
- * the redrawn history. Per winner: the person, the prize (version named),
+ * the redrawn history. Per winner: the person, the prize (and the day's gift code for a current client),
  * status, claim deadline, the call log, public OK and the label it would
  * publish, the tax-form step when required, notes. Forms POST to
  * actions/winner with a `kind` field; each redirects back here.
@@ -89,13 +89,12 @@ function WinnersTable({ rows, editable }: { rows: WinnerView[]; editable: boolea
                 <br />
                 <span style={{ ...muted, fontSize: 13 }}>
                   {p?.city ?? "city unknown"} {p?.zip ?? ""}
-                  {p?.is_existing_client ? " · existing client" : ""}
                 </span>
               </td>
               <td style={td}>
                 {v.prizeName}
                 <br />
-                <span style={{ ...muted, fontSize: 12 }}>{v.versionLabel}</span>
+                <span style={{ ...muted, fontSize: 12 }}>{v.giftCodeLabel}</span>
               </td>
               <td style={td}>
                 <b>{w.status}</b>

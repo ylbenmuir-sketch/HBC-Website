@@ -10,7 +10,7 @@
  */
 
 import { audit } from "./audit";
-import { DRAWINGS, centralParts, prizeFor, prizeName, type Drawing, type PrizeVersion } from "./config";
+import { DRAWINGS, GIFT_CODES, centralParts, prizeFor, prizeName, type Drawing } from "./config";
 import { buildPool } from "./drawings";
 import type { AuditRow, DrawingRow, EntryRow, NotifyRow, OfferRow, PersonRow, WinnerRow } from "./rows";
 import { jobStatus } from "./sends";
@@ -36,8 +36,9 @@ export function centralDayKey(iso: string): string {
 
 export const SLOT_ORDER: Record<string, number> = Object.fromEntries(DRAWINGS.map((d, i) => [d.slot, i]));
 
-export function versionLabel(v: PrizeVersion): string {
-  return v === "current_client" ? "current-client version" : "new-client version";
+/** For staff: the day's gift-certificate code, used if the winner turns out to be a current client. */
+export function giftCodeLabel(slot: Drawing["slot"]): string {
+  return `if a current client: Brain Map → gift certificate ${GIFT_CODES[slot]}`;
 }
 
 export function personName(p: PersonRow | null): string {
@@ -196,7 +197,7 @@ export type WinnerView = {
   drawing: DrawingRow | null;
   config: Drawing | null;
   prizeName: string;
-  versionLabel: string;
+  giftCodeLabel: string;
   /** What the public OK toggle would publish. */
   publicLabelPreview: string;
 };
@@ -213,14 +214,14 @@ export async function loadWinners(store: GiveawayStore): Promise<{ current: Winn
     const person = peopleById.get(w.person_id) ?? null;
     const drawing = drawingsById.get(w.drawing_id) ?? null;
     const config = drawing ? (DRAWINGS.find((d) => d.slot === drawing.slot) ?? null) : null;
-    const spec = config ? prizeFor(config.slot, w.prize_version) : null;
+    const spec = config ? prizeFor(config.slot) : null;
     return {
       winner: w,
       person,
       drawing,
       config,
       prizeName: spec ? prizeName(spec) : "(prize unknown)",
-      versionLabel: versionLabel(w.prize_version),
+      giftCodeLabel: config ? giftCodeLabel(config.slot) : "",
       publicLabelPreview: person ? publicLabel(person.first_name, person.last_name, person.city, person.zip) : "",
     };
   });

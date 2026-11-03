@@ -62,10 +62,8 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
   if (mode === "hidden") return { to: "/10years", query: "" };
   if (mode === "closed" || mode === "thank_you") return back("?error=closed");
 
-  // New or current client is a required choice (Ben, 2026-10-20): two
-  // radios named existing_client, "no" | "yes". Nothing picked → back to
-  // the form with the one-line error; the rest is validated in people.ts.
-  if (!/^(yes|no)$/.test(field(form, "existing_client", 3))) return back("?error=client_status");
+  // No new/current question any more (Ben, 2026-11-03): one prize per
+  // drawing; staff ask on the winner call.
   const input: SignupInput = {
     firstName: field(form, "first_name", 60),
     lastName: field(form, "last_name", 60),
@@ -74,7 +72,6 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     // One box on the form: "I'm 18+ and agree to the Official Rules".
     ageConfirmed: checked(form, "age_rules"),
     rulesAccepted: checked(form, "age_rules"),
-    isExistingClient: checked(form, "existing_client"),
     marketingOptIn: checked(form, "marketing"),
     ref: field(form, "ref", 20) || null,
     sourcePage: field(form, "source_page", 200) || "/10years",
@@ -186,10 +183,10 @@ async function shareUrlFor(store: GiveawayStore, personId: string): Promise<stri
 
 async function sendYoureIn(store: GiveawayStore, secret: string, personId: string, referredBonus: boolean, now: Date): Promise<void> {
   const { data } = await store.select("giveaway_people", "*").eq("id", personId).single();
-  const p = data as { email: string; first_name: string; is_existing_client: boolean; referral_code: string };
+  const p = data as { email: string; first_name: string; referral_code: string };
   const next = DRAWINGS.find((d) => d.at.getTime() > now.getTime()) ?? null;
   const footing = footingFor(p.email, store.env, false, secret);
-  const email = youreInEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), footing });
+  const email = youreInEmail({ firstName: p.first_name, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), footing });
   const sent = await sendGiveawayEmail({ to: p.email, email, marketing: false, footing });
   if (sent.status !== "sent") console.error(`[giveaway] You're in not sent: ${sent.error}`);
 }

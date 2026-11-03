@@ -36,7 +36,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { audit } from "./audit";
-import { claimDeadline, drawing as drawingFor, prizeVersionFor, taxFormRequiredForTotal, type Slot } from "./config";
+import { STANDARD_PRIZE_VERSION, claimDeadline, drawing as drawingFor, taxFormRequiredForTotal, type Slot } from "./config";
 import { HOLDING_STATUSES, type DrawingRow, type EntryRow, type PersonRow, type PoolRow, type PrizeRow, type WinnerRow } from "./rows";
 import type { GiveawayStore } from "./store";
 import { randomCode, sha256Hex } from "./tokens";
@@ -232,7 +232,8 @@ async function drawOne(store: GiveawayStore, d: DrawingRow, now: Date, by: strin
 
 async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow, opts: { seed: string; excluded: string[]; now: Date; by: string; redraw: boolean; reason: string | null }): Promise<Omit<DrawResult, "drawing">> {
   const person = (await store.select("giveaway_people", "*").eq("id", entry.person_id).single()).data as PersonRow;
-  const version = prizeVersionFor(person.is_existing_client);
+  // One prize per drawing (Ben, 2026-11-03): no version from the person.
+  const version = STANDARD_PRIZE_VERSION;
   const prizeRes = await store.select("giveaway_prizes", "*").eq("slot", d.slot).eq("version", version).single();
   if (prizeRes.error) throw fail("prize", prizeRes.error);
   const prize = prizeRes.data as PrizeRow;

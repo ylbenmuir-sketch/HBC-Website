@@ -345,7 +345,9 @@ export class MemoryDb {
   seed() {
     for (const env of GIVEAWAY_ENVS) {
       for (const p of PRIZES) {
-        this.rows("giveaway_prizes").push(this.withDefaults("giveaway_prizes", { env, slot: p.slot, version: p.version, name: prizeName(p), description: prizeDescription(p), brain_map: p.brainMap, sessions: p.sessions, vibro_chair: p.vibroChair, hoolest_keychain: p.hoolestKeychain, hoolest_handheld: p.hoolestHandheld, partner_services: p.partnerServices, retail_value_usd: prizeRetailUsd(p), practitioner_cost_usd: prizePractitionerCostUsd(p), tax_form_required: prizeTaxFormRequired(p) }));
+        for (const version of ["new_client", "current_client"]) {
+          this.rows("giveaway_prizes").push(this.withDefaults("giveaway_prizes", { env, slot: p.slot, version, name: prizeName(p), description: prizeDescription(p), brain_map: p.brainMap, sessions: p.sessions, vibro_chair: p.vibroSessions > 0, hoolest_keychain: p.hoolest === "mini", hoolest_handheld: p.hoolest === "veRelief", partner_services: p.partners.length > 0, retail_value_usd: prizeRetailUsd(p), practitioner_cost_usd: prizePractitionerCostUsd(p), tax_form_required: prizeTaxFormRequired(p) }));
+        }
       }
       for (const d of DRAWINGS) {
         this.rows("giveaway_drawings").push(this.withDefaults("giveaway_drawings", { env, slot: d.slot, kind: d.kind, scheduled_at: d.at.toISOString() }));

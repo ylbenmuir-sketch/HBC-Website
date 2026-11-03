@@ -36,7 +36,7 @@ export default async function ClaimPage({ params, searchParams }: { params: Prom
   } else if (winner.status === "redrawn" || winner.status === "ineligible" || winner.status === "declined" || (winner.status === "unreachable" && new Date(winner.claim_deadline_at) < now)) {
     body = <p className="sub">{t.claimExpired}</p>;
   } else {
-    const prize = prizeName(prizeFor(drawing.slot, winner.prize_version));
+    const prize = prizeName(prizeFor(drawing.slot));
     body = (
       <>
         <h1 style={{ fontSize: 34 }}>{t.claimHeading(person.first_name)}</h1>

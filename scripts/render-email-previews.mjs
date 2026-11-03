@@ -146,20 +146,20 @@ const sarah = { name: "Sarah Mitchell", email: "sarah.mitchell@gmail.com", zip: 
 const G_NOW = new Date("2026-11-16T18:00:30Z");
 const giveawayEmails = [
   { file: "g01-notify-verify", ...G.notifyVerifyEmail({ firstName: "Sarah", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
-  { file: "g02-its-live", ...G.itsLiveEmail({ firstName: "Sarah", isExistingClient: false, enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
-  { file: "g03-monday-reminder", ...G.mondayReminderEmail({ firstName: "Sarah", isExistingClient: false, enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
+  { file: "g02-its-live", ...G.itsLiveEmail({ firstName: "Sarah", enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
+  { file: "g03-monday-reminder", ...G.mondayReminderEmail({ firstName: "Sarah", enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
   { file: "g04-entry-verify", ...G.entryVerifyEmail({ firstName: "Marcus", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
-  { file: "g05-youre-in", ...G.youreInEmail({ firstName: "Sarah", isExistingClient: false, referredBonus: true, nextDrawing: tue, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
-  { file: "g05b-youre-in-existing-client", ...G.youreInEmail({ firstName: "Marcus", isExistingClient: true, referredBonus: false, nextDrawing: mon, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
-  { file: "g06-daily-afternoon", ...G.dailyAfternoonEmail({ isExistingClient: false, nextDrawing: tue, entries: 4, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
-  { file: "g06b-daily-afternoon-friday", ...G.dailyAfternoonEmail({ isExistingClient: true, nextDrawing: grand, entries: 1, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
-  { file: "g07-winner", ...G.winnerEmail({ firstName: "Sarah", drawing: mon, version: "new_client", claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(mon.at), taxFormRequired: false, footing }) },
-  { file: "g07b-winner-grand-tax-form", ...G.winnerEmail({ firstName: "Marcus", drawing: grand, version: "current_client", claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, footing }) },
-  { file: "g08-thank-you-offer", ...G.thankYouEmail({ firstName: "Sarah", isExistingClient: false, offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
-  { file: "g08b-gift-reminder", ...G.giftReminderEmail({ kind: "reminder", firstName: "Sarah", isExistingClient: false, offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
-  { file: "g08c-gift-last-call", ...G.giftReminderEmail({ kind: "last_call", firstName: "Marcus", isExistingClient: true, offerCode: "10Y-D3FG7H", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-D3FG7H", footing }) },
-  { file: "g09-staff-winner-alert", ...G.staffWinnerAlertEmail({ drawing: grand, winner: sarah, version: "new_client", claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: G_NOW }) },
-  { file: "g10-staff-tuesday-call-today", ...G.tuesdayCallTodayEmail({ drawing: mon, winner: sarah, version: "new_client", claimDeadline: GC.claimDeadline(mon.at), adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: GC.SCHEDULE.tuesdayCallToday.at }) },
+  { file: "g05-youre-in", ...G.youreInEmail({ firstName: "Sarah", referredBonus: true, nextDrawing: tue, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
+  { file: "g05b-youre-in-existing-client", ...G.youreInEmail({ firstName: "Marcus", referredBonus: false, nextDrawing: mon, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
+  { file: "g06-daily-afternoon", ...G.dailyAfternoonEmail({ nextDrawing: tue, entries: 4, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
+  { file: "g06b-daily-afternoon-friday", ...G.dailyAfternoonEmail({ nextDrawing: grand, entries: 1, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
+  { file: "g07-winner", ...G.winnerEmail({ firstName: "Sarah", drawing: mon, claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(mon.at), taxFormRequired: false, footing }) },
+  { file: "g07b-winner-grand-tax-form", ...G.winnerEmail({ firstName: "Marcus", drawing: grand, claimUrl: "https://harmonizedbraincenterstn.com/10years/claim/TOKEN", claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, footing }) },
+  { file: "g08-thank-you-offer", ...G.thankYouEmail({ firstName: "Sarah", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
+  { file: "g08b-gift-reminder", ...G.giftReminderEmail({ kind: "reminder", firstName: "Sarah", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
+  { file: "g08c-gift-last-call", ...G.giftReminderEmail({ kind: "last_call", firstName: "Marcus", offerCode: "10Y-D3FG7H", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-D3FG7H", footing }) },
+  { file: "g09-staff-winner-alert", ...G.staffWinnerAlertEmail({ drawing: grand, winner: sarah, claimDeadline: GC.claimDeadline(grand.at), taxFormRequired: true, adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: G_NOW }) },
+  { file: "g10-staff-tuesday-call-today", ...G.tuesdayCallTodayEmail({ drawing: mon, winner: sarah, claimDeadline: GC.claimDeadline(mon.at), adminUrl: "https://harmonizedbraincenterstn.com/admin/10years/winners", now: GC.SCHEDULE.tuesdayCallToday.at }) },
 ];
 emails.push(...giveawayEmails);
 

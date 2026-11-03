@@ -65,8 +65,10 @@ export const SHARED = {
   /** Under every transactional email. */
   whyYouGotThisTransactional: D("You're getting this because you entered the 10-year giveaway at"),
   /** The chair clause, when a prize is listed. */
-  chairNote: D("Every session includes the vibro chair."),
-  partnerLine: (partner: string, prize: string | null) => D(prize ? `Plus from ${partner}: ${prize}.` : `Plus a prize from ${partner}.`),
+  /** One prize per drawing (Ben, 2026-11-03): a current client's Brain Map becomes a certificate for someone new. */
+  currentClientNote: D("Already an HBC client? You'll receive a Brain Map gift certificate to give to someone new in place of your own Brain Map. We'll sort it out on the call."),
+  /** "Redeemed directly with Skye Chiropractic, valid through TBD." — the date from config (PARTNER_GIFTS). */
+  partnerLine: (partner: string, validThrough: string | null, terms: string | null) => D(`Redeemed directly with ${partner}, valid through ${validThrough ?? "TBD"}.${terms ? ` ${terms}` : ""}`),
   /** The offer, in one line. Sits under the "Your first visit is on us" heading, so it doesn't repeat it. */
   offerLine: (bookBySpoken: string, visitBySpoken: string) => D(`A free Brain Map and consultation. Book by ${bookBySpoken}; come in any day through ${visitBySpoken}.`),
   offerBonus: (packageSessions: number) => D(`Start the in-center ${packageSessions}-session package at that visit and the ${packageSessions + 1}th session is free.`),
@@ -194,7 +196,9 @@ export const EMAILS = {
     heading: (dayName: string, kind: "daily" | "grand") => D(`${dayName}'s ${kind === "grand" ? "grand prize" : ""} winner`.replace(/\s+/g, " ")),
     callBy: D("Call by"),
     prize: D("Prize"),
-    version: D("Version"),
+    /** The day's gift code, for a current-client winner (asked on the call). */
+    giftCode: D("Current client?"),
+    giftCodeLine: (code: string) => D(`Ask on the call. If so, their Brain Map becomes gift certificate ${code}, to give to someone new.`),
     taxForm: D("Tax form"),
     /** The threshold lives in config (TAX_FORM_THRESHOLD_USD), so it is not typed here. */
     taxYes: D("Required — mark received in admin"),
@@ -266,7 +270,7 @@ export const PAGES = {
     sealSpan: (from: number, to: number) => D(`${from}–${to}`),
     /** The hero, every mode. */
     heading: D("10 years. A week of prizes."),
-    /** The total is the week's new-client retail value, floored to $1,000 (config). */
+    /** The total is the six prizes' retail value, floored to $500 (config): "Over $5,500". */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
     /** The mystery-gift tease (fix list rev 2, P0-4): notify and live only. "Gift", never "prize"; never names the visit. */
@@ -276,13 +280,6 @@ export const PAGES = {
     sub: (drawings: number, span: string) => D(`${countWord(drawings)} drawings, ${span}. Enter once and you're in every one.`),
     closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
-    /** "Which one are you?" — the path picker under the hero's lines (Ben, 2026-10-20). The two choices are also the form's required client-status choice. */
-    pathLabel: D("Which one are you?"),
-    pathNew: D("I'm new to HBC"),
-    pathCurrent: D("I'm a current client"),
-    /** The form's required choice: the legend assistive tech reads, the error when neither is picked. */
-    clientChoiceLegend: D("New or current client?"),
-    clientChoiceError: D("Pick one so we know which prize version you'd get."),
     /** The slim bottom bar on phones once the form is off screen. */
     entryBarNotify: D("Get my entry link"),
     entryBarLive: D("Enter the giveaway"),
@@ -348,7 +345,6 @@ export const PAGES = {
     /** One box for both (age and rules); the link sits on "Official Rules". */
     ageRules: D("I'm 18+ and agree to the"),
     rulesLink: D("Official Rules"),
-    existingClient: D("I'm already an HBC client"),
     marketing: D("Email me HBC news after the giveaway"),
     honeypot: D("Website"),
     errors: {
@@ -360,7 +356,6 @@ export const PAGES = {
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
       send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
-      client_status: D("Pick one so we know which prize version you'd get."),
     },
     /** "How it works": three steps between the hero and the ladder. Counts, days and times from config. */
     how: {
@@ -379,21 +374,13 @@ export const PAGES = {
     },
     /** The prize ladder. */
     prizesTitle: D("The prize ladder"),
-    newClients: D("New clients"),
-    currentClients: D("Current clients"),
     /** "Mon · noon", "Sat · 5 PM" — day and time from config. */
     cardTime: (dayAbbr: string, time: string) => D(`${dayAbbr} · ${time}`),
     grandLabel: D("Grand prize"),
-    /** The prize in plain words, built from the spec's flags. */
-    prizeWords: (brainMap: boolean, sessions: number) => D(`${brainMap ? "Brain Map + " : ""}${sessions} sessions`),
-    /** A device line: the name from config (DEVICES), "by Hoolest" small beside it. */
-    deviceLine: (name: string) => D(`+ ${name}`),
-    deviceBy: (by: string) => D(`by ${by}`),
-    deviceKeep: (keep: string) => D(keep),
-    /** The phone ladder's row: the prize in one line, "Brain Map + 4 sessions + pocket stimulator". */
-    rowDevice: { keychain: D("pocket stimulator"), handheld: D("handheld stimulator") },
-    /** The value, first and largest: exactly the sum of the priced lines ("$480"); unpriced parts read TBD in the breakdown. */
-    valueBig: (usd: number) => D(`$${usd.toLocaleString("en-US")}`),
+    /** A card's extra lines: "+ Hoolest Mini", "+ 1 BrainMD bottle". */
+    plusLine: (words: string) => D(`+ ${words}`),
+    /** The value, first and largest: exactly the sum of the breakdown's lines ("$194.95"). */
+    valueBig: (usd: number) => D(`$${usd.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(usd) ? 0 : 2, maximumFractionDigits: 2 })}`),
     valueWord: D("value"),
     /** The expanded card: one line per part, from config's prizeBreakdown. */
     breakdown: {
@@ -401,13 +388,15 @@ export const PAGES = {
       close: D("Close"),
       brainMap: D("Brain Map"),
       sessions: (n: number) => D(`${n} LENS ${n === 1 ? "session" : "sessions"}`),
-      /** "Vibro chair with each session (2 × $40)" — the count and rate from config. */
-      chair: (n: number, unitUsd: number | null) => D(unitUsd == null ? "Vibro chair with each session" : `Vibro chair with each session (${n}\u00a0×\u00a0$${unitUsd})`),
-      partner: (name: string | null) => D(name ? `Gift from ${name}` : "Partner prize"),
-      /** A device with no price yet (the pocket device today): left out of the total. */
-      unpriced: D("value TBD"),
-      /** A partner prize not yet named or priced: left out of the total. */
-      partnerTbd: D("TBD"),
+      /** "Vibro chair with each session (12 × $40)" — the count and rate from config. */
+      chair: (n: number, unitUsd: number) => D(`Vibro chair with each session (${n}\u00a0×\u00a0$${unitUsd})`),
+      /** The card's and the phone row's short form. */
+      chairShort: D("vibro chair with each session"),
+      /** "3 BrainMD supplement bottles ($44.95 each)" */
+      brainMd: (n: number, unitUsd: string) => D(n === 1 ? "1 BrainMD supplement bottle" : `${n} BrainMD supplement bottles (${unitUsd} each)`),
+      /** "3 Assisted Lymphatic Therapy sessions… ($125 each)" */
+      partnerGift: (gift: string, n: number, unitUsd: string) => D(n === 1 ? gift : `${n} ${gift} (${unitUsd} each)`),
+      partnerNote: (validThrough: string | null) => D(`Redeemed directly with the partner · valid through ${validThrough ?? "TBD"}`),
       total: D("Total"),
       whatsBrainMap: D("What's a Brain Map?"),
     },
@@ -417,7 +406,8 @@ export const PAGES = {
     winnerLabel: D("Winner"),
     cardWinnerClaimed: D("Claimed ✓"),
     cardWinnerReaching: D("Drawn, we're reaching them now"),
-    prizesNote: D("Every session includes the vibro chair."),
+    /** Under the ladder and the rules table (Ben, 2026-11-03). */
+    prizesNote: D("Partner gifts are redeemed directly with the partner. Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map."),
     /** The photo strip. */
     /** recline.jpg shows the vibro-acoustic chair (Ben: our chairs don't recline). */
     photoChair: D("The vibro-acoustic chair"),
@@ -428,9 +418,8 @@ export const PAGES = {
     photoDevice: (by: string) => D(`Vagus nerve stimulator by ${by}`),
     /** /10years/rules: the full table and every question. */
     detailsTitle: D("Prize details & drawing times"),
-    newClient: D("New client"),
-    currentClient: D("Current client"),
-    partnerPrefix: D("Plus from"),
+    prizeHead: D("Prize"),
+    valueHead: D("Value"),
     qaTitle: D("Giveaway questions"),
     allQuestions: D("All giveaway questions"),
     /** Q&A (decision 14). The page shows enter, more and win; /10years/rules shows all five. */

@@ -234,33 +234,38 @@ export function drawingAfter(slot: Slot): Drawing | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* Rates (decision 16) — retail values are COMPUTED from these         */
+/* Rates — retail values are COMPUTED from these (Ben, 2026-11-03)     */
 /* ------------------------------------------------------------------ */
 
-/** A dollar amount Ben has or has not confirmed. An unconfirmed null
- *  counts as $0 in sums and is listed as unconfirmed wherever it shows. */
-export type Rate = { usd: number | null; confirmed: boolean; note?: string };
+/** A dollar amount. Sums are done in cents (usdSum) so $44.95 adds exactly. */
+export type Rate = { usd: number; note?: string };
 
 export const RATES = {
-  brainMap: { usd: 150, confirmed: true } as Rate,
-  session: { usd: 125, confirmed: true } as Rate,
-  /** Per use; every prize session includes the chair. */
-  vibroChair: { usd: 40, confirmed: true } as Rate,
-  /** Hoolest's published price (Ben, 2026-11-03; was $429 from the
-   *  2026-10-19 brief). */
-  hoolestHandheld: { usd: 399, confirmed: true, note: "Hoolest's published retail price" } as Rate,
-  hoolestKeychain: { usd: null, confirmed: false, note: "UNCONFIRMED — Hoolest keychain retail price not yet supplied; counted as $0" } as Rate,
+  brainMap: { usd: 150 } as Rate,
+  session: { usd: 125, note: "a LENS session" } as Rate,
+  /** Per use — the grand prize's twelve sessions each include the chair. */
+  vibroChair: { usd: 40 } as Rate,
+  /** One bottle of a BrainMD supplement, at BrainMD's retail price. */
+  brainMdBottle: { usd: 44.95, note: "BrainMD retail" } as Rate,
+  hoolestMini: { usd: 99, note: "Hoolest's price" } as Rate,
+  hoolestVeRelief: { usd: 199, note: "Hoolest's price" } as Rate,
   /** Admin cost view only. Per session or map. */
-  practitionerCostPerUnit: { usd: 35, confirmed: true } as Rate,
+  practitionerCostPerUnit: { usd: 35 } as Rate,
 } as const;
 
+/** Exact dollar sums: every amount to cents first. */
+export function usdSum(amounts: readonly number[]): number {
+  return amounts.reduce((t, x) => t + Math.round(x * 100), 0) / 100;
+}
+
 /**
- * The devices, by what they are (Ben, 2026-10-19): display names used on
- * the page, in the emails and in the rules. Never by what they do.
+ * The products, by what they are: display names used on the page, in the
+ * emails and in the rules. Never by what they do.
  */
 export const DEVICES = {
-  handheld: { name: "Handheld vagus nerve stimulator", by: "Hoolest", keep: "yours to keep" },
-  keychain: { name: "Pocket vagus nerve stimulator", by: "Hoolest" },
+  mini: { name: "Hoolest Mini vagus nerve stimulator", short: "Hoolest Mini" },
+  veRelief: { name: "Hoolest VeRelief vagus nerve stimulator", short: "Hoolest VeRelief" },
+  brainMd: { name: "BrainMD supplement bottle", short: "BrainMD bottle" },
 } as const;
 
 /** At or over this total retail value of HBC prizes in a year, a person
@@ -283,95 +288,153 @@ export function taxFormRequiredForTotal(totalUsd: number): boolean {
 export const PRIZE_USE_BY = { at: centralToUtc(2027, 5, 31, 23, 59, 59), ct: "Mon May 31, 2027, 11:59 PM CT", confirmed: false } as const;
 
 /* ------------------------------------------------------------------ */
-/* Prizes (decision 16)                                                */
+/* Partners — gifts redeemed directly with the partner (Ben, 2026-11-03) */
 /* ------------------------------------------------------------------ */
 
-export type PrizeVersion = "new_client" | "current_client";
-
-export type PrizeSpec = {
-  slot: Slot;
-  version: PrizeVersion;
-  brainMap: boolean;
-  sessions: number;
-  /** Every prize session includes the chair. */
-  vibroChair: boolean;
-  hoolestKeychain: boolean;
-  hoolestHandheld: boolean;
-  /** "one service from every partner" — the grand prize only. */
-  partnerServices: boolean;
+export type PartnerGift = {
+  id: "skye" | "amabel" | "envision";
+  /** "Skye Chiropractic" */
+  partner: string;
+  /** What the gift is, in plain words. */
+  gift: string;
+  /** The short form for a one-line phone row. */
+  short: string;
+  /** How many (the lymphatic sessions come in threes). */
+  count: number;
+  unitUsd: number;
+  /** The last day the partner honours it. null = Ben has not supplied it yet ("TBD"). */
+  validThrough: Date | null;
+  /** A line of terms the page and the rules show under the gift, if any. */
+  terms?: string;
 };
 
-const prize = (slot: Slot, version: PrizeVersion, sessions: number, extras: Partial<Pick<PrizeSpec, "hoolestKeychain" | "hoolestHandheld" | "partnerServices">> = {}): PrizeSpec => ({
-  slot,
-  version,
-  brainMap: version === "new_client",
-  sessions,
-  vibroChair: true,
-  hoolestKeychain: false,
-  hoolestHandheld: false,
-  partnerServices: false,
-  ...extras,
-});
+export const PARTNER_GIFTS: Record<PartnerGift["id"], PartnerGift> = {
+  skye: { id: "skye", partner: "Skye Chiropractic", gift: "Skye Chiropractic gift", short: "Skye Chiropractic gift", count: 1, unitUsd: 250, validThrough: null },
+  amabel: {
+    id: "amabel",
+    partner: "Be Well with Amabel",
+    gift: "90-minute one-to-one Women's Health & Life Coaching session with Amabel Luers of Be Well with Amabel",
+    short: "coaching session with Amabel Luers",
+    count: 1,
+    unitUsd: 250,
+    validThrough: null,
+    terms: "The winner may gift this session to a woman of their choice.",
+  },
+  envision: {
+    id: "envision",
+    partner: "Envision Thermography & Wellness",
+    gift: "Assisted Lymphatic Therapy sessions with Victoria Bailey of Envision Thermography & Wellness",
+    short: "3 lymphatic therapy sessions",
+    count: 3,
+    unitUsd: 125,
+    validThrough: null,
+  },
+};
 
-/** Both versions for every drawing, in drawing order. */
+/* ------------------------------------------------------------------ */
+/* Prizes — one per drawing (Ben, 2026-11-03)                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One prize per drawing. There is no separate current-client version: a
+ * current client gets the same prize, with a Brain Map gift certificate to
+ * give to someone new in place of their own Brain Map (GIFT_CODES), worth
+ * the same. The site never decides who is a current client — staff ask on
+ * the winner call.
+ */
+export type PrizeSpec = {
+  slot: Slot;
+  brainMap: boolean;
+  sessions: number;
+  /** Sessions that include the vibro chair (the grand prize: all twelve). */
+  vibroSessions: number;
+  brainMdBottles: number;
+  hoolest: "mini" | "veRelief" | null;
+  partners: PartnerGift["id"][];
+};
+
+const prize = (slot: Slot, p: Omit<PrizeSpec, "slot" | "brainMap">): PrizeSpec => ({ slot, brainMap: true, ...p });
+
+/** In drawing order, Monday to the Saturday grand prize. */
 export const PRIZES: readonly PrizeSpec[] = [
-  prize("mon", "new_client", 2),
-  prize("mon", "current_client", 2),
-  prize("tue", "new_client", 3),
-  prize("tue", "current_client", 3),
-  prize("wed", "new_client", 4, { hoolestKeychain: true }),
-  prize("wed", "current_client", 4, { hoolestKeychain: true }),
-  prize("thu", "new_client", 5, { hoolestKeychain: true }),
-  prize("thu", "current_client", 5, { hoolestKeychain: true }),
-  prize("fri", "new_client", 7, { hoolestKeychain: true }),
-  prize("fri", "current_client", 7, { hoolestKeychain: true }),
-  prize("grand", "new_client", 12, { hoolestHandheld: true, partnerServices: true }),
-  prize("grand", "current_client", 13, { hoolestHandheld: true, partnerServices: true }),
+  prize("mon", { sessions: 0, vibroSessions: 0, brainMdBottles: 1, hoolest: null, partners: [] }),
+  prize("tue", { sessions: 0, vibroSessions: 0, brainMdBottles: 1, hoolest: null, partners: ["skye"] }),
+  prize("wed", { sessions: 3, vibroSessions: 0, brainMdBottles: 1, hoolest: null, partners: [] }),
+  prize("thu", { sessions: 3, vibroSessions: 0, brainMdBottles: 1, hoolest: "mini", partners: [] }),
+  prize("fri", { sessions: 3, vibroSessions: 0, brainMdBottles: 1, hoolest: null, partners: ["amabel"] }),
+  prize("grand", { sessions: 12, vibroSessions: 12, brainMdBottles: 3, hoolest: "veRelief", partners: ["envision"] }),
 ];
 
-export function prizeFor(slot: Slot, version: PrizeVersion): PrizeSpec {
-  const p = PRIZES.find((x) => x.slot === slot && x.version === version);
-  if (!p) throw new Error(`no prize for ${slot}/${version}`);
+export function prizeFor(slot: Slot): PrizeSpec {
+  const p = PRIZES.find((x) => x.slot === slot);
+  if (!p) throw new Error(`no prize for ${slot}`);
   return p;
 }
 
-/** The version a person's "I'm already an HBC client" box picks. */
-export function prizeVersionFor(isExistingClient: boolean): PrizeVersion {
-  return isExistingClient ? "current_client" : "new_client";
+/** giveaway_prizes / giveaway_winners keep 0010's version column (its check
+ *  allows new_client | current_client). There is one prize per drawing now:
+ *  every winner row is written with this, and both seeded rows per slot hold
+ *  the same prize. */
+export const STANDARD_PRIZE_VERSION = "new_client" as const;
+
+/** The one gift-certificate code per day: a current-client winner's Brain Map, given to someone new. */
+export const GIFT_CODES: Record<Slot, string> = { mon: "GIFT-MON", tue: "GIFT-TUE", wed: "GIFT-WED", thu: "GIFT-THU", fri: "GIFT-FRI", grand: "GIFT-SAT" };
+
+export function giftCodeSlot(code: string | null | undefined): Slot | null {
+  const c = (code ?? "").trim().toUpperCase();
+  return (Object.entries(GIFT_CODES).find(([, v]) => v === c)?.[0] as Slot | undefined) ?? null;
 }
 
-const usdOf = (r: Rate) => r.usd ?? 0;
+/** One line of a prize, with its value. */
+export type PrizePart = {
+  kind: "brainMap" | "sessions" | "chair" | "brainMd" | "hoolest" | "partner";
+  count: number;
+  unitUsd: number;
+  usd: number;
+  partner?: PartnerGift;
+  device?: "mini" | "veRelief";
+};
 
-/** Computed retail value — never hand-typed. Unconfirmed rates count as
- *  their stated number, or $0 when none has been supplied. */
+export function prizeBreakdown(p: PrizeSpec, rates = RATES): PrizePart[] {
+  const parts: PrizePart[] = [];
+  if (p.brainMap) parts.push({ kind: "brainMap", count: 1, unitUsd: rates.brainMap.usd, usd: rates.brainMap.usd });
+  if (p.sessions) parts.push({ kind: "sessions", count: p.sessions, unitUsd: rates.session.usd, usd: usdSum(Array(p.sessions).fill(rates.session.usd)) });
+  if (p.hoolest) {
+    const r = p.hoolest === "mini" ? rates.hoolestMini : rates.hoolestVeRelief;
+    parts.push({ kind: "hoolest", count: 1, unitUsd: r.usd, usd: r.usd, device: p.hoolest });
+  }
+  if (p.vibroSessions) parts.push({ kind: "chair", count: p.vibroSessions, unitUsd: rates.vibroChair.usd, usd: usdSum(Array(p.vibroSessions).fill(rates.vibroChair.usd)) });
+  for (const id of p.partners) {
+    const g = PARTNER_GIFTS[id];
+    parts.push({ kind: "partner", count: g.count, unitUsd: g.unitUsd, usd: usdSum(Array(g.count).fill(g.unitUsd)), partner: g });
+  }
+  if (p.brainMdBottles) parts.push({ kind: "brainMd", count: p.brainMdBottles, unitUsd: rates.brainMdBottle.usd, usd: usdSum(Array(p.brainMdBottles).fill(rates.brainMdBottle.usd)) });
+  return parts;
+}
+
+/** The sum of a breakdown's lines. */
+export function breakdownSumUsd(parts: readonly PrizePart[]): number {
+  return usdSum(parts.map((x) => x.usd));
+}
+
+/** Computed retail value — never hand-typed. */
 export function prizeRetailUsd(p: PrizeSpec, rates = RATES): number {
-  let total = 0;
-  if (p.brainMap) total += usdOf(rates.brainMap);
-  total += p.sessions * (usdOf(rates.session) + (p.vibroChair ? usdOf(rates.vibroChair) : 0));
-  if (p.hoolestKeychain) total += usdOf(rates.hoolestKeychain);
-  if (p.hoolestHandheld) total += usdOf(rates.hoolestHandheld);
-  return total;
+  return breakdownSumUsd(prizeBreakdown(p, rates));
 }
 
-/** True when a part of the prize has no price yet (the pocket device, the
- *  partner prizes). Those parts read "value TBD" / "TBD" in the breakdown
- *  and are left out of the sum (fix list rev 2, P0-5), so the value shown
- *  is exactly the sum of the priced lines — no "+". */
-export function prizeHasUnpricedParts(p: PrizeSpec, rates = RATES): boolean {
-  return prizeBreakdown(p, rates).some((part) => part.usd == null);
+/** The six prizes together: $5,537.60. */
+export function prizeTotalUsd(rates = RATES): number {
+  return usdSum(PRIZES.map((p) => prizeRetailUsd(p, rates)));
 }
 
-/** The week's prizes in one number: the sum of one version's retail
- *  values, rounded DOWN to the nearest $1,000 ("Over $6,000 in prizes").
- *  Never typed; the page and the deck read it from here. */
-export function prizeTotalFloorUsd(version: PrizeVersion = "new_client", rates = RATES): number {
-  const sum = PRIZES.filter((p) => p.version === version).reduce((t, p) => t + prizeRetailUsd(p, rates), 0);
-  return Math.floor(sum / 1000) * 1000;
+/** The headline: the total rounded DOWN to the nearest $500 ("Over $5,500 in prizes"). */
+export function prizeTotalFloorUsd(rates = RATES): number {
+  return Math.floor(prizeTotalUsd(rates) / 500) * 500;
 }
 
 /** Practitioner cost (admin cost view only): $35 per session and per map. */
 export function prizePractitionerCostUsd(p: PrizeSpec, rates = RATES): number {
-  return (p.sessions + (p.brainMap ? 1 : 0)) * usdOf(rates.practitionerCostPerUnit);
+  return (p.sessions + (p.brainMap ? 1 : 0)) * rates.practitionerCostPerUnit.usd;
 }
 
 /** Whether this prize ALONE reaches the tax-form threshold (the seed's
@@ -381,98 +444,24 @@ export function prizeTaxFormRequired(p: PrizeSpec, rates = RATES): boolean {
   return taxFormRequiredForTotal(prizeRetailUsd(p, rates));
 }
 
-/** Which rates in a prize are unconfirmed (for the admin and the plan). */
-export function prizeUnconfirmedRates(p: PrizeSpec, rates = RATES): string[] {
-  const out: string[] = [];
-  if (p.brainMap && !rates.brainMap.confirmed) out.push("brainMap");
-  if (!rates.session.confirmed) out.push("session");
-  if (p.vibroChair && !rates.vibroChair.confirmed) out.push("vibroChair");
-  if (p.hoolestKeychain && !rates.hoolestKeychain.confirmed) out.push("hoolestKeychain");
-  if (p.hoolestHandheld && !rates.hoolestHandheld.confirmed) out.push("hoolestHandheld");
-  return out;
-}
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-/** The HBC prize in words: "Brain Map + 4 sessions + Pocket vagus nerve
- *  stimulator by Hoolest". The chair is a clause, not an item, so the list
- *  reads as Ben wrote it; the devices read as DEVICES names them. */
+/** The prize in words: "Brain Map + 3 LENS sessions + Hoolest Mini + 1 BrainMD bottle". */
 export function prizeName(p: PrizeSpec): string {
   const items: string[] = [];
   if (p.brainMap) items.push("Brain Map");
-  items.push(`${p.sessions} sessions`);
-  if (p.hoolestKeychain) items.push(`${DEVICES.keychain.name} by ${DEVICES.keychain.by}`);
-  if (p.hoolestHandheld) items.push(`${DEVICES.handheld.name} by ${DEVICES.handheld.by} (${DEVICES.handheld.keep})`);
+  if (p.sessions) items.push(plural(p.sessions, "LENS session"));
+  if (p.hoolest) items.push(DEVICES[p.hoolest].short);
+  if (p.vibroSessions) items.push(`a vibro chair session with each of the ${p.vibroSessions} sessions`);
+  for (const id of p.partners) items.push(PARTNER_GIFTS[id].count > 1 ? `${PARTNER_GIFTS[id].count} ${PARTNER_GIFTS[id].gift}` : PARTNER_GIFTS[id].gift);
+  if (p.brainMdBottles) items.push(plural(p.brainMdBottles, "BrainMD bottle"));
   return items.join(" + ");
 }
 
-const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
-
-/** The sentence under the name: "a Brain Map, 4 LENS sessions and a pocket
- *  vagus nerve stimulator by Hoolest (every session includes the vibro chair)". */
+/** The sentence form, for the seed's description column. */
 export function prizeDescription(p: PrizeSpec): string {
-  const items: string[] = [];
-  if (p.brainMap) items.push("a Brain Map");
-  items.push(`${p.sessions} LENS sessions`);
-  if (p.hoolestKeychain) items.push(`a ${lower(DEVICES.keychain.name)} by ${DEVICES.keychain.by}`);
-  if (p.hoolestHandheld) items.push(`a ${lower(DEVICES.handheld.name)} by ${DEVICES.handheld.by}, ${DEVICES.handheld.keep}`);
-  const list = items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
-  return p.vibroChair ? `${list} (every session includes the vibro chair)` : list;
-}
-
-/**
- * The value breakdown behind a prize, one row per part, for the ladder's
- * expanded card and the rules table: the map, the sessions, the chair at
- * every session ("2 × $40"), a device, the drawing's partner prize. `usd`
- * is null where no price has been supplied (the pocket device and every
- * partner today): the line reads "value TBD" / "TBD" and is left out of
- * the sum. `unitUsd` is the per-session price for the sessions and chair.
- */
-export type PrizePart = { kind: "brainMap" | "sessions" | "chair" | "keychain" | "handheld" | "partner"; count: number; usd: number | null; unitUsd?: number | null; partner?: Partner };
-
-export function prizeBreakdown(p: PrizeSpec, rates = RATES): PrizePart[] {
-  const parts: PrizePart[] = [];
-  if (p.brainMap) parts.push({ kind: "brainMap", count: 1, usd: rates.brainMap.usd });
-  parts.push({ kind: "sessions", count: p.sessions, usd: rates.session.usd == null ? null : p.sessions * rates.session.usd, unitUsd: rates.session.usd });
-  if (p.vibroChair) parts.push({ kind: "chair", count: p.sessions, usd: rates.vibroChair.usd == null ? null : p.sessions * rates.vibroChair.usd, unitUsd: rates.vibroChair.usd });
-  if (p.hoolestKeychain) parts.push({ kind: "keychain", count: 1, usd: rates.hoolestKeychain.usd });
-  if (p.hoolestHandheld) parts.push({ kind: "handheld", count: 1, usd: rates.hoolestHandheld.usd });
-  // The drawing's partner prize, named or not: "TBD" until Ben names it. A
-  // named partner's value still stays out of the HBC sum (prizeRetailUsd)
-  // until it is confirmed and added to the rates.
-  parts.push({ kind: "partner", count: 1, usd: null, partner: partnerFor(p.slot) ?? undefined });
-  return parts;
-}
-
-/** The sum of a breakdown's priced lines — what the page shows as the value. */
-export function breakdownSumUsd(parts: readonly PrizePart[]): number {
-  return parts.reduce((t, part) => t + (part.usd ?? 0), 0);
-}
-
-/* ------------------------------------------------------------------ */
-/* Partner prizes — six slots, shown only once named (decision 16)      */
-/* ------------------------------------------------------------------ */
-
-export type Partner = {
-  number: 1 | 2 | 3 | 4 | 5 | 6;
-  slot: Slot;
-  /** null = TBD = not shown anywhere public. */
-  name: string | null;
-  prize: string | null;
-  retailUsd: number | null;
-};
-
-export const PARTNERS: readonly Partner[] = [
-  { number: 1, slot: "mon", name: null, prize: null, retailUsd: null },
-  { number: 2, slot: "tue", name: null, prize: null, retailUsd: null },
-  { number: 3, slot: "wed", name: null, prize: null, retailUsd: null },
-  { number: 4, slot: "thu", name: null, prize: null, retailUsd: null },
-  { number: 5, slot: "fri", name: null, prize: null, retailUsd: null },
-  { number: 6, slot: "grand", name: null, prize: null, retailUsd: null },
-];
-
-/** The partner for a drawing, only when its name is set. */
-export function partnerFor(slot: Slot): Partner | null {
-  const p = PARTNERS.find((x) => x.slot === slot);
-  return p && p.name ? p : null;
+  const items = prizeName(p).split(" + ");
+  return items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
 /* ------------------------------------------------------------------ */

@@ -8,7 +8,7 @@
  */
 
 import { giveawayNow } from "./clock";
-import { offerOpen } from "./config";
+import { DRAWINGS, PRIZE_USE_BY, giftCodeSlot, offerOpen, type Slot } from "./config";
 import { giveawayEngineEnabled } from "./engine";
 import type { OfferRow, PersonRow } from "./rows";
 import { giveawayStore, type GiveawayStore } from "./store";
@@ -96,4 +96,38 @@ export async function redeemGift(
   const outcome: GiftOutcome = data === "redeemed" ? "redeemed" : data === "already" ? "already" : "failed";
   if (outcome === "redeemed") await audit(store, { actor: "visitor", action: "offer_redeemed", targetTable: "giveaway_offers", targetId: offer.id, after: { consultation_request_id: input.consultationRequestId, center: input.center } });
   return { outcome };
+}
+
+/* ------------------------------------------------------------------ */
+/* Brain Map gift certificates: GIFT-MON … GIFT-SAT (Ben, 2026-11-03)   */
+/* ------------------------------------------------------------------ */
+
+export type GiftCodeCheck = { ok: true; code: string; slot: Slot } | { ok: false; reason: "unavailable" | "not_yet" | "expired" };
+
+/**
+ * A current-client winner's Brain Map, given to someone new: one code per
+ * day. Tracking only — the site never decides who is a current client and
+ * keeps no redemption row; the lead email shows the code. Returns null when
+ * `code` is not a GIFT- code at all (so the 10Y- offer check runs instead).
+ * Valid from that day's drawing until the prize use-by date, engine on.
+ */
+export function checkGiftCode(code: string, now = giveawayNow()): GiftCodeCheck | null {
+  const slot = giftCodeSlot(code);
+  if (!slot) return /^GIFT-/i.test(code.trim()) ? { ok: false, reason: "unavailable" } : null;
+  if (!giveawayEngineEnabled()) return { ok: false, reason: "unavailable" };
+  const d = DRAWINGS.find((x) => x.slot === slot)!;
+  if (now.getTime() < d.at.getTime()) return { ok: false, reason: "not_yet" };
+  if (now.getTime() > PRIZE_USE_BY.at.getTime()) return { ok: false, reason: "expired" };
+  return { ok: true, code: code.trim().toUpperCase(), slot };
+}
+
+export function giftCodeRefusalMessage(reason: Exclude<GiftCodeCheck, { ok: true }>["reason"]): string {
+  switch (reason) {
+    case "not_yet":
+      return "That gift certificate code isn't active yet. Check the code, or request a free call without it.";
+    case "expired":
+      return "That gift certificate code has expired. You can still request a free call.";
+    default:
+      return "That gift certificate code isn't one we recognise. Check it, or request a free call without it.";
+  }
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ContactPageBody from "@/components/ContactPageBody";
 import type { GiveawayBooking } from "@/components/ContactForm";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
-import { checkOffer, offerRefusalMessage } from "@/lib/giveaway/offers";
+import { checkGiftCode, checkOffer, giftCodeRefusalMessage, offerRefusalMessage } from "@/lib/giveaway/offers";
 import { pageMetadata } from "@/lib/pages";
 
 /**
@@ -34,7 +34,12 @@ export default async function GiveawayContactPage({ searchParams }: { searchPara
   const raw = (Array.isArray(sp.code) ? sp.code[0] : sp.code) ?? "";
   const code = raw.trim().toUpperCase().slice(0, 20) || null;
   const booking: GiveawayBooking = { code, state: null, message: null };
-  if (code && giveawayEngineEnabled()) {
+  const gift = code ? checkGiftCode(code) : null;
+  if (gift) {
+    // A Brain Map gift certificate (GIFT-MON … GIFT-SAT).
+    booking.state = gift.ok ? "ok" : "unknown";
+    booking.message = gift.ok ? `Your Brain Map gift certificate ${code} is ready — it books a Brain Map.` : giftCodeRefusalMessage(gift.reason);
+  } else if (code && giveawayEngineEnabled()) {
     const check = await checkOffer(code).catch(() => ({ ok: false as const, reason: "unavailable" as const }));
     booking.state = check.ok ? "ok" : check.reason;
     booking.message = check.ok ? `Your 10-year code ${code} is ready — it books your free first visit.` : offerRefusalMessage(check.reason);

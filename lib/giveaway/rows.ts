@@ -1,6 +1,10 @@
 /** Row shapes of the giveaway tables (migration 0010), as the code reads them. */
 
-import type { PrizeVersion, Slot } from "./config";
+import type { Slot } from "./config";
+
+/** 0010's version column. One prize per drawing now (Ben, 2026-11-03):
+ *  every winner is written with STANDARD_PRIZE_VERSION (config). */
+export type PrizeVersion = "new_client" | "current_client";
 import type { Center } from "./zip";
 
 export type PersonRow = {

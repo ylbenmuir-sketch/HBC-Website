@@ -307,17 +307,26 @@ export type StaffLead = {
   heardAbout?: string | null;
   details: Details;
   honeypotFilled: boolean;
+  /** A 10-year giveaway booking's code: 10Y-… (thank-you visit) or GIFT-MON…GIFT-SAT (Brain Map gift certificate). */
+  giveawayCode?: string | null;
 };
 
-/** Where the lead came from: two lines, always, "Not given" when blank. */
-function sourceLines(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details">): Array<[string, string]> {
+/** "GIFT-MON (Brain Map gift certificate)" / "10Y-ABC123 (thank-you free first visit)". */
+function giveawayCodeLabel(code: string): string {
+  return /^GIFT-/i.test(code) ? `${code} (Brain Map gift certificate)` : `${code} (thank-you free first visit)`;
+}
+
+/** Where the lead came from: two lines, always, "Not given" when blank; a
+ *  giveaway booking's code first, when there is one. */
+function sourceLines(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details" | "giveawayCode">): Array<[string, string]> {
   return [
+    ...(lead.giveawayCode ? ([["10-year code:", giveawayCodeLabel(lead.giveawayCode)]] as Array<[string, string]>) : []),
     ["Referred by:", lead.referredBy?.trim() || lead.details.referredBy?.trim() || "Not given"],
     ["Heard about us:", lead.heardAbout?.trim() || "Not given"],
   ];
 }
 
-function sourceBlock(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details">): string {
+function sourceBlock(lead: Pick<StaffLead, "referredBy" | "heardAbout" | "details" | "giveawayCode">): string {
   return sourceLines(lead)
     .map(([label, value]) => {
       const given = value !== "Not given";

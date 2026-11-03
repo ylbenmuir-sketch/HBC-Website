@@ -24,11 +24,11 @@ import {
   CLAIM_MOVED_DEADLINE_HOUR_CT,
   CLAIM_WINDOW_MS,
   DEVICES,
+  PARTNER_GIFTS,
   DRAWINGS,
   EARLY_BIRD,
   ELIGIBLE_STATES,
   OFFER,
-  PRIZES,
   PRIZE_USE_BY,
   RATES,
   REFERRAL,
@@ -36,7 +36,7 @@ import {
   TAX_FORM_THRESHOLD_USD,
   TAX_THRESHOLD_CONFIRMED,
   centralParts,
-  prizeRetailUsd,
+  prizeTotalUsd,
 } from "./config";
 
 export type RulesBlock = { p: string } | { ul: string[] } | { strong: string } | { link: { before: string; label: string; href: string } };
@@ -57,7 +57,7 @@ export type RulesInput = {
 /** The all-caps line the draft opens with, above §1. */
 export const NO_PURCHASE_LINE = "NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE OR PAYMENT OF ANY KIND WILL NOT IMPROVE YOUR CHANCES OF WINNING. VOID WHERE PROHIBITED.";
 
-const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", ...o }).format(d);
 /** "Mon Nov 9, 2026, 12:00 AM" */
 const ctFull = (d: Date) => `${fmt(d, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${fmt(d, { hour: "numeric", minute: "2-digit", hour12: true })}`;
@@ -74,11 +74,13 @@ export function maxEntriesPerPerson(): number {
   return 1 + EARLY_BIRD.bonusEntries + REFERRAL.referredBonus + REFERRAL.referrerBonus * REFERRAL.friendCap;
 }
 
-/** The week's total ARV, smallest (all current-client versions) and largest (all new-client). */
-export function arvRange(): { min: number; max: number } {
-  const sum = (v: "new_client" | "current_client") => PRIZES.filter((p) => p.version === v).reduce((t, p) => t + prizeRetailUsd(p), 0);
-  return { min: sum("current_client"), max: sum("new_client") };
+/** The six prizes' total ARV (one prize per drawing — Ben, 2026-11-03). */
+export function totalArv(): number {
+  return prizeTotalUsd();
 }
+
+/** Ben's sentence, verbatim (2026-11-03). */
+export const CURRENT_CLIENT_RULE = "Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map.";
 
 export function rulesSections(input: RulesInput): RulesSection[] {
   const daily = DRAWINGS.filter((d) => d.kind === "daily");
@@ -86,8 +88,8 @@ export function rulesSections(input: RulesInput): RulesSection[] {
   const hours = Math.round(CLAIM_WINDOW_MS / 3_600_000);
   const moved = `${CLAIM_MOVED_DEADLINE_HOUR_CT % 12 || 12}:00 ${CLAIM_MOVED_DEADLINE_HOUR_CT < 12 ? "AM" : "PM"} CT`;
   const year = centralParts(grand.at).year;
-  const { min, max } = arvRange();
-  const keychain = RATES.hoolestKeychain.usd;
+  const total = totalArv();
+  const vd = (d: Date | null) => (d ? longDate(d) : "TBD");
   const extraWord = EARLY_BIRD.bonusEntries === 1 ? "extra entry" : "extra entries";
   const sections: Omit<RulesSection, "n">[] = [
     {
@@ -129,7 +131,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
         {
           ul: [
             `Go to ${input.siteHost}/10years.`,
-            "Fill in your first and last name, email and ZIP code. Say whether you're new to HBC or a current client, and agree to these rules.",
+            "Fill in your first and last name, email and ZIP code, and agree to these rules.",
             "Tap the confirmation link in the email we send you. Your entry counts once you confirm.",
           ],
         },
@@ -160,22 +162,24 @@ export function rulesSections(input: RulesInput): RulesSection[] {
         { p: "How the values are figured:" },
         {
           ul: [
-            `Brain Map: ${usd(RATES.brainMap.usd ?? 0)}`,
-            `LENS session: ${usd(RATES.session.usd ?? 0)} each`,
-            `Vibro-acoustic chair: ${usd(RATES.vibroChair.usd ?? 0)} per session (every session includes it)`,
-            `${DEVICES.keychain.name} by ${DEVICES.keychain.by}: ${keychain == null ? "value TBD" : usd(keychain)}`,
-            `${DEVICES.handheld.name} by ${DEVICES.handheld.by}: ${usd(RATES.hoolestHandheld.usd ?? 0)} (${DEVICES.handheld.by}'s published price)`,
-            `Partner prizes: each of the ${DRAWINGS.length} drawings has one partner prize slot. All are TBD; each will be named and valued here before entries open, or left out.`,
+            `Brain Map: ${usd(RATES.brainMap.usd)}`,
+            `LENS session: ${usd(RATES.session.usd)} each`,
+            `Vibro-acoustic chair: ${usd(RATES.vibroChair.usd)} per session (with each of the grand prize's sessions)`,
+            `BrainMD supplement bottle: ${usd(RATES.brainMdBottle.usd)} each (BrainMD's retail price)`,
+            `${DEVICES.mini.name}: ${usd(RATES.hoolestMini.usd)}`,
+            `${DEVICES.veRelief.name}: ${usd(RATES.hoolestVeRelief.usd)}`,
+            ...Object.values(PARTNER_GIFTS).map((g) => `${g.gift}: ${usd(g.unitUsd)}${g.count > 1 ? " each" : ""}`),
           ],
         },
-        { p: "There are two versions of each prize, one for new clients and one for current clients. Current clients already have a Brain Map, so their version leaves it out; the current-client grand prize has one extra session instead. The version follows the new-or-current answer you give when you enter, and the Sponsor confirms it when you claim. The prize table at the top of this page lists every part of every prize and its value." },
-        { p: `Total ARV of all six prizes: ${usd(min)} if every winner is a current client, up to ${usd(max)} if every winner is new. Pocket devices and partner prizes (TBD) come on top.` },
+        { p: "Each drawing has one prize. The prize table at the top of this page lists every part of every prize and its value." },
+        { p: `Total ARV of all six prizes: ${usd(total)}.` },
+        { p: CURRENT_CLIENT_RULE },
         { strong: "Prize terms:" },
         {
           ul: [
-            `Sessions and Brain Maps are for the winner's own use at an HBC center. They must be scheduled by ${longDate(PRIZE_USE_BY.at)}. They cannot be transferred.`,
-            `${DEVICES.handheld.by} devices are picked up at a center or shipped to an address in an eligible state. They carry only the manufacturer's warranty.`,
-            "Partner prizes are provided by the partner, under the partner's terms.",
+            `Sessions and Brain Maps are for the winner's own use at an HBC center, except a Brain Map gift certificate, which is for someone new. They must be scheduled by ${longDate(PRIZE_USE_BY.at)}. They cannot be transferred.`,
+            `Hoolest devices and BrainMD bottles are picked up at a center or shipped to an address in an eligible state. They carry only the manufacturer's warranty.`,
+            ...Object.values(PARTNER_GIFTS).map((g) => `${g.gift}: provided by ${g.partner} and redeemed directly with ${g.partner}, under its terms, valid through ${vd(g.validThrough)}.${g.terms ? ` ${g.terms}` : ""}`),
             "HBC is a wellness practice, not a medical clinic. Prizes are wellness services and products and are not meant to diagnose, treat, cure or prevent any condition.",
           ],
         },
@@ -273,7 +277,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
       id: "privacy",
       title: "Privacy",
       blocks: [
-        { p: "We use the information you give us to run the giveaway and to send your entry, drawing and thank-you gift emails. We send HBC news only if you opt in. We don't sell your information. Whether you are a new or current client is used only to pick your prize version and gift, and we don't share it. You can unsubscribe at any time." },
+        { p: "We use the information you give us to run the giveaway and to send your entry, drawing and thank-you gift emails. We send HBC news only if you opt in. We don't sell your information. You can unsubscribe at any time." },
         { link: { before: "Full details:", label: "Privacy Policy", href: input.privacyUrl } },
       ],
     },

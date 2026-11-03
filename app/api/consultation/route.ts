@@ -26,7 +26,7 @@ import { capitalizeName } from "@/lib/name-case";
 import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notification";
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
-import { checkOffer, giftCenterFor, offerRefusalMessage, redeemGift } from "@/lib/giveaway/offers";
+import { checkGiftCode, checkOffer, giftCenterFor, giftCodeRefusalMessage, offerRefusalMessage, redeemGift } from "@/lib/giveaway/offers";
 import { CALL_ME_TEXT } from "@/lib/call-consent";
 import { looksLikeEmail } from "@/lib/lead-options";
 
@@ -184,6 +184,13 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       void _a;
       void _b;
       void _c;
+      values = rest;
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
+    }
+    if (error && "giveaway_code" in values && isMissingColumn(error, "giveaway_code")) {
+      console.error("[destination: supabase] giveaway_code column missing — migration 0017 is not applied; saving the lead without it.");
+      const { giveaway_code: _gc, ...rest } = values;
+      void _gc;
       values = rest;
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
@@ -494,9 +501,16 @@ export async function POST(request: Request) {
   // issued, unredeemed, inside the offer window. Refused codes say why, so
   // the visitor can fix the code or book without it. The offer row is
   // stamped after the lead saves (step 1b below).
-  const offerCode = source === "giveaway" ? str(body.offer_code, 20) : null;
-  const offer = offerCode ? await checkOffer(offerCode) : null;
-  if (source === "giveaway" && (!offer || !offer.ok)) {
+  const offerCode = source === "giveaway" ? str(body.offer_code, 20)?.toUpperCase() ?? null : null;
+  // A prize's Brain Map gift certificate (GIFT-MON … GIFT-SAT — Ben,
+  // 2026-11-03): one code per day, for tracking only; no offer row, no
+  // redemption. The lead email shows the code; staff handle the rest.
+  const giftCert = offerCode ? checkGiftCode(offerCode) : null;
+  if (giftCert && !giftCert.ok) {
+    return reply(htmlForm, request, { error: giftCodeRefusalMessage(giftCert.reason) }, { status: 400 });
+  }
+  const offer = offerCode && !giftCert ? await checkOffer(offerCode) : null;
+  if (source === "giveaway" && !giftCert && (!offer || !offer.ok)) {
     return reply(htmlForm, request, { error: offerRefusalMessage(offer && !offer.ok ? offer.reason : "unknown") }, { status: 400 });
   }
 
@@ -625,6 +639,8 @@ export async function POST(request: Request) {
     // A giveaway booking carries the entrant's first-touch channel (P1-6,
     // migration 0016; saveRow drops it if 0016 is not applied yet).
     ...(offer?.ok && (offer.person as { channel?: string | null }).channel ? { giveaway_channel: (offer.person as { channel?: string | null }).channel } : {}),
+    // The code itself, for staff (migration 0017; saveRow drops it if 0017 is not applied yet).
+    ...(offerCode && source === "giveaway" ? { giveaway_code: offerCode } : {}),
   };
 
   // Every consultation is forwarded here, at the lead. A form lead has no
@@ -699,6 +715,7 @@ export async function POST(request: Request) {
         sourcePage,
         smsConsent,
         honeypotFilled: honeypot.trim().length > 0,
+        giveawayCode: source === "giveaway" ? offerCode : null,
       };
 
   // The platform copy starts first and is never waited on by the hold

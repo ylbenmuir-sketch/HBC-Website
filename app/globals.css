@@ -2950,7 +2950,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-step-label { display: block; font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-ink); font-weight: 600; margin: 0 0 6px; }
 /* Value first: the amount is the largest thing on the card, "value" in small caps under it. */
 .ty-step-value { display: flex; flex-direction: column; margin: 0 0 8px; }
-.ty-step-amount { font-family: var(--serif); font-size: 42px; font-weight: 500; line-height: 1; color: var(--gold-ink); letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
+.ty-step-amount { font-family: var(--serif); font-size: 36px; font-weight: 500; line-height: 1; color: var(--gold-ink); letter-spacing: -0.01em; font-variant-numeric: lining-nums; }
 .ty-step-valueword { font-family: var(--serif); font-variant: small-caps; font-size: 14px; letter-spacing: 0.14em; color: var(--slate); margin-top: 3px; }
 .ty-step-prize { display: block; font-size: 13.5px; line-height: 1.4; color: var(--ink); margin: auto 0 0; }
 .ty-prize-main { display: block; font-weight: 500; }
@@ -2988,7 +2988,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-step-grand { background: var(--navy); border-color: var(--navy); color: var(--ivory); }
 .ty-step-grand .ty-step-time { color: rgba(251, 248, 241, 0.62); }
 .ty-step-grand .ty-step-label { color: var(--gold-lift); }
-.ty-step-grand .ty-step-amount { color: var(--gold-lift); font-size: 46px; }
+/* Cents since 2026-11-03 ("$2,838.85"): sized so the widest amount stays inside its card. */
+.ty-step-grand .ty-step-amount { color: var(--gold-lift); font-size: 38px; }
 .ty-step-grand .ty-step-valueword { color: rgba(251, 248, 241, 0.7); }
 .ty-step-grand .ty-step-prize { color: var(--ivory); }
 .ty-step-grand .ty-prize-line, .ty-step-grand .ty-prize-line small, .ty-step-grand .ty-bd-usd, .ty-step-grand .ty-bd-label small { color: rgba(251, 248, 241, 0.72); }
@@ -3048,6 +3049,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-rules-bd b { font-weight: 600; white-space: nowrap; color: var(--navy); }
 .ty-rules-bd .ty-rules-total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 5px; }
 .ty-table .ty-rules-bd .ty-rules-total span { font-weight: 600; color: var(--navy); }
+.ty-table .ty-rules-bd .ty-rules-note, .ty-bd-note { display: block; font-size: 12.5px; color: var(--slate); line-height: 1.35; margin-top: 1px; }
 /* Phones: the three columns don't fit with a full breakdown in each, so
    every drawing becomes one block — the day, then each version under its
    own label (the column heads move into data-label). */

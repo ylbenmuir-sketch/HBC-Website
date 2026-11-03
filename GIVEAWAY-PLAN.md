@@ -50,6 +50,16 @@ next day**.
 
 ### Prizes (decision 16)
 
+> **Superseded 2026-11-03 (Ben): the prize ladder below is history.** One
+> prize per drawing, no new/current versions, $5,537.60 in all ("Over $5,500
+> in prizes"): Mon Brain Map + 1 BrainMD bottle ($194.95); Tue + Skye
+> Chiropractic gift ($444.95); Wed + 3 LENS sessions ($569.95); Thu + Hoolest
+> Mini ($668.95); Fri + Amabel Luers coaching session ($819.95); Sat grand
+> Brain Map + 12 LENS + Hoolest VeRelief + vibro x12 + 3 lymphatic therapy
+> sessions + 3 BrainMD bottles ($2,838.85). Current clients get a Brain Map
+> gift certificate (GIFT-MON … GIFT-SAT) for someone new. Source of truth:
+> `lib/giveaway/config.ts`; copy: GIVEAWAY-COPY.md.
+
 One winner per drawing. The winner gets **the HBC prize and that day's
 partner prize**. Every HBC prize has two versions, and the winner's **"I'm
 already an HBC client"** checkbox picks which one:

@@ -20,7 +20,7 @@ export async function renderTenYearsCard() {
   const t = PAGES.tenYears;
   const weekYear = centralParts(DRAWINGS[0].at).year;
   const years = weekYear - ESTABLISHED_YEAR.value;
-  const total = prizeTotalFloorUsd("new_client");
+  const total = prizeTotalFloorUsd();
   const heading = t.heading.split(/(?<=\.)\s+/);
   return new ImageResponse(
     (

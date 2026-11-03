@@ -4,7 +4,7 @@
  * never a name, email, ZIP, phone, code, token or hash — and any count of 1
  * to 4 is reported as "<5", so a small bucket can't single anyone out.
  * New/current-client status is not reported at all (P1-8; Official Rules
- * §17: it picks a prize version and the gift, nothing else).
+ * §17).
  *
  * Reads through GiveawayStore only, so only this deployment's env is
  * counted (production rows on the production deployment). Paged reads:
@@ -106,8 +106,8 @@ export async function giveawayStats(store: GiveawayStore, now: Date): Promise<Gi
     return !row || new Date(row.scheduled_at).getTime() !== d.at.getTime();
   });
   const prizeDrift = PRIZES.some((p) => {
-    const row = prizes.find((r) => r.slot === p.slot && r.version === p.version);
-    return !row || Number(row.retail_value_usd) !== prizeRetailUsd(p) || row.tax_form_required !== prizeTaxFormRequired(p);
+    const rows = prizes.filter((r) => r.slot === p.slot);
+    return rows.length === 0 || rows.some((row) => Math.round(Number(row.retail_value_usd) * 100) !== Math.round(prizeRetailUsd(p) * 100) || row.tax_form_required !== prizeTaxFormRequired(p));
   });
 
   return {

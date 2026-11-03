@@ -57,7 +57,6 @@ export type SignupInput = {
   zip: string;
   ageConfirmed: boolean;
   rulesAccepted: boolean;
-  isExistingClient: boolean;
   marketingOptIn: boolean;
   /** The referral code carried from /10years?ref=… (entry only). */
   ref?: string | null;
@@ -146,7 +145,6 @@ export async function notifySignup(store: GiveawayStore, input: SignupInput, ctx
     first_name: value.firstName,
     last_name: value.lastName,
     zip: value.zip,
-    is_existing_client: input.isExistingClient,
     age_confirmed: true,
     rules_accepted_at: ctx.now.toISOString(),
     rules_version: RULES_VERSION,
@@ -204,7 +202,7 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
     const person = existing.data as PersonRow;
     if (person.verified_at) return { ok: true, person, alreadyVerified: true };
     const { data, error } = await store
-      .update("giveaway_people", { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, is_existing_client: input.isExistingClient, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION })
+      .update("giveaway_people", { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION })
       .eq("id", person.id)
       .select("*")
       .single();
@@ -220,7 +218,6 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
     zip: value.zip,
     city: value.city,
     nearest_center: value.nearestCenter,
-    is_existing_client: input.isExistingClient,
     age_confirmed: true,
     rules_accepted_at: ctx.now.toISOString(),
     rules_version: RULES_VERSION,
@@ -395,7 +392,6 @@ export async function liveTap(store: GiveawayStore, notifyId: string, now: Date)
         zip: row.zip,
         city: info.city,
         nearest_center: info.nearestCenter,
-        is_existing_client: row.is_existing_client,
         age_confirmed: row.age_confirmed,
         rules_accepted_at: now.toISOString(),
         rules_version: RULES_VERSION,

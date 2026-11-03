@@ -2,15 +2,11 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import FAQAccordion from "@/components/FAQAccordion";
 import AssistantOff from "./AssistantOff";
-import ClientChoice from "./ClientChoice";
 import Countdown from "./Countdown";
 import CopyLink from "./CopyLink";
 import EntryBar from "./EntryBar";
 import Ladder from "./Ladder";
-import PathPicker from "./PathPicker";
-import PathProvider from "./PathProvider";
 import Seal from "./Seal";
-import VersionToggle from "./VersionToggle";
 import UtmCapture from "./UtmCapture";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
@@ -25,7 +21,6 @@ import {
   centralParts,
   eligibilityPhrase,
   nextDrawing,
-  partnerFor,
   prizeBreakdown,
   prizeFor,
   prizeRetailUsd,
@@ -72,13 +67,13 @@ const headingLines = t.heading.split(/(?<=\.)\s+/);
 const YEARS = WEEK_YEAR - ESTABLISHED_YEAR.value;
 
 export default function TenYearsView({ mode, now, card, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
-  const total = prizeTotalFloorUsd("new_client");
+  const total = prizeTotalFloorUsd();
   const open = mode === "notify_me" || mode === "live";
   const next = nextDrawing(now);
   const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
   return (
-    <PathProvider>
+    <>
       <div className="ty" data-mode={mode}>
         {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase. */}
         {(assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />}
@@ -95,7 +90,6 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
               {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
               {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
               <p className="ty-sub">{sub}</p>
-              <PathPicker label={t.pathLabel} newLabel={t.pathNew} currentLabel={t.pathCurrent} />
               {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
               <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
             </div>
@@ -110,7 +104,7 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
         <QuestionsRow />
         {open && <EntryBar label={mode === "notify_me" ? t.entryBarNotify : t.entryBarLive} />}
       </div>
-    </PathProvider>
+    </>
   );
 }
 
@@ -161,7 +155,6 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
           <label htmlFor="website">{t.honeypot}</label>
           <input id="website" name="website" tabIndex={-1} autoComplete="off" />
         </div>
-        <ClientChoice legend={t.clientChoiceLegend} newLabel={t.pathNew} currentLabel={t.pathCurrent} error={t.clientChoiceError} />
         <div className="ty-checks">
           <label className="ty-check">
             <input type="checkbox" name="age_rules" required />
@@ -325,108 +318,108 @@ function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
 /* The prize ladder: six cards climbing Monday to Saturday             */
 /* ------------------------------------------------------------------ */
 
-/** Both versions of a value; CSS shows the one the toggle picks. `block` for list content. */
-function Both({ n, c, block = false }: { n: ReactNode; c: ReactNode; block?: boolean }) {
-  if (block) {
-    return (
-      <>
-        <div className="v-new">{n}</div>
-        <div className="v-cur">{c}</div>
-      </>
-    );
-  }
-  return (
-    <>
-      <span className="v-new">{n}</span>
-      <span className="v-cur">{c}</span>
-    </>
-  );
-}
-
 /** "Mon · noon", "Sat · 5 PM". */
 const cardTime = (d: Drawing) => t.cardTime(d.dayName.slice(0, 3), shortCentralTime(d.at).replace(/\b(am|pm)$/, (m) => m.toUpperCase()));
 
-const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+/** "$44.95", "$150" — cents only when there are any. */
+const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
-/** The prize in plain words, one line per part; the devices by what they are (DEVICES). */
+const validThroughLabel = (d: Date | null) => (d ? new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" }).format(d) : null);
+
+/** The short words for one part — the card's "+" lines and the phone row. */
+function partWords(part: PrizePart): string {
+  switch (part.kind) {
+    case "brainMap":
+      return t.breakdown.brainMap;
+    case "sessions":
+      return t.breakdown.sessions(part.count);
+    case "chair":
+      return t.breakdown.chairShort;
+    case "hoolest":
+      return DEVICES[part.device!].short;
+    case "partner":
+      return part.partner!.short;
+    case "brainMd":
+      return part.count === 1 ? "1 BrainMD bottle" : `${part.count} BrainMD bottles`;
+  }
+}
+
+/** The prize in plain words: the main line, then "+" lines (Ben's order, from config). */
 function PrizeWords({ p }: { p: PrizeSpec }) {
+  const parts = prizeBreakdown(p);
+  const main = parts.filter((x) => x.kind === "brainMap" || x.kind === "sessions").map(partWords).join(" + ");
+  const rest = parts.filter((x) => x.kind !== "brainMap" && x.kind !== "sessions");
   return (
     <>
-      <span className="ty-prize-main">{t.prizeWords(p.brainMap, p.sessions)}</span>
-      {p.hoolestKeychain && (
-        <span className="ty-prize-line">
-          {t.deviceLine(DEVICES.keychain.name)} <small>{t.deviceBy(DEVICES.keychain.by)}</small>
+      <span className="ty-prize-main">{main}</span>
+      {rest.map((x) => (
+        <span key={`${x.kind}-${x.partner?.id ?? x.device ?? ""}`} className="ty-prize-line">
+          {t.plusLine(partWords(x))}
         </span>
-      )}
-      {p.hoolestHandheld && (
-        <span className="ty-prize-line">
-          {t.deviceLine(DEVICES.handheld.name)} <small>{t.deviceBy(DEVICES.handheld.by)}</small> <small>· {t.deviceKeep(DEVICES.handheld.keep)}</small>
-        </span>
-      )}
+      ))}
     </>
   );
 }
 
-/** Exactly the sum of the breakdown's priced lines (config test: breakdownSumUsd = prizeRetailUsd). */
 const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p));
 
-/** The phone row's one line: "Brain Map + 4 sessions + pocket stimulator". */
+/** The phone row's line: "Brain Map + 3 LENS sessions + Hoolest Mini + 1 BrainMD bottle". */
 function rowWords(p: PrizeSpec): string {
-  const parts = [t.prizeWords(p.brainMap, p.sessions)];
-  if (p.hoolestKeychain) parts.push(t.rowDevice.keychain);
-  if (p.hoolestHandheld) parts.push(t.rowDevice.handheld);
-  return parts.join(" + ");
+  return prizeBreakdown(p).map(partWords).join(" + ");
 }
 
-/** The gold bar: this day's value as a share of the grand prize's, per version. */
+/** The gold bar: this day's value as a share of the grand prize's. */
 function barShare(p: PrizeSpec): number {
-  const grand = prizeRetailUsd(prizeFor("grand", p.version));
+  const grand = prizeRetailUsd(prizeFor("grand"));
   return grand > 0 ? Math.max(6, Math.round((prizeRetailUsd(p) / grand) * 100)) : 100;
 }
 
-/** One row of the expanded card: the part and its value. */
+/** One row of the expanded card: the part and its value; a partner gift says how it's redeemed. */
 function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
   const b = t.breakdown;
   const label =
     part.kind === "brainMap" ? b.brainMap
     : part.kind === "sessions" ? b.sessions(part.count)
-    : part.kind === "chair" ? b.chair(part.count, part.unitUsd ?? null)
-    : part.kind === "partner" ? b.partner(part.partner?.name ?? null)
-    : null;
-  const device = part.kind === "keychain" ? DEVICES.keychain : part.kind === "handheld" ? DEVICES.handheld : null;
+    : part.kind === "chair" ? b.chair(part.count, part.unitUsd)
+    : part.kind === "brainMd" ? b.brainMd(part.count, usd(part.unitUsd))
+    : part.kind === "partner" ? b.partnerGift(part.partner!.gift, part.count, usd(part.unitUsd))
+    : DEVICES[part.device!].name;
   return (
     <li className="ty-bd-row" data-part={part.kind}>
       <span className="ty-bd-label">
-        {device && thumb && (
+        {part.kind === "hoolest" && thumb && (
           <span className="ty-bd-thumb" aria-hidden="true">
             <Image src="/images/hoolest-handheld.webp" alt="" width={40} height={40} />
           </span>
         )}
         <span>
-          {device ? device.name : label}
-          {device && <small> {t.deviceBy(device.by)}</small>}
-          {part.kind === "handheld" && <small> · {t.deviceKeep(DEVICES.handheld.keep)}</small>}
+          {label}
+          {part.kind === "partner" && (
+            <small className="ty-bd-note">
+              {" "}
+              · {b.partnerNote(validThroughLabel(part.partner!.validThrough))}
+              {part.partner!.terms ? ` · ${part.partner!.terms}` : ""}
+            </small>
+          )}
         </span>
       </span>
-      <span className="ty-bd-usd" data-tbd={part.usd == null ? "1" : undefined}>{part.usd == null ? (part.kind === "partner" ? b.partnerTbd : b.unpriced) : usd(part.usd)}</span>
+      <span className="ty-bd-usd">{usd(part.usd)}</span>
     </li>
   );
 }
 
-/** The expanded card's contents for one version of a prize. */
+/** The expanded card: every part and its value, then the total (the sum of the lines — config test). */
 function Breakdown({ p, thumb }: { p: PrizeSpec; thumb: boolean }) {
   return (
-    <>
-      <ul className="ty-bd">
-        {prizeBreakdown(p).map((part) => (
-          <PartRow key={part.kind} part={part} thumb={thumb && part.kind === "handheld"} />
-        ))}
-        <li className="ty-bd-row ty-bd-total">
-          <span className="ty-bd-label">{t.breakdown.total}</span>
-          <span className="ty-bd-usd">{valueBig(p)}</span>
-        </li>
-      </ul>
-    </>
+    <ul className="ty-bd">
+      {prizeBreakdown(p).map((part) => (
+        <PartRow key={`${part.kind}-${part.partner?.id ?? part.device ?? ""}`} part={part} thumb={thumb} />
+      ))}
+      <li className="ty-bd-row ty-bd-total">
+        <span className="ty-bd-label">{t.breakdown.total}</span>
+        <span className="ty-bd-usd">{valueBig(p)}</span>
+      </li>
+    </ul>
   );
 }
 
@@ -436,15 +429,15 @@ function stateOf(d: Drawing, mode: ViewMode, now: Date): "next" | "drawn" | "upc
   return nextDrawing(now)?.slot === d.slot ? "next" : "upcoming";
 }
 
+/** One prize per drawing (Ben, 2026-11-03): no new/current toggle. */
 function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winners: PublicWinner[] }) {
   const cards = DRAWINGS.map((d) => {
-    const pN = prizeFor(d.slot, "new_client");
-    const pC = prizeFor(d.slot, "current_client");
+    const p = prizeFor(d.slot);
     const state = stateOf(d, mode, now);
-    const partner = partnerFor(d.slot);
     const grand = d.kind === "grand";
     // Live mode: a drawn day shows its winner (three public states) in place of the prize words.
     const winner = mode === "live" && state === "drawn" ? winners.find((w) => w.slot === d.slot && w.state !== "pending") : undefined;
+    const winnerLine = winner ? (winner.state === "named" ? winner.label : winner.state === "claimed" ? t.cardWinnerClaimed : t.cardWinnerReaching) : null;
     const head = (
       <>
         <span className="ty-step-time">
@@ -454,20 +447,17 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
         </span>
         {grand && <span className="ty-step-label">{t.grandLabel}</span>}
         <span className="ty-step-value">
-          <span className="ty-step-amount">
-            <Both n={valueBig(pN)} c={valueBig(pC)} />
-          </span>
+          <span className="ty-step-amount">{valueBig(p)}</span>
           <span className="ty-step-valueword">{t.valueWord}</span>
         </span>
         {winner ? (
           <span className="ty-step-winner" data-winner-state={winner.state}>
             <span className="ty-step-label">{t.winnerLabel}</span>
-            <span className="ty-step-winner-line">{winner.state === "named" ? winner.label : winner.state === "claimed" ? t.cardWinnerClaimed : t.cardWinnerReaching}</span>
+            <span className="ty-step-winner-line">{winnerLine}</span>
           </span>
         ) : (
           <span className="ty-step-prize">
-            <Both n={<PrizeWords p={pN} />} c={<PrizeWords p={pC} />} />
-            {partner && <span className="ty-prize-line">{`${t.partnerPrefix} ${partner.name}${partner.prize ? `: ${partner.prize}` : ""}`}</span>}
+            <PrizeWords p={p} />
           </span>
         )}
       </>
@@ -484,30 +474,25 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
             {state === "next" && <span className="ty-tag ty-tag-next">{t.nextTag}</span>}
             {state === "drawn" && !winner && <span className="ty-tag">{t.drawnTag}</span>}
           </span>
-          <span className="ty-row-usd">
-            <Both n={valueBig(pN)} c={valueBig(pC)} />
-          </span>
+          <span className="ty-row-usd">{valueBig(p)}</span>
         </span>
         <span className="ty-row-main">
           {winner ? (
             <span className="ty-row-words ty-row-winner" data-winner-state={winner.state}>
-              {t.winnerLabel}: {winner.state === "named" ? winner.label : winner.state === "claimed" ? t.cardWinnerClaimed : t.cardWinnerReaching}
+              {t.winnerLabel}: {winnerLine}
             </span>
           ) : (
-            <span className="ty-row-words">
-              <Both n={rowWords(pN)} c={rowWords(pC)} />
-            </span>
+            <span className="ty-row-words">{rowWords(p)}</span>
           )}
         </span>
         <span className="ty-row-bar" aria-hidden="true">
-          <span className="ty-row-fill v-new" style={{ width: `${barShare(pN)}%` }} />
-          <span className="ty-row-fill v-cur" style={{ width: `${barShare(pC)}%` }} />
+          <span className="ty-row-fill" style={{ width: `${barShare(p)}%` }} />
         </span>
       </>
     );
     const panel = (
       <>
-        <Both block n={<Breakdown p={pN} thumb={grand} />} c={<Breakdown p={pC} thumb={grand} />} />
+        <Breakdown p={p} thumb={grand} />
         <a className="ty-bd-link" href="/brain-map" target="_blank" rel="noopener">
           {t.breakdown.whatsBrainMap}
         </a>
@@ -517,15 +502,9 @@ function PrizeLadder({ mode, now, winners }: { mode: ViewMode; now: Date; winner
   });
   return (
     <section className="ty-prizes" id="ty-prizes" aria-labelledby="ty-prizes-h">
-      {/* The toggle is two radios ahead of the row; CSS swaps every .v-new for its .v-cur. VersionToggle ties them to the visit's choice. */}
-      <VersionToggle />
       <div className="wrap">
         <div className="ty-prizes-head">
           <h2 id="ty-prizes-h">{t.prizesTitle}</h2>
-          <div className="ty-pill">
-            <label htmlFor="ty-v-new">{t.newClients}</label>
-            <label htmlFor="ty-v-cur">{t.currentClients}</label>
-          </div>
         </div>
         <Ladder cards={cards} />
         <p className="ty-prizes-note">{t.prizesNote}</p>
@@ -574,7 +553,7 @@ function PhotoStrip() {
               <div className="ty-photo ty-photo-device" style={{ position: "relative" }}>
                 <Image src="/images/hoolest-handheld.webp" alt="" fill sizes={sizes} />
               </div>
-              <figcaption>{t.photoDevice(DEVICES.handheld.by)}</figcaption>
+              <figcaption>{t.photoDevice("Hoolest")}</figcaption>
             </figure>
           </li>
         </ul>

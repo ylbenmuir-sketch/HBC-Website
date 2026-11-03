@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import FAQAccordion from "@/components/FAQAccordion";
 import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
-import { DEVICES, DRAWINGS, RULES_VERSION, breakdownSumUsd, giftRevealed, pageMode, prizeBreakdown, prizeFor, prizeRetailUsd, type PrizePart, type PrizeSpec } from "@/lib/giveaway/config";
+import { DEVICES, DRAWINGS, RULES_VERSION, breakdownSumUsd, giftRevealed, pageMode, prizeBreakdown, prizeFor, prizeRetailUsd, prizeTotalUsd, type PrizePart, type PrizeSpec } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { NO_PURCHASE_LINE, rulesSections } from "@/lib/giveaway/rules";
 import { locationPhone, locations } from "@/lib/locations";
@@ -42,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
 export default function RulesPage() {
   // The /10years page links here, so the showcase (lib/giveaway/showcase.ts) needs it too.
@@ -75,8 +75,7 @@ export default function RulesPage() {
           <thead>
             <tr>
               <th scope="col">Drawing</th>
-              <th scope="col">{t.newClient}</th>
-              <th scope="col">{t.currentClient}</th>
+              <th scope="col">{t.prizeHead}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,17 +88,16 @@ export default function RulesPage() {
                   </b>
                   <span>{d.ct}</span>
                 </td>
-                <td data-label={t.newClient}>
-                  <PrizeCell p={prizeFor(d.slot, "new_client")} />
-                </td>
-                <td data-label={t.currentClient}>
-                  <PrizeCell p={prizeFor(d.slot, "current_client")} />
+                <td>
+                  <PrizeCell p={prizeFor(d.slot)} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="micro">{t.prizesNote}</p>
+        <p className="micro" data-prize-total={prizeTotalUsd()}>
+          All six prizes: {usd(prizeTotalUsd())}. {t.prizesNote}
+        </p>
         <h2 id="questions">{t.qaTitle}</h2>
         <FAQAccordion items={revealed ? [q.enter, q.more, q.when, q.win, q.offer] : [q.enter, q.more, q.when, q.win]} className="faq-list ty-details-qa" />
         <h2 id="rules">Official Rules</h2>
@@ -138,17 +136,26 @@ export default function RulesPage() {
   );
 }
 
-/** One prize, one version: every part with its value, then the total (the sum of the priced lines). */
+/** One prize: every part with its value, then the total (the sum of the lines). */
 function PrizeCell({ p }: { p: PrizeSpec }) {
   const parts = prizeBreakdown(p);
   const total = breakdownSumUsd(parts);
   // The config test holds this; a mismatch here would mean the page and the seed disagree.
-  if (total !== prizeRetailUsd(p)) throw new Error(`rules table: ${p.slot}/${p.version} breakdown ${total} ≠ ARV ${prizeRetailUsd(p)}`);
+  if (total !== prizeRetailUsd(p)) throw new Error(`rules table: ${p.slot} breakdown ${total} ≠ ARV ${prizeRetailUsd(p)}`);
   return (
-    <ul className="ty-rules-bd" data-arv={total}>
+    <ul className="ty-rules-bd" data-arv={total.toFixed(2)}>
       {parts.map((part) => (
-        <li key={part.kind}>
-          <span>{partLabel(part)}</span> <b>{partValue(part)}</b>
+        <li key={`${part.kind}-${part.partner?.id ?? part.device ?? ""}`}>
+          <span>
+            {partLabel(part)}
+            {part.kind === "partner" && (
+              <small className="ty-rules-note">
+                {PAGES.tenYears.breakdown.partnerNote(part.partner!.validThrough ? new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" }).format(part.partner!.validThrough) : null)}
+                {part.partner!.terms ? `. ${part.partner!.terms}` : ""}
+              </small>
+            )}
+          </span>{" "}
+          <b>{usd(part.usd)}</b>
         </li>
       ))}
       <li className="ty-rules-total">
@@ -166,18 +173,12 @@ function partLabel(part: PrizePart): string {
     case "sessions":
       return b.sessions(part.count);
     case "chair":
-      return b.chair(part.count, part.unitUsd ?? null);
-    case "keychain":
-      return `${DEVICES.keychain.name} by ${DEVICES.keychain.by}`;
-    case "handheld":
-      return `${DEVICES.handheld.name} by ${DEVICES.handheld.by} (${DEVICES.handheld.keep})`;
+      return b.chair(part.count, part.unitUsd);
+    case "brainMd":
+      return b.brainMd(part.count, usd(part.unitUsd));
+    case "hoolest":
+      return DEVICES[part.device!].name;
     case "partner":
-      return b.partner(part.partner?.name ?? null);
+      return b.partnerGift(part.partner!.gift, part.count, usd(part.unitUsd));
   }
-}
-
-function partValue(part: PrizePart): string {
-  const b = PAGES.tenYears.breakdown;
-  if (part.usd != null) return usd(part.usd);
-  return part.kind === "partner" ? b.partnerTbd : b.unpriced;
 }
