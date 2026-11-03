@@ -80,6 +80,16 @@ const BASE = (process.env.CHECK_BASE ?? `http://127.0.0.1:${PORT}`).replace(/\/$
 const CRON_SECRET = process.env.CRON_SECRET ?? "check-giveaway-cron-secret";
 const TOKEN_SECRET = process.env.GIVEAWAY_TOKEN_SECRET ?? "check-giveaway-token-secret-0123456789";
 const OTP_CODE = "123456";
+const STATS_TOKEN = "check-giveaway-stats-token";
+/** P1-5: the counts-only stats endpoint, and a scan for anything personal. */
+async function stats(token = STATS_TOKEN) {
+  const r = await fetch(`${BASE}/api/internal/giveaway-stats`, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+  return { status: r.status, headers: r.headers, body: await r.json().catch(() => null) };
+}
+const personalIn = (payload) => {
+  const t = JSON.stringify(payload);
+  return [/@/, /(?<![\d-])\d{5}(?![\d-])/, /\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/, /HBC-[A-Z0-9]{6}|10Y-[A-Z0-9]{6}/, /\b[0-9a-f]{32,}\b/].filter((re) => re.test(t)).map(String);
+};
 const ADMIN_EMAIL = "admin-check@example.test";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -123,6 +133,7 @@ async function startServer(overrides = {}) {
     INQUIRY_API_BASE: "http://platform.test",
     INQUIRY_INTAKE_SECRET: "test",
     GIVEAWAY_SITE_URL: BASE,
+    GIVEAWAY_STATS_TOKEN: STATS_TOKEN,
   };
   if (USE_DB) {
     // Empty, not deleted: `next start` fills an UNSET key from .env.local,
@@ -711,6 +722,20 @@ try {
   expect("giveaway path, after Dec 5: the banner says expired", /data-state="expired"/.test((await get(`/contact?from=10years&code=${otherCode}`)).text));
   expect("after Dec 5 the page is the thank-you page", /Ten years\. Thank you|Talk with our team/.test((await get("/10years")).text));
 
+  /* ── P1-5: the stats endpoint ───────────────────────────────────────── */
+  section("The stats endpoint (counts only)");
+  {
+    const bad = await stats("wrong-token");
+    expect("stats: a wrong token → 401", bad.status === 401, String(bad.status));
+    expect("stats: no token → 401", (await stats("")).status === 401);
+    const good = await stats();
+    expect("stats: 200, no-store, noindex", good.status === 200 && /no-store/.test(good.headers.get("cache-control") ?? "") && /noindex/.test(good.headers.get("x-robots-tag") ?? ""), String(good.status));
+    expect("stats: no email, ZIP, phone, code or hash anywhere in the payload", personalIn(good.body).length === 0, personalIn(good.body).join(" "));
+    expect("stats: six drawings, all drawn, eleven send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 11 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
+    expect("stats: the facebook entrant is counted under facebook ('<5')", good.body?.people?.by_utm_source?.facebook === "<5" || USE_DB, JSON.stringify(good.body?.people?.by_utm_source));
+    expect("stats: no client-status breakdown (P1-8)", !/by_path|existing|current_client/.test(JSON.stringify(good.body)));
+  }
+
   /* ── the audit ──────────────────────────────────────────────────────── */
   section("The audit");
   const finalDrawings = await dump("giveaway_drawings");
@@ -806,6 +831,11 @@ async function engineOffChecks() {
   const sent = await get("/10years?mode=live&sent=1");
   expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /Check your inbox/.test(sent.text));
   expect("off: no email was sent", emails().length === before, `${emails().length - before} sent`);
+  {
+    const off = await stats();
+    expect("off: the stats endpoint says engine off and reads nothing", off.status === 200 && off.body?.ok === true && off.body?.engine === "off", JSON.stringify(off.body));
+    expect("off: a wrong token is still 401", (await stats("nope")).status === 401);
+  }
   // Everything the engine owns is gone.
   expect("off: /10years/verify?t=x answers 404", (await get("/10years/verify?t=x")).status === 404);
   expect("off: /10years/enter/x answers 404", (await get("/10years/enter/x")).status === 404);
