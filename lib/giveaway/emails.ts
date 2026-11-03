@@ -329,6 +329,35 @@ export function thankYouEmail(input: { firstName: string; isExistingClient: bool
 }
 
 /* ------------------------------------------------------------------ */
+/* 8b. Gift reminder (Dec 1) and last call (Dec 3) — P1-4               */
+/* ------------------------------------------------------------------ */
+
+/** For entrants who have not booked: the code again, the live spots, the deadline. */
+export function giftReminderEmail(input: { kind: "reminder" | "last_call"; firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; spotsLeft?: string | null; footing: Footing }): Email {
+  const c = input.kind === "reminder" ? EMAILS.giftReminder : EMAILS.giftLastCall;
+  const bookBy = spokenDate(OFFER.bookBy.at);
+  const visitBy = spokenDate(OFFER.visitBy.at);
+  const subject = typeof c.subject === "function" ? c.subject(`Sat, ${bookBy}`) : c.subject;
+  const heading = c.heading(input.firstName);
+  const body = c.body(`Sat, ${bookBy}`, visitBy);
+  const left = input.spotsLeft ? EMAILS.thankYou.left(input.spotsLeft) : null;
+  const offer = offerPanel({ code: input.offerCode, isExistingClient: input.isExistingClient });
+  const rows = [
+    section(`${h1(heading)}${p(body)}${left ? p(left) : ""}`, "18px 20px 0"),
+    section(offer.html, "14px 20px 0"),
+    section(buttons([[c.button, input.bookUrl]]), "12px 20px 0"),
+    gap(16),
+    visitorFooter(input.footing, true),
+  ];
+  return {
+    subject,
+    preheader: c.preheader,
+    html: page({ title: subject, preheader: c.preheader, rows }),
+    text: textOf([heading, body, left, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* 9. Staff: winner drawn                                              */
 /* ------------------------------------------------------------------ */
 

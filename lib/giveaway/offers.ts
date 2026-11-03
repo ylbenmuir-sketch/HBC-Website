@@ -8,7 +8,8 @@
  */
 
 import { giveawayNow } from "./clock";
-import { offerOpen } from "./config";
+import { GIFT_CAP, GIFT_FALLBACK, offerOpen } from "./config";
+import { giftSpots, type CenterSpots } from "./gift";
 import { giveawayEngineEnabled } from "./engine";
 import type { OfferRow, PersonRow } from "./rows";
 import { giveawayStore, type GiveawayStore } from "./store";
@@ -37,20 +38,6 @@ export async function checkOffer(code: string, now = giveawayNow(), store: Givea
   return { ok: true, offer, person, nearestCenter };
 }
 
-/** Stamp the booking on the offer. Idempotent (first booking wins). */
-export async function redeemOffer(offer: OfferRow, input: { consultationRequestId: string | null; center: string | null; now?: Date }, store: GiveawayStore | null = giveawayStore()): Promise<boolean> {
-  if (!store) return false;
-  const now = input.now ?? giveawayNow();
-  const { data, error } = await store
-    .update("giveaway_offers", { redeemed_at: now.toISOString(), consultation_request_id: input.consultationRequestId, redeemed_center: input.center })
-    .eq("id", offer.id)
-    .is("redeemed_at", null)
-    .select("id");
-  if (error || !(data?.length)) return false;
-  await audit(store, { actor: "visitor", action: "offer_redeemed", targetTable: "giveaway_offers", targetId: offer.id, after: { consultation_request_id: input.consultationRequestId, center: input.center } });
-  return true;
-}
-
 /** The message a visitor sees for a refused code. */
 export function offerRefusalMessage(reason: Exclude<OfferCheck, { ok: true }>["reason"]): string {
   switch (reason) {
@@ -63,4 +50,82 @@ export function offerRefusalMessage(reason: Exclude<OfferCheck, { ok: true }>["r
     default:
       return "That 10-year code isn't one we recognise. Check it against your email, or request a call without the code.";
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* The per-center cap (fix list rev 2, P1-1; migration 0015)           */
+/* ------------------------------------------------------------------ */
+
+export type GiftCenter = "Nashville" | "Murfreesboro";
+export type GiftOutcome = "redeemed" | "fallback" | "waitlisted" | "already" | "failed";
+
+const isGiftCenter = (c: string | null | undefined): c is GiftCenter => c === "Nashville" || c === "Murfreesboro";
+
+/**
+ * The center a booking counts against. A chosen center is kept; "Not
+ * sure" (or nothing) takes the center with more spots left while caps are
+ * set, else the entrant's nearer center. Concierge and anything else is
+ * not a center's slot and is never capped (returns null).
+ */
+export function giftCenterFor(chosen: string | null, nearest: GiftCenter | null, spots: CenterSpots[] | null): GiftCenter | null {
+  if (isGiftCenter(chosen)) return chosen;
+  if (chosen && !/^not sure/i.test(chosen)) return null;
+  if (spots && spots.length) {
+    const ranked = [...spots].sort((a, b) => b.left - a.left || (a.center === nearest ? -1 : b.center === nearest ? 1 : 0));
+    return ranked[0].center;
+  }
+  return nearest;
+}
+
+/** giftCenterFor with the live spot counts (read only while caps are set). */
+export async function giftCenterForBooking(chosen: string | null, nearest: GiftCenter | null, store: GiveawayStore | null = giveawayStore(), caps = GIFT_CAP): Promise<GiftCenter | null> {
+  const spots = store ? await giftSpots(store, caps).catch(() => null) : null;
+  return giftCenterFor(chosen, nearest, spots);
+}
+
+/** The cap for a center, from config; null = uncapped. */
+export function capFor(center: GiftCenter | null, caps = GIFT_CAP): number | null {
+  if (!center) return null;
+  return center === "Nashville" ? caps.nashville : caps.murfreesboro;
+}
+
+/**
+ * Redeem a valid code against its center's cap, in one database
+ * transaction (giveaway_redeem_gift). Returns what happened and, for a
+ * waitlisted booking, the message the visitor sees.
+ */
+export async function redeemGift(
+  offer: OfferRow,
+  input: { consultationRequestId: string | null; center: GiftCenter | null; now?: Date },
+  store: GiveawayStore | null = giveawayStore(),
+  caps = GIFT_CAP,
+  fallback = GIFT_FALLBACK
+): Promise<{ outcome: GiftOutcome; message: string | null }> {
+  if (!store) return { outcome: "failed", message: null };
+  const now = input.now ?? giveawayNow();
+  const cap = capFor(input.center, caps);
+  const { data, error } = await store.rpc("giveaway_redeem_gift", {
+    p_offer_id: offer.id,
+    p_center: input.center,
+    p_cap: cap,
+    p_fallback: Boolean(fallback),
+    p_consultation_request_id: input.consultationRequestId,
+    p_now: now.toISOString(),
+  });
+  if (error) {
+    console.error(`[giveaway offers] redeem ${offer.id}: ${error.message}`);
+    return { outcome: "failed", message: null };
+  }
+  const outcome = (data as GiftOutcome) ?? "failed";
+  await audit(store, { actor: "visitor", action: `offer_${outcome}`, targetTable: "giveaway_offers", targetId: offer.id, after: { consultation_request_id: input.consultationRequestId, center: input.center, cap } });
+  if (outcome !== "waitlisted" || !input.center) return { outcome, message: null };
+  const spots = await giftSpots(store, caps).catch(() => null);
+  return { outcome, message: waitlistMessage(input.center, spots) };
+}
+
+/** "All Nashville anniversary visits have been claimed. Murfreesboro has 8 left — …" */
+export function waitlistMessage(center: GiftCenter, spots: CenterSpots[] | null): string {
+  const other = spots?.find((s) => s.center !== center && s.left > 0);
+  const switchLine = other ? ` ${other.center} has ${other.left} left — to switch, choose ${other.center} and send your request again.` : "";
+  return `All ${center} anniversary visits have been claimed.${switchLine} You're on our waitlist, and we'll email you if a spot opens.`;
 }

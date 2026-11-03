@@ -186,6 +186,20 @@ get shorter but not longer.
 - **Button:** Book my free first visit *(to /contact?from=10years&code=…)*
 - **Footer:** identity line · marketing line · Unsubscribe.
 
+### 8b. Gift reminder *(marketing; Tue Dec 1, 9:00 AM CT)* and 8c. last call *(Thu Dec 3, 9:00 AM CT)* — P1-4
+
+To verified, subscribed entrants whose code is unredeemed; once each. Neither goes out when every capped center is full and there is no fallback.
+
+- **8b Subject:** Your free first visit: book by *{Sat, Dec 5}* · **Preview:** Your 10-year thank-you gift is still waiting.
+- **8b Heading:** *{Sarah}*, your first visit is still on us. · **Body:** A reminder: your free Brain Map and consultation is waiting. Book by *{Sat, Dec 5}*, for any day through *{Dec 31}*.
+- **8c Subject:** Booking closes Saturday — your free first visit · **Preview:** Last call for your 10-year thank-you gift.
+- **8c Heading:** *{Marcus}*, booking closes Saturday. · **Body:** Your free first visit — a Brain Map and consultation — must be booked by *{Sat, Dec 5}*. The visit itself can be any day through *{Dec 31}*.
+- **Both:** the spots line (only once `GIFT_CAP` has numbers), the offer panel with the code, **Book my free first visit**.
+
+### The gift cap at /contact *(P1-1)*
+
+When a booking's center is at `GIFT_CAP`, the lead is saved, the code is waitlisted and the form says: "All *{Nashville}* anniversary visits have been claimed. *{Murfreesboro has 8 left — to switch, choose Murfreesboro and send your request again.}* You're on our waitlist, and we'll email you if a spot opens." The staff email subject reads "(10 years, waitlist)". The fallback gift (`GIFT_FALLBACK`) is blank — Ben decides.
+
 ### 9. Staff: winner drawn *(to GIVEAWAY_ALERTS, or GIVEAWAY_ALERTS_OWNER on Monday and Saturday)*
 
 - **Subject:** 10 years — *{Saturday}* GRAND PRIZE — *{Sarah Mitchell}* · daily: 10 years — *{Monday}* winner — *{name}*

@@ -274,6 +274,9 @@ export default function ContactForm({
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
   const [offerCodeInput, setOfferCodeInput] = useState(giveaway?.code ?? "");
   const [callMe, setCallMe] = useState(false);
+  // A booking that found its center's free visits all claimed (P1-1): the
+  // route says so, and steps two and three show it.
+  const [giftNotice, setGiftNotice] = useState<string | null>(null);
 
   // Step one.
   const [givenName, setGivenName] = useState("");
@@ -416,7 +419,7 @@ export default function ContactForm({
         }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { ok?: boolean; id?: string | null; error?: string }
+        | { ok?: boolean; id?: string | null; error?: string; notice?: string }
         | null;
       if (!res.ok) {
         trackFunnel("step1_error", pathname, { reason: res.status >= 500 ? "server_error" : "server_rejected" });
@@ -432,6 +435,7 @@ export default function ContactForm({
         trackLeadSaved({ source: "form", center: preferredCenter, pagePath: pathname });
       }
 
+      if (typeof data?.notice === "string" && data.notice) setGiftNotice(data.notice);
       sentPhone.current = Boolean(tel);
       sentEmail.current = Boolean(mail);
       sentReferral.current = Boolean(referredBy.trim());
@@ -529,6 +533,11 @@ export default function ContactForm({
         className="form-done"
         heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll reach out soon.</>}
       >
+        {giftNotice && (
+          <p className="giveaway-code" role="status" data-gift-waitlist>
+            {giftNotice}
+          </p>
+        )}
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
         <p className="done-line">Free call, no obligation.</p>
         <p className="done-line done-phones" data-link-location="confirmation">
@@ -554,6 +563,11 @@ export default function ContactForm({
       .map((m) => ({ id: m, label: CONTACT_METHOD_LABELS[m], value: m }));
     return (
       <StepPanel key="two" heading={<>Got it &mdash; we&rsquo;ll reach out soon.</>}>
+        {giftNotice && (
+          <p className="giveaway-code" role="status" data-gift-waitlist>
+            {giftNotice}
+          </p>
+        )}
         <p className="step-two-lead">A few optional details help us prepare:</p>
         <form className="form form-compact" onSubmit={saveDetails} noValidate>
           <label id="helping-label">Who is this for?</label>

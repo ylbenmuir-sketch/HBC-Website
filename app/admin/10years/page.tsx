@@ -98,7 +98,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               ["Notify-me opens", SCHEDULE.notifyMeStart.ct],
               ["Entries open", SCHEDULE.entriesOpen.ct],
               ...DRAWINGS.map((d) => [`${d.dayName} ${d.kind === "grand" ? "grand prize" : "drawing"}`, d.ct]),
-              ["Thank-you email", SCHEDULE.thankYouSend.ct],
+              ["Thank-you email (gift reveal)", SCHEDULE.thankYouSend.ct],
+              ["Gift reminder", SCHEDULE.offerReminder.ct],
+              ["Gift last call", SCHEDULE.offerLastCall.ct],
               ["Offer closes", SCHEDULE.offerEnd.ct],
             ].map(([label, when]) => (
               <tr key={label}>

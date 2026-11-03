@@ -666,6 +666,18 @@ try {
   expect("giveaway path, a used code: the banner says so", /data-state="redeemed"/.test((await get(`/contact?from=10years&code=${dCode}`)).text));
   b = await booking("10Y-NOPE00");
   expect("an unknown code is refused", b.status === 400);
+  // P1-4: the Dec 1 9 am reminder — verified, subscribed, unredeemed only, once.
+  {
+    const offersNow = await dump("giveaway_offers");
+    const peopleNow = await dump("giveaway_people");
+    const want = peopleNow.filter((p) => p.verified_at && !p.unsubscribed_at && offersNow.some((o) => o.person_id === p.id && !o.redeemed_at)).length;
+    newEmails();
+    const rr = await tick("Dec 1 reminder");
+    const got = newEmails().filter((e) => /Your free first visit: book by Sat, Dec 5/.test(e.body.subject));
+    expect(`Dec 1: the gift reminder to every verified, subscribed, unredeemed entrant (${want})`, got.length === want && want > 0 && got.every((e) => /10Y-[A-Z0-9]{6}/.test(e.body.text)), `${got.length}/${want} sent=${rr.sends.sent}`);
+    expect("Dec 1: nobody who booked gets it", !got.some((e) => to(e) === D.email));
+    expect("Dec 1: a second tick sends nothing", (await tick("Dec 1 reminder again")).sends.sent === 0 && newEmails().length === 0);
+  }
   // The no-JavaScript post carries the giveaway fields too (P0-9).
   {
     const spare = (await dump("giveaway_offers")).find((o) => !o.redeemed_at)?.code;
@@ -700,6 +712,7 @@ try {
     daily: all.filter((e) => /^\[DRAFT\] \w+'s (grand )?prize: |That was the last drawing/.test(e.body.subject)).length,
     winner: all.filter((e) => /You won/.test(e.body.subject)).length,
     thanks: all.filter((e) => /Your 10-year thank-you gift/.test(e.body.subject)).length,
+    giftReminder: all.filter((e) => /Your free first visit: book by/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,
     leads: all.filter((e) => /free call request \(10 years\)/.test(e.body.subject)).length,
   };

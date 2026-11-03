@@ -158,6 +158,11 @@ export type OfferRow = {
   redeemed_at: string | null;
   consultation_request_id: string | null;
   redeemed_center: string | null;
+  /** Migration 0015 (P1-1): a booking that found its center at the cap. */
+  waitlisted_at?: string | null;
+  waitlist_center?: string | null;
+  /** Redeemed as the fallback gift (never counts against the cap). */
+  fallback?: boolean;
 };
 
 export type ScheduledSendRow = {

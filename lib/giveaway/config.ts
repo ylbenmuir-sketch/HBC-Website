@@ -148,7 +148,10 @@ export const SCHEDULE = {
   /** The reveal email: every verified, subscribed entrant, winners included. */
   thankYouSend: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you + gift reveal email to every verified, subscribed entrant"),
   /** Offer reminder — built after Nov 21. My call: 10 am CT. */
-  offerReminder: instant(centralToUtc(2026, 12, 1, 10, 0), "Tue Dec 1, 10:00 AM CT", "Offer reminder (built after Nov 21)"),
+  /** Gift reminder, with the live "X of N left" (fix list rev 2, P1-4). */
+  offerReminder: instant(centralToUtc(2026, 12, 1, 9, 0), "Tue Dec 1, 9:00 AM CT", "Gift reminder to verified, subscribed, unredeemed entrants"),
+  /** Last call: booking closes Saturday (P1-4). */
+  offerLastCall: instant(centralToUtc(2026, 12, 3, 9, 0), "Thu Dec 3, 9:00 AM CT", "Gift last call to verified, subscribed, unredeemed entrants"),
   /** The offer and every code switch off. */
   offerEnd: instant(centralToUtc(2026, 12, 5, 23, 59, 59), "Sat Dec 5, 11:59 PM CT", "Offer window closes; codes stop working; chat returns to /10years"),
   /** The last day to ask for the winners list (Official Rules §20, Grok's draft). */
@@ -516,6 +519,13 @@ export const OFFER = {
  *  the real Brain Map slots for Nov 23 – Dec 31. null = not set yet: the
  *  reveal email then shows no "X of N left" line and nothing is capped. */
 export const GIFT_CAP: { nashville: number | null; murfreesboro: number | null } = { nashville: null, murfreesboro: null };
+
+/** What a code gives once its center is at the cap (P1-1). LEFT BLANK —
+ *  Ben decides at the copy freeze (e.g. a half-price Brain Map through
+ *  Dec 31). null = no fallback: a booking at the cap is waitlisted. When
+ *  set, a booking at the cap redeems as this instead, and "every entrant
+ *  receives a gift" stays true. */
+export const GIFT_FALLBACK: { label: string } | null = null;
 
 /** Whether an offer code still works at `now`. */
 export function offerOpen(now: Date): boolean {

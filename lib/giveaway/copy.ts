@@ -174,6 +174,22 @@ export const EMAILS = {
     button: D("Book my free first visit"),
   },
 
+  /** 8b. The gift reminder (Tue Dec 1) and last call (Thu Dec 3) — P1-4. Unredeemed entrants only. */
+  giftReminder: {
+    subject: (bookBy: string) => D(`Your free first visit: book by ${bookBy}`),
+    preheader: D("Your 10-year thank-you gift is still waiting."),
+    heading: (firstName: string) => D(`${firstName ? `${firstName}, your` : "Your"} first visit is still on us.`),
+    body: (bookBy: string, visitBy: string) => D(`A reminder: your free Brain Map and consultation is waiting. Book by ${bookBy}, for any day through ${visitBy}.`),
+    button: D("Book my free first visit"),
+  },
+  giftLastCall: {
+    subject: D("Booking closes Saturday — your free first visit"),
+    preheader: D("Last call for your 10-year thank-you gift."),
+    heading: (firstName: string) => D(`${firstName ? `${firstName}, booking` : "Booking"} closes Saturday.`),
+    body: (bookBy: string, visitBy: string) => D(`Your free first visit — a Brain Map and consultation — must be booked by ${bookBy}. The visit itself can be any day through ${visitBy}.`),
+    button: D("Book my free first visit"),
+  },
+
   /** 9. Staff: winner drawn. */
   staffWinnerAlert: {
     subject: (dayName: string, kind: "daily" | "grand", name: string) => D(`10 years — ${dayName} ${kind === "grand" ? "GRAND PRIZE" : "winner"} — ${name}`),

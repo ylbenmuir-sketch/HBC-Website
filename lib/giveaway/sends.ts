@@ -9,6 +9,10 @@
  *   thank_you         Sat Nov 21 7 pm  → the gift reveal: every verified,
  *                                        subscribed entrant, winners too
  *                                        (fix list rev 2, P0-10)
+ *   gift_reminder     Tue Dec 1 9 am   → verified, subscribed entrants
+ *   gift_last_call    Thu Dec 3 9 am     whose code is unredeemed (P1-4);
+ *                                        skipped whole when every capped
+ *                                        center is full and no fallback
  *
  * One JOB row per kind (person_id null) is the schedule; the per-minute
  * runner claims a due job and sends to each recipient, writing a RECEIPT
@@ -22,15 +26,15 @@
  */
 
 import { audit } from "./audit";
-import { DRAWINGS, SCHEDULE, drawing, drawingAfter, prizeVersionFor, type Drawing } from "./config";
-import { dailyAfternoonEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, tuesdayCallTodayEmail, type Email, type Footing } from "./emails";
+import { DRAWINGS, GIFT_CAP, GIFT_FALLBACK, SCHEDULE, drawing, drawingAfter, prizeVersionFor, type Drawing } from "./config";
+import { dailyAfternoonEmail, giftReminderEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, tuesdayCallTodayEmail, type Email, type Footing } from "./emails";
 import { entryCount } from "./people";
 import { type NotifyRow, type PersonRow, type ScheduledSendRow, type WinnerRow } from "./rows";
 import type { GiveawayStore } from "./store";
 import { currentWinner, drawingBySlot } from "./drawings";
 import { giftSpots, spotsLine } from "./gift";
 
-export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "tuesday_call_today", "thank_you"] as const;
+export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "tuesday_call_today", "thank_you", "gift_reminder", "gift_last_call"] as const;
 export type SendKind = (typeof SEND_KINDS)[number];
 
 export const JOB_STALE_MS = 10 * 60_000;
@@ -41,6 +45,8 @@ export function dueAt(kind: SendKind): Date {
   if (kind === "monday_reminder") return SCHEDULE.mondayReminder.at;
   if (kind === "tuesday_call_today") return SCHEDULE.tuesdayCallToday.at;
   if (kind === "thank_you") return SCHEDULE.thankYouSend.at;
+  if (kind === "gift_reminder") return SCHEDULE.offerReminder.at;
+  if (kind === "gift_last_call") return SCHEDULE.offerLastCall.at;
   const slot = kind.slice("daily_".length) as Drawing["slot"];
   const d = drawing(slot);
   if (!d.dailyEmailAt) throw new Error(`${kind} has no email time`);
@@ -61,6 +67,9 @@ export type SendDeps = {
   footingFor: (email: string, marketing: boolean) => Footing;
   links: { enterUrl: (notifyId: string) => string; referralUrl: (code: string) => string; bookUrl: (offerCode: string) => string; adminUrl: string };
   staffRecipients: () => { to: string | null; cc: string[] };
+  /** Tests only: the gift caps and fallback instead of config's. */
+  giftCaps?: typeof GIFT_CAP;
+  giftFallback?: typeof GIFT_FALLBACK;
   log?: Pick<Console, "log" | "error">;
 };
 
@@ -110,6 +119,7 @@ async function runJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, de
   if (kind === "tuesday_call_today") return tuesdayJob(store, job, now, deps);
   if (kind === "its_live" || kind === "monday_reminder") return notifyJob(store, job, kind, now, deps, log);
   if (kind === "thank_you") return thankYouJob(store, job, now, deps, log);
+  if (kind === "gift_reminder" || kind === "gift_last_call") return giftReminderJob(store, job, kind, now, deps, log);
   if (kind.startsWith("daily_")) return dailyJob(store, job, kind, now, deps, log);
   return { sent: 0, skipped: 1, failed: 0, reason: `unknown kind ${kind}` };
 }
@@ -187,7 +197,7 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
 async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
   // Everyone, winners included (Ben, 2026-11-03): the copy greets both.
   // The spots are counted once, at send time.
-  const spots = await giftSpots(store);
+  const spots = await giftSpots(store, deps.giftCaps ?? GIFT_CAP);
   const spotsLeft = spots ? spotsLine(spots) : null;
   const out: JobResult = { sent: 0, skipped: 0, failed: 0 };
   for (const p of await subscribedEntrants(store)) {
@@ -206,6 +216,37 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     else {
       out.failed++;
       log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
+    }
+  }
+  return out;
+}
+
+/** P1-4: the code again to everyone verified, subscribed and unredeemed. */
+async function giftReminderJob(store: GiveawayStore, job: ScheduledSendRow, kind: "gift_reminder" | "gift_last_call", now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
+  const spots = await giftSpots(store, deps.giftCaps ?? GIFT_CAP);
+  // Nothing left to book anywhere and no fallback: say nothing.
+  if (spots && spots.every((s) => s.left === 0) && !(deps.giftFallback !== undefined ? deps.giftFallback : GIFT_FALLBACK)) return { sent: 0, skipped: 1, failed: 0, reason: "every center at the gift cap, no fallback" };
+  const spotsLeft = spots ? spotsLine(spots) : null;
+  const { data: offers, error } = await store.select("giveaway_offers", "person_id, code, redeemed_at");
+  if (error) throw new Error(`offers: ${error.message}`);
+  const open = new Map(((offers ?? []) as Array<{ person_id: string; code: string; redeemed_at: string | null }>).filter((o) => !o.redeemed_at).map((o) => [o.person_id, o.code]));
+  const out: JobResult = { sent: 0, skipped: 0, failed: 0 };
+  for (const p of await subscribedEntrants(store)) {
+    const code = open.get(p.id);
+    if (!code) continue;
+    const id = await receipt(store, job, { person_id: p.id });
+    if (!id) {
+      out.skipped++;
+      continue;
+    }
+    const footing = deps.footingFor(p.email, true);
+    const email = giftReminderEmail({ kind: kind === "gift_reminder" ? "reminder" : "last_call", firstName: p.first_name, isExistingClient: p.is_existing_client, offerCode: code, bookUrl: deps.links.bookUrl(code), spotsLeft, footing });
+    const r = await deps.send({ to: p.email, email, marketing: true, footing });
+    await stamp(store, id, r, now);
+    if (r.ok) out.sent++;
+    else {
+      out.failed++;
+      log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
     }
   }
   return out;

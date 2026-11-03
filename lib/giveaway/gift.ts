@@ -19,9 +19,10 @@ export async function giftSpots(store: GiveawayStore, caps = GIFT_CAP): Promise<
     { center: "Murfreesboro" as const, cap: caps.murfreesboro },
   ].filter((c): c is { center: "Nashville" | "Murfreesboro"; cap: number } => c.cap != null);
   if (centers.length === 0) return null;
-  const { data, error } = await store.select("giveaway_offers", "redeemed_center").not("redeemed_at", "is", null);
+  const { data, error } = await store.select("giveaway_offers", "redeemed_center, fallback").not("redeemed_at", "is", null);
   if (error) throw new Error(`gift spots: ${error.message}`);
-  const rows = (data ?? []) as Array<{ redeemed_center: string | null }>;
+  // A fallback redemption (migration 0015) never takes a spot.
+  const rows = ((data ?? []) as Array<{ redeemed_center: string | null; fallback?: boolean }>).filter((r) => !r.fallback);
   return centers.map(({ center, cap }) => {
     const redeemed = rows.filter((r) => r.redeemed_center === center).length;
     return { center, cap, redeemed, left: Math.max(0, cap - redeemed) };

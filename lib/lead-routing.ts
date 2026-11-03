@@ -196,12 +196,14 @@ export function notificationSubject(input: {
   preferredCenter: string | null;
   name: string | null;
   email: string | null;
+  /** A giveaway booking whose center was at the gift cap (P1-1). */
+  giveawayWaitlist?: boolean;
 }): string {
   const form =
     input.source === "chat" && input.route !== "guide"
       ? `${FORM_LABEL[input.route]} (via chat)`
       : input.source === "giveaway" && input.route !== "guide"
-        ? `${FORM_LABEL[input.route]} (10 years)`
+        ? `${FORM_LABEL[input.route]} (10 years${input.giveawayWaitlist ? ", waitlist" : ""})`
         : FORM_LABEL[input.route];
   const center =
     input.route === "guide" ? "No center" : input.preferredCenter?.trim() || "No center chosen";

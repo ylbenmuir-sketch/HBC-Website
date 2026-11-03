@@ -26,7 +26,7 @@ import { capitalizeName } from "@/lib/name-case";
 import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notification";
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
-import { checkOffer, offerRefusalMessage, redeemOffer } from "@/lib/giveaway/offers";
+import { checkOffer, giftCenterForBooking, offerRefusalMessage, redeemGift } from "@/lib/giveaway/offers";
 import { CALL_ME_TEXT } from "@/lib/call-consent";
 import { looksLikeEmail } from "@/lib/lead-options";
 
@@ -301,6 +301,19 @@ async function holdNotification(
   return ok;
 }
 
+/** A giveaway booking that found its center at the gift cap (migration
+ *  0015). A missing column or a failed update is logged, never fatal. */
+async function flagGiveawayWaitlist(rowId: string): Promise<void> {
+  const supabase = supabaseAdmin();
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.from("consultation_requests").update({ giveaway_waitlist: true }).eq("id", rowId);
+    if (error) console.error(`[consultation] ${rowId}: giveaway_waitlist not stamped: ${error.message}${error.code ? ` (code ${error.code})` : ""}`);
+  } catch (err) {
+    console.error(`[consultation] ${rowId}: giveaway_waitlist threw: ${err instanceof Error ? err.name : "unknown"}`);
+  }
+}
+
 /**
  * Step 3: stamp the row with where its notification went. A separate update
  * rather than part of the insert, so these audit columns can never be the
@@ -435,7 +448,7 @@ async function formPayload(request: Request): Promise<Payload> {
 function reply(
   htmlForm: boolean,
   request: Request,
-  body: { ok?: boolean; id?: string | null; error?: string },
+  body: { ok?: boolean; id?: string | null; error?: string; notice?: string },
   init: { status: number }
 ): NextResponse {
   if (init.status >= 400) {
@@ -544,11 +557,14 @@ export async function POST(request: Request) {
   const concerns = concernList(body.concerns);
   // The nearer center from the entrant's ZIP stands in when a giveaway
   // booking did not choose one (decision 9).
+  // With the gift cap set (P1-1), "Not sure" takes the center with more
+  // spots left instead (lib/giveaway/offers.ts → giftCenterFor).
   const chosenCenter = str(body.preferred_center, 60);
+  const giftCenter = offer?.ok ? await giftCenterForBooking(chosenCenter, offer.nearestCenter) : null;
   const preferredCenter = isGuide
     ? null
-    : offer?.ok && (!chosenCenter || chosenCenter === CENTER_UNSPECIFIED) && offer.nearestCenter
-      ? offer.nearestCenter
+    : offer?.ok && (!chosenCenter || chosenCenter === CENTER_UNSPECIFIED) && giftCenter
+      ? giftCenter
       : (chosenCenter ?? CENTER_UNSPECIFIED);
   const bestTime = str(body.best_time, 40);
   const note = str(body.note, 2000);
@@ -644,9 +660,19 @@ export async function POST(request: Request) {
   const savedRowId = await saveRow(row);
 
   // ── 1b. A giveaway booking stamps its offer code as redeemed ────────────
+  // Against the center's cap, in one transaction (migration 0015, P1-1). At
+  // the cap the lead stays saved, the offer is waitlisted, the row is
+  // flagged and the visitor is told — never refused.
+  let giftNotice: string | null = null;
+  let giftWaitlisted = false;
   if (offer?.ok) {
-    const redeemed = await redeemOffer(offer.offer, { consultationRequestId: savedRowId, center: preferredCenter });
-    if (!redeemed) console.error(`[consultation] offer ${offer.offer.id} could not be marked redeemed (lead ${savedRowId ?? "unsaved"})`);
+    const gift = await redeemGift(offer.offer, { consultationRequestId: savedRowId, center: giftCenter });
+    if (gift.outcome === "failed" || gift.outcome === "already") console.error(`[consultation] offer ${offer.offer.id} not redeemed: ${gift.outcome} (lead ${savedRowId ?? "unsaved"})`);
+    if (gift.outcome === "waitlisted") {
+      giftWaitlisted = true;
+      giftNotice = gift.message;
+      if (savedRowId) await flagGiveawayWaitlist(savedRowId);
+    }
   }
 
   // ── 2. Route, then email and platform side by side ─────────────────────
@@ -664,6 +690,7 @@ export async function POST(request: Request) {
     preferredCenter,
     name: firstName,
     email,
+    giveawayWaitlist: giftWaitlisted,
   });
 
   const lead: LeadDetails | null = isGuide
@@ -768,5 +795,5 @@ export async function POST(request: Request) {
 
   // The id is what the form's second step needs, and nothing else: an
   // unguessable uuid v4 that names one row and can change three columns of it.
-  return reply(htmlForm, request, { ok: true, id: savedRowId }, { status: 201 });
+  return reply(htmlForm, request, { ok: true, id: savedRowId, ...(giftNotice ? { notice: giftNotice } : {}) }, { status: 201 });
 }

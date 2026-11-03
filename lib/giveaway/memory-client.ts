@@ -40,7 +40,7 @@ const DEFAULTS: Partial<Record<GiveawayTable, () => Row>> = {
   giveaway_drawings: () => ({ status: "scheduled", pool_snapshot_hash: null, pool_size: null, entries_count: null, seed: null, winner_entry_id: null, winner_person_id: null, drawn_at: null, drawn_by: null, claimed_at: null }),
   giveaway_winners: () => ({ entry_id: null, claim_token_hash: null, phone: null, status: "drawn", call_attempts: [], contacted_at: null, claimed_at: null, public_ok: false, public_ok_at: null, public_label: null, tax_form_required: false, tax_form_received_at: null, redraw_reason: null, redrawn_at: null, notes: null, seed: null, pool_excluded: [] }),
   giveaway_audit: () => ({ target_table: null, target_id: null, reason: null, before: null, after: null, ip_hash: null }),
-  giveaway_offers: () => ({ kind: "free_first_visit", redeemed_at: null, consultation_request_id: null, redeemed_center: null }),
+  giveaway_offers: () => ({ kind: "free_first_visit", redeemed_at: null, consultation_request_id: null, redeemed_center: null, waitlisted_at: null, waitlist_center: null, fallback: false }),
   giveaway_admin_allowlist: () => ({ added_by: "env" }),
   rate_limits: () => ({ count: 0 }),
   scheduled_sends: () => ({ person_id: null, notify_id: null, claimed_at: null, sent_at: null, skipped_reason: null, message_id: null, error: null }),
@@ -376,6 +376,28 @@ export class MemoryDb {
       }
       row.count = Number(row.count) + 1;
       return { data: row.count, error: null, count: null, status: 200, statusText: "OK" };
+    }
+    if (fn === "giveaway_redeem_gift") {
+      // Migration 0015's function, step for step. Synchronous, so two calls
+      // can never interleave between the count and the write — the same
+      // guarantee the advisory lock gives in Postgres.
+      const offers = this.rows("giveaway_offers");
+      const offer = offers.find((r) => r.id === args.p_offer_id && r.env === args.p_env);
+      const ok = (data: string) => ({ data, error: null, count: null, status: 200, statusText: "OK" });
+      if (!offer || offer.redeemed_at != null) return ok("already");
+      const now = norm(args.p_now);
+      const cap = args.p_cap == null ? null : Number(args.p_cap);
+      const taken = offers.filter((r) => r.env === args.p_env && r.redeemed_center === args.p_center && r.redeemed_at != null && !r.fallback).length;
+      if (cap == null || taken < cap) {
+        Object.assign(offer, { redeemed_at: now, consultation_request_id: args.p_consultation_request_id ?? null, redeemed_center: args.p_center, waitlisted_at: null, waitlist_center: null });
+        return ok("redeemed");
+      }
+      if (args.p_fallback) {
+        Object.assign(offer, { redeemed_at: now, consultation_request_id: args.p_consultation_request_id ?? null, redeemed_center: args.p_center, fallback: true });
+        return ok("fallback");
+      }
+      Object.assign(offer, { waitlisted_at: offer.waitlisted_at ?? now, waitlist_center: args.p_center, consultation_request_id: offer.consultation_request_id ?? args.p_consultation_request_id ?? null });
+      return ok("waitlisted");
     }
     return { data: null, error: { message: `Could not find the function public.${fn} in the schema cache`, code: "PGRST202" }, count: null, status: 404, statusText: "Not Found" };
   }
