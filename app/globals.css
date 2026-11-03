@@ -71,6 +71,19 @@
    Roman")` under `font-style: italic` matches the *upright* face and would
    publish upright text where the design is italic. */
 
+/* DM Sans's fallback, pinned (2026-11-03): the exact numbers
+   next/font/google generated (size-adjust 104.53%, the value the layout
+   comment keeps on purpose). With the fonts self-hosted, next/font/local
+   would compute 105.13% from the file instead — a different line-break
+   profile — so the generated one is switched off and this stands in. */
+@font-face {
+  font-family: "DM Sans Tuned Fallback";
+  src: local("Arial");
+  ascent-override: 94.9%;
+  descent-override: 29.66%;
+  line-gap-override: 0%;
+  size-adjust: 104.53%;
+}
 @font-face {
   font-family: "Cormorant Tuned Fallback";
   font-style: normal;

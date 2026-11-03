@@ -43,7 +43,9 @@ const CX = 320;
 const CY = 296;
 const R = 236;
 const VB_H = CY + R + 40;
-const SANS = "'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
+// The site's DM Sans through its CSS variable (self-hosted fonts get a
+// generated family name, so the literal 'DM Sans' would miss it).
+const SANS = "var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 function toSvg(x: number, y: number): [number, number] {
   return [CX + x * R, CY - y * R];
@@ -87,7 +89,7 @@ export default function BrainMapHeat({
         className="bmh-svg"
         role="img"
         aria-label={brainMapSampleSummary()}
-        fontFamily={SANS}
+        style={{ fontFamily: SANS }}
       >
         <defs>
           <clipPath id={clipId}>

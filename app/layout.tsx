@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SlimFooter from "@/components/SlimFooter";
@@ -41,10 +41,16 @@ import "./globals.css";
  * average character width, and for the sans the default already lands on it.
  * There is nothing to gain here and a set of numbers to maintain.
  */
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal"],
+/*
+ * SELF-HOSTED (Ben, 2026-11-03): next/font/local over the exact latin files
+ * Google served (app/fonts/README.md), so no build ever fetches a font. Same
+ * variables, preload choices and fallbacks as the next/font/google calls they
+ * replace; the generated fallback metrics were compared and match.
+ */
+const cormorant = localFont({
+  src: "./fonts/CormorantGaramond-Latin.woff2",
+  weight: "400 600",
+  style: "normal",
   variable: "--font-cormorant",
   display: "swap",
   /**
@@ -79,10 +85,10 @@ const cormorant = Cormorant_Garamond({
  * the wide-fallback bug this pass exists to remove. `em.sage` and the six
  * quote rules in globals.css carry it; a new italic serif rule needs it too.
  */
-const cormorantItalic = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["italic"],
+const cormorantItalic = localFont({
+  src: "./fonts/CormorantGaramond-Italic-Latin.woff2",
+  weight: "400 600",
+  style: "italic",
   variable: "--font-cormorant-italic",
   display: "swap",
   preload: false,
@@ -90,11 +96,17 @@ const cormorantItalic = Cormorant_Garamond({
   fallback: ["Cormorant Tuned Fallback"],
 });
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const dmSans = localFont({
+  src: "./fonts/DMSans-Latin.woff2",
+  weight: "400 600",
+  style: "normal",
   variable: "--font-dm-sans",
   display: "swap",
+  // The 104.53% Arial fallback next/font/google generated, pinned in
+  // globals.css ("DM Sans Tuned Fallback"): next/font/local would compute
+  // 105.13% from the file, which is not the line-break profile kept above.
+  adjustFontFallback: false,
+  fallback: ["DM Sans Tuned Fallback"],
 });
 
 export const metadata: Metadata = {

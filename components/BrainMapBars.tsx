@@ -22,7 +22,9 @@ import {
  * label beside its bar — which is taller, not narrower, and every one of
  * the 21 is legible at 320. Neither depends on a reveal or a script to draw.
  */
-const SANS = "'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
+// The site's DM Sans through its CSS variable (self-hosted fonts get a
+// generated family name, so the literal 'DM Sans' would miss it).
+const SANS = "var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif";
 const MAX_UV = 45;
 
 /** Upright bars — tablets and desktops. */
@@ -38,7 +40,7 @@ function Vertical() {
   const slot = plotW / n;
   const bw = Math.min(22, slot * 0.64);
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} className="bmb-svg bmb-v" role="img" aria-label={brainMapSampleSummary()} fontFamily={SANS}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} className="bmb-svg bmb-v" role="img" aria-label={brainMapSampleSummary()} style={{ fontFamily: SANS }}>
       <rect x={L} y={yOf(BRAIN_MAP_TYPICAL_MAX)} width={plotW} height={yOf(BRAIN_MAP_TYPICAL_MIN) - yOf(BRAIN_MAP_TYPICAL_MAX)} fill="#8FA75A" opacity="0.13" />
       {[0, 10, 20, 30, 40].map((v) => (
         <g key={v}>
@@ -78,7 +80,7 @@ function Horizontal() {
   const plotW = W - L - Rr;
   const xOf = (uv: number) => L + (uv / MAX_UV) * plotW;
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} className="bmb-svg bmb-h" role="img" aria-label={brainMapSampleSummary()} fontFamily={SANS}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} className="bmb-svg bmb-h" role="img" aria-label={brainMapSampleSummary()} style={{ fontFamily: SANS }}>
       <text x={L} y={22} fontSize="17" fontWeight="600" fill="#1C2B3A">Sample recording — {n} sites</text>
       <rect x={xOf(BRAIN_MAP_TYPICAL_MIN)} y={T - 6} width={xOf(BRAIN_MAP_TYPICAL_MAX) - xOf(BRAIN_MAP_TYPICAL_MIN)} height={B - T + 6} fill="#8FA75A" opacity="0.13" />
       {[BRAIN_MAP_TYPICAL_MIN, BRAIN_MAP_TYPICAL_MAX].map((v) => (
