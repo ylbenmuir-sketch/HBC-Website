@@ -27,6 +27,7 @@ import type { EntryRow, NotifyRow, OfferRow, PersonRow } from "./rows";
 import type { GiveawayStore } from "./store";
 import { offerCode, referralCode, sha256Hex } from "./tokens";
 import { zipInfo } from "./zip";
+import type { Attribution } from "./channel";
 
 export const MARKETING_OPT_IN_WORDING = "Yes, send me news from Harmonized Brain Centers after the giveaway.";
 
@@ -61,7 +62,31 @@ export type SignupInput = {
   /** The referral code carried from /10years?ref=… (entry only). */
   ref?: string | null;
   sourcePage?: string | null;
+  /** First-touch UTM tags + channel (P1-6, lib/giveaway/channel.ts). */
+  attribution?: Attribution | null;
 };
+
+/** The attribution columns (migration 0016). */
+const ATTRIBUTION_COLUMNS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "channel"] as const;
+
+function attributionColumns(a: Partial<Attribution> | null | undefined): Record<string, string | null> {
+  if (!a) return {};
+  return { utm_source: a.utm_source ?? null, utm_medium: a.utm_medium ?? null, utm_campaign: a.utm_campaign ?? null, utm_content: a.utm_content ?? null, channel: a.channel ?? null };
+}
+
+/** Insert a row that may carry 0016's columns; before 0016 is applied
+ *  (PostgREST PGRST204 / Postgres 42703 naming one of them) save it
+ *  without them rather than lose the signup. */
+async function insertAttributed(store: GiveawayStore, table: "giveaway_people" | "giveaway_notify", row: Record<string, unknown>) {
+  const first = await store.insert(table, row).select("*").single();
+  const e = first.error as { code?: string; message?: string } | null;
+  if (e && (e.code === "PGRST204" || e.code === "42703") && ATTRIBUTION_COLUMNS.some((c) => e.message?.includes(c))) {
+    console.error(`[giveaway] ${table}: attribution columns missing — migration 0016 is not applied; saving without them.`);
+    const rest = Object.fromEntries(Object.entries(row).filter(([k]) => !(ATTRIBUTION_COLUMNS as readonly string[]).includes(k)));
+    return store.insert(table, rest).select("*").single();
+  }
+  return first;
+}
 
 export type SignupContext = { ipHash: string | null; uaHash: string | null; now: Date };
 
@@ -138,7 +163,8 @@ export async function notifySignup(store: GiveawayStore, input: SignupInput, ctx
     if (error) throw fail("notify update", error);
     return { ok: true, row: data as NotifyRow, verifyTokenSubject: row.id, alreadyVerified: Boolean(row.verified_at) };
   }
-  const { data, error } = await store.insert("giveaway_notify", { email: value.email, ...fields, created_at: ctx.now.toISOString() }).select("*").single();
+  // First touch: the tags go on the INSERT only; a repeat signup keeps the first.
+  const { data, error } = await insertAttributed(store, "giveaway_notify", { email: value.email, ...fields, ...attributionColumns(input.attribution), created_at: ctx.now.toISOString() });
   if (error) throw fail("notify insert", error);
   const row = data as NotifyRow;
   await audit(store, { actor: "visitor", action: "notify_signup", targetTable: "giveaway_notify", targetId: row.id, ipHash: ctx.ipHash });
@@ -207,7 +233,7 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
     marketing_opt_in_wording: MARKETING_OPT_IN_WORDING,
     marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null,
   };
-  const { data, error } = await store.insert("giveaway_people", { ...row, created_at: ctx.now.toISOString() }).select("*").single();
+  const { data, error } = await insertAttributed(store, "giveaway_people", { ...row, ...attributionColumns(input.attribution), created_at: ctx.now.toISOString() });
   if (error) throw fail("person insert", error);
   const person = data as PersonRow;
   await audit(store, { actor: "visitor", action: "entry_signup", targetTable: "giveaway_people", targetId: person.id, ipHash: ctx.ipHash, after: { referred_by: referrer?.id ?? null } });
@@ -359,8 +385,9 @@ export async function liveTap(store: GiveawayStore, notifyId: string, now: Date)
   let first = false;
   if (!person) {
     const info = zipInfo(row.zip);
-    const { data: created, error: insErr } = await store
-      .insert("giveaway_people", {
+    // The notify-me row's first touch carries over to the person (P1-6).
+    const fromNotify = row as NotifyRow & Partial<Attribution>;
+    const { data: created, error: insErr } = await insertAttributed(store, "giveaway_people", {
         email: row.email,
         email_display: row.email_display,
         first_name: row.first_name,
@@ -382,9 +409,8 @@ export async function liveTap(store: GiveawayStore, notifyId: string, now: Date)
         marketing_opt_in_at: row.marketing_opt_in_at,
         unsubscribed_at: row.unsubscribed_at,
         created_at: now.toISOString(),
-      })
-      .select("*")
-      .single();
+        ...attributionColumns(fromNotify.channel ? fromNotify : null),
+      });
     if (insErr) {
       if (insErr.code !== "23505") throw fail("tap person insert", insErr);
       person = await personByEmail(store, row.email);

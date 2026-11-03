@@ -187,6 +187,13 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       values = rest;
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
+    if (error && "giveaway_channel" in values && isMissingColumn(error, "giveaway_channel")) {
+      console.error("[destination: supabase] giveaway_channel column missing — migration 0016 is not applied; saving the lead without it.");
+      const { giveaway_channel: _g, ...rest } = values;
+      void _g;
+      values = rest;
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
+    }
     if (error && "contact_method" in values && isMissingColumn(error, "contact_method")) {
       console.error(
         "[destination: supabase] contact_method column missing — migration 0011 is not applied; saving the lead without it."
@@ -615,6 +622,9 @@ export async function POST(request: Request) {
     ...(callMeText
       ? { call_consent: callMe, call_consent_text: callMeText, call_consent_at: callMe ? new Date().toISOString() : null }
       : {}),
+    // A giveaway booking carries the entrant's first-touch channel (P1-6,
+    // migration 0016; saveRow drops it if 0016 is not applied yet).
+    ...(offer?.ok && (offer.person as { channel?: string | null }).channel ? { giveaway_channel: (offer.person as { channel?: string | null }).channel } : {}),
   };
 
   // Every consultation is forwarded here, at the lead. A form lead has no

@@ -11,6 +11,8 @@ import PathPicker from "./PathPicker";
 import PathProvider from "./PathProvider";
 import Seal from "./Seal";
 import VersionToggle from "./VersionToggle";
+import UtmCapture from "./UtmCapture";
+import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
 import {
   CLAIM_WINDOW_MS,
@@ -117,7 +119,7 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
 /* ------------------------------------------------------------------ */
 
 /** `showcase` is the ?mode= value while the page is the showcase (lib/giveaway/showcase.ts): the submit then carries it, so the success message lands on the same stage. */
-export function FormCard({ mode, now, refCode, error, showcase = null }: { mode: "notify_me" | "live"; now: Date; refCode: string; error: string | null; showcase?: string | null }) {
+export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} }: { mode: "notify_me" | "live"; now: Date; refCode: string; error: string | null; showcase?: string | null; utm?: Partial<Record<UtmField, string>> }) {
   const next = nextDrawing(now) ?? DRAWINGS[0];
   return (
     <>
@@ -128,9 +130,14 @@ export function FormCard({ mode, now, refCode, error, showcase = null }: { mode:
           {error}
         </p>
       )}
-      <form method="post" action={showcase ? `/10years/signup?mode=${encodeURIComponent(showcase)}` : "/10years/signup"} className="form ty-form">
-        <input type="hidden" name="ref" value={refCode} />
+      <form id="ty-entry-form" method="post" action={showcase ? `/10years/signup?mode=${encodeURIComponent(showcase)}` : "/10years/signup"} className="form ty-form">
+        <input type="hidden" name="ref" defaultValue={refCode} />
         <input type="hidden" name="source_page" value="/10years" />
+        {/* First-touch tags (P1-6): this request's own, replaced by the stored first touch in the browser. */}
+        {UTM_FIELDS.map((f) => (
+          <input key={f} type="hidden" name={f} defaultValue={utm[f] ?? ""} />
+        ))}
+        <UtmCapture formId="ty-entry-form" />
         <div className="ty-fields">
           <div>
             <label htmlFor="first_name">{t.firstName}</label>

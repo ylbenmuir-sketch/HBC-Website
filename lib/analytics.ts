@@ -29,6 +29,8 @@
  * name, phone, email, or note (see SiteEvent below).
  */
 
+import type { Channel } from "./giveaway/channel";
+
 export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
 export const GOOGLE_SITE_VERIFICATION =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "";
@@ -165,6 +167,8 @@ export type SiteEvent =
   /** The site-wide 10-year banner (fix list rev 2, P0-7): the mode only, no identifiers. */
   | { name: "giveaway_banner_click"; params: { mode: "notify" | "live" | "closed" } }
   | { name: "giveaway_banner_dismiss"; params: { mode: "notify" | "live" | "closed" } }
+  /** The /10years form was sent (P1-6): the normalized channel only. */
+  | { name: "giveaway_signup_submit"; params: { channel: Channel } }
   | { name: "guide_download"; params: { page_path: string } }
   | {
       name: "partner_badge_click";

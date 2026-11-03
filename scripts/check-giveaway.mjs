@@ -448,6 +448,19 @@ try {
   const ev = await click(E, linkIn(newEmails()[0], "/10years/verify"));
   expect("E: verified with 2 entries (+1 for the link)", /with 2 entries/.test(ev.text));
   expect("E: You're in says they came through a friend's link", /friend's link/.test(newEmails()[0]?.body.text ?? ""));
+  // P1-6: first-touch attribution through the real form post.
+  {
+    const FB = person("FB", "fran.facebook@example.test");
+    await get("/10years?utm_source=facebook&utm_medium=paid&utm_campaign=hbc10y&utm_content=ad-1", FB);
+    await postForm("/10years/signup", signupFields(FB, { utm_source: "facebook", utm_medium: "paid", utm_campaign: "hbc10y", utm_content: "ad-1" }), FB);
+    await click(FB, linkIn(newEmails()[0], "/10years/verify"));
+    newEmails();
+    const ppl = await dump("giveaway_people");
+    const byEmail = (e) => ppl.find((p) => p.email_display === e || p.email === e);
+    expect("P1-6: a facebook/paid entry lands in channel facebook with its tags", byEmail(FB.email)?.channel === "facebook" && byEmail(FB.email)?.utm_content === "ad-1", JSON.stringify(byEmail(FB.email)?.channel));
+    expect("P1-6: a ?ref= link with no tags counts as referral; no tags at all as direct", byEmail(E.email)?.channel === "referral" && byEmail(D.email)?.channel === "direct", `${byEmail(E.email)?.channel} ${byEmail(D.email)?.channel}`);
+    expect("P1-6: the form carries the hidden tag fields", /name="utm_source" value="facebook"/.test((await get("/10years?utm_source=facebook&utm_medium=paid", FB)).text));
+  }
   let dCount = (await dump("giveaway_entries")).filter((e) => e.kind === "referral_bonus" && !e.void_reason).length;
   expect("D: holds 3 referral bonus entries", dCount === 3, `${dCount}`);
   // F from D's own device (same address and browser) → voided.
@@ -483,7 +496,7 @@ try {
   newEmails();
   const peopleNow = await dump("giveaway_people");
   const verifiedNow = peopleNow.filter((p) => p.verified_at).length;
-  expect("verified people so far: A, B, D, E, F, G1–G11, H = 17", verifiedNow === 17, `${verifiedNow}`);
+  expect("verified people so far: A, B, D, E, FB, F, G1–G11, H = 18", verifiedNow === 18, `${verifiedNow}`);
 
   /* ── admin sign-in ──────────────────────────────────────────────────── */
   section("Admin sign-in");

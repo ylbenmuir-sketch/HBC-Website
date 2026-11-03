@@ -15,6 +15,7 @@ import { entryCount, entrySignup, hashes, liveTap, notifySignup, verifyEntry, ve
 import { clientAddress, rateLimit, supabaseCounter } from "./rate-limit";
 import type { WinnerRow } from "./rows";
 import { footingFor, referralLink, sendGiveawayEmail, tokenLink } from "./send";
+import { attributionFrom } from "./channel";
 import { requireGiveawayStore, type GiveawayStore } from "./store";
 import { tokenSecret, verifyToken } from "./tokens";
 import { audit } from "./audit";
@@ -77,6 +78,8 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     marketingOptIn: checked(form, "marketing"),
     ref: field(form, "ref", 20) || null,
     sourcePage: field(form, "source_page", 200) || "/10years",
+    // First-touch tags (P1-6): cleaned and normalized, never trusted as typed.
+    attribution: attributionFrom({ utm_source: field(form, "utm_source", 200), utm_medium: field(form, "utm_medium", 200), utm_campaign: field(form, "utm_campaign", 200), utm_content: field(form, "utm_content", 200), ref: field(form, "ref", 20) }),
   };
 
   // The honeypot: a filled "website" field is a bot. Answer as if it worked,

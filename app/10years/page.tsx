@@ -8,6 +8,7 @@ import { PAGES } from "@/lib/giveaway/copy";
 import { showcaseActive, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
+import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { ogDescription, ogTitle } from "@/lib/og/ten-years";
 import { pageMetadata } from "@/lib/pages";
@@ -63,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-type Search = { sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[] };
+type Search = { sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
 export default async function TenYearsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -85,7 +86,7 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   if (mode === "notify_me" || mode === "live") {
     if (sp.sent) card = <MessageCard title={t.sentTitle} message={mode === "notify_me" ? t.notifySent : t.liveSent} />;
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
-    else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} />;
+    else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
   } else {
     // The gift is named only after the reveal on the REAL clock — never the showcase's stage "now" (P0-2).
     card = <WinnersCard winners={winners} notice={error} revealed={giftRevealed(giveawayNow())} />;
@@ -97,6 +98,16 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
       <TenYearsView mode={mode} now={now} card={card} winners={winners} assistantOff={showcase !== null} />
     </>
   );
+}
+
+/** This request's own UTM tags, as typed (cleaned again on the server when posted). */
+function utmOf(sp: Search): Partial<Record<UtmField, string>> {
+  const out: Partial<Record<UtmField, string>> = {};
+  for (const f of UTM_FIELDS) {
+    const v = sp[f];
+    if (typeof v === "string" && v) out[f] = v.slice(0, 64);
+  }
+  return out;
 }
 
 function errorText(code: string): string {
