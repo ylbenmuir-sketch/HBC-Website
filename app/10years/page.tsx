@@ -8,6 +8,7 @@ import { PAGES } from "@/lib/giveaway/copy";
 import { showcaseActive, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
+import { OFFER_CODE_SHAPE } from "@/lib/giveaway/offers";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { ogDescription, ogTitle } from "@/lib/og/ten-years";
@@ -64,7 +65,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-type Search = { sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
+type Search = { code?: string; sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
 export default async function TenYearsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -89,7 +90,9 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
     else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
   } else {
     // The gift is named only after the reveal on the REAL clock — never the showcase's stage "now" (P0-2).
-    card = <WinnersCard winners={winners} notice={error} revealed={giftRevealed(giveawayNow())} />;
+    // P1-3: the claim button carries a code the visitor arrived with (the reveal email's links go straight to /contact).
+    const code = typeof sp.code === "string" && OFFER_CODE_SHAPE.test(sp.code.trim().toUpperCase()) ? sp.code.trim().toUpperCase() : null;
+    card = <WinnersCard winners={winners} notice={error} revealed={giftRevealed(giveawayNow())} mode={mode === "thank_you" ? "thank_you" : "closed"} code={code} />;
   }
 
   return (

@@ -331,6 +331,12 @@ export const PAGES = {
     /** The card in closed and thank-you modes. */
     /** After the reveal only (P0-2): the gift, named. */
     closedCardLine: (visitBySpoken: string) => D(`Every entrant has a free first visit waiting, any day through ${visitBySpoken}.`),
+    /** P1-3, closed mode after the reveal: the card leads with the gift. */
+    giftTitle: D("Your 10-year thank-you gift"),
+    claimGift: D("Claim my gift"),
+    giftBookBy: (bookBy: string, visitBy: string) => D(`Book by ${bookBy} for a visit any day through ${visitBy}.`),
+    /** After Dec 5 (thank-you mode): booking has closed, so no gift line. */
+    thanksCardLine: D("Thank you for celebrating ten years with us."),
     /** Between the grand drawing and the reveal: the gift is coming, unnamed. */
     giftComing: (revealTime: string) => D(`Your thank-you gift arrives by email tonight at ${revealTime}.`),
     talk: D("Talk with our team"),

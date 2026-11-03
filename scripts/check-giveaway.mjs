@@ -969,6 +969,15 @@ async function browserChecks() {
         await sleep(350);
         const oneOpen = await page.eval("[...document.querySelectorAll('.ty-step-head[aria-expanded=\"true\"]')].map(b => b.closest('li').dataset.slot).join()");
         expect(`${mode} at ${width}: tapping Saturday switches (one open at a time)`, oneOpen === "grand", oneOpen);
+        if (width === 390) {
+          // P1-7: the email field and the button are on the first 390×844 screen (no scrolling).
+          await page.goto(`${BASE}/10years`, { settle: 300 });
+          // Measure the copy as it will ship: this run shows "[DRAFT] " on every string (the subject checks need it).
+          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); })()");
+          await sleep(100);
+          const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: getComputedStyle(document.querySelector('[data-path-picker]')).display })"));
+          expect(`${mode} at 390×844: email field and button above the fold (email ${fold.email}px, button ${fold.submit}px); the hero picker is hidden`, fold.email <= 844 && fold.submit <= 844 && fold.picker === "none", JSON.stringify(fold));
+        }
         if (width === 1440) {
           // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.
           const cardBottom = await page.eval("Math.ceil(document.querySelector('.ty-card').getBoundingClientRect().bottom)");
@@ -977,6 +986,13 @@ async function browserChecks() {
         }
       }
     }
+    // P1-3: after the reveal (closed mode, Mon Nov 23) the card leads with the gift; the claim button is on the first 390×844 screen.
+    await clock(ct(2026, 11, 23, 10));
+    await page.setViewport(390, 844);
+    await page.goto(`${BASE}/10years?code=10Y-ABC123`, { settle: 300 });
+    const gift = JSON.parse(await page.eval("JSON.stringify({ btn: Math.ceil(document.querySelector('[data-claim-gift]')?.getBoundingClientRect().bottom ?? 9999), href: document.querySelector('[data-claim-gift]')?.getAttribute('href'), first: Boolean(document.querySelector('[data-gift-first] + .ty-winners-title + [data-winners]')), picker: getComputedStyle(document.querySelector('[data-path-picker]')).display })"));
+    expect(`closed after the reveal at 390×844: "Claim my gift" above the fold (${gift.btn}px), gift first then the winners, picker hidden`, gift.btn <= 844 && gift.first && gift.picker === "none", JSON.stringify(gift));
+    expect("the claim button carries the code the visitor arrived with", gift.href === "/contact?from=10years&code=10Y-ABC123", gift.href);
   } finally {
     await chrome.close();
     await clock(null);

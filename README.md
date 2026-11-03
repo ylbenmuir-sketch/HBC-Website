@@ -370,6 +370,8 @@ submission requires Supabase credentials.
 | `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **10-year giveaway.** Winner alerts: Tue–Fri drawings to the first, Monday and Saturday to the second (first address To, the rest CC; unset → `LEADS_FALLBACK` with a logged warning). |
 | `GIVEAWAY_SITE_URL` | **10-year giveaway.** Optional. The origin every giveaway link (verify, one-tap, claim, unsubscribe, share) is built on. Defaults to the canonical site URL; `check:giveaway` points it at its own server. Server-side, read at request time. |
 | `GIVEAWAY_REPO` / `GIVEAWAY_OTP_MOCK_CODE` | **Checks only.** `GIVEAWAY_REPO=memory` keeps the giveaway tables in the server process (`lib/giveaway/memory-client.ts`); `GIVEAWAY_OTP_MOCK_CODE=123456` signs the admin in with that code and sends no email. Both are honoured ONLY when the giveaway env is `local` or `test` and refused, loudly, anywhere else. Never set them on a Vercel deployment. |
+| `GIVEAWAY_STATS_TOKEN` | **10-year giveaway (P1-5).** Bearer token for `GET /api/internal/giveaway-stats` (or `?token=`): counts only — no names, emails, ZIPs, phones, codes or hashes, any count of 1–4 reads `<5` — for the reporting bot. Unset = 503; wrong = 401; 60 requests an hour per address. `openssl rand -hex 32`. Production only. |
+| `GIVEAWAY_FAKE_NOW` | **Testing envs only.** An ISO instant that pins the giveaway clock on every server instance (a Vercel preview runs many, so the in-process test clock can't). Honoured only when the giveaway env is `test` or `local`; set on the `giveaway/fix-list-rev2` preview (Nov 17, live mode) for the end-to-end test. |
 | `CRON_SECRET` | Also protects `/api/cron/giveaway` (every minute: due drawings, then due scheduled emails) and the test-only `/api/giveaway/test-clock`. Unset = the giveaway cron refuses (503) and nothing is drawn or sent. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
@@ -410,10 +412,11 @@ until the switch is on; on Nov 9 the showcase ends on its own only if it
 is. Everything below must be true BEFORE setting `GIVEAWAY_ENGINE_ENABLED=1`
 in Vercel (production) and redeploying:
 
-1. **Migration `0010_giveaway.sql` applied** to the live project (step 4
-   above) — the version on main after the 2026-10-19 merge, not the
-   earlier broken seed. The cron, the page in live mode, admin and
-   `/unsubscribe` all query these tables the moment the engine is on.
+1. **Migrations `0010`, `0013`, `0014`, `0015` and `0016` applied** to the
+   live project, in order (step 4 above for 0010). All five were applied
+   by Ben on 2026-11-03. The cron, the page in live mode, admin,
+   `/unsubscribe`, code redemption (0015's `giveaway_redeem_gift`) and
+   entry-source tracking (0016) all use them the moment the engine is on.
 2. **`GIVEAWAY_TOKEN_SECRET`** set in Vercel (`openssl rand -hex 32`).
 3. **`GIVEAWAY_ADMINS`** set (Ben, Denise, Kylie), and the two Supabase
    Auth settings in step 5 done, then a real sign-in at `/admin/10years`
@@ -422,20 +425,29 @@ in Vercel (production) and redeploying:
    fall back to `LEADS_FALLBACK` with a warning.
 5. **`CRON_SECRET`** set (it already is for the lead cron) — the giveaway
    cron refuses without it.
+5b. **`GIVEAWAY_STATS_TOKEN`** set in Vercel (Production) —
+   `openssl rand -hex 32` — and given to the reporting bot. Without it
+   `/api/internal/giveaway-stats` answers 503 (counts only; see the
+   environment table).
 6. **Final copy.** Every `D("…")` in `lib/giveaway/copy.ts` replaced with
-   approved words and `COPY_IS_DRAFT` set to `false`; counsel's Official
-   Rules in `app/10years/rules/page.tsx` and `RULES_VERSION` bumped.
+   approved words and `COPY_IS_DRAFT` set to `false`; the Official Rules
+   (`lib/giveaway/rules.ts`, Ben approves — no counsel) approved, the
+   `PRIZE_USE_BY` placeholder confirmed, `TAX_THRESHOLD_CONFIRMED` set once
+   the accountant confirms, and `RULES_VERSION` set to the approval date.
    `lib/giveaway/send.ts` refuses to send `[DRAFT]` copy in production, so
    with the engine on and the copy still draft, NO giveaway email goes
    out — verification links included — and every signup ends in
    `?error=send_failed`.
 7. **`npm run check:giveaway -- --db`** green against the project
    (env=test rows), after 1–6.
-8. **Un-hide, if wanted.** The page stays `noindex` and out of the sitemap
-   and robots.txt even with the engine on (Ben, 2026-10-19). To let it be
-   found on Nov 9: drop `/10years` from `app/robots.ts`, `app/sitemap.ts`
-   (`NEVER_LISTED`), `next.config.ts` (the header list) and the page's
-   `robots` metadata — and add the links.
+8. **Un-hiding is automatic** (fix list rev 2, P0-6): with the engine on,
+   from Mon Nov 9 12:00 AM CT robots.txt drops the `/10years` disallow (the
+   token routes stay disallowed), the sitemap lists `/10years` and
+   `/10years/rules`, and their meta robots says index — no deploy. On
+   Nov 9, submit the sitemap in Search Console.
+8b. **Redeploy after setting the flag.** The site-wide banner is rendered
+   into the static pages at build time, so it appears only after a deploy
+   made with `GIVEAWAY_ENGINE_ENABLED=1` set.
 9. **Vercel env, not `.env.local`**: the flag is read at request time on
    the server. A local `next dev` without it shows the showcase too; set
    `GIVEAWAY_ENGINE_ENABLED=1` in `.env.local` to drive the real flow with

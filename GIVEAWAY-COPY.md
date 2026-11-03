@@ -306,8 +306,10 @@ With "You're in": **Your share link** (the link in a field) · button **Copy** �
 
 - **Title:** This week's winners
 - The winners list, below.
-- **Line, after the reveal (Sat 7 PM, real clock):** Every entrant has a free first visit waiting, any day through *{December 31}*.
-- **Line, between the grand drawing and the reveal:** Your thank-you gift arrives by email tonight at *{7 PM}*.
+- **After the reveal (Sat 7 PM, real clock) — the gift leads (P1-3):** **Your 10-year thank-you gift** · Every entrant has a free first visit waiting, any day through *{December 31}*. · button **Claim my gift** *(to /contact?from=10years, with the code when the visitor arrived with one)* · Book by *{Sat, Dec 5}* for a visit any day through *{December 31}*. — then the heading **This week's winners** and the list.
+- **Between the grand drawing and the reveal:** the winners, then: Your thank-you gift arrives by email tonight at *{7 PM}*. · **Talk with our team**
+- **Thank-you page (after Dec 5, booking closed):** the winners, then: Thank you for celebrating ten years with us. · **Talk with our team**
+- The "Which one are you?" picker is hidden in closed and thank-you modes, and on phones in every mode (P1-7: the form's required new/current choice asks once).
 - **Button:** Talk with our team *(to /contact — the only call button on the page)*
 
 ### Winners list (three states, decision 7)

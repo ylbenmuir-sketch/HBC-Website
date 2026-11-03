@@ -222,31 +222,59 @@ const revealShort = () => new Intl.DateTimeFormat("en-US", { timeZone: "America/
 const revealTime = () => shortCentralTime(GIFT_REVEAL_AT).replace(/\b(am|pm)$/, (m) => m.toUpperCase());
 
 /**
- * Closed and thank-you modes: the winners list in its three states, and the one call button on the page.
- * `revealed` comes from the REAL giveaway clock (giftRevealed(giveawayNow())), never a showcase's
- * representative now, so a ?mode=closed preview before Saturday 7 pm never names the gift (P0-2).
+ * Closed and thank-you modes. `revealed` comes from the REAL giveaway clock
+ * (giftRevealed(giveawayNow())), never a showcase's representative now, so
+ * a ?mode=closed preview before Saturday 7 pm never names the gift (P0-2).
+ *
+ * P1-3: closed + revealed → the gift FIRST (title, the line, "Claim my
+ * gift" to /contact?from=10years — with the code when the visitor arrived
+ * with one — and the book-by dates), then this week's winners. Closed
+ * before the reveal → the winners and "arrives tonight at 7". Thank-you
+ * mode (after Dec 5, booking closed) → the winners and a plain thank-you.
  */
-export function WinnersCard({ winners, notice, revealed }: { winners: PublicWinner[]; notice: string | null; revealed: boolean }) {
-  const visitBy = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric" }).format(OFFER.visitBy.at);
+export function WinnersCard({ winners, notice, revealed, mode = "closed", code = null }: { winners: PublicWinner[]; notice: string | null; revealed: boolean; mode?: "closed" | "thank_you"; code?: string | null }) {
+  const md = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric" }).format(d);
+  const bookBy = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" }).format(OFFER.bookBy.at);
+  const giftFirst = mode === "closed" && revealed;
+  const list = (
+    <ul className="ty-winners" data-winners>
+      {winners.map((w) => (
+        <li key={w.slot} data-state={w.state}>
+          {w.line}
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <>
-      <h2 className="ty-card-title">{t.winnersTitle}</h2>
       {notice && (
         <p className="ty-error" role="status">
           {notice}
         </p>
       )}
-      <ul className="ty-winners" data-winners>
-        {winners.map((w) => (
-          <li key={w.slot} data-state={w.state}>
-            {w.line}
-          </li>
-        ))}
-      </ul>
-      <p className="ty-card-line">{revealed ? t.closedCardLine(visitBy) : t.giftComing(revealTime())}</p>
-      <a href="/contact" className="btn btn-primary ty-submit">
-        {t.talk}
-      </a>
+      {giftFirst ? (
+        <>
+          <div className="ty-gift-first" data-gift-first>
+            <h2 className="ty-card-title">{t.giftTitle}</h2>
+            <p className="ty-card-line">{t.closedCardLine(md(OFFER.visitBy.at))}</p>
+            <a href={`/contact?from=10years${code ? `&code=${encodeURIComponent(code)}` : ""}`} className="btn btn-primary ty-submit" data-claim-gift>
+              {t.claimGift}
+            </a>
+            <p className="ty-small">{t.giftBookBy(bookBy, md(OFFER.visitBy.at))}</p>
+          </div>
+          <h3 className="ty-winners-title">{t.winnersTitle}</h3>
+          {list}
+        </>
+      ) : (
+        <>
+          <h2 className="ty-card-title">{t.winnersTitle}</h2>
+          {list}
+          <p className="ty-card-line">{mode === "thank_you" ? t.thanksCardLine : t.giftComing(revealTime())}</p>
+          <a href="/contact" className="btn btn-primary ty-submit">
+            {t.talk}
+          </a>
+        </>
+      )}
     </>
   );
 }
