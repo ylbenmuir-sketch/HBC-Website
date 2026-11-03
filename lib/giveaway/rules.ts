@@ -165,7 +165,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
             `Vibro-acoustic chair: ${usd(RATES.vibroChair.usd ?? 0)} per session (every session includes it)`,
             `${DEVICES.keychain.name} by ${DEVICES.keychain.by}: ${keychain == null ? "value TBD" : usd(keychain)}`,
             `${DEVICES.handheld.name} by ${DEVICES.handheld.by}: ${usd(RATES.hoolestHandheld.usd ?? 0)} (${DEVICES.handheld.by}'s published price)`,
-            "Partner prizes: TBD. They will be named and valued here before entries open, or left out.",
+            `Partner prizes: each of the ${DRAWINGS.length} drawings has one partner prize slot. All are TBD; each will be named and valued here before entries open, or left out.`,
           ],
         },
         { p: "There are two versions of each prize, one for new clients and one for current clients. Current clients already have a Brain Map, so their version leaves it out; the current-client grand prize has one extra session instead. The version follows the new-or-current answer you give when you enter, and the Sponsor confirms it when you claim. The prize table at the top of this page lists every part of every prize and its value." },

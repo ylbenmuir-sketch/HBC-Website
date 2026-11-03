@@ -339,10 +339,12 @@ export async function buildExport(store: GiveawayStore, name: ExportName, admin:
     for (const e of entries) if (!e.void_reason) counts.set(e.person_id, (counts.get(e.person_id) ?? 0) + 1);
     const offerByPerson = new Map(offers.map((o) => [o.person_id, o]));
     const byId = new Map(people.map((p) => [p.id, p]));
-    header = ["id", "created_at", "email", "email_display", "first_name", "last_name", "zip", "city", "nearest_center", "is_existing_client", "verified_at", "entries", "referral_code", "referral_credits", "referred_by_email", "marketing_opt_in", "marketing_opt_in_at", "unsubscribed_at", "source_page", "offer_code", "offer_redeemed_at", "offer_redeemed_center"];
+    // P1-8: new/current status is not exported — it picks a prize version and
+    // the gift, nothing else. The winners export keeps prize_version (fulfillment).
+    header = ["id", "created_at", "email", "email_display", "first_name", "last_name", "zip", "city", "nearest_center", "verified_at", "entries", "referral_code", "referral_credits", "referred_by_email", "marketing_opt_in", "marketing_opt_in_at", "unsubscribed_at", "source_page", "offer_code", "offer_redeemed_at", "offer_redeemed_center"];
     rows = people.map((p) => {
       const o = offerByPerson.get(p.id);
-      return [p.id, p.created_at, p.email, p.email_display, p.first_name, p.last_name, p.zip, p.city, p.nearest_center, p.is_existing_client, p.verified_at, counts.get(p.id) ?? 0, p.referral_code, p.referral_credits, p.referred_by_person_id ? (byId.get(p.referred_by_person_id)?.email ?? p.referred_by_person_id) : "", p.marketing_opt_in, p.marketing_opt_in_at, p.unsubscribed_at, p.source_page, o?.code ?? "", o?.redeemed_at ?? "", o?.redeemed_center ?? ""];
+      return [p.id, p.created_at, p.email, p.email_display, p.first_name, p.last_name, p.zip, p.city, p.nearest_center, p.verified_at, counts.get(p.id) ?? 0, p.referral_code, p.referral_credits, p.referred_by_person_id ? (byId.get(p.referred_by_person_id)?.email ?? p.referred_by_person_id) : "", p.marketing_opt_in, p.marketing_opt_in_at, p.unsubscribed_at, p.source_page, o?.code ?? "", o?.redeemed_at ?? "", o?.redeemed_center ?? ""];
     });
   } else if (name === "entries") {
     const [people, entries] = await Promise.all([allRows<PersonRow>(store, "giveaway_people"), allRows<EntryRow>(store, "giveaway_entries", { col: "created_at" })]);
@@ -352,10 +354,10 @@ export async function buildExport(store: GiveawayStore, name: ExportName, admin:
   } else if (name === "offers") {
     const [people, offers] = await Promise.all([allRows<PersonRow>(store, "giveaway_people"), allRows<OfferRow>(store, "giveaway_offers", { col: "issued_at" })]);
     const byId = new Map(people.map((p) => [p.id, p]));
-    header = ["id", "code", "kind", "person_id", "email", "first_name", "last_name", "zip", "is_existing_client", "issued_at", "expires_at", "redeemed_at", "redeemed_center", "consultation_request_id"];
+    header = ["id", "code", "kind", "person_id", "email", "first_name", "last_name", "zip", "issued_at", "expires_at", "redeemed_at", "redeemed_center", "consultation_request_id"];
     rows = offers.map((o) => {
       const p = byId.get(o.person_id);
-      return [o.id, o.code, o.kind, o.person_id, p?.email ?? "", p?.first_name ?? "", p?.last_name ?? "", p?.zip ?? "", p?.is_existing_client ?? "", o.issued_at, o.expires_at, o.redeemed_at, o.redeemed_center, o.consultation_request_id];
+      return [o.id, o.code, o.kind, o.person_id, p?.email ?? "", p?.first_name ?? "", p?.last_name ?? "", p?.zip ?? "", o.issued_at, o.expires_at, o.redeemed_at, o.redeemed_center, o.consultation_request_id];
     });
   } else {
     const { current, history } = await loadWinners(store);

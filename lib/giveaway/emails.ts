@@ -305,17 +305,15 @@ export function winnerEmail(input: { firstName: string; drawing: Drawing; versio
 /* 8. The reveal: thank-you + gift, to every entrant (winners too)      */
 /* ------------------------------------------------------------------ */
 
-/** `spotsLeft`: "Nashville: 12 of 40 left · Murfreesboro: 8 of 30 left", read at send time; null while no caps are set. */
-export function thankYouEmail(input: { firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; spotsLeft?: string | null; footing: Footing }): Email {
+export function thankYouEmail(input: { firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; footing: Footing }): Email {
   const c = EMAILS.thankYou;
   const heading = c.heading(input.firstName);
   const offer = offerPanel({ code: input.offerCode, isExistingClient: input.isExistingClient });
-  const left = input.spotsLeft ? c.left(input.spotsLeft) : null;
   const open = c.openDays(openDaysSpoken());
   const rows = [
     section(`${h1(heading)}${p(c.body)}`, "18px 20px 0"),
     section(offer.html, "14px 20px 0"),
-    section(`${left ? p(left, "padding-top:0;") : ""}${small(open)}`, "10px 20px 0"),
+    section(small(open), "10px 20px 0"),
     section(buttons([[c.button, input.bookUrl]]), "12px 20px 0"),
     gap(16),
     visitorFooter(input.footing, true),
@@ -324,7 +322,7 @@ export function thankYouEmail(input: { firstName: string; isExistingClient: bool
     subject: c.subject,
     preheader: c.preheader,
     html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, c.body, "", ...offer.text, left, open, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
+    text: textOf([heading, c.body, "", ...offer.text, open, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }
 
@@ -332,18 +330,17 @@ export function thankYouEmail(input: { firstName: string; isExistingClient: bool
 /* 8b. Gift reminder (Dec 1) and last call (Dec 3) — P1-4               */
 /* ------------------------------------------------------------------ */
 
-/** For entrants who have not booked: the code again, the live spots, the deadline. */
-export function giftReminderEmail(input: { kind: "reminder" | "last_call"; firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; spotsLeft?: string | null; footing: Footing }): Email {
+/** For entrants who have not booked: the code again and the Dec 5 deadline — the only urgency (Ben, 2026-11-03). */
+export function giftReminderEmail(input: { kind: "reminder" | "last_call"; firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; footing: Footing }): Email {
   const c = input.kind === "reminder" ? EMAILS.giftReminder : EMAILS.giftLastCall;
   const bookBy = spokenDate(OFFER.bookBy.at);
   const visitBy = spokenDate(OFFER.visitBy.at);
   const subject = typeof c.subject === "function" ? c.subject(`Sat, ${bookBy}`) : c.subject;
   const heading = c.heading(input.firstName);
   const body = c.body(`Sat, ${bookBy}`, visitBy);
-  const left = input.spotsLeft ? EMAILS.thankYou.left(input.spotsLeft) : null;
   const offer = offerPanel({ code: input.offerCode, isExistingClient: input.isExistingClient });
   const rows = [
-    section(`${h1(heading)}${p(body)}${left ? p(left) : ""}`, "18px 20px 0"),
+    section(`${h1(heading)}${p(body)}`, "18px 20px 0"),
     section(offer.html, "14px 20px 0"),
     section(buttons([[c.button, input.bookUrl]]), "12px 20px 0"),
     gap(16),
@@ -353,7 +350,7 @@ export function giftReminderEmail(input: { kind: "reminder" | "last_call"; first
     subject,
     preheader: c.preheader,
     html: page({ title: subject, preheader: c.preheader, rows }),
-    text: textOf([heading, body, left, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
+    text: textOf([heading, body, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }
 
@@ -361,12 +358,14 @@ export function giftReminderEmail(input: { kind: "reminder" | "last_call"; first
 /* 9. Staff: winner drawn                                              */
 /* ------------------------------------------------------------------ */
 
+/** What staff see about a winner (P1-8): who and where — never their
+ *  new/current status. The prize VERSION is passed separately, because
+ *  fulfilling the prize needs it. */
 export type StaffWinner = {
   name: string;
   email: string;
   zip: string;
   city: string | null;
-  isExistingClient: boolean;
 };
 
 export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWinner; version: PrizeVersion; claimDeadline: Date; taxFormRequired: boolean; adminUrl: string; now: Date }): Email {

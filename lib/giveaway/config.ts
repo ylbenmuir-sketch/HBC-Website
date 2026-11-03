@@ -515,17 +515,9 @@ export const OFFER = {
   conciergeTravelFeeUsd: 100,
 } as const;
 
-/** Free-first-visit spots per center (fix list rev 2, P1-1): Ben supplies
- *  the real Brain Map slots for Nov 23 – Dec 31. null = not set yet: the
- *  reveal email then shows no "X of N left" line and nothing is capped. */
-export const GIFT_CAP: { nashville: number | null; murfreesboro: number | null } = { nashville: null, murfreesboro: null };
-
-/** What a code gives once its center is at the cap (P1-1). LEFT BLANK —
- *  Ben decides at the copy freeze (e.g. a half-price Brain Map through
- *  Dec 31). null = no fallback: a booking at the cap is waitlisted. When
- *  set, a booking at the cap redeems as this instead, and "every entrant
- *  receives a gift" stays true. */
-export const GIFT_FALLBACK: { label: string } | null = null;
+/** No per-center caps and no fallback gift (Ben, 2026-11-03): every
+ *  entrant's free first visit is good until the booking deadline; urgency
+ *  comes from that date alone. Never "limited spots" or "X of N left". */
 
 /** Whether an offer code still works at `now`. */
 export function offerOpen(now: Date): boolean {

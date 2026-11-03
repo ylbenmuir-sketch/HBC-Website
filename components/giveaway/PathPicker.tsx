@@ -17,7 +17,7 @@ export default function PathPicker({ label, newLabel, currentLabel }: { label: s
   const pathname = usePathname();
   const pick = (v: PrizeVersion) => {
     setVersion(v);
-    trackEvent(giveawayPathPickEvent(v === "new_client" ? "new" : "current", pathname ?? "/10years"));
+    trackEvent(giveawayPathPickEvent(pathname ?? "/10years"));
     document.getElementById("ty-prizes")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const button = (v: PrizeVersion, text: string) => (

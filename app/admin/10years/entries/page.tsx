@@ -83,7 +83,6 @@ export default async function EntriesPage({ searchParams }: { searchParams: Prom
             <th style={th}>Email</th>
             <th style={th}>ZIP / city</th>
             <th style={th}>Verified</th>
-            <th style={th}>Client</th>
             <th style={th}>Entries</th>
             <th style={th}>Credits</th>
             <th style={th}>Referred by</th>
@@ -132,7 +131,6 @@ export default async function EntriesPage({ searchParams }: { searchParams: Prom
                   <span style={{ ...muted, fontSize: 12 }}>{p.city ?? "—"}</span>
                 </td>
                 <td style={td}>{p.verified_at ? fmtAt(p.verified_at) : <span style={muted}>no</span>}</td>
-                <td style={td}>{p.is_existing_client ? "existing" : "new"}</td>
                 <td style={td}>{v.liveEntries}</td>
                 <td style={td}>{p.referral_credits}</td>
                 <td style={{ ...td, fontSize: 13 }}>{v.referredBy ? personName(v.referredBy) : p.referred_by_person_id ? <span style={muted}>unknown person</span> : "—"}</td>

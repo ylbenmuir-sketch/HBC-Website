@@ -125,7 +125,10 @@ async function startServer(overrides = {}) {
     GIVEAWAY_SITE_URL: BASE,
   };
   if (USE_DB) {
-    delete env.GIVEAWAY_REPO;
+    // Empty, not deleted: `next start` fills an UNSET key from .env.local,
+    // which may say GIVEAWAY_REPO=memory — and then --db never touched the
+    // database (found 2026-11-03).
+    env.GIVEAWAY_REPO = "";
   } else {
     env.GIVEAWAY_REPO = "memory";
     // Nothing may touch the real database: empty beats unset, because
@@ -715,6 +718,8 @@ try {
     giftReminder: all.filter((e) => /Your free first visit: book by/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,
     leads: all.filter((e) => /free call request \(10 years\)/.test(e.body.subject)).length,
+    // With --db the bookings save, so the visitor gets "We got your request" too.
+    visitorConfirm: all.filter((e) => /^We got your request/.test(e.body.subject)).length,
   };
   const accounted = Object.values(kinds).reduce((a, b) => a + b, 0);
   console.log(`  emails: ${JSON.stringify(kinds)} = ${accounted} of ${all.length}`);

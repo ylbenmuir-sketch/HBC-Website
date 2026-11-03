@@ -167,8 +167,6 @@ export const EMAILS = {
     preheader: D("A free Brain Map and consultation, with your code."),
     heading: (firstName: string) => D(`${firstName ? `${firstName}, thank` : "Thank"} you.`),
     body: D("Whether or not your name was drawn, thank you for celebrating ten years with us. Here's the gift we promised: your first visit is on us."),
-    /** "Nashville: 12 of 40 left · Murfreesboro: 8 of 30 left" — counts at send time, only when caps are set. */
-    left: (line: string) => D(`Spots are limited: ${line}.`),
     /** "Our centers are open Mon, Nov 23 and Tue, Nov 24" — the days from config. */
     openDays: (days: string) => D(`Our centers are open ${days}, so you can book this week.`),
     button: D("Book my free first visit"),
