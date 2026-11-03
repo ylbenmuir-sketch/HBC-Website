@@ -5,12 +5,13 @@ import FAQAccordion from "@/components/FAQAccordion";
 import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
 import { DEVICES, DRAWINGS, RULES_VERSION, breakdownSumUsd, giftRevealed, pageMode, prizeBreakdown, prizeFor, prizeRetailUsd, type PrizePart, type PrizeSpec } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
-import { rulesSections } from "@/lib/giveaway/rules";
+import { NO_PURCHASE_LINE, rulesSections } from "@/lib/giveaway/rules";
+import { locationPhone, locations } from "@/lib/locations";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
 import { showcaseActive, tenYearsPublic } from "@/lib/giveaway/showcase";
 import AssistantOff from "@/components/giveaway/AssistantOff";
 import { EMAIL_ADDRESS, SITE_URL } from "@/lib/site-config";
-import { DBA_SENTENCE, LEGAL_ENTITY, REGISTERED_ADDRESS_LINE } from "@/lib/sms-identity";
+import { LEGAL_ENTITY } from "@/lib/sms-identity";
 
 /**
  * /10years/rules — the prize table, the giveaway questions, then the
@@ -50,12 +51,16 @@ export default function RulesPage() {
   const revealed = giftRevealed(giveawayNow());
   const t = PAGES.tenYears;
   const q = giveawayQuestions();
+  const siteHost = SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
   const sections = rulesSections({
     legalEntity: LEGAL_ENTITY,
-    dbaSentence: DBA_SENTENCE,
-    addressLine: REGISTERED_ADDRESS_LINE,
-    siteHost: SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, ""),
+    // The open centers, their confirmed addresses and lines (lib/locations.ts).
+    centers: locations
+      .filter((l) => !l.comingSoon)
+      .map((l) => ({ name: l.name, address: `${l.address.streetAddress}, ${l.address.addressLocality}, ${l.address.addressRegion} ${l.address.postalCode}`, phone: locationPhone(l)?.display ?? null })),
+    siteHost,
     contactEmail: EMAIL_ADDRESS,
+    privacyUrl: `${SITE_URL.replace(/\/$/, "")}/privacy-policy`,
     giftRevealed: revealed,
   });
   return (
@@ -99,25 +104,32 @@ export default function RulesPage() {
         <FAQAccordion items={revealed ? [q.enter, q.more, q.when, q.win, q.offer] : [q.enter, q.more, q.when, q.win]} className="faq-list ty-details-qa" />
         <h2 id="rules">Official Rules</h2>
         <p className="sub">Rules version {RULES_VERSION}.</p>
+        <p>
+          <strong>{NO_PURCHASE_LINE}</strong>
+        </p>
         {sections.map((s) => (
           <div key={s.id} id={`rule-${s.id}`} data-rule={s.n}>
             <h3>
               {s.n}. {s.title}
             </h3>
-            {s.paras.slice(0, s.list ? 1 : undefined).map((para) => (
-              <p key={para}>{para}</p>
-            ))}
-            {s.list && (
-              <>
-                <ul>
-                  {s.list.map((li) => (
+            {s.blocks.map((b, i) =>
+              "p" in b ? (
+                <p key={i}>{b.p}</p>
+              ) : "strong" in b ? (
+                <p key={i}>
+                  <strong>{b.strong}</strong>
+                </p>
+              ) : "link" in b ? (
+                <p key={i}>
+                  {b.link.before} <a href={b.link.href}>{b.link.label}</a>.
+                </p>
+              ) : (
+                <ul key={i}>
+                  {b.ul.map((li) => (
                     <li key={li}>{li}</li>
                   ))}
                 </ul>
-                {s.paras.slice(1).map((para) => (
-                  <p key={para}>{para}</p>
-                ))}
-              </>
+              )
             )}
           </div>
         ))}

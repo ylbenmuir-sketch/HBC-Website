@@ -151,6 +151,8 @@ export const SCHEDULE = {
   offerReminder: instant(centralToUtc(2026, 12, 1, 10, 0), "Tue Dec 1, 10:00 AM CT", "Offer reminder (built after Nov 21)"),
   /** The offer and every code switch off. */
   offerEnd: instant(centralToUtc(2026, 12, 5, 23, 59, 59), "Sat Dec 5, 11:59 PM CT", "Offer window closes; codes stop working; chat returns to /10years"),
+  /** The last day to ask for the winners list (Official Rules §20, Grok's draft). */
+  winnersListRequestBy: instant(centralToUtc(2027, 1, 31, 23, 59, 59), "Sun Jan 31, 11:59 PM CT", "Last day to request the winners list"),
   /** A free first visit may be any date through Dec 31. */
   visitBy: instant(centralToUtc(2026, 12, 31, 23, 59, 59), "Thu Dec 31, 11:59 PM CT", "Last day for the free first visit"),
 } as const;
@@ -532,6 +534,11 @@ export const REFERRAL = {
   /** Credited friends per referrer; the eleventh credits nothing. */
   friendCap: 10,
 } as const;
+
+/** The early-bird bonus (decision 13): a notify-me signup who taps the
+ *  one-tap entry link before the first drawing gets this many extra
+ *  entries. lib/giveaway/people.ts and the Official Rules read it here. */
+export const EARLY_BIRD = { bonusEntries: 1, before: DRAWINGS[0] } as const;
 
 /* ------------------------------------------------------------------ */
 /* Eligibility: Tennessee and its neighbours (Ben, 2026-10-19)          */

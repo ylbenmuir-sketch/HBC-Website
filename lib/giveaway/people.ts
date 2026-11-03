@@ -21,7 +21,7 @@
  */
 
 import { audit } from "./audit";
-import { REFERRAL, RULES_VERSION, SCHEDULE, drawing } from "./config";
+import { EARLY_BIRD, REFERRAL, RULES_VERSION, SCHEDULE } from "./config";
 import { emailDomain, normalizeEmail } from "./email-normalize";
 import type { EntryRow, NotifyRow, OfferRow, PersonRow } from "./rows";
 import type { GiveawayStore } from "./store";
@@ -401,7 +401,8 @@ export async function liveTap(store: GiveawayStore, notifyId: string, now: Date)
   }
   await writeBaseEntry(store, person.id, now);
   let earlyBird = false;
-  if (now.getTime() < drawing("mon").at.getTime()) {
+  // One early_bird row = EARLY_BIRD.bonusEntries (1); the unique index allows one per person.
+  if (now.getTime() < EARLY_BIRD.before.at.getTime()) {
     const { error: ebErr } = await store.insert("giveaway_entries", { person_id: person.id, kind: "early_bird", created_at: now.toISOString() });
     if (ebErr && ebErr.code !== "23505") throw fail("early bird", ebErr);
     earlyBird = true;

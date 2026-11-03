@@ -1,18 +1,23 @@
 /**
- * The Official Rules of the 10-year giveaway, as numbered sections (fix
- * list rev 2, P0-1). Ben approves these words himself (no counsel — Ben,
- * 2026-11-03). Every fact in them — times, counts, caps, prices, states,
- * the use-by date, the tax line — is read from lib/giveaway/config.ts, so
- * the rules cannot drift from the page, the emails or the drawing engine.
- * The prize table on /10years/rules is built from the same config
- * (prizeBreakdown), not from this file.
+ * The Official Rules of the 10-year giveaway (fix list rev 2, P0-1): the
+ * wording of Grok's official-rules-draft.md (Ben, 2026-11-03), twenty
+ * numbered sections. Ben approves them himself (no counsel). Every value —
+ * times, counts, caps, prices, states, the use-by date, the tax line, the
+ * sponsor's addresses and phones — is read from lib/giveaway/config.ts (or
+ * lib/locations.ts / lib/sms-identity.ts via the page), never typed, so the
+ * rules cannot drift from the page, the emails or the drawing engine. The
+ * per-drawing prize table on /10years/rules is prizeBreakdown(), not text.
  *
- * Section 13 is the thank-you gift. Before GIFT_REVEAL_AT it is one neutral
- * line that never names the gift (P0-2); from the reveal on it carries the
- * gift's terms.
+ * Where the draft and the config disagreed, the config wins and the
+ * wording follows the code; the list is in the commit that merged the draft.
  *
- * Pure: no environment reads. The page passes the identity strings and
- * whether the gift is revealed.
+ * Section 13 is the thank-you gift: the draft's neutral wording before
+ * GIFT_REVEAL_AT (it never names the gift — P0-2), the gift's terms after.
+ *
+ * The draft's "This is a template, not legal advice." line is kept out of
+ * the public page on purpose (fix list P0-1).
+ *
+ * Pure: no environment reads.
  */
 
 import {
@@ -20,8 +25,8 @@ import {
   CLAIM_WINDOW_MS,
   DEVICES,
   DRAWINGS,
+  EARLY_BIRD,
   ELIGIBLE_STATES,
-  GIFT_REVEAL_AT,
   OFFER,
   PRIZES,
   PRIZE_USE_BY,
@@ -30,29 +35,43 @@ import {
   SCHEDULE,
   TAX_FORM_THRESHOLD_USD,
   TAX_THRESHOLD_CONFIRMED,
+  centralParts,
   prizeRetailUsd,
-  spokenCentralDateTime,
 } from "./config";
 
-export type RulesSection = { n: number; id: string; title: string; paras: string[]; list?: string[] };
+export type RulesBlock = { p: string } | { ul: string[] } | { strong: string } | { link: { before: string; label: string; href: string } };
+export type RulesSection = { n: number; id: string; title: string; blocks: RulesBlock[] };
+
+export type SponsorCenter = { name: string; address: string; phone: string | null };
 
 export type RulesInput = {
   legalEntity: string;
-  dbaSentence: string;
-  addressLine: string;
+  centers: SponsorCenter[];
   siteHost: string;
   contactEmail: string;
+  privacyUrl: string;
   /** giftRevealed(giveawayNow()) — the real clock, never a showcase stage. */
   giftRevealed: boolean;
 };
 
+/** The all-caps line the draft opens with, above §1. */
+export const NO_PURCHASE_LINE = "NO PURCHASE NECESSARY TO ENTER OR WIN. A PURCHASE OR PAYMENT OF ANY KIND WILL NOT IMPROVE YOUR CHANCES OF WINNING. VOID WHERE PROHIBITED.";
+
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
-const longDate = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(d);
-const listOf = (items: string[]) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`);
+const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", ...o }).format(d);
+/** "Mon Nov 9, 2026, 12:00 AM" */
+const ctFull = (d: Date) => `${fmt(d, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}, ${fmt(d, { hour: "numeric", minute: "2-digit", hour12: true })}`;
+/** "Mon Nov 16" */
+const ctDay = (d: Date) => fmt(d, { weekday: "short", month: "short", day: "numeric" });
+/** "12:00 PM" */
+const ctTime = (d: Date) => fmt(d, { hour: "numeric", minute: "2-digit", hour12: true });
+/** "May 31, 2027" */
+const longDate = (d: Date) => fmt(d, { month: "long", day: "numeric", year: "numeric" });
+const listOf = (items: string[], joiner = "and") => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} ${joiner} ${items[items.length - 1]}`);
 
 /** The most entries one person can hold: base + early bird + arriving by a friend's link + the referral cap. */
 export function maxEntriesPerPerson(): number {
-  return 1 + 1 + REFERRAL.referredBonus + REFERRAL.referrerBonus * REFERRAL.friendCap;
+  return 1 + EARLY_BIRD.bonusEntries + REFERRAL.referredBonus + REFERRAL.referrerBonus * REFERRAL.friendCap;
 }
 
 /** The week's total ARV, smallest (all current-client versions) and largest (all new-client). */
@@ -62,139 +81,245 @@ export function arvRange(): { min: number; max: number } {
 }
 
 export function rulesSections(input: RulesInput): RulesSection[] {
-  const first = DRAWINGS[0];
+  const daily = DRAWINGS.filter((d) => d.kind === "daily");
   const grand = DRAWINGS[DRAWINGS.length - 1];
-  const states = listOf(ELIGIBLE_STATES.map((s) => s.name));
   const hours = Math.round(CLAIM_WINDOW_MS / 3_600_000);
   const moved = `${CLAIM_MOVED_DEADLINE_HOUR_CT % 12 || 12}:00 ${CLAIM_MOVED_DEADLINE_HOUR_CT < 12 ? "AM" : "PM"} CT`;
+  const year = centralParts(grand.at).year;
   const { min, max } = arvRange();
-  const keychainPriced = RATES.hoolestKeychain.usd != null;
+  const keychain = RATES.hoolestKeychain.usd;
+  const extraWord = EARLY_BIRD.bonusEntries === 1 ? "extra entry" : "extra entries";
   const sections: Omit<RulesSection, "n">[] = [
     {
       id: "sponsor",
       title: "Sponsor",
-      paras: [`The giveaway is sponsored by ${input.legalEntity}, doing business as Harmonized Brain Centers ("Sponsor"), ${input.addressLine}. ${input.dbaSentence}`],
-    },
-    {
-      id: "no-purchase",
-      title: "No purchase necessary",
-      paras: ["No purchase or payment of any kind is necessary to enter or win. A purchase or payment will not improve your chances of winning. Void where prohibited."],
-    },
-    {
-      id: "eligibility",
-      title: "Who may enter",
-      paras: [
-        `Open to legal residents of ${states} who are 18 or older when they enter. The ZIP code you give must be in one of those states.`,
-        "Employees and contractors of Sponsor, and the members of their immediate families and households, may not enter. Current clients of Sponsor may enter; they are eligible for the current-client version of each prize.",
+      blocks: [
+        { p: `${input.legalEntity}, doing business as Harmonized Brain Centers ("HBC" or "Sponsor"):` },
+        { ul: input.centers.map((c) => `${c.name}: ${c.address}${c.phone ? `, ${c.phone}` : ""}`) },
+        { p: `Questions: ${input.contactEmail}` },
       ],
     },
     {
-      id: "entry-period",
-      title: "Entry period",
-      paras: [
-        `Sign-ups from ${SCHEDULE.notifyMeStart.ct} until entries open are requests to be emailed an entry link; they are not entries.`,
-        `Entries open ${SCHEDULE.entriesOpen.ct} and close ${SCHEDULE.entriesClose.ct}. Sponsor's computer clock is the official clock.`,
+      id: "eligibility",
+      title: "Who can enter",
+      blocks: [
+        { p: `You can enter if you are 18 or older when you enter and a legal resident of ${listOf(ELIGIBLE_STATES.map((s) => s.name), "or")}.` },
+        { p: "You can't enter if you are an employee or contractor of the Sponsor, or a member of the immediate family (spouse, parent, child, sibling) or household of one." },
+        { p: "Current HBC clients can enter. The giveaway is void outside the states listed above and wherever prohibited." },
+      ],
+    },
+    {
+      id: "dates",
+      title: "Dates (all times Central)",
+      blocks: [
+        {
+          ul: [
+            `Notify-me sign-ups: ${ctFull(SCHEDULE.notifyMeStart.at)} through ${ctFull(SCHEDULE.entriesOpen.at)}. Signing up here is a reminder only. It becomes an entry when you tap the entry link we email you.`,
+            `Entry period: ${ctFull(SCHEDULE.entriesOpen.at)} through ${ctFull(SCHEDULE.entriesClose.at)}.`,
+            `Drawings: ${ctDay(daily[0].at)} through ${ctDay(daily[daily.length - 1].at)}, at ${ctTime(daily[0].at)}${ctTime(daily[0].at) === "12:00 PM" ? " (noon)" : ""} each day. The grand prize drawing is ${ctDay(grand.at)} at ${ctTime(grand.at)}.`,
+            "The Sponsor's computer clock is the official clock for this giveaway.",
+          ],
+        },
       ],
     },
     {
       id: "how-to-enter",
-      title: "How to enter",
-      paras: [
-        `Fill in the form at ${input.siteHost}/10years with your name, email address and ZIP code, say whether you are a new or current client, and confirm you are 18 or older and agree to these rules. Then tap the link in the email we send you. An entry counts only once its email address is confirmed.`,
-        "One person, one email address. Entries made with more than one email address, by automated means, or with false information are void.",
+      title: "How to enter (free)",
+      blocks: [
+        {
+          ul: [
+            `Go to ${input.siteHost}/10years.`,
+            "Fill in your first and last name, email and ZIP code. Say whether you're new to HBC or a current client, and agree to these rules.",
+            "Tap the confirmation link in the email we send you. Your entry counts once you confirm.",
+          ],
+        },
+        { p: "Entering is free. This online form is the free way to enter. No purchase, payment, visit or appointment is needed, and buying something will not improve your chances." },
+        { p: "One person, one email address. Entries from extra email addresses, fake identities, scripts or bots are void." },
       ],
     },
     {
       id: "bonus-entries",
       title: "Bonus entries",
-      paras: [
-        `Early bird: confirm your entry before the first drawing (${first.ct}) and you receive one bonus entry.`,
-        `Friends: each confirmed entrant gets a personal share link. Each friend who enters through your link and confirms adds ${REFERRAL.referrerBonus} entries for you and ${REFERRAL.referredBonus} for them. Bonus entries for friends stop after ${REFERRAL.friendCap} friends, so no one can hold more than ${maxEntriesPerPerson()} entries. Referring yourself, or entries made up to collect bonuses, voids the bonus entries involved.`,
+      blocks: [
+        { p: "Your confirmed entry counts in every drawing held after you confirm, for as long as you are still eligible. Bonus entries count only in drawings held after they are added to your total." },
+        {
+          ul: [
+            `Early-bird bonus: If you signed up for notify-me before entries opened and you confirm your entry by tapping the entry link before ${ctFull(EARLY_BIRD.before.at)}, you get ${EARLY_BIRD.bonusEntries} ${extraWord}.`,
+            `Referral bonus: After you confirm, you get a personal link. Each friend who enters through your link and confirms gives you ${REFERRAL.referrerBonus} extra entries. This counts for up to ${REFERRAL.friendCap} friends, so ${REFERRAL.referrerBonus * REFERRAL.friendCap} extra entries at most.`,
+            `Referred bonus: A friend who enters through your link and confirms gets ${REFERRAL.referredBonus} extra ${REFERRAL.referredBonus === 1 ? "entry" : "entries"}.`,
+            "Sharing is optional. You don't have to share, post or tag anyone to enter or to win. Referring yourself, or using fake or duplicate entries, voids the bonus and may disqualify you.",
+          ],
+        },
+        { p: `No one can hold more than ${maxEntriesPerPerson()} entries.` },
+      ],
+    },
+    {
+      id: "prizes",
+      title: "Prizes and approximate retail values (ARV)",
+      blocks: [
+        { p: "How the values are figured:" },
+        {
+          ul: [
+            `Brain Map: ${usd(RATES.brainMap.usd ?? 0)}`,
+            `LENS session: ${usd(RATES.session.usd ?? 0)} each`,
+            `Vibro-acoustic chair: ${usd(RATES.vibroChair.usd ?? 0)} per session (every session includes it)`,
+            `${DEVICES.keychain.name} by ${DEVICES.keychain.by}: ${keychain == null ? "value TBD" : usd(keychain)}`,
+            `${DEVICES.handheld.name} by ${DEVICES.handheld.by}: ${usd(RATES.hoolestHandheld.usd ?? 0)} (${DEVICES.handheld.by}'s published price)`,
+            "Partner prizes: TBD. They will be named and valued here before entries open, or left out.",
+          ],
+        },
+        { p: "There are two versions of each prize, one for new clients and one for current clients. Current clients already have a Brain Map, so their version leaves it out; the current-client grand prize has one extra session instead. The version follows the new-or-current answer you give when you enter, and the Sponsor confirms it when you claim. The prize table at the top of this page lists every part of every prize and its value." },
+        { p: `Total ARV of all six prizes: ${usd(min)} if every winner is a current client, up to ${usd(max)} if every winner is new. Pocket devices and partner prizes (TBD) come on top.` },
+        { strong: "Prize terms:" },
+        {
+          ul: [
+            `Sessions and Brain Maps are for the winner's own use at an HBC center. They must be scheduled by ${longDate(PRIZE_USE_BY.at)}. They cannot be transferred.`,
+            `${DEVICES.handheld.by} devices are picked up at a center or shipped to an address in an eligible state. They carry only the manufacturer's warranty.`,
+            "Partner prizes are provided by the partner, under the partner's terms.",
+            "HBC is a wellness practice, not a medical clinic. Prizes are wellness services and products and are not meant to diagnose, treat, cure or prevent any condition.",
+          ],
+        },
       ],
     },
     {
       id: "drawings",
-      title: "Drawings and odds",
-      paras: [
-        `Sponsor holds ${DRAWINGS.length} drawings, all times Central:`,
-        `Each winner is chosen at random by computer from every eligible, confirmed entry received before that drawing. The selection is recorded so it can be re-checked. A person who wins a daily drawing is not eligible for later daily drawings but stays eligible for the grand prize, which is drawn from every eligible entry of the week. The odds of winning depend on the number of eligible entries.`,
-      ],
-      list: DRAWINGS.map((d) => `${d.dayName}${d.kind === "grand" ? " (grand prize)" : ""}: ${d.ct}`),
-    },
-    {
-      id: "prizes",
-      title: "Prizes and their value",
-      paras: [
-        "The table above lists each drawing's prize in both versions, with every part and its approximate retail value (ARV). The version a winner receives follows the new-or-current-client answer given at entry; Sponsor may check it against its records.",
-        `Values: a Brain Map is ${usd(RATES.brainMap.usd ?? 0)}, a LENS session is ${usd(RATES.session.usd ?? 0)}, and every prize session includes the vibro chair at ${usd(RATES.vibroChair.usd ?? 0)} per session — Sponsor's standard prices. The ${DEVICES.handheld.name.toLowerCase()} by ${DEVICES.handheld.by} is ${usd(RATES.hoolestHandheld.usd ?? 0)}, ${DEVICES.handheld.by}'s published retail price.${keychainPriced ? "" : ` The ${DEVICES.keychain.name.toLowerCase()} by ${DEVICES.keychain.by}'s value is to be determined and is not counted in any total.`}`,
-        `The total ARV of the six prizes is ${usd(min)} if every winner is a current client and ${usd(max)} if every winner is new. Partner prizes are to be determined; if one is added, these rules will be updated with its description and value before its drawing, and partner prizes are not counted in any total.`,
+      title: "How winners are picked",
+      blocks: [
+        {
+          ul: [
+            "Each drawing is a random drawing run by the Sponsor's automated system at the time listed above.",
+            "It draws from all eligible entries received before that drawing, and every entry has an equal chance.",
+            "A daily winner can't win a later daily drawing, but stays in for the grand prize.",
+            "The grand prize is drawn from all eligible entries received during the entry period.",
+            "The Sponsor's decisions are final.",
+          ],
+        },
       ],
     },
     {
-      id: "prize-conditions",
-      title: "Prize conditions",
-      paras: [
-        `Brain Maps and sessions are provided at Sponsor's Nashville or Murfreesboro center, by appointment, and must be used by ${longDate(PRIZE_USE_BY.at)}. Anything unused by then is forfeited.`,
-        "Prizes cannot be transferred, sold or exchanged for cash. Sponsor may substitute a prize of equal or greater value if a prize becomes unavailable. Sessions are subject to Sponsor's standard intake. Prizes are described by what they contain; Sponsor makes no claim about any health outcome.",
-      ],
+      id: "odds",
+      title: "Odds",
+      blocks: [{ p: "Your odds depend on how many eligible entries are received for each drawing. In any one drawing, your chance equals your entries divided by the total eligible entries in that drawing." }],
     },
     {
       id: "winners",
-      title: "Winner notification and claim",
-      paras: [
-        `Winners are notified by email, at the address used to enter. To claim, a winner taps the link in that email and gives the best phone number to reach them within ${hours} hours of the drawing; a deadline that would fall on a Sunday or Monday moves to the following Tuesday at ${moved}. Sponsor then calls to arrange the prize.`,
-        "A winner who does not respond by the deadline, cannot be reached, or is found ineligible forfeits the prize, and an alternate winner is drawn from the same drawing's entries.",
+      title: "Notifying winners, claiming a prize, and redraws",
+      blocks: [
+        {
+          ul: [
+            "We notify winners by email, at the address used to enter, at the time of the drawing.",
+            `To claim, a winner must respond through the claim link within ${hours} hours. If that deadline falls on a Sunday or Monday, it moves to the next Tuesday at ${moved}.`,
+            "On the claim page we ask for a phone number so we can arrange the prize.",
+            "We may ask for proof of age, identity and residency.",
+            "If a winner doesn't respond in time, isn't eligible, or declines, the prize is forfeited. We then draw an alternate winner from the same pool, and the same claim rules apply.",
+            "We're not responsible for emails caught by spam filters or sent to a mistyped address.",
+          ],
+        },
       ],
     },
     {
       id: "taxes",
       title: "Taxes",
-      paras: [
-        `Winners are responsible for any taxes on their prizes. If the prizes Sponsor awards one person in ${grand.at.getUTCFullYear()} total ${usd(TAX_FORM_THRESHOLD_USD)} or more in ARV, that person must complete IRS Form W-9 before the prize is provided, and Sponsor will issue IRS Form 1099.${TAX_THRESHOLD_CONFIRMED ? "" : " Accountant to confirm."}`,
+      blocks: [
+        {
+          p: `Winners pay any taxes on their prizes. For prizes awarded in ${year}, the Sponsor will issue IRS Form 1099-MISC to any winner whose total prize value from the Sponsor in ${year} is ${usd(TAX_FORM_THRESHOLD_USD)} or more. That winner must complete Form W-9 before receiving the prize.${TAX_THRESHOLD_CONFIRMED ? "" : ` (Accountant to confirm the ${usd(TAX_FORM_THRESHOLD_USD)} threshold.)`}`,
+        },
       ],
     },
     {
       id: "publicity",
-      title: "Publicity",
-      paras: ["Sponsor publishes a winner's first name, last initial and city only with the winner's consent, asked on the claim call. Saying no does not affect the prize."],
+      title: "Publicity (only with consent)",
+      blocks: [{ p: "We publish a winner's first name, last initial and city only if the winner agrees, on the claim call. Photos, video, testimonials and reviews need separate written consent. Winning never requires consent to publicity." }],
+    },
+    {
+      id: "no-cash",
+      title: "No cash substitution",
+      blocks: [
+        {
+          ul: [
+            "Prizes can't be exchanged for cash.",
+            "Prizes can't be substituted, assigned or transferred, except by the Sponsor.",
+            "If a prize becomes unavailable, the Sponsor may substitute one of equal or greater value.",
+          ],
+        },
+      ],
     },
     giftSection(input.giftRevealed),
     {
-      id: "privacy",
-      title: "Your information",
-      paras: [
-        `Sponsor uses the information you give to run the giveaway: to confirm your entry, email you about the drawings, and reach you if you win. Sponsor emails you about other news only if you tick the box asking for it, and never shares your information for anyone else's marketing. Every giveaway email has an unsubscribe link. See ${input.siteHost}/privacy-policy.`,
+      id: "cancel",
+      title: "Right to cancel or change",
+      blocks: [
+        { p: "The Sponsor may cancel, suspend or change this giveaway if any of these get in the way of running it fairly:" },
+        { ul: ["fraud", "technical failure", "tampering", "anything else beyond its control"] },
+        { p: "If it is cancelled, the Sponsor may draw winners from eligible entries received before the cancellation. Changes will be posted on this page with a new rules version date." },
       ],
     },
     {
-      id: "general",
-      title: "General conditions",
-      paras: [
-        "Sponsor may disqualify anyone who tampers with the entry process or breaks these rules, and may cancel, pause or change the giveaway if fraud, a technical failure or anything else beyond its control affects it, awarding prizes from the eligible entries received before then. Sponsor is not responsible for entries or emails that are lost, late or misdirected.",
-        "By entering, you agree to these rules and to Sponsor's decisions, which are final. By accepting a prize, a winner releases Sponsor from liability for any loss arising from the prize or the giveaway, except where the law does not allow it.",
-        "These rules are governed by the laws of the State of Tennessee.",
+      id: "disqualification",
+      title: "Disqualification",
+      blocks: [{ p: "The Sponsor may disqualify anyone who:" }, { ul: ["tampers with entries", "uses automated entries, bots or multiple identities", "breaks these rules"] }],
+    },
+    {
+      id: "liability",
+      title: "Limitation of liability and release",
+      blocks: [
+        { p: "By entering, you release the Sponsor, its partners, and their owners, employees and agents from any claim arising from your entry or from accepting or using a prize, to the fullest extent the law allows." },
+        { p: "The Sponsor is not responsible for:" },
+        { ul: ["entries that are lost, late, incomplete or misdirected", "email or technical failures", "errors in these rules or in giveaway materials"] },
+        { p: "Nothing here limits any liability that can't be limited by law." },
       ],
+    },
+    {
+      id: "privacy",
+      title: "Privacy",
+      blocks: [
+        { p: "We use the information you give us to run the giveaway and to send your entry, drawing and thank-you gift emails. We send HBC news only if you opt in. We don't sell your information. Whether you are a new or current client is used only to pick your prize version and gift, and we don't share it. You can unsubscribe at any time." },
+        { link: { before: "Full details:", label: "Privacy Policy", href: input.privacyUrl } },
+      ],
+    },
+    {
+      id: "social",
+      title: "Social media",
+      blocks: [{ p: "This promotion is in no way sponsored, endorsed or administered by, or associated with, Meta (Facebook, Instagram), Google or any other platform. You release those platforms from any liability connected with the giveaway." }],
+    },
+    {
+      id: "law",
+      title: "Governing law",
+      blocks: [{ p: "Tennessee law governs these rules. Any dispute will be handled in the state or federal courts in Davidson County, Tennessee." }],
     },
     {
       id: "winners-list",
       title: "Winners list",
-      paras: [`The winners who agreed to it are listed at ${input.siteHost}/10years after the drawings. For the list, or with any question about these rules, email ${input.contactEmail}.`],
+      blocks: [
+        {
+          p: `For a list of prizes awarded, email ${input.contactEmail} with the subject "HBC 10-Year Winners", or write to the ${input.centers[0]?.name ?? "Nashville"} address above, by ${longDate(SCHEDULE.winnersListRequestBy.at)}. The list includes each winner's city, plus the first name and last initial of winners who agreed to publicity.`,
+        },
+      ],
     },
   ];
   return sections.map((s, i) => ({ ...s, n: i + 1 }));
 }
 
-/** §13. Neutral until the reveal; the gift's terms after it. */
+/** §13. The draft's neutral wording until the reveal; the gift's terms after it. */
 function giftSection(revealed: boolean): Omit<RulesSection, "n"> {
-  const neutral = `Every entrant whose entry is confirmed also receives a 10-year thank-you gift from Sponsor, announced by email ${spokenCentralDateTime(GIFT_REVEAL_AT)} CT. The gift is not a prize: it is not awarded by chance and does not affect anyone's chance of winning.`;
-  if (!revealed) return { id: "thank-you-gift", title: "Thank-you gift", paras: [neutral] };
-  const date = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric" }).format(d);
+  const neutral = "Separately from this giveaway, the Sponsor plans to send a thank-you gift to verified entrants after the final drawing. It is not a prize, doesn't depend on winning, and has no effect on the odds. Details come by email.";
+  if (!revealed) return { id: "thank-you-gift", title: "Thank-you gift", blocks: [{ p: neutral }] };
+  const date = (d: Date) => fmt(d, { month: "long", day: "numeric" });
   return {
     id: "thank-you-gift",
     title: "Thank-you gift",
-    paras: [
-      neutral,
-      `The gift is a free first visit — a Brain Map and consultation, normally ${usd(OFFER.normallyUsd)} — booked with the entrant's code by ${date(OFFER.bookBy.at)} for a visit on any day through ${date(OFFER.visitBy.at)}. One code per entrant, used once. Starting the in-center ${OFFER.packageSessions}-session package at that visit adds a ${OFFER.packageSessions + 1}th session free; Concierge visits are free too, but the travel fee still applies and the package bonus is in-center only. Visits are subject to appointment availability at each center.`,
+    blocks: [
+      { p: neutral },
+      {
+        p: `The gift is a free first visit — a Brain Map and consultation, normally ${usd(OFFER.normallyUsd)} — booked with the entrant's code by ${date(OFFER.bookBy.at)} for a visit on any day through ${date(OFFER.visitBy.at)}. One code per entrant, used once. Starting the in-center ${OFFER.packageSessions}-session package at that visit adds a ${OFFER.packageSessions + 1}th session free; Concierge visits are free too, but the travel fee still applies and the package bonus is in-center only. Visits are subject to appointment availability at each center.`,
+      },
     ],
   };
+}
+
+/** Every word of the rules as plain text (tests, previews). */
+export function rulesText(sections: RulesSection[]): string {
+  return sections
+    .map((s) => [`${s.n}. ${s.title}`, ...s.blocks.map((b) => ("p" in b ? b.p : "strong" in b ? b.strong : "link" in b ? `${b.link.before} ${b.link.label} (${b.link.href})` : b.ul.join("\n")))].join("\n"))
+    .join("\n\n");
 }
