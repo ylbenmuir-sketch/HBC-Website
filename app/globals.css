@@ -238,6 +238,29 @@ em.sage { font-family: var(--serif-italic); font-style: italic; color: var(--sag
    z-index so it cannot land underneath it. */
 .skip { position: absolute; left: 16px; top: -200px; z-index: 100; padding: 12px 18px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15px; border-radius: 4px; text-decoration: none; }
 .skip:focus { top: 16px; outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* The site-wide 10-year banner (fix list rev 2, P0-7; lib/giveaway/banner.ts).
+   Hidden unless the inline <head> script set <html data-hbc-banner> to a
+   live mode before first paint — so it is in the layout from the first
+   frame or not at all (no shift), and a no-JS visitor never sees a stale
+   message. One real link per mode; only the matching one displays. Navy on
+   ivory text (13.9:1); 44 px tall, the dismiss button 44 × 44; no motion. */
+.hbc10y-banner { display: none; background: var(--navy); color: var(--ivory); }
+html[data-hbc-banner="notify"] .hbc10y-banner,
+html[data-hbc-banner="live"] .hbc10y-banner,
+html[data-hbc-banner="closed"] .hbc10y-banner { display: block; }
+.hbc10y-banner-inner { position: relative; display: flex; align-items: stretch; justify-content: center; min-height: 44px; padding: 0 44px; max-width: 1240px; margin: 0 auto; }
+.hbc10y-banner-link { display: none; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; color: var(--ivory); font-family: var(--sans); font-size: 14.5px; font-weight: 600; line-height: 1.35; text-align: center; text-decoration: none; text-underline-offset: 3px; }
+html[data-hbc-banner="notify"] .hbc10y-banner-link[data-copy="notify"],
+html[data-hbc-banner="live"] .hbc10y-banner-link[data-copy="live"],
+html[data-hbc-banner="closed"] .hbc10y-banner-link[data-copy="closed"] { display: flex; }
+.hbc10y-banner-link:hover { text-decoration: underline; }
+.hbc10y-banner-link:focus-visible, .hbc10y-banner-x:focus-visible { outline: 2px solid var(--gold); outline-offset: -4px; border-radius: 4px; }
+.hbc10y-banner-x { position: absolute; top: 0; right: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: 0; color: var(--ivory); cursor: pointer; opacity: 0.85; }
+.hbc10y-banner-x:hover { opacity: 1; }
+@media (max-width: 480px) {
+  .hbc10y-banner-link { font-size: 13.5px; }
+}
 main:focus { outline: none; }
 
 /* visible keyboard focus, sitewide */
@@ -2299,6 +2322,18 @@ body[data-bottombar] footer.site {
   .contact-ways-line-phone { display: block; margin: 20px 0 0; }
   .contact-ways-email { display: block; margin-top: 4px; }
 }
+/* The 10-year giveaway path (fix list rev 2, P0-8): both centers' lines,
+   call only — the center over its number so each fits half a 320 screen. */
+.contact-ways.contact-ways-giveaway { grid-template-columns: 1fr 1fr; }
+.contact-ways-giveaway .contact-way { white-space: normal; }
+.contact-ways-giveaway .contact-way-title { display: flex; flex-direction: column; align-items: flex-start; text-align: left; line-height: 1.25; }
+.contact-way-num { font-weight: 500; font-size: 14px; color: var(--slate); white-space: nowrap; }
+/* The giveaway booking's code banner and call-me box, step one. */
+.giveaway-code { margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 4px; background: var(--ivory); font-size: 14.5px; line-height: 1.45; color: var(--ink); }
+.giveaway-code[data-state="ok"] { border-left-color: var(--sage-deep); }
+.giveaway-code b { color: var(--navy); letter-spacing: 0.04em; }
+.giveaway-code-input { text-transform: uppercase; letter-spacing: 0.06em; }
+/* The call-me box reuses the texting box's look (.sms-consent), always at full strength. */
 /* "Best way to reach you" — the step-two chip pattern on step one. */
 .reach-chips .chip { padding: 10px 20px; }
 .reach-note { margin-top: 10px; }
@@ -2772,19 +2807,25 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 /* Hero: words left, the form card right. */
 .ty-hero { padding: 16px 0 32px; }
 .ty-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 56px; align-items: center; }
-.ty-seal { display: block; width: 112px; height: 112px; margin: 0 0 10px -2px; font-family: var(--sans); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6)); }
+.ty-seal { display: block; width: 104px; height: 104px; margin: 0 0 6px -2px; font-family: var(--sans); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6)); }
 .ty-seal-num { font-family: var(--serif); }
 /* The focal point (Ben, 2026-10-20): "10 years." in the brand sage, the
    second sentence about half its size in navy under it. */
-.ty-hero h1 { display: flex; flex-direction: column; align-items: flex-start; max-width: none; margin: 0 0 14px; line-height: 1; }
+.ty-hero h1 { display: flex; flex-direction: column; align-items: flex-start; max-width: none; margin: 0 0 10px; line-height: 1; }
 .ty-h1-years { font-size: clamp(96px, 8.6vw, 124px); line-height: 0.95; letter-spacing: -0.025em; color: var(--sage-deep); }
 .ty-h1-rest { font-size: clamp(42px, 4vw, 58px); line-height: 1.05; letter-spacing: -0.015em; color: var(--navy); margin-top: 8px; }
-.ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 8px; letter-spacing: -0.005em; }
+.ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 6px; letter-spacing: -0.005em; }
 .ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
-.ty-proof { font-size: 13px; color: var(--slate); letter-spacing: 0.04em; margin: 18px 0 0; }
+/* The mystery-gift tease (fix list rev 2, P0-4): one gold-ink line with a
+   small gift mark, under the value line; the card's twin sits above the
+   button. Never names the gift. */
+.ty-gift-tease { font-family: var(--sans); font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--gold-ink); margin: 0 0 6px; }
+.ty-gift-tease::before, .ty-gift-card::before { content: "\2726\00a0"; color: var(--gold); }
+.ty-gift-card { font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--gold-ink); margin: 12px 0 0; }
+.ty-proof { font-size: 13px; color: var(--slate); letter-spacing: 0.04em; margin: 14px 0 0; }
 
 /* "Which one are you?": two equal buttons; the pressed one is navy. */
-.ty-path { margin-top: 18px; }
+.ty-path { margin-top: 14px; }
 .ty-path-label { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 8px; }
 .ty-path-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; }
 .ty-path-btn { font: inherit; font-family: var(--sans); font-weight: 600; font-size: 15px; line-height: 1.3; color: var(--navy); background: #fff; border: 1.5px solid var(--line-control); border-radius: 6px; padding: 12px 14px; min-height: 50px; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s; }
@@ -2793,7 +2834,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-path-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* The countdown: four quiet boxes. */
-.ty-count { margin-top: 18px; }
+.ty-count { margin-top: 14px; }
 .ty-count-boxes { display: flex; gap: 8px; }
 .ty-count-box { display: flex; flex-direction: column; align-items: center; min-width: 66px; padding: 9px 10px 7px; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
 .ty-count-n { font-family: var(--serif); font-size: 30px; font-weight: 500; line-height: 1; color: var(--navy); font-variant-numeric: tabular-nums; }
@@ -2980,6 +3021,23 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-table th { text-align: left; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate); font-weight: 600; padding: 8px 12px 8px 0; }
 .ty-table td { padding: 12px 12px 12px 0; border-top: 1px solid var(--line); vertical-align: top; color: var(--ink); }
 .ty-table td span { display: block; font-size: 13.5px; color: var(--slate); }
+/* The rules table's breakdown (fix list rev 2, P0-5): one line per part, the value right-aligned, the total last. */
+.ty-rules-bd { list-style: none; margin: 0; padding: 0; font-size: 14px; line-height: 1.4; }
+.ty-rules-bd li { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+.ty-table .ty-rules-bd li span { display: inline; font-size: inherit; color: var(--ink); }
+.ty-rules-bd b { font-weight: 600; white-space: nowrap; color: var(--navy); }
+.ty-rules-bd .ty-rules-total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 5px; }
+.ty-table .ty-rules-bd .ty-rules-total span { font-weight: 600; color: var(--navy); }
+/* Phones: the three columns don't fit with a full breakdown in each, so
+   every drawing becomes one block — the day, then each version under its
+   own label (the column heads move into data-label). */
+@media (max-width: 767px) {
+  .ty-table thead { display: none; }
+  .ty-table, .ty-table tbody, .ty-table tr, .ty-table td { display: block; width: 100%; }
+  .ty-table tr { border-top: 1px solid var(--line); padding: 12px 0 6px; }
+  .ty-table td { border-top: 0; padding: 0 0 10px; }
+  .ty-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 4px; }
+}
 .ty-details h2[id], .ty-details h1[id] { scroll-margin-top: 96px; }
 /* The draft rules name bare URLs; they break rather than run off a 320px screen. */
 .ty-details.policy p, .ty-details .policy p { overflow-wrap: anywhere; }
@@ -3007,7 +3065,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-hero h1 { margin: 0 0 12px; }
   .ty-h1-years { font-size: 68px; }
   .ty-h1-rest { font-size: 34px; margin-top: 4px; }
-  .ty-value { font-size: 20px; }
+  .ty-value { font-size: 20px; margin-bottom: 6px; }
+  .ty-gift-tease { font-size: 15px; margin-bottom: 8px; }
   .ty-sub { font-size: 16.5px; }
   .ty-path { margin-top: 16px; }
   .ty-path-btns { max-width: none; }

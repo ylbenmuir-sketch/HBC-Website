@@ -140,8 +140,13 @@ export const SCHEDULE = {
   tuesdayCallToday: instant(centralToUtc(2026, 11, 17, 8, 30), "Tue Nov 17, 8:30 AM CT", "Staff 'call today' for Monday's winner (skipped if contacted)"),
   /** Entries close at the grand drawing. */
   entriesClose: instant(centralToUtc(2026, 11, 21, 17, 0), "Sat Nov 21, 5:00 PM CT", "Entries close; the grand prize is drawn"),
-  /** Thank-you + offer to everyone who did not win. My call: 10 am CT. */
-  thankYouSend: instant(centralToUtc(2026, 11, 22, 10, 0), "Sun Nov 22, 10:00 AM CT", "Thank-you + offer email to non-winners"),
+  /** The thank-you gift is revealed (fix list rev 2, P0-2/P0-10): before
+   *  this instant no public surface or email names it; from it the page and
+   *  the reveal email do. Ben, 2026-11-03: Saturday evening, so the clinics'
+   *  Monday and Tuesday of Thanksgiving week are two full call days. */
+  giftReveal: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you gift revealed on the page"),
+  /** The reveal email: every verified, subscribed entrant, winners included. */
+  thankYouSend: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you + gift reveal email to every verified, subscribed entrant"),
   /** Offer reminder — built after Nov 21. My call: 10 am CT. */
   offerReminder: instant(centralToUtc(2026, 12, 1, 10, 0), "Tue Dec 1, 10:00 AM CT", "Offer reminder (built after Nov 21)"),
   /** The offer and every code switch off. */
@@ -149,6 +154,20 @@ export const SCHEDULE = {
   /** A free first visit may be any date through Dec 31. */
   visitBy: instant(centralToUtc(2026, 12, 31, 23, 59, 59), "Thu Dec 31, 11:59 PM CT", "Last day for the free first visit"),
 } as const;
+
+/** The instant the thank-you gift may be named in public (P0-2). */
+export const GIFT_REVEAL_AT = SCHEDULE.giftReveal.at;
+
+/** True from the reveal on. Ask with giveawayNow(), never a showcase's
+ *  representative "now": a ?mode=closed preview before Saturday night must
+ *  not show the gift. */
+export function giftRevealed(now: Date): boolean {
+  return now.getTime() >= GIFT_REVEAL_AT.getTime();
+}
+
+/** The clinic days right after the reveal (Ben, 2026-11-03): open Monday
+ *  and Tuesday of Thanksgiving week. The reveal email names them. */
+export const CLINIC_DAYS_AFTER_REVEAL = [centralToUtc(2026, 11, 23, 9, 0), centralToUtc(2026, 11, 24, 9, 0)] as const;
 
 /** The daily afternoon email, Mon–Fri (decision 15: simplified). */
 export const DAILY_EMAIL_HOUR_CT = 16;
@@ -222,8 +241,9 @@ export const RATES = {
   session: { usd: 125, confirmed: true } as Rate,
   /** Per use; every prize session includes the chair. */
   vibroChair: { usd: 40, confirmed: true } as Rate,
-  /** Ben's brief of 2026-10-19 states $429 for the page's value tags. */
-  hoolestHandheld: { usd: 429, confirmed: true } as Rate,
+  /** Hoolest's published price (Ben, 2026-11-03; was $429 from the
+   *  2026-10-19 brief). */
+  hoolestHandheld: { usd: 399, confirmed: true, note: "Hoolest's published retail price" } as Rate,
   hoolestKeychain: { usd: null, confirmed: false, note: "UNCONFIRMED — Hoolest keychain retail price not yet supplied; counted as $0" } as Rate,
   /** Admin cost view only. Per session or map. */
   practitionerCostPerUnit: { usd: 35, confirmed: true } as Rate,
@@ -238,8 +258,24 @@ export const DEVICES = {
   keychain: { name: "Pocket vagus nerve stimulator", by: "Hoolest" },
 } as const;
 
-/** Over this computed retail value a winner needs a tax form (decision 16). */
-export const TAX_FORM_THRESHOLD_USD = 600;
+/** At or over this total retail value of HBC prizes in a year, a person
+ *  needs a tax form (fix list rev 2, P0-11): $2,000 for 2026, up from $600.
+ *  Aggregated per PERSON, not per prize — a daily winner who also wins the
+ *  grand prize is judged on both. */
+export const TAX_FORM_THRESHOLD_USD = 2000;
+/** False until HBC's accountant confirms the threshold; while false the
+ *  rules add "Accountant to confirm." after the tax line. */
+export const TAX_THRESHOLD_CONFIRMED = false;
+
+/** Whether a person whose HBC prizes this year total `totalUsd` needs a tax form. */
+export function taxFormRequiredForTotal(totalUsd: number): boolean {
+  return totalUsd >= TAX_FORM_THRESHOLD_USD;
+}
+
+/** The last day a prize's sessions and Brain Map can be used. UNCONFIRMED
+ *  (my default, 2026-11-03): six months after the drawings. Ben confirms or
+ *  changes it at the copy freeze; the rules read it from here. */
+export const PRIZE_USE_BY = { at: centralToUtc(2027, 5, 31, 23, 59, 59), ct: "Mon May 31, 2027, 11:59 PM CT", confirmed: false } as const;
 
 /* ------------------------------------------------------------------ */
 /* Prizes (decision 16)                                                */
@@ -312,10 +348,12 @@ export function prizeRetailUsd(p: PrizeSpec, rates = RATES): number {
   return total;
 }
 
-/** True when the retail value is a floor — a part of the prize (the
- *  keychain) has no price supplied yet, so the page shows "$810+". */
-export function prizeValueIsFloor(p: PrizeSpec, rates = RATES): boolean {
-  return (p.hoolestKeychain && rates.hoolestKeychain.usd == null) || (p.hoolestHandheld && rates.hoolestHandheld.usd == null);
+/** True when a part of the prize has no price yet (the pocket device, the
+ *  partner prizes). Those parts read "value TBD" / "TBD" in the breakdown
+ *  and are left out of the sum (fix list rev 2, P0-5), so the value shown
+ *  is exactly the sum of the priced lines — no "+". */
+export function prizeHasUnpricedParts(p: PrizeSpec, rates = RATES): boolean {
+  return prizeBreakdown(p, rates).some((part) => part.usd == null);
 }
 
 /** The week's prizes in one number: the sum of one version's retail
@@ -331,9 +369,11 @@ export function prizePractitionerCostUsd(p: PrizeSpec, rates = RATES): number {
   return (p.sessions + (p.brainMap ? 1 : 0)) * usdOf(rates.practitionerCostPerUnit);
 }
 
-/** Whether the retail value is over the tax-form threshold. */
+/** Whether this prize ALONE reaches the tax-form threshold (the seed's
+ *  per-prize flag). A winner's own flag is aggregated per person —
+ *  taxFormRequiredForTotal(), lib/giveaway/drawings.ts. */
 export function prizeTaxFormRequired(p: PrizeSpec, rates = RATES): boolean {
-  return prizeRetailUsd(p, rates) > TAX_FORM_THRESHOLD_USD;
+  return taxFormRequiredForTotal(prizeRetailUsd(p, rates));
 }
 
 /** Which rates in a prize are unconfirmed (for the admin and the plan). */
@@ -356,7 +396,6 @@ export function prizeName(p: PrizeSpec): string {
   items.push(`${p.sessions} sessions`);
   if (p.hoolestKeychain) items.push(`${DEVICES.keychain.name} by ${DEVICES.keychain.by}`);
   if (p.hoolestHandheld) items.push(`${DEVICES.handheld.name} by ${DEVICES.handheld.by} (${DEVICES.handheld.keep})`);
-  if (p.partnerServices) items.push("one service from every partner");
   return items.join(" + ");
 }
 
@@ -370,29 +409,37 @@ export function prizeDescription(p: PrizeSpec): string {
   items.push(`${p.sessions} LENS sessions`);
   if (p.hoolestKeychain) items.push(`a ${lower(DEVICES.keychain.name)} by ${DEVICES.keychain.by}`);
   if (p.hoolestHandheld) items.push(`a ${lower(DEVICES.handheld.name)} by ${DEVICES.handheld.by}, ${DEVICES.handheld.keep}`);
-  if (p.partnerServices) items.push("one service from every partner");
   const list = items.length === 1 ? items[0] : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
   return p.vibroChair ? `${list} (every session includes the vibro chair)` : list;
 }
 
 /**
  * The value breakdown behind a prize, one row per part, for the ladder's
- * expanded card: the map, the sessions, the chair at every session, a
- * device, a partner's gift. `usd` is null where no price has been supplied
- * (the keychain today), which is what puts the "+" on the total.
+ * expanded card and the rules table: the map, the sessions, the chair at
+ * every session ("2 × $40"), a device, the drawing's partner prize. `usd`
+ * is null where no price has been supplied (the pocket device and every
+ * partner today): the line reads "value TBD" / "TBD" and is left out of
+ * the sum. `unitUsd` is the per-session price for the sessions and chair.
  */
-export type PrizePart = { kind: "brainMap" | "sessions" | "chair" | "keychain" | "handheld" | "partner"; count: number; usd: number | null; partner?: Partner };
+export type PrizePart = { kind: "brainMap" | "sessions" | "chair" | "keychain" | "handheld" | "partner"; count: number; usd: number | null; unitUsd?: number | null; partner?: Partner };
 
 export function prizeBreakdown(p: PrizeSpec, rates = RATES): PrizePart[] {
   const parts: PrizePart[] = [];
   if (p.brainMap) parts.push({ kind: "brainMap", count: 1, usd: rates.brainMap.usd });
-  parts.push({ kind: "sessions", count: p.sessions, usd: rates.session.usd == null ? null : p.sessions * rates.session.usd });
-  if (p.vibroChair) parts.push({ kind: "chair", count: p.sessions, usd: rates.vibroChair.usd == null ? null : p.sessions * rates.vibroChair.usd });
+  parts.push({ kind: "sessions", count: p.sessions, usd: rates.session.usd == null ? null : p.sessions * rates.session.usd, unitUsd: rates.session.usd });
+  if (p.vibroChair) parts.push({ kind: "chair", count: p.sessions, usd: rates.vibroChair.usd == null ? null : p.sessions * rates.vibroChair.usd, unitUsd: rates.vibroChair.usd });
   if (p.hoolestKeychain) parts.push({ kind: "keychain", count: 1, usd: rates.hoolestKeychain.usd });
   if (p.hoolestHandheld) parts.push({ kind: "handheld", count: 1, usd: rates.hoolestHandheld.usd });
-  const partner = partnerFor(p.slot);
-  if (partner) parts.push({ kind: "partner", count: 1, usd: partner.retailUsd, partner });
+  // The drawing's partner prize, named or not: "TBD" until Ben names it. A
+  // named partner's value still stays out of the HBC sum (prizeRetailUsd)
+  // until it is confirmed and added to the rates.
+  parts.push({ kind: "partner", count: 1, usd: null, partner: partnerFor(p.slot) ?? undefined });
   return parts;
+}
+
+/** The sum of a breakdown's priced lines — what the page shows as the value. */
+export function breakdownSumUsd(parts: readonly PrizePart[]): number {
+  return parts.reduce((t, part) => t + (part.usd ?? 0), 0);
 }
 
 /* ------------------------------------------------------------------ */
@@ -462,6 +509,11 @@ export const OFFER = {
   /** Concierge: the visit is free, the travel fee still applies, no bonus. */
   conciergeTravelFeeUsd: 100,
 } as const;
+
+/** Free-first-visit spots per center (fix list rev 2, P1-1): Ben supplies
+ *  the real Brain Map slots for Nov 23 – Dec 31. null = not set yet: the
+ *  reveal email then shows no "X of N left" line and nothing is capped. */
+export const GIFT_CAP: { nashville: number | null; murfreesboro: number | null } = { nashville: null, murfreesboro: null };
 
 /** Whether an offer code still works at `now`. */
 export function offerOpen(now: Date): boolean {
@@ -546,4 +598,4 @@ export function chatSuppressedOn10Years(now: Date): boolean {
 }
 
 /** The current rules text version recorded on every acceptance. */
-export const RULES_VERSION = "2026-10-18-draft";
+export const RULES_VERSION = "2026-11-03";

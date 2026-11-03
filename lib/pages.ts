@@ -297,15 +297,16 @@ export const staticPages: StaticPage[] = [
     crumb: "Privacy",
   },
   {
-    // The 10-year giveaway (GIVEAWAY-PLAN.md). A HIDDEN page (Ben,
-    // 2026-10-19): noindex, disallowed in robots.txt, never in the sitemap
-    // (app/sitemap.ts), linked from nowhere. Registered here for its title,
-    // description and WebPage node only.
+    // The 10-year giveaway (GIVEAWAY-PLAN.md). Hidden until the engine is on
+    // and Nov 9 is reached, then indexed (app/10years/page.tsx, P0-6); the
+    // sitemap adds it on the same clock (app/sitemap.ts). The description
+    // never names the thank-you gift: it would be Google's snippet before
+    // the reveal (fix list rev 2, P0-2).
     path: "/10years",
     title: "Ten Years of Harmonized Brain Centers",
     description:
-      "Ten years of Harmonized Brain Centers: a week of drawings for Tennessee residents, one tap to enter them all, and a free first visit for everyone who enters.",
-    dateModified: "2026-10-18",
+      "Harmonized Brain Centers turns 10: six drawings Nov 16–21 for adult residents of TN and 8 nearby states. One free entry counts for every drawing.",
+    dateModified: "2026-11-03",
     type: "WebPage",
     crumb: "Ten years",
   },

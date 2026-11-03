@@ -13,6 +13,10 @@ import Analytics from "@/components/Analytics";
 import AssistantLoader from "@/components/AssistantLoader";
 import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION } from "@/lib/analytics";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
+import GiveawayBanner from "@/components/giveaway/GiveawayBanner";
+import { bannerScript } from "@/lib/giveaway/banner";
+import { PAGES as GIVEAWAY_PAGES } from "@/lib/giveaway/copy";
+import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
 import "./globals.css";
@@ -163,6 +167,11 @@ export default function RootLayout({
             __html: `document.documentElement.classList.add("js")`,
           }}
         />
+        {/* The 10-year banner's mode (fix list rev 2, P0-7), decided before
+            first paint so the bar is in the layout from the first frame or
+            not at all: <html data-hbc-banner>, read by CSS. Only while the
+            giveaway engine is on. lib/giveaway/banner.ts. */}
+        {giveawayEngineEnabled() && <script dangerouslySetInnerHTML={{ __html: bannerScript() }} />}
       </head>
       {/* The dock's footprint, reserved in the server-rendered HTML rather than
           by an effect after hydration: since 2026-11-02 the phone action bar
@@ -187,6 +196,7 @@ export default function RootLayout({
               Organization and WebSite included — through <PageSchema>, so a
               route has exactly one block. See lib/schema.ts. */}
           <RevealOnScroll />
+          {giveawayEngineEnabled() && <GiveawayBanner copy={GIVEAWAY_PAGES.banner} />}
           <Header />
           <main id="main" tabIndex={-1}>
             {children}

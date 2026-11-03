@@ -16,6 +16,13 @@
  * So on Nov 9 the showcase ends on its own ONLY if the engine is on; with
  * it off, the page stays a showcase. The decision reads giveawayNow(), so
  * a local fake clock moves it the same way it moves the real page.
+ *
+ * ?mode= IS LOCKED IN PRODUCTION (fix list rev 2, P0-3): on the live site
+ * the param is ignored and the showcase is always the notify-me stage, so
+ * nobody can open sample winners or a later stage there. Previews and
+ * laptops keep every stage. (The fix list also allowed an admin session to
+ * unlock it; the admin cookie is scoped to /admin/10years, so a /10years
+ * request never carries it — not built.)
  */
 
 import { giveawayNow } from "./clock";
@@ -36,6 +43,18 @@ export const SHOWCASE_PARAMS: Record<string, ShowcaseMode> = {
 
 export function showcaseParamFor(mode: ShowcaseMode): string {
   return Object.entries(SHOWCASE_PARAMS).find(([, m]) => m === mode)?.[0] ?? "notify";
+}
+
+/** Whether ?mode= may pick a stage: everywhere but the production deployment. */
+export function showcaseParamHonored(env: Record<string, string | undefined> = process.env): boolean {
+  return env.VERCEL_ENV?.trim() !== "production";
+}
+
+/** True once /10years is the real, public page: the engine is on and the
+ *  clock has reached notify-me (Nov 9). Robots, the sitemap and the page's
+ *  meta robots all follow this one answer (P0-6). */
+export function tenYearsPublic(now: Date = giveawayNow(), env: Record<string, string | undefined> = process.env): boolean {
+  return !showcaseActive(now, env);
 }
 
 export function showcaseMode(param: string | string[] | undefined): ShowcaseMode {
@@ -70,8 +89,8 @@ export function showcaseNow(mode: ShowcaseMode): Date {
 export type Showcase = { mode: ShowcaseMode; param: string; now: Date; winners: PublicWinner[] };
 
 /** Everything the page needs for one showcase stage. */
-export function showcaseFor(param: string | string[] | undefined): Showcase {
-  const mode = showcaseMode(param);
+export function showcaseFor(param: string | string[] | undefined, env: Record<string, string | undefined> = process.env): Showcase {
+  const mode = showcaseMode(showcaseParamHonored(env) ? param : undefined);
   const now = showcaseNow(mode);
   return { mode, param: showcaseParamFor(mode), now, winners: showcaseWinners(mode, now) };
 }

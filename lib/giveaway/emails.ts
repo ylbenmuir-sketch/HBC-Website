@@ -20,6 +20,8 @@ import { escapeHtml as esc, formatCentral } from "../email/format";
 import { C, SANS, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
 import { EMAILS, SHARED } from "./copy";
 import {
+  CLINIC_DAYS_AFTER_REVEAL,
+  GIFT_REVEAL_AT,
   OFFER,
   REFERRAL,
   formatCentralLabel,
@@ -83,7 +85,18 @@ const spokenDate = (at: Date) => {
   return label.replace(/,.*$/, "").replace(/^\w+ /, ""); // "Dec 5"
 };
 
-/** The offer panel shared by "You're in" and the thank-you. */
+/** "Sat, Nov 21 at 7 PM" — the reveal, for the You're-in tease. */
+const revealSpoken = () => {
+  const d = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" }).format(GIFT_REVEAL_AT);
+  const t = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", hour12: true }).format(GIFT_REVEAL_AT).replace(":00", "");
+  return `${d} at ${t}`;
+};
+
+/** "Mon, Nov 23 and Tue, Nov 24" — the clinic days after the reveal. */
+const openDaysSpoken = () =>
+  CLINIC_DAYS_AFTER_REVEAL.map((d) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" }).format(d)).join(" and ");
+
+/** The offer panel — the reveal email only (fix list rev 2, P0-2: nothing before it names the gift). */
 function offerPanel(input: { code: string; isExistingClient: boolean }): { html: string; text: string[] } {
   const line = SHARED.offerLine(spokenDate(OFFER.bookBy.at), spokenDate(OFFER.visitBy.at));
   const bonus = SHARED.offerBonus(OFFER.packageSessions);
@@ -200,8 +213,6 @@ export function youreInEmail(input: {
   referredBonus: boolean;
   nextDrawing: Drawing | null;
   referralUrl: string;
-  offerCode: string;
-  bookUrl: string;
   footing: Footing;
 }): Email {
   const c = EMAILS.youreIn;
@@ -210,12 +221,11 @@ export function youreInEmail(input: {
   const heading = c.heading(input.firstName);
   const body = c.body(input.nextDrawing, prize?.name ?? null);
   const share = c.shareBody(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap);
-  const offer = offerPanel({ code: input.offerCode, isExistingClient: input.isExistingClient });
+  const tease = c.giftTease(revealSpoken());
   const rows = [
     section(`${h1(heading)}${p(body)}${prize?.partner ? p(prize.partner) : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "18px 20px 0"),
     section(panel(`${panelTitle(c.shareHeading)}<div class="hbc-text" style="font-family:${SANS};font-size:14px;line-height:1.45;color:${C.ink};">${esc(share)}</div><div style="padding-top:8px;">${buttons([[c.shareButton, input.referralUrl]])}</div><div class="hbc-muted" style="font-family:${SANS};font-size:12px;color:${C.slate};padding-top:6px;word-break:break-all;">${esc(input.referralUrl)}</div>`), "14px 20px 0"),
-    section(offer.html, "10px 20px 0"),
-    section(buttons([[c.offerButton, input.bookUrl]]), "12px 20px 0"),
+    section(p(tease, "padding-top:0;"), "14px 20px 0"),
     gap(16),
     visitorFooter(input.footing, false),
   ];
@@ -233,8 +243,7 @@ export function youreInEmail(input: {
       share,
       `${c.shareButton}: ${input.referralUrl}`,
       "",
-      ...offer.text,
-      `${c.offerButton}: ${input.bookUrl}`,
+      tease,
       "",
       ...visitorFooterText(input.footing, false),
     ]),
@@ -293,16 +302,20 @@ export function winnerEmail(input: { firstName: string; drawing: Drawing; versio
 }
 
 /* ------------------------------------------------------------------ */
-/* 8. Non-winner thank-you + offer                                     */
+/* 8. The reveal: thank-you + gift, to every entrant (winners too)      */
 /* ------------------------------------------------------------------ */
 
-export function thankYouEmail(input: { firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; footing: Footing }): Email {
+/** `spotsLeft`: "Nashville: 12 of 40 left · Murfreesboro: 8 of 30 left", read at send time; null while no caps are set. */
+export function thankYouEmail(input: { firstName: string; isExistingClient: boolean; offerCode: string; bookUrl: string; spotsLeft?: string | null; footing: Footing }): Email {
   const c = EMAILS.thankYou;
   const heading = c.heading(input.firstName);
   const offer = offerPanel({ code: input.offerCode, isExistingClient: input.isExistingClient });
+  const left = input.spotsLeft ? c.left(input.spotsLeft) : null;
+  const open = c.openDays(openDaysSpoken());
   const rows = [
     section(`${h1(heading)}${p(c.body)}`, "18px 20px 0"),
     section(offer.html, "14px 20px 0"),
+    section(`${left ? p(left, "padding-top:0;") : ""}${small(open)}`, "10px 20px 0"),
     section(buttons([[c.button, input.bookUrl]]), "12px 20px 0"),
     gap(16),
     visitorFooter(input.footing, true),
@@ -311,7 +324,7 @@ export function thankYouEmail(input: { firstName: string; isExistingClient: bool
     subject: c.subject,
     preheader: c.preheader,
     html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, c.body, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
+    text: textOf([heading, c.body, "", ...offer.text, left, open, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }
 

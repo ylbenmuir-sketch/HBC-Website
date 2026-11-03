@@ -24,6 +24,14 @@ every `D()` is gone, `COPY_IS_DRAFT` at the top of `copy.ts` is set to
 `false`. Until then nothing can be sent for real. Strings you change here are
 changed there; nothing else moves.
 
+**Fix list rev 2 (2026-11-03).** The free first visit is a secret until
+the reveal, **Sat Nov 21, 7:00 PM CT** (`GIFT_REVEAL_AT` in config): no
+page, email or meta line before then names it — the page and emails tease
+"a 10-year thank-you gift" instead, and the reveal email names it. The
+Hoolest handheld is **$399** (Hoolest's published price; was $429). The
+tax-form threshold is **$2,000** per person for 2026 (was $600 per prize).
+Partner prizes and the pocket device read **TBD** and are out of every sum.
+
 ---
 
 ## Voice and claims (how these were written)
@@ -120,8 +128,8 @@ emails only — the Unsubscribe link.
 Tightest email on a phone (796 of 844 px at 390 wide), so these strings may
 get shorter but not longer.
 
-- **Subject:** You're in. Here's your share link and your free first visit.
-- **Preview:** The next drawing, your share link, your free first visit.
+- **Subject:** You're in. Here's your share link.
+- **Preview:** The next drawing, your share link, and a thank-you gift on the way.
 - **Heading:** *{Sarah}*, you're in.
 - **Body:** Next drawing: *{Tuesday at noon}* — *{Brain Map + 3 sessions}*. Your entry counts in it and every one after. *(after the last drawing: "Your entry counts in every drawing still to come.")*
 - **Partner line** *(only when that drawing's partner is named)*.
@@ -129,13 +137,9 @@ get shorter but not longer.
 - **Panel — heading:** Add entries
 - **Panel — body:** Share your link. Each friend who enters and confirms adds *{3}* entries for you and *{1}* for them, up to *{10}* friends.
 - **Panel — button:** Share my link *(the link itself is printed under it)*
-- **Offer panel — heading:** Your first visit is on us
-- **Offer panel — body:** A free Brain Map and consultation. Book by *{Dec 5}*; come in any day through *{Dec 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
-- **Offer panel — code:** Your code · *{10Y-R8TN4W}*
-- **Offer panel — existing clients only:** Already a client? Forward this to a friend — the code works for whoever books with it.
-- **Button:** Book my free first visit
+- **Gift tease** *(replaces the offer panel — rev 2, P0-2)*: Plus a thank-you gift for every entrant, revealed by email *{Sat, Nov 21 at 7 PM}*.
 - **Footer:** identity line · transactional line.
-- **From config:** next drawing (day, time, prize in the reader's version), referral numbers, offer dates, package size, the personal code, the share link.
+- **From config:** next drawing (day, time, prize in the reader's version), referral numbers, the reveal time, the share link. No code and no book button: the code arrives with the reveal email.
 
 ### 6. Daily afternoon *(marketing; Mon–Fri 4:00 pm CT, to every subscribed entrant)*
 
@@ -149,7 +153,7 @@ get shorter but not longer.
 - **Footer:** identity line · marketing line · Unsubscribe.
 - **From config:** next drawing's day, time and prize (reader's version), the reader's entry count.
 - Heading, body and count line follow the shape in decision 15 word for word; no winner name anywhere.
-- Filled example, Friday's email to a current client: Subject "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner" · Body "Next drawing: Saturday at 5:00 pm — 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner."
+- Filled example, Friday's email to a current client: Subject "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)" · Body "Next drawing: Saturday at 5:00 pm — 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)."
 
 ### 7. Winner *(transactional; the moment they are drawn)*
 
@@ -160,21 +164,26 @@ get shorter but not longer.
 - **Partner line** *(when named)*.
 - **Small print:** Every session includes the vibro chair.
 - **Call line:** We'll call to set it up. Tap below and give us the best number by *{Thu Nov 19, 12:00 PM CT}* — after that, the prize is redrawn.
-- **Tax line** *(only when the prize's computed value is over the config threshold)*: Because of this prize's value, a short tax form is part of claiming it. We'll walk you through it on the call.
+- **Tax line** *(only when the winner's HBC prizes this year total at least the config threshold, $2,000 — aggregated per person, so a daily winner who also wins the grand prize gets it on both)*: Because of this prize's value, a short tax form is part of claiming it. We'll walk you through it on the call.
 - **Public line:** On the call we'll ask whether we may post your first name, last initial and city on the winners list. Saying no is fine.
 - **Button:** Claim my prize
 - **Footer:** identity line · transactional line.
 - **From config:** day name, prize in the winner's version, the claim deadline (72 h, or the following Tuesday 5:00 pm CT when it would land on a Sunday or Monday), the tax flag.
-- Filled example, the grand prize to a current client: "Your prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner." · "…give us the best number by Tue Nov 24, 5:00 PM CT…" · tax line shown.
+- Filled example, the grand prize to a current client: "Your prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)." · "…give us the best number by Tue Nov 24, 5:00 PM CT…" · tax line shown.
 
-### 8. Thank-you + offer *(marketing; Sun Nov 22, 10:00 am CT, to everyone not holding a prize)*
+### 8. The reveal: thank-you + gift *(marketing; Sat Nov 21, 7:00 PM CT, to every verified, subscribed entrant — winners included)*
 
-- **Subject:** Thank you — and your first visit is on us
+- **Subject:** Your 10-year thank-you gift: your first visit is on us
 - **Preview:** A free Brain Map and consultation, with your code.
 - **Heading:** *{Sarah}*, thank you.
-- **Body:** Ten years in, and this week was one of our favorites. Your name wasn't drawn, and we'd still like to meet you — so your first visit is on us.
-- **Offer panel:** as in email 5 (heading, body, code, the forward line for existing clients).
-- **Button:** Book my free first visit
+- **Body:** Whether or not your name was drawn, thank you for celebrating ten years with us. Here's the gift we promised: your first visit is on us.
+- **Offer panel — heading:** Your first visit is on us
+- **Offer panel — body:** A free Brain Map and consultation. Book by *{Dec 5}*; come in any day through *{Dec 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
+- **Offer panel — code:** Your code · *{10Y-R8TN4W}*
+- **Offer panel — existing clients only:** Already a client? Forward this to a friend — the code works for whoever books with it.
+- **Spots line** *(only once `GIFT_CAP` has numbers; counted at send time)*: Spots are limited: *{Nashville: 12 of 40 left · Murfreesboro: 8 of 30 left}*.
+- **Open days:** Our centers are open *{Mon, Nov 23 and Tue, Nov 24}*, so you can book this week.
+- **Button:** Book my free first visit *(to /contact?from=10years&code=…)*
 - **Footer:** identity line · marketing line · Unsubscribe.
 
 ### 9. Staff: winner drawn *(to GIVEAWAY_ALERTS, or GIVEAWAY_ALERTS_OWNER on Monday and Saturday)*
@@ -214,17 +223,19 @@ show the same page with the result in the card.
 - **H1:** 10 years. A week of prizes. *(breaks after the first sentence)*
 - **Value line (notify-me, live):** Over $*{6,000}* in prizes. One entry.
 - **Value line (closed, thank-you):** Over $*{6,000}* in prizes.
+- **Gift tease (notify-me, live; under the value line):** Every entrant receives a 10-year thank-you gift, revealed Saturday night.
 - **Line (notify-me, live):** *{Six}* drawings, *{Nov 16–21}*. Enter once and you're in every one.
 - **Line (closed):** Entries are closed. Thank you, neighbors.
 - **Line (thank-you page):** Here's who won our anniversary week.
 - **Countdown** *(notify-me, live only)*: four boxes labelled **days · hrs · min · sec**, then **until entries open** (notify-me, to the entries-open time) or **until the next drawing** (live, to the next drawing). Ticks from the server's clock.
 - **Proof line:** *{10}* years · *{140,000+}* sessions · Nashville & Murfreesboro *(the count is `STAT_SESSIONS`)*
-- The total is the sum of the six new-client prize values from config ($6,774 today), rounded down to the nearest $1,000 — never typed.
+- The total is the sum of the six new-client prize values from config ($6,744 today; $6,009 if every winner is a current client), rounded down to the nearest $1,000 — never typed. A unit test fails if the smallest total drops under $6,000.
 
 ### The form card — notify-me (Nov 9 – Nov 15)
 
 - **Title:** Get your one-tap entry.
 - **Line:** Entries open *{Sunday, Nov 15 at 6 PM}*. We'll email your link.
+- **Gift tease (above the button, both modes):** Plus a thank-you gift for every entrant, revealed *{Sat, Nov 21}*.
 - **Button:** Send me my entry link
 
 ### The form card — live (Nov 15 – Nov 21)
@@ -282,7 +293,8 @@ With "You're in": **Your share link** (the link in a field) · button **Copy** �
 
 - **Title:** This week's winners
 - The winners list, below.
-- **Line:** Every entrant has a free first visit waiting, any day through *{December 31}*.
+- **Line, after the reveal (Sat 7 PM, real clock):** Every entrant has a free first visit waiting, any day through *{December 31}*.
+- **Line, between the grand drawing and the reveal:** Your thank-you gift arrives by email tonight at *{7 PM}*.
 - **Button:** Talk with our team *(to /contact — the only call button on the page)*
 
 ### Winners list (three states, decision 7)
@@ -309,14 +321,14 @@ Three numbered steps, one line each; the counts, days and times are from config.
 ### The prize ladder
 
 - **Heading:** The prize ladder · **Toggle:** New clients | Current clients *(default New clients; switches every prize, value and breakdown)*
-- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), then the value first and largest — **$*{480}*** (**$*{810}*+** where a part has no price yet) with **value** in small caps under it — then the prize in plain words.
-- **Prize words:** *{Brain Map + }{2} sessions* · + Pocket vagus nerve stimulator *by Hoolest* · + Handheld vagus nerve stimulator *by Hoolest · yours to keep* · + a gift from every partner *(each line only while the prize in config includes it; the device names are `DEVICES` in config and read the same in the emails and the rules)*
+- Six cards in one row, climbing Monday to Saturday. Each: *{Mon}* · *{noon}* (Saturday: *{Sat}* · *{5 PM}*), then the value first and largest — **$*{480}*** (exactly the sum of the priced lines; no "+") with **value** in small caps under it — then the prize in plain words.
+- **Prize words:** *{Brain Map + }{2} sessions* · + Pocket vagus nerve stimulator *by Hoolest* · + Handheld vagus nerve stimulator *by Hoolest · yours to keep* *(each line only while the prize in config includes it; the device names are `DEVICES` in config and read the same in the emails and the rules)*
 - **Saturday** *(the navy card)*: the label **Grand prize**, then the same.
 - **Partner line** *(when named in config)*: Plus from *{partner}*: *{prize}*
 - **Live tags:** Next (the next drawing's card, sage outline) · Drawn (a drawn day with no winner row yet).
 - **A drawn day in live mode** shows **Winner** and one of: *{Jane D., Franklin}* · Claimed ✓ · Drawn, we're reaching them now.
 - **Every card opens** (tap anywhere; hover on desktop; Enter/Space) to its value breakdown, one line per part from config:
-  **Brain Map** · $*{150}* — ***{2}* LENS sessions** · $*{250}* — **Vibro chair at every session** · $*{80}* — **Pocket vagus nerve stimulator** *by Hoolest* · bonus *(no price supplied yet; the total carries the "+")* — **Handheld vagus nerve stimulator** *by Hoolest · yours to keep* · $*{429}* *(with the product photo beside it on Saturday)* — **Gift from *{partner}*** · $*{…}* *(when named)* — then **Total** · **$*{480}*** in bold, and the link **What's a Brain Map?** *(to /brain-map, new tab)*.
+  **Brain Map** · $*{150}* — ***{2}* LENS sessions** · $*{250}* — **Vibro chair with each session (*{2}* × $*{40}*)** · $*{80}* — **Pocket vagus nerve stimulator** *by Hoolest* · value TBD *(no price supplied yet; out of the total)* — **Handheld vagus nerve stimulator** *by Hoolest · yours to keep* · $*{399}* *(with the product photo beside it on Saturday)* — **Partner prize** · TBD *(every drawing; "Gift from *{partner}*" once named; out of the total)* — then **Total** · **$*{480}*** in bold, and the link **What's a Brain Map?** *(to /brain-map, new tab)*. Monday new client reads $150 + $250 + $80 = $480; Saturday new client $150 + $1,500 + $480 + $399 = $2,529; Saturday current client $1,625 + $520 + $399 = $2,544.
 - **Under the row:** Every session includes the vibro chair.
 
 ### Photos
@@ -331,17 +343,16 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
 3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
 4. **How will I know if I won?** We email you the moment you're drawn, then call to arrange your prize. You have *{72}* hours to get back to us (a little longer over the weekend); after that, we draw again.
-5. **What's the thank-you offer?** Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
+5. **What's my thank-you gift?** *(after the reveal only — rev 2, P0-2)* Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
 
 "noon Central" in Q3 is typed; the day list and the grand time are from config.
 
 ### Prize details (/10years/rules, above the Official Rules)
 
 - **Heading:** Prize details & drawing times
-- **Table heads:** Drawing · New client · Current client — rows (day, time, both prize names) straight from config.
-- **Partner line under a prize** *(when named)*: Plus from *{partner}*: *{prize}*
+- **Table heads:** Drawing · New client · Current client — each cell is the prize's breakdown from config, one line per part with its value (the same lines as the ladder's popover, the vibro chair as "*{n}* × $40"), then **Total**. The page refuses to render a total that is not the sum of its lines.
 - Under the table: the chair line from the ladder.
-- **Questions heading:** Giveaway questions *(all five, above)*
+- **Questions heading:** Giveaway questions *(four before the reveal; the gift question joins after it)*
 
 ### Page chrome on /10years and below
 
@@ -372,33 +383,36 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 
 Sign in · Work email · Email me a code · "We emailed a six-digit code to *{email}*. It works for ten minutes." · Code · That address isn't on the admin list. · That code didn't work. Check it and try again, or request a new one. · Too many tries. Wait a few minutes and try again. · Signed in as · Sign out · Dashboard · Environment · Schedule (from config) · the two migration-status lines.
 
-### Official Rules placeholder (/10years/rules — counsel's to replace)
+### Official Rules (/10years/rules#rules — Ben approves; rev 2, P0-1)
 
-Every paragraph is prefixed "[DRAFT — counsel to replace]" and the page
-shows the rules version from config. Headings, with the facts each pulls
-from config:
+The words are `lib/giveaway/rules.ts`; every fact is from config. Sixteen
+numbered sections:
 
-1. **Sponsor** — legal entity, DBA, registered address (from `lib/sms-identity.ts`)
+1. **Sponsor** — legal entity, DBA, registered address (`lib/sms-identity.ts`)
 2. **No purchase necessary**
-3. **Eligibility** — residents of *{Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)}* (from config), 18+, employees excluded, current clients eligible
-4. **Entry period** — entries open and close timestamps
-5. **How to enter** — one entry per person; referral numbers (3 / 1 / cap 10); self-referral voids
-6. **Drawings** — the six drawings with time and both prize versions; daily winners stay in the grand pool; odds statement
-7. **Winner notification and claim** — 72 hours, the Sunday/Monday → Tuesday 5 pm rule, redraw, tax form over $600
-8. **Publicity** — first name, last initial, city, only with the winner's OK on the call
-9. **Thank-you offer** — free first visit (normally $150), book-by and visit-by dates, 13th-session bonus in-center only
-10. **General** — governing law, liability, release, privacy link
+3. **Who may enter** — residents of the nine `ELIGIBLE_STATES`, 18+, employees/contractors and households excluded, current clients eligible
+4. **Entry period** — notify-me sign-ups are not entries; entries open/close timestamps
+5. **How to enter** — the form, the email confirmation, one person one address
+6. **Bonus entries** — early bird (confirm before *{Mon Nov 16, 12:00 PM CT}*: +1); friends (+3 / +1, cap 10); most entries any one person can hold: *{33}*
+7. **Drawings and odds** — the six times; random by computer, recorded; daily winners stay in the grand pool
+8. **Prizes and their value** — the per-part rates ($150 · $125 · $40 chair per session · Hoolest $399, its published price); pocket device and partner prizes TBD and out of every total; the week's ARV *{$6,009}*–*{$6,744}*
+9. **Prize conditions** — at either center by appointment, used by *{Monday, May 31, 2027}* (`PRIZE_USE_BY` — **unconfirmed, Ben to confirm**), no transfer or cash, no health-outcome claim
+10. **Winner notification and claim** — **by email only**; 72 hours, Sun/Mon → Tue 5 PM CT; alternate drawn
+11. **Taxes** — $2,000 or more per person in 2026 → W-9 and 1099; "Accountant to confirm." shows until `TAX_THRESHOLD_CONFIRMED` is true
+12. **Publicity** — first name, last initial, city, only with consent on the claim call
+13. **Thank-you gift** — before the reveal one neutral line ("…a 10-year thank-you gift…announced by email Saturday, Nov 21 at 7 PM CT…not a prize"); after it, the free first visit's terms
+14. **Your information** — what entries are used for, opt-in news only, unsubscribe, privacy link
+15. **General conditions** — disqualification, cancellation, release, Tennessee law
+16. **Winners list** — where, and the contact email
 
 ---
 
 ## Questions for Ben
 
-1. **Two buttons in "You're in".** The plan puts the share link and the free
-   visit in the same email, so it has two buttons. If one button matters
-   more than the rule's exception, say which comes first and the other goes
-   to a text link.
+1. ~~Two buttons in "You're in".~~ Resolved by rev 2: the free visit left
+   that email (it is revealed Saturday night), so it has one button.
 2. **Grand-prize subject length.** Friday's daily email subject is the prize
-   name: "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner" (about 110
+   name: "Saturday's grand prize: 13 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep)" (about 90
    characters; phones show ~40). A shorter *display* name for the grand
    prize would need a config change, not a copy change.
 3. **Typed days and counts.** "Monday's prize" (It's-live subject),

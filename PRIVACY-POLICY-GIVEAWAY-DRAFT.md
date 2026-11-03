@@ -66,8 +66,8 @@ only phone number it ever holds is the one a winner gives us to be called.
 **Winners.** When you win, a member of our team calls you. If you say on
 that call that we may post your first name, last initial and city on the
 winners list, we do; otherwise the list says only that the day's prize was
-claimed. Prizes with a retail value over $600 come with a tax form, which
-we walk you through on the call. **[Ben and the accountant to confirm:
+claimed. If the prizes we award you in 2026 total $2,000 or more in retail
+value, a tax form comes with them, which we walk you through on the call. **[Ben and the accountant to confirm:
 which form, what it collects (name, address, taxpayer ID), who prepares it,
 and that it goes to the IRS as the law requires — the sentence should say
 exactly that and no more.]**

@@ -7,6 +7,12 @@
  *
  *   node --experimental-strip-types -e "import('./lib/giveaway/seed-sql.ts').then(m => console.log(m.seedSql()))"
  *
+ * prizeSyncSql() is the same prize rows as an UPDATE, for migrations after
+ * 0010 (0013 onward): it brings rows that already exist — in every env —
+ * to the config's names and values, so a price change reaches a database
+ * that ran an older 0010. Idempotent. config.test.mjs checks the newest
+ * sync migration against it.
+ *
  * Pure.
  */
 
@@ -55,4 +61,45 @@ export function seedBlockOf(sql: string): string | null {
   const b = sql.indexOf(SEED_END);
   if (a < 0 || b < 0 || b < a) return null;
   return sql.slice(a, b + SEED_END.length);
+}
+
+export const SYNC_BEGIN = "-- BEGIN prize sync generated from lib/giveaway/config.ts (do not edit by hand; npm test checks it)";
+export const SYNC_END = "-- END prize sync generated from lib/giveaway/config.ts";
+
+/** The giveaway_prizes rows, every env, set to what config computes. A
+ *  no-op where the table does not exist yet (0010 not applied) or a row
+ *  already matches. */
+export function prizeSyncSql(): string {
+  const rows = PRIZES.map(
+    (p) => `      (${lit(p.slot)}, ${lit(p.version)}, ${lit(prizeName(p))}, ${lit(prizeDescription(p))}, ${prizeRetailUsd(p)}, ${prizePractitionerCostUsd(p)}, ${prizeTaxFormRequired(p)})`
+  );
+  return [
+    SYNC_BEGIN,
+    "do $$",
+    "begin",
+    "  if to_regclass('public.giveaway_prizes') is null then",
+    "    raise notice 'giveaway_prizes does not exist yet; apply 0010 first (its seed already carries these values)';",
+    "    return;",
+    "  end if;",
+    "  update public.giveaway_prizes as g",
+    "     set name = v.name, description = v.description, retail_value_usd = v.retail_value_usd,",
+    "         practitioner_cost_usd = v.practitioner_cost_usd, tax_form_required = v.tax_form_required",
+    "    from (values",
+    rows.join(",\n"),
+    "    ) as v(slot, version, name, description, retail_value_usd, practitioner_cost_usd, tax_form_required)",
+    "   where g.slot = v.slot and g.version = v.version",
+    "     and (g.name, g.description, g.retail_value_usd, g.practitioner_cost_usd, g.tax_form_required)",
+    "         is distinct from (v.name, v.description, v.retail_value_usd, v.practitioner_cost_usd, v.tax_form_required);",
+    "end",
+    "$$;",
+    SYNC_END,
+  ].join("\n");
+}
+
+/** The sync block in a migration file, or null. */
+export function syncBlockOf(sql: string): string | null {
+  const a = sql.indexOf(SYNC_BEGIN);
+  const b = sql.indexOf(SYNC_END);
+  if (a < 0 || b < 0 || b < a) return null;
+  return sql.slice(a, b + SYNC_END.length);
 }

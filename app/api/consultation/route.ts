@@ -27,6 +27,7 @@ import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notificatio
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
 import { checkOffer, offerRefusalMessage, redeemOffer } from "@/lib/giveaway/offers";
+import { CALL_ME_TEXT } from "@/lib/call-consent";
 import { looksLikeEmail } from "@/lib/lead-options";
 
 export const runtime = "nodejs";
@@ -78,6 +79,11 @@ type Payload = {
   sms_consent?: unknown;
   /** The consent wording exactly as it was shown to her, ticked or not. */
   sms_consent_text?: unknown;
+  /** The 10-year giveaway path's call-me box (lib/call-consent.ts; fix list
+   *  rev 2, P0-8): true only when ticked, with a number to call. */
+  call_me?: unknown;
+  /** Its wording, exactly as shown; must equal CALL_ME_TEXT. */
+  call_me_text?: unknown;
   /** The honeypot (see the read in the handler) — hidden from real visitors. */
   website?: unknown;
 };
@@ -169,6 +175,17 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
         .insert({ ...values, phone: "" })
         .select("id")
         .single());
+    }
+    // The call-me columns (migration 0014) may not exist yet either: the
+    // lead is saved without them and the log says what to apply.
+    if (error && "call_consent" in values && (isMissingColumn(error, "call_consent") || isMissingColumn(error, "call_consent_text") || isMissingColumn(error, "call_consent_at"))) {
+      console.error("[destination: supabase] call_consent columns missing — migration 0014 is not applied; saving the lead without them.");
+      const { call_consent: _a, call_consent_text: _b, call_consent_at: _c, ...rest } = values;
+      void _a;
+      void _b;
+      void _c;
+      values = rest;
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
     if (error && "contact_method" in values && isMissingColumn(error, "contact_method")) {
       console.error(
@@ -406,6 +423,12 @@ async function formPayload(request: Request): Promise<Payload> {
     sms_consent_text: field("sms_consent_text"),
     // A ticked checkbox posts "on"; an unticked one posts nothing.
     sms_consent: consent === "on" || consent === "true",
+    // The 10-year giveaway path (P0-9): its booking fields reach the route
+    // without JavaScript too.
+    source: field("source") || undefined,
+    offer_code: field("offer_code") || undefined,
+    call_me: field("call_me") === "on" || field("call_me") === "true",
+    call_me_text: field("call_me_text"),
   };
 }
 
@@ -447,7 +470,10 @@ export async function POST(request: Request) {
   }
   const isGuide = type === "guide";
 
-  const source = str(body.source, 20) ?? "form";
+  const requestedSource = str(body.source, 20) ?? "form";
+  // The giveaway path's no-JavaScript post always says "giveaway"; with the
+  // code box left empty it is an ordinary request, not a refusal (P0-9).
+  const source = requestedSource === "giveaway" && !str(body.offer_code, 20) ? "form" : requestedSource;
   if (!SUBMISSION_SOURCES.has(source)) {
     return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
   }
@@ -546,6 +572,9 @@ export async function POST(request: Request) {
   const smsConsentText = isGuide ? null : str(body.sms_consent_text, CONSENT_TEXT_MAX);
   // And only with a number to text: a tick beside an empty phone field is no.
   const smsConsent = !isGuide && body.sms_consent === true && smsConsentText !== null && phone !== null;
+  // The giveaway path's call-me box: the exact words or nothing; a yes needs a phone.
+  const callMeText = !isGuide && body.call_me_text === CALL_ME_TEXT ? CALL_ME_TEXT : null;
+  const callMe = callMeText !== null && body.call_me === true && phone !== null;
 
   // The honeypot, read raw rather than through str(): empty is the normal
   // human answer, and str() maps empty to null. It is never used to reject
@@ -576,6 +605,13 @@ export async function POST(request: Request) {
     sms_consent: smsConsent,
     sms_consent_text: smsConsentText,
     sms_consent_at: smsConsent ? new Date().toISOString() : null,
+    // The giveaway path's call-me box (migration 0014): only when the path
+    // offered it — the wording is stored ticked or not, the time only on a
+    // yes, and a yes needs a number to call. saveRow drops these three if
+    // 0014 is not applied yet.
+    ...(callMeText
+      ? { call_consent: callMe, call_consent_text: callMeText, call_consent_at: callMe ? new Date().toISOString() : null }
+      : {}),
   };
 
   // Every consultation is forwarded here, at the lead. A form lead has no

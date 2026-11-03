@@ -61,7 +61,7 @@ already an HBC client"** checkbox picks which one:
 | Wed | Brain Map + 4 sessions + Pocket vagus nerve stimulator by Hoolest | 4 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 3 (TBD) |
 | Thu | Brain Map + 5 sessions + Pocket vagus nerve stimulator by Hoolest | 5 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 4 (TBD) |
 | Fri | Brain Map + 7 sessions + Pocket vagus nerve stimulator by Hoolest | 7 sessions + Pocket vagus nerve stimulator by Hoolest | Partner 5 (TBD) |
-| **Sat GRAND** | Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) + one service from every partner | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
+| **Sat GRAND** | Brain Map + 12 sessions + Handheld vagus nerve stimulator by Hoolest (yours to keep) *(partner prizes TBD — rev 2, 2026-11-03)* | 13 sessions + the same Hoolest handheld + partner services | Partner 6 (TBD) |
 
 - **Every prize session includes the vibro chair.**
 - Partner prizes are six slots, smallest Monday to biggest Saturday, all
@@ -69,10 +69,10 @@ already an HBC client"** checkbox picks which one:
   set in config**; unset = not shown at all (no "TBD" ever renders).
 - **Retail values come from config rates, never hand-typed** (`lib/giveaway/
   config.ts`): Brain Map $150; session $125; vibro chair $40 per use; Hoolest
-  handheld $429 (**UNCONFIRMED**); Hoolest keychain retail **UNCONFIRMED**
+  handheld **$399** (Hoolest's published price, Ben 2026-11-03; was $429); Hoolest keychain retail **UNCONFIRMED**
   (counted as $0 until set). Practitioner cost $35 per session or map — admin
   cost view only, never shown to the public.
-- Any prize whose **computed retail value is over $600** sets
+- *(Superseded 2026-11-03, fix list rev 2: $2,000 or more per PERSON for 2026, aggregated — `taxFormRequiredForTotal`.)* Any prize whose **computed retail value is over $600** sets
   `tax_form_required` on the winner. The claim flow and admin show a **"tax
   form received"** step for those winners. With the rates above that is
   every prize from Tuesday's new-client version up; Monday's two versions and

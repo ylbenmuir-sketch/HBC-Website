@@ -36,7 +36,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { audit } from "./audit";
-import { claimDeadline, drawing as drawingFor, prizeVersionFor, type Slot } from "./config";
+import { claimDeadline, drawing as drawingFor, prizeVersionFor, taxFormRequiredForTotal, type Slot } from "./config";
 import { HOLDING_STATUSES, type DrawingRow, type EntryRow, type PersonRow, type PoolRow, type PrizeRow, type WinnerRow } from "./rows";
 import type { GiveawayStore } from "./store";
 import { randomCode, sha256Hex } from "./tokens";
@@ -236,6 +236,11 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
   const prizeRes = await store.select("giveaway_prizes", "*").eq("slot", d.slot).eq("version", version).single();
   if (prizeRes.error) throw fail("prize", prizeRes.error);
   const prize = prizeRes.data as PrizeRow;
+  // The tax form is judged on the PERSON's 2026 total from HBC (fix list rev
+  // 2, P0-11): this prize plus every prize they currently hold.
+  const held = await heldPrizeValues(store, person.id);
+  const total = held.reduce((t, h) => t + h.value, 0) + Number(prize.retail_value_usd);
+  const taxFormRequired = taxFormRequiredForTotal(total);
   const claimToken = randomCode(24);
   const { data, error } = await store
     .insert("giveaway_winners", {
@@ -247,7 +252,7 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
       claim_token_hash: sha256Hex(claimToken),
       status: "drawn",
       claim_deadline_at: claimDeadline(opts.now).toISOString(),
-      tax_form_required: prize.tax_form_required,
+      tax_form_required: taxFormRequired,
       seed: opts.seed,
       pool_excluded: opts.excluded,
       redraw_reason: null,
@@ -255,7 +260,25 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
     .select("*")
     .single();
   if (error) throw fail("winner", error);
+  // Crossing the line with this prize puts the earlier prize under the same form.
+  const flip = held.filter((h) => !h.taxFormRequired).map((h) => h.winnerId);
+  if (taxFormRequired && flip.length) {
+    const { error: flipErr } = await store.update("giveaway_winners", { tax_form_required: true }).in("id", flip);
+    if (flipErr) throw fail("tax form (earlier prize)", flipErr);
+  }
   return { winner: data as WinnerRow, person, prize, claimToken, redraw: opts.redraw };
+}
+
+/** The prizes a person currently holds (any winner row not redrawn), with their values. */
+async function heldPrizeValues(store: GiveawayStore, personId: string): Promise<Array<{ winnerId: string; value: number; taxFormRequired: boolean }>> {
+  const { data, error } = await store.select("giveaway_winners", "id, prize_id, status, tax_form_required").eq("person_id", personId).neq("status", "redrawn");
+  if (error) throw fail("held prizes", error);
+  const rows = (data ?? []) as Array<{ id: string; prize_id: string; tax_form_required: boolean }>;
+  if (rows.length === 0) return [];
+  const { data: prizes, error: pErr } = await store.select("giveaway_prizes", "id, retail_value_usd").in("id", rows.map((r) => r.prize_id));
+  if (pErr) throw fail("held prize values", pErr);
+  const value = new Map(((prizes ?? []) as Array<{ id: string; retail_value_usd: number | string }>).map((p) => [p.id, Number(p.retail_value_usd)]));
+  return rows.map((r) => ({ winnerId: r.id, value: value.get(r.prize_id) ?? 0, taxFormRequired: r.tax_form_required }));
 }
 
 /* ------------------------------------------------------------------ */

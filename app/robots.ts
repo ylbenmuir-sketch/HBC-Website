@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { tenYearsPublic } from "@/lib/giveaway/showcase";
 import { SITE_URL } from "@/lib/site-config";
 
 /**
@@ -35,10 +36,22 @@ import { SITE_URL } from "@/lib/site-config";
  *  it is noindex via header and absent from the sitemap, and a disallow
  *  would only hide the noindex from the crawler that already has the URL. */
 /** `/10years` (2026-10-19): the giveaway page is live as a HIDDEN page —
- *  anyone with the link sees it, nobody finds it. `noindex, nofollow` on
- *  the page and in the header, absent from the sitemap, and disallowed here
- *  (a prefix, so the sub-routes go with it). */
-const DISALLOW = ["/api/", "/guides/", "/admin/", "/10years", "/about/founder/draft"];
+ *  anyone with the link sees it, nobody finds it. Disallowed here as a
+ *  prefix (the sub-routes go with it) UNTIL tenYearsPublic(): the engine on
+ *  and the clock at Nov 9 (fix list rev 2, P0-6). From then /10years and
+ *  /10years/rules are crawlable and every token route stays disallowed,
+ *  listed one by one. `/unsubscribe` stays off the list for the reason
+ *  above. */
+const BASE_DISALLOW = ["/api/", "/guides/", "/admin/", "/about/founder/draft"];
+export const TEN_YEARS_TOKEN_ROUTES = ["/10years/claim/", "/10years/enter/", "/10years/verify", "/10years/signup"];
+
+/** Answered per request, so the flip at Mon Nov 9 12:00 AM CT is exact and
+ *  needs no deploy (and the giveaway's fake clock moves it in a test run). */
+export const dynamic = "force-dynamic";
+
+export function disallowFor(now?: Date, env?: Record<string, string | undefined>): string[] {
+  return tenYearsPublic(now, env) ? [...BASE_DISALLOW, ...TEN_YEARS_TOKEN_ROUTES] : [...BASE_DISALLOW, "/10years"];
+}
 
 const SEARCH_AND_ANSWER_AGENTS = [
   "OAI-SearchBot",
@@ -57,6 +70,7 @@ const SEARCH_AND_ANSWER_AGENTS = [
 const TRAINING_AGENTS = ["GPTBot", "CCBot", "Bytespider", "anthropic-ai"];
 
 export default function robots(): MetadataRoute.Robots {
+  const DISALLOW = disallowFor();
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: DISALLOW },

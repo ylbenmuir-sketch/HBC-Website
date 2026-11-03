@@ -6,8 +6,9 @@
  *   daily_<slot>      Mon–Fri 4 pm     → every verified, subscribed entrant
  *   tuesday_call_today Tue 8:30 am     → staff, skipped if Monday's winner
  *                                        is marked contacted
- *   thank_you         Sun Nov 22 10 am → every verified entrant who is not
- *                                        holding a prize
+ *   thank_you         Sat Nov 21 7 pm  → the gift reveal: every verified,
+ *                                        subscribed entrant, winners too
+ *                                        (fix list rev 2, P0-10)
  *
  * One JOB row per kind (person_id null) is the schedule; the per-minute
  * runner claims a due job and sends to each recipient, writing a RECEIPT
@@ -24,9 +25,10 @@ import { audit } from "./audit";
 import { DRAWINGS, SCHEDULE, drawing, drawingAfter, prizeVersionFor, type Drawing } from "./config";
 import { dailyAfternoonEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, tuesdayCallTodayEmail, type Email, type Footing } from "./emails";
 import { entryCount } from "./people";
-import { HOLDING_STATUSES, type NotifyRow, type PersonRow, type ScheduledSendRow, type WinnerRow } from "./rows";
+import { type NotifyRow, type PersonRow, type ScheduledSendRow, type WinnerRow } from "./rows";
 import type { GiveawayStore } from "./store";
 import { currentWinner, drawingBySlot } from "./drawings";
+import { giftSpots, spotsLine } from "./gift";
 
 export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "tuesday_call_today", "thank_you"] as const;
 export type SendKind = (typeof SEND_KINDS)[number];
@@ -183,11 +185,12 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
 }
 
 async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
-  const { data: winners } = await store.select("giveaway_winners", "person_id, status").in("status", [...HOLDING_STATUSES]);
-  const holding = new Set(((winners ?? []) as Array<{ person_id: string }>).map((w) => w.person_id));
+  // Everyone, winners included (Ben, 2026-11-03): the copy greets both.
+  // The spots are counted once, at send time.
+  const spots = await giftSpots(store);
+  const spotsLeft = spots ? spotsLine(spots) : null;
   const out: JobResult = { sent: 0, skipped: 0, failed: 0 };
   for (const p of await subscribedEntrants(store)) {
-    if (holding.has(p.id)) continue;
     const id = await receipt(store, job, { person_id: p.id });
     if (!id) {
       out.skipped++;
@@ -196,7 +199,7 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     const { data: offer } = await store.select("giveaway_offers", "code").eq("person_id", p.id).maybeSingle();
     const code = (offer as { code: string } | null)?.code ?? "";
     const footing = deps.footingFor(p.email, true);
-    const email = thankYouEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
+    const email = thankYouEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, offerCode: code, bookUrl: deps.links.bookUrl(code), spotsLeft, footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
     if (r.ok) out.sent++;

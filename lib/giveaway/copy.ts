@@ -124,14 +124,17 @@ export const EMAILS = {
 
   /** 5. "You're in" — referral link + offer (+ forward line). */
   youreIn: {
-    subject: D("You're in. Here's your share link and your free first visit."),
-    preheader: D("The next drawing, your share link, your free first visit."),
+    subject: D("You're in. Here's your share link."),
+    preheader: D("The next drawing, your share link, and a thank-you gift on the way."),
     heading: (firstName: string) => D(`${firstName ? `${firstName}, you` : "You"}'re in.`),
     body: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? `Next drawing: ${when(next)} — ${prizeName}. Your entry counts in it and every one after.` : "Your entry counts in every drawing still to come."),
     referredBonus: D("A friend's link brought you here, so you start with a bonus entry."),
     shareHeading: D("Add entries"),
     shareBody: (referrerBonus: number, referredBonus: number, cap: number) => D(`Share your link. Each friend who enters and confirms adds ${referrerBonus} entries for you and ${referredBonus} for them, up to ${cap} friends.`),
     shareButton: D("Share my link"),
+    /** The gift is NOT named before the reveal (fix list rev 2, P0-2). */
+    giftTease: (revealSpoken: string) => D(`Plus a thank-you gift for every entrant, revealed by email ${revealSpoken}.`),
+    /** The offer panel's heading — the reveal email only. */
     offerHeading: D("Your first visit is on us"),
     offerButton: D("Book my free first visit"),
   },
@@ -158,12 +161,16 @@ export const EMAILS = {
     button: D("Claim my prize"),
   },
 
-  /** 8. Non-winner thank-you + offer. */
+  /** 8. The reveal: thank-you + gift, to every verified, subscribed entrant (winners too). */
   thankYou: {
-    subject: D("Thank you — and your first visit is on us"),
+    subject: D("Your 10-year thank-you gift: your first visit is on us"),
     preheader: D("A free Brain Map and consultation, with your code."),
     heading: (firstName: string) => D(`${firstName ? `${firstName}, thank` : "Thank"} you.`),
-    body: D("Ten years in, and this week was one of our favorites. Your name wasn't drawn, and we'd still like to meet you — so your first visit is on us."),
+    body: D("Whether or not your name was drawn, thank you for celebrating ten years with us. Here's the gift we promised: your first visit is on us."),
+    /** "Nashville: 12 of 40 left · Murfreesboro: 8 of 30 left" — counts at send time, only when caps are set. */
+    left: (line: string) => D(`Spots are limited: ${line}.`),
+    /** "Our centers are open Mon, Nov 23 and Tue, Nov 24" — the days from config. */
+    openDays: (days: string) => D(`Our centers are open ${days}, so you can book this week.`),
     button: D("Book my free first visit"),
   },
 
@@ -197,6 +204,14 @@ export const EMAILS = {
 /* ------------------------------------------------------------------ */
 
 export const PAGES = {
+  /** The site-wide banner (fix list rev 2, P0-7). Never mentions the gift: non-entrants can't claim it. */
+  banner: {
+    label: D("10-year giveaway"),
+    notify: D("HBC turns 10 — a week of prizes starts Nov 16. Get your entry link →"),
+    live: D("Our 10-year giveaway is live — enter once for six drawings →"),
+    closed: D("Thank you for 10 years — see this week's winners →"),
+    dismiss: D("Dismiss the 10-year giveaway banner"),
+  },
   unsubscribe: {
     title: D("You're unsubscribed"),
     done: D("You won't get any more giveaway emails from us. If you win a drawing you've already entered, we'll still reach you about that."),
@@ -240,6 +255,9 @@ export const PAGES = {
     /** The total is the week's new-client retail value, floored to $1,000 (config). */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
+    /** The mystery-gift tease (fix list rev 2, P0-4): notify and live only. "Gift", never "prize"; never names the visit. */
+    giftTeaseHero: D("Every entrant receives a 10-year thank-you gift, revealed Saturday night."),
+    giftTeaseCard: (revealShort: string) => D(`Plus a thank-you gift for every entrant, revealed ${revealShort}.`),
     /** The count and the dates come from config. */
     sub: (drawings: number, span: string) => D(`${countWord(drawings)} drawings, ${span}. Enter once and you're in every one.`),
     closedSub: D("Entries are closed. Thank you, neighbors."),
@@ -257,7 +275,10 @@ export const PAGES = {
     /** The share preview (Open Graph). Dates and the total come from config. */
     og: {
       title: D("10 Years. A Week of Prizes."),
-      description: (drawings: number, span: string) => D(`${countWord(drawings)} drawings ${span}. One entry gets you into every one.`),
+      description: (drawings: number, span: string) => D(`${countWord(drawings)} drawings ${span}, and a thank-you gift for every entrant.`),
+      tease: D("+ a thank-you gift for every entrant"),
+      /** The card's footer line: short, so it never meets the brand name. */
+      foot: (drawings: number, span: string) => D(`${countWord(drawings)} drawings · ${span}`),
       years: (years: number) => D(`${years} Years`),
       value: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes`),
     },
@@ -294,7 +315,10 @@ export const PAGES = {
     copied: D("Copied"),
     backToForm: D("Back to the form"),
     /** The card in closed and thank-you modes. */
+    /** After the reveal only (P0-2): the gift, named. */
     closedCardLine: (visitBySpoken: string) => D(`Every entrant has a free first visit waiting, any day through ${visitBySpoken}.`),
+    /** Between the grand drawing and the reveal: the gift is coming, unnamed. */
+    giftComing: (revealTime: string) => D(`Your thank-you gift arrives by email tonight at ${revealTime}.`),
     talk: D("Talk with our team"),
     /** The form. */
     firstName: D("First name"),
@@ -346,12 +370,10 @@ export const PAGES = {
     deviceLine: (name: string) => D(`+ ${name}`),
     deviceBy: (by: string) => D(`by ${by}`),
     deviceKeep: (keep: string) => D(keep),
-    partnersLine: D("+ a gift from every partner"),
     /** The phone ladder's row: the prize in one line, "Brain Map + 4 sessions + pocket stimulator". */
     rowDevice: { keychain: D("pocket stimulator"), handheld: D("handheld stimulator") },
-    rowPartners: D("partner gifts"),
-    /** The value, first and largest: "$480", "$810+" when a part has no price yet; "value" in small caps under it. */
-    valueBig: (usd: number, floor: boolean) => D(`$${usd.toLocaleString("en-US")}${floor ? "+" : ""}`),
+    /** The value, first and largest: exactly the sum of the priced lines ("$480"); unpriced parts read TBD in the breakdown. */
+    valueBig: (usd: number) => D(`$${usd.toLocaleString("en-US")}`),
     valueWord: D("value"),
     /** The expanded card: one line per part, from config's prizeBreakdown. */
     breakdown: {
@@ -359,10 +381,13 @@ export const PAGES = {
       close: D("Close"),
       brainMap: D("Brain Map"),
       sessions: (n: number) => D(`${n} LENS ${n === 1 ? "session" : "sessions"}`),
-      chair: D("Vibro chair at every session"),
-      partner: (name: string) => D(`Gift from ${name}`),
-      /** A part with no price yet (the pocket device today): it rides on top of the total, which carries the "+". */
-      unpriced: D("bonus"),
+      /** "Vibro chair with each session (2 × $40)" — the count and rate from config. */
+      chair: (n: number, unitUsd: number | null) => D(unitUsd == null ? "Vibro chair with each session" : `Vibro chair with each session (${n}\u00a0×\u00a0$${unitUsd})`),
+      partner: (name: string | null) => D(name ? `Gift from ${name}` : "Partner prize"),
+      /** A device with no price yet (the pocket device today): left out of the total. */
+      unpriced: D("value TBD"),
+      /** A partner prize not yet named or priced: left out of the total. */
+      partnerTbd: D("TBD"),
       total: D("Total"),
       whatsBrainMap: D("What's a Brain Map?"),
     },
@@ -399,7 +424,8 @@ export const PAGES = {
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
       winQ: D("How will I know if I won?"),
       winA: (hours: number) => D(`We email you the moment you're drawn, then call to arrange your prize. You have ${hours} hours to get back to us (a little longer over the weekend); after that, we draw again.`),
-      offerQ: D("What's the thank-you offer?"),
+      /** After the reveal only (P0-2). */
+      offerQ: D("What's my thank-you gift?"),
       offerA: (bookBySpoken: string, visitBySpoken: string, packageSessions: number) => D(`Everyone who enters gets a free first visit — a Brain Map and consultation — booked by ${bookBySpoken} for any day through ${visitBySpoken}. Start the in-center ${packageSessions}-session package at that visit and the ${packageSessions + 1}th session is free.`),
     },
     /** Winners list, the three states (decision 7). */
@@ -410,10 +436,10 @@ export const PAGES = {
     winnerPending: (day: string, spoken: string) => D(`${day}: drawing ${spoken}`),
     /** The verification click. */
     verifiedNotify: D("When entries open, you'll get one email with one button. That button is your entry."),
-    verifiedEntry: (entries: number) => D(`Confirmed, with ${entries} ${entries === 1 ? "entry" : "entries"}. Your thank-you code is in your inbox.`),
+    verifiedEntry: (entries: number) => D(`Confirmed, with ${entries} ${entries === 1 ? "entry" : "entries"}. Your thank-you gift arrives by email Saturday night.`),
     verifyInvalid: D("That link isn't valid or has expired. Enter again below and we'll send a fresh one."),
     /** The one-tap page. */
-    tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you code is in your inbox." : "Confirmed. Your thank-you code is in your inbox."),
+    tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you gift arrives by email Saturday night." : "Confirmed. Your thank-you gift arrives by email Saturday night."),
     tapNotOpen: D("Entries aren't open yet — this link works the moment they do."),
     tapClosed: D("Entries have closed — thank you for wanting in."),
     /** The claim page. */

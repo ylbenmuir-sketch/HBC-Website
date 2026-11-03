@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
 import { CONTACT_METHOD_LABELS, type ContactMethod } from "@/lib/contact-method";
+import { CALL_ME_TEXT, GIVEAWAY_PHONE_LABEL } from "@/lib/call-consent";
 import {
   consultationSaved,
   trackFunnel,
@@ -147,6 +148,16 @@ const CENTER_BY_SLUG: Record<string, CenterChoice> = {
 
 export type CenterPhone = { name: string; phone: { display: string; tel: string } };
 
+/**
+ * The 10-year giveaway booking (fix list rev 2, P0-8/P0-9), decided by the
+ * server page app/contact/10years: the code from the email link and what
+ * the server found when it checked it (null state = no check: no code, or
+ * the giveaway engine is off). In this mode there is no texting box, the
+ * phone asks for the best number to call, and an unticked call-me box
+ * stands where the texting box was.
+ */
+export type GiveawayBooking = { code: string | null; state: "ok" | "expired" | "redeemed" | "unknown" | "unavailable" | null; message: string | null };
+
 const CARD_STYLE = {
   background: "#fff",
   border: "1px solid var(--line)",
@@ -250,13 +261,19 @@ function ChoiceChips<T extends string>({
 export default function ContactForm({
   centerPhones = [],
   video,
+  giveaway = null,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
   /** The first-visit video for step three (lib/videos.ts). */
   video: Video;
+  /** The 10-year giveaway path (/contact?from=10years), or null. */
+  giveaway?: GiveawayBooking | null;
 }) {
   const pathname = usePathname();
+  // The giveaway path: the code (pre-filled from the email link) and the call-me box.
+  const [offerCodeInput, setOfferCodeInput] = useState(giveaway?.code ?? "");
+  const [callMe, setCallMe] = useState(false);
 
   // Step one.
   const [givenName, setGivenName] = useState("");
@@ -375,7 +392,7 @@ export default function ContactForm({
     const from = params.get("from");
     // A 10-year giveaway offer code (?from=10years&code=…): the request is
     // a giveaway booking and the route validates the code.
-    const offerCode = from === "10years" ? params.get("code")?.trim().toUpperCase() ?? null : null;
+    const offerCode = giveaway ? offerCodeInput.trim().toUpperCase() || null : from === "10years" ? params.get("code")?.trim().toUpperCase() ?? null : null;
     try {
       const res = await fetch("/api/consultation", {
         method: "POST",
@@ -392,8 +409,10 @@ export default function ContactForm({
           source_page: from || pathname,
           // A yes only with a number to text. The wording is sent ticked or
           // not — the row keeps what she was offered, not only what she said.
-          sms_consent: Boolean(tel) && smsConsent,
-          sms_consent_text: FORM_CONSENT_TEXT,
+          // The giveaway path offers no texting at all (P0-8).
+          ...(giveaway
+            ? { sms_consent: false, call_me: Boolean(tel) && callMe, call_me_text: CALL_ME_TEXT }
+            : { sms_consent: Boolean(tel) && smsConsent, sms_consent_text: FORM_CONSENT_TEXT }),
         }),
       });
       const data = (await res.json().catch(() => null)) as
@@ -416,7 +435,7 @@ export default function ContactForm({
       sentPhone.current = Boolean(tel);
       sentEmail.current = Boolean(mail);
       sentReferral.current = Boolean(referredBy.trim());
-      sentConsent.current = Boolean(tel) && smsConsent;
+      sentConsent.current = !giveaway && Boolean(tel) && smsConsent;
       setStatus("idle");
       // Step two needs a row to add to; without an id there is nothing to
       // PATCH, and she goes straight to the confirmation.
@@ -658,13 +677,46 @@ export default function ContactForm({
       onClick={onFirstInteraction}
       noValidate
     >
-      <div className="eyebrow">Request your free call</div>
+      <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
       {/* For the no-JavaScript post only (see the file comment): the JSON
           submit builds its own body. The center mirrors the chips' state;
           the wording is the same constant the JSON path sends. */}
       <input type="hidden" name="preferred_center" value={preferredCenter ?? ""} />
-      <input type="hidden" name="sms_consent_text" value={FORM_CONSENT_TEXT} />
-      <input type="hidden" name="source_page" value={pathname} />
+      {giveaway ? (
+        <>
+          {/* The giveaway booking (P0-9): the route validates the code. */}
+          <input type="hidden" name="source" value="giveaway" />
+          <input type="hidden" name="call_me_text" value={CALL_ME_TEXT} />
+          <input type="hidden" name="source_page" value="10years" />
+        </>
+      ) : (
+        <>
+          <input type="hidden" name="sms_consent_text" value={FORM_CONSENT_TEXT} />
+          <input type="hidden" name="source_page" value={pathname} />
+        </>
+      )}
+
+      {giveaway && (
+        <>
+          {giveaway.code && giveaway.message && (
+            <p className="giveaway-code" role="status" data-giveaway-code data-state={giveaway.state ?? undefined}>
+              {giveaway.message}
+            </p>
+          )}
+          <label htmlFor="offer-code">Your 10-year code</label>
+          <input
+            id="offer-code"
+            name="offer_code"
+            className="giveaway-code-input"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            maxLength={10}
+            value={offerCodeInput}
+            onChange={(e) => setOfferCodeInput(e.target.value)}
+          />
+        </>
+      )}
 
       {/* One field, first and last (Ben, 2026-10-27); stored whole, greeted
           by the first word (lib/first-name.ts). The id predates the change. */}
@@ -683,7 +735,15 @@ export default function ContactForm({
       <p className="micro either-note" id="reach-either">
         A phone number or an email &mdash; either one is fine.
       </p>
-      <label htmlFor="phone">Phone</label>
+      <label htmlFor="phone">
+        {giveaway ? (
+          <>
+            {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
+          </>
+        ) : (
+          "Phone"
+        )}
+      </label>
       <input
         id="phone"
         name="phone"
@@ -741,6 +801,14 @@ export default function ContactForm({
           links open a new tab so a half-filled form is not lost. Optional:
           the request goes through ticked or not, and a tick with no phone
           is a no. */}
+      {giveaway ? (
+        /* The giveaway path: no texting (Dialpad bans sweepstakes traffic);
+           an unticked call-me box instead, stored with its words and time. */
+        <div className="sms-consent call-me" data-call-me>
+          <input id="call-me" name="call_me" type="checkbox" checked={callMe} onChange={(e) => setCallMe(e.target.checked)} />
+          <label htmlFor="call-me">{CALL_ME_TEXT}</label>
+        </div>
+      ) : (
       <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
         <input
           id="sms-consent"
@@ -765,6 +833,7 @@ export default function ContactForm({
           )}
         </p>
       </div>
+      )}
 
       {/*
         Hidden from real users three ways, because one is not reliable:

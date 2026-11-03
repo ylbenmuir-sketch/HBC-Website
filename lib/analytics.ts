@@ -161,6 +161,9 @@ export type SiteEvent =
   | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
   | { name: "brain_map_jump"; params: { page_path: string } }
   | { name: "giveaway_path_pick"; params: { choice: "new" | "current"; page_path: string } }
+  /** The site-wide 10-year banner (fix list rev 2, P0-7): the mode only, no identifiers. */
+  | { name: "giveaway_banner_click"; params: { mode: "notify" | "live" | "closed" } }
+  | { name: "giveaway_banner_dismiss"; params: { mode: "notify" | "live" | "closed" } }
   | { name: "guide_download"; params: { page_path: string } }
   | {
       name: "partner_badge_click";

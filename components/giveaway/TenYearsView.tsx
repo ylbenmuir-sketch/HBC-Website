@@ -16,6 +16,7 @@ import {
   CLAIM_WINDOW_MS,
   DEVICES,
   DRAWINGS,
+  GIFT_REVEAL_AT,
   OFFER,
   REFERRAL,
   SCHEDULE,
@@ -27,7 +28,6 @@ import {
   prizeFor,
   prizeRetailUsd,
   prizeTotalFloorUsd,
-  prizeValueIsFloor,
   shortCentralTime,
   spokenCentral,
   spokenCentralDateTime,
@@ -90,6 +90,8 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
                 {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
               </h1>
               <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
+              {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
+              {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
               <p className="ty-sub">{sub}</p>
               <PathPicker label={t.pathLabel} newLabel={t.pathNew} currentLabel={t.pathCurrent} />
               {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
@@ -162,6 +164,7 @@ export function FormCard({ mode, now, refCode, error, showcase = null }: { mode:
           </label>
         </div>
         {refCode && mode === "live" && <p className="ty-ref">{t.refNote}</p>}
+        <p className="ty-gift-card" data-gift-tease>{t.giftTeaseCard(revealShort())}</p>
         <button type="submit" className="btn btn-primary ty-submit">
           {mode === "notify_me" ? t.notifyButton : t.liveButton}
         </button>
@@ -205,8 +208,18 @@ export function YoureInCard({ message, shareUrl }: { message: string; shareUrl?:
   );
 }
 
-/** Closed and thank-you modes: the winners list in its three states, and the one call button on the page. */
-export function WinnersCard({ winners, notice }: { winners: PublicWinner[]; notice: string | null }) {
+/** "Sat, Nov 21" — the reveal date, for the form card's tease. */
+const revealShort = () => new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" }).format(GIFT_REVEAL_AT);
+
+/** "7 PM" — the reveal time. */
+const revealTime = () => shortCentralTime(GIFT_REVEAL_AT).replace(/\b(am|pm)$/, (m) => m.toUpperCase());
+
+/**
+ * Closed and thank-you modes: the winners list in its three states, and the one call button on the page.
+ * `revealed` comes from the REAL giveaway clock (giftRevealed(giveawayNow())), never a showcase's
+ * representative now, so a ?mode=closed preview before Saturday 7 pm never names the gift (P0-2).
+ */
+export function WinnersCard({ winners, notice, revealed }: { winners: PublicWinner[]; notice: string | null; revealed: boolean }) {
   const visitBy = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "long", day: "numeric" }).format(OFFER.visitBy.at);
   return (
     <>
@@ -223,7 +236,7 @@ export function WinnersCard({ winners, notice }: { winners: PublicWinner[]; noti
           </li>
         ))}
       </ul>
-      <p className="ty-card-line">{t.closedCardLine(visitBy)}</p>
+      <p className="ty-card-line">{revealed ? t.closedCardLine(visitBy) : t.giftComing(revealTime())}</p>
       <a href="/contact" className="btn btn-primary ty-submit">
         {t.talk}
       </a>
@@ -315,19 +328,18 @@ function PrizeWords({ p }: { p: PrizeSpec }) {
           {t.deviceLine(DEVICES.handheld.name)} <small>{t.deviceBy(DEVICES.handheld.by)}</small> <small>· {t.deviceKeep(DEVICES.handheld.keep)}</small>
         </span>
       )}
-      {p.partnerServices && <span className="ty-prize-line">{t.partnersLine}</span>}
     </>
   );
 }
 
-const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p), prizeValueIsFloor(p));
+/** Exactly the sum of the breakdown's priced lines (config test: breakdownSumUsd = prizeRetailUsd). */
+const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p));
 
 /** The phone row's one line: "Brain Map + 4 sessions + pocket stimulator". */
 function rowWords(p: PrizeSpec): string {
   const parts = [t.prizeWords(p.brainMap, p.sessions)];
   if (p.hoolestKeychain) parts.push(t.rowDevice.keychain);
   if (p.hoolestHandheld) parts.push(t.rowDevice.handheld);
-  if (p.partnerServices) parts.push(t.rowPartners);
   return parts.join(" + ");
 }
 
@@ -343,8 +355,8 @@ function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
   const label =
     part.kind === "brainMap" ? b.brainMap
     : part.kind === "sessions" ? b.sessions(part.count)
-    : part.kind === "chair" ? b.chair
-    : part.kind === "partner" ? b.partner(part.partner?.name ?? "")
+    : part.kind === "chair" ? b.chair(part.count, part.unitUsd ?? null)
+    : part.kind === "partner" ? b.partner(part.partner?.name ?? null)
     : null;
   const device = part.kind === "keychain" ? DEVICES.keychain : part.kind === "handheld" ? DEVICES.handheld : null;
   return (
@@ -361,7 +373,7 @@ function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
           {part.kind === "handheld" && <small> · {t.deviceKeep(DEVICES.handheld.keep)}</small>}
         </span>
       </span>
-      <span className="ty-bd-usd">{part.usd == null ? b.unpriced : usd(part.usd)}</span>
+      <span className="ty-bd-usd" data-tbd={part.usd == null ? "1" : undefined}>{part.usd == null ? (part.kind === "partner" ? b.partnerTbd : b.unpriced) : usd(part.usd)}</span>
     </li>
   );
 }

@@ -299,7 +299,11 @@ try {
   section("Today (Oct 2026), engine on: /10years is still the showcase before Nov 9");
   const todayPage = await get("/10years");
   expect("/10years answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
-  expect("/10years is noindex (header and meta)", /noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
+  // Rev 2, P0-6: the meta robots follows the clock; no static noindex header may pin it.
+  expect("/10years is noindex (meta), with no static noindex header", !/noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
+  const robotsToday = await get("/robots.txt");
+  expect("before Nov 9: robots.txt still disallows /10years", /^Disallow: \/10years$/m.test(robotsToday.text), robotsToday.text.slice(0, 200));
+  expect("before Nov 9: the sitemap does not list /10years", !/\/10years</.test((await get("/sitemap.xml")).text));
   // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
   const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
   expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
@@ -318,13 +322,34 @@ try {
 
   /* ── notify-me ──────────────────────────────────────────────────────── */
   section("Nov 10: notify-me");
+  // Rev 2, P0-6: un-hidden on the clock (the fake clock is Nov 10 here).
+  await clock(ct(2026, 11, 9, 0, 1));
+  {
+    const robots = (await get("/robots.txt")).text;
+    expect("Nov 9 00:01: robots.txt drops the /10years disallow, keeps the token routes, /admin and /api", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/claim\//.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
+    const map = (await get("/sitemap.xml")).text;
+    expect("Nov 9 00:01: the sitemap lists /10years and /10years/rules, dated by the rules version", /\/10years<\/loc>/.test(map) && /\/10years\/rules<\/loc>/.test(map) && !/\/10years\/(claim|enter|verify)/.test(map));
+    const pub = await get("/10years");
+    expect("Nov 9 00:01: /10years meta robots says index", /name="robots" content="index, follow"/.test(pub.text));
+    expect("Nov 9 00:01: /10years/rules meta robots says index", /name="robots" content="index, follow"/.test((await get("/10years/rules")).text));
+    expect("the token routes keep a noindex header", /noindex/.test((await get("/10years/verify")).headers.get("x-robots-tag") ?? ""));
+    // P0-2: nothing before the reveal names the gift; P0-4: the tease is there instead.
+    const FORBIDDEN = /free first visit|first visit|13th|thank-you offer/i;
+    const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
+    expect("notify-me: no page surface names the gift (/10years, /10years/rules)", !FORBIDDEN.test(visible(pub.text)) && !FORBIDDEN.test(visible((await get("/10years/rules")).text)));
+    expect("notify-me: the hero and card tease the gift", (visible(pub.text).match(/data-gift-tease="true"/g) ?? []).length === 2 && /thank-you gift/.test(pub.text));
+    expect("the meta description is the new one", /name="description" content="Harmonized Brain Centers turns 10: six drawings Nov 16–21/.test(pub.text));
+    expect("og:description teases the gift", /property="og:description" content="Six drawings Nov 16–21, and a thank-you gift for every entrant\."/.test(pub.text.replace(/\[DRAFT\] /g, "")));
+  }
+  await clock(ct(2026, 11, 10, 10));
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
   expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Send me my entry link/.test(page.text), String(page.status));
   // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
-  expect("sitemap still never lists /10years (a hidden page, Ben 2026-10-19)", !/10years/.test((await get("/sitemap.xml")).text));
+  // Rev 2, P0-6: public from Nov 9 — the page and the rules are listed, never a token route.
+  expect("from Nov 9 the sitemap lists /10years and /10years/rules only", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text) && !/\/10years\/(claim|enter|verify|signup)/.test((await get("/sitemap.xml")).text));
   const A = person("A", "alice.notify@example.test");
   // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES).
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
@@ -379,7 +404,8 @@ try {
   const tapA2 = await get(new URL(enterLinks[A.email]).pathname, A);
   expect("A: a second tap adds nothing", /data-ok="1"/.test(tapA2.text));
   let youreIn = newEmails();
-  expect("A: one You're in email, with the share link and the offer code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && /10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text), `${youreIn.length}`);
+  // Rev 2, P0-2: no code and no named gift before the reveal — a tease instead.
+  expect("A: one You're in email, with the share link, the gift tease and NO code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && !/10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text) && /thank-you gift for every entrant/.test(youreIn[0].body.text) && !/first visit/i.test(youreIn[0].body.text), `${youreIn.length}`);
   expect("A (not a client): no forward-to-a-friend line", !/Forward this to a friend/.test(youreIn[0]?.body.text ?? ""));
   // Monday 9 am: the reminder to B and C (not A).
   await clock(C.SCHEDULE.mondayReminder.at);
@@ -393,7 +419,7 @@ try {
   const bPerson = (await dump("giveaway_people")).find((r) => r.email === B.email);
   expect("B's row: city Louisville, nearer center Nashville (out of state, by the road in)", Boolean(bPerson) && bPerson.city === "Louisville" && bPerson.nearest_center === "nashville", JSON.stringify(bPerson && { city: bPerson.city, center: bPerson.nearest_center }));
   youreIn = newEmails();
-  expect("B (a current client): You're in carries the forward line", youreIn.length === 1 && /Forward this to a friend/.test(youreIn[0].body.text));
+  expect("B (a current client): You're in names no gift and has no forward line yet", youreIn.length === 1 && !/Forward this to a friend|first visit/i.test(youreIn[0].body.text));
 
   /* ── live entries + referrals ───────────────────────────────────────── */
   section("Mon Nov 16, 8 am: entries and referrals");
@@ -407,7 +433,10 @@ try {
   expect("D: verified with 1 entry", /data-ok="1"/.test(dv.text) && /with 1 entry/.test(dv.text));
   const dIn = newEmails()[0];
   const dRef = dIn.body.text.match(/ref=(HBC-[A-Z0-9]{6})/)[1];
-  const dCode = dIn.body.text.match(/(10Y-[A-Z0-9]{6})/)[1];
+  // The code is issued at verification but only mailed at the reveal: read it from the store (giveaway tables, memory mode).
+  const dPerson = (await dump("giveaway_people")).find((p) => p.email_display === D.email || p.email === D.email);
+  const dCode = (await dump("giveaway_offers")).find((o) => o.person_id === dPerson?.id)?.code;
+  expect("D: an offer code is issued (unmailed until the reveal)", /^10Y-[A-Z0-9]{6}$/.test(dCode ?? ""), String(dCode));
   // E through D's link.
   const E = person("E", "eve.friend@example.test");
   const refPage = await get(`/10years?ref=${dRef}`, E);
@@ -581,20 +610,45 @@ try {
   expect("a signup after close is refused", /error=closed/.test(late.location), late.location);
   expect("a one-tap after close is refused", /data-ok="0"/.test((await get(new URL(enterLinks[Cc.email]).pathname, Cc)).text));
 
-  section("Sun Nov 22: thank-you + offer");
+  // Rev 2: between the grand drawing and the reveal the gift is coming, unnamed.
+  {
+    const before = (await get("/10years")).text.replace(/<script[\s\S]*?<\/script>/g, "");
+    expect("Sat 5–7 pm: the closed card says the gift arrives tonight and names nothing", /arrives by email tonight at 7 PM/.test(before) && !/first visit|13th|thank-you offer/i.test(before));
+  }
+
+  section("Sat Nov 21, 7 pm: the reveal (thank-you + gift)");
+  expect("the reveal email is due Sat Nov 21, 7:00 PM CT", C.formatCentralLabel(C.SCHEDULE.thankYouSend.at) === "Sat Nov 21, 7:00 PM CT");
   await clock(C.SCHEDULE.thankYouSend.at);
-  run = await tick("Sunday thank-you");
+  run = await tick("Saturday reveal");
   fresh = newEmails();
   const holders = new Set((await dump("giveaway_winners")).filter((w) => ["drawn", "contacted", "claimed"].includes(w.status)).map((w) => w.person_id));
   const people = await dump("giveaway_people");
-  const expectThanks = people.filter((p) => p.verified_at && !p.unsubscribed_at && !holders.has(p.id)).length;
-  expect(`thank-you to every non-winner who is subscribed (${expectThanks})`, run.sends.sent === expectThanks && fresh.length === expectThanks && fresh.every((e) => /Thank you/.test(e.body.subject) && /10Y-/.test(e.body.text)), `${run.sends.sent}/${fresh.length}`);
-  expect("no winner got the thank-you", !fresh.some((e) => holders.has(people.find((p) => p.email === to(e))?.id)));
+  const expectThanks = people.filter((p) => p.verified_at && !p.unsubscribed_at).length;
+  expect(`the reveal to every verified, subscribed entrant, winners included (${expectThanks})`, run.sends.sent === expectThanks && fresh.length === expectThanks && fresh.every((e) => /thank-you gift/.test(e.body.subject) && /10Y-/.test(e.body.text) && /Whether or not your name was drawn/.test(e.body.text)), `${run.sends.sent}/${fresh.length}`);
+  expect("subscribed winners got it too", fresh.some((e) => holders.has(people.find((p) => p.email === to(e) || p.email_display === to(e))?.id)));
+  expect("once per person", new Set(fresh.map(to)).size === fresh.length);
+  run = await tick("Saturday reveal, again");
+  expect("a second run sends nothing (dedupe)", newEmails().length === 0 && run.sends.sent === 0);
+  expect("after the reveal: the closed card names the gift", /free first visit waiting/.test((await get("/10years")).text));
 
   section("Dec 1: an offer code booked through /contact");
   await clock(ct(2026, 12, 1, 10));
   const booking = (code, center = "Not sure yet") =>
     fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.200" }, body: JSON.stringify({ source: "giveaway", offer_code: code, first_name: "TEST Dan Tester", phone: "0000000000", email: D.email, preferred_center: center, best_time: "Any time", source_page: "10years", sms_consent: false }) });
+  // Rev 2, P0-8/P0-9: the giveaway path to /contact, server-rendered.
+  {
+    const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
+    const plain = await get("/contact");
+    expect("/contact (plain) is unchanged: Text us link and the texting box", /href="sms:/.test(plain.text) && /name="sms_consent"/.test(plain.text) && !/data-giveaway-code/.test(plain.text));
+    const gp = await get(`/contact?from=10years&code=${dCode}`);
+    expect("/contact?from=10years&code=…: 200, a visible 'ready' code banner", gp.status === 200 && /data-giveaway-code="true" data-state="ok"/.test(gp.text) && new RegExp(`${dCode} is ready`).test(visible(gp.text)), String(gp.status));
+    expect("giveaway path: no sms: link and no texting box", !/href="sms:/.test(gp.text) && !/name="sms_consent"/.test(gp.text) && !/Text me updates/.test(visible(gp.text)));
+    expect("giveaway path: both numbers as call links", /href="tel:\+?1?6153318762"/.test(gp.text) && /href="tel:\+?1?6152032650"/.test(gp.text), (gp.text.match(/href="tel:[^"]+"/g) ?? []).join(" "));
+    expect("giveaway path: hidden source=giveaway, the code field pre-filled, the phone label, an unticked call-me box", /name="source" value="giveaway"/.test(gp.text) && new RegExp(`name="offer_code"[^>]*value="${dCode}"`).test(gp.text) && /Best number to call you to book/.test(gp.text) && /name="call_me"/.test(gp.text) && !/name="call_me"[^>]*checked/.test(gp.text));
+    expect("giveaway path: noindex", /name="robots" content="noindex, nofollow"/.test(gp.text));
+    const wrong = await get("/contact?from=10years&code=10Y-NOPE00");
+    expect("giveaway path, a wrong code: the banner says so", /data-state="unknown"/.test(wrong.text) && /isn(&#x27;|')t one we recognise/.test(visible(wrong.text)));
+  }
   let b = await booking(dCode);
   let bj = await b.json().catch(() => null);
   // Without a database (the default: SUPABASE_URL is emptied so nothing can
@@ -609,14 +663,24 @@ try {
   b = await booking(dCode);
   bj = await b.json().catch(() => null);
   expect("the same code a second time is refused as already used", b.status === 400 && /already been used/.test(bj?.error ?? ""), `${b.status} ${JSON.stringify(bj)}`);
+  expect("giveaway path, a used code: the banner says so", /data-state="redeemed"/.test((await get(`/contact?from=10years&code=${dCode}`)).text));
   b = await booking("10Y-NOPE00");
   expect("an unknown code is refused", b.status === 400);
+  // The no-JavaScript post carries the giveaway fields too (P0-9).
+  {
+    const spare = (await dump("giveaway_offers")).find((o) => !o.redeemed_at)?.code;
+    const form = new URLSearchParams({ source: "giveaway", offer_code: spare ?? "", first_name: "TEST NoJS Tester", phone: "0000000000", email: "nojs@example.test", preferred_center: "Murfreesboro", source_page: "10years", call_me: "on", call_me_text: "Yes, call me to schedule my visit.", website: "" });
+    const nj = await fetch(`${BASE}/api/consultation`, { method: "POST", redirect: "manual", headers: { "content-type": "application/x-www-form-urlencoded", "x-forwarded-for": "203.0.113.201" }, body: form });
+    expect("a no-JS giveaway post redeems its code", Boolean(spare) && (await dump("giveaway_offers")).find((o) => o.code === spare)?.redeemed_at != null, `${nj.status}`);
+    newEmails();
+  }
   newEmails();
   const otherCode = (await dump("giveaway_offers")).find((o) => o.code !== dCode).code;
   await clock(ct(2026, 12, 6, 9));
   b = await booking(otherCode);
   bj = await b.json().catch(() => null);
   expect("after Dec 5 a code is refused as expired", b.status === 400 && /expired/.test(bj?.error ?? ""), `${b.status} ${JSON.stringify(bj)}`);
+  expect("giveaway path, after Dec 5: the banner says expired", /data-state="expired"/.test((await get(`/contact?from=10years&code=${otherCode}`)).text));
   expect("after Dec 5 the page is the thank-you page", /Ten years\. Thank you|Talk with our team/.test((await get("/10years")).text));
 
   /* ── the audit ──────────────────────────────────────────────────────── */
@@ -635,7 +699,7 @@ try {
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
     daily: all.filter((e) => /^\[DRAFT\] \w+'s (grand )?prize: |That was the last drawing/.test(e.body.subject)).length,
     winner: all.filter((e) => /You won/.test(e.body.subject)).length,
-    thanks: all.filter((e) => /Thank you — and your first visit/.test(e.body.subject)).length,
+    thanks: all.filter((e) => /Your 10-year thank-you gift/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,
     leads: all.filter((e) => /free call request \(10 years\)/.test(e.body.subject)).length,
   };
@@ -675,7 +739,21 @@ async function engineOffChecks() {
   const home = await get("/10years");
   expect("off: /10years answers 200", home.status === 200, String(home.status));
   expect("off: it is the notify-me stage, form posting with ?mode=notify", home.text.includes('data-mode="notify_me"') && home.text.includes('action="/10years/signup?mode=notify"'));
-  expect("off: noindex, nofollow — header and meta", /noindex, nofollow/.test(home.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex, nofollow"/.test(home.text));
+  expect("off: noindex, nofollow (meta; no static header — it follows the clock)", /name="robots" content="noindex, nofollow"/.test(home.text));
+  // Rev 2, P0-2: before the reveal (the real clock today), no stage names the gift.
+  {
+    const FORBIDDEN = /free first visit|first visit|13th|thank-you offer/i;
+    const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
+    const stages = ["/10years", "/10years?mode=notify", "/10years?mode=live", "/10years?mode=closed", "/10years?mode=thanks", "/10years/rules"];
+    const hits = [];
+    for (const path of stages) if (FORBIDDEN.test(visible((await get(path)).text))) hits.push(path);
+    expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
+    const rules = (await get("/10years/rules")).text;
+    expect("off: the rules have no placeholder, no counsel, no brackets in the rules text", !/placeholder|counsel/i.test(rules) && !/\[(DRAFT|CONFIRM)/.test(rules));
+    expect("off: the rules carry their own meta description", /name="description" content="Official Rules and prize details for the Harmonized Brain Centers 10-year giveaway/.test(rules));
+    expect("off: the rules table's totals equal config (grand $2,529 / $2,544; Monday $480 / $330)", /data-arv="2529"/.test(rules) && /data-arv="2544"/.test(rules) && /data-arv="480"/.test(rules) && /data-arv="330"/.test(rules));
+    expect("off: the rules show the vibro chair as 2 × $40, the pocket device value TBD, partners TBD", /Vibro chair with each session \(2[\s ]×[\s ]\$40\)/.test(rules) && /value TBD/.test(rules) && />TBD</.test(rules));
+  }
   expect("off: no [DRAFT] tag on the page", !home.text.includes("[DRAFT]"));
   expect("off: the assistant is off (page marker)", /data-assistant-off/.test(home.text));
   expect("off: no preview banner", !/preview|showcase/i.test(home.text.replace(/<script[\s\S]*?<\/script>/g, "")));
@@ -686,7 +764,7 @@ async function engineOffChecks() {
   const thanks = await get("/10years?mode=thanks");
   expect("off: ?mode=thanks shows the thank-you stage", thanks.status === 200 && thanks.text.includes('data-mode="thank_you"') && /data-assistant-off/.test(thanks.text));
   expect("off: an unknown ?mode= is notify-me", (await get("/10years?mode=whatever")).text.includes('data-mode="notify_me"'));
-  expect("off: /10years/rules answers 200, noindex, assistant off", await get("/10years/rules").then((r) => r.status === 200 && /noindex/.test(r.headers.get("x-robots-tag") ?? "") && /data-assistant-off/.test(r.text)));
+  expect("off: /10years/rules answers 200, noindex (meta), assistant off", await get("/10years/rules").then((r) => r.status === 200 && /name="robots" content="noindex/.test(r.text) && /data-assistant-off/.test(r.text)));
   // The form: a normal success, no row (there is no store to write to — a
   // write would have answered ?error=unavailable), no email.
   const P = person("showcase", "showcase@example.test");

@@ -39,6 +39,8 @@ export async function renderTenYearsCard() {
             <div style={{ fontFamily: "Cormorant Garamond", fontSize: 168, lineHeight: 0.9, color: SAGE, letterSpacing: "-0.03em", display: "flex" }}>{t.og.years(years)}</div>
             <div style={{ fontFamily: "Cormorant Garamond", fontSize: 66, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 10 }}>{heading.length > 1 ? heading.slice(1).join(" ") : ogTitle()}</div>
             <div style={{ fontSize: 34, lineHeight: 1.2, color: GOLD_INK, display: "flex", marginTop: 22, fontWeight: 500 }}>{t.og.value(total)}</div>
+            {/* The mystery gift (fix list rev 2, P0-4): "gift", never the visit. */}
+            <div style={{ fontSize: 26, lineHeight: 1.2, color: NAVY, display: "flex", marginTop: 10, fontWeight: 500 }}>{t.og.tease}</div>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid rgba(169,133,63,0.45)", paddingTop: 24 }}>
@@ -52,7 +54,7 @@ export async function renderTenYearsCard() {
               <div style={{ fontSize: 14, letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD_INK, marginTop: 6, display: "flex" }}>LENS neurofeedback</div>
             </div>
           </div>
-          <div style={{ fontSize: 22, color: SLATE, letterSpacing: "0.04em", display: "flex" }}>{ogDescription()}</div>
+          <div style={{ fontSize: 22, color: SLATE, letterSpacing: "0.04em", display: "flex" }}>{t.og.foot(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"))}</div>
         </div>
       </div>
     ),

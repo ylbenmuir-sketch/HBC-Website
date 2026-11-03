@@ -6,12 +6,19 @@ import { staticPages } from "@/lib/pages";
 import { resources, isPublishable, lastChanged } from "@/lib/resources";
 import { team } from "@/lib/team";
 import { VIDEO_PAGES_DATE, videoPath, videos } from "@/lib/videos";
+import { RULES_VERSION } from "@/lib/giveaway/config";
+import { tenYearsPublic } from "@/lib/giveaway/showcase";
 
-/** Never in the sitemap, whatever answers there: the giveaway page is a
- *  hidden page (Ben, 2026-10-19 — noindex, disallowed, linked from
- *  nowhere) and /admin is staff-only. Prefix matches, so every sub-route
- *  (verify, enter, claim, rules; the admin screens) goes with them. */
+/** Never listed from staticPages: /admin is staff-only, and the giveaway
+ *  routes are added below only on the clock. Prefix matches, so every
+ *  sub-route (verify, enter, claim; the admin screens) goes with them. */
 const NEVER_LISTED = ["/10years", "/admin"];
+
+/** /10years and /10years/rules join once the page is public (engine on,
+ *  Nov 9 reached — fix list rev 2, P0-6), dated by the rules version. The
+ *  token routes never do. Answered per request so no deploy is needed. */
+export const dynamic = "force-dynamic";
+const tenYearsEntries = () => (tenYearsPublic() ? ["/10years", "/10years/rules"].map((path) => ({ path, lastModified: RULES_VERSION })) : []);
 const neverListed = (path: string) => NEVER_LISTED.some((p) => path === p || path.startsWith(`${p}/`));
 
 /**
@@ -69,6 +76,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // One watch page per video. Their videos are listed again, with the
     // video fields Google reads, in /video-sitemap.xml.
     ...videos.map((v) => ({ path: videoPath(v), lastModified: VIDEO_PAGES_DATE })),
+    ...tenYearsEntries(),
   ];
 
   return entries.map(({ path, lastModified }) => ({

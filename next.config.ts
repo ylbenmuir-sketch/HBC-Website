@@ -407,19 +407,37 @@ const nextConfig: NextConfig = {
       // (GIVEAWAY-PLAN.md §5, §6; 2026-10-18): never cached, never indexed.
       // The page metadata says noindex too; the header is what a crawler
       // obeys for a route handler's response and what a CDN obeys for both.
-      // `/10years` (2026-10-19): a hidden page — see app/robots.ts.
-      ...["/admin/:path*", "/unsubscribe", "/10years", "/10years/:path*"].map((source) => ({
+      // The giveaway's token routes (claim, enter, verify, signup) are never
+      // indexed. /10years and /10years/rules are NOT here (fix list rev 2,
+      // P0-6): their meta robots follows the clock — noindex while hidden,
+      // index once public — and a static header here would pin them noindex.
+      ...["/admin/:path*", "/unsubscribe", "/10years/claim/:path*", "/10years/enter/:path*", "/10years/verify", "/10years/signup"].map((source) => ({
         source,
         headers: [
           { key: "Cache-Control", value: "no-store, max-age=0" },
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       })),
+      // The page itself and the rules: never cached (the mode follows the clock).
+      ...["/10years", "/10years/rules"].map((source) => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+      })),
     ];
   },
 
   async rewrites() {
-    return [
+    // An array here would be `afterFiles` rewrites, which never see a path
+    // that is a page (/contact is); the giveaway variant needs `beforeFiles`.
+    return {
+      beforeFiles: [
+        // The 10-year giveaway's booking path (fix list rev 2, P0-8):
+        // /contact?from=10years… renders app/contact/10years (no texting,
+        // both numbers, the code banner), the address bar unchanged and the
+        // query carried along. Plain /contact stays a static page.
+        { source: "/contact", has: [{ type: "query" as const, key: "from", value: "10years" }], destination: "/contact/10years" },
+      ],
+      afterFiles: [
       // 410 Gone, one rule, the paths in GONE_PATTERN:
       // - /vibro-acoustic-chair — approved, Ben, Aug 2026. Furniture-shopping
       //   traffic the practice cannot use; the decision is in
@@ -434,7 +452,9 @@ const nextConfig: NextConfig = {
       { source: "/wp-admin", destination: "/api/gone" },
       { source: "/wp-admin/:path*", destination: "/api/gone" },
       { source: "/wp-login.php", destination: "/api/gone" },
-    ];
+      ],
+      fallback: [],
+    };
   },
 };
 

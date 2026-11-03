@@ -14,7 +14,7 @@ import { entryVerifyEmail, notifyVerifyEmail, youreInEmail } from "./emails";
 import { entryCount, entrySignup, hashes, liveTap, notifySignup, verifyEntry, verifyNotify, type SignupInput } from "./people";
 import { clientAddress, rateLimit, supabaseCounter } from "./rate-limit";
 import type { WinnerRow } from "./rows";
-import { bookLink, footingFor, referralLink, sendGiveawayEmail, tokenLink } from "./send";
+import { footingFor, referralLink, sendGiveawayEmail, tokenLink } from "./send";
 import { requireGiveawayStore, type GiveawayStore } from "./store";
 import { tokenSecret, verifyToken } from "./tokens";
 import { audit } from "./audit";
@@ -148,7 +148,7 @@ export async function handleVerify(token: string | null): Promise<VerifyPageResu
   if (!asEntry.ok) return { ok: false, message: PAGES.tenYears.verifyInvalid };
   const r = await verifyEntry(store, asEntry.payload.s, now);
   if (!r.ok) return { ok: false, message: PAGES.tenYears.verifyInvalid };
-  if (r.first) await sendYoureIn(store, secret, r.person.id, r.referredBonus, r.offer.code, now);
+  if (r.first) await sendYoureIn(store, secret, r.person.id, r.referredBonus, now);
   return { ok: true, kind: "entry", message: PAGES.tenYears.verifiedEntry(await entryCount(store, r.person.id)), shareUrl: await shareUrlFor(store, r.person.id) };
 }
 
@@ -171,7 +171,7 @@ export async function handleTap(token: string | null): Promise<VerifyPageResult>
     if (r.reason === "not_open") return { ok: false, message: pageMode(now) === "notify_me" ? PAGES.tenYears.tapNotOpen : PAGES.tenYears.tapClosed };
     return { ok: false, message: PAGES.tenYears.verifyInvalid };
   }
-  if (r.first) await sendYoureIn(store, secret, r.person.id, false, r.offer.code, now);
+  if (r.first) await sendYoureIn(store, secret, r.person.id, false, now);
   return { ok: true, kind: "entry", message: PAGES.tenYears.tapped(r.earlyBird), shareUrl: await shareUrlFor(store, r.person.id) };
 }
 
@@ -181,12 +181,12 @@ async function shareUrlFor(store: GiveawayStore, personId: string): Promise<stri
   return code ? referralLink(code) : undefined;
 }
 
-async function sendYoureIn(store: GiveawayStore, secret: string, personId: string, referredBonus: boolean, offerCode: string, now: Date): Promise<void> {
+async function sendYoureIn(store: GiveawayStore, secret: string, personId: string, referredBonus: boolean, now: Date): Promise<void> {
   const { data } = await store.select("giveaway_people", "*").eq("id", personId).single();
   const p = data as { email: string; first_name: string; is_existing_client: boolean; referral_code: string };
   const next = DRAWINGS.find((d) => d.at.getTime() > now.getTime()) ?? null;
   const footing = footingFor(p.email, store.env, false, secret);
-  const email = youreInEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), offerCode, bookUrl: bookLink(offerCode), footing });
+  const email = youreInEmail({ firstName: p.first_name, isExistingClient: p.is_existing_client, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), footing });
   const sent = await sendGiveawayEmail({ to: p.email, email, marketing: false, footing });
   if (sent.status !== "sent") console.error(`[giveaway] You're in not sent: ${sent.error}`);
 }

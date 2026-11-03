@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import PageSchema from "@/components/PageSchema";
 import TenYearsView, { FormCard, MessageCard, WinnersCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { pageMode } from "@/lib/giveaway/config";
+import { giftRevealed, pageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
-import { showcaseActive, showcaseFor } from "@/lib/giveaway/showcase";
+import { showcaseActive, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
@@ -35,23 +35,33 @@ import { pageMetadata } from "@/lib/pages";
  * engine is off, and before Nov 9 even with it on, the page is a hidden
  * preview — the notify-me stage, ?mode=live | closed | thanks for the
  * others, the forms succeeding on screen and writing nothing, sample
- * winners. Hidden means: noindex, nofollow (here and the header in
- * next.config.ts), disallowed in robots.txt, absent from the sitemap,
- * linked from nowhere.
+ * winners. Hidden means: noindex, nofollow, disallowed in robots.txt,
+ * absent from the sitemap, linked from nowhere.
+ *
+ * UN-HIDDEN ON THE CLOCK (fix list rev 2, P0-6): from the moment the real
+ * page shows — engine on and Nov 9 reached (tenYearsPublic) — the meta
+ * robots says index, robots.txt drops the /10years disallow (the token
+ * routes stay disallowed and noindex) and the sitemap lists /10years and
+ * /10years/rules. No deploy needed: this route, robots and the sitemap
+ * are all answered per request. ?mode= is ignored on the
+ * production deployment (lib/giveaway/showcase.ts, P0-3).
  */
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export const metadata: Metadata = {
-  ...pageMetadata("/10years"),
-  robots: { index: false, follow: false },
-  // The share preview (Ben, 2026-10-20): its own title and line over the
-  // shared set, WITHOUT its default image — an `images` set here would
-  // beat the file-based card, app/10years/opengraph-image.tsx. Still noindex.
-  openGraph: { ...(({ images: _default, ...rest }) => (void _default, rest))(SHARED_OPEN_GRAPH), type: "website", title: ogTitle(), description: ogDescription() },
-  twitter: { card: "summary_large_image", title: ogTitle(), description: ogDescription() },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const indexable = tenYearsPublic();
+  return {
+    ...pageMetadata("/10years"),
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
+    // The share preview (Ben, 2026-10-20): its own title and line over the
+    // shared set, WITHOUT its default image — an `images` set here would
+    // beat the file-based card, app/10years/opengraph-image.tsx.
+    openGraph: { ...(({ images: _default, ...rest }) => (void _default, rest))(SHARED_OPEN_GRAPH), type: "website", title: ogTitle(), description: ogDescription() },
+    twitter: { card: "summary_large_image", title: ogTitle(), description: ogDescription() },
+  };
+}
 
 type Search = { sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[] };
 
@@ -77,7 +87,8 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
     else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} />;
   } else {
-    card = <WinnersCard winners={winners} notice={error} />;
+    // The gift is named only after the reveal on the REAL clock — never the showcase's stage "now" (P0-2).
+    card = <WinnersCard winners={winners} notice={error} revealed={giftRevealed(giveawayNow())} />;
   }
 
   return (

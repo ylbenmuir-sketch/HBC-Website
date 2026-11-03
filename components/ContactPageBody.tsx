@@ -1,0 +1,187 @@
+import ContactForm, { type GiveawayBooking } from "@/components/ContactForm";
+import PartnerBadge from "@/components/PartnerBadge";
+import { getVideo } from "@/lib/videos";
+import { locationPhone, locations } from "@/lib/locations";
+import { EMAIL_ADDRESS, PHONE_DISPLAY, PHONE_TEL, SHOW_EMAIL, SHOW_PHONE } from "@/lib/site-config";
+import { hubTrail } from "@/lib/pages";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageSchema from "@/components/PageSchema";
+
+/**
+ * The /contact page's body, shared by /contact (static) and its 10-year
+ * giveaway variant (app/contact/10years/page.tsx — /contact?from=10years is
+ * rewritten there in next.config.ts, so plain /contact stays prerendered).
+ *
+ * With `giveaway` (fix list rev 2, P0-8): no "Text us" link and no texting
+ * checkbox (Dialpad bans sweepstakes traffic; entrants get email only), both
+ * centers' numbers as call links, and the form's giveaway mode (code banner,
+ * "Best number to call you to book", the call-me box). Without it the page
+ * is exactly what it was.
+ */
+/** The first-visit video the form shows once the call is requested — step
+ *  three of components/ContactForm.tsx. No VideoObject here (2026-10-20):
+ *  the video appears only after a submit, so a crawler never sees it on
+ *  this page, and its watch page (/videos/your-first-appointment) is the
+ *  one URL its markup lives on. */
+const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
+
+export default function ContactPageBody({ giveaway = null }: { giveaway?: GiveawayBooking | null }) {
+  const trail = hubTrail("/contact");
+  /**
+   * Both open centers' own lines, not the one sitewide number: the person on
+   * this page is deciding which center to visit, and the local number is part
+   * of that decision — it shouldn't take a trip to a location page to find.
+   * Each number carries its own center's gate (locationPhone), so one line in
+   * doubt comes off this list without taking the other with it. Franklin has
+   * no line of its own and is filtered with comingSoon, not by phone: its
+   * `phone` field holds the sitewide number, which is not a fact about a
+   * center a person could call.
+   */
+  const centerPhones = locations
+    .filter((l) => !l.comingSoon)
+    .flatMap((l) => {
+      const phone = locationPhone(l);
+      return phone ? [{ name: l.name, phone }] : [];
+    });
+
+  // "Whatever's easiest… Or email …" — rendered twice, one copy per
+  // breakpoint (desktop: under the three cards; phone: under the form).
+  const waysLine = (
+    <>
+      Whatever&rsquo;s easiest for you. A real person&nbsp;answers.
+      {SHOW_EMAIL && (
+        <>
+          {" "}
+          <span className="contact-ways-email">
+            Or email <a href={`mailto:${EMAIL_ADDRESS}`}>{EMAIL_ADDRESS}</a>.
+          </span>
+        </>
+      )}
+    </>
+  );
+
+  return (
+    // `desk-compact`: this page keeps the ~90% desktop scale the rest of the
+    // site gave back (Ben, 2026-10-15) — see the end of globals.css.
+    <div className="desk-compact">
+      <PageSchema path="/contact" breadcrumb={trail} />
+      <Breadcrumbs trail={trail} />
+      {/* `compact`: the form's first step has to sit above the fold on a
+          desktop, so this hero and the section below it run tighter than the
+          site default — see the contact block in globals.css. */}
+      <section className="page-hero center compact">
+        <div className="wrap rv">
+          <div className="eyebrow">Talk with our team</div>
+          {/* Ben, 2026-10-26: the short step one asks for a name and a way
+              to reach her, so the H1 and the line under it say exactly that. */}
+          <h1>Let&rsquo;s get you started</h1>
+          <p className="sub" style={{ maxWidth: "60ch" }}>
+            Send your name and number. We&rsquo;ll reach out to answer your
+            questions and find a time that works.
+          </p>
+        </div>
+      </section>
+
+      {/* Three ways in, side by side, before the form (Ben, 2026-10-19): text,
+          call, or the form. On phones (Ben, 2026-10-30) only Text and Call
+          remain, as one compact row, the form card starts right under them
+          (the form IS the third way), and the "Or email" line moves below the
+          form — so the Name field is on the first screen at 390×844. The
+          desktop layout is unchanged; globals.css → `.contact-way-form`. The main line for both
+          — the center lines stay on step three. The sms: link is a real link
+          everywhere. Every tap here reports contact_link_click with location
+          "contact_page" (components/Analytics.tsx). */}
+      {SHOW_PHONE && (
+        <section className="contact-ways-sec">
+          <div className="wrap form-solo" data-link-location="contact_page">
+            {/* Icon + "Text us" / "Call us", no number (Ben, 2026-11-02):
+                the number is in the header. Same sms:/tel: links to the main
+                line as before — the center lines stay on step three — and
+                the same contact_link_click (location contact_page, link_type
+                text/phone). The icons are the phone action bar's. */}
+            {giveaway ? (
+              /* The giveaway path: both centers' lines, call only (P0-8). */
+              <div className="contact-ways contact-ways-giveaway">
+                {centerPhones.map((c) => (
+                  <a key={c.name} className="contact-way" href={`tel:${c.phone.tel}`} aria-label={`Call ${c.name} ${c.phone.display}`}>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="contact-way-title">
+                      {c.name} <span className="contact-way-num">{c.phone.display}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+            <div className="contact-ways">
+              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text ${PHONE_DISPLAY}`}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="contact-way-title">Text us</span>
+              </a>
+              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="contact-way-title">Call us</span>
+              </a>
+              <a className="contact-way contact-way-form" href="#send-a-message">
+                <span className="contact-way-title">Send a message</span>
+              </a>
+            </div>
+            )}
+            <p className="contact-ways-line contact-ways-line-desk">{waysLine}</p>
+          </div>
+        </section>
+      )}
+
+      <section className="sec sec-form" id="send-a-message">
+        {/* One centered column (Ben, 2026-10-13). The "What happens next"
+            column that used to sit beside the form repeated step three's
+            three steps and its phone box; the one line it had that nothing
+            else did — what is helpful to have ready — moved into step three
+            (components/ContactForm.tsx). */}
+        <div className="wrap form-solo">
+          {/* The center lines come from the gated reader in
+              lib/locations.ts, so step three can never print a number a
+              location page would not. (BOOKING_CALENDAR_URL's "Pick a time
+              for your call" link was on step three; the confirmation is now
+              four fixed things and it is gone — Ben, 2026-10-14.) */}
+          <ContactForm
+            centerPhones={centerPhones}
+            video={FIRST_VISIT_VIDEO}
+            giveaway={giveaway}
+          />
+          {/* Phones only: the same line, under the form (Ben, 2026-10-30). */}
+          {SHOW_PHONE && (
+            <p className="contact-ways-line contact-ways-line-phone" data-link-location="contact_page">
+              {waysLine}
+            </p>
+          )}
+          {/* The Amen Clinics referral-partner badge, small, with the
+              reassurance lines under the form (Ben, 2026-11-02) — below
+              the form on every width, so step one's first screen at
+              390×844 does not move (components/PartnerBadge.tsx). */}
+          <PartnerBadge location="contact_page" size="small" />
+        </div>
+      </section>
+    </div>
+  );
+}
