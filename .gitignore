@@ -70,3 +70,6 @@ next-env.d.ts
 # source PNGs stay out of git.
 /public/images/murfreesboro-center.png
 /public/images/murfreesboro-waiting-room.png
+
+# Hype email draft previews (scripts/render-hype-previews.mjs) — local review only
+/docs/hype-previews/

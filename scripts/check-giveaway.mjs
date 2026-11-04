@@ -25,7 +25,7 @@
  *                    unset and no store at all: /10years is the hidden showcase
  *                    (200, noindex, no [DRAFT], every ?mode=), its form
  *                    "succeeds" and writes nothing, the cron answers 200 and
- *                    touches nothing, admin / claim / enter / verify are 404,
+ *                    touches nothing, admin / enter / verify are 404,
  *                    /unsubscribe says unavailable, the rest of the site works
  *   today            engine on: /10years is still the showcase before Nov 9;
  *                    /admin/10years is noindex + no-store
@@ -39,8 +39,8 @@
  *                    F from D's own device (voided); eleven more friends
  *                    (the 11th credits nothing); an unknown code; a sixth
  *                    attempt from one address refused by the limiter
- *   Mon noon …       six drawings: Monday (owner alert, winner email, claim
- *                    page, marked contacted → Tuesday re-send skipped),
+ *   Mon noon …       six drawings: Monday (owner alert, NO winner email —
+ *                    Ben, 2026-11-03; marked claimed in the backup admin),
  *                    Tuesday (staff alert, tax-form line), a deliberately
  *                    skipped minute (Wed + Thu drawn in one tick), Friday,
  *                    an unreachable winner → redraw with a reason, public-OK
@@ -94,6 +94,32 @@ const ADMIN_EMAIL = "admin-check@example.test";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const C = await import(`${ROOT}/lib/giveaway/config.ts`);
+
+/* ── --db: every TEST row this run creates is deleted at the end ──────── */
+// (Ben, 2026-11-03.) The giveaway rows are env=test; the bookings are the
+// @example.test leads in consultation_requests created since RUN_START.
+// The same cleanup runs first too, so a crashed earlier run cannot skew
+// this one. env=test is shared with the branch preview's test data: a --db
+// run clears that as well.
+const RUN_START = new Date().toISOString();
+let dbCleanup = null;
+if (USE_DB) {
+  const L = await import("./giveaway-test-cleanup.mjs");
+  const { url, key } = L.supabaseCredentials(ROOT, readFileSync, existsSync, join);
+  if (!url || !key) throw new Error("--db needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (environment or .env.local)");
+  const { createClient } = await import("@supabase/supabase-js");
+  const { GiveawayStore } = await import(`${ROOT}/lib/giveaway/store.ts`);
+  const db = createClient(url, key, { auth: { persistSession: false } });
+  const store = new GiveawayStore(db, "test");
+  dbCleanup = async (when) => {
+    await L.resetGiveawayEnv(store);
+    const leads = when === "end" ? await L.deleteTestLeads(db, RUN_START) : 0;
+    const left = Object.values(await L.countGiveawayRows(store)).reduce((a, b) => a + b, 0);
+    const { count: leadsLeft } = await db.from("consultation_requests").select("id", { count: "exact", head: true }).ilike("email", "%@example.test").gte("created_at", RUN_START);
+    console.log(`  --db cleanup (${when}): env=test giveaway rows left ${left}; TEST leads deleted ${leads}, left ${leadsLeft ?? "?"}`);
+    return { left, leadsLeft: leadsLeft ?? -1 };
+  };
+}
 
 /* ── the server ────────────────────────────────────────────────────────── */
 
@@ -306,6 +332,7 @@ try {
   const info = await (await fetch(`${BASE}/api/giveaway/test-clock`, { headers: cronAuth })).json();
   if (info.env !== "test" && info.env !== "local") throw new Error(`server env is "${info.env}" — refusing to run against it`);
   console.log(`check:giveaway against ${BASE} (env ${info.env}, ${info.memory ? "in-memory tables" : "database"}; logs in ${work})`);
+  if (dbCleanup) await dbCleanup("start");
   await resetAll();
   mark = emails().length;
 
@@ -325,7 +352,7 @@ try {
   expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPreview.text)?.[1] ?? "x") === ogUrl);
   const og = await fetch(`${BASE}/10years/opengraph-image`);
   expect("the card renders (200, image/png, 1200×630 declared)", og.status === 200 && /image\/png/.test(og.headers.get("content-type") ?? "") && /og:image:width" content="1200"/.test(todayPage.text), String(og.status));
-  expect("/10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
+  expect("/10years/claim/x answers 404 (no claim page any more)", (await get("/10years/claim/x")).status === 404);
   // The prize ladder (Ben, 2026-11-03): six values, one prize each, "Over $5,500".
   {
     const visible = todayPage.text.replace(/<script[\s\S]*?<\/script>/g, "");
@@ -351,7 +378,7 @@ try {
   await clock(ct(2026, 11, 9, 0, 1));
   {
     const robots = (await get("/robots.txt")).text;
-    expect("Nov 9 00:01: robots.txt drops the /10years disallow, keeps the token routes, /admin and /api", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/claim\//.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
+    expect("Nov 9 00:01: robots.txt drops the /10years disallow, keeps the token routes, /admin and /api", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
     const map = (await get("/sitemap.xml")).text;
     expect("Nov 9 00:01: the sitemap lists /10years and /10years/rules, dated by the rules version", /\/10years<\/loc>/.test(map) && /\/10years\/rules<\/loc>/.test(map) && !/\/10years\/(claim|enter|verify)/.test(map));
     const pub = await get("/10years");
@@ -527,24 +554,28 @@ try {
   expect("Monday drawn once", run.drawings.drawn.length === 1 && run.drawings.drawn[0].slot === "mon", JSON.stringify(run.drawings));
   fresh = newEmails();
   const alertMon = fresh.find((e) => /10 years — Monday winner/.test(e.body.subject));
-  const winMon = fresh.find((e) => /You won Monday/.test(e.body.subject));
   expect("Monday: staff alert to the OWNER route (ben@, cc denise@)", alertMon && to(alertMon) === "ben@example.test" && JSON.stringify(alertMon.body.cc) === JSON.stringify(["denise@example.test"]), alertMon ? `${to(alertMon)} cc ${JSON.stringify(alertMon.body.cc)}` : "no alert");
-  expect("Monday: winner email with a claim link, deadline Thursday noon", winMon && linkIn(winMon, "/10years/claim/") && /Thu Nov 19, 12:00 PM CT/.test(winMon.body.text), winMon ? winMon.body.text.slice(0, 200) : "no winner email");
-  expect("exactly two emails for a drawing", fresh.length === 2, `${fresh.length}`);
+  expect("Monday: NO email to the winner (Ben, 2026-11-03) — the staff alert is the only email", fresh.length === 1 && !fresh.some((e) => /You won/.test(e.body.subject)), fresh.map((e) => e.body.subject).join(" | "));
+  {
+    const t = alertMon?.body.text ?? "";
+    expect("the alert says: by phone and email today, phone not on the form, 72 h after the first attempt, reply all", /by phone and email/.test(t) && /Not on the entry form/.test(t) && /72 hours after your first attempt, a new winner may be drawn/.test(t) && /Reply all/.test(t), t.slice(0, 400));
+    expect("the alert has no admin link or claim link, and an 'Email the winner' mailto", !/\/admin\/10years|\/10years\/claim/.test(alertMon?.body.html ?? "") && /href="mailto:[^"]*\?subject=/.test(alertMon?.body.html ?? ""));
+    expect("the alert says bottles and devices are picked up at a center", /picked up at a center\. Nothing is shipped/.test(t));
+  }
   const again = await tick("Monday noon again");
   expect("a second tick the same minute draws nothing and sends nothing", again.drawings.drawn.length === 0 && newEmails().length === 0);
   let winners = await dump("giveaway_winners");
   const monWinner = winners.find((w) => w.status === "drawn");
   const monPerson = peopleNow.find((p) => p.id === monWinner.person_id);
   expect("Monday winner's prize row is the one standard prize (no versions)", monWinner.prize_version === "new_client" && Boolean(monPerson));
-  // The claim page.
-  const claimPath = new URL(linkIn(winMon, "/10years/claim/")).pathname;
-  const claimPage = await get(claimPath, A);
-  expect("claim page greets the winner and asks for a number", claimPage.status === 200 && /congratulations/.test(claimPage.text) && /name="phone"/.test(claimPage.text));
-  const claimed = await postForm(`${claimPath}/submit`, { phone: "(615) 555-0101" }, A);
-  expect("claim page accepts the number", /done=1/.test(claimed.location), claimed.location);
+  expect("the winner row has no claim token", monWinner.claim_token_hash === null);
+  // Staff reached the winner and replied to the alert; Ben records it in the backup admin.
+  {
+    const c = await adminPost(`/admin/10years/actions/winner`, { winner_id: monWinner.id, kind: "status", status: "claimed" });
+    expect("backup admin: Monday's winner marked claimed", c.status === 303 && !/error/.test(c.location), c.location);
+  }
   winners = await dump("giveaway_winners");
-  expect("the winner row is claimed with the phone", winners.find((w) => w.id === monWinner.id).status === "claimed" && winners.find((w) => w.id === monWinner.id).phone === "(615) 555-0101");
+  expect("the winner row is claimed", winners.find((w) => w.id === monWinner.id).status === "claimed");
   expect("the winners list shows Monday as claimed ✓ (no name yet)", /Monday's winner: claimed/.test((await peekClosed()).text));
   // ADMIN_ACTIONS_MONDAY — filled in once the admin screens exist.
   await adminActionsAfterMonday(monWinner);
@@ -562,13 +593,12 @@ try {
   expect("H: unsubscribed_at is set", (await dump("giveaway_people")).find((p) => p.email === H.email).unsubscribed_at !== null);
   expect("a tampered unsubscribe link is refused", (await get("/unsubscribe?t=abc.def")).status === 400);
 
-  section("Tue 8:30 am: the call-today re-send is skipped (Monday's winner contacted)");
-  await clock(C.SCHEDULE.tuesdayCallToday.at);
+  section("Tue 8:30 am: no 'call today' reminder any more (Ben, 2026-11-03)");
+  await clock(ct(2026, 11, 17, 8, 30));
   run = await tick("Tuesday 8:30");
   const sends = await dump("scheduled_sends");
-  const tueJob = sends.find((s) => s.kind === "tuesday_call_today" && !s.person_id && !s.notify_id);
-  expect("Tuesday re-send skipped with the reason", tueJob?.sent_at && /already/.test(tueJob.skipped_reason ?? ""), JSON.stringify(tueJob));
-  expect("no email went out for it", newEmails().length === 0);
+  expect("no tuesday_call_today job is scheduled", !sends.some((s) => s.kind === "tuesday_call_today"), JSON.stringify(sends.filter((s) => s.kind === "tuesday_call_today")));
+  expect("no email went out at 8:30", newEmails().length === 0);
 
   section("Tue noon: the second drawing (staff route, tax form)");
   await clock(C.drawing("tue").at);
@@ -582,9 +612,9 @@ try {
   expect("Tuesday's winner is not Monday's", tueWinner.person_id !== monWinner.person_id);
   const tuePool = (await dump("giveaway_drawing_pool")).filter((p) => p.drawing_id === tueWinner.drawing_id);
   expect("Monday's winner is absent from Tuesday's frozen pool", !tuePool.some((p) => p.person_id === monWinner.person_id));
-  const winTue = fresh.find((e) => /You won Tuesday/.test(e.body.subject));
   const tuePrize = (await dump("giveaway_prizes")).find((p) => p.id === tueWinner.prize_id);
-  expect("the tax-form line appears exactly when the prize reaches $2,000 (per person)", Boolean(winTue) && /tax form/.test(winTue.body.text) === tuePrize.tax_form_required, `${tuePrize.name} $${tuePrize.retail_value_usd}`);
+  expect("the alert's tax line is 'Required: … W-9' exactly when the prize reaches $2,000 (per person)", Boolean(alertTue) && /W-9/.test(alertTue.body.text) === tuePrize.tax_form_required, `${tuePrize.name} $${tuePrize.retail_value_usd}`);
+  expect("Tuesday: no email to the winner", !fresh.some((e) => /You won/.test(e.body.subject)));
   if (tuePrize.tax_form_required) {
     const tax = await adminPost(`/admin/10years/actions/winner`, { winner_id: tueWinner.id, kind: "tax_form_received", on: "1" });
     expect("admin: tax form received toggled on Tuesday's prize", tax.status === 303 && !/error/.test(tax.location), tax.location);
@@ -610,8 +640,7 @@ try {
   run = await tick("Friday noon");
   expect("Friday drawn", run.drawings.drawn.length === 1 && run.drawings.drawn[0].slot === "fri");
   fresh = newEmails();
-  const winFri = fresh.find((e) => /You won Friday/.test(e.body.subject));
-  expect("Friday's claim deadline moved to Tuesday 5 pm (would land Monday)", winFri && /Tue Nov 24, 5:00 PM CT/.test(winFri.body.text));
+  expect("Friday: the staff alert only, no winner email", fresh.length === 1 && /10 years — Friday winner/.test(fresh[0].body.subject), fresh.map((e) => e.body.subject).join(" | "));
   await clock(C.drawing("fri").dailyEmailAt);
   run = await tick("Friday 4 pm");
   fresh = newEmails();
@@ -625,8 +654,7 @@ try {
   expect("Thursday: the first winner is marked redrawn with the reason, a new winner exists", thuAfter.length === 2 && thuAfter.some((w) => w.status === "redrawn" && /unreachable/.test(w.redraw_reason ?? "")) && thuAfter.some((w) => w.status === "drawn"), JSON.stringify(thuAfter.map((w) => w.status)));
   expect("Thursday's redraw picked someone else", thuAfter.find((w) => w.status === "drawn").person_id !== thuWinnerBefore.person_id);
   fresh = newEmails();
-  expect("the redraw sent a new alert and a new winner email", fresh.some((e) => /10 years — Thursday winner/.test(e.body.subject)) && fresh.some((e) => /You won Thursday/.test(e.body.subject)));
-  expect("the redrawn winner's deadline is Tuesday 5 pm (Fri 3 pm + 72 h = Mon)", /Tue Nov 24, 5:00 PM CT/.test(fresh.find((e) => /You won Thursday/.test(e.body.subject))?.body.text ?? ""));
+  expect("the redraw sent a new staff alert and nothing to the new winner", fresh.length === 1 && /10 years — Thursday winner/.test(fresh[0].body.subject), fresh.map((e) => e.body.subject).join(" | "));
 
   section("Sat 5 pm: the grand prize");
   await clock(C.drawing("grand").at);
@@ -661,6 +689,15 @@ try {
   expect(`the reveal to every verified, subscribed entrant, winners included (${expectThanks})`, run.sends.sent === expectThanks && fresh.length === expectThanks && fresh.every((e) => /thank-you gift/.test(e.body.subject) && /10Y-/.test(e.body.text) && /Whether or not your name was drawn/.test(e.body.text)), `${run.sends.sent}/${fresh.length}`);
   expect("subscribed winners got it too", fresh.some((e) => holders.has(people.find((p) => p.email === to(e) || p.email_display === to(e))?.id)));
   expect("once per person", new Set(fresh.map(to)).size === fresh.length);
+  {
+    // Item 6 (Ben, 2026-11-03): the reveal's button opens /contact with the entrant's own code.
+    const ok = fresh.every((e) => {
+      const code = (String(e.body.text).match(/10Y-[A-Z0-9]{6}/) ?? [])[0];
+      const html = String(e.body.html ?? "");
+      return code && html.includes(`href="${BASE}/contact?from=10years&amp;code=${code}"`) && /Book my free first visit/.test(html);
+    });
+    expect("each reveal email's 'Book my free first visit' button opens /contact?from=10years&code=<their code>", ok, fresh[0] ? String(fresh[0].body.html).match(/href="[^"]*contact[^"]*"/g)?.join(" ") : "none");
+  }
   run = await tick("Saturday reveal, again");
   expect("a second run sends nothing (dedupe)", newEmails().length === 0 && run.sends.sent === 0);
   expect("after the reveal: the closed card names the gift", /free first visit waiting/.test((await get("/10years")).text));
@@ -680,6 +717,9 @@ try {
     expect("giveaway path: both numbers as call links", /href="tel:\+?1?6153318762"/.test(gp.text) && /href="tel:\+?1?6152032650"/.test(gp.text), (gp.text.match(/href="tel:[^"]+"/g) ?? []).join(" "));
     expect("giveaway path: hidden source=giveaway, the code field pre-filled, the phone label, an unticked call-me box", /name="source" value="giveaway"/.test(gp.text) && new RegExp(`name="offer_code"[^>]*value="${dCode}"`).test(gp.text) && /Best number to call you to book/.test(gp.text) && /name="call_me"/.test(gp.text) && !/name="call_me"[^>]*checked/.test(gp.text));
     expect("giveaway path: noindex", /name="robots" content="noindex, nofollow"/.test(gp.text));
+    expect("giveaway path, a ready code: the entrant's nearer center (Nashville, from the ZIP) is preselected", /name="preferred_center" value="Nashville"/.test(gp.text), (gp.text.match(/name="preferred_center"[^>]*/) ?? [""])[0]);
+    expect("giveaway path, a ready code: the Nashville chip is checked", /id="center-nashville"[^>]*aria-checked="true"/.test(gp.text), (gp.text.match(/id="center-nashville"[^>]*/) ?? [""])[0]);
+    expect("giveaway path, a GIFT- code: no center preselected", /name="preferred_center" value=""/.test((await get("/contact?from=10years&code=GIFT-MON")).text));
     const wrong = await get("/contact?from=10years&code=10Y-NOPE00");
     expect("giveaway path, a wrong code: the banner says so", /data-state="unknown"/.test(wrong.text) && /isn(&#x27;|')t one we recognise/.test(visible(wrong.text)));
   }
@@ -750,7 +790,7 @@ try {
     const good = await stats();
     expect("stats: 200, no-store, noindex", good.status === 200 && /no-store/.test(good.headers.get("cache-control") ?? "") && /noindex/.test(good.headers.get("x-robots-tag") ?? ""), String(good.status));
     expect("stats: no email, ZIP, phone, code or hash anywhere in the payload", personalIn(good.body).length === 0, personalIn(good.body).join(" "));
-    expect("stats: six drawings, all drawn, eleven send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 11 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
+    expect("stats: six drawings, all drawn, ten send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 10 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
     expect("stats: the facebook entrant is counted under facebook ('<5')", good.body?.people?.by_utm_source?.facebook === "<5" || USE_DB, JSON.stringify(good.body?.people?.by_utm_source));
     expect("stats: no client-status breakdown (P1-8)", !/by_path|existing|current_client/.test(JSON.stringify(good.body)));
   }
@@ -770,7 +810,6 @@ try {
     reminder: all.filter((e) => /Today at noon/.test(e.body.subject)).length,
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
     daily: all.filter((e) => /^\[DRAFT\] \w+'s (grand )?prize: |That was the last drawing/.test(e.body.subject)).length,
-    winner: all.filter((e) => /You won/.test(e.body.subject)).length,
     thanks: all.filter((e) => /Your 10-year thank-you gift/.test(e.body.subject)).length,
     giftReminder: all.filter((e) => /Your free first visit: book by/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,
@@ -781,7 +820,7 @@ try {
   const accounted = Object.values(kinds).reduce((a, b) => a + b, 0);
   console.log(`  emails: ${JSON.stringify(kinds)} = ${accounted} of ${all.length}`);
   expect("every email in the mock is one of the expected kinds", accounted === all.length, `${all.length - accounted} unexplained`);
-  expect("7 winner emails (six drawings + one redraw), 7 staff alerts", kinds.winner === 7 && kinds.alerts === 7, `${kinds.winner}/${kinds.alerts}`);
+  expect("0 winner emails, 7 staff alerts (six drawings + one redraw)", !all.some((e) => /You won/.test(e.body.subject)) && kinds.alerts === 7, `${all.filter((e) => /You won/.test(e.body.subject)).length}/${kinds.alerts}`);
   expect("every email went to an example.test address", all.every((e) => /@example\.test$/.test(to(e)) && (e.body.cc ?? []).every((c) => /@example\.test$/.test(c))));
 
   if (!SKIP_BROWSER) await browserChecks();
@@ -794,6 +833,14 @@ try {
   if (server) {
     server.kill("SIGTERM");
     await sleep(500);
+  }
+  if (dbCleanup) {
+    try {
+      const r = await dbCleanup("end");
+      expect("--db: every TEST row this run created is deleted (env=test giveaway rows and @example.test leads)", r.left === 0 && r.leadsLeft === 0, JSON.stringify(r));
+    } catch (err) {
+      failures.push(`--db cleanup failed: ${err instanceof Error ? err.message : String(err)} — run node scripts/giveaway-reset-env.mjs test --yes`);
+    }
   }
 }
 
@@ -824,7 +871,9 @@ async function engineOffChecks() {
     for (const path of stages) if (FORBIDDEN.test(visible((await get(path)).text))) hits.push(path);
     expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
     const rules = (await get("/10years/rules")).text;
-    expect("off: the rules have no placeholder, no counsel, no brackets in the rules text", !/placeholder|counsel/i.test(rules) && !/\[(DRAFT|CONFIRM)/.test(rules));
+    // The ask bar's input carries a placeholder= attribute when the assistant is built on; that is not rules text.
+    const rulesWords = rules.replace(/\splaceholder="[^"]*"/g, "");
+    expect("off: the rules have no placeholder, no counsel, no brackets in the rules text", !/placeholder|counsel/i.test(rulesWords) && !/\[(DRAFT|CONFIRM)/.test(rulesWords));
     expect("off: the rules carry their own meta description", /name="description" content="Official Rules and prize details for the Harmonized Brain Centers 10-year giveaway/.test(rules));
     expect("off: the rules table's totals equal config ($194.95 … $2,838.85)", ["194.95", "444.95", "569.95", "668.95", "819.95", "2838.85"].every((v) => rules.includes(`data-arv="${v}"`)), (rules.match(/data-arv="[^"]+"/g) ?? []).join(" "));
     expect("off: the rules show the vibro chair as 12 × $40, partner gifts redeemed with the partner (valid through TBD), BrainMD at $44.95", /Vibro chair with each session \(12[\s\u00a0]×[\s\u00a0]\$40\)/.test(rules) && /Redeemed directly with the partner · valid through TBD/.test(rules) && /3 BrainMD supplement bottles \(\$44\.95 each\)/.test(rules));
@@ -859,7 +908,6 @@ async function engineOffChecks() {
   expect("off: /10years/verify?t=x answers 404", (await get("/10years/verify?t=x")).status === 404);
   expect("off: /10years/enter/x answers 404", (await get("/10years/enter/x")).status === 404);
   expect("off: /10years/claim/x answers 404", (await get("/10years/claim/x")).status === 404);
-  expect("off: POST /10years/claim/x/submit answers 404", (await postForm("/10years/claim/x/submit", { phone: "6155550100" }, P)).status === 404);
   expect("off: /admin/10years answers 404", (await get("/admin/10years")).status === 404);
   expect("off: /admin/10years/winners answers 404", (await get("/admin/10years/winners")).status === 404);
   expect("off: POST /admin/10years/request-code answers 404", (await postForm("/admin/10years/request-code", { email: ADMIN_EMAIL }, P)).status === 404);
@@ -983,6 +1031,14 @@ async function browserChecks() {
           await sleep(100);
           const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none' })"));
           expect(`${mode} at 390×844: email field and button above the fold (email ${fold.email}px, button ${fold.submit}px); the hero picker is hidden`, fold.email <= 844 && fold.submit <= 844 && fold.picker === "none", JSON.stringify(fold));
+          // Ben, 2026-11-03: the same at 360×740 (the 18+/rules line stays on one line there).
+          await page.setViewport(360, 740);
+          await page.goto(`${BASE}/10years`, { settle: 300 });
+          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); })()");
+          await sleep(100);
+          const f360 = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), overflow: document.documentElement.scrollWidth > innerWidth })"));
+          expect(`${mode} at 360×740: email field and button above the fold (email ${f360.email}px, button ${f360.submit}px)`, f360.email <= 740 && f360.submit <= 740 && !f360.overflow, JSON.stringify(f360));
+          await page.setViewport(390, 844);
         }
         if (width === 1440) {
           // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.

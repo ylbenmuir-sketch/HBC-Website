@@ -21,8 +21,7 @@
  */
 
 import {
-  CLAIM_MOVED_DEADLINE_HOUR_CT,
-  CLAIM_WINDOW_MS,
+  RESPONSE_WINDOW_MS,
   DEVICES,
   PARTNER_GIFTS,
   DRAWINGS,
@@ -85,8 +84,7 @@ export const CURRENT_CLIENT_RULE = "Current clients receive a Brain Map gift cer
 export function rulesSections(input: RulesInput): RulesSection[] {
   const daily = DRAWINGS.filter((d) => d.kind === "daily");
   const grand = DRAWINGS[DRAWINGS.length - 1];
-  const hours = Math.round(CLAIM_WINDOW_MS / 3_600_000);
-  const moved = `${CLAIM_MOVED_DEADLINE_HOUR_CT % 12 || 12}:00 ${CLAIM_MOVED_DEADLINE_HOUR_CT < 12 ? "AM" : "PM"} CT`;
+  const hours = Math.round(RESPONSE_WINDOW_MS / 3_600_000);
   const year = centralParts(grand.at).year;
   const total = totalArv();
   const vd = (d: Date | null) => (d ? longDate(d) : "TBD");
@@ -178,7 +176,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
         {
           ul: [
             `Sessions and Brain Maps are for the winner's own use at an HBC center, except a Brain Map gift certificate, which is for someone new. They must be scheduled by ${longDate(PRIZE_USE_BY.at)}. They cannot be transferred.`,
-            `Hoolest devices and BrainMD bottles are picked up at a center or shipped to an address in an eligible state. They carry only the manufacturer's warranty.`,
+            "Hoolest devices and BrainMD bottles are picked up at an HBC center (Nashville or Murfreesboro). They are not shipped. They carry only the manufacturer's warranty.",
             ...Object.values(PARTNER_GIFTS).map((g) => `${g.gift}: provided by ${g.partner} and redeemed directly with ${g.partner}, under its terms, valid through ${vd(g.validThrough)}.${g.terms ? ` ${g.terms}` : ""}`),
             "HBC is a wellness practice, not a medical clinic. Prizes are wellness services and products and are not meant to diagnose, treat, cure or prevent any condition.",
           ],
@@ -207,15 +205,14 @@ export function rulesSections(input: RulesInput): RulesSection[] {
     },
     {
       id: "winners",
-      title: "Notifying winners, claiming a prize, and redraws",
+      title: "Notifying winners and redraws",
       blocks: [
         {
           ul: [
-            "We notify winners by email, at the address used to enter, at the time of the drawing.",
-            `To claim, a winner must respond through the claim link within ${hours} hours. If that deadline falls on a Sunday or Monday, it moves to the next Tuesday at ${moved}.`,
-            "On the claim page we ask for a phone number so we can arrange the prize.",
+            // Ben's wording, verbatim (2026-11-03). Winners get no automated email.
+            `HBC staff will contact the winner by phone and email. If the winner doesn't respond within ${hours} hours of our first attempt, a new winner may be drawn.`,
             "We may ask for proof of age, identity and residency.",
-            "If a winner doesn't respond in time, isn't eligible, or declines, the prize is forfeited. We then draw an alternate winner from the same pool, and the same claim rules apply.",
+            "If a winner isn't eligible or declines, the prize is forfeited and a new winner may be drawn from the same pool, under the same rules.",
             "We're not responsible for emails caught by spam filters or sent to a mistyped address.",
           ],
         },
@@ -233,7 +230,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
     {
       id: "publicity",
       title: "Publicity (only with consent)",
-      blocks: [{ p: "We publish a winner's first name, last initial and city only if the winner agrees, on the claim call. Photos, video, testimonials and reviews need separate written consent. Winning never requires consent to publicity." }],
+      blocks: [{ p: "We publish a winner's first name, last initial and city only if the winner agrees when we reach them. Photos, video, testimonials and reviews need separate written consent. Winning never requires consent to publicity." }],
     },
     {
       id: "no-cash",

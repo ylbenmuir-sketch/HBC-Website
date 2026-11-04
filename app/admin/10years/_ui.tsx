@@ -63,8 +63,8 @@ export function AdminShell({ title, current, admin, env, children }: { title: st
 
 const OK_MESSAGES: Record<string, string> = {
   "1": "Done.",
-  drawn: "Drawn. The staff alert and the winner email have been sent.",
-  redrawn: "Redrawn. The staff alert and the winner email have been sent.",
+  drawn: "Drawn. The staff alert has been sent (winners get no automated email).",
+  redrawn: "Redrawn. A new staff alert has been sent (winners get no automated email).",
   reverified: "Re-verified below.",
   voided: "Entry voided.",
   winner: "Winner updated.",

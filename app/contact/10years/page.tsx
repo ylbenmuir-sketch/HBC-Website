@@ -15,7 +15,8 @@ import { pageMetadata } from "@/lib/pages";
  * links, "Best number to call you to book", an unticked call-me box. With
  * the engine on and a code in the link, the code is checked here, read-only
  * (lib/giveaway/offers.ts — through GiveawayStore), and the banner says
- * whether it is ready or why not; the route checks it again on submit and
+ * whether it is ready or why not (a ready code also preselects the center
+ * nearer the entrant's ZIP); the route checks it again on submit and
  * stamps redeemed_at when the lead saves.
  *
  * Canonical /contact; never indexed (the code is in the query).
@@ -43,6 +44,8 @@ export default async function GiveawayContactPage({ searchParams }: { searchPara
     const check = await checkOffer(code).catch(() => ({ ok: false as const, reason: "unavailable" as const }));
     booking.state = check.ok ? "ok" : check.reason;
     booking.message = check.ok ? `Your 10-year code ${code} is ready — it books your free first visit.` : offerRefusalMessage(check.reason);
+    // The center nearer the entrant's ZIP, preselected (Ben, 2026-11-03).
+    if (check.ok) booking.center = check.nearestCenter;
   }
   return <ContactPageBody giveaway={booking} />;
 }

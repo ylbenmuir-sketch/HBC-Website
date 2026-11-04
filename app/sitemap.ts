@@ -11,7 +11,7 @@ import { tenYearsPublic } from "@/lib/giveaway/showcase";
 
 /** Never listed from staticPages: /admin is staff-only, and the giveaway
  *  routes are added below only on the clock. Prefix matches, so every
- *  sub-route (verify, enter, claim; the admin screens) goes with them. */
+ *  sub-route (verify, enter; the admin screens) goes with them. */
 const NEVER_LISTED = ["/10years", "/admin"];
 
 /** /10years and /10years/rules join once the page is public (engine on,

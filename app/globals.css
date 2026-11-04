@@ -3204,6 +3204,21 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .nav-explore { white-space: nowrap; }
   header.site.campaign .nav-tel { display: none; }
 }
+/* Narrow phones (360–389): the entry button on the first 360×740 screen
+   (Ben, 2026-11-03). At 360 the "I'm 18+ and agree to the Official Rules"
+   line needs 249px and had 246, so it wrapped and pushed the button 6px
+   below the fold. 4px less side padding on the card and a 2px tighter
+   checkbox gap keep it on one line (10px to spare). Notify-me's two-line
+   card line put its button 7px below too: the card's top padding and the
+   gaps around the fields, checkbox and button give back 14px. 390+ is untouched. */
+@media (max-width: 389px) {
+  .ty-card { padding: 16px 14px 18px; }
+  .form.ty-form .ty-check { gap: 8px; }
+  .ty-checks { margin-top: 8px; }
+  .ty-gift-card { margin-top: 10px; }
+  .ty-fields { margin-top: 12px; }
+  .ty-submit { margin-top: 10px; }
+}
 @media (max-width: 420px) {
   header.site.campaign .nav { padding: 0 16px; gap: 12px; }
   .nav-campaign { gap: 14px; }

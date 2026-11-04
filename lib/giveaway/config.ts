@@ -136,8 +136,6 @@ export const SCHEDULE = {
   entriesOpen: instant(centralToUtc(2026, 11, 15, 18, 0), "Sun Nov 15, 6:00 PM CT", "Entries open; 'It's live' email to verified notify-me signups"),
   /** One reminder to notify-me signups who have not tapped. */
   mondayReminder: instant(centralToUtc(2026, 11, 16, 9, 0), "Mon Nov 16, 9:00 AM CT", "Reminder to notify-me signups who have not tapped"),
-  /** The Tuesday staff re-send for Monday's winner, skipped if contacted. */
-  tuesdayCallToday: instant(centralToUtc(2026, 11, 17, 8, 30), "Tue Nov 17, 8:30 AM CT", "Staff 'call today' for Monday's winner (skipped if contacted)"),
   /** Entries close at the grand drawing. */
   entriesClose: instant(centralToUtc(2026, 11, 21, 17, 0), "Sat Nov 21, 5:00 PM CT", "Entries close; the grand prize is drawn"),
   /** The thank-you gift is revealed (fix list rev 2, P0-2/P0-10): before
@@ -465,25 +463,27 @@ export function prizeDescription(p: PrizeSpec): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Claim deadline (decisions 6, 18)                                    */
+/* Reaching a winner (Ben, 2026-11-03)                                  */
 /* ------------------------------------------------------------------ */
 
-export const CLAIM_WINDOW_MS = 72 * 60 * 60_000;
-export const CLAIM_MOVED_DEADLINE_HOUR_CT = 17;
+/**
+ * No automated email to winners. Staff get the alert at the draw and
+ * contact the winner by phone and email themselves. Official Rules: "If
+ * the winner doesn't respond within 72 hours of our first attempt, a new
+ * winner may be drawn." The window runs from staff's first attempt, which
+ * the system does not see, so a redraw is Ben's call (/admin/10years →
+ * Drawings → Redraw, with a reason); nothing redraws on its own.
+ */
+export const RESPONSE_WINDOW_MS = 72 * 60 * 60_000;
 
 /**
- * 72 hours from the draw — unless that lands on a Sunday or a Monday
- * (Central), in which case the following Tuesday at 5:00 pm CT.
+ * The soonest a redraw could be considered: 72 hours after the draw, as if
+ * the first attempt came the minute the winner was drawn. Written to
+ * giveaway_winners.claim_deadline_at (0010: not null) for the backup admin
+ * screen; never shown to the public or to a winner.
  */
-export function claimDeadline(drawnAt: Date): Date {
-  const plain = new Date(drawnAt.getTime() + CLAIM_WINDOW_MS);
-  const { year, month, day, weekday } = centralParts(plain);
-  if (weekday !== 0 && weekday !== 1) return plain;
-  const daysToTuesday = weekday === 0 ? 2 : 1;
-  // Day arithmetic in UTC on the Central calendar date, then back to a
-  // Central wall-clock time (DST-correct via centralToUtc).
-  const tuesday = new Date(Date.UTC(year, month - 1, day + daysToTuesday));
-  return centralToUtc(tuesday.getUTCFullYear(), tuesday.getUTCMonth() + 1, tuesday.getUTCDate(), CLAIM_MOVED_DEADLINE_HOUR_CT, 0);
+export function earliestRedrawAt(drawnAt: Date): Date {
+  return new Date(drawnAt.getTime() + RESPONSE_WINDOW_MS);
 }
 
 /* ------------------------------------------------------------------ */

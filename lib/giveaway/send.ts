@@ -26,7 +26,6 @@ export const PATHS = {
   page: "/10years",
   verify: "/10years/verify",
   enter: "/10years/enter",
-  claim: "/10years/claim",
   unsubscribe: "/unsubscribe",
   book: "/contact",
   admin: "/admin/10years",
@@ -52,8 +51,6 @@ export function tokenLink(kind: TokenKind, subject: string, env: GiveawayEnv, op
       return `${siteUrl()}${PATHS.verify}?t=${encodeURIComponent(token)}`;
     case "live_tap":
       return `${siteUrl()}${PATHS.enter}/${encodeURIComponent(token)}`;
-    case "claim":
-      return `${siteUrl()}${PATHS.claim}/${encodeURIComponent(token)}`;
     default:
       throw new Error(`no link for token kind ${kind}`);
   }

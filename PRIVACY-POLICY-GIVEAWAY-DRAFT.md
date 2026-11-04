@@ -39,9 +39,9 @@ centers is nearer. We also keep a scrambled version (a hash) of your IP
 address and of your browser's description — not the address itself, and not
 in a form we can read back.
 
-If you win, the claim page asks for one more thing: the phone number you
-want us to call. Nothing on the giveaway asks for a phone number before
-that.
+The giveaway never asks for a phone number. If you win, our staff contact
+you by phone and email; if we don't already have your number, we ask for it
+by email, and keep it only to arrange your prize.
 
 **Why.** To run the drawings and count entries; to email you about the
 week; to call you if you win; to send you the thank-you offer and your

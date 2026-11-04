@@ -6,6 +6,9 @@
  *   node scripts/giveaway-reset-env.mjs test            # dry run: counts only
  *   node scripts/giveaway-reset-env.mjs test --yes      # delete
  *
+ * The same cleanup runs on its own at the start and end of every
+ * `check:giveaway -- --db` (scripts/giveaway-test-cleanup.mjs).
+ *
  * Refuses any env but test or local. Every delete goes through
  * GiveawayStore, which adds `env = <env>` to it, so a production or preview
  * row cannot be touched. giveaway_prizes stay (the seed); giveaway_drawings
@@ -32,14 +35,8 @@ if (env !== "test" && env !== "local") {
   console.error(`refused: env must be "test" or "local" (got ${JSON.stringify(env)})`);
   process.exit(2);
 }
-if (existsSync(join(ROOT, ".env.local"))) {
-  for (const line of readFileSync(join(ROOT, ".env.local"), "utf8").split("\n")) {
-    const m = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
-  }
-}
-const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const { countGiveawayRows, resetGiveawayEnv, supabaseCredentials } = await import("./giveaway-test-cleanup.mjs");
+const { url, key } = supabaseCredentials(ROOT, readFileSync, existsSync, join);
 if (!url || !key) {
   console.error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set");
   process.exit(2);
@@ -48,33 +45,12 @@ const { createClient } = await import("@supabase/supabase-js");
 const { GiveawayStore } = await import(`${ROOT}/lib/giveaway/store.ts`);
 const store = new GiveawayStore(createClient(url, key, { auth: { persistSession: false } }), env);
 
-// Children before parents (0010's foreign keys).
-const ORDER = ["giveaway_drawing_pool", "giveaway_winners", "scheduled_sends", "giveaway_offers", "giveaway_entries", "giveaway_notify", "giveaway_people", "giveaway_audit", "rate_limits", "giveaway_admin_allowlist"];
-
-const count = async (t) => {
-  const { count: n, error } = await store.select(t, "env", { count: "exact", head: true });
-  if (error) throw new Error(`${t}: ${error.message}`);
-  return n ?? 0;
+const show = async () => {
+  for (const [t, n] of Object.entries(await countGiveawayRows(store))) console.log(`  ${t}: ${n}`);
 };
-const drawnCount = async () => {
-  const { count: n } = await store.select("giveaway_drawings", "env", { count: "exact", head: true }).neq("status", "scheduled");
-  return n ?? 0;
-};
-
 console.log(`env "${env}" — ${yes ? "DELETING" : "dry run (add --yes to delete)"}`);
-for (const t of ORDER) console.log(`  ${t}: ${await count(t)}`);
-console.log(`  giveaway_drawings not scheduled: ${await drawnCount()}`);
+await show();
 if (!yes) process.exit(0);
-
-const must = (label, r) => {
-  if (r.error) throw new Error(`${label}: ${r.error.message}`);
-};
-// The drawings point at entries and people: clear those links first.
-must("drawings reset", await store.update("giveaway_drawings", { status: "scheduled", pool_snapshot_hash: null, pool_size: null, entries_count: null, seed: null, winner_entry_id: null, winner_person_id: null, drawn_at: null, drawn_by: null, claimed_at: null }).neq("status", "__none__"));
-// People refer to people (referred_by).
-must("people referrals", await store.update("giveaway_people", { referred_by_person_id: null }).not("referred_by_person_id", "is", null));
-// store.delete() carries `env = <env>`: the only filter, and the one that matters.
-for (const t of ORDER) must(t, await store.delete(t));
+await resetGiveawayEnv(store);
 console.log("after:");
-for (const t of ORDER) console.log(`  ${t}: ${await count(t)}`);
-console.log(`  giveaway_drawings not scheduled: ${await drawnCount()}`);
+await show();

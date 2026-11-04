@@ -30,16 +30,15 @@
  * previous winner row becomes `redrawn` with the reason; a new winner row
  * is written with its own seed and exclusion list.
  *
- * Side effects (the alert, the winner email) go through a Notifier passed
- * in, so the tests send nothing.
+ * The side effect (the staff alert — winners get no automated email, Ben,
+ * 2026-11-03) goes through a Notifier passed in, so the tests send nothing.
  */
 
 import { createHash, randomBytes } from "node:crypto";
 import { audit } from "./audit";
-import { STANDARD_PRIZE_VERSION, claimDeadline, drawing as drawingFor, taxFormRequiredForTotal, type Slot } from "./config";
+import { STANDARD_PRIZE_VERSION, drawing as drawingFor, earliestRedrawAt, taxFormRequiredForTotal, type Slot } from "./config";
 import { HOLDING_STATUSES, type DrawingRow, type EntryRow, type PersonRow, type PoolRow, type PrizeRow, type WinnerRow } from "./rows";
 import type { GiveawayStore } from "./store";
-import { randomCode, sha256Hex } from "./tokens";
 
 export const CLAIM_STALE_MS = 5 * 60_000;
 
@@ -48,8 +47,6 @@ export type DrawResult = {
   winner: WinnerRow;
   person: PersonRow;
   prize: PrizeRow;
-  /** The raw claim token (hashed on the row) — only the winner email sees it. */
-  claimToken: string;
   redraw: boolean;
 };
 
@@ -197,7 +194,7 @@ async function drawOne(store: GiveawayStore, d: DrawingRow, now: Date, by: strin
     log.log(`[giveaway drawings] ${d.slot}: finishing an interrupted draw`);
     const person = (await store.select("giveaway_people", "*").eq("id", existing.person_id).single()).data as PersonRow;
     const prize = (await store.select("giveaway_prizes", "*").eq("id", existing.prize_id).single()).data as PrizeRow;
-    return { drawing: { ...d, status: "drawn" }, winner: existing, person, prize, claimToken: "", redraw: false };
+    return { drawing: { ...d, status: "drawn" }, winner: existing, person, prize, redraw: false };
   }
 
   // Freeze the pool (idempotent: unique (drawing_id, entry_id)).
@@ -242,7 +239,6 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
   const held = await heldPrizeValues(store, person.id);
   const total = held.reduce((t, h) => t + h.value, 0) + Number(prize.retail_value_usd);
   const taxFormRequired = taxFormRequiredForTotal(total);
-  const claimToken = randomCode(24);
   const { data, error } = await store
     .insert("giveaway_winners", {
       drawing_id: d.id,
@@ -250,9 +246,10 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
       entry_id: entry.id,
       prize_id: prize.id,
       prize_version: version,
-      claim_token_hash: sha256Hex(claimToken),
+      // No claim link any more (no winner email): the column stays null.
+      claim_token_hash: null,
       status: "drawn",
-      claim_deadline_at: claimDeadline(opts.now).toISOString(),
+      claim_deadline_at: earliestRedrawAt(opts.now).toISOString(),
       tax_form_required: taxFormRequired,
       seed: opts.seed,
       pool_excluded: opts.excluded,
@@ -267,7 +264,7 @@ async function writeWinner(store: GiveawayStore, d: DrawingRow, entry: EntryRow,
     const { error: flipErr } = await store.update("giveaway_winners", { tax_form_required: true }).in("id", flip);
     if (flipErr) throw fail("tax form (earlier prize)", flipErr);
   }
-  return { winner: data as WinnerRow, person, prize, claimToken, redraw: opts.redraw };
+  return { winner: data as WinnerRow, person, prize, redraw: opts.redraw };
 }
 
 /** The prizes a person currently holds (any winner row not redrawn), with their values. */
@@ -358,28 +355,12 @@ export async function reverify(store: GiveawayStore, drawingId: string): Promise
 }
 
 /* ------------------------------------------------------------------ */
-/* Winner updates (admin + claim page)                                  */
+/* Winner updates (the backup admin screen)                             */
 /* ------------------------------------------------------------------ */
-
-export async function winnerByToken(store: GiveawayStore, token: string): Promise<WinnerRow | null> {
-  const { data } = await store.select("giveaway_winners", "*").eq("claim_token_hash", sha256Hex(token)).maybeSingle();
-  return (data as WinnerRow | null) ?? null;
-}
 
 export async function winnerById(store: GiveawayStore, id: string): Promise<WinnerRow | null> {
   const { data } = await store.select("giveaway_winners", "*").eq("id", id).maybeSingle();
   return (data as WinnerRow | null) ?? null;
-}
-
-/** The winner gave a number on the claim page. */
-export async function claimWithPhone(store: GiveawayStore, winner: WinnerRow, phone: string, now: Date): Promise<WinnerRow> {
-  const patch: Partial<WinnerRow> = { phone: phone.trim().slice(0, 40) };
-  if (winner.status === "drawn") Object.assign(patch, { status: "claimed", claimed_at: now.toISOString() });
-  else if (winner.status === "contacted") Object.assign(patch, { status: "claimed", claimed_at: now.toISOString() });
-  const { data, error } = await store.update("giveaway_winners", patch).eq("id", winner.id).select("*").single();
-  if (error) throw fail("claim", error);
-  await audit(store, { actor: "visitor", action: "winner_claimed", targetTable: "giveaway_winners", targetId: winner.id, before: { status: winner.status }, after: { status: (data as WinnerRow).status } });
-  return data as WinnerRow;
 }
 
 export type WinnerAction =

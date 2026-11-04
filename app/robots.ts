@@ -43,7 +43,7 @@ import { SITE_URL } from "@/lib/site-config";
  *  listed one by one. `/unsubscribe` stays off the list for the reason
  *  above. */
 const BASE_DISALLOW = ["/api/", "/guides/", "/admin/", "/about/founder/draft"];
-export const TEN_YEARS_TOKEN_ROUTES = ["/10years/claim/", "/10years/enter/", "/10years/verify", "/10years/signup"];
+export const TEN_YEARS_TOKEN_ROUTES = ["/10years/enter/", "/10years/verify", "/10years/signup"];
 
 /** Answered per request, so the flip at Mon Nov 9 12:00 AM CT is exact and
  *  needs no deploy (and the giveaway's fake clock moves it in a test run). */

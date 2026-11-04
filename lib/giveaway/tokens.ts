@@ -1,11 +1,11 @@
 /**
  * Signed tokens for links that must work without a login — unsubscribe,
- * the one-tap "It's live" entry, verification clicks, the winner's claim
- * page — plus the hashes and random codes the tables store.
+ * the one-tap "It's live" entry, verification clicks, the admin sign-in —
+ * plus the hashes and random codes the tables store.
  *
  * A token is `base64url(JSON payload) + "." + base64url(HMAC-SHA256)`. The
  * payload names its kind, its subject, the env it was issued for and an
- * optional expiry, and verification checks all four, so a claim token can
+ * optional expiry, and verification checks all four, so a verification token can
  * never unsubscribe anyone and a preview token can never touch production.
  *
  * The secret is GIVEAWAY_TOKEN_SECRET (Vercel → Environment Variables; any
@@ -18,7 +18,7 @@ import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 
 
 export const TOKEN_SECRET_ENV = "GIVEAWAY_TOKEN_SECRET";
 
-export type TokenKind = "unsubscribe" | "verify_notify" | "verify_entry" | "live_tap" | "claim" | "admin_pending" | "admin_session";
+export type TokenKind = "unsubscribe" | "verify_notify" | "verify_entry" | "live_tap" | "admin_pending" | "admin_session";
 
 export type TokenPayload = {
   /** kind */

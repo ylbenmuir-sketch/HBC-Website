@@ -4,8 +4,6 @@
  *   its_live          Sun Nov 15 6 pm  → verified notify-me signups, one-tap
  *   monday_reminder   Mon Nov 16 9 am  → signups who have not tapped
  *   daily_<slot>      Mon–Fri 4 pm     → every verified, subscribed entrant
- *   tuesday_call_today Tue 8:30 am     → staff, skipped if Monday's winner
- *                                        is marked contacted
  *   thank_you         Sat Nov 21 7 pm  → the gift reveal: every verified,
  *                                        subscribed entrant, winners too
  *                                        (fix list rev 2, P0-10)
@@ -25,13 +23,12 @@
 
 import { audit } from "./audit";
 import { DRAWINGS, SCHEDULE, drawing, drawingAfter, type Drawing } from "./config";
-import { dailyAfternoonEmail, giftReminderEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, tuesdayCallTodayEmail, type Email, type Footing } from "./emails";
+import { dailyAfternoonEmail, giftReminderEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, type Email, type Footing } from "./emails";
 import { entryCount } from "./people";
-import { type NotifyRow, type PersonRow, type ScheduledSendRow, type WinnerRow } from "./rows";
+import { type NotifyRow, type PersonRow, type ScheduledSendRow } from "./rows";
 import type { GiveawayStore } from "./store";
-import { currentWinner, drawingBySlot } from "./drawings";
 
-export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "tuesday_call_today", "thank_you", "gift_reminder", "gift_last_call"] as const;
+export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "thank_you", "gift_reminder", "gift_last_call"] as const;
 export type SendKind = (typeof SEND_KINDS)[number];
 
 export const JOB_STALE_MS = 10 * 60_000;
@@ -40,7 +37,6 @@ export const JOB_STALE_MS = 10 * 60_000;
 export function dueAt(kind: SendKind): Date {
   if (kind === "its_live") return SCHEDULE.entriesOpen.at;
   if (kind === "monday_reminder") return SCHEDULE.mondayReminder.at;
-  if (kind === "tuesday_call_today") return SCHEDULE.tuesdayCallToday.at;
   if (kind === "thank_you") return SCHEDULE.thankYouSend.at;
   if (kind === "gift_reminder") return SCHEDULE.offerReminder.at;
   if (kind === "gift_last_call") return SCHEDULE.offerLastCall.at;
@@ -73,8 +69,7 @@ export type SendDeps = {
   /** Deliver one email; resolve with Resend's id or an error string. */
   send: (input: { to: string; email: Email; marketing: boolean; footing: Footing | null; cc?: string[] }) => Promise<{ ok: boolean; messageId: string | null; error: string | null }>;
   footingFor: (email: string, marketing: boolean) => Footing;
-  links: { enterUrl: (notifyId: string) => string; referralUrl: (code: string) => string; bookUrl: (offerCode: string) => string; adminUrl: string };
-  staffRecipients: () => { to: string | null; cc: string[] };
+  links: { enterUrl: (notifyId: string) => string; referralUrl: (code: string) => string; bookUrl: (offerCode: string) => string };
   log?: Pick<Console, "log" | "error">;
 };
 
@@ -121,7 +116,6 @@ type JobResult = { sent: number; skipped: number; failed: number; reason?: strin
 
 async function runJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
   const kind = job.kind as SendKind;
-  if (kind === "tuesday_call_today") return tuesdayJob(store, job, now, deps);
   if (kind === "its_live" || kind === "monday_reminder") return notifyJob(store, job, kind, now, deps, log);
   if (kind === "thank_you") return thankYouJob(store, job, now, deps, log);
   if (kind === "gift_reminder" || kind === "gift_last_call") return giftReminderJob(store, job, kind, now, deps, log);
@@ -248,25 +242,6 @@ async function giftReminderJob(store: GiveawayStore, job: ScheduledSendRow, kind
     }
   }
   return out;
-}
-
-async function tuesdayJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps): Promise<JobResult> {
-  const mon = await drawingBySlot(store, "mon");
-  const winner: WinnerRow | null = mon ? await currentWinner(store, mon.id) : null;
-  if (!winner) return { sent: 0, skipped: 1, failed: 0, reason: "no Monday winner" };
-  if (winner.status !== "drawn") return { sent: 0, skipped: 1, failed: 0, reason: `Monday winner already ${winner.status}` };
-  const to = deps.staffRecipients();
-  if (!to.to) return { sent: 0, skipped: 0, failed: 1, reason: "no staff address" };
-  const person = (await store.select("giveaway_people", "*").eq("id", winner.person_id).single()).data as PersonRow;
-  const email = tuesdayCallTodayEmail({
-    drawing: drawing("mon"),
-    winner: { name: `${person.first_name} ${person.last_name}`, email: person.email_display, zip: person.zip, city: person.city },
-    claimDeadline: new Date(winner.claim_deadline_at),
-    adminUrl: deps.links.adminUrl,
-    now,
-  });
-  const r = await deps.send({ to: to.to, email, marketing: false, footing: null, cc: to.cc });
-  return r.ok ? { sent: 1, skipped: 0, failed: 0 } : { sent: 0, skipped: 0, failed: 1, reason: r.error ?? "send failed" };
 }
 
 /** For the admin dashboard: the jobs and their state. */

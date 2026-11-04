@@ -25,11 +25,11 @@
  * their callers pass no drawing; GIVEAWAY-COPY.md lists each one.
  *
  * Phrases other code matches on (keep them): lib/giveaway/engine.test.mjs
- * — "Today at noon", "Monday's winner still needs a call", "Thank you", the
+ * — "Today at noon", "Thank you", the
  * next drawing's day name in the daily subject; scripts/check-giveaway.mjs
  * — "Send me my entry link", "Enter me", "Forward this to a friend", "friend's
- * link", "with N entries", "You won Monday", "10 years — Monday winner",
- * "GRAND PRIZE", "tax form", "congratulations", "Monday's winner: claimed",
+ * link", "with N entries", "10 years — Monday winner",
+ * "GRAND PRIZE", "W-9", "Monday's winner: claimed",
  * "already" (unsubscribe), "You're in." (subject).
  */
 
@@ -66,7 +66,6 @@ export const SHARED = {
   whyYouGotThisTransactional: D("You're getting this because you entered the 10-year giveaway at"),
   /** The chair clause, when a prize is listed. */
   /** One prize per drawing (Ben, 2026-11-03): a current client's Brain Map becomes a certificate for someone new. */
-  currentClientNote: D("Already an HBC client? You'll receive a Brain Map gift certificate to give to someone new in place of your own Brain Map. We'll sort it out on the call."),
   /** "Redeemed directly with Skye Chiropractic, valid through TBD." — the date from config (PARTNER_GIFTS). */
   partnerLine: (partner: string, validThrough: string | null, terms: string | null) => D(`Redeemed directly with ${partner}, valid through ${validThrough ?? "TBD"}.${terms ? ` ${terms}` : ""}`),
   /** The offer, in one line. Sits under the "Your first visit is on us" heading, so it doesn't repeat it. */
@@ -151,18 +150,6 @@ export const EMAILS = {
     button: D("Share my link"),
   },
 
-  /** 7. Winner. */
-  winner: {
-    subject: (dayName: string) => D(`You won ${dayName}'s drawing`),
-    preheader: D("We'll call you. Tap to give us the best number."),
-    heading: (firstName: string) => D(`${firstName ? `${firstName}, you` : "You"} won.`),
-    body: (prizeName: string) => D(`Your prize: ${prizeName}.`),
-    callLine: (deadlineLabel: string) => D(`We'll call to set it up. Tap below and give us the best number by ${deadlineLabel} — after that, the prize is redrawn.`),
-    publicLine: D("On the call we'll ask whether we may post your first name, last initial and city on the winners list. Saying no is fine."),
-    taxLine: D("Because of this prize's value, a short tax form is part of claiming it. We'll walk you through it on the call."),
-    button: D("Claim my prize"),
-  },
-
   /** 8. The reveal: thank-you + gift, to every verified, subscribed entrant (winners too). */
   thankYou: {
     subject: D("Your 10-year thank-you gift: your first visit is on us"),
@@ -190,30 +177,34 @@ export const EMAILS = {
     button: D("Book my free first visit"),
   },
 
-  /** 9. Staff: winner drawn. */
+  /** 9. Staff: winner drawn. Winners get no email of their own (Ben,
+   *  2026-11-03): this alert is how a winner is reached. Staff have no
+   *  admin screen; they work from this email and reply to it. */
   staffWinnerAlert: {
     subject: (dayName: string, kind: "daily" | "grand", name: string) => D(`10 years — ${dayName} ${kind === "grand" ? "GRAND PRIZE" : "winner"} — ${name}`),
     heading: (dayName: string, kind: "daily" | "grand") => D(`${dayName}'s ${kind === "grand" ? "grand prize" : ""} winner`.replace(/\s+/g, " ")),
-    callBy: D("Call by"),
     prize: D("Prize"),
+    reach: D("Reach them"),
+    reachLine: D("Today, by phone and email. They haven't been told they won. Note the time of your first attempt."),
+    phone: D("Phone"),
+    phoneLine: D("Not on the entry form. Look them up in your client records, or email first and ask for the best number."),
+    noAnswer: D("No answer?"),
+    /** The hours come from config (RESPONSE_WINDOW_MS). */
+    noAnswerLine: (hours: number) => D(`${hours} hours after your first attempt, a new winner may be drawn. Reply to this email and Ben decides.`),
     /** The day's gift code, for a current-client winner (asked on the call). */
     giftCode: D("Current client?"),
     giftCodeLine: (code: string) => D(`Ask on the call. If so, their Brain Map becomes gift certificate ${code}, to give to someone new.`),
     taxForm: D("Tax form"),
     /** The threshold lives in config (TAX_FORM_THRESHOLD_USD), so it is not typed here. */
-    taxYes: D("Required — mark received in admin"),
+    taxYes: D("Required: they complete a W-9 before receiving the prize"),
     taxNo: D("Not required"),
     partner: D("Partner prize"),
-    button: D("Open in admin"),
-    footer: D("Three call attempts, one per day, voicemail each time. Mark contacted in admin after the first conversation."),
-  },
-
-  /** 10. Staff: Tuesday "call today" for Monday's winner. */
-  tuesdayCallToday: {
-    subject: (name: string) => D(`10 years — Monday's winner still needs a call — ${name}`),
-    heading: D("Call today: Monday's winner"),
-    body: D("Monday's winner hasn't been marked contacted yet. Please call this morning, then mark the row in admin."),
-    button: D("Open in admin"),
+    pickup: D("Pickup"),
+    pickupLine: D("BrainMD bottles and Hoolest devices are picked up at a center. Nothing is shipped."),
+    button: D("Email the winner"),
+    /** The mailto subject staff start from. */
+    mailSubject: D("You won! Harmonized Brain Centers 10-year giveaway"),
+    footer: D("Reply all to this email with how it went: reached or not, accepted or declined, current client or not, and whether we may post their first name, last initial and city."),
   },
 } as const;
 
@@ -432,7 +423,8 @@ export const PAGES = {
       whenQ: D("When are the drawings?"),
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
       winQ: D("How will I know if I won?"),
-      winA: (hours: number) => D(`We email you the moment you're drawn, then call to arrange your prize. You have ${hours} hours to get back to us (a little longer over the weekend); after that, we draw again.`),
+      /** Ben's Official Rules wording, verbatim (2026-11-03). */
+      winA: (hours: number) => D(`HBC staff will contact the winner by phone and email. If the winner doesn't respond within ${hours} hours of our first attempt, a new winner may be drawn.`),
       /** After the reveal only (P0-2). */
       offerQ: D("What's my thank-you gift?"),
       offerA: (bookBySpoken: string, visitBySpoken: string, packageSessions: number) => D(`Everyone who enters gets a free first visit — a Brain Map and consultation — booked by ${bookBySpoken} for any day through ${visitBySpoken}. Start the in-center ${packageSessions}-session package at that visit and the ${packageSessions + 1}th session is free.`),
@@ -451,14 +443,5 @@ export const PAGES = {
     tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you gift arrives by email Saturday night." : "Confirmed. Your thank-you gift arrives by email Saturday night."),
     tapNotOpen: D("Entries aren't open yet — this link works the moment they do."),
     tapClosed: D("Entries have closed — thank you for wanting in."),
-    /** The claim page. */
-    claimHeading: (firstName: string) => D(`${firstName}, congratulations.`),
-    claimBody: (prizeName: string, deadlineLabel: string) => D(`Your prize: ${prizeName}. Give us the best number to call by ${deadlineLabel} and we'll set it up.`),
-    claimPhone: D("Best number to call"),
-    claimButton: D("That's my number"),
-    claimDone: D("Got it. We'll call you from the center. On the call we'll ask whether we may post your first name, last initial and city."),
-    claimTax: D("Because of this prize's value, a short tax form is part of claiming it — we'll walk you through it on the call."),
-    claimExpired: D("The claim window for this prize has passed and the prize has been redrawn. Thank you for entering."),
-    claimInvalid: D("That claim link isn't valid."),
   },
 } as const;

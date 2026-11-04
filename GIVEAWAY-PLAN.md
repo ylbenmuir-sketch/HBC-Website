@@ -3,6 +3,15 @@
 Planning document (Ben's brief, 2026-10-15, Tier 4). Read with
 `BUILD-LOG-2026-10-15.md` and, once the build starts, `GIVEAWAY-BUILD-LOG.md`.
 
+> **Superseded 2026-11-03 (Ben): winner notification.** Winners get no
+> automated email, there is no claim page, and there is no Tuesday "call
+> today" reminder. Staff get the winner alert and contact the winner by phone
+> and email; the rules say "If the winner doesn't respond within 72 hours of
+> our first attempt, a new winner may be drawn." `/admin/10years` is Ben's
+> backup only. Every passage below about the winner email, the claim link,
+> the claim deadline's Sunday/Monday rule (decision 18) or the Tuesday
+> re-send is history. Current state: `docs/giveaway-handoff.md`.
+
 **Updated 2026-10-18 (second pass)** with Ben's prize ladder, the
 Saturday grand-only drawing, the claim-deadline rule, the Concierge rule and
 six scope cuts (§8, decisions 15–20). Every other section was rewritten to

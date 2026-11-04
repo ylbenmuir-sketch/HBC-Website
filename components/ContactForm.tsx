@@ -156,7 +156,13 @@ export type CenterPhone = { name: string; phone: { display: string; tel: string 
  * phone asks for the best number to call, and an unticked call-me box
  * stands where the texting box was.
  */
-export type GiveawayBooking = { code: string | null; state: "ok" | "expired" | "redeemed" | "unknown" | "unavailable" | null; message: string | null };
+export type GiveawayBooking = {
+  code: string | null;
+  state: "ok" | "expired" | "redeemed" | "unknown" | "unavailable" | null;
+  message: string | null;
+  /** The entrant's nearer center (from their ZIP), when the code checked out: preselected. */
+  center?: "Nashville" | "Murfreesboro" | null;
+};
 
 const CARD_STYLE = {
   background: "#fff",
@@ -279,7 +285,8 @@ export default function ContactForm({
   const [givenName, setGivenName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [preferredCenter, setPreferredCenter] = useState<string | null>(null);
+  // A valid 10-year code preselects the entrant's nearer center; ?center= still wins (below).
+  const [preferredCenter, setPreferredCenter] = useState<string | null>(giveaway?.center ?? null);
   const [showConcierge, setShowConcierge] = useState(false);
   const [referredBy, setReferredBy] = useState("");
   const [note, setNote] = useState("");

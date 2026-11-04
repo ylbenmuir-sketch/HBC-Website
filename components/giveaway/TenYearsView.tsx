@@ -11,7 +11,7 @@ import UtmCapture from "./UtmCapture";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
 import {
-  CLAIM_WINDOW_MS,
+  RESPONSE_WINDOW_MS,
   DEVICES,
   DRAWINGS,
   GIFT_REVEAL_AT,
@@ -571,7 +571,7 @@ export function giveawayQuestions() {
     enter: { q: t.qa.enterQ, a: t.qa.enterA(eligibilityPhrase()) },
     more: { q: t.qa.moreQ, a: t.qa.moreA(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap) },
     when: { q: t.qa.whenQ, a: t.qa.whenA(DRAWINGS.filter((d) => d.kind === "daily").map((d) => d.dayName).join(", "), spokenCentral(DRAWINGS[DRAWINGS.length - 1].at)) },
-    win: { q: t.qa.winQ, a: t.qa.winA(Math.round(CLAIM_WINDOW_MS / 3_600_000)) },
+    win: { q: t.qa.winQ, a: t.qa.winA(Math.round(RESPONSE_WINDOW_MS / 3_600_000)) },
     offer: {
       q: t.qa.offerQ,
       a: t.qa.offerA(

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { loadWinners, personName, type WinnerView } from "@/lib/giveaway/admin-data";
+import { RESPONSE_WINDOW_MS } from "@/lib/giveaway/config";
 import { ACTIONS, AdminShell, Flash, fmtAt, muted, requireAdminPage, smallBtn, smallInput, table, td, th } from "../_ui";
 
 /**
  * /admin/10years/winners — every current winner (status != redrawn), then
  * the redrawn history. Per winner: the person, the prize (and the day's gift code for a current client),
- * status, claim deadline, the call log, public OK and the label it would
+ * status, when a redraw becomes possible, the call log, public OK and the label it would
  * publish, the tax-form step when required, notes. Forms POST to
  * actions/winner with a `kind` field; each redirects back here.
  */
@@ -40,7 +41,7 @@ export default async function WinnersPage({ searchParams }: { searchParams: Prom
         </p>
       )}
       <p style={{ ...muted, fontSize: 14, margin: "0 0 18px" }}>
-        Three call attempts, one per day. Mark contacted after the first conversation; public OK only after the winner says yes on the call. A winner unreachable past the deadline is redrawn from the Drawings screen.
+        Ben&rsquo;s backup screen: staff work from the alert email and reply to it. Log the first attempt here if you want the 72-hour clock shown. Public OK only after the winner says yes. If there&rsquo;s no response within 72 hours of the first attempt, redraw from the Drawings screen.
       </p>
       {current.length === 0 && !loadError && <p style={muted}>No winners drawn yet.</p>}
       {current.length > 0 && <WinnersTable rows={current} editable />}
@@ -99,7 +100,7 @@ function WinnersTable({ rows, editable }: { rows: WinnerView[]; editable: boolea
               <td style={td}>
                 <b>{w.status}</b>
                 <br />
-                <span style={{ fontSize: 13 }}>claim by {fmtAt(w.claim_deadline_at)}</span>
+                <span style={{ fontSize: 13 }}>{w.call_attempts?.length ? <>redraw possible from {fmtAt(new Date(new Date(w.call_attempts[0].at).getTime() + RESPONSE_WINDOW_MS).toISOString())}</> : <>no attempt logged</>}</span>
                 {w.contacted_at && (
                   <>
                     <br />

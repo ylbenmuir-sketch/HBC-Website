@@ -363,12 +363,12 @@ submission requires Supabase credentials.
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
 | `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and every event is a no-op: `submit_lead_form` + `generate_lead` (a saved call request, form or chat), `contact_link_click` (any `tel:`/`mailto:` tap; location from the nearest `data-link-location`), `guide_download`. Names match the old WordPress site's. Loads in production only: never under `next dev`, never on a Vercel preview (reads `VERCEL_ENV`). Build-time. See `lib/analytics.ts`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing Webmaster "HTML tag" tokens (the `content` value). Each renders its meta tag only when set. Build-time. |
-| `GIVEAWAY_ENGINE_ENABLED` | **10-year giveaway — the master switch** (`lib/giveaway/engine.ts`). OFF when unset: the default, and what production runs until Ben turns it on. Off = `/10years` is the hidden showcase (`lib/giveaway/showcase.ts`: the notify-me page with the `[DRAFT]` tags hidden, `?mode=live` / `closed` / `thanks` for the later stages, forms that succeed on screen and write nothing, sample winners), `/api/cron/giveaway` answers 200 and touches nothing, `/admin/10years` and `/10years/{claim,enter,verify}` answer 404, `/unsubscribe` says "unavailable", a `/contact` offer code is refused without a lookup. On (`1`): the real giveaway — the page follows the config clock from Nov 9 and the showcase ends on its own. Set it only after the checklist under *10-year giveaway: turning the engine on*. Server-side. |
-| `GIVEAWAY_ADMINS` | **10-year giveaway (Phase 1, Oct 2026).** Who may sign in at `/admin/10years`: comma-separated staff addresses, e.g. `ben@…, denise@…, kylie@…` (same format as the `LEADS_*` lists). Read on every sign-in and upserted into `giveaway_admin_allowlist`; no address is written in code. Unset = nobody can sign in. Server-side. |
-| `GIVEAWAY_TOKEN_SECRET` | **10-year giveaway.** Signs the unsubscribe, verification, one-tap and claim links and the admin session cookie (`lib/giveaway/tokens.ts`). Any long random string, 16+ characters — `openssl rand -hex 32`. Unset = `/unsubscribe` answers 503 and admin sign-in refuses. Changing it invalidates every link already sent. Server-side. |
+| `GIVEAWAY_ENGINE_ENABLED` | **10-year giveaway — the master switch** (`lib/giveaway/engine.ts`). OFF when unset: the default, and what production runs until Ben turns it on. Off = `/10years` is the hidden showcase (`lib/giveaway/showcase.ts`: the notify-me page with the `[DRAFT]` tags hidden, `?mode=live` / `closed` / `thanks` for the later stages, forms that succeed on screen and write nothing, sample winners), `/api/cron/giveaway` answers 200 and touches nothing, `/admin/10years` and `/10years/{enter,verify}` answer 404, `/unsubscribe` says "unavailable", a `/contact` offer code is refused without a lookup. On (`1`): the real giveaway — the page follows the config clock from Nov 9 and the showcase ends on its own. Set it only after the checklist under *10-year giveaway: turning the engine on*. Server-side. |
+| `GIVEAWAY_ADMINS` | **10-year giveaway (Phase 1, Oct 2026).** Who may sign in at `/admin/10years`: **Ben's address only** (Ben, 2026-11-03: there is no admin screen for staff; it is Ben's backup for redraws and record-keeping). Comma-separated, same format as the `LEADS_*` lists. Read on every sign-in and upserted into `giveaway_admin_allowlist`; no address is written in code. Unset = nobody can sign in. Server-side. |
+| `GIVEAWAY_TOKEN_SECRET` | **10-year giveaway.** Signs the unsubscribe, verification and one-tap links and the admin session cookie (`lib/giveaway/tokens.ts`). Any long random string, 16+ characters — `openssl rand -hex 32`. Unset = `/unsubscribe` answers 503 and admin sign-in refuses. Changing it invalidates every link already sent. Server-side. |
 | `GIVEAWAY_ENV` | **10-year giveaway.** Optional. Which rows this process may touch: `production` / `preview` / `local` / `test`. Defaults from `VERCEL_ENV` (production → production, preview → preview, else local). Every giveaway table has an `env` column and every read and write is scoped to it (`lib/giveaway/store.ts`), so a check run with `GIVEAWAY_ENV=test` can never see or email a real entrant. The same idea as `LEAD_HOLD_ENV`. |
 | `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **10-year giveaway.** Winner alerts: Tue–Fri drawings to the first, Monday and Saturday to the second (first address To, the rest CC; unset → `LEADS_FALLBACK` with a logged warning). |
-| `GIVEAWAY_SITE_URL` | **10-year giveaway.** Optional. The origin every giveaway link (verify, one-tap, claim, unsubscribe, share) is built on. Defaults to the canonical site URL; `check:giveaway` points it at its own server. Server-side, read at request time. |
+| `GIVEAWAY_SITE_URL` | **10-year giveaway.** Optional. The origin every giveaway link (verify, one-tap, unsubscribe, share) is built on. Defaults to the canonical site URL; `check:giveaway` points it at its own server. Server-side, read at request time. |
 | `GIVEAWAY_REPO` / `GIVEAWAY_OTP_MOCK_CODE` | **Checks only.** `GIVEAWAY_REPO=memory` keeps the giveaway tables in the server process (`lib/giveaway/memory-client.ts`); `GIVEAWAY_OTP_MOCK_CODE=123456` signs the admin in with that code and sends no email. Both are honoured ONLY when the giveaway env is `local` or `test` and refused, loudly, anywhere else. Never set them on a Vercel deployment. |
 | `GIVEAWAY_STATS_TOKEN` | **10-year giveaway (P1-5).** Bearer token for `GET /api/internal/giveaway-stats` (or `?token=`): counts only — no names, emails, ZIPs, phones, codes or hashes, any count of 1–4 reads `<5` — for the reporting bot. Unset = 503; wrong = 401; 60 requests an hour per address. `openssl rand -hex 32`. Production only. |
 | `GIVEAWAY_FAKE_NOW` | **Testing envs only.** An ISO instant that pins the giveaway clock on every server instance (a Vercel preview runs many, so the in-process test clock can't). Honoured only when the giveaway env is `test` or `local`; set on the `giveaway/fix-list-rev2` preview (Nov 17, live mode) for the end-to-end test. |
@@ -418,11 +418,22 @@ in Vercel (production) and redeploying:
    `/unsubscribe`, code redemption (0015's `giveaway_redeem_gift`) and
    entry-source tracking (0016) all use them the moment the engine is on.
 2. **`GIVEAWAY_TOKEN_SECRET`** set in Vercel (`openssl rand -hex 32`).
-3. **`GIVEAWAY_ADMINS`** set (Ben, Denise, Kylie), and the two Supabase
-   Auth settings in step 5 done, then a real sign-in at `/admin/10years`
-   tried once.
+3. **`GIVEAWAY_ADMINS`** set to Ben's address only (the admin screen is
+   Ben's backup; staff never sign in), and the two Supabase Auth settings
+   in step 5 done, then a real sign-in at `/admin/10years` tried once.
 4. **`GIVEAWAY_ALERTS` and `GIVEAWAY_ALERTS_OWNER`** set, or the alerts
-   fall back to `LEADS_FALLBACK` with a warning.
+   fall back to `LEADS_FALLBACK` with a warning. The staff winner alert is
+   the ONLY notice of a win (winners get no automated email), so:
+4b. **Recipient check (Production).** `npx vercel env pull --environment=production`
+   to a scratch file, then read these and confirm each address is a real,
+   monitored inbox and nothing is a test or preview address:
+   `GIVEAWAY_ALERTS` (Tue–Fri winners; first address is To, the rest CC),
+   `GIVEAWAY_ALERTS_OWNER` (Mon and Sat winners), `LEADS_NASHVILLE`,
+   `LEADS_MURFREESBORO`, `LEADS_CONCIERGE`, `LEADS_FALLBACK` (also the
+   alert fallback), `LEADS_NOTIFY_EMAIL` (last fallback) and
+   `GIVEAWAY_ADMINS` (Ben only). Production cannot send a test alert
+   without drawing a real winner, so reading the addresses IS the check.
+   Delete the scratch file afterwards.
 5. **`CRON_SECRET`** set (it already is for the lead cron) — the giveaway
    cron refuses without it.
 5b. **`GIVEAWAY_STATS_TOKEN`** set in Vercel (Production) —

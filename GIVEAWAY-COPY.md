@@ -156,21 +156,11 @@ get shorter but not longer.
 - Heading, body and count line follow the shape in decision 15 word for word; no winner name anywhere.
 - Filled example, Friday's email: Subject "Saturday's grand prize: Brain Map + 12 LENS sessions + Hoolest VeRelief + …" · Body "Next drawing: Saturday at 5:00 pm — …"
 
-### 7. Winner *(transactional; the moment they are drawn)*
+### 7. Winner — **removed** *(Ben, 2026-11-03)*
 
-- **Subject:** You won *{Monday}*'s drawing
-- **Preview:** We'll call you. Tap to give us the best number.
-- **Heading:** *{Sarah}*, you won.
-- **Body:** Your prize: *{Brain Map + 2 sessions}*.
-- **Partner line** *(when named)*.
-- **Small print:** Every session includes the vibro chair.
-- **Call line:** We'll call to set it up. Tap below and give us the best number by *{Thu Nov 19, 12:00 PM CT}* — after that, the prize is redrawn.
-- **Tax line** *(only when the winner's HBC prizes this year total at least the config threshold, $2,000 — aggregated per person, so a daily winner who also wins the grand prize gets it on both)*: Because of this prize's value, a short tax form is part of claiming it. We'll walk you through it on the call.
-- **Public line:** On the call we'll ask whether we may post your first name, last initial and city on the winners list. Saying no is fine.
-- **Button:** Claim my prize
-- **Footer:** identity line · transactional line.
-- **From config:** day name, prize in the winner's version, the claim deadline (72 h, or the following Tuesday 5:00 pm CT when it would land on a Sunday or Monday), the tax flag.
-- Filled example, the grand prize: "Your prize: Brain Map + 12 LENS sessions + Hoolest VeRelief + a vibro chair session with each of the 12 sessions + 3 Assisted Lymphatic Therapy sessions with Victoria Bailey of Envision Thermography & Wellness + 3 BrainMD bottles." · "Redeemed directly with Envision Thermography & Wellness, valid through *{TBD}*." · "Already an HBC client? You'll receive a Brain Map gift certificate to give to someone new in place of your own Brain Map. We'll sort it out on the call." · tax line shown.
+Winners get **no automated email**. Staff get the winner alert (9) and
+contact the winner by phone and email themselves. The claim page and its
+copy are gone too.
 
 ### 8. The reveal: thank-you + gift *(marketing; Sat Nov 21, 7:00 PM CT, to every verified, subscribed entrant — winners included)*
 
@@ -202,24 +192,27 @@ The free first visit has no per-center cap and no fallback gift. Nothing on the 
 
 ### 9. Staff: winner drawn *(to GIVEAWAY_ALERTS, or GIVEAWAY_ALERTS_OWNER on Monday and Saturday)*
 
+The only notice of a win: winners get no email of their own. Staff have no
+admin screen; they work from this email and reply to it.
+
 - **Subject:** 10 years — *{Saturday}* GRAND PRIZE — *{Sarah Mitchell}* · daily: 10 years — *{Monday}* winner — *{name}*
 - **Preview:** *{name}* · *{prize}*
 - **Eyebrow:** *{Saturday}*'s grand prize winner · daily: *{Monday}*'s winner
 - **Then:** the winner's name, email, city and ZIP.
-- **Fact grid labels:** Prize · Version *(New client / Current client)* · Call by *{Tue Nov 24, 5:00 PM CT}* · Tax form: "Required — mark received in admin" or "Not required" · Partner prize *(when named)*
-- **Button:** Open in admin
-- **Footer:** Three call attempts, one per day, voicemail each time. Mark contacted in admin after the first conversation. · Drawn *{Mon Nov 16, 12:00 PM CT}*
-- Change from the first draft: the tax line no longer types "$600" — the threshold lives in config.
+- **Fact grid:**
+  - **Prize:** *{prize}*
+  - **Reach them:** Today, by phone and email. They haven't been told they won. Note the time of your first attempt.
+  - **Phone:** Not on the entry form. Look them up in your client records, or email first and ask for the best number.
+  - **No answer?** *{72}* hours after your first attempt, a new winner may be drawn. Reply to this email and Ben decides.
+  - **Current client?** Ask on the call. If so, their Brain Map becomes gift certificate *{GIFT-MON}*, to give to someone new.
+  - **Tax form:** "Required: they complete a W-9 before receiving the prize" or "Not required"
+  - **Pickup:** BrainMD bottles and Hoolest devices are picked up at a center. Nothing is shipped.
+  - **Partner prize** *(when the prize has one)*
+- **Button:** Email the winner *(a mailto: to the winner, subject "You won! Harmonized Brain Centers 10-year giveaway")*
+- **Closing line:** Reply all to this email with how it went: reached or not, accepted or declined, current client or not, and whether we may post their first name, last initial and city.
+- **Footer:** Drawn *{Mon Nov 16, 12:00 PM CT}*
 
-### 10. Staff: Tuesday "call today" *(Tue 8:30 am CT; skipped when Monday's winner is marked contacted)*
-
-- **Subject:** 10 years — Monday's winner still needs a call — *{Sarah Mitchell}*
-- **Eyebrow:** Call today: Monday's winner
-- **Then:** name, email, city and ZIP.
-- **Body:** Monday's winner hasn't been marked contacted yet. Please call this morning, then mark the row in admin.
-- **Fact grid:** Prize *{Brain Map + 2 sessions}* · Call by *{Thu Nov 19, 12:00 PM CT}*
-- **Button:** Open in admin
-- **Footer:** Sent *{Tue Nov 17, 8:30 AM CT}*
+### 10. Staff: Tuesday "call today" — **removed** *(Ben, 2026-11-03)*
 
 ---
 
@@ -366,7 +359,7 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; residents of *{Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)}*, 18 and over. *(the states are `ELIGIBLE_STATES` in config)*
 2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
 3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
-4. **How will I know if I won?** We email you the moment you're drawn, then call to arrange your prize. You have *{72}* hours to get back to us (a little longer over the weekend); after that, we draw again.
+4. **How will I know if I won?** HBC staff will contact the winner by phone and email. If the winner doesn't respond within *{72}* hours of our first attempt, a new winner may be drawn. *(Ben's Official Rules wording, verbatim.)*
 5. **What's my thank-you gift?** *(after the reveal only — rev 2, P0-2)* Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
 
 "noon Central" in Q3 is typed; the day list and the grand time are from config.
@@ -383,16 +376,7 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 - Header: the logo, **Explore HBC** *(to the homepage)*, the phone number. No menu, no call button.
 - Footer: © *{year}* Harmonized Brain Centers · **Official Rules** · **Privacy**. Both are hard-coded in the components, not in copy.ts.
 
-### Claim page (/10years/claim/…, from the winner email)
-
-- **H1:** *{Sarah}*, congratulations.
-- **Body:** Your prize: *{Brain Map + 2 sessions}*. Give us the best number to call by *{Thu Nov 19, 12:00 PM CT}* and we'll set it up.
-- **Tax line** *(when required)*: Because of this prize's value, a short tax form is part of claiming it — we'll walk you through it on the call.
-- **Field label:** Best number to call · **Button:** That's my number
-- **Done:** Got it. We'll call you from the center. On the call we'll ask whether we may post your first name, last initial and city.
-- **Expired / redrawn:** The claim window for this prize has passed and the prize has been redrawn. Thank you for entering.
-- **Bad link:** That claim link isn't valid.
-- Hard-coded on the page: the empty-phone error "Please add a phone number we can call."
+### Claim page — **removed** *(Ben, 2026-11-03: no winner email, so nothing links to it; /10years/claim/… answers 404)*
 
 ### Unsubscribe page (/unsubscribe, from any marketing email)
 
@@ -403,7 +387,7 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 - **Unavailable:** Unsubscribing isn't available right now. Please try again in a few minutes, or reply to any of our emails and we'll take care of it.
 - **Link:** Back to the site
 
-### Admin screens (staff only; listed for completeness)
+### Admin screens (Ben's backup only — staff never sign in; listed for completeness)
 
 Sign in · Work email · Email me a code · "We emailed a six-digit code to *{email}*. It works for ten minutes." · Code · That address isn't on the admin list. · That code didn't work. Check it and try again, or request a new one. · Too many tries. Wait a few minutes and try again. · Signed in as · Sign out · Dashboard · Environment · Schedule (from config) · the two migration-status lines.
 
@@ -420,10 +404,10 @@ numbered sections:
 6. **Bonus entries** — early bird (confirm before *{Mon Nov 16, 12:00 PM CT}*: +1); friends (+3 / +1, cap 10); most entries any one person can hold: *{33}*
 7. **Drawings and odds** — the six times; random by computer, recorded; daily winners stay in the grand pool
 8. **Prizes and their value** — the per-part rates (Brain Map $150 · LENS session $125 · vibro chair $40 per session · BrainMD bottle $44.95 · Hoolest Mini $99 · Hoolest VeRelief $199 · the three partner gifts); total ARV *{$5,537.60}*; "Current clients receive a Brain Map gift certificate to give to someone new in place of their own Brain Map."; partner gifts redeemed directly with the partner, valid through *{TBD}*
-9. **Prize conditions** — at either center by appointment, used by *{Monday, May 31, 2027}* (`PRIZE_USE_BY` — **unconfirmed, Ben to confirm**), no transfer or cash, no health-outcome claim
-10. **Winner notification and claim** — **by email only**; 72 hours, Sun/Mon → Tue 5 PM CT; alternate drawn
+9. **Prize conditions** — Hoolest devices and BrainMD bottles picked up at a center (Nashville or Murfreesboro), never shipped; services at either center by appointment, used by *{Monday, May 31, 2027}* (`PRIZE_USE_BY` — **unconfirmed, Ben to confirm**), no transfer or cash, no health-outcome claim
+10. **Notifying winners and redraws** — "HBC staff will contact the winner by phone and email. If the winner doesn't respond within 72 hours of our first attempt, a new winner may be drawn." (Ben, verbatim); ineligible or declined → forfeited, a new winner may be drawn from the same pool
 11. **Taxes** — $2,000 or more per person in 2026 → W-9 and 1099; "Accountant to confirm." shows until `TAX_THRESHOLD_CONFIRMED` is true
-12. **Publicity** — first name, last initial, city, only with consent on the claim call
+12. **Publicity** — first name, last initial, city, only with consent, asked when we reach the winner
 13. **Thank-you gift** — before the reveal one neutral line ("…a 10-year thank-you gift…announced by email Saturday, Nov 21 at 7 PM CT…not a prize"); after it, the free first visit's terms
 14. **Your information** — what entries are used for, opt-in news only, unsubscribe, privacy link
 15. **General conditions** — disqualification, cancellation, release, Tennessee law

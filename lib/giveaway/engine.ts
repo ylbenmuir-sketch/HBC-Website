@@ -7,7 +7,7 @@
  *   - /api/cron/giveaway answers 200 at once and touches nothing — migration
  *     0010 is not applied, so no giveaway table may ever be queried;
  *   - no scheduled email is sent;
- *   - /admin/10years and /10years/{claim,enter,verify} answer 404;
+ *   - /admin/10years and /10years/{enter,verify} answer 404;
  *   - /unsubscribe shows its "unavailable" message for giveaway tokens;
  *   - the thank-you offer code at /contact is refused without a lookup;
  *   - /10years is the SHOWCASE (lib/giveaway/showcase.ts): the notify-me

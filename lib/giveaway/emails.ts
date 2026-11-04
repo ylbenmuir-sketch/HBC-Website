@@ -1,5 +1,6 @@
 /**
- * The ten giveaway emails (GIVEAWAY-PLAN.md §4), built on the shared
+ * The giveaway emails (GIVEAWAY-PLAN.md §4; winners get none of their own —
+ * Ben, 2026-11-03), built on the shared
  * template's pieces (lib/email/templates.ts: page, section, footer, buttons)
  * so they are the same design as every other email the site sends. Words
  * come from lib/giveaway/copy.ts ([DRAFT] until approved); facts (prizes,
@@ -7,7 +8,7 @@
  *
  * Marketing emails (It's live, the Monday reminder, the daily afternoon,
  * the thank-you) carry the unsubscribe link and the registered identity line
- * (CAN-SPAM). Transactional ones (verifications, You're in, winner) carry
+ * (CAN-SPAM). Transactional ones (verifications, You're in) carry
  * the identity line and a "why you got this" line. Staff emails carry
  * neither.
  *
@@ -27,6 +28,7 @@ import {
   formatCentralLabel,
   GIFT_CODES,
   PARTNER_GIFTS,
+  RESPONSE_WINDOW_MS,
   prizeFor,
   prizeName,
   type Drawing,
@@ -276,33 +278,6 @@ export function dailyAfternoonEmail(input: { nextDrawing: Drawing | null; entrie
 }
 
 /* ------------------------------------------------------------------ */
-/* 7. Winner                                                           */
-/* ------------------------------------------------------------------ */
-
-export function winnerEmail(input: { firstName: string; drawing: Drawing; claimUrl: string; claimDeadline: Date; taxFormRequired: boolean; footing: Footing }): Email {
-  const c = EMAILS.winner;
-  const prize = prizeLineFor(input.drawing);
-  const subject = c.subject(input.drawing.dayName);
-  const heading = c.heading(input.firstName);
-  const body = c.body(prize.name);
-  const deadline = formatCentral(input.claimDeadline);
-  const callLine = c.callLine(deadline);
-  const rows = [
-    section(`${h1(heading)}${p(body)}${prize.partner ? p(prize.partner) : ""}${small(SHARED.currentClientNote)}`, "18px 20px 0"),
-    section(`${p(callLine, "padding-top:0;")}${input.taxFormRequired ? small(c.taxLine) : ""}${small(c.publicLine)}`, "12px 20px 0"),
-    section(buttons([[c.button, input.claimUrl]]), "14px 20px 0"),
-    gap(16),
-    visitorFooter(input.footing, false),
-  ];
-  return {
-    subject,
-    preheader: c.preheader,
-    html: page({ title: subject, preheader: c.preheader, rows }),
-    text: textOf([heading, body, prize.partner, SHARED.currentClientNote, "", callLine, input.taxFormRequired ? c.taxLine : null, c.publicLine, "", `${c.button}: ${input.claimUrl}`, "", ...visitorFooterText(input.footing, false)]),
-  };
-}
-
-/* ------------------------------------------------------------------ */
 /* 8. The reveal: thank-you + gift, to every entrant (winners too)      */
 /* ------------------------------------------------------------------ */
 
@@ -369,15 +344,19 @@ export type StaffWinner = {
   city: string | null;
 };
 
-export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWinner; claimDeadline: Date; taxFormRequired: boolean; adminUrl: string; now: Date }): Email {
+export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWinner; taxFormRequired: boolean; now: Date }): Email {
   const c = EMAILS.staffWinnerAlert;
   const prize = prizeLineFor(input.drawing);
   const subject = c.subject(input.drawing.dayName, input.drawing.kind, input.winner.name);
   const heading = c.heading(input.drawing.dayName, input.drawing.kind);
-  const deadline = formatCentral(input.claimDeadline);
   const where = [input.winner.city, input.winner.zip].filter(Boolean).join(" ");
   // Current client? Staff ask on the call; their Brain Map becomes this day's gift certificate.
   const giftLine = c.giftCodeLine(GIFT_CODES[input.drawing.slot]);
+  const noAnswer = c.noAnswerLine(Math.round(RESPONSE_WINDOW_MS / 3_600_000));
+  const spec = prizeFor(input.drawing.slot);
+  const hasPickup = spec.brainMdBottles > 0 || spec.hoolest !== null;
+  // "Email the winner": staff's own mail app, To the winner, a subject to start from.
+  const mailto = `mailto:${encodeURIComponent(input.winner.email)}?subject=${encodeURIComponent(c.mailSubject)}`;
   const rows = [
     section(`<div style="font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${C.slate};line-height:1.6;" class="hbc-muted">${esc(heading)}</div>`, "14px 20px 0"),
     section(
@@ -387,16 +366,20 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
     section(
       factGrid([
         [c.prize, esc(prize.name)],
+        [c.reach, `<b>${esc(c.reachLine)}</b>`],
+        [c.phone, esc(c.phoneLine)],
+        [c.noAnswer, esc(noAnswer)],
         [c.giftCode, esc(giftLine)],
-        [c.callBy, `<b>${esc(deadline)}</b>`],
         [c.taxForm, input.taxFormRequired ? `<b class="hbc-no" style="color:${C.alert};">${esc(c.taxYes)}</b>` : esc(c.taxNo)],
+        ...(hasPickup ? ([[c.pickup, esc(c.pickupLine)]] as Array<[string, string]>) : []),
         ...(prize.partner ? ([[c.partner, esc(prize.partner)]] as Array<[string, string]>) : []),
       ]),
       "14px 20px 0"
     ),
-    section(buttons([[c.button, input.adminUrl]]), "4px 20px 0"),
+    section(buttons([[c.button, mailto]]), "4px 20px 0"),
+    section(p(c.footer), "10px 20px 0"),
     gap(14),
-    footer([esc(c.footer), `Drawn ${esc(formatCentral(input.now))}`]),
+    footer([`Drawn ${esc(formatCentral(input.now))}`]),
   ];
   return {
     subject,
@@ -408,44 +391,17 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
       input.winner.name,
       `${input.winner.email} · ${where}`,
       "",
-      `${c.prize}:      ${prize.name}`,
-      `${c.giftCode}: ${giftLine}`,
-      `${c.callBy}:    ${deadline}`,
-      `${c.taxForm}:   ${input.taxFormRequired ? c.taxYes : c.taxNo}`,
+      `${c.prize}: ${prize.name}`,
+      `${c.reach}: ${c.reachLine}`,
+      `${c.phone}: ${c.phoneLine}`,
+      `${c.noAnswer} ${noAnswer}`,
+      `${c.giftCode} ${giftLine}`,
+      `${c.taxForm}: ${input.taxFormRequired ? c.taxYes : c.taxNo}`,
+      hasPickup ? `${c.pickup}: ${c.pickupLine}` : null,
       prize.partner ? `${c.partner}: ${prize.partner}` : null,
       "",
-      `${c.button}: ${input.adminUrl}`,
       c.footer,
       `Drawn ${formatCentral(input.now)}`,
     ]),
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* 10. Staff: Tuesday "call today"                                     */
-/* ------------------------------------------------------------------ */
-
-export function tuesdayCallTodayEmail(input: { winner: StaffWinner; claimDeadline: Date; adminUrl: string; now: Date; drawing: Drawing }): Email {
-  const c = EMAILS.tuesdayCallToday;
-  const prize = prizeLineFor(input.drawing);
-  const subject = c.subject(input.winner.name);
-  const deadline = formatCentral(input.claimDeadline);
-  const where = [input.winner.city, input.winner.zip].filter(Boolean).join(" ");
-  const rows = [
-    section(`<div style="font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${C.alert};line-height:1.6;">${esc(c.heading)}</div>`, "14px 20px 0"),
-    section(
-      `<div class="hbc-name" style="font-family:${SANS};font-size:24px;font-weight:700;color:${C.navy};line-height:1.2;">${esc(input.winner.name)}</div><div class="hbc-text" style="font-family:${SANS};font-size:15px;color:${C.ink};line-height:1.4;padding-top:3px;"><a href="mailto:${esc(input.winner.email)}" style="color:${C.ink};text-decoration:none;">${esc(input.winner.email)}</a> <span style="color:${C.slate};">&middot;</span> ${esc(where)}</div>${p(c.body)}`,
-      "8px 20px 0"
-    ),
-    section(factGrid([[EMAILS.staffWinnerAlert.prize, esc(prize.name)], [EMAILS.staffWinnerAlert.callBy, `<b>${esc(deadline)}</b>`]]), "12px 20px 0"),
-    section(buttons([[c.button, input.adminUrl]]), "4px 20px 0"),
-    gap(14),
-    footer([`Sent ${esc(formatCentral(input.now))}`]),
-  ];
-  return {
-    subject,
-    preheader: `${input.winner.name} · ${deadline}`,
-    html: page({ title: subject, preheader: `${input.winner.name} · ${deadline}`, rows }),
-    text: textOf([c.heading.toUpperCase(), "", input.winner.name, `${input.winner.email} · ${where}`, c.body, "", `${EMAILS.staffWinnerAlert.prize}: ${prize.name}`, `${EMAILS.staffWinnerAlert.callBy}: ${deadline}`, "", `${c.button}: ${input.adminUrl}`, `Sent ${formatCentral(input.now)}`]),
   };
 }
