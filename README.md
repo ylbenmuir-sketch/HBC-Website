@@ -434,6 +434,11 @@ in Vercel (production) and redeploying:
    `GIVEAWAY_ADMINS` (Ben only). Production cannot send a test alert
    without drawing a real winner, so reading the addresses IS the check.
    Delete the scratch file afterwards.
+4c. **Countdown email photo.** The six drawing-week countdown emails (Mon–Fri
+   4 pm, Sat 9 am) have a prize-photo slot. Until `HYPE_PRIZE_PHOTO_URL`
+   (`lib/giveaway/config.ts`) is set to a hosted photo (about 1072 px wide),
+   entrants would see a "PRIZE PHOTO" placeholder box. Set it, or remove the
+   slot, and update `lib/giveaway/hype.test.mjs`.
 5. **`CRON_SECRET`** set (it already is for the lead cron) — the giveaway
    cron refuses without it.
 5b. **`GIVEAWAY_STATS_TOKEN`** set in Vercel (Production) —

@@ -151,8 +151,9 @@ const giveawayEmails = [
   { file: "g04-entry-verify", ...G.entryVerifyEmail({ firstName: "Marcus", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
   { file: "g05-youre-in", ...G.youreInEmail({ firstName: "Sarah", referredBonus: true, nextDrawing: tue, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
   { file: "g05b-youre-in-existing-client", ...G.youreInEmail({ firstName: "Marcus", referredBonus: false, nextDrawing: mon, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
-  { file: "g06-daily-afternoon", ...G.dailyAfternoonEmail({ nextDrawing: tue, entries: 4, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
-  { file: "g06b-daily-afternoon-friday", ...G.dailyAfternoonEmail({ nextDrawing: grand, entries: 1, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
+  // The six drawing-week countdown emails (Mon–Fri 4 pm, Sat 9 am): all six in scripts/render-hype-previews.mjs.
+  { file: "g06-countdown-tuesday", ...G.hypeEmail({ day: "tue", entries: 4, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
+  { file: "g06b-countdown-saturday", ...G.hypeEmail({ day: "sat", entries: 1, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
   { file: "g08-thank-you-offer", ...G.thankYouEmail({ firstName: "Sarah", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
   { file: "g08b-gift-reminder", ...G.giftReminderEmail({ kind: "reminder", firstName: "Sarah", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
   { file: "g08c-gift-last-call", ...G.giftReminderEmail({ kind: "last_call", firstName: "Marcus", offerCode: "10Y-D3FG7H", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-D3FG7H", footing }) },
@@ -201,7 +202,8 @@ await chrome.close();
 let failed = 0;
 console.log(`email previews → ${OUT}\n`);
 for (const r of results) {
-  const fits = r.width !== 390 || r.height <= 844;
+  // The countdown emails are measured by their button instead (scripts/render-hype-previews.mjs).
+  const fits = r.width !== 390 || r.height <= 844 || r.file.startsWith("g06");
   if (!fits || r.overflowX) failed += 1;
   console.log(
     `  ${fits && !r.overflowX ? "✓" : "✗"} ${r.file.padEnd(36)} ${String(r.width).padStart(3)}px wide: ${r.height}px tall${r.width === 390 ? ` (${844 - r.height}px to spare on 844)` : ""}${r.overflowX ? " — SIDEWAYS SCROLL" : ""}`

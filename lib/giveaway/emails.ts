@@ -18,11 +18,21 @@
  */
 
 import { escapeHtml as esc, formatCentral } from "../email/format";
-import { C, SANS, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
+import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
 import { EMAILS, SHARED } from "./copy";
 import {
   CLINIC_DAYS_AFTER_REVEAL,
+  DEVICES,
+  DRAWINGS,
   GIFT_REVEAL_AT,
+  HYPE_PRIZE_PHOTO_URL,
+  SCHEDULE,
+  centralParts,
+  drawing,
+  drawingAfter,
+  prizeRetailUsd,
+  shortCentralTime,
+  type PrizeSpec,
   OFFER,
   REFERRAL,
   formatCentralLabel,
@@ -254,27 +264,202 @@ export function youreInEmail(input: {
 }
 
 /* ------------------------------------------------------------------ */
-/* 6. Daily afternoon (simplified)                                     */
+/* 6. Drawing-week countdown: Mon–Fri 4 pm + Sat 9 am (Ben, 2026-11-04) */
 /* ------------------------------------------------------------------ */
 
-export function dailyAfternoonEmail(input: { nextDrawing: Drawing | null; entries: number; referralUrl: string; footing: Footing }): Email {
-  const c = EMAILS.dailyAfternoon;
-  const prize = input.nextDrawing ? prizeLineFor(input.nextDrawing) : null;
-  const subject = c.subject(input.nextDrawing, prize?.name ?? null);
-  const body = c.body(input.nextDrawing, prize?.name ?? null);
-  const entries = c.entries(input.entries);
-  const rows = [
-    section(`${h1(c.heading)}${p(body)}${prize?.partner ? p(prize.partner) : ""}${p(entries)}`, "18px 20px 0"),
-    section(buttons([[c.button, input.referralUrl]]), "16px 20px 0"),
-    gap(16),
-    visitorFooter(input.footing, true),
-  ];
-  return {
-    subject,
-    preheader: c.preheader,
-    html: page({ title: subject, preheader: c.preheader, rows }),
-    text: textOf([c.heading, body, prize?.partner ?? null, entries, "", `${c.button}: ${input.referralUrl}`, "", ...visitorFooterText(input.footing, true)]),
+/** The six countdown emails, keyed by the day they go out. */
+export type HypeDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
+export const HYPE_DAYS: readonly HypeDay[] = ["mon", "tue", "wed", "thu", "fri", "sat"];
+
+/** When each countdown email goes out (the daily slots' 4 pm, Saturday 9 am). */
+export function hypeSendAt(day: HypeDay): Date {
+  if (day === "sat") return SCHEDULE.saturdayMorning.at;
+  const at = drawing(day).dailyEmailAt;
+  if (!at) throw new Error(`${day} has no email time`);
+  return at;
+}
+
+/** Calendar days (Central) from the send to the grand drawing: Mon 5 … Sat 0. */
+export function hypeDaysLeft(day: HypeDay): number {
+  const dayNo = (d: Date) => {
+    const p = centralParts(d);
+    return Date.UTC(p.year, p.month - 1, p.day) / 86_400_000;
   };
+  return dayNo(drawing("grand").at) - dayNo(hypeSendAt(day));
+}
+
+/** The grand prize as five short bullets, built from its PrizeSpec:
+ *  "Brain Map", "12 LENS sessions + vibro chair", "Hoolest VeRelief",
+ *  "3 lymphatic therapy sessions", "3 BrainMD bottles". */
+export function grandPrizeBullets(p: PrizeSpec = prizeFor("grand")): string[] {
+  const out: string[] = [];
+  if (p.brainMap) out.push("Brain Map");
+  if (p.sessions) out.push(`${p.sessions} LENS sessions${p.vibroSessions ? " + vibro chair" : ""}`);
+  if (p.hoolest) out.push(DEVICES[p.hoolest].short);
+  for (const id of p.partners) out.push(PARTNER_GIFTS[id].short);
+  if (p.brainMdBottles) out.push(`${p.brainMdBottles} BrainMD ${p.brainMdBottles === 1 ? "bottle" : "bottles"}`);
+  return out;
+}
+
+/** A daily prize in one short line: "Brain Map + 3 LENS + BrainMD". */
+export function shortPrizeName(p: PrizeSpec): string {
+  const out: string[] = [];
+  if (p.brainMap) out.push("Brain Map");
+  if (p.sessions) out.push(`${p.sessions} LENS`);
+  if (p.hoolest) out.push(DEVICES[p.hoolest].short);
+  for (const id of p.partners) out.push(EMAILS.hype.partnerTiny[id] ?? PARTNER_GIFTS[id].short);
+  if (p.brainMdBottles) out.push(p.brainMdBottles === 1 ? "BrainMD" : `${p.brainMdBottles} BrainMD`);
+  return out.join(" + ");
+}
+
+const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** "5 PM", "7 PM", "noon". */
+const clock = (d: Date) => shortCentralTime(d).replace(/\b(am|pm)\b/, (m) => m.toUpperCase());
+
+/* The countdown email's own look (Ben's mockup, 2026-11-04): one ivory
+ * column, centered wordmark, thin gold rules, no card. Email-safe: 600px
+ * max, single column, tables, inline styles, system fonts; the <style>
+ * block only tightens phones (≤ 480px) and handles dark mode, and the
+ * email reads correctly where a client drops it. */
+const HYPE = { bg: C.ivory, rule: "#dccfae", photo: "#ece4d4", gold: C.goldInk, ink: C.navy, body: C.ink, muted: C.slate } as const;
+
+function hypePage(input: { title: string; preheader: string; rows: string[] }): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>${esc(input.title)}</title>
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  /* Phone sizes are inline (every client honours them); wider screens
+     scale up here. A client that drops <style> shows the phone layout,
+     which still reads well in a 600px column. */
+  @media (min-width: 481px) {
+    .hy-pad { padding-left: 32px !important; padding-right: 32px !important; }
+    .hy-word { font-size: 32px !important; }
+    .hy-value { font-size: 52px !important; }
+    .hy-when { font-size: 19px !important; }
+    .hy-head { padding-top: 26px !important; padding-bottom: 20px !important; }
+    .hy-top { padding-top: 28px !important; }
+    .hy-photo-pad { padding-top: 22px !important; }
+    .hy-photo { height: 190px !important; }
+    .hy-gap { padding-top: 26px !important; }
+    .hy-open { font-size: 23px !important; }
+    .hy-li { font-size: 19px !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+    .hy-tpad { padding-top: 18px !important; }
+    .hy-trow { padding-top: 12px !important; padding-bottom: 12px !important; }
+    .hy-tname { font-size: 19px !important; }
+    .hy-tval { font-size: 21px !important; }
+    .hy-cpad { padding-top: 18px !important; }
+    .hy-count { font-size: 20px !important; }
+    .hy-btn a { font-size: 20px !important; padding: 18px 12px !important; }
+    .hy-hint { font-size: 17px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .hbc-bg { background: #11181f !important; }
+    .hbc-word, .hbc-name, .hbc-text { color: #f1ece2 !important; }
+    .hbc-sub, .hy-gold { color: #d2b77c !important; }
+    .hbc-muted { color: #a9b2ba !important; }
+    .hy-rule { border-color: #3a4753 !important; }
+    .hy-photo { background: #212c36 !important; }
+    .hbc-btn { background: #f1ece2 !important; border-color: #f1ece2 !important; }
+    .hbc-btn a { color: #1c2b3a !important; }
+    .hbc-foot a, .hbc-foot div { color: #a9b2ba !important; }
+  }
+</style>
+</head>
+<body class="hbc-bg" style="margin:0;padding:0;background:${HYPE.bg};-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">${esc(input.preheader)}&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
+<table role="presentation" class="hbc-bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${HYPE.bg};" bgcolor="${HYPE.bg}">
+<tr><td align="center" style="padding:0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+${input.rows.join("\n")}
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export function hypeEmail(input: { day: HypeDay; entries: number; referralUrl: string; footing: Footing }): Email {
+  const c = EMAILS.hype;
+  const grand = drawing("grand");
+  const daysLeft = hypeDaysLeft(input.day);
+  const value = usd(prizeRetailUsd(prizeFor("grand")));
+  const grandTime = clock(grand.at);
+  const sendAt = hypeSendAt(input.day);
+  const facts = { entries: input.entries, grandDay: grand.dayName, grandTime, drawingsLeft: DRAWINGS.filter((d) => d.at > sendAt).length };
+  const subject = c.subject(daysLeft, value, grandTime);
+  const preheader = c.preheader[input.day](facts);
+  const label = c.countdown(daysLeft);
+  const when = c.prizeWhen(grand.dayName, grandTime);
+  const opener = c.opener[input.day];
+  const bullets = grandPrizeBullets();
+  // Mon–Thu: the next daily drawing (Friday's next is the grand prize itself).
+  const next = input.day === "sat" ? null : drawingAfter(input.day);
+  const tomorrow = next && next.kind === "daily" ? { label: c.tomorrowLabel(clock(next.at)), name: shortPrizeName(prizeFor(next.slot)), value: usd(prizeRetailUsd(prizeFor(next.slot))) } : null;
+  const button = c.button(REFERRAL.referrerBonus);
+  const hint =
+    input.day === "sat" ? c.hint.sat(grandTime, clock(GIFT_REVEAL_AT)) : input.day === "fri" ? c.hint.fri(grandTime) : c.hint.daily(REFERRAL.referrerBonus);
+  const count = c.entriesCount(input.entries);
+
+  // Footer: the registered identity, split for the centered three lines.
+  const [orgName, ...addressParts] = input.footing.identityLine.split(" · ");
+  const address = addressParts.join(" · ");
+  const unsub = input.footing.unsubscribeUrl;
+
+  const F = SANS;
+  const rule = `<tr><td class="hy-pad" style="padding:0 20px;"><div class="hy-rule" style="border-top:1px solid ${HYPE.rule};font-size:0;line-height:0;height:0;">&nbsp;</div></td></tr>`;
+  const rows = [
+    // Wordmark
+    `<tr><td align="center" style="padding:18px 20px 14px;text-align:center;border-bottom:1px solid ${HYPE.rule};" class="hy-rule hy-head"><div class="hbc-word hy-word" style="font-family:${SERIF};font-size:28px;color:${HYPE.ink};line-height:1.1;">Harmonized</div><div class="hbc-sub" style="font-family:${F};font-size:12px;font-weight:700;letter-spacing:0.3em;color:${HYPE.gold};line-height:1;padding-top:8px;padding-left:0.3em;">BRAIN CENTERS</div></td></tr>`,
+    // Countdown + value + when
+    `<tr><td align="center" class="hy-pad hy-top" style="padding:18px 20px 0;text-align:center;"><div class="hy-gold" style="font-family:${F};font-size:14px;font-weight:700;letter-spacing:0.2em;color:${HYPE.gold};line-height:1;padding-left:0.2em;">${esc(label)}</div><div class="hbc-name hy-value" style="font-family:${F};font-size:44px;font-weight:800;color:${HYPE.ink};line-height:1.05;letter-spacing:-0.02em;padding-top:12px;">${esc(value)}</div><div class="hbc-text hy-when" style="font-family:${F};font-size:17px;color:${HYPE.body};line-height:1.3;padding-top:8px;">${esc(when)}</div></td></tr>`,
+    // Photo slot (a placeholder until there is a photo: HYPE_PRIZE_PHOTO_URL)
+    `<tr><td class="hy-pad hy-photo-pad" style="padding:16px 20px 0;">${
+      HYPE_PRIZE_PHOTO_URL
+        ? `<img src="${esc(HYPE_PRIZE_PHOTO_URL)}" width="536" alt="${esc(c.photoAlt)}" style="display:block;width:100%;max-width:536px;height:auto;border:0;">`
+        : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="hy-photo" align="center" valign="middle" height="104" bgcolor="${HYPE.photo}" style="height:104px;background:${HYPE.photo};text-align:center;font-family:${F};font-size:14px;letter-spacing:0.12em;color:${HYPE.gold};"><span class="hy-gold">${esc(c.photoPlaceholder)}</span></td></tr></table>`
+    }</td></tr>`,
+    // Opener + bullets
+    `<tr><td class="hy-pad hy-gap" style="padding:18px 20px 0;"><div class="hbc-name hy-open" style="font-family:${F};font-size:20px;font-weight:700;color:${HYPE.ink};line-height:1.3;">${esc(opener)}</div><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">${bullets
+      .map((b) => `<tr><td valign="top" class="hbc-text hy-li" style="font-family:${F};font-size:17px;color:${HYPE.body};line-height:1.35;padding:2px 14px 2px 4px;">&bull;</td><td class="hbc-text hy-li" style="font-family:${F};font-size:17px;color:${HYPE.body};line-height:1.35;padding:2px 0;">${esc(b)}</td></tr>`)
+      .join("")}</table></td></tr>`,
+    // Tomorrow · Noon (Mon–Thu), between thin gold rules
+    tomorrow
+      ? `<tr><td class="hy-pad hy-tpad" style="padding:14px 20px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="hy-rule hy-trow" style="border-top:1px solid ${HYPE.rule};border-bottom:1px solid ${HYPE.rule};padding:10px 0 10px;"><div class="hy-gold" style="font-family:${F};font-size:14px;font-weight:700;letter-spacing:0.12em;color:${HYPE.gold};line-height:1.3;">${esc(tomorrow.label)}</div><div class="hbc-text hy-tname" style="font-family:${F};font-size:17px;color:${HYPE.body};line-height:1.35;padding-top:4px;">${esc(tomorrow.name)}</div><div class="hbc-name hy-tval" style="font-family:${F};font-size:19px;font-weight:700;color:${HYPE.ink};line-height:1.3;padding-top:2px;">${esc(tomorrow.value)}</div></td></tr></table></td></tr>`
+      : `<tr><td class="hy-pad hy-tpad" style="padding:14px 20px 0;"><div class="hy-rule" style="border-top:1px solid ${HYPE.rule};font-size:0;line-height:0;height:0;">&nbsp;</div></td></tr>`,
+    // Entries, button, hint
+    `<tr><td class="hy-pad hy-cpad" align="center" style="padding:14px 20px 0;text-align:center;"><div class="hbc-text hy-count" style="font-family:${F};font-size:18px;color:${HYPE.body};line-height:1.3;">${esc(c.entriesLead)} <strong class="hbc-name" style="color:${HYPE.ink};font-weight:700;">${esc(count)}</strong></div></td></tr>`,
+    `<tr><td class="hy-pad" style="padding:12px 20px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="hbc-btn hy-btn" align="center" bgcolor="${C.navy}" style="background:${C.navy};border:1px solid ${C.navy};border-radius:6px;"><a href="${esc(input.referralUrl)}" style="display:block;padding:16px 10px;font-family:${F};font-size:18px;font-weight:700;color:${C.white};text-decoration:none;line-height:1.2;text-align:center;">${esc(button)}</a></td></tr></table></td></tr>`,
+    `<tr><td class="hy-pad" align="center" style="padding:12px 20px 24px;text-align:center;"><div class="hbc-muted hy-hint" style="font-family:${F};font-size:15px;color:${HYPE.muted};line-height:1.4;">${esc(hint)}</div></td></tr>`,
+    rule,
+    // Centered footer: name, address, Unsubscribe (CAN-SPAM: identity + opt-out)
+    `<tr><td class="hbc-foot hy-pad" align="center" style="padding:18px 20px 28px;text-align:center;"><div style="font-family:${F};font-size:15px;line-height:1.6;color:${HYPE.muted};">${esc(orgName)}</div>${
+      address ? `<div style="font-family:${F};font-size:15px;line-height:1.6;color:${HYPE.muted};">${esc(address)}</div>` : ""
+    }${unsub ? `<div style="font-family:${F};font-size:15px;line-height:1.6;"><a href="${esc(unsub)}" style="color:${HYPE.muted};text-decoration:underline;">${esc(SHARED.unsubscribe)}</a></div>` : ""}</td></tr>`,
+  ];
+
+  const text = textOf([
+    label,
+    value,
+    when,
+    "",
+    opener,
+    ...bullets.map((b) => `• ${b}`),
+    "",
+    tomorrow ? `${tomorrow.label}: ${tomorrow.name} — ${tomorrow.value}` : null,
+    tomorrow ? "" : null,
+    `${c.entriesLead} ${count}`,
+    `${button}: ${input.referralUrl}`,
+    hint,
+    "",
+    ...visitorFooterText(input.footing, true),
+  ]);
+  return { subject, preheader, html: hypePage({ title: subject, preheader, rows }), text };
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,4 +1,4 @@
-# 10-year giveaway — handoff (as of Tue Nov 3, 2026, late evening CT)
+# 10-year giveaway — handoff (as of Wed Nov 4, 2026 CT)
 
 Written to start a fresh chat from. Everything below is on the branch, not on
 `main`. Verified against the live database and Vercel the evening it was
@@ -6,12 +6,11 @@ written; anything not verified says so.
 
 ## Where things are
 
-- **Branch:** `giveaway/fix-list-rev2`, pushed to GitHub up to `f8909ab`.
-  **Not merged to `main`.** Production deploys `main`, so the live site still
-  runs the older giveaway code: the hidden `/10years` showcase, engine off.
-- **Uncommitted:** the Nov 3 late-evening changes (Ben's nine items, below)
-  are in the worktree, **not committed or pushed**, so the preview doesn't
-  show them yet. Commit and push them when Ben says so.
+- **Branch:** `giveaway/fix-list-rev2`, pushed to GitHub (see `git log`;
+  the Nov 3 nine items are `6ac73ff`, the Nov 4 countdown emails the commit
+  after it). **Not merged to `main`.** Production deploys `main`, so the live
+  site still runs the older giveaway code: the hidden `/10years` showcase,
+  engine off.
 - **Worktree on Ben's Mac:** `/Users/benmuir/Code/hbc-10y-fixes`. The main
   checkout at `…/HBC Website - 7.14.26/hbc-website-v2_4` stays on `main`.
 - **Preview (Vercel login needed):**
@@ -25,12 +24,40 @@ written; anything not verified says so.
   `4e9a991` P1-5 stats endpoint · `4b7cb9c` self-hosted fonts ·
   `22c9abe` P1-7 + P1-3 + checklist · `c1550c2` new prize ladder ·
   `f8909ab` the first version of this doc.
-- **Checks on the uncommitted worktree:** `npm test` 257/257 ·
-  `npm run check:giveaway` 260/260 in memory · `-- --db` 261/261 against
-  Supabase (its own cleanup left 0 env=test rows and 0 test leads; confirmed
-  separately) · typecheck and lint clean · `npm run build` OK.
-  `check:layout` was **not** re-run; the only CSS change is a ≤389px block
-  scoped to `.ty-*` (the giveaway page).
+- **Checks (Nov 4, on the pushed branch):** `npm test` 265/265 ·
+  `npm run check:giveaway` 265/265 in memory · `-- --db` 266/266 against
+  Supabase (its own cleanup: 3 test leads deleted, 0 env=test rows and 0
+  test leads left) · typecheck and lint clean · `npm run build` OK.
+  `scripts/render-hype-previews.mjs`: all six countdown emails put the button
+  on the first 375×812 screen (37–179px to spare), with or without the
+  email's `<style>` block.
+
+## What changed on Nov 4 (countdown emails, FAQ)
+
+- **Drawing-week countdown emails, built** (Ben's mockup and copy). They
+  replace the Mon–Fri 4 pm daily email, and a new job `daily_sat` sends
+  the sixth on **Sat Nov 21, 9:00 AM** (`SCHEDULE.saturdayMorning`). 11 send
+  jobs now. Body: countdown label (Mon 5 DAYS … Fri TOMORROW, Sat TODAY,
+  calendar days to the grand drawing), $2,838.85, "Grand prize · Saturday
+  5 PM", photo slot, one bold opener, the five grand-prize bullets, a
+  "Tomorrow · Noon" row Mon–Thu, "You have {n} entries", "Share and get 3
+  more entries", one hint. Copy in `EMAILS.hype`, builder `hypeEmail()`,
+  tests `lib/giveaway/hype.test.mjs`. Every value, time and count comes
+  from config. Recipients: verified and not unsubscribed, read at send time;
+  {n} is that person's own unvoided entries, counted at send time.
+  Monday's row says "Skye Chiropractic gift".
+- **Photo slot:** `HYPE_PRIZE_PHOTO_URL` is null, so the emails show a
+  "PRIZE PHOTO" placeholder box. Must be set (or the slot removed) before
+  turn-on: README checklist step 4c.
+- **Layout:** phone sizes inline, desktop sizes in a `min-width: 481px`
+  media query, so a client that drops `<style>` still fits the phone fold.
+  At 600×900 the Mon–Thu button sits about 29px under the first screen.
+- **/10years FAQ "How will I know if I won?"** is now Ben's wording: "Our
+  team will reach out by email and phone soon after the drawing. If we
+  don't hear back within 72 hours of our first attempt, a new winner may be
+  drawn." The Official Rules keep the staff sentence. Swept the site and
+  every entrant email: nothing promises an automatic winner email. Note:
+  the page's "How it works" step 3 still ends "We'll call you." (unchanged).
 
 ## What changed on Nov 3, late evening (Ben's nine items)
 
@@ -66,7 +93,7 @@ written; anything not verified says so.
    `check:giveaway` now asserts 360×740 in both modes. 320×640 still doesn't
    fit (button at 779px live).
 5. **No admin screen for staff.** The Tuesday 8:30 AM "call today" email is
-   gone (10 send jobs, not 11). The staff alert lost its "Open in admin"
+   gone (10 send jobs, not 11; Nov 4 added the Saturday countdown, so 11 again). The staff alert lost its "Open in admin"
    button and the "mark contacted in admin" line. `/admin/10years` stays, and
    `GIVEAWAY_ADMINS` should hold Ben's address only (README updated).
 6. **Reveal email button:** confirmed. It goes to
@@ -77,8 +104,7 @@ written; anything not verified says so.
    nearer the entrant's ZIP (`GiveawayBooking.center`, set server-side in
    `app/contact/10years/page.tsx`), and `?center=` still wins. GIFT- codes
    preselect nothing. `check:giveaway` asserts all of this.
-7. **Hype emails:** drafts only, in `docs/giveaway-hype-drafts.md`, waiting
-   for Ben. Nothing is built.
+7. **Hype emails:** built on Nov 4 as the countdown emails (see above).
 8. **Recipients:** Preview values are listed under "Env vars" below. A
    recipient check is now step 4b of the README checklist and step 5 of the
    Friday checklist below.
@@ -187,7 +213,7 @@ Times are Central. Scheduled emails are drained by the every-minute cron
 | Monday reminder | **Mon Nov 16, 9:00 AM** | Verified notify-me signups who haven't tapped |
 | Confirm your entry | On an entry signup, Nov 15–21 | That address |
 | You're in (share link + "thank-you gift on the way", no code) | On the first confirmation or tap | That entrant |
-| Daily afternoon (next prize, entry count, share link) | **Mon–Fri, 4:00 PM** | Every verified, subscribed entrant. Hype rewrite drafted, not built |
+| Countdown ("5 days to the $2,838.85 grand prize" … , their entry count, share button) | **Mon–Fri, 4:00 PM** and **Sat Nov 21, 9:00 AM** | Every verified, subscribed entrant |
 | Thank-you + gift reveal (10Y- code, "Book my free first visit" → /contact, code prefilled, center preselected) | **Sat Nov 21, 7:00 PM** | Every verified, subscribed entrant, winners included |
 | Gift reminder | **Tue Dec 1, 9:00 AM** | Verified, subscribed, unredeemed |
 | Last call ("Booking closes Saturday") | **Thu Dec 3, 9:00 AM** | Verified, subscribed, unredeemed |
@@ -284,8 +310,8 @@ The full version is in README → "10-year giveaway: turning the engine on".
 In order:
 
 1. **Copy freeze (Thu Nov 5):** Ben approves the rules, the page copy,
-   the gift tease, all emails and the hype drafts (or keeps today's daily
-   email). Replace every `D("…")`, set `COPY_IS_DRAFT = false`, set
+   the gift tease and all emails, and sets `HYPE_PRIZE_PHOTO_URL` (or
+   drops the countdown emails' photo slot). Replace every `D("…")`, set `COPY_IS_DRAFT = false`, set
    `RULES_VERSION` to the approval date, and fill in `PRIZE_USE_BY` and the
    partner valid-through dates.
 2. **Merge `giveaway/fix-list-rev2` → `main`, with Ben's OK.** Nothing below
@@ -332,9 +358,9 @@ In order:
    the row is marked in `/admin/10years`. Staff can't do that, so unless Ben
    records it from their replies, each drawn day keeps saying "we're reaching
    them now".
-3. **Hype emails:** drafts in `docs/giveaway-hype-drafts.md`. Ben approves or
-   edits them, and says yes or no to the optional Saturday 9 AM send (a new
-   job). Then build.
+3. **Countdown email photo:** `HYPE_PRIZE_PHOTO_URL` is null, so the six
+   countdown emails show a "PRIZE PHOTO" placeholder. Ben supplies a photo
+   of the grand prize (about 1072 px wide, hosted), or the slot comes out.
 4. **Preview alerts reach real staff** (see Env vars). Set Preview-scoped
    `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` to Ben's address before any
    Draw now on the preview, if that matters.

@@ -25,8 +25,7 @@
  * their callers pass no drawing; GIVEAWAY-COPY.md lists each one.
  *
  * Phrases other code matches on (keep them): lib/giveaway/engine.test.mjs
- * — "Today at noon", "Thank you", the
- * next drawing's day name in the daily subject; scripts/check-giveaway.mjs
+ * — "Today at noon", "Thank you", "grand prize" in the countdown subject; scripts/check-giveaway.mjs
  * — "Send me my entry link", "Enter me", "Forward this to a friend", "friend's
  * link", "with N entries", "10 years — Monday winner",
  * "GRAND PRIZE", "W-9", "Monday's winner: claimed",
@@ -48,6 +47,10 @@ export const CAMPAIGN = "10 Years of Harmonized Brain Centers";
 
 /** "Monday at noon", "Saturday at 5:00 pm" — read off the drawing, never typed. */
 const when = (d: Drawing) => spokenCentral(d.at);
+
+/** What the countdown email's preview line may say (lib/giveaway/emails.ts hypeEmail). */
+export type HypeFacts = { entries: number; grandDay: string; grandTime: string; drawingsLeft: number };
+const numberWord = (n: number) => ["zero", "one", "two", "three", "four", "five", "six"][n] ?? String(n);
 
 /** 6 → "Six". Counts come from config; this only spells them. */
 const countWord = (n: number) => ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"][n] ?? String(n);
@@ -78,9 +81,6 @@ export const SHARED = {
 /* ------------------------------------------------------------------ */
 /* Emails                                                              */
 /* ------------------------------------------------------------------ */
-
-/** "Monday's prize: Brain Map + 2 sessions" / "Saturday's grand prize: …" */
-const drawingPrize = (d: Drawing, prizeName: string) => `${d.dayName}'s ${d.kind === "grand" ? "grand prize" : "prize"}: ${prizeName}`;
 
 export const EMAILS = {
   /** 1. Notify-me verification. */
@@ -140,14 +140,55 @@ export const EMAILS = {
     offerButton: D("Book my free first visit"),
   },
 
-  /** 6. Daily afternoon (simplified, decision 15). */
-  dailyAfternoon: {
-    subject: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? drawingPrize(next, prizeName) : "That was the last drawing"),
-    preheader: D("Today's drawing is done. Here's what's next."),
-    heading: D("Today's drawing is done and the winner is being called."),
-    body: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? `Next drawing: ${when(next)} — ${prizeName}.` : "That was the last drawing. Thank you for a wonderful week."),
-    entries: (n: number) => D(`You have ${n} ${n === 1 ? "entry" : "entries"}. Share your link to add more.`),
-    button: D("Share my link"),
+  /** 6. Drawing-week countdown (Ben, 2026-11-04): replaces the old daily
+   *  afternoon email Mon–Fri at 4 pm, plus Saturday at 9 am. The body is
+   *  ONLY: countdown label + grand-prize value + "Grand prize · Saturday
+   *  5 PM", the photo slot, one bold opener, the grand prize as five
+   *  bullets, a "Tomorrow · Noon" row (Mon–Thu), the entry count, the
+   *  button and one hint. The countdown, values, times and the bullets
+   *  come from config (lib/giveaway/emails.ts hypeEmail). */
+  hype: {
+    /** "4 days to the $2,838.85 grand prize" / "Tomorrow at 5 PM: …" / "Today at 5 PM: …". */
+    subject: (daysLeft: number, value: string, time: string) =>
+      D(daysLeft === 0 ? `Today at ${time}: the ${value} grand prize` : daysLeft === 1 ? `Tomorrow at ${time}: the ${value} grand prize` : `${daysLeft} days to the ${value} grand prize`),
+    /** The countdown label over the value. */
+    countdown: (daysLeft: number) => (daysLeft === 0 ? "TODAY" : daysLeft === 1 ? "TOMORROW" : `${daysLeft} DAYS`),
+    /** "Grand prize · Saturday 5 PM" */
+    prizeWhen: (dayName: string, time: string) => `Grand prize · ${dayName} ${time}`,
+    /** c: the entrant's entries, the grand drawing's day and time, and how
+     *  many drawings a friend who joins now is still in. */
+    preheader: {
+      mon: (c: HypeFacts) => D(`You're entered. It's drawn ${c.grandDay} at ${c.grandTime}.`),
+      tue: (c: HypeFacts) => D(`A friend who joins today is in ${numberWord(c.drawingsLeft)} drawings.`),
+      wed: () => D("Halfway through the week, and you're entered."),
+      thu: (c: HypeFacts) => D(`One daily drawing left, then ${c.grandDay}.`),
+      fri: (c: HypeFacts) => D(`Friends can still get in before ${c.grandTime} tomorrow.`),
+      sat: (c: HypeFacts) => D(`You're entered with ${c.entries} ${c.entries === 1 ? "entry" : "entries"}.`),
+    },
+    /** One bold line, 8 words at most (lib/giveaway/hype.test.mjs). */
+    opener: {
+      mon: D("Day one is drawn. You're still in."),
+      tue: D("Two drawings down. You're still in."),
+      wed: D("Halfway through the week. Still in."),
+      thu: D("One daily drawing left before Saturday."),
+      fri: D("Daily drawings done. Tomorrow's the big one."),
+      sat: D("Today's the day. You're entered."),
+    },
+    photoPlaceholder: "PRIZE PHOTO",
+    photoAlt: "The grand prize",
+    /** "Tomorrow · Noon" — the next daily drawing's time is from config. */
+    tomorrowLabel: (time: string) => `Tomorrow · ${time.charAt(0).toUpperCase()}${time.slice(1)}`,
+    /** The short partner names for the one-line "Tomorrow" prize. */
+    partnerTiny: { skye: "Skye Chiropractic gift", amabel: "Amabel coaching", envision: "3 lymphatic" } as Record<string, string>,
+    /** Split so the count can be bold: "You have" + "4 entries". */
+    entriesLead: "You have",
+    entriesCount: (n: number) => `${n} ${n === 1 ? "entry" : "entries"}`,
+    button: (bonus: number) => D(`Share and get ${bonus} more entries`),
+    hint: {
+      daily: (bonus: number) => D(`Each friend who enters adds ${bonus} to yours.`),
+      fri: (closeTime: string) => D(`Friends must enter by ${closeTime} tomorrow.`),
+      sat: (closeTime: string, revealTime: string) => D(`Friends can enter until ${closeTime}. Thank-you gift arrives at ${revealTime}.`),
+    },
   },
 
   /** 8. The reveal: thank-you + gift, to every verified, subscribed entrant (winners too). */
@@ -423,8 +464,8 @@ export const PAGES = {
       whenQ: D("When are the drawings?"),
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
       winQ: D("How will I know if I won?"),
-      /** Ben's Official Rules wording, verbatim (2026-11-03). */
-      winA: (hours: number) => D(`HBC staff will contact the winner by phone and email. If the winner doesn't respond within ${hours} hours of our first attempt, a new winner may be drawn.`),
+      /** Ben's wording, verbatim (2026-11-04). The rules keep the staff sentence. */
+      winA: (hours: number) => D(`Our team will reach out by email and phone soon after the drawing. If we don't hear back within ${hours} hours of our first attempt, a new winner may be drawn.`),
       /** After the reveal only (P0-2). */
       offerQ: D("What's my thank-you gift?"),
       offerA: (bookBySpoken: string, visitBySpoken: string, packageSessions: number) => D(`Everyone who enters gets a free first visit — a Brain Map and consultation — booked by ${bookBySpoken} for any day through ${visitBySpoken}. Start the in-center ${packageSessions}-session package at that visit and the ${packageSessions + 1}th session is free.`),

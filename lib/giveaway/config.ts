@@ -136,6 +136,9 @@ export const SCHEDULE = {
   entriesOpen: instant(centralToUtc(2026, 11, 15, 18, 0), "Sun Nov 15, 6:00 PM CT", "Entries open; 'It's live' email to verified notify-me signups"),
   /** One reminder to notify-me signups who have not tapped. */
   mondayReminder: instant(centralToUtc(2026, 11, 16, 9, 0), "Mon Nov 16, 9:00 AM CT", "Reminder to notify-me signups who have not tapped"),
+  /** The Saturday-morning countdown email (Ben, 2026-11-04): the sixth
+   *  drawing-week email, after the Mon–Fri 4 pm ones. */
+  saturdayMorning: instant(centralToUtc(2026, 11, 21, 9, 0), "Sat Nov 21, 9:00 AM CT", "Countdown email to every verified, subscribed entrant"),
   /** Entries close at the grand drawing. */
   entriesClose: instant(centralToUtc(2026, 11, 21, 17, 0), "Sat Nov 21, 5:00 PM CT", "Entries close; the grand prize is drawn"),
   /** The thank-you gift is revealed (fix list rev 2, P0-2/P0-10): before
@@ -172,7 +175,7 @@ export function giftRevealed(now: Date): boolean {
  *  and Tuesday of Thanksgiving week. The reveal email names them. */
 export const CLINIC_DAYS_AFTER_REVEAL = [centralToUtc(2026, 11, 23, 9, 0), centralToUtc(2026, 11, 24, 9, 0)] as const;
 
-/** The daily afternoon email, Mon–Fri (decision 15: simplified). */
+/** The Mon–Fri countdown email hour (Ben, 2026-11-04: lib/giveaway/emails.ts hypeEmail). */
 export const DAILY_EMAIL_HOUR_CT = 16;
 
 /* ------------------------------------------------------------------ */
@@ -419,6 +422,12 @@ export function breakdownSumUsd(parts: readonly PrizePart[]): number {
 export function prizeRetailUsd(p: PrizeSpec, rates = RATES): number {
   return breakdownSumUsd(prizeBreakdown(p, rates));
 }
+
+/** The grand-prize photo in the drawing-week countdown emails (Ben,
+ *  2026-11-04): an absolute https URL, about 1072 px wide (shown at 536).
+ *  null = no photo yet, and the email shows a "PRIZE PHOTO" placeholder box.
+ *  Set it, or remove the slot, before the engine is turned on. */
+export const HYPE_PRIZE_PHOTO_URL: string | null = null;
 
 /** The six prizes together: $5,537.60. */
 export function prizeTotalUsd(rates = RATES): number {

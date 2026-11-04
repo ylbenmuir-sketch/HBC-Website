@@ -142,19 +142,25 @@ get shorter but not longer.
 - **Footer:** identity line · transactional line.
 - **From config:** next drawing (day, time, prize in the reader's version), referral numbers, the reveal time, the share link. No code and no book button: the code arrives with the reveal email.
 
-### 6. Daily afternoon *(marketing; Mon–Fri 4:00 pm CT, to every subscribed entrant)*
+### 6. Drawing-week countdown *(marketing; Mon–Fri 4:00 pm CT and Sat 9:00 am CT, to every verified, subscribed entrant)*
 
-- **Subject:** *{Tuesday}*'s prize: *{Brain Map + 3 sessions}* — Friday's reads *{Saturday}*'s grand prize: *{…}*
-- **Preview:** Today's drawing is done. Here's what's next.
-- **Heading:** Today's drawing is done and the winner is being called.
-- **Body:** Next drawing: *{Tuesday at noon}* — *{Brain Map + 3 sessions}*.
-- **Partner line** *(when named)*.
-- **Count line:** You have *{4}* entries. Share your link to add more. *(1 → "1 entry")*
-- **Button:** Share my link
-- **Footer:** identity line · marketing line · Unsubscribe.
-- **From config:** next drawing's day, time and prize (reader's version), the reader's entry count.
-- Heading, body and count line follow the shape in decision 15 word for word; no winner name anywhere.
-- Filled example, Friday's email: Subject "Saturday's grand prize: Brain Map + 12 LENS sessions + Hoolest VeRelief + …" · Body "Next drawing: Saturday at 5:00 pm — …"
+Ben's mockup and wording, 2026-11-04. Replaces the old daily afternoon email.
+Built by `hypeEmail()` (`lib/giveaway/emails.ts`); its own look: one ivory
+column, centered wordmark, thin gold rules. Render all six with
+`node scripts/render-hype-previews.mjs` → `docs/hype-previews/index.html`.
+
+- **Subject:** *{5}* days to the *{$2,838.85}* grand prize (Mon 5, Tue 4, Wed 3, Thu 2) · Fri: Tomorrow at *{5 PM}*: the *{$2,838.85}* grand prize · Sat: Today at *{5 PM}*: the *{$2,838.85}* grand prize
+- **Preview:** Mon: You're entered. It's drawn *{Saturday}* at *{5 PM}*. · Tue: A friend who joins today is in *{four}* drawings. · Wed: Halfway through the week, and you're entered. · Thu: One daily drawing left, then *{Saturday}*. · Fri: Friends can still get in before *{5 PM}* tomorrow. · Sat: You're entered with *{4}* entries.
+- **Countdown label:** *{5 DAYS · 4 DAYS · 3 DAYS · 2 DAYS · TOMORROW · TODAY}* (calendar days to the grand drawing)
+- **Value + line:** *{$2,838.85}* · Grand prize · *{Saturday}* *{5 PM}*
+- **Photo slot:** `HYPE_PRIZE_PHOTO_URL`; a "PRIZE PHOTO" placeholder until set
+- **Opener (bold, ≤ 8 words):** Mon: Day one is drawn. You're still in. · Tue: Two drawings down. You're still in. · Wed: Halfway through the week. Still in. · Thu: One daily drawing left before Saturday. · Fri: Daily drawings done. Tomorrow's the big one. · Sat: Today's the day. You're entered.
+- **Bullets (every day, from the grand PrizeSpec):** Brain Map · *{12}* LENS sessions + vibro chair · Hoolest VeRelief · *{3}* lymphatic therapy sessions · *{3}* BrainMD bottles
+- **Tomorrow · Noon (Mon–Thu):** Mon *{Brain Map + Skye Chiropractic gift + BrainMD}* *{$444.95}* · Tue *{Brain Map + 3 LENS + BrainMD}* *{$569.95}* · Wed *{Brain Map + 3 LENS + Hoolest Mini + BrainMD}* *{$668.95}* · Thu *{Brain Map + 3 LENS + Amabel coaching + BrainMD}* *{$819.95}*
+- **Count:** You have **{4} entries** *(1 → "1 entry"; that entrant's own valid entries at send time)*
+- **Button:** Share and get *{3}* more entries → their share link
+- **Hint:** Mon–Thu: Each friend who enters adds *{3}* to yours. · Fri: Friends must enter by *{5 PM}* tomorrow. · Sat: Friends can enter until *{5 PM}*. Thank-you gift arrives at *{7 PM}*.
+- **Footer (centered):** Harmonized Brain Centers · the registered address · Unsubscribe.
 
 ### 7. Winner — **removed** *(Ben, 2026-11-03)*
 
@@ -359,7 +365,7 @@ On the page (last, before the slim footer): 1, 2 and 4 below side by side, plus 
 1. **How do I enter?** Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; residents of *{Tennessee and neighboring states (KY, VA, NC, GA, AL, MS, AR, MO)}*, 18 and over. *(the states are `ELIGIBLE_STATES` in config)*
 2. **How do bonus entries work?** Share your personal link. Each friend who enters and confirms gives you *{3}* more entries and gives them *{1}*, up to *{10}* friends.
 3. **When are the drawings?** Daily drawings at noon Central: *{Monday, Tuesday, Wednesday, Thursday, Friday}*. The grand prize is drawn *{Saturday at 5:00 pm}*, from every entry of the week.
-4. **How will I know if I won?** HBC staff will contact the winner by phone and email. If the winner doesn't respond within *{72}* hours of our first attempt, a new winner may be drawn. *(Ben's Official Rules wording, verbatim.)*
+4. **How will I know if I won?** Our team will reach out by email and phone soon after the drawing. If we don't hear back within *{72}* hours of our first attempt, a new winner may be drawn. *(Ben's Official Rules wording, verbatim.)*
 5. **What's my thank-you gift?** *(after the reveal only — rev 2, P0-2)* Everyone who enters gets a free first visit — a Brain Map and consultation — booked by *{December 5}* for any day through *{December 31}*. Start the in-center *{12}*-session package at that visit and the *{13}*th session is free.
 
 "noon Central" in Q3 is typed; the day list and the grand time are from config.
@@ -419,7 +425,7 @@ numbered sections:
 
 1. ~~Two buttons in "You're in".~~ Resolved by rev 2: the free visit left
    that email (it is revealed Saturday night), so it has one button.
-2. **Grand-prize subject length.** Friday's daily email subject is the prize
+2. ~~**Grand-prize subject length.**~~ Resolved 2026-11-04: the countdown subjects are short. *(Old note:)* Friday's daily email subject is the prize
    name — the grand prize's is now over 200 characters (the full partner gift name) (phones show ~40
    characters; phones show ~40). A shorter *display* name for the grand
    prize would need a config change, not a copy change.

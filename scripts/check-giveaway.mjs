@@ -272,6 +272,21 @@ function newEmails() {
   return fresh;
 }
 const to = (e) => (Array.isArray(e.body?.to) ? e.body.to[0] : e.body?.to);
+
+/** Each countdown email shows that entrant's own valid entries (Ben, 2026-11-04). */
+async function expectOwnCounts(label, list) {
+  const people = await dump("giveaway_people");
+  const entries = (await dump("giveaway_entries")).filter((e) => !e.void_reason);
+  const wrong = [];
+  const counts = new Set();
+  for (const e of list) {
+    const p = people.find((x) => x.email === to(e) || x.email_display === to(e));
+    const n = p ? entries.filter((x) => x.person_id === p.id).length : -1;
+    counts.add(n);
+    if (!new RegExp(`You have ${n} entr(y|ies)\\n`).test(String(e.body.text))) wrong.push(`${to(e)} wants ${n}`);
+  }
+  expect(`${label}: every countdown email shows that entrant's own entry count (${[...counts].sort((a, b) => a - b).join(", ")})`, list.length > 0 && wrong.length === 0 && counts.size > 1, wrong.join("; ") || `${counts.size} distinct count(s)`);
+}
 const linkIn = (e, pathPart) => {
   const m = String(e.body?.text ?? "").match(new RegExp(`${BASE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${pathPart}[^\\s"<]+`));
   return m ? m[0] : null;
@@ -585,7 +600,8 @@ try {
   run = await tick("Monday 4 pm");
   fresh = newEmails();
   expect(`daily email to every verified entrant (${verifiedNow})`, run.sends.sent === verifiedNow && fresh.length === verifiedNow, `${run.sends.sent}/${fresh.length}`);
-  expect("daily email names Tuesday's prize, carries entries count and the unsubscribe link", fresh.every((e) => /Tuesday/.test(e.body.subject) && /entr(y|ies)/.test(e.body.text) && unsubLinkIn(e)));
+  expect("Monday's countdown email: '5 days to the $2,838.85 grand prize', the unsubscribe link, Tomorrow · Noon", fresh.every((e) => /5 days to the \$2,838\.85 grand prize$/.test(e.body.subject) && unsubLinkIn(e) && /Tomorrow · Noon: Brain Map \+ Skye Chiropractic gift \+ BrainMD — \$444\.95/.test(e.body.text)), fresh[0]?.body.subject);
+  await expectOwnCounts("Monday", fresh);
   // Unsubscribe H from a daily email.
   const hDaily = fresh.find((e) => to(e) === H.email);
   const unsub = await get(new URL(unsubLinkIn(hDaily)).pathname + new URL(unsubLinkIn(hDaily)).search, H);
@@ -623,7 +639,8 @@ try {
   await clock(C.drawing("tue").dailyEmailAt);
   run = await tick("Tuesday 4 pm");
   expect("Tuesday daily skips the unsubscribed entrant", run.sends.sent === verifiedNow - 1, `${run.sends.sent}`);
-  newEmails();
+  fresh = newEmails();
+  expect("Tuesday's countdown email: 4 days, and not to H (unsubscribed)", fresh.every((e) => /4 days to the \$2,838\.85 grand prize$/.test(e.body.subject)) && !fresh.some((e) => to(e) === H.email));
 
   section("A skipped cron minute: Wed and Thu caught up in one tick");
   await clock(new Date(C.drawing("thu").at.getTime() + 3 * 60_000));
@@ -644,7 +661,7 @@ try {
   await clock(C.drawing("fri").dailyEmailAt);
   run = await tick("Friday 4 pm");
   fresh = newEmails();
-  expect("Friday's daily email names Saturday's grand prize", fresh.length > 0 && fresh.every((e) => /Saturday/.test(e.body.subject)));
+  expect("Friday's countdown email: 'Tomorrow at 5 PM', no Tomorrow · Noon row, Friday's hint", fresh.length > 0 && fresh.every((e) => /Tomorrow at 5 PM: the \$2,838\.85 grand prize$/.test(e.body.subject) && !/Tomorrow · Noon/.test(e.body.text) && /Friends must enter by 5 PM tomorrow\./.test(e.body.text)));
   // ADMIN_ACTIONS_REDRAW — Thursday's winner unreachable → redraw.
   const thuDrawing = (await dump("giveaway_drawings")).find((d) => d.slot === "thu");
   const thuWinnerBefore = (await dump("giveaway_winners")).find((w) => w.drawing_id === thuDrawing.id && w.status !== "redrawn");
@@ -655,6 +672,18 @@ try {
   expect("Thursday's redraw picked someone else", thuAfter.find((w) => w.status === "drawn").person_id !== thuWinnerBefore.person_id);
   fresh = newEmails();
   expect("the redraw sent a new staff alert and nothing to the new winner", fresh.length === 1 && /10 years — Thursday winner/.test(fresh[0].body.subject), fresh.map((e) => e.body.subject).join(" | "));
+
+  section("Sat 9 am: the sixth countdown email (Ben, 2026-11-04)");
+  await clock(C.SCHEDULE.saturdayMorning.at);
+  run = await tick("Saturday 9 am");
+  fresh = newEmails();
+  {
+    const people = await dump("giveaway_people");
+    const want = people.filter((p) => p.verified_at && !p.unsubscribed_at).length;
+    expect(`Saturday 9 am: to every verified, subscribed entrant (${want}), not to H`, run.sends.sent === want && fresh.length === want && !fresh.some((e) => to(e) === H.email), `${run.sends.sent}/${fresh.length}`);
+    expect("Saturday's subject is 'Today at 5 PM: the $2,838.85 grand prize' and the hint names 5 PM and 7 PM", fresh.every((e) => /Today at 5 PM: the \$2,838\.85 grand prize$/.test(e.body.subject) && /Friends can enter until 5 PM\. Thank-you gift arrives at 7 PM\./.test(e.body.text)));
+    await expectOwnCounts("Saturday", fresh);
+  }
 
   section("Sat 5 pm: the grand prize");
   await clock(C.drawing("grand").at);
@@ -790,7 +819,7 @@ try {
     const good = await stats();
     expect("stats: 200, no-store, noindex", good.status === 200 && /no-store/.test(good.headers.get("cache-control") ?? "") && /noindex/.test(good.headers.get("x-robots-tag") ?? ""), String(good.status));
     expect("stats: no email, ZIP, phone, code or hash anywhere in the payload", personalIn(good.body).length === 0, personalIn(good.body).join(" "));
-    expect("stats: six drawings, all drawn, ten send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 10 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
+    expect("stats: six drawings, all drawn, eleven send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 11 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
     expect("stats: the facebook entrant is counted under facebook ('<5')", good.body?.people?.by_utm_source?.facebook === "<5" || USE_DB, JSON.stringify(good.body?.people?.by_utm_source));
     expect("stats: no client-status breakdown (P1-8)", !/by_path|existing|current_client/.test(JSON.stringify(good.body)));
   }
@@ -809,7 +838,7 @@ try {
     itsLive: all.filter((e) => /^\[DRAFT\] It's live/.test(e.body.subject)).length,
     reminder: all.filter((e) => /Today at noon/.test(e.body.subject)).length,
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
-    daily: all.filter((e) => /^\[DRAFT\] \w+'s (grand )?prize: |That was the last drawing/.test(e.body.subject)).length,
+    countdown: all.filter((e) => /^\[DRAFT\] (\d days to|Tomorrow at 5 PM:|Today at 5 PM:) the \$2,838\.85 grand prize$/.test(e.body.subject)).length,
     thanks: all.filter((e) => /Your 10-year thank-you gift/.test(e.body.subject)).length,
     giftReminder: all.filter((e) => /Your free first visit: book by/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,

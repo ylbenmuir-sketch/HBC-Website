@@ -1,6 +1,11 @@
 # Drawing-week hype emails — DRAFTS for Ben (Nov 3, 2026)
 
-**Not built.** Ben asked to see these before anything changes. Email only.
+> **BUILT (Nov 4, 2026).** These became the countdown emails: `EMAILS.hype`
+> in `lib/giveaway/copy.ts` and `hypeEmail()` in `lib/giveaway/emails.ts`, on
+> the Mon–Fri 4 pm and Sat 9 am jobs. GIVEAWAY-COPY.md §6 has the final words.
+> Everything below is history.
+
+**Not built (at the time).** Ben asked to see these before anything changes. Email only.
 
 > **Rev 3 (Nov 3, latest): Ben's mockup.** The body is only: badge (5 DAYS,
 > 4 DAYS, 3 DAYS, 2 DAYS, TOMORROW, TODAY, which are calendar days to Sat Nov 21) +

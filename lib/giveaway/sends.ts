@@ -3,7 +3,10 @@
  *
  *   its_live          Sun Nov 15 6 pm  → verified notify-me signups, one-tap
  *   monday_reminder   Mon Nov 16 9 am  → signups who have not tapped
- *   daily_<slot>      Mon–Fri 4 pm     → every verified, subscribed entrant
+ *   daily_<day>       Mon–Fri 4 pm,    → the drawing-week countdown email
+ *                     Sat 9 am           (Ben, 2026-11-04): every verified,
+ *                                        subscribed entrant, with their own
+ *                                        entry count
  *   thank_you         Sat Nov 21 7 pm  → the gift reveal: every verified,
  *                                        subscribed entrant, winners too
  *                                        (fix list rev 2, P0-10)
@@ -22,13 +25,13 @@
  */
 
 import { audit } from "./audit";
-import { DRAWINGS, SCHEDULE, drawing, drawingAfter, type Drawing } from "./config";
-import { dailyAfternoonEmail, giftReminderEmail, itsLiveEmail, mondayReminderEmail, thankYouEmail, type Email, type Footing } from "./emails";
+import { DRAWINGS, SCHEDULE, drawing } from "./config";
+import { giftReminderEmail, hypeEmail, hypeSendAt, itsLiveEmail, mondayReminderEmail, thankYouEmail, type Email, type Footing, type HypeDay } from "./emails";
 import { entryCount } from "./people";
 import { type NotifyRow, type PersonRow, type ScheduledSendRow } from "./rows";
 import type { GiveawayStore } from "./store";
 
-export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "thank_you", "gift_reminder", "gift_last_call"] as const;
+export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "daily_sat", "thank_you", "gift_reminder", "gift_last_call"] as const;
 export type SendKind = (typeof SEND_KINDS)[number];
 
 export const JOB_STALE_MS = 10 * 60_000;
@@ -40,10 +43,7 @@ export function dueAt(kind: SendKind): Date {
   if (kind === "thank_you") return SCHEDULE.thankYouSend.at;
   if (kind === "gift_reminder") return SCHEDULE.offerReminder.at;
   if (kind === "gift_last_call") return SCHEDULE.offerLastCall.at;
-  const slot = kind.slice("daily_".length) as Drawing["slot"];
-  const d = drawing(slot);
-  if (!d.dailyEmailAt) throw new Error(`${kind} has no email time`);
-  return d.dailyEmailAt;
+  return hypeSendAt(kind.slice("daily_".length) as HypeDay);
 }
 
 /** Create the job rows for this env (idempotent). */
@@ -171,9 +171,9 @@ async function subscribedEntrants(store: GiveawayStore): Promise<PersonRow[]> {
 }
 
 async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendKind, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
-  const slot = kind.slice("daily_".length) as Drawing["slot"];
-  const next = drawingAfter(slot);
+  const day = kind.slice("daily_".length) as HypeDay;
   const out: JobResult = { sent: 0, skipped: 0, failed: 0 };
+  // subscribedEntrants(): verified and NOT unsubscribed, read at send time.
   for (const p of await subscribedEntrants(store)) {
     const id = await receipt(store, job, { person_id: p.id });
     if (!id) {
@@ -181,7 +181,8 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
       continue;
     }
     const footing = deps.footingFor(p.email, true);
-    const email = dailyAfternoonEmail({ nextDrawing: next, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
+    // This entrant's own valid (unvoided) entries, counted now.
+    const email = hypeEmail({ day, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing });
     await stamp(store, id, r, now);
     if (r.ok) out.sent++;
