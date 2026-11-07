@@ -2828,6 +2828,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 /* "Celebrating 10 Years!" (Ben, 2026-11-06) breaks after "Celebrating" on
    desktop; 108px at most so the hero still fits the first 1440×900 screen. */
 .ty-h1-years { font-size: clamp(88px, 7.5vw, 108px); line-height: 0.95; letter-spacing: -0.025em; color: var(--sage-deep); }
+/* The draft build's tag, off the headline's line (removed with COPY_IS_DRAFT). */
+.ty-h1-draft { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; line-height: 1.4; color: var(--gold-ink); margin-bottom: 2px; }
 .ty-h1-rest { font-size: clamp(42px, 4vw, 58px); line-height: 1.05; letter-spacing: -0.015em; color: var(--navy); margin-top: 8px; }
 .ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 6px; letter-spacing: -0.005em; }
 .ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
@@ -3136,7 +3138,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
      Closed and thank-you keep the seal above the headline. */
   .ty[data-mode="notify_me"] .ty-seal, .ty[data-mode="live"] .ty-seal { display: none; }
   .ty[data-mode="notify_me"] .ty-hero h1, .ty[data-mode="live"] .ty-hero h1 { margin: 0 0 8px; }
-  .ty[data-mode="notify_me"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-years { font-size: min(56px, calc((100vw - 48px) / 8)); white-space: nowrap; }
+  .ty[data-mode="notify_me"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-years { font-size: min(56px, calc((100vw - 48px) / 8)); }
   .ty[data-mode="notify_me"] .ty-h1-rest, .ty[data-mode="live"] .ty-h1-rest { font-size: 30px; }
   .ty[data-mode="notify_me"] .ty-path, .ty[data-mode="live"] .ty-path { display: none; }
   .ty[data-mode="notify_me"] .ty-card, .ty[data-mode="live"] .ty-card { order: 1; margin-top: 14px; }

@@ -436,7 +436,7 @@ try {
   expect("the entry form has no new/current question", !/name="existing_client"|data-client-choice|data-path-picker/.test(notifyPage));
   // "Best phone if you win" (Ben, 2026-11-06) is on the drawing entry form only.
   expect("notify-me: the form has no phone field", !/name="phone"/.test(notifyPage) && !/Best phone if you win/.test(notifyPage));
-  expect("the header reads 'Celebrating 10 Years!' and step 3 'We'll call and email you.'", /<span class="ty-h1-years">(?:\[DRAFT\] )?Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(notifyPage) && /We(?:&#x27;|')ll call and email you\./.test(notifyPage) && !/We(?:&#x27;|')ll call you\./.test(notifyPage));
+  expect("the header reads 'Celebrating 10 Years!' and step 3 'We'll call and email you.'", /(?:<span class="ty-h1-draft">\[DRAFT\]<\/span>)?<span class="ty-h1-years">Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(notifyPage) && /We(?:&#x27;|')ll call and email you\./.test(notifyPage) && !/We(?:&#x27;|')ll call you\./.test(notifyPage));
   for (const p of [A, B, Cc]) {
     // A posts a phone anyway (no such field on this form): notify-me ignores it.
     const r = await postForm("/10years/signup", signupFields(p, p === A ? { phone: "6155550111" } : {}), p);
@@ -504,7 +504,7 @@ try {
   {
     const livePage = (await get("/10years")).text;
     expect("live: the entry form has an optional 'Best phone if you win' field", /<label for="phone">(?:\[DRAFT\] )?Best phone if you win<\/label>/.test(livePage) && /<input id="phone"(?=[^>]*type="tel")(?=[^>]*name="phone")[^>]*>/.test(livePage) && !/<input id="phone"[^>]*required/.test(livePage));
-    expect("live: the header is 'Celebrating 10 Years!' here too", /<span class="ty-h1-years">(?:\[DRAFT\] )?Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(livePage));
+    expect("live: the header is 'Celebrating 10 Years!' here too", /(?:<span class="ty-h1-draft">\[DRAFT\]<\/span>)?<span class="ty-h1-years">Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(livePage));
     const Q = person("Q", "quinn.badphone@example.test", { phone: "555-12" });
     const bad = await postForm("/10years/signup", signupFields(Q), Q);
     expect("a phone that isn't a US number is refused with ?error=invalid_phone", /error=invalid_phone/.test(bad.location), bad.location);
@@ -1105,14 +1105,14 @@ async function browserChecks() {
           // P1-7: the email field and the button are on the first 390×844 screen (no scrolling).
           await page.goto(`${BASE}/10years`, { settle: 300 });
           // Measure the copy as it will ship: this run shows "[DRAFT] " on every string (the subject checks need it).
-          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); })()");
+          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()");
           await sleep(100);
           const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none' })"));
           expect(`${mode} at 390×844: email field and button above the fold (email ${fold.email}px, button ${fold.submit}px); the hero picker is hidden`, fold.email <= 844 && fold.submit <= 844 && fold.picker === "none", JSON.stringify(fold));
           // Ben, 2026-11-03: the same at 360×740 (the 18+/rules line stays on one line there).
           await page.setViewport(360, 740);
           await page.goto(`${BASE}/10years`, { settle: 300 });
-          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); })()");
+          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()");
           await sleep(100);
           const f360 = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), overflow: document.documentElement.scrollWidth > innerWidth })"));
           expect(`${mode} at 360×740: email field and button above the fold (email ${f360.email}px, button ${f360.submit}px)`, f360.email <= 740 && f360.submit <= 740 && !f360.overflow, JSON.stringify(f360));

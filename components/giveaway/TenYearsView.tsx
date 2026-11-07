@@ -83,7 +83,9 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
               <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
               <h1>
                 {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
-                <span className="ty-h1-years">{headingLines[0].replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
+                {/* A draft build's "[DRAFT] " tag sits on its own small line, so the headline keeps its one phone line. */}
+                {headingLines[0].startsWith("[DRAFT] ") && <span className="ty-h1-draft">[DRAFT]</span>}
+                <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
                 {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
               </h1>
               <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
