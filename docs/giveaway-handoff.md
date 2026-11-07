@@ -1,4 +1,4 @@
-# 10-year giveaway — handoff (as of Wed Nov 4, 2026 CT)
+# 10-year giveaway — handoff (as of Fri Nov 6, 2026 CT)
 
 Written to start a fresh chat from. Everything below is on the branch, not on
 `main`. Verified against the live database and Vercel the evening it was
@@ -7,8 +7,8 @@ written; anything not verified says so.
 ## Where things are
 
 - **Branch:** `giveaway/fix-list-rev2`, pushed to GitHub (see `git log`;
-  the Nov 3 nine items are `6ac73ff`, the Nov 4 countdown emails the commit
-  after it). **Not merged to `main`.** Production deploys `main`, so the live
+  the Nov 3 nine items are `6ac73ff`, the Nov 4 countdown emails `bdd2a41`,
+  the Nov 6 header + phone + step 3 the commit after it). **Not merged to `main`.** Production deploys `main`, so the live
   site still runs the older giveaway code: the hidden `/10years` showcase,
   engine off.
 - **Worktree on Ben's Mac:** `/Users/benmuir/Code/hbc-10y-fixes`. The main
@@ -24,13 +24,47 @@ written; anything not verified says so.
   `4e9a991` P1-5 stats endpoint · `4b7cb9c` self-hosted fonts ·
   `22c9abe` P1-7 + P1-3 + checklist · `c1550c2` new prize ladder ·
   `f8909ab` the first version of this doc.
-- **Checks (Nov 4, on the pushed branch):** `npm test` 265/265 ·
-  `npm run check:giveaway` 265/265 in memory · `-- --db` 266/266 against
+- **Checks (Nov 6, on the pushed branch):** `npm test` 273/273 ·
+  `npm run check:giveaway` 274/274 in memory · `-- --db` 274/274 against
   Supabase (its own cleanup: 3 test leads deleted, 0 env=test rows and 0
-  test leads left) · typecheck and lint clean · `npm run build` OK.
+  test leads left; 0018 not applied there, so it checked the save-without-
+  phone path) · typecheck and lint clean · `npm run build` OK.
   `scripts/render-hype-previews.mjs`: all six countdown emails put the button
   on the first 375×812 screen (37–179px to spare), with or without the
   email's `<style>` block.
+
+## What changed on Nov 6 (header, phone on the entry form, step 3)
+
+- **Header:** the /10years H1's large line is now **"Celebrating 10
+  Years!"** (was "10 years."), with "A week of prizes." under it as before,
+  in all four modes. The HBC wordmark is untouched. Desktop: up to 108px,
+  breaking "Celebrating / 10 Years!" ("10 Years!" never splits). Phones in
+  notify-me and live: one line across the full width, sized to the screen
+  (39px at 360, 43px at 390), and the small seal badge that sat beside
+  "10 years." is hidden there; closed and thank-you keep the seal above
+  the headline. Folds held: 360×740 button 713px (notify) / 691px (live),
+  390×844 731 / 709, 1440×900 hero text 862px.
+- **"Best phone if you win"**: an optional field on the **live** entry form
+  only (never notify-me), *Optional* shown in the empty box. ZIP and the
+  phone share a row (email takes its own), so the phone adds no row on a
+  phone; below 360px they stack. Blank is fine; anything typed must be a US
+  number ("(615) 555-0134", "615.555.0134", "+1 …") or the card says "That
+  phone number doesn't look right. Check it, or leave it blank." Saved
+  formatted on `giveaway_people.phone` (**migration 0018, NOT applied**). A
+  blank repeat signup keeps the number already given. The staff winner
+  alert's **Phone** row shows it in bold, tap to call, or **"No phone given,
+  email first."** (entered through notify-me, left blank, or before 0018).
+  The winners CSV's `phone` column falls back to it. Never used for texts.
+- **Step 3:** "We'll call you." → **"We'll call and email you."** (all
+  three variants), matching the FAQ.
+- Tests: `lib/giveaway/phone.test.mjs` (7); `check:giveaway` checks the
+  header and step 3 on the page, no phone field on notify-me, the field on
+  live, a bad number refused, the phone saved (memory) or the entry saved
+  without it (`--db` before 0018), and every staff alert of the week
+  against its winner's phone.
+- Not changed: the Official Rules' "How to enter" still lists name, email
+  and ZIP (the phone is optional, so the rules stay true; `RULES_VERSION`
+  unchanged). The form has no new-or-current question (removed Nov 3).
 
 ## What changed on Nov 4 (countdown emails, FAQ)
 
@@ -57,7 +91,8 @@ written; anything not verified says so.
   don't hear back within 72 hours of our first attempt, a new winner may be
   drawn." The Official Rules keep the staff sentence. Swept the site and
   every entrant email: nothing promises an automatic winner email. Note:
-  the page's "How it works" step 3 still ends "We'll call you." (unchanged).
+  the page's "How it works" step 3 then ended "We'll call you." (changed
+  to "We'll call and email you." on Nov 6).
 
 ## What changed on Nov 3, late evening (Ben's nine items)
 
@@ -153,6 +188,7 @@ this project. Nothing in the Nov 3 late-evening changes needs a migration.
 | 0015 | `giveaway_redeem_gift()` (one-transaction redemption) + offer waitlist/fallback columns (unused since caps were dropped) + `consultation_requests.giveaway_waitlist` (unused) | Applied |
 | 0016 | UTM + `channel` on `giveaway_people` / `giveaway_notify`; `consultation_requests.giveaway_channel` | Applied |
 | 0017 | **Current prize ladder** synced into every env's `giveaway_prizes`; `consultation_requests.giveaway_code` | Applied (prize rows read $194.95 … $2,838.85) |
+| 0018 | `giveaway_people.phone` ("Best phone if you win", Nov 6) | **NOT applied** — Ben applies by hand; until then entries save without the phone and alerts say "No phone given, email first." |
 
 (0011 and 0012 are the contact-form migrations, applied earlier.)
 `lib/giveaway/config.test.mjs` checks that the **newest** sync migration
@@ -316,7 +352,8 @@ In order:
    partner valid-through dates.
 2. **Merge `giveaway/fix-list-rev2` → `main`, with Ben's OK.** Nothing below
    matters in Production until this is done.
-3. Migrations: done (0010, 0013–0017).
+3. Migrations: 0010, 0013–0017 done; **apply 0018** (the phone), then run
+   `npm run check:giveaway -- --db` and see the phone checks pass.
 4. **Production env vars:** `GIVEAWAY_TOKEN_SECRET`, `GIVEAWAY_ADMINS` (Ben
    only), `GIVEAWAY_ALERTS`, `GIVEAWAY_ALERTS_OWNER`, `GIVEAWAY_STATS_TOKEN`
    (`CRON_SECRET` is already set).
@@ -349,11 +386,11 @@ In order:
 
 ## Open items
 
-1. **Phone numbers.** The entry form never asks for one, and the claim page
-   (the only place a winner gave a number) is gone. The rules say staff
-   contact winners "by phone and email". The alert tells staff to check
-   client records or ask by email first. If Ben wants a number on file,
-   that's a new form field (and it would cost the 360×740 fold).
+1. **Phone numbers.** Done Nov 6: the live entry form has an optional
+   "Best phone if you win" and the staff alert shows it. Owed: migration
+   0018 (until it's applied nobody's phone is saved). Entrants who came
+   through notify-me (one-tap) never see the field, so their alerts say
+   "No phone given, email first."
 2. **Public winners list.** It says "claimed ✓" or names a winner only once
    the row is marked in `/admin/10years`. Staff can't do that, so unless Ben
    records it from their replies, each drawn day keeps saying "we're reaching

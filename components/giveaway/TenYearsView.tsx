@@ -63,7 +63,7 @@ const t = PAGES.tenYears;
 type ViewMode = Exclude<PageMode, "hidden">;
 
 const WEEK_YEAR = centralParts(DRAWINGS[0].at).year;
-const headingLines = t.heading.split(/(?<=\.)\s+/);
+const headingLines = t.heading.split(/(?<=[.!])\s+/);
 const YEARS = WEEK_YEAR - ESTABLISHED_YEAR.value;
 
 export default function TenYearsView({ mode, now, card, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
@@ -82,8 +82,8 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
             <div className="ty-hero-text">
               <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
               <h1>
-                {/* "10 years." is the focal point, the second sentence half its size under it (Ben, 2026-10-20). */}
-                <span className="ty-h1-years">{headingLines[0]}</span>
+                {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
+                <span className="ty-h1-years">{headingLines[0].replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
                 {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
               </h1>
               <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
@@ -132,7 +132,7 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
           <input key={f} type="hidden" name={f} defaultValue={utm[f] ?? ""} />
         ))}
         <UtmCapture formId="ty-entry-form" />
-        <div className="ty-fields">
+        <div className={mode === "live" ? "ty-fields ty-fields-phone" : "ty-fields"}>
           <div>
             <label htmlFor="first_name">{t.firstName}</label>
             <input id="first_name" name="first_name" autoComplete="given-name" required maxLength={60} />
@@ -149,6 +149,13 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
             <label htmlFor="zip">{t.zip}</label>
             <input id="zip" name="zip" inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{5}" required maxLength={5} />
           </div>
+          {/* "Best phone if you win" (Ben, 2026-11-06): the drawing entry form only, optional; never notify-me. */}
+          {mode === "live" && (
+            <div>
+              <label htmlFor="phone">{t.phone}</label>
+              <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} placeholder={t.phoneHint} />
+            </div>
+          )}
         </div>
         {/* The honeypot — a field no person sees or fills. Same pattern as the contact form. */}
         <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>

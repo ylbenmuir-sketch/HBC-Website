@@ -208,7 +208,7 @@ admin screen; they work from this email and reply to it.
 - **Fact grid:**
   - **Prize:** *{prize}*
   - **Reach them:** Today, by phone and email. They haven't been told they won. Note the time of your first attempt.
-  - **Phone:** Not on the entry form. Look them up in your client records, or email first and ask for the best number.
+  - **Phone:** the entrant's "Best phone if you win" from the entry form, e.g. **(615) 555-0134** (tap to call). Left blank (or entered through notify-me, which has no phone field): No phone given, email first.
   - **No answer?** *{72}* hours after your first attempt, a new winner may be drawn. Reply to this email and Ben decides.
   - **Current client?** Ask on the call. If so, their Brain Map becomes gift certificate *{GIFT-MON}*, to give to someone new.
   - **Tax form:** "Required: they complete a W-9 before receiving the prize" or "Not required"
@@ -233,7 +233,7 @@ show the same page with the result in the card.
 ### The hero (every mode)
 
 - **Seal** *(gold, pure SVG)*: top arc *{10}* YEARS · bottom arc *{2016–2026}* · the number in the middle. Years = the drawing year minus `ESTABLISHED_YEAR` (site-config).
-- **H1:** 10 years. A week of prizes. *(breaks after the first sentence)*
+- **H1:** Celebrating 10 Years! A week of prizes. *(breaks after the first sentence; "Celebrating 10 Years!" is the large line. Ben, 2026-11-06; was "10 years.")*
 - **Value line (notify-me, live):** Over $*{5,500}* in prizes. One entry.
 - **Value line (closed, thank-you):** Over $*{5,500}* in prizes.
 - **Gift tease (notify-me, live; under the value line):** Every entrant receives a 10-year thank-you gift, revealed Saturday night.
@@ -261,7 +261,8 @@ show the same page with the result in the card.
 ### The form (both modes)
 
 Fields (label inside each box): **First name** · **Last name** (one row) · **Email** · **ZIP code** (one row)
-Checkboxes: **I'm 18+ and agree to the Official Rules** (required; link on **Official Rules**) · **I'm already an HBC client**
+Live only, optional (Ben, 2026-11-06): **Best phone if you win**, with *Optional* in the empty box. Email takes its own row and ZIP shares a row with the phone. Never on the notify-me form. Saved on the entrant and shown in the staff winner alert.
+Checkbox: **I'm 18+ and agree to the Official Rules** (required; link on **Official Rules**). No new/current question (removed 2026-11-03).
 Under the button, unticked: **Email me HBC news after the giveaway**
 Hidden honeypot label (never seen): Website
 
@@ -272,6 +273,7 @@ Hidden honeypot label (never seen): Website
 | name missing | Please add your first and last name. |
 | bad email | That email address doesn't look right. |
 | bad ZIP | Please add your five-digit ZIP code. |
+| phone typed but not a US number (live) | That phone number doesn't look right. Check it, or leave it blank. |
 | ZIP outside the eligible states | Thanks for wanting in! This one's for neighbors within driving distance of our centers. If we got your ZIP wrong, check the five digits and try again. |
 | 18+/rules box unticked | Please confirm you're 18 or older and agree to the Official Rules. |
 | rate limited | Too many tries from this connection. Please wait a little and try again. |
@@ -329,9 +331,9 @@ Three numbered steps, one line each; the counts, days and times are from config.
 
 1. **Enter once.** Get your link and tap to confirm. You're in every drawing.
 2. **Share your link.** Each friend who enters adds *{3}* entries for you.
-3. **Win.** Drawings at *{noon}*, *{Mon–Fri}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call you.
-   - Live, a daily drawing next: Next drawing: *{Tue at noon}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call you.
-   - Live, the grand drawing next: Next: the grand prize, *{Saturday}* at *{5 PM}*. We'll call you.
+3. **Win.** Drawings at *{noon}*, *{Mon–Fri}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call and email you.
+   - Live, a daily drawing next: Next drawing: *{Tue at noon}*. Grand prize *{Saturday}* at *{5 PM}*. We'll call and email you.
+   - Live, the grand drawing next: Next: the grand prize, *{Saturday}* at *{5 PM}*. We'll call and email you.
 
 ### The prize ladder *(Ben, 2026-11-03: one prize per drawing)*
 

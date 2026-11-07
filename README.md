@@ -417,6 +417,14 @@ in Vercel (production) and redeploying:
    by Ben on 2026-11-03. The cron, the page in live mode, admin,
    `/unsubscribe`, code redemption (0015's `giveaway_redeem_gift`) and
    entry-source tracking (0016) all use them the moment the engine is on.
+   **`0018_giveaway_phone.sql` is NOT applied yet** (written 2026-11-06):
+   it adds `giveaway_people.phone` for the entry form's optional "Best
+   phone if you win". Until it is applied, entries save without the phone
+   (the code retries without it and logs that 0018 is missing) and every
+   winner alert says "No phone given, email first." Apply it by hand (SQL
+   Editor → paste → Run; additive, safe to run twice), then run
+   `npm run check:giveaway -- --db`: the check sees the column and checks
+   that the phone is saved and shown in the alert.
 2. **`GIVEAWAY_TOKEN_SECRET`** set in Vercel (`openssl rand -hex 32`).
 3. **`GIVEAWAY_ADMINS`** set to Ben's address only (the admin screen is
    Ben's backup; staff never sign in), and the two Supabase Auth settings

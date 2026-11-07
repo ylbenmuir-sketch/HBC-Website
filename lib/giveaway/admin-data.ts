@@ -363,7 +363,7 @@ export async function buildExport(store: GiveawayStore, name: ExportName, admin:
   } else {
     const { current, history } = await loadWinners(store);
     header = ["id", "drawing_slot", "drawing_day", "status", "person_id", "first_name", "last_name", "email", "phone", "zip", "city", "prize", "prize_version", "claim_deadline_at", "contacted_at", "claimed_at", "call_attempts", "public_ok", "public_label", "tax_form_required", "tax_form_received_at", "redraw_reason", "redrawn_at", "notes", "created_at"];
-    rows = [...current, ...history].map(({ winner: w, person: p, config, prizeName: prize }) => [w.id, config?.slot ?? "", config?.dayName ?? "", w.status, w.person_id, p?.first_name ?? "", p?.last_name ?? "", p?.email ?? "", w.phone, p?.zip ?? "", p?.city ?? "", prize, w.prize_version, w.claim_deadline_at, w.contacted_at, w.claimed_at, (w.call_attempts ?? []).map((c) => `${c.at} ${c.by}: ${c.outcome}`).join(" | "), w.public_ok, w.public_label, w.tax_form_required, w.tax_form_received_at, w.redraw_reason, w.redrawn_at, w.notes, w.created_at]);
+    rows = [...current, ...history].map(({ winner: w, person: p, config, prizeName: prize }) => [w.id, config?.slot ?? "", config?.dayName ?? "", w.status, w.person_id, p?.first_name ?? "", p?.last_name ?? "", p?.email ?? "", w.phone ?? p?.phone ?? "", p?.zip ?? "", p?.city ?? "", prize, w.prize_version, w.claim_deadline_at, w.contacted_at, w.claimed_at, (w.call_attempts ?? []).map((c) => `${c.at} ${c.by}: ${c.outcome}`).join(" | "), w.public_ok, w.public_label, w.tax_form_required, w.tax_form_received_at, w.redraw_reason, w.redrawn_at, w.notes, w.created_at]);
   }
 
   await audit(store, { actor: admin, action: "export_csv", targetTable: `giveaway_${name}`, reason: name, after: { rows: rows.length } });

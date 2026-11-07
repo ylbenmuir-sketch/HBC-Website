@@ -28,6 +28,8 @@ import type { GiveawayStore } from "./store";
 import { offerCode, referralCode, sha256Hex } from "./tokens";
 import { zipInfo } from "./zip";
 import type { Attribution } from "./channel";
+import { looksLikeUsPhone } from "../lead-options";
+import { displayPhone } from "../email/format";
 
 export const MARKETING_OPT_IN_WORDING = "Yes, send me news from Harmonized Brain Centers after the giveaway.";
 
@@ -63,6 +65,9 @@ export type SignupInput = {
   sourcePage?: string | null;
   /** First-touch UTM tags + channel (P1-6, lib/giveaway/channel.ts). */
   attribution?: Attribution | null;
+  /** "Best phone if you win" (Ben, 2026-11-06): optional, on the live entry
+   *  form only (never notify-me). Saved on the person for the staff alert. */
+  phone?: string | null;
 };
 
 /** The attribution columns (migration 0016). */
@@ -73,23 +78,43 @@ function attributionColumns(a: Partial<Attribution> | null | undefined): Record<
   return { utm_source: a.utm_source ?? null, utm_medium: a.utm_medium ?? null, utm_campaign: a.utm_campaign ?? null, utm_content: a.utm_content ?? null, channel: a.channel ?? null };
 }
 
-/** Insert a row that may carry 0016's columns; before 0016 is applied
- *  (PostgREST PGRST204 / Postgres 42703 naming one of them) save it
- *  without them rather than lose the signup. */
-async function insertAttributed(store: GiveawayStore, table: "giveaway_people" | "giveaway_notify", row: Record<string, unknown>) {
-  const first = await store.insert(table, row).select("*").single();
-  const e = first.error as { code?: string; message?: string } | null;
-  if (e && (e.code === "PGRST204" || e.code === "42703") && ATTRIBUTION_COLUMNS.some((c) => e.message?.includes(c))) {
-    console.error(`[giveaway] ${table}: attribution columns missing — migration 0016 is not applied; saving without them.`);
-    const rest = Object.fromEntries(Object.entries(row).filter(([k]) => !(ATTRIBUTION_COLUMNS as readonly string[]).includes(k)));
-    return store.insert(table, rest).select("*").single();
+/** Columns added after 0010 that a write may carry before its migration
+ *  is applied: 0016's attribution tags, 0018's phone. */
+const LATE_COLUMNS: ReadonlyArray<{ migration: string; columns: readonly string[] }> = [
+  { migration: "0016", columns: ATTRIBUTION_COLUMNS },
+  { migration: "0018", columns: ["phone"] },
+];
+
+/** The late columns a PostgREST PGRST204 / Postgres 42703 error names, if any. */
+function missingLateColumns(error: unknown): { migration: string; columns: readonly string[] } | null {
+  const e = error as { code?: string; message?: string } | null;
+  if (!e || (e.code !== "PGRST204" && e.code !== "42703")) return null;
+  return LATE_COLUMNS.find((l) => l.columns.some((c) => new RegExp(`\\b${c}\\b`).test(e.message ?? ""))) ?? null;
+}
+
+/** Write a row that may carry late columns; before their migration is
+ *  applied, save it without them rather than lose the signup. Retries once
+ *  per migration that is missing. */
+async function writeTolerant<R extends { error: unknown }>(table: "giveaway_people" | "giveaway_notify", row: Record<string, unknown>, write: (row: Record<string, unknown>) => PromiseLike<R>): Promise<R> {
+  let current = row;
+  let result = await write(current);
+  for (let i = 0; i < LATE_COLUMNS.length; i++) {
+    const missing = missingLateColumns(result.error);
+    if (!missing || !missing.columns.some((c) => c in current)) break;
+    console.error(`[giveaway] ${table}: ${missing.columns.join(", ")} missing — migration ${missing.migration} is not applied; saving without ${missing.columns.length > 1 ? "them" : "it"}.`);
+    current = Object.fromEntries(Object.entries(current).filter(([k]) => !missing.columns.includes(k)));
+    result = await write(current);
   }
-  return first;
+  return result;
+}
+
+async function insertAttributed(store: GiveawayStore, table: "giveaway_people" | "giveaway_notify", row: Record<string, unknown>) {
+  return writeTolerant(table, row, (r) => store.insert(table, r).select("*").single());
 }
 
 export type SignupContext = { ipHash: string | null; uaHash: string | null; now: Date };
 
-export type SignupRefusal = "invalid_name" | "invalid_email" | "invalid_zip" | "not_eligible" | "age" | "rules";
+export type SignupRefusal = "invalid_name" | "invalid_email" | "invalid_zip" | "invalid_phone" | "not_eligible" | "age" | "rules";
 
 export type Validated = {
   firstName: string;
@@ -99,6 +124,8 @@ export type Validated = {
   zip: string;
   city: string | null;
   nearestCenter: "nashville" | "murfreesboro" | null;
+  /** "(615) 555-0134", or null when left blank. */
+  phone: string | null;
 };
 
 const clean = (s: string, max: number) => s.replace(/\s+/g, " ").trim().slice(0, max);
@@ -116,7 +143,11 @@ export function validateSignup(input: SignupInput): { ok: true; value: Validated
   if (!info.eligible) return { ok: false, reason: "not_eligible" };
   if (!input.ageConfirmed) return { ok: false, reason: "age" };
   if (!input.rulesAccepted) return { ok: false, reason: "rules" };
-  return { ok: true, value: { firstName, lastName, email, emailDisplay: input.email.trim().slice(0, 254), zip, city: info.city, nearestCenter: info.nearestCenter } };
+  // Optional: blank is fine; anything typed must look like a US number.
+  const phoneTyped = clean(input.phone ?? "", 40);
+  if (phoneTyped && !looksLikeUsPhone(phoneTyped)) return { ok: false, reason: "invalid_phone" };
+  const phone = phoneTyped ? displayPhone(phoneTyped) : null;
+  return { ok: true, value: { firstName, lastName, email, emailDisplay: input.email.trim().slice(0, 254), zip, city: info.city, nearestCenter: info.nearestCenter, phone } };
 }
 
 const fail = (where: string, error: { message: string } | null) => new Error(`${where}: ${error?.message ?? "unknown error"}`);
@@ -201,11 +232,9 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
   if (existing.data) {
     const person = existing.data as PersonRow;
     if (person.verified_at) return { ok: true, person, alreadyVerified: true };
-    const { data, error } = await store
-      .update("giveaway_people", { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION })
-      .eq("id", person.id)
-      .select("*")
-      .single();
+    // A blank phone on a repeat keeps the one already given.
+    const fields = { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION, ...(value.phone ? { phone: value.phone } : {}) };
+    const { data, error } = await writeTolerant("giveaway_people", fields, (r) => store.update("giveaway_people", r).eq("id", person.id).select("*").single());
     if (error) throw fail("person update", error);
     return { ok: true, person: data as PersonRow, alreadyVerified: false };
   }
@@ -218,6 +247,7 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
     zip: value.zip,
     city: value.city,
     nearest_center: value.nearestCenter,
+    ...(value.phone ? { phone: value.phone } : {}),
     age_confirmed: true,
     rules_accepted_at: ctx.now.toISOString(),
     rules_version: RULES_VERSION,

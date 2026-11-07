@@ -19,6 +19,9 @@ export type PersonRow = {
   city: string | null;
   nearest_center: Center | null;
   is_existing_client: boolean;
+  /** "Best phone if you win" (migration 0018), "(615) 555-0134"; optional.
+   *  Undefined until 0018 is applied. */
+  phone?: string | null;
   age_confirmed: boolean;
   rules_accepted_at: string | null;
   rules_version: string | null;

@@ -17,7 +17,7 @@
  * scripts/render-email-previews.mjs renders every one at 390 and 640.
  */
 
-import { escapeHtml as esc, formatCentral } from "../email/format";
+import { escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
 import { EMAILS, SHARED } from "./copy";
 import {
@@ -527,6 +527,9 @@ export type StaffWinner = {
   email: string;
   zip: string;
   city: string | null;
+  /** "Best phone if you win" from the entry form, or null (left blank, or
+   *  entered through notify-me, whose form has no phone). */
+  phone: string | null;
 };
 
 export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWinner; taxFormRequired: boolean; now: Date }): Email {
@@ -552,7 +555,7 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
       factGrid([
         [c.prize, esc(prize.name)],
         [c.reach, `<b>${esc(c.reachLine)}</b>`],
-        [c.phone, esc(c.phoneLine)],
+        [c.phone, input.winner.phone ? `<b><a href="${esc(telHref(input.winner.phone))}" style="color:${C.ink};text-decoration:none;">${esc(input.winner.phone)}</a></b>` : esc(c.phoneNone)],
         [c.noAnswer, esc(noAnswer)],
         [c.giftCode, esc(giftLine)],
         [c.taxForm, input.taxFormRequired ? `<b class="hbc-no" style="color:${C.alert};">${esc(c.taxYes)}</b>` : esc(c.taxNo)],
@@ -578,7 +581,7 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
       "",
       `${c.prize}: ${prize.name}`,
       `${c.reach}: ${c.reachLine}`,
-      `${c.phone}: ${c.phoneLine}`,
+      `${c.phone}: ${input.winner.phone ?? c.phoneNone}`,
       `${c.noAnswer} ${noAnswer}`,
       `${c.giftCode} ${giftLine}`,
       `${c.taxForm}: ${input.taxFormRequired ? c.taxYes : c.taxNo}`,

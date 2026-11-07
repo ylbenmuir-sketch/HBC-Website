@@ -73,6 +73,8 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     ageConfirmed: checked(form, "age_rules"),
     rulesAccepted: checked(form, "age_rules"),
     marketingOptIn: checked(form, "marketing"),
+    // "Best phone if you win": on the live form only; optional (Ben, 2026-11-06).
+    phone: mode === "live" ? field(form, "phone", 40) || null : null,
     ref: field(form, "ref", 20) || null,
     sourcePage: field(form, "source_page", 200) || "/10years",
     // First-touch tags (P1-6): cleaned and normalized, never trusted as typed.

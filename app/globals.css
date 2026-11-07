@@ -2825,7 +2825,9 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 /* The focal point (Ben, 2026-10-20): "10 years." in the brand sage, the
    second sentence about half its size in navy under it. */
 .ty-hero h1 { display: flex; flex-direction: column; align-items: flex-start; max-width: none; margin: 0 0 10px; line-height: 1; }
-.ty-h1-years { font-size: clamp(96px, 8.6vw, 124px); line-height: 0.95; letter-spacing: -0.025em; color: var(--sage-deep); }
+/* "Celebrating 10 Years!" (Ben, 2026-11-06) breaks after "Celebrating" on
+   desktop; 108px at most so the hero still fits the first 1440×900 screen. */
+.ty-h1-years { font-size: clamp(88px, 7.5vw, 108px); line-height: 0.95; letter-spacing: -0.025em; color: var(--sage-deep); }
 .ty-h1-rest { font-size: clamp(42px, 4vw, 58px); line-height: 1.05; letter-spacing: -0.015em; color: var(--navy); margin-top: 8px; }
 .ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 6px; letter-spacing: -0.005em; }
 .ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
@@ -2873,6 +2875,12 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-fields > div { grid-column: span 6; position: relative; }
 .ty-fields > div:nth-child(3) { grid-column: span 7; }
 .ty-fields > div:nth-child(4) { grid-column: span 5; }
+/* Live: "Best phone if you win" (Ben, 2026-11-06). Email takes the row, ZIP
+   and the phone share the next, so a phone adds no row. */
+.ty-fields-phone > div:nth-child(3) { grid-column: span 12; }
+.ty-fields-phone > div:nth-child(4) { grid-column: span 4; }
+.ty-fields-phone > div:nth-child(5) { grid-column: span 8; }
+.form.ty-form .ty-fields input::placeholder { color: var(--slate); opacity: 1; }
 .form.ty-form .ty-fields label { position: absolute; z-index: 1; top: 8px; left: 14px; right: 10px; margin: 0; font-size: 10.5px; line-height: 1.2; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .form.ty-form input:not([type="checkbox"]) { height: 52px; padding: 19px 14px 5px; }
 /* The required choice: two pills, the radios hidden but focusable (a hidden
@@ -3071,7 +3079,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 @media (max-width: 1060px) {
   header.site.campaign .nav { height: 64px; }
   .ty-hero-grid { grid-template-columns: minmax(0, 1fr) 400px; gap: 40px; }
-  .ty-h1-years { font-size: 92px; }
+  /* min(): "Celebrating" stays inside the text column down to 901 (Ben, 2026-11-06). */
+  .ty-h1-years { font-size: min(88px, 9.4vw); }
   .ty-h1-rest { font-size: 44px; }
 }
 @media (max-width: 900px) {
@@ -3104,6 +3113,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   /* The form on a phone: ZIP full width, shorter fields, a tighter rhythm. */
   .ty-fields { row-gap: 8px; margin-top: 14px; }
   .ty-fields > div:nth-child(3), .ty-fields > div:nth-child(4) { grid-column: span 12; }
+  .ty-fields-phone > div:nth-child(4) { grid-column: span 4; }
+  .ty-fields-phone > div:nth-child(5) { grid-column: span 8; }
   .form.ty-form input:not([type="checkbox"]):not([type="radio"]) { height: 48px; padding: 18px 14px 4px; }
   .form.ty-form .ty-choice { margin-top: 10px; }
   .ty-choice-opt span { min-height: 44px; font-size: 13.5px; padding: 8px 6px; }
@@ -3119,9 +3130,13 @@ footer.site.slim a:hover { color: var(--sage-deep); }
      the ladder through PathProvider. Desktop is unchanged. */
   .ty[data-mode="notify_me"] .ty-hero-grid, .ty[data-mode="live"] .ty-hero-grid { position: relative; row-gap: 0; }
   .ty[data-mode="notify_me"] .ty-hero-text, .ty[data-mode="live"] .ty-hero-text { display: contents; }
-  .ty[data-mode="notify_me"] .ty-seal, .ty[data-mode="live"] .ty-seal { position: absolute; top: 0; right: 24px; width: 64px; height: 64px; margin: 0; }
-  .ty[data-mode="notify_me"] .ty-hero h1, .ty[data-mode="live"] .ty-hero h1 { margin: 0 72px 8px 0; }
-  .ty[data-mode="notify_me"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-years { font-size: 60px; }
+  /* "Celebrating 10 Years!" (Ben, 2026-11-06) on ONE line, full width, so
+     the form keeps its first screen at 360×740 and 390×844; the seal badge
+     that sat beside "10 years." steps aside (the headline says it now).
+     Closed and thank-you keep the seal above the headline. */
+  .ty[data-mode="notify_me"] .ty-seal, .ty[data-mode="live"] .ty-seal { display: none; }
+  .ty[data-mode="notify_me"] .ty-hero h1, .ty[data-mode="live"] .ty-hero h1 { margin: 0 0 8px; }
+  .ty[data-mode="notify_me"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-years { font-size: min(56px, calc((100vw - 48px) / 8)); white-space: nowrap; }
   .ty[data-mode="notify_me"] .ty-h1-rest, .ty[data-mode="live"] .ty-h1-rest { font-size: 30px; }
   .ty[data-mode="notify_me"] .ty-path, .ty[data-mode="live"] .ty-path { display: none; }
   .ty[data-mode="notify_me"] .ty-card, .ty[data-mode="live"] .ty-card { order: 1; margin-top: 14px; }
@@ -3189,6 +3204,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 }
 @media (max-width: 359px) {
   .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
+  /* Below 360 the phone's label needs the full row. */
+  .ty-fields-phone > div:nth-child(4), .ty-fields-phone > div:nth-child(5) { grid-column: span 12; }
   .ty-h1-years { font-size: 60px; }
   .ty-h1-rest { font-size: 30px; }
   /* The ladder rows at 320: the grand row's label stays on the day's line and its words fit two lines. */

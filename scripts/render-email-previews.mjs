@@ -142,7 +142,7 @@ const footing = {
 const mon = GC.drawing("mon");
 const tue = GC.drawing("tue");
 const grand = GC.drawing("grand");
-const sarah = { name: "Sarah Mitchell", email: "sarah.mitchell@gmail.com", zip: "37064", city: "Franklin" };
+const sarah = { name: "Sarah Mitchell", email: "sarah.mitchell@gmail.com", zip: "37064", city: "Franklin", phone: "(615) 555-0134" };
 const G_NOW = new Date("2026-11-16T18:00:30Z");
 const giveawayEmails = [
   { file: "g01-notify-verify", ...G.notifyVerifyEmail({ firstName: "Sarah", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
@@ -158,6 +158,8 @@ const giveawayEmails = [
   { file: "g08b-gift-reminder", ...G.giftReminderEmail({ kind: "reminder", firstName: "Sarah", offerCode: "10Y-R8TN4W", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-R8TN4W", footing }) },
   { file: "g08c-gift-last-call", ...G.giftReminderEmail({ kind: "last_call", firstName: "Marcus", offerCode: "10Y-D3FG7H", bookUrl: "https://harmonizedbraincenterstn.com/contact?from=10years&code=10Y-D3FG7H", footing }) },
   { file: "g09-staff-winner-alert", ...G.staffWinnerAlertEmail({ drawing: grand, winner: sarah, taxFormRequired: true, now: G_NOW }) },
+  // The same alert when the optional phone was left blank (Ben, 2026-11-06).
+  { file: "g09b-staff-winner-alert-no-phone", ...G.staffWinnerAlertEmail({ drawing: mon, winner: { ...sarah, phone: null }, taxFormRequired: false, now: G_NOW }) },
 ];
 emails.push(...giveawayEmails);
 

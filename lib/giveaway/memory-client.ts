@@ -33,7 +33,7 @@ type Result = { data: unknown; error: { message: string; code?: string; details?
 
 /** Column defaults, as 0010 declares them. */
 const DEFAULTS: Partial<Record<GiveawayTable, () => Row>> = {
-  giveaway_people: () => ({ city: null, nearest_center: null, is_existing_client: false, age_confirmed: false, rules_accepted_at: null, rules_version: null, verified_at: null, referred_by_person_id: null, referral_credits: 0, source_page: null, ip_hash: null, ua_hash: null, marketing_opt_in: false, marketing_opt_in_wording: null, marketing_opt_in_at: null, unsubscribed_at: null }),
+  giveaway_people: () => ({ city: null, nearest_center: null, phone: null, is_existing_client: false, age_confirmed: false, rules_accepted_at: null, rules_version: null, verified_at: null, referred_by_person_id: null, referral_credits: 0, source_page: null, ip_hash: null, ua_hash: null, marketing_opt_in: false, marketing_opt_in_wording: null, marketing_opt_in_at: null, unsubscribed_at: null }),
   giveaway_notify: () => ({ is_existing_client: false, age_confirmed: false, rules_accepted_at: null, rules_version: null, marketing_opt_in: false, marketing_opt_in_wording: null, marketing_opt_in_at: null, verify_token_hash: null, verified_at: null, live_token_hash: null, sent_live_at: null, reminded_at: null, tapped_at: null, person_id: null, source_page: null, ip_hash: null, ua_hash: null, unsubscribed_at: null }),
   giveaway_entries: () => ({ referral_person_id: null, void_reason: null, voided_at: null }),
   giveaway_prizes: () => ({ vibro_chair: true, hoolest_keychain: false, hoolest_handheld: false, partner_services: false, fulfilment_status: "pending" }),

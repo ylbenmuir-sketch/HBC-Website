@@ -208,6 +208,8 @@ const section = (title) => console.log(`\n${title}`);
 
 /** A "person": their own address and browser, so the limiter and the
  *  self-referral rule see them as distinct. */
+/** Whether giveaway_people has 0018's phone column (memory: always; --db: once applied). */
+let HAS_PHONE_COLUMN = false;
 let ipCounter = 10;
 const person = (name, email, extra = {}) => ({ name, email, ip: `203.0.113.${ipCounter++}`, ua: `check-giveaway/${name}`, ...extra });
 const headersFor = (p, more = {}) => ({ "x-forwarded-for": p.ip, "user-agent": p.ua, ...more });
@@ -422,11 +424,16 @@ try {
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
   const Cc = person("C", "cara.notify@example.test");
   // New or current client is a required two-way choice (Ben, 2026-10-20): "yes" | "no".
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...extra });
+  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...(p.phone ? { phone: p.phone } : {}), ...extra });
   // One prize per drawing (Ben, 2026-11-03): the form asks nothing about new or current.
-  expect("the entry form has no new/current question", !/name="existing_client"|data-client-choice|data-path-picker/.test((await get("/10years")).text));
+  const notifyPage = (await get("/10years")).text;
+  expect("the entry form has no new/current question", !/name="existing_client"|data-client-choice|data-path-picker/.test(notifyPage));
+  // "Best phone if you win" (Ben, 2026-11-06) is on the drawing entry form only.
+  expect("notify-me: the form has no phone field", !/name="phone"/.test(notifyPage) && !/Best phone if you win/.test(notifyPage));
+  expect("the header reads 'Celebrating 10 Years!' and step 3 'We'll call and email you.'", /<span class="ty-h1-years">(?:\[DRAFT\] )?Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(notifyPage) && /We(?:&#x27;|')ll call and email you\./.test(notifyPage) && !/We(?:&#x27;|')ll call you\./.test(notifyPage));
   for (const p of [A, B, Cc]) {
-    const r = await postForm("/10years/signup", signupFields(p), p);
+    // A posts a phone anyway (no such field on this form): notify-me ignores it.
+    const r = await postForm("/10years/signup", signupFields(p, p === A ? { phone: "6155550111" } : {}), p);
     expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
   }
   const nonTn = await postForm("/10years/signup", signupFields(person("Z", "zed@example.test"), { zip: "43215" }), person("Z1", ""));
@@ -487,7 +494,16 @@ try {
   /* ── live entries + referrals ───────────────────────────────────────── */
   section("Mon Nov 16, 8 am: entries and referrals");
   await clock(ct(2026, 11, 16, 8));
-  const D = person("D", "dan.entrant@example.test");
+  const D = person("D", "dan.entrant@example.test", { phone: "615.555.0101" });
+  {
+    const livePage = (await get("/10years")).text;
+    expect("live: the entry form has an optional 'Best phone if you win' field", /<label for="phone">(?:\[DRAFT\] )?Best phone if you win<\/label>/.test(livePage) && /<input id="phone"(?=[^>]*type="tel")(?=[^>]*name="phone")[^>]*>/.test(livePage) && !/<input id="phone"[^>]*required/.test(livePage));
+    expect("live: the header is 'Celebrating 10 Years!' here too", /<span class="ty-h1-years">(?:\[DRAFT\] )?Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(livePage));
+    const Q = person("Q", "quinn.badphone@example.test", { phone: "555-12" });
+    const bad = await postForm("/10years/signup", signupFields(Q), Q);
+    expect("a phone that isn't a US number is refused with ?error=invalid_phone", /error=invalid_phone/.test(bad.location), bad.location);
+    expect("…and nothing is saved or sent for it", !(await dump("giveaway_people")).some((p) => p.email === Q.email) && newEmails().length === 0);
+  }
   let r = await postForm("/10years/signup", signupFields(D), D);
   expect("D: entry signup → ?sent=1", /\?sent=1$/.test(r.location), r.location);
   let [dVerify] = newEmails();
@@ -499,6 +515,16 @@ try {
   // The code is issued at verification but only mailed at the reveal: read it from the store (giveaway tables, memory mode).
   const dPerson = (await dump("giveaway_people")).find((p) => p.email_display === D.email || p.email === D.email);
   const dCode = (await dump("giveaway_offers")).find((o) => o.person_id === dPerson?.id)?.code;
+  // Migration 0018 adds giveaway_people.phone. Memory mode always has it; --db has it once Ben applies 0018.
+  HAS_PHONE_COLUMN = Boolean(dPerson) && "phone" in dPerson;
+  if (HAS_PHONE_COLUMN) {
+    expect("D: the phone is saved on the entrant, formatted", dPerson.phone === "(615) 555-0101", JSON.stringify(dPerson?.phone));
+    const aPerson = (await dump("giveaway_people")).find((p) => p.email === A.email);
+    expect("A (entered through notify-me): no phone on the entrant", aPerson && aPerson.phone == null, JSON.stringify(aPerson?.phone));
+  } else {
+    console.log("  · giveaway_people.phone is missing — migration 0018 is not applied here; checking that entries still save without it.");
+    expect("before 0018: D's entry saved anyway (the phone is dropped, not the entry)", Boolean(dPerson) && Boolean(dPerson.verified_at));
+  }
   expect("D: an offer code is issued (unmailed until the reveal)", /^10Y-[A-Z0-9]{6}$/.test(dCode ?? ""), String(dCode));
   // E through D's link.
   const E = person("E", "eve.friend@example.test");
@@ -534,7 +560,7 @@ try {
   expect("an audit line names the self-referral", (await dump("giveaway_audit")).some((a) => a.action === "referral_voided"));
   // Eleven more friends: the 11th credits nothing.
   for (let i = 1; i <= 11; i++) {
-    const G = person(`G${i}`, `friend${i}.of.dan@example.test`);
+    const G = person(`G${i}`, `friend${i}.of.dan@example.test`, i % 2 ? { phone: `(629) 555-01${String(i).padStart(2, "0")}` } : {});
     r = await postForm("/10years/signup", signupFields(G, { ref: dRef }), G);
     const gv = await click(G, linkIn(newEmails()[0], "/10years/verify"));
     if (i === 11) expect("the 11th friend still gets their +1", /with 2 entries/.test(gv.text));
@@ -573,7 +599,7 @@ try {
   expect("Monday: NO email to the winner (Ben, 2026-11-03) — the staff alert is the only email", fresh.length === 1 && !fresh.some((e) => /You won/.test(e.body.subject)), fresh.map((e) => e.body.subject).join(" | "));
   {
     const t = alertMon?.body.text ?? "";
-    expect("the alert says: by phone and email today, phone not on the form, 72 h after the first attempt, reply all", /by phone and email/.test(t) && /Not on the entry form/.test(t) && /72 hours after your first attempt, a new winner may be drawn/.test(t) && /Reply all/.test(t), t.slice(0, 400));
+    expect("the alert says: by phone and email today, 72 h after the first attempt, reply all", /by phone and email/.test(t) && /72 hours after your first attempt, a new winner may be drawn/.test(t) && /Reply all/.test(t), t.slice(0, 400));
     expect("the alert has no admin link or claim link, and an 'Email the winner' mailto", !/\/admin\/10years|\/10years\/claim/.test(alertMon?.body.html ?? "") && /href="mailto:[^"]*\?subject=/.test(alertMon?.body.html ?? ""));
     expect("the alert says bottles and devices are picked up at a center", /picked up at a center\. Nothing is shipped/.test(t));
   }
@@ -695,6 +721,23 @@ try {
   expect(`the grand pool is every valid entry of the week (${allEntries.length}), daily winners included`, grand.pool_size === allEntries.length, `${grand.pool_size}`);
   fresh = newEmails();
   expect("Saturday: alert to the OWNER route", fresh.some((e) => /GRAND PRIZE/.test(e.body.subject) && to(e) === "ben@example.test"));
+  /* Every staff alert of the week shows the winner's own phone, or "No phone given, email first." */
+  {
+    const people = await dump("giveaway_people");
+    const alerts = emails().filter((e) => /10 years — .*(winner|GRAND PRIZE)/.test(e.body.subject));
+    const wrong = [];
+    let withPhone = 0;
+    for (const a of alerts) {
+      const p = people.find((x) => a.body.text.includes(x.email_display));
+      const want = HAS_PHONE_COLUMN && p?.phone ? `Phone: ${p.phone}` : "Phone: No phone given, email first.";
+      if (!p || !a.body.text.replaceAll("[DRAFT] ", "").includes(want)) wrong.push(`${a.body.subject}: wanted "${want}"`);
+      if (HAS_PHONE_COLUMN && p?.phone) {
+        withPhone++;
+        if (!a.body.html.includes(`href="tel:+1${p.phone.replace(/\D/g, "")}"`)) wrong.push(`${a.body.subject}: no tel: link`);
+      }
+    }
+    expect(`all ${alerts.length} staff alerts show the winner's phone (${withPhone}) or "No phone given, email first." (${alerts.length - withPhone})`, alerts.length >= 7 && wrong.length === 0, wrong.join(" | "));
+  }
   const closedPage = await get("/10years");
   expect("closed mode: no form, winners list present", !closedPage.text.includes('action="/10years/signup"') && /data-winners/.test(closedPage.text));
   const late = await postForm("/10years/signup", signupFields(person("L", "late@example.test")), person("L1", ""));

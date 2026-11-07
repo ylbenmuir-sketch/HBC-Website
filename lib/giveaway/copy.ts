@@ -228,7 +228,8 @@ export const EMAILS = {
     reach: D("Reach them"),
     reachLine: D("Today, by phone and email. They haven't been told they won. Note the time of your first attempt."),
     phone: D("Phone"),
-    phoneLine: D("Not on the entry form. Look them up in your client records, or email first and ask for the best number."),
+    /** The entry form's optional "Best phone if you win" was left blank (Ben, 2026-11-06). */
+    phoneNone: D("No phone given, email first."),
     noAnswer: D("No answer?"),
     /** The hours come from config (RESPONSE_WINDOW_MS). */
     noAnswerLine: (hours: number) => D(`${hours} hours after your first attempt, a new winner may be drawn. Reply to this email and Ben decides.`),
@@ -300,8 +301,9 @@ export const PAGES = {
     /** The seal: "10 YEARS" over "2016–2026" (years from config and site-config). */
     sealYears: (years: number) => D(`${years} years`),
     sealSpan: (from: number, to: number) => D(`${from}–${to}`),
-    /** The hero, every mode. */
-    heading: D("10 years. A week of prizes."),
+    /** The hero, every mode: "Celebrating 10 Years!" is the focal line, the
+     *  second sentence under it (Ben, 2026-11-06). */
+    heading: D("Celebrating 10 Years! A week of prizes."),
     /** The total is the six prizes' retail value, floored to $500 (config): "Over $5,500". */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
@@ -374,6 +376,9 @@ export const PAGES = {
     lastName: D("Last name"),
     email: D("Email"),
     zip: D("ZIP code"),
+    /** The live entry form only, optional (Ben, 2026-11-06). Never on notify-me. */
+    phone: D("Best phone if you win"),
+    phoneHint: D("Optional"),
     /** One box for both (age and rules); the link sits on "Official Rules". */
     ageRules: D("I'm 18+ and agree to the"),
     rulesLink: D("Official Rules"),
@@ -383,6 +388,7 @@ export const PAGES = {
       invalid_name: D("Please add your first and last name."),
       invalid_email: D("That email address doesn't look right."),
       invalid_zip: D("Please add your five-digit ZIP code."),
+      invalid_phone: D("That phone number doesn't look right. Check it, or leave it blank."),
       age: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rules: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
@@ -397,12 +403,12 @@ export const PAGES = {
       step2Title: D("Share your link."),
       step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
       step3Title: D("Win."),
-      /** "Drawings at noon, Mon–Fri. Grand prize Saturday at 5 PM. We'll call you." */
-      step3Line: (dailyTime: string, dailySpan: string, grandDay: string, grandTime: string) => D(`Drawings at ${dailyTime}, ${dailySpan}. Grand prize ${grandDay} at ${grandTime}. We'll call you.`),
-      /** Live, a daily drawing next: "Next drawing: Tue at noon. Grand prize Saturday at 5 PM. We'll call you." */
-      step3LineLive: (nextShort: string, grandDay: string, grandTime: string) => D(`Next drawing: ${nextShort}. Grand prize ${grandDay} at ${grandTime}. We'll call you.`),
+      /** "Drawings at noon, Mon–Fri. Grand prize Saturday at 5 PM. We'll call and email you." (Ben, 2026-11-06: matches the FAQ.) */
+      step3Line: (dailyTime: string, dailySpan: string, grandDay: string, grandTime: string) => D(`Drawings at ${dailyTime}, ${dailySpan}. Grand prize ${grandDay} at ${grandTime}. We'll call and email you.`),
+      /** Live, a daily drawing next: "Next drawing: Tue at noon. Grand prize Saturday at 5 PM. We'll call and email you." */
+      step3LineLive: (nextShort: string, grandDay: string, grandTime: string) => D(`Next drawing: ${nextShort}. Grand prize ${grandDay} at ${grandTime}. We'll call and email you.`),
       /** Live, the grand drawing next. */
-      step3LineGrandNext: (grandDay: string, grandTime: string) => D(`Next: the grand prize, ${grandDay} at ${grandTime}. We'll call you.`),
+      step3LineGrandNext: (grandDay: string, grandTime: string) => D(`Next: the grand prize, ${grandDay} at ${grandTime}. We'll call and email you.`),
     },
     /** The prize ladder. */
     prizesTitle: D("The prize ladder"),

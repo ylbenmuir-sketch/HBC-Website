@@ -26,7 +26,7 @@ export function liveNotifier(store: GiveawayStore, now: () => Date, log: Pick<Co
       const to = alertRecipients(d.slot);
       const alert = staffWinnerAlertEmail({
         drawing: d,
-        winner: { name: `${r.person.first_name} ${r.person.last_name}`, email: r.person.email_display, zip: r.person.zip, city: r.person.city },
+        winner: { name: `${r.person.first_name} ${r.person.last_name}`, email: r.person.email_display, zip: r.person.zip, city: r.person.city, phone: r.person.phone ?? null },
         taxFormRequired: r.winner.tax_form_required,
         now: now(),
       });
