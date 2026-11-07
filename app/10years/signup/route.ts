@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { showcaseActive, showcaseFor } from "@/lib/giveaway/showcase";
+import { showcaseActiveFor, showcaseFor } from "@/lib/giveaway/showcase";
 import { handleSignup } from "@/lib/giveaway/web";
 
 export const runtime = "nodejs";
@@ -13,8 +13,10 @@ export const dynamic = "force-dynamic";
  * redirect keeps the stage (?mode=) the form was on.
  */
 export async function POST(request: Request) {
-  if (showcaseActive()) {
-    const { param } = showcaseFor(new URL(request.url).searchParams.get("mode") ?? undefined);
+  // The showcase form posts with ?mode=; the real form posts without it (Ben, 2026-11-07).
+  const modeParam = new URL(request.url).searchParams.get("mode") ?? undefined;
+  if (showcaseActiveFor(modeParam)) {
+    const { param } = showcaseFor(modeParam);
     return NextResponse.redirect(new URL(`/10years?mode=${encodeURIComponent(param)}&sent=1`, request.url), 303);
   }
   const form = await request.formData().catch(() => null);

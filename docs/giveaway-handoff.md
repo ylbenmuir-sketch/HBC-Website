@@ -16,8 +16,9 @@ written; anything not verified says so.
 - **Preview (Vercel login needed):**
   https://hbc-website-git-giveaway-fix-list-rev2-ylbenmuir-9529s-projects.vercel.app
   It runs with the engine ON, `GIVEAWAY_ENV=test` and the REAL clock (the
-  Nov 17 pin was removed Nov 6). Before Nov 9, plain `/10years` is hidden
-  (404) and `/10years?mode=notify|live|closed|thanks` shows each stage.
+  Nov 17 pin was removed Nov 6). Before Nov 9, plain `/10years` is the real
+  notify-me page and `/10years?mode=notify|live|closed|thanks` shows each
+  showcase stage.
   See "Env vars" below.
 - **Commits on the branch** (oldest first): `709a85f` fix list P0 + Hoolest
   price · `007d244` Grok's rules wording · `ec14f36` P1-1 cap (later
@@ -34,6 +35,23 @@ written; anything not verified says so.
   `scripts/render-hype-previews.mjs`: all six countdown emails put the button
   on the first 375×812 screen (37–179px to spare), with or without the
   email's `<style>` block.
+
+## What changed on Nov 7 (real notify-me page before Nov 9, COPY_IS_DRAFT env)
+
+- **Engine on, before Mon Nov 9 12:00 AM CT:** `/10years` is the REAL
+  notify-me page (`entryPageMode`), open to anyone with the URL; its form
+  saves a notify row and sends the confirmation email. `/10years/verify`,
+  `/10years/enter/…` and `/10years/rules` work too; the assistant is off.
+  Still waiting for Nov 9 (`pageMode` / `tenYearsPublic`): robots.txt
+  `Disallow: /10years`, the sitemap, the meta robots (noindex) and the site
+  banner. No site-wide nav links to /10years.
+- **`?mode=`:** a showcase only with the engine off, or on a non-production
+  deployment before Nov 9 (`showcaseActiveFor`). Production never honors it,
+  so `/10years?mode=closed` can't show sample winners there.
+- **`COPY_IS_DRAFT` is a Vercel env var** (on unless exactly `false`). While
+  on, production refuses every giveaway email (signups end in
+  `?error=send_failed`) and shows `[DRAFT]` tags.
+- The Nov 6 "plain /10years 404s" rule is gone.
 
 ## What changed on Nov 6 (header, phone on the entry form, step 3)
 

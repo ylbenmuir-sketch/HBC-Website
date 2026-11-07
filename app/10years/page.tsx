@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import PageSchema from "@/components/PageSchema";
 import TenYearsView, { FormCard, MessageCard, WinnersCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { giftRevealed, pageMode } from "@/lib/giveaway/config";
+import { entryPageMode, giftRevealed, pageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
-import { showcaseActive, showcaseFor, showcaseHiddenWithoutParam, tenYearsPublic } from "@/lib/giveaway/showcase";
+import { showcaseActiveFor, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
 import { OFFER_CODE_SHAPE } from "@/lib/giveaway/offers";
@@ -18,7 +17,8 @@ import { pageMetadata } from "@/lib/pages";
  * /10years — the anniversary giveaway page (GIVEAWAY-PLAN.md §4, §6).
  *
  * Four modes, switched by the config clock, never by a deploy:
- *   hidden     before Nov 9      → 404 (this route does not exist yet)
+ *   hidden     before Nov 9      → engine on: the real notify-me page, but
+ *                                  noindex, robots-disallowed, no banner
  *   notify_me  Nov 9 – Nov 15    → the full form (so the Sunday email can
  *                                  be one tap), the prizes, three questions
  *   live       Nov 15 – Nov 21   → the same form, now entering; the prizes
@@ -36,9 +36,9 @@ import { pageMetadata } from "@/lib/pages";
  * THE SHOWCASE (Ben, 2026-10-19; lib/giveaway/showcase.ts): while the
  * engine is off, the page is a hidden preview — the notify-me stage,
  * ?mode=live | closed | thanks for the others. With the engine ON before
- * Nov 9 (Ben, 2026-11-06), plain /10years is hidden (404) and only a
- * ?mode=notify | live | closed | thanks link shows a stage (not on the
- * production deployment, which ignores ?mode=). In both, the forms succeeding on screen and writing nothing, sample
+ * Nov 9 (Ben, 2026-11-07), plain /10years is the REAL notify-me page (its
+ * form saves and emails); a ?mode= link is a showcase only on a
+ * non-production deployment. Production never honors ?mode=. In both, the forms succeeding on screen and writing nothing, sample
  * winners. Hidden means: noindex, nofollow, disallowed in robots.txt,
  * absent from the sitemap, linked from nowhere.
  *
@@ -75,12 +75,11 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   const ref = (sp.ref ?? "").toUpperCase().slice(0, 20);
   const error = sp.error ? errorText(sp.error) : null;
 
-  // Engine on, before Nov 9: no ?mode= (or production) → hidden, as the real page is (Ben, 2026-11-06).
-  if (showcaseHiddenWithoutParam(sp.mode)) notFound();
-  const showcase = showcaseActive() ? showcaseFor(sp.mode) : null;
+  // Engine on: the real page — notify-me already before Nov 9 (Ben, 2026-11-07). Showcase: engine off, or a ?mode= test link on a preview before Nov 9.
+  const showcase = showcaseActiveFor(sp.mode) ? showcaseFor(sp.mode) : null;
   const now = showcase ? showcase.now : giveawayNow();
-  const mode = showcase ? showcase.mode : pageMode(now);
-  if (mode === "hidden") notFound();
+  const mode = showcase ? showcase.mode : entryPageMode(now);
+  const early = !showcase && pageMode(now) === "hidden";
 
   // The winners: the ladder's drawn cards during the week, the card itself
   // after close. The showcase's are sample people; nothing is read.
@@ -102,7 +101,7 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageSchema path="/10years" />
-      <TenYearsView mode={mode} now={now} card={card} winners={winners} assistantOff={showcase !== null} />
+      <TenYearsView mode={mode} now={now} card={card} winners={winners} assistantOff={showcase !== null || early} />
     </>
   );
 }

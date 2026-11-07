@@ -12,7 +12,8 @@
  * With the engine ON, production always shows the tags: a live giveaway
  * still carrying draft words must be unmistakable.
  *
- * It unlocks nothing: COPY_IS_DRAFT (lib/giveaway/copy.ts) stays true and
+ * It unlocks nothing: COPY_IS_DRAFT (lib/giveaway/copy.ts; env var, on
+ * unless set to "false" — Ben, 2026-11-07) stays true and
  * lib/giveaway/send.ts refuses to send while it is, whatever the subject
  * line looks like. lib/giveaway/draft.test.mjs proves both.
  */

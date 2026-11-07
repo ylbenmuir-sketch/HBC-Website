@@ -10,9 +10,11 @@
  * When the showcase shows (both must hold for the real page):
  *
  *   engine off (lib/giveaway/engine.ts)   → showcase, whatever the date
- *   engine on, before Nov 9               → showcase, but plain /10years
- *                                           404s; only ?mode= shows a stage
- *                                           (Ben, 2026-11-06; never on production)
+ *   engine on, before Nov 9               → the REAL notify-me page
+ *                                           (Ben, 2026-11-07); a ?mode= link
+ *                                           is a showcase on non-production
+ *                                           deployments only (showcaseActiveFor).
+ *                                           Robots/sitemap/banner still wait.
  *   engine on, from Nov 9                 → the real page; ?mode= is ignored
  *
  * So on Nov 9 the showcase ends on its own ONLY if the engine is on; with
@@ -65,15 +67,21 @@ export function showcaseMode(param: string | string[] | undefined): ShowcaseMode
 }
 
 /**
- * Engine ON, before Nov 9 (Ben, 2026-11-06): plain /10years stays hidden
- * (the route 404s, as in the real hidden mode); only a ?mode= preview link
- * shows a stage, and never on the production deployment, where ?mode= is
- * ignored. Engine OFF keeps the Oct 19 showcase: notify-me with no ?mode=.
+ * Whether THIS request gets the showcase (Ben, 2026-11-07):
+ *   engine off                      → yes (notify-me; ?mode= picks a stage
+ *                                     except on production, which ignores it)
+ *   engine on, before Nov 9         → only a ?mode= link on a non-production
+ *                                     deployment (testing); plain /10years is
+ *                                     the REAL notify-me page (entryPageMode)
+ *   engine on, from Nov 9           → never
+ * Production never honors ?mode=, so /10years?mode=closed can never show
+ * sample winners there.
  */
-export function showcaseHiddenWithoutParam(param: string | string[] | undefined, now: Date = giveawayNow(), env: Record<string, string | undefined> = process.env): boolean {
-  if (!giveawayEngineEnabled(env) || pageMode(now) !== "hidden") return false;
+export function showcaseActiveFor(param: string | string[] | undefined, now: Date = giveawayNow(), env: Record<string, string | undefined> = process.env): boolean {
+  if (!giveawayEngineEnabled(env)) return true;
+  if (pageMode(now) !== "hidden") return false;
   const key = (Array.isArray(param) ? param[0] : param)?.trim() ?? "";
-  return !(showcaseParamHonored(env) && key !== "");
+  return showcaseParamHonored(env) && key !== "";
 }
 
 /** True while /10years is the showcase rather than the real page. */

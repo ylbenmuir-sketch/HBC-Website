@@ -597,6 +597,18 @@ export function pageMode(now: Date): PageMode {
   return "thank_you";
 }
 
+/**
+ * What the real /10years (and its verify, one-tap and rules pages) shows
+ * with the engine ON (Ben, 2026-11-07): before notify-me start it is
+ * already the real notify-me page, open to anyone with the URL. Only the
+ * public signals wait for notifyMeStart — robots.txt, the sitemap, the meta
+ * robots (tenYearsPublic) and the site banner (lib/giveaway/banner.ts).
+ */
+export function entryPageMode(now: Date): Exclude<PageMode, "hidden"> {
+  const m = pageMode(now);
+  return m === "hidden" ? "notify_me" : m;
+}
+
 /** The chat assistant stays off /10years from notify-me start to offer end. */
 export const CHAT_SUPPRESSION_WINDOW = { from: SCHEDULE.notifyMeStart.at, to: SCHEDULE.offerEnd.at } as const;
 

@@ -7,7 +7,7 @@
  */
 
 import { giveawayNow } from "./clock";
-import { DRAWINGS, REFERRAL, pageMode, type PageMode } from "./config";
+import { DRAWINGS, REFERRAL, entryPageMode, pageMode, type PageMode } from "./config";
 import { PAGES } from "./copy";
 import { currentWinner } from "./drawings";
 import { entryVerifyEmail, notifyVerifyEmail, youreInEmail } from "./emails";
@@ -58,8 +58,8 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     return back("?error=unavailable");
   }
   const ctx = requestContext(request, secret);
-  const mode = pageMode(ctx.now);
-  if (mode === "hidden") return { to: "/10years", query: "" };
+  // Before Nov 9 the real page is already notify-me (Ben, 2026-11-07).
+  const mode = entryPageMode(ctx.now);
   if (mode === "closed" || mode === "thank_you") return back("?error=closed");
 
   // No new/current question any more (Ben, 2026-11-03): one prize per
@@ -170,7 +170,7 @@ export async function handleTap(token: string | null): Promise<VerifyPageResult>
   if (!v.ok) return { ok: false, message: PAGES.tenYears.verifyInvalid };
   const r = await liveTap(store, v.payload.s, now);
   if (!r.ok) {
-    if (r.reason === "not_open") return { ok: false, message: pageMode(now) === "notify_me" ? PAGES.tenYears.tapNotOpen : PAGES.tenYears.tapClosed };
+    if (r.reason === "not_open") return { ok: false, message: entryPageMode(now) === "notify_me" ? PAGES.tenYears.tapNotOpen : PAGES.tenYears.tapClosed };
     return { ok: false, message: PAGES.tenYears.verifyInvalid };
   }
   if (r.first) await sendYoureIn(store, secret, r.person.id, false, now);

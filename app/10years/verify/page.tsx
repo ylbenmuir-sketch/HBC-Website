@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import TenYearsView, { MessageCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
-import { pageMode } from "@/lib/giveaway/config";
+import { entryPageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { handleVerify } from "@/lib/giveaway/web";
 
@@ -16,8 +16,8 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
   // Not a page at all while the engine is off (lib/giveaway/engine.ts).
   if (!giveawayEngineEnabled()) notFound();
   const now = giveawayNow();
-  const mode = pageMode(now);
-  if (mode === "hidden") notFound();
+  // Before Nov 9 the real page is already notify-me (Ben, 2026-11-07).
+  const mode = entryPageMode(now);
   const { t } = await searchParams;
   const r = await handleVerify(t ?? null);
   const copy = PAGES.tenYears;

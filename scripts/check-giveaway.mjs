@@ -27,7 +27,8 @@
  *                    "succeeds" and writes nothing, the cron answers 200 and
  *                    touches nothing, admin / enter / verify are 404,
  *                    /unsubscribe says unavailable, the rest of the site works
- *   today            engine on: /10years is still the showcase before Nov 9;
+ *   today            engine on: /10years is already the real notify-me page
+ *                    (noindex, robots-disallowed) before Nov 9;
  *                    /admin/10years is noindex + no-store
  *   Nov 10           notify-me: three signups (one from Kentucky) + an Ohio ZIP refused +
  *                    a honeypot swallowed; three verification emails; links
@@ -354,11 +355,20 @@ try {
   mark = emails().length;
 
   /* ── today: the showcase, engine on ─────────────────────────────────── */
-  section("Today (Oct 2026), engine on: plain /10years is hidden before Nov 9; ?mode= links preview");
-  // Ben, 2026-11-06: the real hidden default; the four ?mode= previews still work (not on production).
-  expect("plain /10years answers 404 (hidden)", (await get("/10years")).status === 404);
-  const todayPage = await get("/10years?mode=notify");
-  expect("/10years?mode=notify answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
+  section("Today (Oct 2026), engine on: /10years is the REAL notify-me page before Nov 9; ?mode= links preview");
+  // Ben, 2026-11-07: anyone with the URL sees the real notify-me page (its form saves); robots/sitemap/noindex wait for Nov 9.
+  const todayPage = await get("/10years");
+  expect("plain /10years answers 200 with the real notify-me form (posting to /10years/signup, no ?mode=)", todayPage.status === 200 && todayPage.text.includes('data-mode="notify_me"') && todayPage.text.includes('action="/10years/signup"'), String(todayPage.status));
+  expect("…with the assistant off", /data-assistant-off/.test(todayPage.text));
+  const showNotify = await get("/10years?mode=notify");
+  expect("/10years?mode=notify (a preview, not production) is the showcase posting with ?mode=", showNotify.status === 200 && showNotify.text.includes('action="/10years/signup?mode=notify"'), String(showNotify.status));
+  {
+    const EARLY = person("Early", "early.bird.nov7@example.test");
+    const r = await postForm("/10years/signup", { first_name: "Early", last_name: "Tester", email: EARLY.email, zip: "37064", age_rules: "on" }, EARLY);
+    const row = (await dump("giveaway_notify")).find((n) => n.email === EARLY.email);
+    const mail = newEmails();
+    expect("before Nov 9: a real notify signup saves a row and sends the confirmation email", /\?sent=1$/.test(r.location) && Boolean(row) && mail.length === 1 && to(mail[0]) === EARLY.email, `${r.location} row=${Boolean(row)} mails=${mail.length}`);
+  }
   for (const [m, dm] of [["live", "live"], ["closed", "closed"], ["thanks", "thank_you"]]) {
     const pg = await get(`/10years?mode=${m}`);
     expect(`/10years?mode=${m} answers 200 with the ${dm} stage`, pg.status === 200 && pg.text.includes(`data-mode="${dm}"`), String(pg.status));
@@ -459,8 +469,10 @@ try {
   const twice = await get(new URL(verifyLinks[A.email]).pathname + new URL(verifyLinks[A.email]).search, A);
   expect("a second click is still a confirmation", /data-ok="1"/.test(twice.text));
   expect("a garbage verify token is refused", /data-ok="0"/.test((await get("/10years/verify?t=nonsense")).text));
-  const notifyRows = await dump("giveaway_notify");
-  expect("three notify rows, all verified, nobody entered yet", notifyRows.length === 3 && notifyRows.every((r) => r.verified_at) && (await dump("giveaway_people")).length === 0, `${notifyRows.length}`);
+  // Plus the unconfirmed early signup from before Nov 9 (Ben, 2026-11-07), which is never sent an entry link.
+  const allNotify = await dump("giveaway_notify");
+  const notifyRows = allNotify.filter((r) => r.email !== "early.bird.nov7@example.test");
+  expect("three notify rows, all verified, plus the unconfirmed early one; nobody entered yet", allNotify.length === 4 && notifyRows.length === 3 && notifyRows.every((r) => r.verified_at) && (await dump("giveaway_people")).length === 0, `${allNotify.length}`);
   expect("no email was sent for the honeypot or the non-TN ZIP", newEmails().length === 0);
 
   /* ── It's live ──────────────────────────────────────────────────────── */

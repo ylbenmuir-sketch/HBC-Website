@@ -35,7 +35,13 @@
 import { spokenCentral, type Drawing } from "./config";
 import { hideDraftTags } from "./draft";
 
-export const COPY_IS_DRAFT = true;
+/** Draft until Ben approves the copy: ON unless the env var COPY_IS_DRAFT is
+ *  exactly "false" (Ben, 2026-11-07 — he sets it in Vercel at turn-on).
+ *  While on: every string carries "[DRAFT] " (shown unless hidden, see
+ *  lib/giveaway/draft.ts) and lib/giveaway/send.ts refuses every send
+ *  outside a testing env. Off: the strings below ship exactly as written. */
+export const copyIsDraft = (env: Record<string, string | undefined> = process.env): boolean => env.COPY_IS_DRAFT?.trim() !== "false";
+export const COPY_IS_DRAFT = copyIsDraft();
 
 /** The draft marker. Remove per string as Ben approves it. The prefix can
  *  be hidden on screen (GIVEAWAY_HIDE_DRAFT_TAGS=1, never in production —

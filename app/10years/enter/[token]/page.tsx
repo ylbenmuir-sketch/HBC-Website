@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import TenYearsView, { MessageCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
-import { pageMode } from "@/lib/giveaway/config";
+import { entryPageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { handleTap } from "@/lib/giveaway/web";
 
@@ -16,8 +16,8 @@ export default async function EnterPage({ params }: { params: Promise<{ token: s
   // Not a page at all while the engine is off (lib/giveaway/engine.ts).
   if (!giveawayEngineEnabled()) notFound();
   const now = giveawayNow();
-  const mode = pageMode(now);
-  if (mode === "hidden") notFound();
+  // Before Nov 9 the real page is already notify-me (Ben, 2026-11-07).
+  const mode = entryPageMode(now);
   const { token } = await params;
   const r = await handleTap(decodeURIComponent(token));
   const card = r.ok ? <YoureInCard message={r.message} shareUrl={r.shareUrl} /> : <MessageCard title={PAGES.tenYears.notYetTitle} message={r.message} ok={false} />;

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import FAQAccordion from "@/components/FAQAccordion";
 import { giveawayQuestions } from "@/components/giveaway/TenYearsView";
@@ -45,9 +44,9 @@ export async function generateMetadata(): Promise<Metadata> {
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
 export default function RulesPage() {
-  // The /10years page links here, so the showcase (lib/giveaway/showcase.ts) needs it too.
-  const showcase = showcaseActive();
-  if (!showcase && pageMode(giveawayNow()) === "hidden") notFound();
+  // Linked from /10years, which is open from the engine's turn-on (showcase or the real page, Ben 2026-11-07); noindex until Nov 9.
+  // The assistant is off here in the showcase and before Nov 9, as on /10years.
+  const showcase = showcaseActive() || pageMode(giveawayNow()) === "hidden";
   const revealed = giftRevealed(giveawayNow());
   const t = PAGES.tenYears;
   const q = giveawayQuestions();
