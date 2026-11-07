@@ -5,7 +5,7 @@ import TenYearsView, { FormCard, MessageCard, WinnersCard } from "@/components/g
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { giftRevealed, pageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
-import { showcaseActive, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
+import { showcaseActive, showcaseFor, showcaseHiddenWithoutParam, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
 import { OFFER_CODE_SHAPE } from "@/lib/giveaway/offers";
@@ -34,9 +34,11 @@ import { pageMetadata } from "@/lib/pages";
  * (lib/giveaway/copy.ts).
  *
  * THE SHOWCASE (Ben, 2026-10-19; lib/giveaway/showcase.ts): while the
- * engine is off, and before Nov 9 even with it on, the page is a hidden
- * preview — the notify-me stage, ?mode=live | closed | thanks for the
- * others, the forms succeeding on screen and writing nothing, sample
+ * engine is off, the page is a hidden preview — the notify-me stage,
+ * ?mode=live | closed | thanks for the others. With the engine ON before
+ * Nov 9 (Ben, 2026-11-06), plain /10years is hidden (404) and only a
+ * ?mode=notify | live | closed | thanks link shows a stage (not on the
+ * production deployment, which ignores ?mode=). In both, the forms succeeding on screen and writing nothing, sample
  * winners. Hidden means: noindex, nofollow, disallowed in robots.txt,
  * absent from the sitemap, linked from nowhere.
  *
@@ -73,6 +75,8 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   const ref = (sp.ref ?? "").toUpperCase().slice(0, 20);
   const error = sp.error ? errorText(sp.error) : null;
 
+  // Engine on, before Nov 9: no ?mode= (or production) → hidden, as the real page is (Ben, 2026-11-06).
+  if (showcaseHiddenWithoutParam(sp.mode)) notFound();
   const showcase = showcaseActive() ? showcaseFor(sp.mode) : null;
   const now = showcase ? showcase.now : giveawayNow();
   const mode = showcase ? showcase.mode : pageMode(now);

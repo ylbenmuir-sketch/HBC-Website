@@ -15,8 +15,10 @@ written; anything not verified says so.
   checkout at `…/HBC Website - 7.14.26/hbc-website-v2_4` stays on `main`.
 - **Preview (Vercel login needed):**
   https://hbc-website-git-giveaway-fix-list-rev2-ylbenmuir-9529s-projects.vercel.app
-  It runs with the engine ON, `GIVEAWAY_ENV=test` and the clock pinned to
-  Tue Nov 17 (live mode). See "Env vars" below.
+  It runs with the engine ON, `GIVEAWAY_ENV=test` and the REAL clock (the
+  Nov 17 pin was removed Nov 6). Before Nov 9, plain `/10years` is hidden
+  (404) and `/10years?mode=notify|live|closed|thanks` shows each stage.
+  See "Env vars" below.
 - **Commits on the branch** (oldest first): `709a85f` fix list P0 + Hoolest
   price · `007d244` Grok's rules wording · `ec14f36` P1-1 cap (later
   removed) + P1-4 reminders · `ace819b` no caps, P1-8, scheduler fix ·
@@ -299,7 +301,7 @@ Values are never recorded here, apart from the recipient lists Ben asked for.
 | `GIVEAWAY_ALERTS` / `GIVEAWAY_ALERTS_OWNER` | **unset — needed** (else alerts fall back to `LEADS_FALLBACK`) | **unset** |
 | `GIVEAWAY_STATS_TOKEN` | **unset — needed** (stats endpoint answers 503) | unset |
 | `GIVEAWAY_SITE_URL` | unset (→ canonical site) | branch preview URL — branch only |
-| `GIVEAWAY_FAKE_NOW` | never (ignored outside test/local) | `2026-11-17T16:00:00Z` — branch only |
+| `GIVEAWAY_FAKE_NOW` | never (ignored outside test/local) | **removed Nov 6** (was `2026-11-17T16:00:00Z`, which made the preview the real live page and ignored `?mode=`) |
 | `GIVEAWAY_HIDE_DRAFT_TAGS` | unset | unset (`.env.local` only) |
 | `GIVEAWAY_REPO`, `GIVEAWAY_OTP_MOCK_CODE` | never (checks only) | never |
 | `CRON_SECRET` | set | set — branch only |

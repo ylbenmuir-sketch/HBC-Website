@@ -354,9 +354,15 @@ try {
   mark = emails().length;
 
   /* ── today: the showcase, engine on ─────────────────────────────────── */
-  section("Today (Oct 2026), engine on: /10years is still the showcase before Nov 9");
-  const todayPage = await get("/10years");
-  expect("/10years answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
+  section("Today (Oct 2026), engine on: plain /10years is hidden before Nov 9; ?mode= links preview");
+  // Ben, 2026-11-06: the real hidden default; the four ?mode= previews still work (not on production).
+  expect("plain /10years answers 404 (hidden)", (await get("/10years")).status === 404);
+  const todayPage = await get("/10years?mode=notify");
+  expect("/10years?mode=notify answers 200 as the showcase (notify-me form posting with ?mode=)", todayPage.status === 200 && todayPage.text.includes('action="/10years/signup?mode=notify"'), String(todayPage.status));
+  for (const [m, dm] of [["live", "live"], ["closed", "closed"], ["thanks", "thank_you"]]) {
+    const pg = await get(`/10years?mode=${m}`);
+    expect(`/10years?mode=${m} answers 200 with the ${dm} stage`, pg.status === 200 && pg.text.includes(`data-mode="${dm}"`), String(pg.status));
+  }
   // Rev 2, P0-6: the meta robots follows the clock; no static noindex header may pin it.
   expect("/10years is noindex (meta), with no static noindex header", !/noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
   const robotsToday = await get("/robots.txt");
@@ -365,7 +371,7 @@ try {
   // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
   const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
   expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
-  const refPreview = await get("/10years?ref=HBC-TEST01");
+  const refPreview = await get("/10years?mode=notify&ref=HBC-TEST01");
   expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPreview.text)?.[1] ?? "x") === ogUrl);
   const og = await fetch(`${BASE}/10years/opengraph-image`);
   expect("the card renders (200, image/png, 1200×630 declared)", og.status === 200 && /image\/png/.test(og.headers.get("content-type") ?? "") && /og:image:width" content="1200"/.test(todayPage.text), String(og.status));
