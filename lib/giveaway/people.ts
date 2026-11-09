@@ -2,16 +2,23 @@
  * Signing up, verifying, entering (GIVEAWAY-PLAN.md §4; decisions 1, 3, 8,
  * 12, 13, 15). The rules of who is in and with how many chances:
  *
- *   notify-me  → giveaway_notify row + verification email; the click sets
- *                verified_at. Nobody is entered yet.
- *   It's live  → the one-tap link turns a VERIFIED notify row into a person
- *                + base entry, no second verification; +1 early_bird when
- *                tapped before Monday's noon drawing. Idempotent.
- *   entry      → giveaway_people row (unverified) + verification email; the
- *                click sets verified_at and writes the base entry, the
- *                referred_bonus (+1) when a referral code was carried, the
- *                referrer's three referral_bonus rows (cap ten friends, no
- *                self-referral), and the offer code. Idempotent.
+ * THE FORM IS THE OFFICIAL ACTION (Ben, 2026-11-08). Submitting the form
+ * puts someone on the list (notify-me) or enters them (live) on the spot —
+ * no email click. The emails that follow are a courtesy, never a condition.
+ * `verified_at` keeps its column name but now means "submitted the form"
+ * (or, for rows from before this change, "clicked the old link").
+ *
+ *   notify-me  → giveaway_notify row, verified_at set at submit
+ *                (notifyFromForm). Nobody is entered yet.
+ *   It's live  → the optional one-tap link turns a notify row into a person
+ *                + base entry; +1 early_bird before Monday's noon drawing.
+ *                Idempotent.
+ *   entry      → enterFromForm: the giveaway_people row, then at once
+ *                verified_at, the base entry, the referred_bonus (+1) when
+ *                a referral code was carried, the referrer's three
+ *                referral_bonus rows (cap ten friends, no self-referral),
+ *                the offer code, and — for a notify-me signup entering by
+ *                form instead of the tap — the same early bird. Idempotent.
  *
  * Every write goes through GiveawayStore (env-scoped). Emails are not sent
  * here: each function returns what the caller should send (the token link,
@@ -213,6 +220,19 @@ export async function verifyNotify(store: GiveawayStore, notifyId: string, now: 
   return { ok: true, row: upd.data as NotifyRow, first: true };
 }
 
+/**
+ * The notify-me form, as the official action (Ben, 2026-11-08): the signup
+ * and, in the same request, verified_at. `alreadyVerified` = this address
+ * was on the list before this submit.
+ */
+export async function notifyFromForm(store: GiveawayStore, input: SignupInput, ctx: SignupContext): Promise<NotifyOutcome> {
+  const r = await notifySignup(store, input, ctx);
+  if (!r.ok || r.alreadyVerified) return r;
+  const v = await verifyNotify(store, r.row.id, ctx.now);
+  if (!v.ok) throw new Error("notify: row vanished between signup and confirm");
+  return { ...r, row: v.row };
+}
+
 /* ------------------------------------------------------------------ */
 /* Entry                                                               */
 /* ------------------------------------------------------------------ */
@@ -316,6 +336,47 @@ export async function verifyEntry(store: GiveawayStore, personId: string, now: D
   const offer = await ensureOffer(store, verified, now);
   await audit(store, { actor: "visitor", action: "entry_verified", targetTable: "giveaway_people", targetId: verified.id, after: { referred_bonus: referredBonus } });
   return { ok: true, person: verified, first: true, referredBonus, offer };
+}
+
+export type FormEntryOutcome =
+  | { ok: true; person: PersonRow; alreadyEntered: boolean; first: boolean; referredBonus: boolean; earlyBird: boolean }
+  | { ok: false; reason: SignupRefusal };
+
+/**
+ * The entry form, as the official entry (Ben, 2026-11-08): entrySignup and
+ * verifyEntry in one request — base entry, referral credit, offer code —
+ * then the notify-me early bird when it applies. A repeat from an address
+ * already entered changes nothing (`alreadyEntered`).
+ */
+export async function enterFromForm(store: GiveawayStore, input: SignupInput, ctx: SignupContext): Promise<FormEntryOutcome> {
+  const r = await entrySignup(store, input, ctx);
+  if (!r.ok) return r;
+  if (r.alreadyVerified) return { ok: true, person: r.person, alreadyEntered: true, first: false, referredBonus: false, earlyBird: false };
+  const v = await verifyEntry(store, r.person.id, ctx.now);
+  if (!v.ok) throw new Error("entry: person vanished between signup and confirm");
+  const earlyBird = await carryNotifySignup(store, v.person, ctx.now);
+  return { ok: true, person: v.person, alreadyEntered: false, first: v.first, referredBonus: v.referredBonus, earlyBird };
+}
+
+/**
+ * A notify-me signup who enters by the form rather than the one-tap link
+ * gets exactly what the tap gives: the notify row is marked entered
+ * (tapped_at + person_id, so the Monday "you're not in yet" reminder skips
+ * them) and +1 early_bird before Monday's noon drawing. The same address
+ * after Gmail folding (normalizeEmail) is the same signup.
+ */
+export async function carryNotifySignup(store: GiveawayStore, person: PersonRow, now: Date): Promise<boolean> {
+  const { data, error } = await store.select("giveaway_notify", "*").eq("email", person.email).maybeSingle();
+  if (error) throw fail("notify carry lookup", error);
+  const row = data as NotifyRow | null;
+  if (!row) return false;
+  const upd = await store.update("giveaway_notify", { tapped_at: row.tapped_at ?? now.toISOString(), person_id: person.id }).eq("id", row.id);
+  if (upd.error) throw fail("notify carry", upd.error);
+  if (now.getTime() >= EARLY_BIRD.before.at.getTime()) return false;
+  const { error: ebErr } = await store.insert("giveaway_entries", { person_id: person.id, kind: "early_bird", created_at: now.toISOString() });
+  if (ebErr && ebErr.code !== "23505") throw fail("early bird (form)", ebErr);
+  if (!ebErr) await audit(store, { actor: "visitor", action: "early_bird_form", targetTable: "giveaway_people", targetId: person.id, after: { notify_id: row.id } });
+  return true;
 }
 
 /** Entries carry the giveaway clock's time, not the database's, so the

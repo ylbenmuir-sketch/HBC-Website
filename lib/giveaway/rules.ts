@@ -114,7 +114,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
       blocks: [
         {
           ul: [
-            `Notify-me sign-ups: ${ctFull(SCHEDULE.notifyMeStart.at)} through ${ctFull(SCHEDULE.entriesOpen.at)}. Signing up here is a reminder only. It becomes an entry when you tap the entry link we email you.`,
+            `Notify-me sign-ups: ${ctFull(SCHEDULE.notifyMeStart.at)} through ${ctFull(SCHEDULE.entriesOpen.at)}. Submitting the notify-me form puts you on the reminder list. It is not an entry. To enter, submit the entry form during the entry period, or use the optional one-tap entry button in the reminder email we send when entries open.`,
             `Entry period: ${ctFull(SCHEDULE.entriesOpen.at)} through ${ctFull(SCHEDULE.entriesClose.at)}.`,
             `Drawings: ${ctDay(daily[0].at)} through ${ctDay(daily[daily.length - 1].at)}, at ${ctTime(daily[0].at)}${ctTime(daily[0].at) === "12:00 PM" ? " (noon)" : ""} each day. The grand prize drawing is ${ctDay(grand.at)} at ${ctTime(grand.at)}.`,
             "The Sponsor's computer clock is the official clock for this giveaway.",
@@ -130,23 +130,24 @@ export function rulesSections(input: RulesInput): RulesSection[] {
           ul: [
             `Go to ${input.siteHost}/10years.`,
             "Fill in your first and last name, email and ZIP code, and agree to these rules.",
-            "Tap the confirmation link in the email we send you. Your entry counts once you confirm.",
+            "Submit the form. Submitting the form is your entry. You do not need to open or click anything in an email to enter.",
+            "We then email you a copy of your entry with your personal share link. That email is a courtesy. Your entry counts even if you never receive or open it.",
           ],
         },
         { p: "Entering is free. This online form is the free way to enter. No purchase, payment, visit or appointment is needed, and buying something will not improve your chances." },
-        { p: "One person, one email address. Entries from extra email addresses, fake identities, scripts or bots are void." },
+        { p: "One person, one email address. Gmail addresses that differ only by dots or a \"+\" tag reach the same inbox, so they count as one email address. Entries from extra email addresses, fake identities, scripts or bots are void." },
       ],
     },
     {
       id: "bonus-entries",
       title: "Bonus entries",
       blocks: [
-        { p: "Your confirmed entry counts in every drawing held after you confirm, for as long as you are still eligible. Bonus entries count only in drawings held after they are added to your total." },
+        { p: "Your entry counts in every drawing held after you submit it, for as long as you are still eligible. Bonus entries count only in drawings held after they are added to your total." },
         {
           ul: [
-            `Early-bird bonus: If you signed up for notify-me before entries opened and you confirm your entry by tapping the entry link before ${ctFull(EARLY_BIRD.before.at)}, you get ${EARLY_BIRD.bonusEntries} ${extraWord}.`,
-            `Referral bonus: After you confirm, you get a personal link. Each friend who enters through your link and confirms gives you ${REFERRAL.referrerBonus} extra entries. This counts for up to ${REFERRAL.friendCap} friends, so ${REFERRAL.referrerBonus * REFERRAL.friendCap} extra entries at most.`,
-            `Referred bonus: A friend who enters through your link and confirms gets ${REFERRAL.referredBonus} extra ${REFERRAL.referredBonus === 1 ? "entry" : "entries"}.`,
+            `Early-bird bonus: If you signed up for notify-me before entries opened and you enter before ${ctFull(EARLY_BIRD.before.at)}, either by submitting the entry form with the same email address or by using the one-tap entry button in our email, you get ${EARLY_BIRD.bonusEntries} ${extraWord}.`,
+            `Referral bonus: After you enter, you get a personal share link, shown on the page and emailed to you. Each friend who submits the entry form through your link gives you ${REFERRAL.referrerBonus} extra entries. This counts for up to ${REFERRAL.friendCap} friends, so ${REFERRAL.referrerBonus * REFERRAL.friendCap} extra entries at most.`,
+            `Referred bonus: A friend who submits the entry form through your link gets ${REFERRAL.referredBonus} extra ${REFERRAL.referredBonus === 1 ? "entry" : "entries"}.`,
             "Sharing is optional. You don't have to share, post or tag anyone to enter or to win. Referring yourself, or using fake or duplicate entries, voids the bonus and may disqualify you.",
           ],
         },
@@ -303,7 +304,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
 
 /** §13. The draft's neutral wording until the reveal; the gift's terms after it. */
 function giftSection(revealed: boolean): Omit<RulesSection, "n"> {
-  const neutral = "Separately from this giveaway, the Sponsor plans to send a thank-you gift to verified entrants after the final drawing. It is not a prize, doesn't depend on winning, and has no effect on the odds. Details come by email.";
+  const neutral = "Separately from this giveaway, the Sponsor plans to send a thank-you gift to entrants after the final drawing. It is not a prize, doesn't depend on winning, and has no effect on the odds. Details come by email.";
   if (!revealed) return { id: "thank-you-gift", title: "Thank-you gift", blocks: [{ p: neutral }] };
   const date = (d: Date) => fmt(d, { month: "long", day: "numeric" });
   return {

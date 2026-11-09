@@ -26,7 +26,7 @@
  *
  * Phrases other code matches on (keep them): lib/giveaway/engine.test.mjs
  * — "Today at noon", "Thank you", "grand prize" in the countdown subject; scripts/check-giveaway.mjs
- * — "Send me my entry link", "Enter me", "Forward this to a friend", "friend's
+ * — "Put me on the list", "Enter me", "Forward this to a friend", "friend's
  * link", "with N entries", "10 years — Monday winner",
  * "GRAND PRIZE", "W-9", "Monday's winner: claimed",
  * "already" (unsubscribe), "You're in." (subject).
@@ -89,14 +89,15 @@ export const SHARED = {
 /* ------------------------------------------------------------------ */
 
 export const EMAILS = {
-  /** 1. Notify-me verification. */
-  notifyVerify: {
-    subject: D("Confirm your email — the 10-year giveaway"),
-    preheader: D("One tap and you're on the list."),
-    heading: (firstName: string) => D(`${firstName ? `${firstName}, you're` : "You're"} almost on the list.`),
-    body: D("Tap the button to confirm it's you. Then, the moment entries open, you get one email with one button — and that button is your entry."),
-    button: D("Confirm my email"),
-    small: D("Didn't sign up? Ignore this and nothing happens."),
+  /** 1. Notify-me follow-up (Ben, 2026-11-08): the form put them on the
+   *  list; this email only confirms it. Nothing in it is required. */
+  notifyOnList: {
+    subject: D("You're on the list — the 10-year giveaway"),
+    preheader: D("Entries open Sunday evening. Here's what happens next."),
+    heading: (firstName: string) => D(`${firstName ? `${firstName}, you're` : "You're"} on the list.`),
+    body: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken} Central. Enter on the giveaway page then. We'll also email you a one-tap entry button to make it quicker.`),
+    button: D("See the prizes"),
+    small: D("Didn't sign up? Ignore this email. Every reminder after it has an unsubscribe link."),
   },
 
   /** 2. "It's live" — the one-tap entry. */
@@ -119,16 +120,6 @@ export const EMAILS = {
     button: D("Enter me — one tap"),
   },
 
-  /** 4. Entry verification (double opt-in). */
-  entryVerify: {
-    subject: D("Confirm your entry — the 10-year giveaway"),
-    preheader: D("Tap to confirm and you're in."),
-    heading: (firstName: string) => D(`${firstName ? `${firstName}, one` : "One"} more tap.`),
-    body: D("Tap the button and your entry counts in every drawing still to come. Unconfirmed entries can't be drawn."),
-    button: D("Confirm my entry"),
-    small: D("Didn't enter? Ignore this and nothing happens."),
-  },
-
   /** 5. "You're in" — referral link + offer (+ forward line). */
   youreIn: {
     subject: D("You're in. Here's your share link."),
@@ -137,7 +128,7 @@ export const EMAILS = {
     body: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? `Next drawing: ${when(next)} — ${prizeName}. Your entry counts in it and every one after.` : "Your entry counts in every drawing still to come."),
     referredBonus: D("A friend's link brought you here, so you start with a bonus entry."),
     shareHeading: D("Add entries"),
-    shareBody: (referrerBonus: number, referredBonus: number, cap: number) => D(`Share your link. Each friend who enters and confirms adds ${referrerBonus} entries for you and ${referredBonus} for them, up to ${cap} friends.`),
+    shareBody: (referrerBonus: number, referredBonus: number, cap: number) => D(`Share your link. Each friend who enters through it adds ${referrerBonus} entries for you and ${referredBonus} for them, up to ${cap} friends.`),
     shareButton: D("Share my link"),
     /** The gift is NOT named before the reveal (fix list rev 2, P0-2). */
     giftTease: (revealSpoken: string) => D(`Plus a thank-you gift for every entrant, revealed by email ${revealSpoken}.`),
@@ -264,7 +255,7 @@ export const PAGES = {
   /** The site-wide banner (fix list rev 2, P0-7). Never mentions the gift: non-entrants can't claim it. */
   banner: {
     label: D("10-year giveaway"),
-    notify: D("HBC turns 10 — a week of prizes starts Nov 16. Get your entry link →"),
+    notify: D("HBC turns 10 — a week of prizes starts Nov 16. Get on the list →"),
     live: D("Our 10-year giveaway is live — enter once for six drawings →"),
     closed: D("Thank you for 10 years — see this week's winners →"),
     dismiss: D("Dismiss the 10-year giveaway banner"),
@@ -321,7 +312,7 @@ export const PAGES = {
     closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
     /** The slim bottom bar on phones once the form is off screen. */
-    entryBarNotify: D("Get my entry link"),
+    entryBarNotify: D("Get on the list"),
     entryBarLive: D("Enter the giveaway"),
     /** The share preview (Open Graph). Dates and the total come from config. */
     og: {
@@ -340,23 +331,24 @@ export const PAGES = {
     /** "10 years · 140,000+ sessions · Nashville & Murfreesboro" — the count is STAT_SESSIONS. */
     proofLine: (years: number, sessions: string) => D(`${years} years · ${sessions} sessions · Nashville & Murfreesboro`),
     /** The form card — notify-me (Nov 9–15). */
-    notifyFormTitle: D("Get your one-tap entry."),
-    notifyFormLine: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. We'll email your link.`),
-    notifyButton: D("Send me my entry link"),
+    notifyFormTitle: D("Get on the list."),
+    notifyFormLine: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. We'll remind you.`),
+    notifyButton: D("Put me on the list"),
     /** The form card — live (Nov 15–21). */
     liveFormTitle: D("Enter the giveaway"),
     liveFormLine: (nextSpoken: string) => D(`Next drawing: ${nextSpoken}`),
     liveButton: D("Enter me"),
     refNote: D("A friend sent you. You'll both get bonus entries."),
-    /** The card after a submit, both modes. */
-    sentTitle: D("Check your inbox."),
-    notifySent: D("Tap the link we just sent to confirm your email. Your entry link follows when entries open."),
-    liveSent: D("Tap the link we just sent to confirm your entry. Unconfirmed entries can't be drawn."),
+    /** The card after a submit (Ben, 2026-11-08: the submit IS the signup or
+     *  the entry; the email that follows is a copy, not a step). */
+    notifySent: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. Come back then to enter. We'll also email you a reminder with a one-tap entry button.`),
+    liveSent: D("You're entered in every drawing still to come. We've emailed you a copy with your share link."),
+    liveSentEarlyBird: D("You're entered in every drawing still to come, with an early-bird bonus entry. We've emailed you a copy with your share link."),
     alreadyNotifyTitle: D("You're on the list."),
-    notifyAlready: D("You're already signed up. Watch for your entry link when entries open."),
+    notifyAlready: D("You're already signed up. When entries open, enter here or with the one-tap button we email you."),
     alreadyLiveTitle: D("You're already in."),
     liveAlready: D("Watch your inbox each afternoon for the next drawing."),
-    /** The card after the email link (verify) or the one tap. */
+    /** The card after a submit, an old email link (verify) or the one tap. */
     onListTitle: D("You're on the list."),
     inTitle: D("You're in."),
     notYetTitle: D("Not yet."),
@@ -398,14 +390,13 @@ export const PAGES = {
       age: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rules: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
-      send_failed: D("We couldn't send the confirmation email just now. Please try again in a minute."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
     },
     /** "How it works": three steps between the hero and the ladder. Counts, days and times from config. */
     how: {
       title: D("How it works"),
       step1Title: D("Enter once."),
-      step1Line: D("Get your link and tap to confirm. You're in every drawing."),
+      step1Line: D("Fill in the form one time. You're in every drawing."),
       step2Title: D("Share your link."),
       step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
       step3Title: D("Win."),
@@ -470,9 +461,9 @@ export const PAGES = {
     qa: {
       enterQ: D("How do I enter?"),
       /** The eligibility is config's eligibilityPhrase(): "Tennessee and neighboring states (KY, …)". */
-      enterA: (eligibility: string) => D(`Fill in the form, then tap the link in the email we send you. That's your entry, and it counts in every drawing still to come. Free to enter, nothing to buy. One entry per person; residents of ${eligibility}, 18 and over.`),
+      enterA: (eligibility: string) => D(`Fill in the form and submit it. That's your entry, and it counts in every drawing still to come. We email you a copy, but you don't need to open it. Free to enter, nothing to buy. One entry per person; residents of ${eligibility}, 18 and over.`),
       moreQ: D("How do bonus entries work?"),
-      moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters and confirms gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
+      moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters through it gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
       whenQ: D("When are the drawings?"),
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
       winQ: D("How will I know if I won?"),
@@ -488,10 +479,10 @@ export const PAGES = {
     winnerClaimed: (day: string) => D(`${day}'s winner: claimed ✓`),
     winnerReaching: (day: string) => D(`${day}'s winner has been drawn — we're reaching them now`),
     winnerPending: (day: string, spoken: string) => D(`${day}: drawing ${spoken}`),
-    /** The verification click. */
-    verifiedNotify: D("When entries open, you'll get one email with one button. That button is your entry."),
+    /** An old verification link (emails sent before 2026-11-08). */
+    verifiedNotify: D("When entries open, enter on this page or with the one-tap button we email you."),
     verifiedEntry: (entries: number) => D(`Confirmed, with ${entries} ${entries === 1 ? "entry" : "entries"}. Your thank-you gift arrives by email Saturday night.`),
-    verifyInvalid: D("That link isn't valid or has expired. Enter again below and we'll send a fresh one."),
+    verifyInvalid: D("That link isn't valid or has expired. You can sign up or enter with the form."),
     /** The one-tap page. */
     tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you gift arrives by email Saturday night." : "Confirmed. Your thank-you gift arrives by email Saturday night."),
     tapNotOpen: D("Entries aren't open yet — this link works the moment they do."),

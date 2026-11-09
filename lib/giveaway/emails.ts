@@ -27,6 +27,7 @@ import {
   GIFT_REVEAL_AT,
   HYPE_PRIZE_PHOTO_URL,
   SCHEDULE,
+  spokenCentralDateTime,
   centralParts,
   drawing,
   drawingAfter,
@@ -125,15 +126,19 @@ function offerPanel(input: { code: string }): { html: string; text: string[] } {
 }
 
 /* ------------------------------------------------------------------ */
-/* 1. Notify-me verification                                           */
+/* 1. Notify-me: you're on the list                                    */
 /* ------------------------------------------------------------------ */
 
-export function notifyVerifyEmail(input: { firstName: string; verifyUrl: string; footing: Footing }): Email {
-  const c = EMAILS.notifyVerify;
+/** The follow-up to a notify-me submit (Ben, 2026-11-08): the submit put
+ *  them on the list; this only says so. The button is a link back to the
+ *  page, never a condition. */
+export function notifyOnListEmail(input: { firstName: string; pageUrl: string; footing: Footing }): Email {
+  const c = EMAILS.notifyOnList;
   const heading = c.heading(input.firstName);
+  const body = c.body(spokenCentralDateTime(SCHEDULE.entriesOpen.at));
   const rows = [
-    section(`${h1(heading)}${p(c.body)}`, "18px 20px 0"),
-    section(buttons([[c.button, input.verifyUrl]]), "16px 20px 0"),
+    section(`${h1(heading)}${p(body)}`, "18px 20px 0"),
+    section(buttons([[c.button, input.pageUrl]]), "16px 20px 0"),
     section(small(c.small), "8px 20px 0"),
     gap(16),
     visitorFooter(input.footing, false),
@@ -142,7 +147,7 @@ export function notifyVerifyEmail(input: { firstName: string; verifyUrl: string;
     subject: c.subject,
     preheader: c.preheader,
     html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, c.body, "", `${c.button}: ${input.verifyUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false)]),
+    text: textOf([heading, body, "", `${c.button}: ${input.pageUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false)]),
   };
 }
 
@@ -192,28 +197,6 @@ export function mondayReminderEmail(input: { firstName: string; enterUrl: string
     preheader: c.preheader,
     html: page({ title: subject, preheader: c.preheader, rows }),
     text: textOf([heading, body, prize.partner, "", `${c.button}: ${input.enterUrl}`, "", ...visitorFooterText(input.footing, true)]),
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* 4. Entry verification                                               */
-/* ------------------------------------------------------------------ */
-
-export function entryVerifyEmail(input: { firstName: string; verifyUrl: string; footing: Footing }): Email {
-  const c = EMAILS.entryVerify;
-  const heading = c.heading(input.firstName);
-  const rows = [
-    section(`${h1(heading)}${p(c.body)}`, "18px 20px 0"),
-    section(buttons([[c.button, input.verifyUrl]]), "16px 20px 0"),
-    section(small(c.small), "8px 20px 0"),
-    gap(16),
-    visitorFooter(input.footing, false),
-  ];
-  return {
-    subject: c.subject,
-    preheader: c.preheader,
-    html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, c.body, "", `${c.button}: ${input.verifyUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false)]),
   };
 }
 

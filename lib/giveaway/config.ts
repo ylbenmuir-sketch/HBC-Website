@@ -617,4 +617,4 @@ export function chatSuppressedOn10Years(now: Date): boolean {
 }
 
 /** The current rules text version recorded on every acceptance. */
-export const RULES_VERSION = "2026-11-03";
+export const RULES_VERSION = "2026-11-08";

@@ -1,7 +1,7 @@
 /**
  * What the /10years routes and pages share: the request context (hashed
  * address and agent), the signup handler (notify-me or entry by mode, the
- * limiter, the honeypot, the verification email), the verification and
+ * limiter, the honeypot, the follow-up email), the old verification and
  * one-tap handlers that also send the follow-up email, and the public
  * winners list in its three states. Server-only.
  */
@@ -10,17 +10,16 @@ import { giveawayNow } from "./clock";
 import { DRAWINGS, REFERRAL, entryPageMode, pageMode, type PageMode } from "./config";
 import { PAGES } from "./copy";
 import { currentWinner } from "./drawings";
-import { entryVerifyEmail, notifyVerifyEmail, youreInEmail } from "./emails";
-import { entryCount, entrySignup, hashes, liveTap, notifySignup, verifyEntry, verifyNotify, type SignupInput } from "./people";
+import { notifyOnListEmail, youreInEmail } from "./emails";
+import { enterFromForm, entryCount, hashes, liveTap, notifyFromForm, verifyEntry, verifyNotify, type SignupInput } from "./people";
 import { clientAddress, rateLimit, supabaseCounter } from "./rate-limit";
 import type { WinnerRow } from "./rows";
-import { footingFor, referralLink, sendGiveawayEmail, tokenLink } from "./send";
+import { footingFor, referralLink, sendGiveawayEmail, siteUrl } from "./send";
 import { attributionFrom } from "./channel";
 import { requireGiveawayStore, type GiveawayStore } from "./store";
 import { tokenSecret, verifyToken } from "./tokens";
 import { audit } from "./audit";
 
-export const VERIFY_LINK_TTL_MS = 7 * 24 * 60 * 60_000;
 
 export type RequestContext = { ip: string; ipHash: string; uaHash: string | null; now: Date };
 
@@ -92,44 +91,42 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
   const limited = await rateLimit(counter, "entry_ip", ctx.ip, { now: ctx.now, salt: secret });
   if (!limited.allowed) return back(limited.reason === "error" ? "?error=unavailable" : "?error=rate_limited");
 
+  // The form is the official action (Ben, 2026-11-08): the submit puts them
+  // on the list or enters them. The email after it is a follow-up — a send
+  // failure is logged and the visitor still sees success, because they are.
   if (mode === "notify_me") {
-    const r = await notifySignup(store, input, ctx);
+    const r = await notifyFromForm(store, input, ctx);
     if (!r.ok) return back(`?error=${r.reason}`);
     if (r.alreadyVerified) return back("?already=1");
+    // One courtesy email per address per ten minutes (no inbox flooding).
     const perEmail = await rateLimit(counter, "verify_email", r.row.email, { now: ctx.now, salt: secret });
-    if (!perEmail.allowed) return back("?sent=1"); // one email per ten minutes; say nothing more
-    const email = notifyVerifyEmail({ firstName: r.row.first_name, verifyUrl: tokenLink("verify_notify", r.row.id, store.env, { secret, expiresAt: new Date(ctx.now.getTime() + VERIFY_LINK_TTL_MS) }), footing: footingFor(r.row.email, store.env, false, secret) });
-    const sent = await sendGiveawayEmail({ to: r.row.email, email, marketing: false, footing: null });
-    if (sent.status !== "sent") {
-      console.error(`[giveaway signup] notify verification not sent: ${sent.error}`);
-      return back("?error=send_failed");
+    if (perEmail.allowed) {
+      const email = notifyOnListEmail({ firstName: r.row.first_name, pageUrl: `${siteUrl()}/10years`, footing: footingFor(r.row.email, store.env, false, secret) });
+      const sent = await sendGiveawayEmail({ to: r.row.email, email, marketing: false, footing: null });
+      if (sent.status !== "sent") console.error(`[giveaway signup] on-the-list email not sent (the signup stands): ${sent.error}`);
     }
     return back("?sent=1");
   }
 
   // live
-  const r = await entrySignup(store, input, ctx);
+  const r = await enterFromForm(store, input, ctx);
   if (!r.ok) return back(`?error=${r.reason}`);
-  if (r.alreadyVerified) return back("?already=1");
+  if (r.alreadyEntered) return back("?already=1");
   if (input.ref) {
     const byCode = await rateLimit(counter, "referral_code", input.ref, { now: ctx.now, salt: secret });
     if (!byCode.allowed) await audit(store, { actor: "system", action: "referral_code_burst", reason: input.ref.toUpperCase(), ipHash: ctx.ipHash });
   }
-  const perEmail = await rateLimit(counter, "verify_email", r.person.email, { now: ctx.now, salt: secret });
-  if (!perEmail.allowed) return back("?sent=1");
-  const email = entryVerifyEmail({ firstName: r.person.first_name, verifyUrl: tokenLink("verify_entry", r.person.id, store.env, { secret, expiresAt: new Date(ctx.now.getTime() + VERIFY_LINK_TTL_MS) }), footing: footingFor(r.person.email, store.env, false, secret) });
-  const sent = await sendGiveawayEmail({ to: r.person.email, email, marketing: false, footing: null });
-  if (sent.status !== "sent") {
-    console.error(`[giveaway signup] entry verification not sent: ${sent.error}`);
-    return back("?error=send_failed");
-  }
-  return back("?sent=1");
+  if (r.first) await sendYoureIn(store, secret, r.person.id, r.referredBonus, ctx.now);
+  // The card shows the share link at once, so the email isn't needed for it either.
+  return back(`?sent=1&share=${encodeURIComponent(r.person.referral_code)}${r.earlyBird ? "&eb=1" : ""}`);
 }
 
 /** `shareUrl` is set once an entry is confirmed (the card shows it with a copy button). */
 export type VerifyPageResult = { ok: true; kind: "notify" | "entry"; message: string; shareUrl?: string } | { ok: false; message: string };
 
-/** The verification click, either kind. Sends "You're in" on a first entry verification. */
+/** The verification click from emails sent before 2026-11-08, either kind
+ *  (idempotent; a row the form already confirmed just says so). Sends
+ *  "You're in" on a first entry verification. */
 export async function handleVerify(token: string | null): Promise<VerifyPageResult> {
   let store: GiveawayStore;
   let secret: string;

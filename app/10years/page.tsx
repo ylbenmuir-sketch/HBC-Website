@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import PageSchema from "@/components/PageSchema";
-import TenYearsView, { FormCard, MessageCard, WinnersCard } from "@/components/giveaway/TenYearsView";
+import TenYearsView, { FormCard, MessageCard, WinnersCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { entryPageMode, giftRevealed, pageMode } from "@/lib/giveaway/config";
+import { SCHEDULE, entryPageMode, giftRevealed, pageMode, spokenCentralDateTime } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { showcaseActiveFor, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
+import { referralLink } from "@/lib/giveaway/send";
 import { OFFER_CODE_SHAPE } from "@/lib/giveaway/offers";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
@@ -67,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-type Search = { code?: string; sent?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
+type Search = { code?: string; sent?: string; share?: string; eb?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
 export default async function TenYearsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -88,7 +89,9 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
 
   let card;
   if (mode === "notify_me" || mode === "live") {
-    if (sp.sent) card = <MessageCard title={t.sentTitle} message={mode === "notify_me" ? t.notifySent : t.liveSent} />;
+    // The submit is the signup or the entry (Ben, 2026-11-08); the card says so, with the share link at once on an entry.
+    if (sp.sent && mode === "notify_me") card = <MessageCard title={t.onListTitle} message={t.notifySent(spokenCentralDateTime(SCHEDULE.entriesOpen.at))} ok />;
+    else if (sp.sent) card = <YoureInCard message={sp.eb === "1" ? t.liveSentEarlyBird : t.liveSent} shareUrl={shareOf(sp.share)} />;
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
     else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
   } else {
@@ -104,6 +107,12 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
       <TenYearsView mode={mode} now={now} card={card} winners={winners} assistantOff={showcase !== null || early} />
     </>
   );
+}
+
+/** The share link for the card after an entry: the code from the redirect, only in its exact shape. */
+function shareOf(code: string | undefined): string | undefined {
+  const c = typeof code === "string" ? code.trim().toUpperCase() : "";
+  return /^HBC-[A-Z0-9]{6}$/.test(c) ? referralLink(c) : undefined;
 }
 
 /** This request's own UTM tags, as typed (cleaned again on the server when posted). */

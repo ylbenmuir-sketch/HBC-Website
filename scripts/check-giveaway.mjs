@@ -367,7 +367,10 @@ try {
     const r = await postForm("/10years/signup", { first_name: "Early", last_name: "Tester", email: EARLY.email, zip: "37064", age_rules: "on" }, EARLY);
     const row = (await dump("giveaway_notify")).find((n) => n.email === EARLY.email);
     const mail = newEmails();
-    expect("before Nov 9: a real notify signup saves a row and sends the confirmation email", /\?sent=1$/.test(r.location) && Boolean(row) && mail.length === 1 && to(mail[0]) === EARLY.email, `${r.location} row=${Boolean(row)} mails=${mail.length}`);
+    // Ben, 2026-11-08: the submit is the signup — on the list at once; the email is a follow-up with no link to click.
+    expect("before Nov 9: a real notify signup saves a row, ON THE LIST at once, and sends the on-the-list email", /\?sent=1$/.test(r.location) && Boolean(row?.verified_at) && mail.length === 1 && to(mail[0]) === EARLY.email && /You're on the list/.test(mail[0].body.subject) && !linkIn(mail[0], "/10years/verify"), `${r.location} row=${Boolean(row)} verified=${Boolean(row?.verified_at)} mails=${mail.length}`);
+    const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), EARLY);
+    expect("…and the card after it says 'You're on the list.', not 'Check your inbox'", /You(?:&#x27;|')re on the list\./.test(card.text) && !/Check your inbox/.test(card.text));
   }
   for (const [m, dm] of [["live", "live"], ["closed", "closed"], ["thanks", "thank_you"]]) {
     const pg = await get(`/10years?mode=${m}`);
@@ -429,7 +432,7 @@ try {
   await clock(ct(2026, 11, 10, 10));
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
-  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Send me my entry link/.test(page.text), String(page.status));
+  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Put me on the list/.test(page.text) && !/entry link/.test(page.text), String(page.status));
   // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
@@ -459,20 +462,16 @@ try {
   const bot = await postForm("/10years/signup", signupFields(person("Bot", "bot@example.test"), { website: "http://spam.example" }), person("Bot1", ""));
   expect("a filled honeypot is swallowed as a success", /\?sent=1$/.test(bot.location), bot.location);
   let fresh = newEmails();
-  expect("three verification emails, none for the bot", fresh.length === 3 && !fresh.some((e) => to(e) === "bot@example.test"), `${fresh.length}`);
-  const verifyLinks = Object.fromEntries(fresh.map((e) => [to(e), linkIn(e, "/10years/verify")]));
-  expect("each verification email carries a /10years/verify link", Object.values(verifyLinks).every(Boolean));
-  for (const p of [A, B, Cc]) {
-    const v = await get(new URL(verifyLinks[p.email]).pathname + new URL(verifyLinks[p.email]).search, p);
-    expect(`${p.name}: verification click confirms`, v.status === 200 && /data-ok="1"/.test(v.text));
+  expect("three on-the-list emails, none for the bot", fresh.length === 3 && !fresh.some((e) => to(e) === "bot@example.test") && fresh.every((e) => /You're on the list/.test(e.body.subject)), `${fresh.length}`);
+  expect("no follow-up email carries a verify link (the submit was the signup)", fresh.every((e) => !linkIn(e, "/10years/verify")));
+  {
+    const repeat = await postForm("/10years/signup", signupFields(A), A);
+    expect("A again: ?already=1 and no second email", /\?already=1$/.test(repeat.location) && newEmails().length === 0, repeat.location);
   }
-  const twice = await get(new URL(verifyLinks[A.email]).pathname + new URL(verifyLinks[A.email]).search, A);
-  expect("a second click is still a confirmation", /data-ok="1"/.test(twice.text));
   expect("a garbage verify token is refused", /data-ok="0"/.test((await get("/10years/verify?t=nonsense")).text));
-  // Plus the unconfirmed early signup from before Nov 9 (Ben, 2026-11-07), which is never sent an entry link.
+  // Plus the early signup from before Nov 9 (Ben, 2026-11-07) — on the list too, now that the submit is the signup.
   const allNotify = await dump("giveaway_notify");
-  const notifyRows = allNotify.filter((r) => r.email !== "early.bird.nov7@example.test");
-  expect("three notify rows, all verified, plus the unconfirmed early one; nobody entered yet", allNotify.length === 4 && notifyRows.length === 3 && notifyRows.every((r) => r.verified_at) && (await dump("giveaway_people")).length === 0, `${allNotify.length}`);
+  expect("four notify rows (A, B, C and the early one), all on the list with no click; nobody entered yet", allNotify.length === 4 && allNotify.every((r) => r.verified_at) && (await dump("giveaway_people")).length === 0, `${allNotify.length}`);
   expect("no email was sent for the honeypot or the non-TN ZIP", newEmails().length === 0);
 
   /* ── It's live ──────────────────────────────────────────────────────── */
@@ -480,7 +479,7 @@ try {
   await clock(C.SCHEDULE.entriesOpen.at);
   const live = await tick("entries open");
   fresh = newEmails();
-  expect("cron: the It's live job sent three emails", live.sends.sent === 3 && fresh.length === 3, JSON.stringify(live.sends));
+  expect("cron: the It's live job sent four emails (A, B, C, the early one)", live.sends.sent === 4 && fresh.length === 4, JSON.stringify(live.sends));
   expect("It's live emails are marketing: unsubscribe link + List-Unsubscribe header", fresh.every((e) => unsubLinkIn(e) && e.body?.headers?.["List-Unsubscribe"]));
   const enterLinks = Object.fromEntries(fresh.map((e) => [to(e), linkIn(e, "/10years/enter/")]));
   expect("each carries a one-tap /10years/enter link", Object.values(enterLinks).every(Boolean));
@@ -495,11 +494,11 @@ try {
   // Rev 2, P0-2: no code and no named gift before the reveal — a tease instead.
   expect("A: one You're in email, with the share link, the gift tease and NO code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && !/10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text) && /thank-you gift for every entrant/.test(youreIn[0].body.text) && !/first visit/i.test(youreIn[0].body.text), `${youreIn.length}`);
   expect("A (not a client): no forward-to-a-friend line", !/Forward this to a friend/.test(youreIn[0]?.body.text ?? ""));
-  // Monday 9 am: the reminder to B and C (not A).
+  // Monday 9 am: the reminder to B, C and the early one (not A).
   await clock(C.SCHEDULE.mondayReminder.at);
   const rem = await tick("Monday reminder");
   fresh = newEmails();
-  expect("Monday 9 am: reminder to B and C only", rem.sends.sent === 2 && fresh.length === 2 && !fresh.some((e) => to(e) === A.email) && fresh.every((e) => /Today at noon/.test(e.body.subject)), JSON.stringify(rem.sends));
+  expect("Monday 9 am: reminder to B, C and the early one only", rem.sends.sent === 3 && fresh.length === 3 && !fresh.some((e) => to(e) === A.email) && fresh.every((e) => /Today at noon/.test(e.body.subject)), JSON.stringify(rem.sends));
   // B taps Monday 2 pm → no early bird; C never taps.
   await clock(ct(2026, 11, 16, 14));
   const tapB = await get(new URL(enterLinks[B.email]).pathname, B);
@@ -522,14 +521,23 @@ try {
     expect("a phone that isn't a US number is refused with ?error=invalid_phone", /error=invalid_phone/.test(bad.location), bad.location);
     expect("…and nothing is saved or sent for it", !(await dump("giveaway_people")).some((p) => p.email === Q.email) && newEmails().length === 0);
   }
+  // Ben, 2026-11-08: the submit IS the entry. No click anywhere below.
+  const entriesOf = async (email) => {
+    const p = (await dump("giveaway_people")).find((x) => x.email_display === email || x.email === email);
+    return p ? (await dump("giveaway_entries")).filter((e) => e.person_id === p.id && !e.void_reason).length : -1;
+  };
   let r = await postForm("/10years/signup", signupFields(D), D);
-  expect("D: entry signup → ?sent=1", /\?sent=1$/.test(r.location), r.location);
-  let [dVerify] = newEmails();
-  const click = async (p, link) => get(new URL(link).pathname + new URL(link).search, p);
-  const dv = await click(D, linkIn(dVerify, "/10years/verify"));
-  expect("D: verified with 1 entry", /data-ok="1"/.test(dv.text) && /with 1 entry/.test(dv.text));
-  const dIn = newEmails()[0];
+  expect("D: entry submit → ?sent=1 with the share code", /\?sent=1&share=HBC-[A-Z0-9]{6}$/.test(r.location), r.location);
+  expect("D: entered with 1 entry by the submit alone", (await entriesOf(D.email)) === 1, String(await entriesOf(D.email)));
+  {
+    const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), D);
+    expect("D: the card says You're in and shows the share link at once", /data-ok="1"/.test(card.text) && /You(?:&#x27;|')re in\./.test(card.text) && /\?ref=HBC-[A-Z0-9]{6}/.test(card.text) && !/Check your inbox/.test(card.text));
+  }
+  const dMail = newEmails();
+  expect("D: exactly one email, You're in (no confirmation email)", dMail.length === 1 && /You're in\./.test(dMail[0].body.subject) && !linkIn(dMail[0], "/10years/verify"), dMail.map((e) => e.body.subject).join(" | "));
+  const dIn = dMail[0];
   const dRef = dIn.body.text.match(/ref=(HBC-[A-Z0-9]{6})/)[1];
+  expect("D: the page's share code and the email's match", r.location.endsWith(`share=${dRef}`), `${r.location} vs ${dRef}`);
   // The code is issued at verification but only mailed at the reveal: read it from the store (giveaway tables, memory mode).
   const dPerson = (await dump("giveaway_people")).find((p) => p.email_display === D.email || p.email === D.email);
   const dCode = (await dump("giveaway_offers")).find((o) => o.person_id === dPerson?.id)?.code;
@@ -549,15 +557,13 @@ try {
   const refPage = await get(`/10years?ref=${dRef}`, E);
   expect("E: the referral link's page carries the hidden ref field", new RegExp(`name="ref" value="${dRef}"`).test(refPage.text));
   r = await postForm("/10years/signup", signupFields(E, { ref: dRef }), E);
-  const ev = await click(E, linkIn(newEmails()[0], "/10years/verify"));
-  expect("E: verified with 2 entries (+1 for the link)", /with 2 entries/.test(ev.text));
+  expect("E: entered with 2 entries (+1 for the link) by the submit alone", (await entriesOf(E.email)) === 2, String(await entriesOf(E.email)));
   expect("E: You're in says they came through a friend's link", /friend's link/.test(newEmails()[0]?.body.text ?? ""));
   // P1-6: first-touch attribution through the real form post.
   {
     const FB = person("FB", "fran.facebook@example.test");
     await get("/10years?utm_source=facebook&utm_medium=paid&utm_campaign=hbc10y&utm_content=ad-1", FB);
     await postForm("/10years/signup", signupFields(FB, { utm_source: "facebook", utm_medium: "paid", utm_campaign: "hbc10y", utm_content: "ad-1" }), FB);
-    await click(FB, linkIn(newEmails()[0], "/10years/verify"));
     newEmails();
     const ppl = await dump("giveaway_people");
     const byEmail = (e) => ppl.find((p) => p.email_display === e || p.email === e);
@@ -570,8 +576,7 @@ try {
   // F from D's own device (same address and browser) → voided.
   const F = { ...person("F", "fake.friend@example.test"), ip: D.ip, ua: D.ua };
   r = await postForm("/10years/signup", signupFields(F, { ref: dRef }), F);
-  const fv = await click(F, linkIn(newEmails()[0], "/10years/verify"));
-  expect("F (same device as D): entered with 1 entry — the bonus is voided", /with 1 entry/.test(fv.text));
+  expect("F (same device as D): entered with 1 entry — the bonus is voided", (await entriesOf(F.email)) === 1, String(await entriesOf(F.email)));
   newEmails();
   const voided = (await dump("giveaway_entries")).filter((e) => e.void_reason);
   expect("F's +1 exists as a voided row (logged, not dropped)", voided.length === 1 && /same device/.test(voided[0].void_reason));
@@ -580,8 +585,7 @@ try {
   for (let i = 1; i <= 11; i++) {
     const G = person(`G${i}`, `friend${i}.of.dan@example.test`, i % 2 ? { phone: `(629) 555-01${String(i).padStart(2, "0")}` } : {});
     r = await postForm("/10years/signup", signupFields(G, { ref: dRef }), G);
-    const gv = await click(G, linkIn(newEmails()[0], "/10years/verify"));
-    if (i === 11) expect("the 11th friend still gets their +1", /with 2 entries/.test(gv.text));
+    if (i === 11) expect("the 11th friend still gets their +1", (await entriesOf(G.email)) === 2, String(await entriesOf(G.email)));
     newEmails();
   }
   dCount = (await dump("giveaway_entries")).filter((e) => e.kind === "referral_bonus" && !e.void_reason).length;
@@ -590,7 +594,6 @@ try {
   // Unknown code: entered normally.
   const H = person("H", "hal.noref@example.test");
   r = await postForm("/10years/signup", signupFields(H, { ref: "HBC-ZZZZZZ" }), H);
-  await click(H, linkIn(newEmails()[0], "/10years/verify"));
   newEmails();
   // The limiter: six attempts from one address within the hour.
   const spam = person("S", "spam@example.test");
@@ -600,7 +603,8 @@ try {
   newEmails();
   const peopleNow = await dump("giveaway_people");
   const verifiedNow = peopleNow.filter((p) => p.verified_at).length;
-  expect("verified people so far: A, B, D, E, FB, F, G1–G11, H = 18", verifiedNow === 18, `${verifiedNow}`);
+  // The five limiter submits that got through are entries too: the submit is the entry (Ben, 2026-11-08).
+  expect("entered people so far: A, B, D, E, FB, F, G1–G11, H = 18, plus the 5 limiter submits = 23", verifiedNow === 23, `${verifiedNow}`);
 
   /* ── admin sign-in ──────────────────────────────────────────────────── */
   section("Admin sign-in");
@@ -895,7 +899,7 @@ try {
   expect("the Dialpad mock log is EMPTY — no giveaway path sent a text", texts().length === 0, `${texts().length} text(s)`);
   const all = emails();
   const kinds = {
-    verify: all.filter((e) => /Confirm your (email|entry)/.test(e.body.subject)).length,
+    onList: all.filter((e) => /You're on the list/.test(e.body.subject)).length,
     itsLive: all.filter((e) => /^\[DRAFT\] It's live/.test(e.body.subject)).length,
     reminder: all.filter((e) => /Today at noon/.test(e.body.subject)).length,
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
@@ -908,6 +912,7 @@ try {
     visitorConfirm: all.filter((e) => /^We got your request/.test(e.body.subject)).length,
   };
   const accounted = Object.values(kinds).reduce((a, b) => a + b, 0);
+  expect("no 'Confirm your email/entry' email was ever sent (Ben, 2026-11-08)", !all.some((e) => /Confirm your (email|entry)/.test(e.body.subject)));
   console.log(`  emails: ${JSON.stringify(kinds)} = ${accounted} of ${all.length}`);
   expect("every email in the mock is one of the expected kinds", accounted === all.length, `${all.length - accounted} unexplained`);
   expect("0 winner emails, 7 staff alerts (six drawings + one redraw)", !all.some((e) => /You won/.test(e.body.subject)) && kinds.alerts === 7, `${all.filter((e) => /You won/.test(e.body.subject)).length}/${kinds.alerts}`);
@@ -987,7 +992,7 @@ async function engineOffChecks() {
   const liveForm = await postForm("/10years/signup?mode=live", { first_name: "Show", last_name: "Case", email: P.email, zip: "37064", age_rules: "on" }, P);
   expect("off: the live form → 303 to ?mode=live&sent=1", liveForm.status === 303 && /\/10years\?mode=live&sent=1$/.test(liveForm.location), `${liveForm.status} ${liveForm.location}`);
   const sent = await get("/10years?mode=live&sent=1");
-  expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /Check your inbox/.test(sent.text));
+  expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /You(?:&#x27;|')re in\./.test(sent.text));
   expect("off: no email was sent", emails().length === before, `${emails().length - before} sent`);
   {
     const off = await stats();

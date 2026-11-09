@@ -145,10 +145,9 @@ const grand = GC.drawing("grand");
 const sarah = { name: "Sarah Mitchell", email: "sarah.mitchell@gmail.com", zip: "37064", city: "Franklin", phone: "(615) 555-0134" };
 const G_NOW = new Date("2026-11-16T18:00:30Z");
 const giveawayEmails = [
-  { file: "g01-notify-verify", ...G.notifyVerifyEmail({ firstName: "Sarah", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
+  { file: "g01-notify-on-list", ...G.notifyOnListEmail({ firstName: "Sarah", pageUrl: "https://harmonizedbraincenterstn.com/10years", footing }) },
   { file: "g02-its-live", ...G.itsLiveEmail({ firstName: "Sarah", enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
   { file: "g03-monday-reminder", ...G.mondayReminderEmail({ firstName: "Sarah", enterUrl: "https://harmonizedbraincenterstn.com/10years/enter/TOKEN", firstDrawing: mon, footing }) },
-  { file: "g04-entry-verify", ...G.entryVerifyEmail({ firstName: "Marcus", verifyUrl: "https://harmonizedbraincenterstn.com/10years/verify?t=TOKEN", footing }) },
   { file: "g05-youre-in", ...G.youreInEmail({ firstName: "Sarah", referredBonus: true, nextDrawing: tue, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-K7M2PQ", footing }) },
   { file: "g05b-youre-in-existing-client", ...G.youreInEmail({ firstName: "Marcus", referredBonus: false, nextDrawing: mon, referralUrl: "https://harmonizedbraincenterstn.com/10years?ref=HBC-Q2WX9A", footing }) },
   // The six drawing-week countdown emails (Mon–Fri 4 pm, Sat 9 am): all six in scripts/render-hype-previews.mjs.
