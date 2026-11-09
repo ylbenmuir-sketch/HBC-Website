@@ -100,6 +100,17 @@ export const EMAILS = {
     body: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken} Central. Enter on the giveaway page then. We'll also email you a one-tap entry button to make it quicker.`),
     button: D("See the prizes"),
     small: D("Didn't sign up? Ignore this email or unsubscribe below."),
+    /** The new layout (Ben, 2026-11-09): prize teaser, date block, calendar, tell a friend. Values from config. */
+    prizesLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes`),
+    grandLabel: (dayName: string) => D(`${dayName} · Grand prize`),
+    dateSub: D("Entries open"),
+    calendarLabel: D("Add it to your calendar"),
+    calendarGoogle: D("Google Calendar"),
+    calendarIcs: D("Apple / Outlook"),
+    calendarTitle: D("HBC 10-year giveaway — entries open"),
+    calendarDescription: (url: string) => D(`Entries open now for the Harmonized Brain Centers 10-year giveaway. Enter here: ${url}`),
+    shareLine: D("Know someone who'd love this? Share the giveaway:"),
+    bannerAlt: D("Harmonized Brain Centers — 10-year giveaway"),
   },
 
   /** 2. "It's live" — the one-tap entry. */

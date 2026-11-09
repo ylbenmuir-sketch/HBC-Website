@@ -20,6 +20,7 @@
 import { escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
 import { EMAILS, SHARED } from "./copy";
+import { CALENDAR_PATHS, CALENDAR_UTM, SHARE_UTM } from "./calendar";
 import {
   CLINIC_DAYS_AFTER_REVEAL,
   DEVICES,
@@ -42,6 +43,7 @@ import {
   RESPONSE_WINDOW_MS,
   prizeFor,
   prizeName,
+  prizeTotalFloorUsd,
   type Drawing,
 } from "./config";
 
@@ -125,6 +127,99 @@ function offerPanel(input: { code: string }): { html: string; text: string[] } {
 }
 
 /* ------------------------------------------------------------------ */
+/* The giveaway look (Ben, 2026-11-09)                                  */
+/* ------------------------------------------------------------------ */
+
+/* One 600px white card on ivory, the 10-year banner as its only image
+ * (hosted on our domain, public/email/10years-banner.png, ~600 wide, with
+ * alt text on an ivory ground so it reads with images off), live text
+ * below, the visitor footer. Tables and inline styles for Gmail; an MSO
+ * wrapper pins 600px in Outlook; the <style> block only adds Apple Mail's
+ * dark mode. The countdown emails keep their own look (Ben's mockup). */
+export const EMAIL_BANNER_PATH = "/email/10years-banner.png";
+
+function bannerRow(siteUrl: string): string {
+  return `<tr><td class="hbc-banner" bgcolor="${C.ivory}" style="padding:0;background:${C.ivory};border-radius:8px 8px 0 0;font-size:0;line-height:0;"><img src="${esc(siteUrl)}${EMAIL_BANNER_PATH}" width="600" height="200" alt="${esc(EMAILS.notifyOnList.bannerAlt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:8px 8px 0 0;font-family:${SERIF};font-size:20px;line-height:1.3;color:${C.navy};text-align:center;"></td></tr>`;
+}
+
+function giveawayPage({ title, preheader, rows, siteUrl }: { title: string; preheader: string; rows: string[]; siteUrl: string }): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>${esc(title)}</title>
+<style>
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  @media (prefers-color-scheme: dark) {
+    .hbc-bg { background: #11181f !important; }
+    .hbc-card { background: #1a232c !important; border-color: #2c3843 !important; }
+    .hbc-name, .hbc-text, .hbc-text a { color: #f1ece2 !important; }
+    .hbc-gold { color: #d2b77c !important; }
+    .hbc-muted, .hbc-muted a { color: #a9b2ba !important; }
+    .hbc-panel, .hbc-foot { background: #212c36 !important; border-color: #2c3843 !important; }
+    .hbc-rule { border-color: #2c3843 !important; }
+    .hbc-btn { background: #f1ece2 !important; border-color: #f1ece2 !important; }
+    .hbc-btn a { color: #1c2b3a !important; }
+    .hbc-btn-quiet { background: #1a232c !important; border-color: #3a4753 !important; }
+    .hbc-btn-quiet a { color: #f1ece2 !important; }
+    .hbc-foot div, .hbc-foot a { color: #a9b2ba !important; }
+    .hbc-link { color: #d2b77c !important; }
+  }
+</style>
+</head>
+<body class="hbc-bg" style="margin:0;padding:0;background:${C.ivory2};-webkit-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">${esc(preheader)}&#8199;&#847;&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>
+<table role="presentation" class="hbc-bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.ivory2};" bgcolor="${C.ivory2}">
+<tr><td align="center" style="padding:12px 8px;">
+<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" class="hbc-card" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:${C.white};border:1px solid ${C.line};border-radius:8px;" bgcolor="${C.white}">
+${bannerRow(siteUrl)}
+${rows.join("\n")}
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+/** The notify email's date block: gold caps on navy (solid fill, so dark mode keeps it). */
+function dateBlock(top: string, sub: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="${C.navy}" style="background:${C.navy};border-radius:6px;padding:14px 12px;text-align:center;"><div style="font-family:${SANS};font-size:15px;font-weight:800;letter-spacing:0.14em;color:#d2b77c;line-height:1.35;">${esc(top)}</div><div style="font-family:${SANS};font-size:15px;font-weight:600;color:${C.ivory};line-height:1.35;padding-top:4px;">${esc(sub)}</div></td></tr></table>`;
+}
+
+/** "SUNDAY · NOV 15 · 6 PM CENTRAL" from config. */
+function entriesOpenCaps(): string {
+  const at = SCHEDULE.entriesOpen.at;
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "long" }).format(at);
+  const md = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric" }).format(at);
+  return `${day} · ${md} · ${clock(at)} Central`.toUpperCase();
+}
+
+/** The teaser's three highlights: the grand prize, then the two richest daily prizes (config's values and short names). */
+export function notifyHighlights(): Array<{ label: string; name: string; value: string }> {
+  const grand = drawing("grand");
+  const daily = DRAWINGS.filter((d) => d.kind === "daily").sort((a, b) => prizeRetailUsd(prizeFor(b.slot)) - prizeRetailUsd(prizeFor(a.slot))).slice(0, 2);
+  return [grand, ...daily].map((d) => ({
+    label: d.kind === "grand" ? EMAILS.notifyOnList.grandLabel(d.dayName) : d.dayName,
+    name: shortPrizeName(prizeFor(d.slot)),
+    value: usd(prizeRetailUsd(prizeFor(d.slot))),
+  }));
+}
+
+function highlightRows(list: Array<{ label: string; name: string; value: string }>): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${list
+    .map(
+      (h, i) =>
+        `<tr><td class="hbc-rule" valign="top" style="padding:8px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><div class="hbc-gold" style="font-family:${SANS};font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${C.goldInk};line-height:1.3;">${esc(h.label)}</div><div class="hbc-text" style="font-family:${SANS};font-size:15px;color:${C.ink};line-height:1.35;padding-top:2px;">${esc(h.name)}</div></td><td class="hbc-rule" valign="top" align="right" style="padding:8px 0 8px 12px;white-space:nowrap;${i ? `border-top:1px solid ${C.line};` : ""}"><div class="hbc-name" style="font-family:${SANS};font-size:17px;font-weight:700;color:${C.navy};line-height:1.3;padding-top:12px;">${esc(h.value)}</div></td></tr>`
+    )
+    .join("")}</table>`;
+}
+
+/* ------------------------------------------------------------------ */
 /* 1. Notify-me: you're on the list                                    */
 /* ------------------------------------------------------------------ */
 
@@ -133,20 +228,52 @@ function offerPanel(input: { code: string }): { html: string; text: string[] } {
  *  page, never a condition. */
 export function notifyOnListEmail(input: { firstName: string; pageUrl: string; footing: Footing }): Email {
   const c = EMAILS.notifyOnList;
+  const site = input.footing.siteUrl;
   const heading = c.heading(input.firstName);
   const body = c.body(spokenCentralDateTime(SCHEDULE.entriesOpen.at));
+  const prizes = c.prizesLine(prizeTotalFloorUsd());
+  const highlights = notifyHighlights();
+  const when = entriesOpenCaps();
+  const google = `${site}${CALENDAR_PATHS.google}?${CALENDAR_UTM}`;
+  const ics = `${site}${CALENDAR_PATHS.ics}?${CALENDAR_UTM}`;
+  const share = `${site}/10years?${SHARE_UTM}`;
+  const shareShown = `${host(site)}/10years`;
   const rows = [
-    section(`${h1(heading)}${p(body)}`, "18px 20px 0"),
-    section(buttons([[c.button, input.pageUrl]]), "16px 20px 0"),
-    section(small(c.small), "8px 20px 0"),
-    gap(16),
+    section(`${h1(heading)}${p(body)}`, "20px 24px 0"),
+    section(`<div class="hbc-name" style="font-family:${SANS};font-size:20px;font-weight:800;color:${C.navy};line-height:1.25;">${esc(prizes)}</div><div style="padding-top:6px;">${highlightRows(highlights)}</div>`, "18px 24px 0"),
+    section(buttons([[c.button, input.pageUrl]]), "12px 24px 0"),
+    section(dateBlock(when, c.dateSub), "20px 24px 0"),
+    section(`<div class="hbc-muted" style="font-family:${SANS};font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${C.slate};padding-bottom:8px;">${esc(c.calendarLabel)}</div>${buttons([[c.calendarGoogle, google], [c.calendarIcs, ics]], { quiet: true })}`, "16px 24px 0"),
+    section(`<div class="hbc-text" style="font-family:${SANS};font-size:15px;color:${C.ink};line-height:1.45;">${esc(c.shareLine)} <a class="hbc-link" href="${esc(share)}" style="color:${C.sageDeep};font-weight:600;">${esc(shareShown)}</a></div>`, "18px 24px 0"),
+    section(small(c.small), "12px 24px 0"),
+    gap(18),
     visitorFooter(input.footing, false, SHARED.whyYouGotThisReminder),
   ];
   return {
     subject: c.subject,
     preheader: c.preheader,
-    html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, body, "", `${c.button}: ${input.pageUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false, SHARED.whyYouGotThisReminder)]),
+    html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: site }),
+    text: textOf([
+      heading,
+      body,
+      "",
+      prizes,
+      ...highlights.map((h) => `• ${h.label}: ${h.name} — ${h.value}`),
+      "",
+      `${c.button}: ${input.pageUrl}`,
+      "",
+      `${when} — ${c.dateSub}`,
+      "",
+      `${c.calendarLabel}:`,
+      `${c.calendarGoogle}: ${google}`,
+      `${c.calendarIcs}: ${ics}`,
+      "",
+      `${c.shareLine} ${share}`,
+      "",
+      c.small,
+      "",
+      ...visitorFooterText(input.footing, false, SHARED.whyYouGotThisReminder),
+    ]),
   };
 }
 
@@ -170,7 +297,7 @@ export function itsLiveEmail(input: { firstName: string; enterUrl: string; first
   return {
     subject,
     preheader: c.preheader,
-    html: page({ title: subject, preheader: c.preheader, rows }),
+    html: giveawayPage({ title: subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([heading, body, prize.partner, c.earlyBird, "", `${c.button}: ${input.enterUrl}`, "", c.small, "", ...visitorFooterText(input.footing, true)]),
   };
 }
@@ -194,7 +321,7 @@ export function mondayReminderEmail(input: { firstName: string; enterUrl: string
   return {
     subject,
     preheader: c.preheader,
-    html: page({ title: subject, preheader: c.preheader, rows }),
+    html: giveawayPage({ title: subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([heading, body, prize.partner, "", `${c.button}: ${input.enterUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }
@@ -227,7 +354,7 @@ export function youreInEmail(input: {
   return {
     subject: c.subject,
     preheader: c.preheader,
-    html: page({ title: c.subject, preheader: c.preheader, rows }),
+    html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([
       heading,
       body,
@@ -464,7 +591,7 @@ export function thankYouEmail(input: { firstName: string; offerCode: string; boo
   return {
     subject: c.subject,
     preheader: c.preheader,
-    html: page({ title: c.subject, preheader: c.preheader, rows }),
+    html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([heading, c.body, "", ...offer.text, open, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }
@@ -492,7 +619,7 @@ export function giftReminderEmail(input: { kind: "reminder" | "last_call"; first
   return {
     subject,
     preheader: c.preheader,
-    html: page({ title: subject, preheader: c.preheader, rows }),
+    html: giveawayPage({ title: subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([heading, body, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
   };
 }

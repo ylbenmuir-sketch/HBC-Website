@@ -67,3 +67,54 @@ export async function renderTenYearsCard() {
     }
   );
 }
+
+/** The email header (Ben, 2026-11-09): the share card's seal, "10 Years" and the
+ *  week, as a 1200×400 banner shown at 600 wide. scripts/render-email-banner.mjs
+ *  turns it into the small, palette PNG the emails link to (public/email/). */
+export const EMAIL_BANNER_SIZE = { width: 1200, height: 400 };
+
+export async function renderTenYearsEmailBanner() {
+  const { serif, sans } = await fonts();
+  const t = PAGES.tenYears;
+  const weekYear = centralParts(DRAWINGS[0].at).year;
+  const years = weekYear - ESTABLISHED_YEAR.value;
+  const total = prizeTotalFloorUsd();
+  const heading = t.heading.split(/(?<=[.!])\s+/);
+  return new ImageResponse(
+    (
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: IVORY, padding: "40px 64px 30px", fontFamily: "DM Sans", color: NAVY }}>
+        <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+          <div style={{ width: 236, height: 236, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 118, border: `3px solid ${GOLD}`, position: "relative", flexShrink: 0 }}>
+            <div style={{ position: "absolute", top: 8, left: 8, right: 8, bottom: 8, borderRadius: 110, border: `1.5px solid ${GOLD}` }} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ fontSize: 17, letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD_INK, display: "flex" }}>{t.sealYears(years)}</div>
+              <div style={{ fontFamily: "Cormorant Garamond", fontSize: 116, lineHeight: 1, color: GOLD_INK, display: "flex", marginTop: 2 }}>{years}</div>
+              <div style={{ fontSize: 16, letterSpacing: "0.26em", color: GOLD_INK, display: "flex", marginTop: 4 }}>{t.sealSpan(ESTABLISHED_YEAR.value, weekYear)}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", marginLeft: 52 }}>
+            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 148, lineHeight: 0.9, color: SAGE, letterSpacing: "-0.03em", display: "flex" }}>{t.og.years(years)}</div>
+            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 60, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 12 }}>{heading.length > 1 ? heading.slice(1).join(" ") : ogTitle()}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "2px solid rgba(169,133,63,0.5)", paddingTop: 18 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="19" stroke={GOLD} strokeWidth="1.2" />
+              <path d="M6 22 C10 22, 11 14, 14 17 S 18 27, 21 21 S 26 17, 29 20 S 33 21, 34 20" stroke="#8FA08D" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            </svg>
+            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 30, lineHeight: 1, display: "flex", marginLeft: 14 }}>{SITE_NAME}</div>
+          </div>
+          <div style={{ fontSize: 26, color: GOLD_INK, display: "flex", fontWeight: 500 }}>{t.og.value(total)}</div>
+        </div>
+      </div>
+    ),
+    {
+      ...EMAIL_BANNER_SIZE,
+      fonts: [
+        { name: "Cormorant Garamond", data: serif, weight: 600, style: "normal" },
+        { name: "DM Sans", data: sans, weight: 500, style: "normal" },
+      ],
+    }
+  );
+}
