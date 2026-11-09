@@ -136,11 +136,15 @@ export const FEATURE_ASSISTANT =
  * are a tool, not a page a visitor chats on. /10years joins this list in
  * Phase 2 behind the config dates (lib/giveaway/config.ts).
  *
+ * /review and /start (2026-11-09): the review-request page staff text to
+ * clients is two buttons, and the Instagram landing page carries the
+ * contact form itself (the /contact reasoning). Neither is a page to chat on.
+ *
  * Path prefixes, matched the way the layout audit matches them: the route
  * itself and anything beneath it. Read by components/BottomBarContext.tsx,
  * which is the one place that decides what is at the bottom of the screen.
  */
-export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin"] as const;
+export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin", "/review", "/start"] as const;
 
 /**
  * The window (decision 14): /10years from the notify-me date through the
@@ -162,9 +166,11 @@ export const ASSISTANT_SUPPRESSED_WINDOW = { route: "/10years", from: CHAT_SUPPR
  * /contact has its own Text/Call row (Ben, 2026-11-02), and /admin and
  * /10years are the two routes the assistant already leaves alone — the
  * giveaway page has its own entry bar at the foot of the screen, and the
- * staff screens are a tool. Path prefixes, matched like the list above.
+ * staff screens are a tool. /start has its own Call and Text buttons and the
+ * form (2026-11-09), and /review is two buttons a client was texted to
+ * press. Path prefixes, matched like the list above.
  */
-export const MOBILE_BAR_SUPPRESSED_ROUTES = ["/contact", "/admin", "/10years"] as const;
+export const MOBILE_BAR_SUPPRESSED_ROUTES = ["/contact", "/admin", "/10years", "/review", "/start"] as const;
 
 /** True when the assistant must not render on this pathname, whatever the date. */
 export function assistantSuppressedOn(pathname: string | null): boolean {
@@ -634,6 +640,23 @@ const STORY_FOR_CONCERN: Record<string, string> = {
   "emotional-regulation": "Andreanna",
   "brain-fog": "Rachel",
 };
+/**
+ * The one Google review a local search page quotes (Ben, 2026-11-09): the
+ * two open centers' location pages, the Franklin page (Nashville's, since
+ * that is the center it sends people to), /brain-map and /lens-neurofeedback.
+ * Picked by reviewer name and center from GOOGLE_REVIEW_QUOTES above, so the
+ * words are the same ones the concern pages quote — exact text, labelled
+ * "Google review" — and nothing is written for the page. Null when the name
+ * is not in the list, and the page then shows no review rather than a
+ * made-up one.
+ */
+export function googleReviewNamed(
+  firstName: string,
+  center: "nashville" | "murfreesboro",
+): Testimonial | null {
+  return GOOGLE_REVIEW_QUOTES.find((t) => t.firstName === firstName && t.center === center) ?? null;
+}
+
 export function storyForConcern(slug: string): Testimonial | null {
   const name = STORY_FOR_CONCERN[slug];
   if (name) return VERIFIED_TESTIMONIALS.find((t) => t.firstName === name) ?? null;

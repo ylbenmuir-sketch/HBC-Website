@@ -1,17 +1,26 @@
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
+  BRAIN_MAP_PRICE,
+  COURSE_VARIES_NOTE,
   FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
+  FULL_COURSE,
+  INSURANCE_POLICY,
+  MAINTENANCE,
+  MAINTENANCE_NOTE,
   PHONE,
   REVIEW_COUNTS,
   SESSION_LENGTH,
   SHOW_DRAFT_CONTENT,
   SHOW_REVIEWS,
+  type Testimonial,
   type Verifiable,
+  googleReviewNamed,
   isDraftText,
   verifiedOr,
 } from "./site-config";
+import { SITE_FAQS } from "./faq";
 import { practitionersAt, teamForCenter } from "./team";
 
 /**
@@ -143,10 +152,15 @@ export type Location = {
    *
    * Recorded here for post-visit follow-up — the message a practitioner sends
    * someone who has just finished a course of sessions — because that link is
-   * per center and this file is where per-center facts live. Kept out of the
-   * site itself deliberately: a public "leave us a review" button next to a
+   * per center and this file is where per-center facts live. Kept off every
+   * public page deliberately: a public "leave us a review" button next to a
    * 5.0 average solicits from an audience that has already been shown the
    * rating, which is the shape of review gating even when nothing is filtered.
+   * The ONE place it renders is /review (app/review/page.tsx, 2026-11-09): a
+   * noindex page, in no menu and no sitemap, that staff text to a client after
+   * a visit. It shows no rating, offers nothing, and asks every client the
+   * same way — no filtering of happy from unhappy, which Google's policy
+   * forbids.
    *
    * Verified as write links, not read links: both redirect to a Maps URL
    * carrying `!12e1` and `laa=nmx-review-solicitation-ia2` — Google's
@@ -157,6 +171,15 @@ export type Location = {
    * they may not have had.
    */
   reviewWriteUrl: string | null;
+  /**
+   * The one Google review this center's page quotes (Ben, 2026-11-09), named
+   * by the reviewer's first name in GOOGLE_REVIEW_QUOTES (lib/site-config.ts)
+   * — the same words the concern pages quote, never written for the page.
+   * Null for a center with no reviews. Franklin, which has none, shows
+   * Nashville's instead (the center it sends people to); the page reads
+   * `localReview()` below, which makes that choice in one place.
+   */
+  googleReview: string | null;
   /**
    * This center's own phone number, shaped and gated like PHONE in
    * lib/site-config.ts.
@@ -407,6 +430,9 @@ export const locations: Location[] = [
     reviewReadUrl: "https://www.google.com/maps?cid=690359003920868215",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CXcjMjzbpZQJEBM/review",
+    /** Marjorie H. — a parent, on this center's listing; the page is written
+     *  for a worried parent or adult. */
+    googleReview: "Marjorie",
     /**
      * PHONE's own value and flag, not a copy: Nashville's line is the
      * practice's primary number, and referencing the one constant means
@@ -518,9 +544,12 @@ export const locations: Location[] = [
     finalSub:
       "How much LENS helps varies from person to person, and it isn't a replacement for care you're already getting. A call is the fastest way to find out whether it fits — and whether a weekday or a Saturday suits you better.",
     metaTitle: "LENS Neurofeedback in Nashville, TN",
+    // 144 chars.
     metaDescription:
       "LENS neurofeedback in Nashville, TN — gentle, passive sessions Tuesday through Saturday, just off I-24 at Thompson Lane. The first call is free.",
-    dateModified: "2026-10-20",
+    // 2026-11-09: FAQs, a Google review, directions link, the proof line and
+    // the first-visit handoff — the local-search pass (Ben).
+    dateModified: "2026-11-09",
   },
   {
     slug: "murfreesboro",
@@ -565,6 +594,8 @@ export const locations: Location[] = [
     reviewReadUrl: "https://www.google.com/maps?cid=978389547119317468",
     /** Supplied by Ben. Follow-up only — see `reviewWriteUrl` on the type. */
     reviewWriteUrl: "https://g.page/r/CdyRAAAc8JMNEBM/review",
+    /** Trisha — the one quoted review on this center's listing. */
+    googleReview: "Trisha",
     /**
      * Murfreesboro's own line — supplied by Ben (September 2026 roster
      * brief), published on the practice's previous site, and the number its
@@ -709,9 +740,12 @@ export const locations: Location[] = [
     finalSub:
       "How much LENS helps varies from person to person, and it isn't a replacement for care you're already getting. A call is the fastest way to find out whether it fits, and which of our two centers is easier for you to reach.",
     metaTitle: "LENS Neurofeedback in Murfreesboro, TN",
+    // 147 chars (under 150 — Ben, 2026-11-09; "adults, children and
+    // families" became "adults and children").
     metaDescription:
-      "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults, children and families across Rutherford County. First call free.",
-    dateModified: "2026-10-14",
+      "LENS neurofeedback in downtown Murfreesboro, TN — gentle, passive sessions for adults and children across Rutherford County. The first call is free.",
+    // 2026-11-09: the local-search pass (see Nashville).
+    dateModified: "2026-11-09",
   },
   {
     slug: "franklin",
@@ -737,6 +771,8 @@ export const locations: Location[] = [
     reviewReadUrl: null,
     /** No profile to review yet — the center has not opened. */
     reviewWriteUrl: null,
+    /** None of its own; the page quotes Nashville's (localReview below). */
+    googleReview: null,
     /** The practice's primary line — an unopened center has no line of its own. */
     phone: { value: PHONE.value, verified: PHONE.verified },
     cardExtra: "Serving Franklin, Brentwood, Spring Hill & Thompson's Station",
@@ -752,11 +788,19 @@ export const locations: Location[] = [
      */
     hero: {
       eyebrow: "Franklin, Tennessee — coming soon",
-      titleLead: "The same gentle care is coming to ",
-      titleAccent: "Williamson County",
-      titleAccentWideBreak: true,
-      titleTail: ".",
-      sub: "Opening soon. Practitioners for our Franklin center complete the same Harmonized training before opening day. Until then, Nashville and Murfreesboro are open now — start there, and your plan transfers when we open.",
+      /**
+       * The query, not the announcement (Ben, 2026-11-09): this page is the
+       * site's answer to "neurofeedback near Franklin, TN", and the answer
+       * is the Nashville center — open now, already seeing clients from
+       * Franklin, Brentwood, Spring Hill and Thompson's Station (its
+       * communities list), with the Franklin center to follow. The old H1
+       * ("The same gentle care is coming to Williamson County.") named no
+       * service. `titleAccentWideBreak` went with "Williamson County".
+       */
+      titleLead: "Neurofeedback near ",
+      titleAccent: "Franklin, TN",
+      titleTail: " — at our Nashville center, open now.",
+      sub: "A Franklin center is coming. Until it opens, Williamson County families come to our Nashville center just off I-24 at Thompson Lane — the same passive, brief LENS sessions, Tuesday through Saturday — and your plan transfers when Franklin opens.",
       arrivalLines: ["Start at Nashville or", "Murfreesboro today"],
     },
     plateSpec: "Franklin — exterior storefront, golden hour",
@@ -801,9 +845,19 @@ export const locations: Location[] = [
     finalHeading: "Franklin is coming. Start at Nashville or Murfreesboro now.",
     finalSub:
       "Both centers are open and welcoming new clients. Tell us what's going on and we'll tell you plainly whether LENS is a fit, and which center is easier for you to reach — your plan transfers to Franklin when it opens.",
+    /**
+     * Set for a coming-soon center, against the rule on the type, because
+     * this page CAN serve the query it names (Ben, 2026-11-09): it sends a
+     * Franklin searcher to the Nashville center, which is open and already
+     * serves Franklin. 31 characters.
+     */
+    metaTitle: "Neurofeedback near Franklin, TN",
+    // 149 chars.
     metaDescription:
-      "LENS neurofeedback is coming soon to Franklin, TN. Until the Williamson County center opens, start at Nashville or Murfreesboro — the first call is free.",
-    dateModified: "2026-10-13",
+      "Neurofeedback near Franklin, TN: a Franklin center is coming. Until then, Williamson County families come to our Nashville center. First call free.",
+    // 2026-11-09: retargeted to "neurofeedback near Franklin, TN" — new H1,
+    // title, Nashville's address, hours and directions, FAQs, a review.
+    dateModified: "2026-11-09",
   },
 ];
 
@@ -1069,4 +1123,102 @@ export function combinedReviewCount(): number | null {
  */
 export function reviewCountLabel(count: number): string {
   return `${count.toLocaleString("en-US")} ${count === 1 ? "review" : "reviews"}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* The local search pass (Ben, 2026-11-09)                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The open center a visitor to this page is actually sent to: the center
+ * itself, or for a coming-soon center the Nashville center — the one whose
+ * communities list already holds Franklin's towns, and the one the Franklin
+ * page's "Until we open" section books. One function, so the page's facts
+ * block, its review and its FAQs cannot point at different centers.
+ */
+export function servingCenter(location: Location): Location {
+  if (!location.comingSoon) return location;
+  return getLocation("nashville") ?? location;
+}
+
+/**
+ * The Google review a location page quotes — this center's, or the serving
+ * center's for a coming-soon page. Franklin quotes a DIFFERENT Nashville
+ * review from the Nashville page's own, so the two pages do not share a
+ * quote. Gated like every review surface: null while SHOW_REVIEWS is off.
+ */
+export function localReview(location: Location): Testimonial | null {
+  if (!SHOW_REVIEWS) return null;
+  const center = servingCenter(location);
+  if (center.slug !== "nashville" && center.slug !== "murfreesboro") return null;
+  const name = location.comingSoon ? "Diana" : location.googleReview;
+  return name ? googleReviewNamed(name, center.slug) : null;
+}
+
+export type LocalFaq = { q: string; a: string };
+
+/** A sitewide FAQ's answer, by its question — so a local page's answer is
+ *  the one /faq gives, word for word, not a second copy. */
+function siteAnswer(question: string): string {
+  const faq = SITE_FAQS.find((f) => f.q === question);
+  if (!faq) throw new Error(`lib/locations.ts: no sitewide FAQ "${question}"`);
+  return faq.a;
+}
+
+/**
+ * The 4–6 questions a location page answers under its own heading, and
+ * publishes as FAQPage markup (visible answers only). Every answer is built
+ * from facts the site already states — lib/site-config.ts constants, this
+ * file's hours and parking lines, the sitewide FAQ — and nothing here is a
+ * new claim. Hours come from `formattedHours`, never typed: the week has one
+ * home. "How far from Franklin" is deliberately not asked — no drive time is
+ * recorded anywhere in the repo.
+ */
+export function locationFaqs(location: Location): LocalFaq[] {
+  const center = servingCenter(location);
+  const hours = formattedHours(center).join(" · ");
+  const address = formattedAddress(center);
+  const common: LocalFaq[] = [
+    {
+      q: "Do I need a referral or a diagnosis to start?",
+      a: "No. No referral is needed, and no diagnosis is needed to start — people describe what's in front of them, not a label. The first step is a free phone call.",
+    },
+    {
+      q: "What happens at the first visit, and what does it cost?",
+      a: `Plan for ${FIRST_VISIT_DURATION}. ${BRAIN_MAP_NAME} — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a ${BRAIN_MAP_POINTS}-point recording of brain activity, your map explained point by point, and a written plan you keep.`,
+    },
+    {
+      q: "How many sessions will I need?",
+      a:
+        `A full course is ${FULL_COURSE.value.sessions} sessions, then maintenance, and ${FULL_COURSE.value.children}. ` +
+        `From there: ${MAINTENANCE.value}. ${MAINTENANCE_NOTE} ${COURSE_VARIES_NOTE}`,
+    },
+    { q: "Do you take insurance, HSA or FSA?", a: INSURANCE_POLICY },
+    { q: "Is it appropriate for children?", a: siteAnswer("Is it appropriate for children?") },
+  ];
+  if (location.comingSoon) {
+    return [
+      {
+        q: `Is the ${location.name} center open yet?`,
+        a: `Not yet. Until it opens, Williamson County clients come to our ${center.name} center${address ? ` at ${address}` : ""} — it already sees clients from ${location.planning.communities.join(", ")} — and your plan transfers to ${location.name} when the doors open.${hours ? ` ${center.name} hours: ${hours}.` : ""}`,
+      },
+      ...common,
+    ];
+  }
+  if (location.slug === "nashville") {
+    return [
+      ...common,
+      {
+        q: "Where do I park, and are you open on Saturdays?",
+        a: `${location.planning.gettingHere}${hours ? ` Hours: ${hours}.` : ""}`,
+      },
+    ];
+  }
+  return [
+    ...common,
+    {
+      q: "What days are you open, and where do I park?",
+      a: `${hours ? `${hours}. ` : ""}${location.planning.gettingHere}${location.planning.scheduleNote ? ` ${location.planning.scheduleNote.body}` : ""}`,
+    },
+  ];
 }

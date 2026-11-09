@@ -3271,3 +3271,31 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   header.site.campaign .nav { padding: 0 16px; gap: 12px; }
   .nav-campaign { gap: 14px; }
 }
+
+/* ── The local search pages (Ben, 2026-11-09) ──────────────────────────
+   components/CenterFacts.tsx — one center's address, week, parking,
+   directions and the three ways in; components/LocalProof.tsx — the proof
+   line with the partner badge under it. Two blocks side by side from 761px
+   (`.center-facts-grid`); one column under it. */
+.center-facts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.center-facts { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 30px 32px; }
+.center-facts h3 { font-family: var(--serif); font-size: 26px; font-weight: 500; line-height: 1.2; color: var(--navy); margin: 0 0 18px; }
+.center-facts dl { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; margin: 0; }
+.center-facts dl > div:last-child { grid-column: 1 / -1; }
+.center-facts dt { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: var(--gold-ink); margin: 0 0 6px; }
+.center-facts dd { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink); }
+.center-facts-links { margin: 18px 0 0; font-size: 14.5px; display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.center-facts-links a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
+.center-facts-links a:hover { border-color: var(--gold); }
+.center-facts-ctas { margin-top: 22px; gap: 10px 22px; }
+.center-facts-ctas .btn-ghost { padding-left: 0; padding-right: 0; }
+.local-proof { margin-top: 36px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.local-proof.center { align-items: center; text-align: center; }
+.proof-line { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--slate); font-weight: 500; }
+.local-proof .partner-badge-small { margin-top: 0; }
+@media (max-width: 760px) {
+  .center-facts-grid { grid-template-columns: 1fr; gap: 18px; }
+  .center-facts { padding: 24px 22px; }
+  .center-facts dl { grid-template-columns: 1fr; gap: 14px; }
+  .center-facts h3 { font-size: 23px; }
+}

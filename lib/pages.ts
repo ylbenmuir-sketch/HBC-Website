@@ -54,8 +54,10 @@ export type StaticPage = {
   description: string;
   /** ISO date the copy on this page last changed. Bump it by hand. */
   dateModified: string;
-  /** schema.org type of the page's WebPage node. */
-  type: PageType;
+  /** schema.org type of the page's WebPage node — or two, `["WebPage",
+   *  "FAQPage"]`, on a page that renders a Q&A list and passes it as the
+   *  node's mainEntity (the /concerns/[slug] pattern; 2026-11-09). */
+  type: PageType | PageType[];
   /** Breadcrumb label, for the routes that render a trail. */
   crumb: string;
 };
@@ -122,8 +124,10 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "LENS neurofeedback — some call it LENS therapy — is passive and brief, with nothing to practice. What it is, who it's for, Nashville & Murfreesboro.",
-    dateModified: "2026-10-20",
-    type: "WebPage",
+    // 2026-11-09: FAQs, a Google review, both centers' addresses and
+    // directions, the proof line — the local-search pass.
+    dateModified: "2026-11-09",
+    type: ["WebPage", "FAQPage"],
     crumb: "LENS neurofeedback",
   },
   {
@@ -148,13 +152,15 @@ export const staticPages: StaticPage[] = [
     // "Brain mapping in Nashville" (Ben, 2026-11-02), 51 characters.
     title: "Brain Mapping in Nashville: The Harmonized Brain Map",
     absoluteTitle: true,
-    // 158 chars. The boundary leads — "a recording, not a test" is the rule
-    // the page is written under, and the one sentence that must survive
-    // truncation.
+    // 146 chars (under 150 — Ben, 2026-11-09). The boundary leads — "a
+    // recording, not a test" is the rule the page is written under, and the
+    // one sentence that must survive truncation.
     description:
-      "Brain mapping in Nashville & Murfreesboro: a 21-point recording of brain activity that guides your plan — not a test. What it involves and what it costs.",
-    dateModified: "2026-10-13",
-    type: "WebPage",
+      "Brain mapping in Nashville & Murfreesboro: a 21-point recording of brain activity that guides your plan — not a test. What it involves and costs.",
+    // 2026-11-09: the H1 names the query, plus who it helps, both centers,
+    // a Google review and FAQs.
+    dateModified: "2026-11-09",
+    type: ["WebPage", "FAQPage"],
     crumb: "The Brain Map",
   },
   {

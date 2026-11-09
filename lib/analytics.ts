@@ -127,6 +127,10 @@ export const LINK_LOCATIONS = [
   "contact_page",
   "confirmation",
   "mobile_bar",
+  // The local search pages' Call/Text buttons (2026-11-09): /brain-map and
+  // /lens-neurofeedback heroes and the center blocks under them, the /start
+  // Instagram landing page. The location pages keep location_hero.
+  "local_page",
   "other",
 ] as const;
 
@@ -147,9 +151,12 @@ export const CONCERN_CHIPS = [
 ] as const;
 export type ConcernChip = (typeof CONCERN_CHIPS)[number];
 /** Where a partner badge sits (components/PartnerBadge.tsx); snake_case like LINK_LOCATIONS. */
-export const PARTNER_BADGE_LOCATIONS = ["home_strip", "contact_page"] as const;
+export const PARTNER_BADGE_LOCATIONS = ["home_strip", "contact_page", "local_page"] as const;
 export type PartnerBadgeLocation = (typeof PARTNER_BADGE_LOCATIONS)[number];
 export type LinkLocation = (typeof LINK_LOCATIONS)[number];
+/** The two centers with a Google listing to review (lib/locations.ts). */
+export const REVIEW_CENTERS = ["nashville", "murfreesboro"] as const;
+export type ReviewCenter = (typeof REVIEW_CENTERS)[number];
 
 type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
 
@@ -168,6 +175,9 @@ export type SiteEvent =
   /** The /10years form was sent (P1-6): the normalized channel only. */
   | { name: "giveaway_signup_submit"; params: { channel: Channel } }
   | { name: "guide_download"; params: { page_path: string } }
+  /** /review (2026-11-09): a tap on a center's "write a review" button. The
+   *  center only — the page is noindex and carries nothing about the client. */
+  | { name: "review_link_click"; params: { center: ReviewCenter } }
   | {
       name: "partner_badge_click";
       params: { partner: "amen_clinics"; location: PartnerBadgeLocation; page_path: string };
@@ -396,6 +406,11 @@ export function partnerBadgeEvent(
     name: "partner_badge_click",
     params: { partner: "amen_clinics", location, page_path: cleanPath(pagePath) },
   };
+}
+
+/** A tap on /review's "Nashville" or "Murfreesboro" button: the center, fixed. */
+export function reviewLinkEvent(center: ReviewCenter): SiteEvent {
+  return { name: "review_link_click", params: { center } };
 }
 
 export function trackGuideDownload(pagePath: unknown): void {

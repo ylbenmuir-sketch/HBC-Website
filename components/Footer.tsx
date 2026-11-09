@@ -34,6 +34,9 @@ const groups = [
     links: [
       { label: "LENS neurofeedback", href: "/lens-neurofeedback" },
       { label: "How LENS works", href: "/how-lens-works" },
+      // The query the page is built for, as its anchor (Ben, 2026-11-09):
+      // "brain mapping nashville" sits at ~7 in Search Console and climbing.
+      { label: "Brain mapping in Nashville", href: "/brain-map" },
       { label: "Your first visit", href: "/first-visit" },
       { label: "FAQ", href: "/faq" },
       { label: "Resources", href: "/resources" },
@@ -44,9 +47,14 @@ const groups = [
   {
     heading: "Visit",
     links: [
-      { label: "Nashville", href: "/locations/nashville" },
-      { label: "Murfreesboro", href: "/locations/murfreesboro" },
-      { label: "Franklin — coming soon", href: "/locations/franklin" },
+      // The two local clusters' queries as anchor text (Ben, 2026-11-09):
+      // the location pages are the site's answer to "neurofeedback
+      // nashville" and "neurofeedback murfreesboro" (QUERY-TO-PAGE-MAP.md),
+      // and a footer anchor reading "Nashville" said nothing about what
+      // the page was for. Franklin's names what its page answers now.
+      { label: "Neurofeedback in Nashville", href: "/locations/nashville" },
+      { label: "Neurofeedback in Murfreesboro", href: "/locations/murfreesboro" },
+      { label: "Neurofeedback near Franklin — coming soon", href: "/locations/franklin" },
       { label: "Concierge — at home", href: "/concierge" },
       { label: "All locations", href: "/locations" },
     ],

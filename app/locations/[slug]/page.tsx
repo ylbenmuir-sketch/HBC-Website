@@ -8,6 +8,10 @@ import PhotoFrame from "@/components/PhotoFrame";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import ConfirmTag from "@/components/ConfirmTag";
+import CenterFacts from "@/components/CenterFacts";
+import FAQAccordion from "@/components/FAQAccordion";
+import GoogleReviewQuote from "@/components/GoogleReviewQuote";
+import LocalProof from "@/components/LocalProof";
 import { Btn, TalkCta } from "@/components/Buttons";
 import PageSchema from "@/components/PageSchema";
 import {
@@ -15,15 +19,20 @@ import {
   formattedHours,
   getLocation,
   hasConfirmedAddress,
+  localReview,
+  locationFaqs,
   locationPhone,
   locationReviewCount,
+  mapsUrl,
   reviewCountLabel,
   saturdayLabel,
+  servingCenter,
   spacePhotoCount,
 } from "@/lib/locations";
-import { localBusinessRef, localBusinessSchema, personSchema } from "@/lib/schema";
+import { faqQuestions, localBusinessRef, localBusinessSchema, personSchema } from "@/lib/schema";
 import { type CenterSlug, publishableMembers, teamForCenter } from "@/lib/team";
 import {
+  EXPERIENCES_DISCLAIMER,
   PHYSICIAN_REFERRALS,
   SHOW_DRAFT_CONTENT,
   SHOW_TEAM,
@@ -136,9 +145,18 @@ export default async function LocationPage({
     ? "/contact"
     : `/contact?center=${location.slug}`;
   // The open center a coming-soon page points at: Nashville (the one whose
-  // communities list already includes Franklin's towns).
-  const nearest = location.comingSoon ? getLocation("nashville") ?? null : null;
-  const nearestPhone = nearest ? locationPhone(nearest) : null;
+  // communities list already includes Franklin's towns) — servingCenter()
+  // in lib/locations.ts, so the facts block, the review and the FAQs below
+  // all name the same center.
+  const nearest = location.comingSoon ? servingCenter(location) : null;
+  // The local search pass (Ben, 2026-11-09): one Google review from this
+  // center's listing (Nashville's on the Franklin page), 4–6 FAQs built from
+  // facts the site already states, and a directions link. The FAQs are also
+  // the page node's mainEntity, so the markup carries exactly the questions
+  // a visitor can read.
+  const review = localReview(location);
+  const faqs = locationFaqs(location);
+  const directions = mapsUrl(location);
   const arrivalLines = location.hero.arrivalLines
     .filter(Boolean)
     .filter((l) => SHOW_DRAFT_CONTENT || !isDraftText(l));
@@ -193,7 +211,8 @@ export default async function LocationPage({
         path={`/locations/${location.slug}`}
         breadcrumb={trail}
         page={{
-          type: "WebPage",
+          type: faqs.length > 0 ? ["WebPage", "FAQPage"] : "WebPage",
+          ...(faqs.length > 0 ? { mainEntity: faqQuestions(faqs) } : {}),
           name: location.metaTitle
             ? location.metaTitle
             : `${location.name} — ${location.comingSoon ? "Coming Soon — " : ""}${SITE_NAME}`,
@@ -418,19 +437,23 @@ export default async function LocationPage({
                 {location.name} is coming soon. Until then, our {nearest.name}{" "}
                 center is a short drive away.
               </h2>
-              <div className="hero-ctas" style={{ marginTop: 26 }} data-link-location="location_hero">
-                <TalkCta href={`/contact?center=${nearest.slug}`} />
-                {nearestPhone && (
-                  <>
-                    <Btn href={`tel:${nearestPhone.tel}`} variant="ghost">
-                      Call {nearestPhone.display}
-                    </Btn>
-                    <Btn href={`sms:${nearestPhone.tel}`} variant="ghost" external>
-                      Text {nearestPhone.display}
-                    </Btn>
-                  </>
-                )}
-              </div>
+              {/* The open center's address, week, parking, directions and
+                  the three ways in (components/CenterFacts.tsx, 2026-11-09)
+                  — read from Nashville's own record, not retyped here. It
+                  replaced a bare row of the same three buttons: a visitor
+                  who searched "neurofeedback near Franklin" is deciding
+                  whether the drive is reasonable, and the address and hours
+                  are what decide it. */}
+              <p>
+                It already sees clients from {location.planning.communities.join(", ")}.
+                Start there, and your plan transfers to {location.name} when the doors
+                open.
+              </p>
+              <CenterFacts
+                location={nearest}
+                linkLocation="location_hero"
+                heading={`${nearest.name} center — open now`}
+              />
             </div>
           </div>
         </section>
@@ -585,6 +608,14 @@ export default async function LocationPage({
                 </div>
               ))}
             </div>
+            {/* The handoff to the page that owns the first visit in full
+                (QUERY-TO-PAGE-MAP.md rule 1): four short steps here, the
+                minute-by-minute account there. */}
+            <div className="hero-ctas" style={{ marginTop: 28 }}>
+              <Btn href="/first-visit" variant="invert">
+                The first visit, minute by minute
+              </Btn>
+            </div>
           </div>
           <div className="rv">
             {SHOW_DRAFT_CONTENT ? (
@@ -640,6 +671,29 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* One Google review from this center's own listing, the proof line
+          and the partner line (Ben, 2026-11-09). The quote is one of the
+          GOOGLE_REVIEW_QUOTES the concern pages already quote — exact
+          words, labelled "Google review", linked to the listing it is on —
+          chosen per center in lib/locations.ts (Nashville's on the Franklin
+          page, which sends people there). Visible content only: no Review
+          markup, no AggregateRating (see REVIEWS in lib/site-config.ts). */}
+      {review && (
+        <section className="sec sec-ivory2">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="sec-head rv" style={{ marginBottom: 26 }}>
+              <div className="eyebrow">From our Google reviews</div>
+              <h2>What {servingCenter(location).name} clients say.</h2>
+            </div>
+            <div className="rv">
+              <GoogleReviewQuote review={review} />
+              <p className="sample-note" style={{ marginTop: 14 }}>{EXPERIENCES_DISCLAIMER}</p>
+              <LocalProof />
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="sec">
         <div className="wrap split">
@@ -722,6 +776,16 @@ export default async function LocationPage({
                       ? "We'll send simple directions and arrival details when you book."
                       : location.planning.gettingHere}
                   </p>
+                  {/* Google's documented directions URL from the confirmed
+                      address — the schema's `hasMap`, as a link a visitor
+                      can tap (2026-11-09). Null until the address is. */}
+                  {directions && (
+                    <p style={{ marginTop: 8 }}>
+                      <a href={directions} target="_blank" rel="noopener">
+                        Get directions &rarr;
+                      </a>
+                    </p>
+                  )}
                 </div>
               </div>
               {/* Nashville's Saturday, Murfreesboro's three clinic days. The
@@ -763,6 +827,26 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* The questions a local searcher asks before calling (Ben,
+          2026-11-09) — referral, cost, sessions, insurance, children, and
+          this center's own parking and week. Built in lib/locations.ts from
+          facts the site already states; the same list is the page node's
+          mainEntity above, so the FAQPage markup is exactly what is on the
+          page. */}
+      {faqs.length > 0 && (
+        <section className="sec sec-ivory2">
+          <div className="wrap" style={{ maxWidth: 900 }}>
+            <div className="sec-head rv">
+              <div className="eyebrow">Before you call</div>
+              <h2>
+                Questions people ask about {location.comingSoon ? "starting" : `the ${location.name} center`}.
+              </h2>
+            </div>
+            <FAQAccordion items={faqs} />
+          </div>
+        </section>
+      )}
 
       <FinalCTA
         heading={location.finalHeading}

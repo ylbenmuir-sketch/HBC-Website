@@ -336,7 +336,7 @@ export const resources: Resource[] = [
     slug: "homework-battles",
     cluster: "focus",
     datePublished: "2026-07-13",
-    dateModified: "2026-10-12",
+    dateModified: "2026-11-09",
     tag: "For parents",
     title: "Homework battles: what's really happening in a stuck brain",
     crumbLabel: "Homework battles",
@@ -395,10 +395,13 @@ export const resources: Resource[] = [
       },
       {
         type: "links",
-        text: "If the evenings above sound like yours, these two pages go further.",
+        text: "If the evenings above sound like yours, these two pages go further — and the two centers are where it starts.",
         items: [
           { href: "/concerns/focus-adhd", label: "Focus, ADHD & follow-through" },
           { href: "/concerns/children-school", label: "Children, school & transitions" },
+          // The local pages, by the query they answer (Ben, 2026-11-09).
+          { href: "/locations/nashville", label: "Neurofeedback in Nashville" },
+          { href: "/locations/murfreesboro", label: "Neurofeedback in Murfreesboro" },
         ],
       },
       { type: "note", text: ARTICLE_NOTE },
@@ -414,7 +417,7 @@ export const resources: Resource[] = [
     slug: "exhausted-after-eight-hours",
     cluster: "sleep",
     datePublished: "2026-08-23",
-    dateModified: "2026-10-12",
+    dateModified: "2026-11-09",
     tag: "Sleep",
     title: "Why you're exhausted after eight hours of sleep",
     crumbLabel: "Exhausted after eight hours",
@@ -480,6 +483,8 @@ export const resources: Resource[] = [
         items: [
           { href: "/concerns/sleep", label: "Sleep difficulties" },
           { href: "/concerns/brain-fog", label: "Brain fog, memory & mental fatigue" },
+          // The local page (Ben, 2026-11-09): Saturday mornings are on its schedule.
+          { href: "/locations/nashville", label: "Neurofeedback in Nashville, Tuesday to Saturday" },
         ],
       },
       { type: "note", text: ARTICLE_NOTE },
@@ -665,6 +670,8 @@ export const resources: Resource[] = [
     // the verified constants interpolated below.
     cluster: null,
     datePublished: "2026-10-15",
+    // 2026-11-09: a link to a local page in the handoff block.
+    dateModified: "2026-11-09",
     tag: "How it works",
     title: "LENS vs. traditional neurofeedback: an honest comparison",
     crumbLabel: "LENS vs. traditional neurofeedback",
@@ -730,6 +737,8 @@ export const resources: Resource[] = [
         items: [
           { href: "/how-lens-works", label: "How a LENS session works" },
           { href: "/lens-neurofeedback", label: "What LENS neurofeedback is" },
+          // The recording both approaches start from (Ben, 2026-11-09).
+          { href: "/brain-map", label: "Brain mapping in Nashville: the first visit's recording" },
           { href: "/first-visit", label: "Your first visit" },
           { href: "/faq", label: "The full FAQ" },
         ],
@@ -827,7 +836,7 @@ export const resources: Resource[] = [
     slug: "the-last-ten-percent",
     cluster: "focus",
     datePublished: "2026-08-23",
-    dateModified: "2026-10-12",
+    dateModified: "2026-11-09",
     tag: "For adults",
     title: "The last ten percent: why finishing is a different job from starting",
     crumbLabel: "The last ten percent",
@@ -895,6 +904,9 @@ export const resources: Resource[] = [
         items: [
           { href: "/concerns/focus-adhd", label: "Focus, ADHD & follow-through" },
           { href: "/adults", label: "LENS for adults" },
+          // The local page (Ben, 2026-11-09): the center for commuters who
+          // would rather not add the drive to the end of a day.
+          { href: "/locations/murfreesboro", label: "Neurofeedback in Murfreesboro" },
         ],
       },
       { type: "note", text: ARTICLE_NOTE },

@@ -8,10 +8,13 @@ import ProofBand from "@/components/ProofBand";
 import LocationCard from "@/components/LocationCard";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FAQAccordion from "@/components/FAQAccordion";
+import GoogleReviewQuote from "@/components/GoogleReviewQuote";
+import LocalProof from "@/components/LocalProof";
 import PageSchema from "@/components/PageSchema";
 import { Btn, TalkCta } from "@/components/Buttons";
-import { serviceRef, serviceSchema } from "@/lib/schema";
-import { locations, hoursSummary } from "@/lib/locations";
+import { faqQuestions, serviceRef, serviceSchema } from "@/lib/schema";
+import { locations, formattedAddress, hoursSummary, mapsUrl } from "@/lib/locations";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
@@ -28,16 +31,21 @@ import {
   PACKAGE_PRICE,
   PACKAGE_SAVING,
   PACKAGE_SESSIONS,
+  PHONE_DISPLAY,
+  PHONE_TEL,
   SESSION_LENGTH,
   SESSION_PRICE,
   SHOW_DRAFT_CONTENT,
+  SHOW_PHONE,
   SHOW_TEAM,
   STAT_SESSIONS,
   TESTIMONIALS,
   TRAINING_CLAIM,
   VERIFIED_TESTIMONIALS,
+  googleReviewNamed,
   verifiedOr,
 } from "@/lib/site-config";
+import { SITE_FAQS } from "@/lib/faq";
 import { hubTrail, pageMetadata } from "@/lib/pages";
 
 /**
@@ -182,6 +190,50 @@ const concernCards = [
 /** The page's one video, below the fold (lib/videos.ts → `home`). */
 const VIDEO = videoForPage("/lens-neurofeedback");
 
+/** Lori F., Nashville — a Google review in the sleep concern's words. Exact
+ *  text from GOOGLE_REVIEW_QUOTES; the page writes no review of its own. */
+const REVIEW = googleReviewNamed("Lori", "nashville");
+
+/** A sitewide FAQ's answer, word for word (lib/faq.ts). */
+function siteAnswer(question: string): string {
+  const faq = SITE_FAQS.find((f) => f.q === question);
+  if (!faq) throw new Error(`/lens-neurofeedback: no sitewide FAQ "${question}"`);
+  return faq.a;
+}
+
+/**
+ * The questions a "lens neurofeedback" searcher asks before calling (the
+ * local search pass, Ben, 2026-11-09). Each answer is a fact the site
+ * already states — the sitewide FAQ, lib/site-config.ts, the centers' own
+ * records — never a new claim; the FAQPage markup is these six, as shown.
+ * "How it works" is deliberately not one of them: /how-lens-works owns the
+ * mechanism (see the split at the top of this file).
+ */
+const FAQS = [
+  {
+    q: "Is LENS the same as traditional neurofeedback?",
+    a: "No. LENS is passive feedback, not active training: there is no screen-based program to master, nothing to concentrate on, and nothing to practice between visits. A session is short, a child does not have to sit still and succeed at something, and nobody leaves with homework.",
+  },
+  { q: "Does it hurt?", a: siteAnswer("Does it hurt?") },
+  { q: "How many sessions will I need?", a: siteAnswer("How many sessions will I need?") },
+  {
+    q: "Do I need a referral or a diagnosis?",
+    a: "No. No referral is needed, and no diagnosis is needed to start — people describe what's in front of them. The first step is a free phone call, and nothing is booked on it unless you want it to be.",
+  },
+  {
+    q: "Where is LENS neurofeedback offered in Middle Tennessee?",
+    a: locations
+      .filter((l) => !l.comingSoon)
+      .map((l) => {
+        const address = formattedAddress(l);
+        const hours = hoursSummary(l);
+        return `${l.name}: ${address ?? l.address.addressLocality}${hours ? ` (${hours})` : ""}.`;
+      })
+      .join(" ") + " A Franklin center is coming; Williamson County clients come to Nashville until it opens.",
+  },
+  { q: "Does insurance cover it, or can I use an HSA or FSA?", a: INSURANCE_POLICY },
+];
+
 export default function LensNeurofeedbackPage() {
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
   const sessionCount = verifiedOr(STAT_SESSIONS);
@@ -190,6 +242,10 @@ export default function LensNeurofeedbackPage() {
   const murfreesboro = locations.find((l) => l.slug === "murfreesboro")!;
   const nashvilleHours = hoursSummary(nashville);
   const murfreesboroHours = hoursSummary(murfreesboro);
+  const nashvilleAddress = formattedAddress(nashville);
+  const murfreesboroAddress = formattedAddress(murfreesboro);
+  const nashvilleMap = mapsUrl(nashville);
+  const murfreesboroMap = mapsUrl(murfreesboro);
 
   const trail = hubTrail("/lens-neurofeedback");
   return (
@@ -200,6 +256,7 @@ export default function LensNeurofeedbackPage() {
         path="/lens-neurofeedback"
         breadcrumb={trail}
         about={serviceRef()}
+        mainEntity={faqQuestions(FAQS)}
         nodes={[serviceSchema({ description: metadata.description! })]}
       />
       <Breadcrumbs trail={trail} />
@@ -208,8 +265,11 @@ export default function LensNeurofeedbackPage() {
         <div className="wrap split" style={{ alignItems: "center" }}>
           <div className="rv">
             <div className="eyebrow">LENS neurofeedback</div>
+            {/* The query leads (Ben, 2026-11-09). Not "how it works": the
+                mechanism is /how-lens-works's cluster, and the H1 is where
+                a page declares what it competes for (the split above). */}
             <h1>
-              What LENS neurofeedback (LENS therapy) is, and{" "}
+              LENS neurofeedback: what it is, and{" "}
               <em className="sage">who it&rsquo;s for.</em>
             </h1>
             <p className="sub">
@@ -217,8 +277,20 @@ export default function LensNeurofeedbackPage() {
               people call it LENS therapy &mdash; passive, brief, and with
               nothing to practice between visits.
             </p>
-            <div className="hero-ctas" style={{ marginTop: 34 }}>
+            {/* Get Started, Call, Text (Ben, 2026-11-09) — the main line,
+                reported as local_page (components/Analytics.tsx). */}
+            <div className="hero-ctas" style={{ marginTop: 34 }} data-link-location="local_page">
               <TalkCta />
+              {SHOW_PHONE && (
+                <>
+                  <Btn href={`tel:${PHONE_TEL}`} variant="ghost">
+                    Call {PHONE_DISPLAY}
+                  </Btn>
+                  <Btn href={`sms:${PHONE_TEL}`} variant="ghost" external>
+                    Text {PHONE_DISPLAY}
+                  </Btn>
+                </>
+              )}
             </div>
             <p className="micro">
               Nashville &amp; Murfreesboro
@@ -647,6 +719,10 @@ export default function LensNeurofeedbackPage() {
               training.
             </p>
           </div>
+          {/* Each card carries the center's address and a directions link
+              now (Ben, 2026-11-09), from the same gated helpers the location
+              pages use — the schema's hasMap URL as a link a visitor can
+              tap. */}
           <div className="loc-grid rv">
             <LocationCard
               location={nashville}
@@ -655,10 +731,24 @@ export default function LensNeurofeedbackPage() {
                   <b>Open &mdash; welcoming new clients</b>
                   <br />
                   Serving Davidson County.
+                  {nashvilleAddress && (
+                    <>
+                      <br />
+                      {nashvilleAddress}
+                    </>
+                  )}
                   {nashvilleHours && (
                     <>
                       <br />
                       {nashvilleHours}
+                    </>
+                  )}
+                  {nashvilleMap && (
+                    <>
+                      <br />
+                      <a href={nashvilleMap} target="_blank" rel="noopener">
+                        Get directions &rarr;
+                      </a>
                     </>
                   )}
                 </>
@@ -671,15 +761,32 @@ export default function LensNeurofeedbackPage() {
                   <b>Open &mdash; welcoming new clients</b>
                   <br />
                   Serving Rutherford County.
+                  {murfreesboroAddress && (
+                    <>
+                      <br />
+                      {murfreesboroAddress}
+                    </>
+                  )}
                   {murfreesboroHours && (
                     <>
                       <br />
                       {murfreesboroHours}
                     </>
                   )}
+                  {murfreesboroMap && (
+                    <>
+                      <br />
+                      <a href={murfreesboroMap} target="_blank" rel="noopener">
+                        Get directions &rarr;
+                      </a>
+                    </>
+                  )}
                 </>
               }
             />
+          </div>
+          <div className="rv" style={{ marginTop: 34 }}>
+            <LocalProof />
           </div>
           <div
             className="hero-ctas rv"
@@ -689,6 +796,37 @@ export default function LensNeurofeedbackPage() {
               All locations
             </Btn>
           </div>
+        </div>
+      </section>
+
+      {/* One Google review (Lori F., Nashville) — the same quote
+          /concerns/sleep carries, exact words, labelled and linked to the
+          listing. Separate from the trio above, which is written-permission
+          client stories only. Visible content; no Review markup. */}
+      {REVIEW && (
+        <section className="sec">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="sec-head rv" style={{ marginBottom: 26 }}>
+              <div className="eyebrow">From our Google reviews</div>
+              <h2>In a client&rsquo;s own words, on Google.</h2>
+            </div>
+            <div className="rv">
+              <GoogleReviewQuote review={REVIEW} />
+              <p className="sample-note" style={{ marginTop: 14 }}>{EXPERIENCES_DISCLAIMER}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* The six questions a searcher asks before calling (FAQS above),
+          published as the page node's FAQPage mainEntity. */}
+      <section className="sec sec-ivory2">
+        <div className="wrap" style={{ maxWidth: 900 }}>
+          <div className="sec-head rv">
+            <div className="eyebrow">Before you call</div>
+            <h2>Questions people ask about LENS neurofeedback.</h2>
+          </div>
+          <FAQAccordion items={FAQS} />
         </div>
       </section>
 

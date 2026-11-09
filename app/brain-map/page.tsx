@@ -1,22 +1,34 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import BrainMapFigure from "@/components/BrainMapFigure";
+import CenterFacts from "@/components/CenterFacts";
+import FAQAccordion from "@/components/FAQAccordion";
+import GoogleReviewQuote from "@/components/GoogleReviewQuote";
+import LocalProof from "@/components/LocalProof";
 import PlaceholderPlate from "@/components/PlaceholderPlate";
 import FinalCTA from "@/components/FinalCTA";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
 import { Btn, TalkCta } from "@/components/Buttons";
 import { LENS_IS_NOT } from "@/lib/lens";
+import { formattedAddress, hoursSummary, locations } from "@/lib/locations";
 import { hubTrail, pageMetadata } from "@/lib/pages";
+import { faqQuestions } from "@/lib/schema";
 import {
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
   BRAIN_MAP_PRICE,
   COURSE_VARIES_NOTE,
+  EXPERIENCES_DISCLAIMER,
   FIRST_VISIT_DURATION,
   FULL_COURSE,
+  INSURANCE_POLICY,
+  PHONE_DISPLAY,
+  PHONE_TEL,
   SESSION_LENGTH,
   SESSION_PRICE,
+  SHOW_PHONE,
+  googleReviewNamed,
 } from "@/lib/site-config";
 
 /**
@@ -54,6 +66,63 @@ import {
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/brain-map");
 
+/** The two open centers, Nashville first — the title names it. */
+const OPEN_CENTERS = locations.filter((l) => !l.comingSoon);
+
+/**
+ * Where a map most often starts (the local search pass, Ben, 2026-11-09):
+ * the concern pages, in the words a parent or adult uses. Each line is
+ * lifted from the concern's own `recognize` list (lib/concerns.ts), so the
+ * card and the page it opens describe the same thing.
+ */
+const WHO_IT_HELPS = [
+  { href: "/concerns/focus-adhd", label: "Focus & ADHD", line: "Struggling to stay on task — at work or at school" },
+  { href: "/concerns/anxiety", label: "Anxiety & stress", line: "Feeling constantly on edge, braced for something" },
+  { href: "/concerns/sleep", label: "Sleep", line: "A mind that won't shut off at night" },
+  { href: "/concerns/children-school", label: "Children & school", line: "A bright kid who can't show what they know" },
+  { href: "/concerns/brain-fog", label: "Brain fog & memory", line: "Thinking that feels slow or cloudy" },
+  { href: "/concerns/concussion", label: "Post-concussion symptoms", line: "The fog that lifts and returns" },
+];
+
+/** Tracy D., Nashville — a Google review that names focus and attention,
+ *  which is what the map is most often about. Exact words, from
+ *  GOOGLE_REVIEW_QUOTES. */
+const REVIEW = googleReviewNamed("Tracy", "nashville");
+
+/**
+ * The questions a "brain mapping nashville" searcher asks before calling.
+ * Every answer is built from facts the site already states; the two
+ * centers' lines come from lib/locations.ts through the same helpers the
+ * location pages use. Published as FAQPage markup, visible answers only.
+ */
+const FAQS = [
+  {
+    q: "Is the Brain Map a test or a diagnosis?",
+    a: `No. It is a recording of the brain's electrical activity at ${BRAIN_MAP_POINTS} points, turned into a chart you can read. There is nothing to pass or fail, it doesn't diagnose anything, and nobody here reads it for a condition. It guides your written plan.`,
+  },
+  {
+    q: "How long does brain mapping take, and what does it cost?",
+    a: `Plan for ${FIRST_VISIT_DURATION} — it is your first visit. ${BRAIN_MAP_NAME} is ${BRAIN_MAP_PRICE} and includes the full conversation, the ${BRAIN_MAP_POINTS}-point recording, your map explained point by point, and a written plan you keep.`,
+  },
+  {
+    q: "Do I need a referral to get a brain map?",
+    a: "No. No referral and no diagnosis are needed to start — the first step is a free phone call, and nothing is booked on it unless you want it to be.",
+  },
+  {
+    q: "Where can I get a brain map in Nashville or Murfreesboro?",
+    a: OPEN_CENTERS.map((l) => {
+      const address = formattedAddress(l);
+      const hours = hoursSummary(l);
+      return `${l.name}: ${address ?? l.address.addressLocality}${hours ? ` (${hours})` : ""}.`;
+    }).join(" "),
+  },
+  {
+    q: "Is it safe for children?",
+    a: "Yes. Small sensors take brief readings at a standard set of points across the scalp — nothing invasive, nothing to feel, and nothing a child has to sit still for. Parents are welcome at every visit.",
+  },
+  { q: "Can I pay with an HSA or FSA?", a: INSURANCE_POLICY },
+];
+
 const recordingSteps = [
   {
     n: "1",
@@ -83,16 +152,22 @@ export default function BrainMapPage() {
   const trail = hubTrail("/brain-map");
   return (
     <>
-      <PageSchema path="/brain-map" breadcrumb={trail} />
+      {/* The page node is a WebPage and a FAQPage — the visible questions
+          below are its mainEntity (the /concerns/[slug] pattern). */}
+      <PageSchema path="/brain-map" breadcrumb={trail} mainEntity={faqQuestions(FAQS)} />
       <Breadcrumbs trail={trail} />
 
       <section className="page-hero">
         <div className="wrap">
           <div className="rv" style={{ maxWidth: 760 }}>
             <div className="eyebrow">{BRAIN_MAP_NAME}</div>
+            {/* The query first (Ben, 2026-11-09: "brain mapping nashville"
+                is at ~7 and climbing), then the rule the page is written
+                under. "Not a test" keeps the accent — it is the sentence
+                that must survive a skim. */}
             <h1>
-              A recording of your brain&rsquo;s activity &mdash;{" "}
-              <em className="sage">not a test.</em>
+              Brain mapping in Nashville &mdash; a recording of your
+              brain&rsquo;s activity, <em className="sage">not a test.</em>
             </h1>
             <p className="sub">
               Brain mapping in Nashville and Murfreesboro starts here: on
@@ -102,13 +177,26 @@ export default function BrainMapPage() {
               Here&rsquo;s exactly what that involves, what it costs, and what
               it can&rsquo;t tell you.
             </p>
-            <div className="hero-ctas" style={{ marginTop: 34 }}>
+            {/* Get Started, Call, Text (Ben, 2026-11-09) — the main line,
+                reported as local_page (components/Analytics.tsx). */}
+            <div className="hero-ctas" style={{ marginTop: 34 }} data-link-location="local_page">
               <TalkCta />
+              {SHOW_PHONE && (
+                <>
+                  <Btn href={`tel:${PHONE_TEL}`} variant="ghost">
+                    Call {PHONE_DISPLAY}
+                  </Btn>
+                  <Btn href={`sms:${PHONE_TEL}`} variant="ghost" external>
+                    Text {PHONE_DISPLAY}
+                  </Btn>
+                </>
+              )}
             </div>
             {/* No price in the hero (Ben, 2026-11-02): it moved to "What it
                 costs" below, after the page has said what the recording is. */}
             <p className="micro">
               Plan for {FIRST_VISIT_DURATION} &middot; It is your first visit
+              &middot; Nashville &amp; Murfreesboro
             </p>
           </div>
           <div className="rv">
@@ -173,6 +261,69 @@ export default function BrainMapPage() {
                   <p>{s.p}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Who it helps (Ben, 2026-11-09): written for the parent or adult
+          deciding whether to book, in the words the concern pages use, with
+          a link to each. "Helps" here means who comes in for a map — no
+          outcome is claimed for any of them (the rule above). */}
+      <section className="sec">
+        <div className="wrap" style={{ maxWidth: 940 }}>
+          <div className="sec-head rv">
+            <div className="eyebrow">Who it helps</div>
+            <h2>Who comes in for a brain map.</h2>
+            <p className="sub">
+              Parents of a child who can&rsquo;t show what they know at school.
+              Adults who used to focus and can&rsquo;t now. People who sleep
+              badly, startle easily, or feel foggy after a concussion that was
+              supposed to be behind them. Nobody needs a diagnosis to start
+              &mdash; you describe what&rsquo;s in front of you, and the map
+              gives us somewhere to look.
+            </p>
+          </div>
+          <div className="care-grid rv">
+            {WHO_IT_HELPS.map((c) => (
+              <div className="care" key={c.href}>
+                <h3>
+                  <Link href={c.href}>{c.label}</Link>
+                </h3>
+                <p>{c.line}</p>
+              </div>
+            ))}
+          </div>
+          <div className="hero-ctas rv" style={{ marginTop: 34 }}>
+            <Btn href="/what-we-help-with" variant="ghost" arrow>
+              Everything we help with
+            </Btn>
+            <Btn href="/first-visit" variant="ghost" arrow>
+              What a first visit looks like
+            </Btn>
+          </div>
+        </div>
+      </section>
+
+      {/* Where we record it (Ben, 2026-11-09): both open centers' address,
+          week, parking and directions, and the three ways in — read from
+          lib/locations.ts (components/CenterFacts.tsx), the same facts the
+          location pages and their LocalBusiness nodes carry. No second
+          LocalBusiness here: the markup for each center lives on its own
+          page, and this page's node is the recording. */}
+      <section className="sec sec-ivory2">
+        <div className="wrap">
+          <div className="sec-head rv">
+            <div className="eyebrow">Where we record it</div>
+            <h2>Brain mapping in Nashville and Murfreesboro.</h2>
+            <p className="sub">
+              Two open centers, one recording, the same care model. Both have
+              a private lot, and the first call is free at either.
+            </p>
+          </div>
+          <div className="center-facts-grid rv">
+            {OPEN_CENTERS.map((l) => (
+              <CenterFacts key={l.slug} location={l} />
             ))}
           </div>
         </div>
@@ -333,6 +484,37 @@ export default function BrainMapPage() {
               The full FAQ
             </Btn>
           </div>
+        </div>
+      </section>
+
+      {/* One Google review from the Nashville listing — exact words, the
+          same quote /concerns/performance carries, labelled and linked to
+          the listing it is on — with the proof line and the partner line
+          under it. Visible content only; no Review or AggregateRating
+          markup (lib/site-config.ts → REVIEWS). */}
+      {REVIEW && (
+        <section className="sec sec-ivory2">
+          <div className="wrap" style={{ maxWidth: 820 }}>
+            <div className="sec-head rv" style={{ marginBottom: 26 }}>
+              <div className="eyebrow">From our Google reviews</div>
+              <h2>What people say after the map.</h2>
+            </div>
+            <div className="rv">
+              <GoogleReviewQuote review={REVIEW} />
+              <p className="sample-note" style={{ marginTop: 14 }}>{EXPERIENCES_DISCLAIMER}</p>
+              <LocalProof />
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="sec">
+        <div className="wrap" style={{ maxWidth: 900 }}>
+          <div className="sec-head rv">
+            <div className="eyebrow">Before you book</div>
+            <h2>Questions people ask about brain mapping.</h2>
+          </div>
+          <FAQAccordion items={FAQS} />
         </div>
       </section>
 
