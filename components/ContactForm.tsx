@@ -19,9 +19,10 @@ import {
   HEARD_ABOUT_OPTIONS,
   TIME_OPTIONS,
   isReferral,
+  isUsPhone,
   looksLikeEmail,
-  looksLikeUsPhone,
 } from "@/lib/lead-options";
+import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
 import ScannerText from "./ScannerText";
@@ -90,6 +91,12 @@ import ScannerText from "./ScannerText";
  * value in the query string, and nothing was saved). The chips are buttons,
  * so without scripting the center is "Not sure yet" — the hidden
  * preferred_center input mirrors the React state and is empty otherwise.
+ * Since 2026-11-08 that post is REFUSED on the live site (→ /contact/not-sent,
+ * which gives the number): the spam flood that day came in exactly this way,
+ * from a script that read the HTML and never ran it, and the route now wants
+ * the page token only this script fetches (lib/form-guard.ts). The action
+ * stays so a JavaScript-less submit still lands on a page with the phone
+ * number instead of a GET with every typed value in the query string.
  * Step one also carries `above-fold`: the card is never hidden behind the
  * reveal animation (globals.css → `html.js .rv.above-fold`), so it is on
  * screen from first paint rather than ~1 s after hydration (2 s on a slow
@@ -269,8 +276,8 @@ export default function ContactForm({
   // Unchecked by default, and never required (lib/sms-consent.ts).
   const [smsConsent, setSmsConsent] = useState(false);
   // The honeypot. Real visitors never see this field and so always submit it
-  // empty; scripted spam fills every input it finds. Passed straight through
-  // to the platform, which classifies it — nothing here rejects on it.
+  // empty; scripted spam fills every input it finds. The route refuses a
+  // filled one (the spam guard, 2026-11-08) — nothing is saved or sent.
   const [website, setWebsite] = useState("");
 
   // Step two. Nothing preselected: an answer the visitor did not give is not
@@ -311,6 +318,12 @@ export default function ContactForm({
     }
   }, []);
 
+  // The page token for step one's POST (lib/form-token-client.ts — the spam
+  // guard), fetched now so it is old enough by the time she sends.
+  useEffect(() => {
+    prefetchFormToken();
+  }, []);
+
   // Leaving the page with step two open and unanswered is a skip too. The
   // held email goes at two minutes regardless (lib/held-notification.ts).
   useEffect(() => {
@@ -334,6 +347,9 @@ export default function ContactForm({
   // pointer on a field arrives before its focus. Verified on production
   // 2026-10-30: a chip tap alone sent no form_start.
   function onFirstInteraction() {
+    // A tab left open past the token's life gets a fresh one here, not at
+    // the submit. A no-op while the one it has is good.
+    prefetchFormToken();
     if (started.current) return;
     started.current = true;
     trackFunnel("form_start", pathname);
@@ -358,7 +374,9 @@ export default function ContactForm({
     if (!tel && !mail) {
       return refuse("missing_contact", "Please add a phone number or an email so we can reach you.", "phone");
     }
-    if (tel && !looksLikeUsPhone(tel)) {
+    // A real US number: in-service area code, dialable exchange (the spam
+    // guard, 2026-11-08 — the route holds it to the same check).
+    if (tel && !isUsPhone(tel)) {
       return refuse("bad_phone", "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
     }
     if (mail && !looksLikeEmail(mail)) {
@@ -377,24 +395,21 @@ export default function ContactForm({
     // a giveaway booking and the route validates the code.
     const offerCode = from === "10years" ? params.get("code")?.trim().toUpperCase() ?? null : null;
     try {
-      const res = await fetch("/api/consultation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
-          // The whole name, first and last; the key is the column's name.
-          first_name: name,
-          ...(tel ? { phone: tel } : {}),
-          ...(mail ? { email: mail } : {}),
-          preferred_center: preferredCenter,
-          ...(referredBy.trim() ? { referred_by: referredBy.trim() } : {}),
-          website,
-          source_page: from || pathname,
-          // A yes only with a number to text. The wording is sent ticked or
-          // not — the row keeps what she was offered, not only what she said.
-          sms_consent: Boolean(tel) && smsConsent,
-          sms_consent_text: FORM_CONSENT_TEXT,
-        }),
+      // With the page token (lib/form-token-client.ts — the spam guard).
+      const res = await postWithFormToken("/api/consultation", {
+        ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
+        // The whole name, first and last; the key is the column's name.
+        first_name: name,
+        ...(tel ? { phone: tel } : {}),
+        ...(mail ? { email: mail } : {}),
+        preferred_center: preferredCenter,
+        ...(referredBy.trim() ? { referred_by: referredBy.trim() } : {}),
+        website,
+        source_page: from || pathname,
+        // A yes only with a number to text. The wording is sent ticked or
+        // not — the row keeps what she was offered, not only what she said.
+        sms_consent: Boolean(tel) && smsConsent,
+        sms_consent_text: FORM_CONSENT_TEXT,
       });
       const data = (await res.json().catch(() => null)) as
         | { ok?: boolean; id?: string | null; error?: string }

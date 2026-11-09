@@ -7,6 +7,8 @@ import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
  * it or could not save it (app/api/consultation/route.ts → reply). The
  * scripted form shows the exact reason inline; without scripting there is
  * no inline, so this page says what the form needs and gives the number.
+ * Since the spam guard (2026-11-08, lib/form-guard.ts) every post without
+ * the form's script lands here: the page token is fetched by that script.
  * Not indexed, not in the sitemap.
  */
 export const metadata: Metadata = {
@@ -23,8 +25,8 @@ export default function ContactNotSentPage() {
           <h1>We couldn&rsquo;t send that.</h1>
           <p className="sub" style={{ maxWidth: "60ch" }}>
             Please check that you added your name and a phone number or an
-            email, then try again &mdash; or call us and we&rsquo;ll take it
-            down over the phone.
+            email, then try again (the form needs JavaScript turned on)
+            &mdash; or call us and we&rsquo;ll take it down over the phone.
           </p>
         </div>
       </section>

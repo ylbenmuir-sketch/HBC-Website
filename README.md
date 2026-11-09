@@ -371,6 +371,8 @@ submission requires Supabase credentials.
 | `GIVEAWAY_SITE_URL` | **10-year giveaway.** Optional. The origin every giveaway link (verify, one-tap, claim, unsubscribe, share) is built on. Defaults to the canonical site URL; `check:giveaway` points it at its own server. Server-side, read at request time. |
 | `GIVEAWAY_REPO` / `GIVEAWAY_OTP_MOCK_CODE` | **Checks only.** `GIVEAWAY_REPO=memory` keeps the giveaway tables in the server process (`lib/giveaway/memory-client.ts`); `GIVEAWAY_OTP_MOCK_CODE=123456` signs the admin in with that code and sends no email. Both are honoured ONLY when the giveaway env is `local` or `test` and refused, loudly, anywhere else. Never set them on a Vercel deployment. |
 | `CRON_SECRET` | Also protects `/api/cron/giveaway` (every minute: due drawings, then due scheduled emails) and the test-only `/api/giveaway/test-clock`. Unset = the giveaway cron refuses (503) and nothing is drawn or sent. |
+| `FORM_TOKEN_SECRET` | **Contact-form spam guard** (`lib/form-guard.ts`, 2026-11-08). Signs the page token the form and the guide signup fetch from `/api/form-token`. Any long random string — `openssl rand -hex 32`. Recommended. Unset = a key derived from `SUPABASE_SERVICE_ROLE_KEY` is used, so the guard works without it (rotating that key then also expires open forms' tokens, which retry once on their own). Changing it is harmless for the same reason. Server-side. |
+| `FORM_GUARD` | **Contact-form spam guard switch.** Unset = the page token, the 3-second minimum and the per-address rate limit are enforced on Vercel (production and preview, read from `VERCEL_ENV`) and off on a local server, so `check:contact` / `check:giveaway` post as before. `on` forces them locally (that is how they were tested); `off` turns them off on Vercel too — the emergency switch if a real visitor is ever refused (redeploy after changing it). The honeypot and the real-US-phone check are always on, whatever this says. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
 ## Supabase setup
@@ -588,6 +590,44 @@ It writes eight rows named `E2E-…` and refuses to run unless
 `CHECK_CONTACT_ALLOW_PROJECT` names the project in `SUPABASE_URL`, for the
 same reason `check:chat` refuses a non-empty table. Pass `--keep` to leave
 the rows for inspection.
+
+### The spam guard (2026-11-08)
+
+A flood started 2026-11-08 05:48 UTC: 48 fake leads in ~21 hours from 17
+countries, every one a form-encoded post straight to `/api/consultation`
+(the no-JavaScript path, answered 303) with an outdated Chrome 133/134 user
+agent and the consent box ticked; the one real lead in that window came
+through the script (JSON, 201, then step two). Each fake one saved a row,
+sent the office a lead email, sent the address given a "we got your
+request" email, and tried to text the number given (about 28 texts went
+out; Dialpad refused 20 as invalid numbers). The honeypot was never filled. Nothing a visitor sees changed;
+the route now refuses, before anything is saved or sent:
+
+| Check | Where | Answer |
+| --- | --- | --- |
+| Per-address rate limit: 5 POSTs per 10 min, 20 per day (refused ones count) | `checkFormRateLimit` | 429 + `Retry-After` |
+| Honeypot `website` filled | route, step 0 | 400 with the phone number; nothing saved |
+| No valid page token (`form_token`) — fetched by the form's script from `/api/form-token`, HMAC-signed, good for 1 h | `checkFormToken` | 403 `retry: "form_token"` (the script refetches and retries once); a no-JS post → `/contact/not-sent` |
+| Token younger than 3 s (faster than anyone fills the form) | `checkFormToken` | same 403. The form waits out the remainder itself, so a real visitor is never refused by this |
+| A typed phone that is not a real US number (area code not in service — e.g. 991 — or an undialable exchange) | `isUsPhone` in `lib/lead-options.ts`, on the form and the route | 400 "…leave it blank and use email". Blank phone with an email is still fine, and vice versa |
+
+The first three rows are enforced on Vercel only (`FORM_GUARD`, above); the
+honeypot and phone checks everywhere. The site assistant's in-process
+submit carries a per-process key (`internalSubmitHeaders`) and skips the
+token, timer and rate limit — it has its own limit. A giveaway booking
+needs an issued offer code and comes through the same form, so the route's
+phone check is held to `source: "form"`. Every refusal logs
+`[spam guard] refused reason=… country=…` (never a submitted value):
+`npx vercel logs --environment production --query "requestPath:/api/consultation"`.
+
+The rate limit is in memory, per server instance. The global backstop is
+Ben's Vercel Firewall rule (in place before this shipped; leave it as is):
+POST `/api/consultation`, 5 requests per 600 s per IP, then 429 — answered
+at the edge before the function runs.
+
+The area-code list is generated (see the comment on `US_AREA_CODES`); a new
+overlay is refused until it is added, and the message sends that visitor to
+email.
 
 ### The first-visit video
 

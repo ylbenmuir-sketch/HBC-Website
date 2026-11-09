@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { consultationSaved, trackGuideDownload } from "@/lib/analytics";
+import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
 import {
   GUIDE_DOWNLOAD_NAME,
   GUIDE_HTML_PATH,
@@ -78,14 +79,11 @@ export default function GuideCta({
     setStatus("submitting");
     setErrorMessage("");
     try {
-      const res = await fetch("/api/consultation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "guide",
-          email: email.trim(),
-          source_page: pathname,
-        }),
+      // With the page token (lib/form-token-client.ts — the spam guard).
+      const res = await postWithFormToken("/api/consultation", {
+        type: "guide",
+        email: email.trim(),
+        source_page: pathname,
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Something went wrong.");
@@ -151,7 +149,15 @@ export default function GuideCta({
             </div>
           </div>
         ) : (
-          <form className="form rv" onSubmit={handleSubmit} noValidate>
+          <form
+            className="form rv"
+            onSubmit={handleSubmit}
+            // The page token (lib/form-token-client.ts), fetched at the first
+            // touch rather than on every page this section appears on.
+            onFocus={prefetchFormToken}
+            onPointerDown={prefetchFormToken}
+            noValidate
+          >
             <div className="two" style={{ alignItems: "flex-end" }}>
               <div>
                 <label htmlFor="guide-email">Email</label>
