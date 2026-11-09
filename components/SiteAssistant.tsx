@@ -11,6 +11,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { chatBookingSaved, trackLeadSaved } from "@/lib/analytics";
+import { trackMetaLead } from "@/lib/meta-pixel";
 import { useBottomBar } from "./BottomBarContext";
 
 /**
@@ -544,7 +545,11 @@ export default function SiteAssistant() {
       // A booking that saved: the GA4 lead events, center and page only. The
       // route sets `lead` on that turn alone (lib/analytics.ts).
       const center = chatBookingSaved(response.ok, body);
-      if (center) trackLeadSaved({ source: "chat", center, pagePath: pathname });
+      if (center) {
+        trackLeadSaved({ source: "chat", center, pagePath: pathname });
+        // Meta's Lead, with the id the server copy was sent with (lib/meta-pixel.ts).
+        trackMetaLead(body.lead?.event_id);
+      }
       // §4.1: the turn ends. The composer closes rather than inviting another
       // message straight after a crisis response.
       if (body.ended) setEnded(true);

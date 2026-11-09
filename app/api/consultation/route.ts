@@ -36,7 +36,10 @@ import {
   guardEnforced,
   isInternalSubmit,
 } from "@/lib/form-guard";
-import { UTM_FIELDS, cleanUtm, isLeadSource } from "@/lib/attribution";
+import { AD_FIELDS, UTM_FIELDS, cleanClickId, cleanUtm, isLeadSource } from "@/lib/attribution";
+import { metaContext, sendMetaEvent } from "@/lib/meta-capi";
+import { isMetaEventId } from "@/lib/meta";
+import { SITE_URL } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 
@@ -103,6 +106,15 @@ type Payload = {
   utm_campaign?: unknown;
   utm_content?: unknown;
   lead_source?: unknown;
+  /** Migration 0020 (2026-11-09): utm_term and the ad click ids. */
+  utm_term?: unknown;
+  fbclid?: unknown;
+  gclid?: unknown;
+  /** When the visit landed (ms) — only for Meta's fbc, never saved. */
+  landed_at?: unknown;
+  /** The Meta Lead's dedup id and the page it was sent from (lib/meta-capi.ts). Never saved. */
+  meta_event_id?: unknown;
+  meta_page?: unknown;
 };
 
 /** The attribution columns (migration 0019), in one place for the retry. */
@@ -207,11 +219,19 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       values = rest;
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
-    // The attribution columns (migration 0019, 2026-11-09) may not exist
+    // utm_term / fbclid / gclid (migration 0020, 2026-11-09) may not exist
     // yet: the lead is saved without them and the log says what to apply.
+    if (error && AD_FIELDS.some((c) => c in values && isMissingColumn(error!, c))) {
+      console.error("[destination: supabase] utm_term/fbclid/gclid columns missing — migration 0020 is not applied; saving the lead without them.");
+      values = Object.fromEntries(Object.entries(values).filter(([k]) => !(AD_FIELDS as readonly string[]).includes(k)));
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
+    }
+    // The attribution columns (migration 0019, 2026-11-09) may not exist
+    // yet: the lead is saved without them (and without 0020's, which come
+    // after) and the log says what to apply.
     if (error && ATTRIBUTION_COLUMNS.some((c) => c in values && isMissingColumn(error!, c))) {
       console.error("[destination: supabase] utm_*/lead_source columns missing — migration 0019 is not applied; saving the lead without them.");
-      values = Object.fromEntries(Object.entries(values).filter(([k]) => !(ATTRIBUTION_COLUMNS as readonly string[]).includes(k)));
+      values = Object.fromEntries(Object.entries(values).filter(([k]) => !([...ATTRIBUTION_COLUMNS, ...AD_FIELDS] as readonly string[]).includes(k)));
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
     if (error && "giveaway_code" in values && isMissingColumn(error, "giveaway_code")) {
@@ -695,6 +715,13 @@ export async function POST(request: Request) {
     if (v) attribution[field] = v;
   }
   if (isLeadSource(body.lead_source)) attribution.lead_source = body.lead_source;
+  // Migration 0020: utm_term cleaned like the others; the click ids keep their case.
+  const utmTerm = cleanUtm(body.utm_term);
+  if (utmTerm) attribution.utm_term = utmTerm;
+  for (const field of ["fbclid", "gclid"] as const) {
+    const v = cleanClickId(body[field]);
+    if (v) attribution[field] = v;
+  }
 
   // The honeypot, read raw rather than through str(): empty is the normal
   // human answer, and str() maps empty to null. A filled one was refused at
@@ -893,6 +920,20 @@ export async function POST(request: Request) {
   // Anything overdue for this deployment goes out after this answers — a
   // second chance should a cron tick run late. Never delays the response.
   after(sweepDue);
+
+  // ── 5. Meta's Lead, server copy (lib/meta-capi.ts; Ben, 2026-11-09) ────
+  // Every saved consultation — form, chat, giveaway booking — exactly where
+  // the browser fires GA's submit_lead_form. Same event_id as the browser's
+  // fbq Lead (the form makes it; the chat route makes it for the chat; a
+  // no-JavaScript post gets a fresh one). After the response, so it can
+  // never delay or fail the request. IP, user agent, _fbc/_fbp only — no
+  // email, no phone, nothing she typed.
+  if (!isGuide) {
+    const metaEventId = isMetaEventId(body.meta_event_id) ? body.meta_event_id : crypto.randomUUID();
+    const metaCtx = metaContext(request.headers, { fbclid: attribution.fbclid, landedAt: body.landed_at });
+    const metaPage = typeof body.meta_page === "string" ? body.meta_page.slice(0, 500) : sourcePage;
+    after(() => sendMetaEvent({ eventName: "Lead", eventId: metaEventId, page: metaPage, ctx: metaCtx, origin: SITE_URL }));
+  }
 
   // The id is what the form's second step needs, and nothing else: an
   // unguessable uuid v4 that names one row and can change three columns of it.

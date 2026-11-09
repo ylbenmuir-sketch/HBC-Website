@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ANALYTICS_ENABLED, GA_ID, analyticsActive, contactLinkEvent, trackEvent } from "@/lib/analytics";
+import { ANALYTICS_ENABLED, GA_ID, GOOGLE_ADS_ID, analyticsActive, contactLinkEvent, trackEvent } from "@/lib/analytics";
 import { sendTap, tapAllowedHost, tapIgnoredPath, tapPayload } from "@/lib/tap";
 
 /**
@@ -108,7 +108,9 @@ export default function Analytics() {
 function gtag(){dataLayer.push(arguments);}
 window.gtag = gtag;
 gtag('js', new Date());
-gtag('config', ${JSON.stringify(GA_ID)}, { send_page_view: false });`}
+gtag('config', ${JSON.stringify(GA_ID)}, { send_page_view: false });${
+  GOOGLE_ADS_ID ? `\ngtag('config', ${JSON.stringify(GOOGLE_ADS_ID)}, { send_page_view: false });` : ""
+}`}
       </Script>
     </>
   );

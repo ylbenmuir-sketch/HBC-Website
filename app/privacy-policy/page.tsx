@@ -22,6 +22,7 @@ import {
   SMS_TERMS_PATH,
 } from "@/lib/sms-consent";
 import { ANALYTICS_ENABLED } from "@/lib/analytics";
+import { META_PIXEL_ENABLED } from "@/lib/meta-pixel";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageSchema from "@/components/PageSchema";
 
@@ -232,13 +233,33 @@ export default function PrivacyPolicyPage() {
                 pages you view, general details about your browser and device,
                 and a note when you request a call (with which center you
                 picked), get the guide, or tap our phone number or email
-                address. It never receives what you type into a form. There
-                are no advertising tags or pixels here.
+                address. It never receives what you type into a form.
+                {META_PIXEL_ENABLED ? "" : " There are no advertising tags or pixels here."}
               </p>
-            ) : (
+            ) : META_PIXEL_ENABLED ? null : (
               <p>
                 There are no analytics or advertising tags here, and no pixel
                 reporting your visit to anyone.
+              </p>
+            )}
+            {/* Follows META_PIXEL_ENABLED (lib/meta-pixel.ts), the constant
+                that decides whether components/MetaPixel.tsx renders. The
+                general pages are META_ALLOWED_PATHS in lib/meta.ts; what the
+                server sends is buildMetaEvent in lib/meta-capi.ts. No
+                "unless" or "with your consent" here (A2P). */}
+            {META_PIXEL_ENABLED && (
+              <p>
+                We use Meta&rsquo;s pixel (Facebook and Instagram) on our
+                general pages &mdash; the home page, contact, locations and
+                pages about how we work &mdash; to measure whether our ads
+                bring people to us. It sets cookies, and it tells Meta which
+                of those pages you viewed, general details about your browser
+                and device, and when you request a call or tap our phone
+                number. It never runs on our pages about specific concerns,
+                and it never sends Meta any health information, your name,
+                your phone number, your email address, or anything you type
+                into a form. Text-message opt-in data and consent are never
+                shared with anyone.
               </p>
             )}
             <p>
@@ -327,6 +348,14 @@ export default function PrivacyPolicyPage() {
               {ANALYTICS_ENABLED && (
                 <li>
                   <b>Google</b> receives page views through Google Analytics.
+                </li>
+              )}
+              {META_PIXEL_ENABLED && (
+                <li>
+                  <b>Meta</b> receives views of our general pages and a note
+                  when you request a call or tap our phone number, to measure
+                  our ads &mdash; never your name, phone number, email address
+                  or anything about your health.
                 </li>
               )}
               <li>

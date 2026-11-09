@@ -298,7 +298,7 @@ export const staticPages: StaticPage[] = [
     // emails, the assistant's session, YouTube, the two carrier sentences.
     // 2026-10-18: every consent-conditioned sharing clause removed (Dialpad's
     // A2P scan rejects them; see INFORMATION_SHARING).
-    dateModified: "2026-10-18",
+    dateModified: "2026-11-09",
     type: "WebPage",
     crumb: "Privacy",
   },

@@ -36,6 +36,14 @@ export const GOOGLE_SITE_VERIFICATION =
   process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "";
 export const BING_SITE_VERIFICATION =
   process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? "";
+/**
+ * A Google Ads tag id (`AW-…`), a placeholder for later (Ben, 2026-11-09).
+ * When set, components/Analytics.tsx adds its `config` line to the GA4 tag
+ * (so it loads only where GA4 does), with no page views and no conversion
+ * labels yet. Every GA4 event names GA_ID in `send_to`, so nothing the site
+ * reports reaches the Ads tag by accident.
+ */
+export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? "";
 
 /**
  * A production build, and on Vercel the Production deployment. Previews are
@@ -43,7 +51,7 @@ export const BING_SITE_VERIFICATION =
  * half reads VERCEL_ENV, inlined as HBC_VERCEL_ENV by next.config.ts. Off
  * Vercel it is empty and the NODE_ENV half decides alone.
  */
-const PRODUCTION_DEPLOY =
+export const PRODUCTION_DEPLOY =
   process.env.NODE_ENV === "production" &&
   ["", "production"].includes(process.env.HBC_VERCEL_ENV ?? "");
 
@@ -428,7 +436,9 @@ export function trackEvent(event: SiteEvent): void {
   if (!analyticsActive()) return;
   if (typeof window.gtag !== "function") return;
   try {
-    window.gtag("event", event.name, event.params);
+    // send_to: GA4 only — a Google Ads config on the same tag must not
+    // receive the site's events (NEXT_PUBLIC_GOOGLE_ADS_ID).
+    window.gtag("event", event.name, { ...event.params, send_to: GA_ID });
   } catch {
     // Measurement never surfaces as an error to a visitor.
   }

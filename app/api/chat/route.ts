@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { POST as submitConsultation } from "@/app/api/consultation/route";
 import { internalSubmitHeaders } from "@/lib/form-guard";
+import { metaForwardHeaders } from "@/lib/meta-capi";
 import { answerFromSite } from "@/lib/chat/answer";
 import {
   BOOKING_FAILURE_REPLY,
@@ -91,7 +92,7 @@ function reply(
     buttons?: string[];
     /** Only on the turn whose booking saved — the widget's cue to send the
      *  GA4 lead events (lib/analytics.ts). The center, nothing she typed. */
-    lead?: { saved: true; center: string };
+    lead?: { saved: true; center: string; event_id?: string };
   },
   status = 200
 ) {
@@ -156,7 +157,7 @@ export async function POST(request: Request) {
     outcome: TurnOutcome,
     detail?: string,
     passages?: string[],
-    lead?: { saved: true; center: string }
+    lead?: { saved: true; center: string; event_id?: string }
   ) => {
     session.bookingOffered = offersCall(text);
     await sessionStore.save(session);
@@ -246,6 +247,12 @@ export async function POST(request: Request) {
 
     if (turn.submit) {
       const submission = turn.submit;
+      // The Meta Lead's id (lib/meta-capi.ts): made here, because the widget
+      // cannot know which message completes a booking. The consultation
+      // route sends the server copy; the widget fires the browser copy with
+      // the id this turn returns. The visitor's cookies, IP and user agent
+      // ride along so the server copy matches her browser's.
+      const metaEventId = crypto.randomUUID();
       try {
         // The consultation handler called in-process, not fetched over HTTP.
         // A fetch to our own origin went through the deployment's front door:
@@ -261,8 +268,8 @@ export async function POST(request: Request) {
             // The in-process key exempts this from the form's spam guard
             // (lib/form-guard.ts): the chat has its own rate limit, and no
             // browser ever holds this key.
-            headers: { "Content-Type": "application/json", ...internalSubmitHeaders() },
-            body: JSON.stringify(submission),
+            headers: { ...metaForwardHeaders(request.headers), "Content-Type": "application/json", ...internalSubmitHeaders() },
+            body: JSON.stringify({ ...submission, meta_event_id: metaEventId, meta_page: page }),
           })
         );
         const result = (await response.json().catch(() => null)) as
@@ -275,6 +282,7 @@ export async function POST(request: Request) {
         return finish(bookingSuccessReply(submission), "booking-submitted", undefined, undefined, {
           saved: true,
           center: submission.preferred_center,
+          event_id: metaEventId,
         });
       } catch (error) {
         console.error(

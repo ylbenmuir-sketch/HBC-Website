@@ -25,6 +25,8 @@ import {
 } from "@/lib/lead-options";
 import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
 import { attributionForSubmit } from "@/lib/attribution";
+import { newMetaEventId } from "@/lib/meta";
+import { trackMetaLead } from "@/lib/meta-pixel";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
 import ScannerText from "./ScannerText";
@@ -442,8 +444,13 @@ export default function ContactForm({
         storage = null;
       }
       const attribution = attributionForSubmit(window.location.search, document.referrer, storage);
+      // Meta's Lead id (lib/meta-capi.ts): the route sends the server copy
+      // with it once the row saves; the browser copy fires below with the same.
+      const metaEventId = newMetaEventId();
       const res = await postWithFormToken("/api/consultation", {
         ...attribution,
+        meta_event_id: metaEventId,
+        meta_page: window.location.pathname + window.location.search,
         ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
         // The whole name, first and last; the key is the column's name.
         first_name: name,
@@ -475,6 +482,7 @@ export default function ContactForm({
       if (consultationSaved(res.ok, data)) {
         trackFunnel("step1_success", pathname, { center: preferredCenter });
         trackLeadSaved({ source: "form", center: preferredCenter, pagePath: pathname });
+        trackMetaLead(metaEventId);
       }
 
       sentPhone.current = Boolean(tel);

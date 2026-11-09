@@ -26,10 +26,25 @@
 export const UTM_FIELDS = ["utm_source", "utm_medium", "utm_campaign", "utm_content"] as const;
 export type UtmField = (typeof UTM_FIELDS)[number];
 
+/**
+ * Added for the Meta/Google ads (Ben, 2026-11-09; migration 0020): utm_term,
+ * cleaned like the other four, and the two ad click ids. A click id is an
+ * opaque token whose case matters, so it is kept as sent, limited to
+ * [A-Za-z0-9._-] and 500 characters. Their own list so the route can drop
+ * them alone while 0020 is not applied.
+ */
+export const AD_FIELDS = ["utm_term", "fbclid", "gclid"] as const;
+export type AdField = (typeof AD_FIELDS)[number];
+
 export const LEAD_SOURCES = ["instagram"] as const;
 export type LeadSourceTag = (typeof LEAD_SOURCES)[number];
 
-export type Attribution = Record<UtmField, string | null> & { lead_source: LeadSourceTag | null };
+export type Attribution = Record<UtmField, string | null> &
+  Record<AdField, string | null> & {
+    lead_source: LeadSourceTag | null;
+    /** When the first touch was recorded (ms) — Meta's fbc needs it. Never saved on the row. */
+    landed_at?: number | null;
+  };
 
 /** sessionStorage key for the visit's first touch. */
 export const ATTRIBUTION_KEY = "hbc.attribution";
@@ -39,6 +54,21 @@ export function cleanUtm(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const v = value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 64);
   return v || null;
+}
+
+/** A click id (fbclid, gclid): case kept, allow-listed characters, at most 500 — or null. */
+export function cleanClickId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim().replace(/[^A-Za-z0-9._-]/g, "").slice(0, 500);
+  return v || null;
+}
+
+function adFieldsFrom(get: (f: AdField) => unknown): Record<AdField, string | null> {
+  return {
+    utm_term: cleanUtm(get("utm_term")),
+    fbclid: cleanClickId(get("fbclid")),
+    gclid: cleanClickId(get("gclid")),
+  };
 }
 
 /** instagram.com, l.instagram.com, www.instagram.com — the app's link hosts. */
@@ -66,11 +96,11 @@ export function isLeadSource(value: unknown): value is LeadSourceTag {
 export function attributionFrom(search: string, referrer: unknown): Attribution {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const utm = Object.fromEntries(UTM_FIELDS.map((f) => [f, cleanUtm(params.get(f))])) as Record<UtmField, string | null>;
-  return { ...utm, lead_source: leadSourceFor(utm.utm_source, referrer) };
+  return { ...utm, ...adFieldsFrom((f) => params.get(f)), lead_source: leadSourceFor(utm.utm_source, referrer) };
 }
 
 export function hasAttribution(a: Attribution): boolean {
-  return UTM_FIELDS.some((f) => a[f] !== null) || a.lead_source !== null;
+  return UTM_FIELDS.some((f) => a[f] !== null) || AD_FIELDS.some((f) => a[f] != null) || a.lead_source !== null;
 }
 
 /** The stored attribution, or null; anything malformed reads as nothing. */
@@ -80,7 +110,8 @@ export function parseStored(raw: unknown): Attribution | null {
     const v = JSON.parse(raw) as Record<string, unknown>;
     if (!v || typeof v !== "object") return null;
     const utm = Object.fromEntries(UTM_FIELDS.map((f) => [f, cleanUtm(v[f])])) as Record<UtmField, string | null>;
-    return { ...utm, lead_source: isLeadSource(v.lead_source) ? v.lead_source : null };
+    const landedAt = typeof v.landed_at === "number" && Number.isFinite(v.landed_at) ? v.landed_at : null;
+    return { ...utm, ...adFieldsFrom((f) => v[f]), lead_source: isLeadSource(v.lead_source) ? v.lead_source : null, landed_at: landedAt };
   } catch {
     return null;
   }
@@ -93,8 +124,8 @@ type StorageLike = { getItem(key: string): string | null; setItem(key: string, v
  * (components/UtmCapture.tsx); a visit that already has one keeps it. Never
  * throws — a private window with storage blocked simply records nothing.
  */
-export function captureAttribution(search: string, referrer: unknown, storage: StorageLike | null): Attribution | null {
-  const current = attributionFrom(search, referrer);
+export function captureAttribution(search: string, referrer: unknown, storage: StorageLike | null, now = Date.now()): Attribution | null {
+  const current = { ...attributionFrom(search, referrer), landed_at: now };
   try {
     const stored = parseStored(storage?.getItem(ATTRIBUTION_KEY) ?? null);
     if (stored && hasAttribution(stored)) return stored;
@@ -120,6 +151,8 @@ export function attributionForSubmit(search: string, referrer: unknown, storage:
   if (!hasAttribution(a)) return {};
   const out: Partial<Attribution> = {};
   for (const f of UTM_FIELDS) if (a[f]) out[f] = a[f];
+  for (const f of AD_FIELDS) if (a[f]) out[f] = a[f];
   if (a.lead_source) out.lead_source = a.lead_source;
+  if (a.landed_at) out.landed_at = a.landed_at;
   return out;
 }

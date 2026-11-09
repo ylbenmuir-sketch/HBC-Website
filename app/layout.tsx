@@ -11,6 +11,7 @@ import MobileActionBar from "@/components/MobileActionBar";
 import { SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import Analytics from "@/components/Analytics";
 import UtmCapture from "@/components/UtmCapture";
+import MetaPixel from "@/components/MetaPixel";
 import AssistantLoader from "@/components/AssistantLoader";
 import { BING_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION } from "@/lib/analytics";
 import { FEATURE_ASSISTANT, SITE_NAME, SITE_URL } from "@/lib/site-config";
@@ -244,6 +245,9 @@ export default function RootLayout({
           {/* The visit's first touch (utm tags, an Instagram referrer) for
               the lead record — lib/attribution.ts. Renders nothing. */}
           <UtmCapture />
+          {/* Meta Pixel, general pages only — lib/meta.ts. Inert until
+              NEXT_PUBLIC_META_PIXEL_ID is set. */}
+          <MetaPixel />
         </BottomBarProvider>
       </body>
     </html>
