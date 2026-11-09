@@ -383,6 +383,7 @@ try {
   }
   // Ben, 2026-11-07: before Nov 9 anyone with the URL saw the real notify-me page; robots/sitemap/noindex waited. Pinned, so it stays tested.
   section("Nov 8 (clock pinned): the real notify-me page before Nov 9; ?mode= links preview");
+  let earlyUnsub = null;
   await clock(ct(2026, 11, 8, 12));
   const nov8Page = await get("/10years");
   expect("plain /10years answers 200 with the real notify-me form (posting to /10years/signup, no ?mode=)", nov8Page.status === 200 && nov8Page.text.includes('data-mode="notify_me"') && nov8Page.text.includes('action="/10years/signup"'), String(nov8Page.status));
@@ -395,6 +396,9 @@ try {
     const mail = newEmails();
     // Ben, 2026-11-08: the submit is the signup — on the list at once; the email is a follow-up with no link to click.
     expect("before Nov 9: a real notify signup saves a row, ON THE LIST at once, and sends the on-the-list email", /\?sent=1$/.test(r.location) && Boolean(row?.verified_at) && mail.length === 1 && to(mail[0]) === EARLY.email && /You're on the list/.test(mail[0].body.subject) && !linkIn(mail[0], "/10years/verify"), `${r.location} row=${Boolean(row)} verified=${Boolean(row?.verified_at)} mails=${mail.length}`);
+    // Ben, 2026-11-09: the on-the-list email carries the one-click unsubscribe (link + List-Unsubscribe headers).
+    earlyUnsub = mail[0] ? unsubLinkIn(mail[0]) : null;
+    expect("the on-the-list email has an unsubscribe link and the List-Unsubscribe headers", Boolean(earlyUnsub) && Boolean(mail[0]?.body?.headers?.["List-Unsubscribe"]) && mail[0]?.body?.headers?.["List-Unsubscribe-Post"] === "List-Unsubscribe=One-Click", JSON.stringify(mail[0]?.body?.headers ?? {}));
     const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), EARLY);
     expect("…and the card after it says 'You're on the list.', not 'Check your inbox'", /You(?:&#x27;|')re on the list\./.test(card.text) && !/Check your inbox/.test(card.text));
   }
@@ -491,6 +495,13 @@ try {
   let fresh = newEmails();
   expect("three on-the-list emails, none for the bot", fresh.length === 3 && !fresh.some((e) => to(e) === "bot@example.test") && fresh.every((e) => /You're on the list/.test(e.body.subject)), `${fresh.length}`);
   expect("no follow-up email carries a verify link (the submit was the signup)", fresh.every((e) => !linkIn(e, "/10years/verify")));
+  expect("each on-the-list email carries its own unsubscribe link (Ben, 2026-11-09)", fresh.every((e) => unsubLinkIn(e) && e.body?.headers?.["List-Unsubscribe"]));
+  {
+    // The early signup unsubscribes from its on-the-list email: off every later giveaway email, still on the list.
+    const u = earlyUnsub ? await get(new URL(earlyUnsub).pathname + new URL(earlyUnsub).search) : { status: 0, text: "" };
+    const row = (await dump("giveaway_notify")).find((n) => n.email === "early.bird.nov7@example.test");
+    expect("the early one: the on-the-list unsubscribe link works (200) and sets unsubscribed_at; the row stays", u.status === 200 && /unsubscribed/i.test(u.text) && Boolean(row?.unsubscribed_at) && Boolean(row?.verified_at), `${u.status} unsub=${Boolean(row?.unsubscribed_at)}`);
+  }
   {
     const repeat = await postForm("/10years/signup", signupFields(A), A);
     expect("A again: ?already=1 and no second email", /\?already=1$/.test(repeat.location) && newEmails().length === 0, repeat.location);
@@ -506,7 +517,7 @@ try {
   await clock(C.SCHEDULE.entriesOpen.at);
   const live = await tick("entries open");
   fresh = newEmails();
-  expect("cron: the It's live job sent four emails (A, B, C, the early one)", live.sends.sent === 4 && fresh.length === 4, JSON.stringify(live.sends));
+  expect("cron: the It's live job sent three emails (A, B, C) — not the early one, who unsubscribed", live.sends.sent === 3 && fresh.length === 3 && !fresh.some((e) => to(e) === "early.bird.nov7@example.test"), JSON.stringify(live.sends));
   expect("It's live emails are marketing: unsubscribe link + List-Unsubscribe header", fresh.every((e) => unsubLinkIn(e) && e.body?.headers?.["List-Unsubscribe"]));
   const enterLinks = Object.fromEntries(fresh.map((e) => [to(e), linkIn(e, "/10years/enter/")]));
   expect("each carries a one-tap /10years/enter link", Object.values(enterLinks).every(Boolean));
@@ -521,11 +532,12 @@ try {
   // Rev 2, P0-2: no code and no named gift before the reveal — a tease instead.
   expect("A: one You're in email, with the share link, the gift tease and NO code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && !/10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text) && /thank-you gift for every entrant/.test(youreIn[0].body.text) && !/first visit/i.test(youreIn[0].body.text), `${youreIn.length}`);
   expect("A (not a client): no forward-to-a-friend line", !/Forward this to a friend/.test(youreIn[0]?.body.text ?? ""));
-  // Monday 9 am: the reminder to B, C and the early one (not A).
+  expect("A's You're in email has an unsubscribe link and the List-Unsubscribe headers (Ben, 2026-11-09)", Boolean(youreIn[0] && unsubLinkIn(youreIn[0])) && youreIn[0]?.body?.headers?.["List-Unsubscribe-Post"] === "List-Unsubscribe=One-Click");
+  // Monday 9 am: the reminder to B and C (not A, who entered; not the early one, unsubscribed).
   await clock(C.SCHEDULE.mondayReminder.at);
   const rem = await tick("Monday reminder");
   fresh = newEmails();
-  expect("Monday 9 am: reminder to B, C and the early one only", rem.sends.sent === 3 && fresh.length === 3 && !fresh.some((e) => to(e) === A.email) && fresh.every((e) => /Today at noon/.test(e.body.subject)), JSON.stringify(rem.sends));
+  expect("Monday 9 am: reminder to B and C only (not A, not the unsubscribed early one)", rem.sends.sent === 2 && fresh.length === 2 && !fresh.some((e) => to(e) === A.email || to(e) === "early.bird.nov7@example.test") && fresh.every((e) => /Today at noon/.test(e.body.subject)), JSON.stringify(rem.sends));
   // B taps Monday 2 pm → no early bird; C never taps.
   await clock(ct(2026, 11, 16, 14));
   const tapB = await get(new URL(enterLinks[B.email]).pathname, B);
@@ -621,7 +633,9 @@ try {
   // Unknown code: entered normally.
   const H = person("H", "hal.noref@example.test");
   r = await postForm("/10years/signup", signupFields(H, { ref: "HBC-ZZZZZZ" }), H);
-  newEmails();
+  // H's You're in email: its unsubscribe link is the one H uses Monday afternoon (Ben, 2026-11-09).
+  const hYoureIn = newEmails().find((e) => to(e) === H.email);
+  expect("H's You're in email carries an unsubscribe link", Boolean(hYoureIn && unsubLinkIn(hYoureIn)));
   // The limiter: six attempts from one address within the hour.
   const spam = person("S", "spam@example.test");
   let limited = null;
@@ -677,11 +691,14 @@ try {
   expect(`daily email to every verified entrant (${verifiedNow})`, run.sends.sent === verifiedNow && fresh.length === verifiedNow, `${run.sends.sent}/${fresh.length}`);
   expect("Monday's countdown email: '5 days to the $2,838.85 grand prize', the unsubscribe link, Tomorrow · Noon", fresh.every((e) => /5 days to the \$2,838\.85 grand prize$/.test(e.body.subject) && unsubLinkIn(e) && /Tomorrow · Noon: Brain Map \+ Skye Chiropractic gift \+ BrainMD — \$444\.95/.test(e.body.text)), fresh[0]?.body.subject);
   await expectOwnCounts("Monday", fresh);
-  // Unsubscribe H from a daily email.
-  const hDaily = fresh.find((e) => to(e) === H.email);
-  const unsub = await get(new URL(unsubLinkIn(hDaily)).pathname + new URL(unsubLinkIn(hDaily)).search, H);
-  expect("H: unsubscribe link works (200, no-store, noindex)", unsub.status === 200 && /unsubscribed/i.test(unsub.text) && /noindex/.test(unsub.headers.get("x-robots-tag") ?? ""));
+  // H unsubscribes with the link from the You're in email (the countdown emails carry the same system — checked above).
+  expect("H got Monday's countdown email (still subscribed then)", fresh.some((e) => to(e) === H.email));
+  const hEntriesBefore = await entriesOf(H.email);
+  const hLink = unsubLinkIn(hYoureIn);
+  const unsub = await get(new URL(hLink).pathname + new URL(hLink).search, H);
+  expect("H: the You're in unsubscribe link works (200, no-store, noindex)", unsub.status === 200 && /unsubscribed/i.test(unsub.text) && /noindex/.test(unsub.headers.get("x-robots-tag") ?? ""));
   expect("H: unsubscribed_at is set", (await dump("giveaway_people")).find((p) => p.email === H.email).unsubscribed_at !== null);
+  expect("H: the entry still counts after unsubscribing (same entries, still entered)", (await entriesOf(H.email)) === hEntriesBefore && hEntriesBefore > 0 && Boolean((await dump("giveaway_people")).find((p) => p.email === H.email)?.verified_at), `${hEntriesBefore} → ${await entriesOf(H.email)}`);
   expect("a tampered unsubscribe link is refused", (await get("/unsubscribe?t=abc.def")).status === 400);
 
   section("Tue 8:30 am: no 'call today' reminder any more (Ben, 2026-11-03)");
