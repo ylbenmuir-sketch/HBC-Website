@@ -27,9 +27,13 @@
  *                    "succeeds" and writes nothing, the cron answers 200 and
  *                    touches nothing, admin / enter / verify are 404,
  *                    /unsubscribe says unavailable, the rest of the site works
- *   today            engine on: /10years is already the real notify-me page
- *                    (noindex, robots-disallowed) before Nov 9;
+ *   today            engine on, the REAL clock (Nov 9 has passed): /10years is
+ *                    public as planned — the real page, indexable, not
+ *                    robots-disallowed, in the sitemap; ?mode= links ignored;
  *                    /admin/10years is noindex + no-store
+ *   Nov 8 (pinned)   the clock moved back: the real notify-me page before
+ *                    Nov 9 (noindex, robots-disallowed, not in the sitemap,
+ *                    ?mode= previews), and an early signup
  *   Nov 10           notify-me: three signups (one from Kentucky) + an Ohio ZIP refused +
  *                    a honeypot swallowed; three verification emails; links
  *                    clicked (one twice); /10years still never in the sitemap
@@ -354,12 +358,34 @@ try {
   await resetAll();
   mark = emails().length;
 
-  /* ── today: the showcase, engine on ─────────────────────────────────── */
-  section("Today (Oct 2026), engine on: /10years is the REAL notify-me page before Nov 9; ?mode= links preview");
-  // Ben, 2026-11-07: anyone with the URL sees the real notify-me page (its form saves); robots/sitemap/noindex wait for Nov 9.
+  /* ── today: the real clock, engine on — public since Nov 9 ───────────── */
+  // Ben, 2026-11-09: /10years went public on Nov 9 as planned. These run on the REAL clock, so they are the
+  // alarm for the live site's state: if any of them fails, /10years is hidden, unlisted or previewable again.
+  section("Today (real clock, after Nov 9), engine on: /10years is public as planned");
+  await clock(null);
+  const todayMs = Date.now();
+  if (todayMs < ct(2026, 11, 9, 0, 0)) throw new Error("the 'today' section assumes the real clock is past Nov 9 00:00 CT");
   const todayPage = await get("/10years");
-  expect("plain /10years answers 200 with the real notify-me form (posting to /10years/signup, no ?mode=)", todayPage.status === 200 && todayPage.text.includes('data-mode="notify_me"') && todayPage.text.includes('action="/10years/signup"'), String(todayPage.status));
+  const todayMode = /data-mode="([a-z_]+)"/.exec(todayPage.text)?.[1] ?? "";
+  expect(`plain /10years answers 200 with the real page (${todayMode})`, todayPage.status === 200 && ["notify_me", "live", "closed", "thank_you"].includes(todayMode) && !/signup\?mode=/.test(todayPage.text), String(todayPage.status));
   expect("…with the assistant off", /data-assistant-off/.test(todayPage.text));
+  for (const m of ["notify", "live", "closed", "thanks"]) {
+    const pg = await get(`/10years?mode=${m}`);
+    expect(`today: /10years?mode=${m} is ignored — the same real page, no showcase`, pg.status === 200 && pg.text.includes(`data-mode="${todayMode}"`) && !/signup\?mode=/.test(pg.text) && !/Sarah K\., Franklin|Daniel O\., Clarksville/.test(pg.text), String(pg.status));
+  }
+  expect("today: /10years meta robots says index, with no static noindex header", /name="robots" content="index, follow"/.test(todayPage.text) && !/noindex/.test(todayPage.headers.get("x-robots-tag") ?? ""));
+  expect("today: /10years/rules meta robots says index", /name="robots" content="index, follow"/.test((await get("/10years/rules")).text));
+  {
+    const robots = (await get("/robots.txt")).text;
+    expect("today: robots.txt allows /10years, still disallows the token routes, /admin/ and /api/", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
+    const map = (await get("/sitemap.xml")).text;
+    expect("today: the sitemap lists /10years and /10years/rules, never a token route, /unsubscribe or /admin", /\/10years<\/loc>/.test(map) && /\/10years\/rules<\/loc>/.test(map) && !/\/10years\/(claim|enter|verify|signup)|unsubscribe|\/admin/.test(map));
+  }
+  // Ben, 2026-11-07: before Nov 9 anyone with the URL saw the real notify-me page; robots/sitemap/noindex waited. Pinned, so it stays tested.
+  section("Nov 8 (clock pinned): the real notify-me page before Nov 9; ?mode= links preview");
+  await clock(ct(2026, 11, 8, 12));
+  const nov8Page = await get("/10years");
+  expect("plain /10years answers 200 with the real notify-me form (posting to /10years/signup, no ?mode=)", nov8Page.status === 200 && nov8Page.text.includes('data-mode="notify_me"') && nov8Page.text.includes('action="/10years/signup"'), String(nov8Page.status));
   const showNotify = await get("/10years?mode=notify");
   expect("/10years?mode=notify (a preview, not production) is the showcase posting with ?mode=", showNotify.status === 200 && showNotify.text.includes('action="/10years/signup?mode=notify"'), String(showNotify.status));
   {
@@ -377,7 +403,7 @@ try {
     expect(`/10years?mode=${m} answers 200 with the ${dm} stage`, pg.status === 200 && pg.text.includes(`data-mode="${dm}"`), String(pg.status));
   }
   // Rev 2, P0-6: the meta robots follows the clock; no static noindex header may pin it.
-  expect("/10years is noindex (meta), with no static noindex header", !/noindex/.test(todayPage.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(todayPage.text));
+  expect("/10years is noindex (meta), with no static noindex header", !/noindex/.test(nov8Page.headers.get("x-robots-tag") ?? "") && /name="robots" content="noindex/.test(nov8Page.text));
   const robotsToday = await get("/robots.txt");
   expect("before Nov 9: robots.txt still disallows /10years", /^Disallow: \/10years$/m.test(robotsToday.text), robotsToday.text.slice(0, 200));
   expect("before Nov 9: the sitemap does not list /10years", !/\/10years</.test((await get("/sitemap.xml")).text));
@@ -402,9 +428,9 @@ try {
   }
   expect("/10years/rules answers 200 (the showcase links to it)", (await get("/10years/rules")).status === 200);
   const site = await get("/sitemap.xml");
-  expect("sitemap has no /10years, /unsubscribe or /admin", !/10years|unsubscribe|\/admin/.test(site.text));
+  expect("before Nov 9: sitemap has no /10years, /unsubscribe or /admin", !/10years|unsubscribe|\/admin/.test(site.text));
   const robots = (await get("/robots.txt")).text;
-  expect("robots.txt disallows /admin/ and /10years", /Disallow: \/admin\//.test(robots) && /Disallow: \/10years/.test(robots));
+  expect("before Nov 9: robots.txt disallows /admin/ and /10years", /Disallow: \/admin\//.test(robots) && /^Disallow: \/10years$/m.test(robots));
   const admin = await get("/admin/10years");
   expect("/admin/10years answers 200, noindex, no-store", admin.status === 200 && /noindex/.test(admin.headers.get("x-robots-tag") ?? "") && /no-store/.test(admin.headers.get("cache-control") ?? ""));
 

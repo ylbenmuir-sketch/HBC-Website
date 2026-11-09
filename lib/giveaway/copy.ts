@@ -315,7 +315,7 @@ export const PAGES = {
     closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
     /** The slim bottom bar on phones once the form is off screen. */
-    entryBarNotify: D("Get on the list"),
+    entryBarNotify: D("Remind me"),
     entryBarLive: D("Enter the giveaway"),
     /** The share preview (Open Graph). Dates and the total come from config. */
     og: {
