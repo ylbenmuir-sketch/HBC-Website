@@ -36,6 +36,7 @@ import {
   guardEnforced,
   isInternalSubmit,
 } from "@/lib/form-guard";
+import { UTM_FIELDS, cleanUtm, isLeadSource } from "@/lib/attribution";
 
 export const runtime = "nodejs";
 
@@ -95,7 +96,17 @@ type Payload = {
   website?: unknown;
   /** The page token the form's script fetched (lib/form-guard.ts). */
   form_token?: unknown;
+  /** Where the visit started (lib/attribution.ts, 2026-11-09): the first
+   *  page's utm tags, cleaned, and "instagram" when it was. About the link. */
+  utm_source?: unknown;
+  utm_medium?: unknown;
+  utm_campaign?: unknown;
+  utm_content?: unknown;
+  lead_source?: unknown;
 };
+
+/** The attribution columns (migration 0019), in one place for the retry. */
+const ATTRIBUTION_COLUMNS = [...UTM_FIELDS, "lead_source"] as const;
 
 /* ------------------------------------------------------------------ */
 /* The destinations                                                    */
@@ -194,6 +205,13 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       void _b;
       void _c;
       values = rest;
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
+    }
+    // The attribution columns (migration 0019, 2026-11-09) may not exist
+    // yet: the lead is saved without them and the log says what to apply.
+    if (error && ATTRIBUTION_COLUMNS.some((c) => c in values && isMissingColumn(error!, c))) {
+      console.error("[destination: supabase] utm_*/lead_source columns missing — migration 0019 is not applied; saving the lead without them.");
+      values = Object.fromEntries(Object.entries(values).filter(([k]) => !(ATTRIBUTION_COLUMNS as readonly string[]).includes(k)));
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
     if (error && "giveaway_code" in values && isMissingColumn(error, "giveaway_code")) {
@@ -667,6 +685,17 @@ export async function POST(request: Request) {
   const callMeText = !isGuide && body.call_me_text === CALL_ME_TEXT ? CALL_ME_TEXT : null;
   const callMe = callMeText !== null && body.call_me === true && phone !== null;
 
+  // Where the visit started (lib/attribution.ts; migration 0019). Cleaned
+  // the way the giveaway cleans its tags; lead_source only from the fixed
+  // list. Only keys with a value are written, so saveRow's retry can drop
+  // them whole and an untagged visit's row carries none.
+  const attribution: Record<string, string> = {};
+  for (const field of UTM_FIELDS) {
+    const v = cleanUtm(body[field]);
+    if (v) attribution[field] = v;
+  }
+  if (isLeadSource(body.lead_source)) attribution.lead_source = body.lead_source;
+
   // The honeypot, read raw rather than through str(): empty is the normal
   // human answer, and str() maps empty to null. A filled one was refused at
   // the top (step 0), so this is "" for every request that gets here; the
@@ -707,6 +736,8 @@ export async function POST(request: Request) {
     ...(offer?.ok && (offer.person as { channel?: string | null }).channel ? { giveaway_channel: (offer.person as { channel?: string | null }).channel } : {}),
     // The code itself, for staff (migration 0017; saveRow drops it if 0017 is not applied yet).
     ...(offerCode && source === "giveaway" ? { giveaway_code: offerCode } : {}),
+    // The visit's first touch (migration 0019; saveRow drops it if 0019 is not applied yet).
+    ...(isGuide ? {} : attribution),
   };
 
   // Every consultation is forwarded here, at the lead. A form lead has no

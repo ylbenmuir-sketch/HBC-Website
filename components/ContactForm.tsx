@@ -24,6 +24,7 @@ import {
   looksLikeEmail,
 } from "@/lib/lead-options";
 import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
+import { attributionForSubmit } from "@/lib/attribution";
 import type { Video } from "@/lib/videos";
 import VideoEmbed from "./VideoEmbed";
 import ScannerText from "./ScannerText";
@@ -275,6 +276,7 @@ export default function ContactForm({
   centerPhones = [],
   video,
   giveaway = null,
+  variant = "default",
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -282,6 +284,16 @@ export default function ContactForm({
   video: Video;
   /** The 10-year giveaway path (/contact?from=10years), or null. */
   giveaway?: GiveawayBooking | null;
+  /**
+   * "start" is the Instagram landing page's form (/start, Ben, 2026-11-09):
+   * step one without "Who referred you?" — a visitor arriving from the bio
+   * link was not referred by a person, and the field is the one optional
+   * line standing between the center chips and the button on a 390×844
+   * screen. Step two still asks it when a referral is picked. Everything
+   * else — the fields, the consent box, the request, the funnel — is the
+   * same form, so the lead is the same lead.
+   */
+  variant?: "default" | "start";
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -420,7 +432,18 @@ export default function ContactForm({
     const offerCode = giveaway ? offerCodeInput.trim().toUpperCase() || null : from === "10years" ? params.get("code")?.trim().toUpperCase() ?? null : null;
     try {
       // With the page token (lib/form-token-client.ts — the spam guard).
+      // Where the visit started (lib/attribution.ts): the utm tags of the
+      // first page and whether it was Instagram — about the link, never
+      // the person. Nothing is sent when the visit carried none.
+      let storage: Storage | null = null;
+      try {
+        storage = window.sessionStorage;
+      } catch {
+        storage = null;
+      }
+      const attribution = attributionForSubmit(window.location.search, document.referrer, storage);
       const res = await postWithFormToken("/api/consultation", {
+        ...attribution,
         ...(offerCode ? { source: "giveaway", offer_code: offerCode } : {}),
         // The whole name, first and last; the key is the column's name.
         first_name: name,
@@ -802,18 +825,22 @@ export default function ContactForm({
         required
       />
 
-      <label htmlFor="referred-by">
-        Who referred you? <span style={OPTIONAL_STYLE}>(optional)</span>
-      </label>
-      <input
-        id="referred-by"
-        name="referred_by"
-        autoComplete="off"
-        maxLength={200}
-        placeholder="A doctor, a practice, a friend…"
-        value={referredBy}
-        onChange={(e) => setReferredBy(e.target.value)}
-      />
+      {variant !== "start" && (
+        <>
+          <label htmlFor="referred-by">
+            Who referred you? <span style={OPTIONAL_STYLE}>(optional)</span>
+          </label>
+          <input
+            id="referred-by"
+            name="referred_by"
+            autoComplete="off"
+            maxLength={200}
+            placeholder="A doctor, a practice, a friend…"
+            value={referredBy}
+            onChange={(e) => setReferredBy(e.target.value)}
+          />
+        </>
+      )}
 
       {/* Text-message consent, last before the button (Ben, 2026-11-02).
           A2P 10DLC: carrier reviewers read it in the server-rendered HTML,
