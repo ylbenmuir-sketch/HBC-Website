@@ -422,8 +422,9 @@ try {
   // The prize ladder (Ben, 2026-11-03): six values, one prize each, "Over $5,500".
   {
     const visible = todayPage.text.replace(/<script[\s\S]*?<\/script>/g, "");
-    const want = ["$194.95", "$444.95", "$569.95", "$668.95", "$819.95", "$2,838.85"];
-    expect("the ladder shows the six new values", want.every((v) => visible.includes(v)), want.filter((v) => !visible.includes(v)).join(" "));
+    // Whole dollars on the page (Ben, 2026-11-09); the rules keep the cents (checked below).
+    const want = ["$195", "$445", "$570", "$669", "$820", "$2,839"];
+    expect("the ladder shows the six values in whole dollars, no cents", want.every((v) => visible.includes(v)) && !/\$(?:194\.95|444\.95|569\.95|668\.95|819\.95|2,838\.85)/.test(visible), want.filter((v) => !visible.includes(v)).join(" "));
     expect("the headline reads Over $5,500 in prizes", /Over \$5,500 in prizes/.test(visible));
     const rules = (await get("/10years/rules")).text.replace(/<script[\s\S]*?<\/script>/g, "");
     const old = /\$6,000|\$6,744|\$6,009|\$2,529|\$2,544|\$399|\$429|Partner prize|keychain|Pocket vagus|Handheld vagus|New client|Current client</;
@@ -689,7 +690,7 @@ try {
   run = await tick("Monday 4 pm");
   fresh = newEmails();
   expect(`daily email to every verified entrant (${verifiedNow})`, run.sends.sent === verifiedNow && fresh.length === verifiedNow, `${run.sends.sent}/${fresh.length}`);
-  expect("Monday's countdown email: '5 days to the $2,838.85 grand prize', the unsubscribe link, Tomorrow · Noon", fresh.every((e) => /5 days to the \$2,838\.85 grand prize$/.test(e.body.subject) && unsubLinkIn(e) && /Tomorrow · Noon: Brain Map \+ Skye Chiropractic gift \+ BrainMD — \$444\.95/.test(e.body.text)), fresh[0]?.body.subject);
+  expect("Monday's countdown email: '5 days to the $2,839 grand prize', the unsubscribe link, Tomorrow · Noon", fresh.every((e) => /5 days to the \$2,839 grand prize$/.test(e.body.subject) && unsubLinkIn(e) && /Tomorrow · Noon: Brain Map \+ Skye Chiropractic gift \+ BrainMD — \$445/.test(e.body.text)), fresh[0]?.body.subject);
   await expectOwnCounts("Monday", fresh);
   // H unsubscribes with the link from the You're in email (the countdown emails carry the same system — checked above).
   expect("H got Monday's countdown email (still subscribed then)", fresh.some((e) => to(e) === H.email));
@@ -732,7 +733,7 @@ try {
   run = await tick("Tuesday 4 pm");
   expect("Tuesday daily skips the unsubscribed entrant", run.sends.sent === verifiedNow - 1, `${run.sends.sent}`);
   fresh = newEmails();
-  expect("Tuesday's countdown email: 4 days, and not to H (unsubscribed)", fresh.every((e) => /4 days to the \$2,838\.85 grand prize$/.test(e.body.subject)) && !fresh.some((e) => to(e) === H.email));
+  expect("Tuesday's countdown email: 4 days, and not to H (unsubscribed)", fresh.every((e) => /4 days to the \$2,839 grand prize$/.test(e.body.subject)) && !fresh.some((e) => to(e) === H.email));
 
   section("A skipped cron minute: Wed and Thu caught up in one tick");
   await clock(new Date(C.drawing("thu").at.getTime() + 3 * 60_000));
@@ -753,7 +754,7 @@ try {
   await clock(C.drawing("fri").dailyEmailAt);
   run = await tick("Friday 4 pm");
   fresh = newEmails();
-  expect("Friday's countdown email: 'Tomorrow at 5 PM', no Tomorrow · Noon row, Friday's hint", fresh.length > 0 && fresh.every((e) => /Tomorrow at 5 PM: the \$2,838\.85 grand prize$/.test(e.body.subject) && !/Tomorrow · Noon/.test(e.body.text) && /Friends must enter by 5 PM tomorrow\./.test(e.body.text)));
+  expect("Friday's countdown email: 'Tomorrow at 5 PM', no Tomorrow · Noon row, Friday's hint", fresh.length > 0 && fresh.every((e) => /Tomorrow at 5 PM: the \$2,839 grand prize$/.test(e.body.subject) && !/Tomorrow · Noon/.test(e.body.text) && /Friends must enter by 5 PM tomorrow\./.test(e.body.text)));
   // ADMIN_ACTIONS_REDRAW — Thursday's winner unreachable → redraw.
   const thuDrawing = (await dump("giveaway_drawings")).find((d) => d.slot === "thu");
   const thuWinnerBefore = (await dump("giveaway_winners")).find((w) => w.drawing_id === thuDrawing.id && w.status !== "redrawn");
@@ -773,7 +774,7 @@ try {
     const people = await dump("giveaway_people");
     const want = people.filter((p) => p.verified_at && !p.unsubscribed_at).length;
     expect(`Saturday 9 am: to every verified, subscribed entrant (${want}), not to H`, run.sends.sent === want && fresh.length === want && !fresh.some((e) => to(e) === H.email), `${run.sends.sent}/${fresh.length}`);
-    expect("Saturday's subject is 'Today at 5 PM: the $2,838.85 grand prize' and the hint names 5 PM and 7 PM", fresh.every((e) => /Today at 5 PM: the \$2,838\.85 grand prize$/.test(e.body.subject) && /Friends can enter until 5 PM\. Thank-you gift arrives at 7 PM\./.test(e.body.text)));
+    expect("Saturday's subject is 'Today at 5 PM: the $2,839 grand prize' and the hint names 5 PM and 7 PM", fresh.every((e) => /Today at 5 PM: the \$2,839 grand prize$/.test(e.body.subject) && /Friends can enter until 5 PM\. Thank-you gift arrives at 7 PM\./.test(e.body.text)));
     await expectOwnCounts("Saturday", fresh);
   }
 
@@ -947,7 +948,7 @@ try {
     itsLive: all.filter((e) => /^\[DRAFT\] It's live/.test(e.body.subject)).length,
     reminder: all.filter((e) => /Today at noon/.test(e.body.subject)).length,
     youreIn: all.filter((e) => /You're in\./.test(e.body.subject)).length,
-    countdown: all.filter((e) => /^\[DRAFT\] (\d days to|Tomorrow at 5 PM:|Today at 5 PM:) the \$2,838\.85 grand prize$/.test(e.body.subject)).length,
+    countdown: all.filter((e) => /^\[DRAFT\] (\d days to|Tomorrow at 5 PM:|Today at 5 PM:) the \$2,839 grand prize$/.test(e.body.subject)).length,
     thanks: all.filter((e) => /Your 10-year thank-you gift/.test(e.body.subject)).length,
     giftReminder: all.filter((e) => /Your free first visit: book by/.test(e.body.subject)).length,
     alerts: all.filter((e) => /^\[DRAFT\] 10 years — /.test(e.body.subject)).length,

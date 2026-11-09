@@ -421,7 +421,8 @@ export function shortPrizeName(p: PrizeSpec): string {
   return out.join(" + ");
 }
 
-const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** Prize values in emails: whole dollars, rounded (Ben, 2026-11-09) — "$2,839". The rules keep the cents. */
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 /** "5 PM", "7 PM", "noon". */
 const clock = (d: Date) => shortCentralTime(d).replace(/\b(am|pm)\b/, (m) => m.toUpperCase());
 

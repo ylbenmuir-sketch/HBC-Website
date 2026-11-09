@@ -189,7 +189,7 @@ export const EMAILS = {
     /** "Tomorrow · Noon" — the next daily drawing's time is from config. */
     tomorrowLabel: (time: string) => `Tomorrow · ${time.charAt(0).toUpperCase()}${time.slice(1)}`,
     /** The short partner names for the one-line "Tomorrow" prize. */
-    partnerTiny: { skye: "Skye Chiropractic gift", amabel: "Amabel coaching", envision: "3 lymphatic" } as Record<string, string>,
+    partnerTiny: { skye: "Skye Chiropractic gift", amabel: "Amabel coaching", envision: "3 lymphatic sessions" } as Record<string, string>,
     /** Split so the count can be bold: "You have" + "4 entries". */
     entriesLead: "You have",
     entriesCount: (n: number) => `${n} ${n === 1 ? "entry" : "entries"}`,

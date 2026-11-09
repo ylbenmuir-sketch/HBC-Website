@@ -365,8 +365,8 @@ function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
 /** "Mon · noon", "Sat · 5 PM". */
 const cardTime = (d: Drawing) => t.cardTime(d.dayName.slice(0, 3), shortCentralTime(d.at).replace(/\b(am|pm)$/, (m) => m.toUpperCase()));
 
-/** "$44.95", "$150" — cents only when there are any. */
-const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
+/** Card values in whole dollars, rounded (Ben, 2026-11-09): "$45", "$2,839". The rules page keeps the cents. */
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 
 /** The short words for one part — the card's "+" lines and the phone row. */
@@ -407,7 +407,7 @@ function PrizeWords({ p }: { p: PrizeSpec }) {
   );
 }
 
-const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p));
+const valueBig = (p: PrizeSpec) => t.valueBig(Math.round(prizeRetailUsd(p)));
 
 /** The phone row's line: "Brain Map + 3 LENS sessions + Hoolest Mini + 1 BrainMD bottle".
  *  The grand prize: "Brain Map + 12 LENS sessions + Hoolest VeRelief + 3 more" (Ben, 2026-11-09). */
