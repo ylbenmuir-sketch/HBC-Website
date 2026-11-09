@@ -202,7 +202,7 @@ export function MessageCard({ title, message, ok, back = false }: { title: strin
 }
 
 /** A confirmed entry: "You're in", the count, the share link with a copy button. */
-export function YoureInCard({ message, shareUrl }: { message: string; shareUrl?: string }) {
+export function YoureInCard({ message, shareUrl, back = false }: { message: string; shareUrl?: string; back?: boolean }) {
   return (
     <div className="ty-message" role="status" data-ok="1">
       <h2 className="ty-card-title">{t.inTitle}</h2>
@@ -212,6 +212,12 @@ export function YoureInCard({ message, shareUrl }: { message: string; shareUrl?:
           <CopyLink url={shareUrl} label={t.shareLabel} copy={t.copy} copied={t.copied} />
           <p className="ty-small">{t.shareLine(REFERRAL.referrerBonus, REFERRAL.referredBonus)}</p>
         </>
+      )}
+      {/* After a submit the URL carries ?sent=1; someone it is forwarded to still needs a way to the form. */}
+      {back && (
+        <a className="ty-textlink" href="/10years#enter">
+          {t.backToForm}
+        </a>
       )}
     </div>
   );

@@ -464,8 +464,9 @@ in Vercel (production) and redeploying:
    the accountant confirms, and `RULES_VERSION` set to the approval date.
    `lib/giveaway/send.ts` refuses to send `[DRAFT]` copy in production, so
    with the engine on and the copy still draft, NO giveaway email goes
-   out — verification links included — and every signup ends in
-   `?error=send_failed`.
+   out. Since 2026-11-08 the form submit itself is the signup / the entry
+   (no email click), so signups still save and succeed on screen; only
+   the follow-up emails (on the list, You're in, share link) are missing.
 7. **`npm run check:giveaway -- --db`** green against the project
    (env=test rows), after 1–6.
 8. **Un-hiding is automatic** (fix list rev 2, P0-6): with the engine on,
