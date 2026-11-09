@@ -213,7 +213,14 @@ export default function PrivacyPolicyPage() {
                 this origin, and youtube-nocookie.com only on a click. The
                 browser-storage sentence follows FEATURE_ASSISTANT: the ask
                 bar's one-time cue (components/StickyAskBar.tsx → CUE_KEY)
-                is the site's only use of localStorage.
+                is the site's only use of localStorage. The session-storage
+                sentence covers all three sessionStorage keys: the visit's
+                first touch (components/UtmCapture.tsx → lib/attribution.ts:
+                utm tags, ad click ids, landing time — sent with a call
+                request, and read for Meta's fbc), the giveaway's own utm
+                capture (components/giveaway/UtmCapture.tsx — sent with a
+                signup), and the 10-year banner's dismissal
+                (components/giveaway/GiveawayBanner.tsx — never sent).
 
                 Adding any other tag, pixel, widget, embed, or font, script or
                 image from another origin falsifies it. Whoever does that edits
@@ -223,8 +230,13 @@ export default function PrivacyPolicyPage() {
               This site itself sets no cookies. Its fonts and images are served
               from this site.
               {FEATURE_ASSISTANT
-                ? " The one thing it stores in your browser is a note that you have already seen the “Ask us” nudge, so it is not shown again — it stays on your device and is never sent to us."
-                : " It stores nothing in your browser."}
+                ? " It keeps a note on your device that you have already seen the “Ask us” nudge, so it is not shown again; that note is never sent to us."
+                : ""}
+              {" "}Until you close the tab, it also keeps the tags on the link
+              that brought you here (such as which ad or post you followed)
+              and whether you closed our 10-year banner. The link tags are sent
+              with a call request or a 10-year giveaway signup, so we know
+              where it came from.
             </p>
             {ANALYTICS_ENABLED ? (
               <p>
