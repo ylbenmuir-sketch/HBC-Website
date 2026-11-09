@@ -28,7 +28,14 @@ import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
 import { checkGiftCode, checkOffer, giftCenterFor, giftCodeRefusalMessage, offerRefusalMessage, redeemGift } from "@/lib/giveaway/offers";
 import { CALL_ME_TEXT } from "@/lib/call-consent";
-import { looksLikeEmail } from "@/lib/lead-options";
+import { isUsPhone, looksLikeEmail } from "@/lib/lead-options";
+import {
+  checkFormRateLimit,
+  checkFormToken,
+  formClientKey,
+  guardEnforced,
+  isInternalSubmit,
+} from "@/lib/form-guard";
 
 export const runtime = "nodejs";
 
@@ -86,6 +93,8 @@ type Payload = {
   call_me_text?: unknown;
   /** The honeypot (see the read in the handler) — hidden from real visitors. */
   website?: unknown;
+  /** The page token the form's script fetched (lib/form-guard.ts). */
+  form_token?: unknown;
 };
 
 /* ------------------------------------------------------------------ */
@@ -433,6 +442,10 @@ async function formPayload(request: Request): Promise<Payload> {
     referred_by: field("referred_by"),
     note: field("note"),
     website: field("website") ?? "",
+    // Never present on a real no-JavaScript post: the token is fetched by
+    // the form's script. Read so a script that copies one in is still
+    // checked like any other request.
+    form_token: field("form_token"),
     source_page: field("source_page"),
     sms_consent_text: field("sms_consent_text"),
     // A ticked checkbox posts "on"; an unticked one posts nothing.
@@ -449,8 +462,8 @@ async function formPayload(request: Request): Promise<Payload> {
 function reply(
   htmlForm: boolean,
   request: Request,
-  body: { ok?: boolean; id?: string | null; error?: string },
-  init: { status: number }
+  body: { ok?: boolean; id?: string | null; error?: string; retry?: string },
+  init: { status: number; headers?: Record<string, string> }
 ): NextResponse {
   if (init.status >= 400) {
     console.warn(`[submission] refused ${init.status}${htmlForm ? " (html form post)" : ""}: ${body.error ?? "no message"}`);
@@ -471,11 +484,53 @@ function reply(
  */
 export async function POST(request: Request) {
   const htmlForm = isFormEncoded(request);
+
+  // ── 0. The spam guard (Ben, 2026-11-08; lib/form-guard.ts) ─────────────
+  // Before anything is saved, emailed or texted. The assistant's in-process
+  // submit is exempt (its own rate limit; it never crosses the network).
+  // Every refusal is logged with its reason and country — never a value.
+  const internal = isInternalSubmit(request);
+  const enforce = !internal && guardEnforced();
+  const refuseSpam = (reason: string, status: number, error: string, extra: { retry?: string; headers?: Record<string, string> } = {}) => {
+    console.warn(
+      `[spam guard] refused reason=${reason}${htmlForm ? " (html form post)" : ""} country=${request.headers.get("x-vercel-ip-country") ?? "?"}`
+    );
+    return reply(htmlForm, request, { error, ...(extra.retry ? { retry: extra.retry } : {}) }, { status, headers: extra.headers });
+  };
+  const couldNotSend = `We couldn't send your request just now. Please refresh the page and try again — or call us at ${PHONE_DISPLAY}.`;
+
+  if (enforce) {
+    const rate = checkFormRateLimit(formClientKey(request));
+    if (!rate.allowed) {
+      return refuseSpam("rate_limit", 429, `Too many requests from this connection. Please try again later — or call us at ${PHONE_DISPLAY}.`, {
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      });
+    }
+  }
+
   let body: Payload;
   try {
     body = htmlForm ? await formPayload(request) : await request.json();
   } catch {
     return reply(htmlForm, request, { error: "Invalid request." }, { status: 400 });
+  }
+
+  // The honeypot: a field real visitors never see (components/ContactForm.tsx)
+  // and so always send empty. Filled means a script filled every input it
+  // found — refused, never saved, nothing sent. (Until 2026-11-08 it only
+  // flagged the lead; the flood did not fill it, but the rule stands.)
+  if (typeof body.website === "string" && body.website.trim().length > 0) {
+    return refuseSpam("honeypot", 400, couldNotSend);
+  }
+
+  if (enforce) {
+    const token = checkFormToken(body.form_token);
+    if (!token.ok) {
+      // 403 with retry "form_token": the form's script fetches a fresh token
+      // and tries once more (lib/form-token-client.ts). A script without
+      // one gets the same answer and nothing else.
+      return refuseSpam(`token_${token.reason}`, 403, couldNotSend, { retry: "form_token" });
+    }
   }
 
   const type = str(body.type, 20) ?? "consultation";
@@ -556,6 +611,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // A typed phone must be a real US number (lib/lead-options.ts → isUsPhone):
+  // the flood's numbers had area codes like 991. Blank is fine when there is
+  // an email — the rule above. Held to the form: the assistant's own flow
+  // reads the number, and a giveaway booking needs an issued offer code and
+  // comes through the same form, which checks the number before sending.
+  if (source === "form" && !isGuide && phone && !isUsPhone(phone)) {
+    return reply(htmlForm, request,
+      { error: "That phone number doesn't look like a U.S. number — please check it, or leave it blank and use email." },
+      { status: 400 }
+    );
+  }
+
   // Optional on a consultation (the form asks it in step two), but when it is
   // sent it has to be one of the three the row and the platform understand.
   if (helpingWho && !HELPING_OPTIONS.has(helpingWho)) {
@@ -601,10 +668,9 @@ export async function POST(request: Request) {
   const callMe = callMeText !== null && body.call_me === true && phone !== null;
 
   // The honeypot, read raw rather than through str(): empty is the normal
-  // human answer, and str() maps empty to null. It is never used to reject
-  // anything here — classification is the platform's job (a non-empty value is
-  // stored flagged there and still answers 201), so a bot gets exactly the same
-  // response a parent does.
+  // human answer, and str() maps empty to null. A filled one was refused at
+  // the top (step 0), so this is "" for every request that gets here; the
+  // flagging below stays as a second line should that check ever move.
   const honeypot = typeof body.website === "string" ? body.website : "";
 
   // Guide signups carry nothing but an address; the rest stays null rather than

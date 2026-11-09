@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { POST as submitConsultation } from "@/app/api/consultation/route";
+import { internalSubmitHeaders } from "@/lib/form-guard";
 import { answerFromSite } from "@/lib/chat/answer";
 import {
   BOOKING_FAILURE_REPLY,
@@ -257,7 +258,10 @@ export async function POST(request: Request) {
         const response = await submitConsultation(
           new Request(new URL("/api/consultation", request.url), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            // The in-process key exempts this from the form's spam guard
+            // (lib/form-guard.ts): the chat has its own rate limit, and no
+            // browser ever holds this key.
+            headers: { "Content-Type": "application/json", ...internalSubmitHeaders() },
             body: JSON.stringify(submission),
           })
         );

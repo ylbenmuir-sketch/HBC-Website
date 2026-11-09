@@ -106,7 +106,9 @@
  *
  * Twelve rows, named `E2E-<run>-<Path>-<width> Tester` — the chat's are
  * `Etoe<run as letters>Yes|No Chat`, because the chat reads a name as
- * letters only — phone 0000000000, and two chat_sessions rows. The same preflight as scripts/chat-checklist.mjs:
+ * letters only — phone 615-555-0199 (a
+ * fictional 555-01xx number: the form and the route refuse a fake area code since
+ * the spam guard, 2026-11-08), and two chat_sessions rows. The same preflight as scripts/chat-checklist.mjs:
  * CHECK_CONTACT_ALLOW_PROJECT must name the exact project ref in
  * SUPABASE_URL, which cannot be satisfied without looking at which project
  * that is. At the end, unless `--keep` is passed, the run deletes the rows it
@@ -314,7 +316,7 @@ function expect(label, ok, detail = "") {
 }
 
 /** The row for a submission: exactly one, with the columns step one wrote. */
-async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), phone = "0000000000", source = "form", bestTime = null, contactMethod = null, heardAbout = null, sourcePage = "/contact", consent, consentText = FORM_CONSENT_TEXT }) {
+async function expectRow(name, { center, helpingWho, concerns, note, referredBy = null, email = emailFor(name), phone = "6155550199", source = "form", bestTime = null, contactMethod = null, heardAbout = null, sourcePage = "/contact", consent, consentText = FORM_CONSENT_TEXT }) {
   const rows = await rowsNamed(name);
   expect(`${name}: exactly one row`, rows.length === 1, `${rows.length} row(s)`);
   const r = rows[0];
@@ -384,8 +386,8 @@ function expectEmail(name, row, { center, consent, source = "the contact form", 
   expect(`${name}: email is from "Harmonized Brain Centers"`, e.body.from === FROM, String(e.body.from));
   expect(`${name}: email has the branded HTML and a plain-text twin`, html.startsWith("<!doctype html>") && html.includes("BRAIN CENTERS") && text.length > 0);
   expect(`${name}: email's first line says "New call request"${channel === "chat" ? " … via chat" : ""}`, text.startsWith("NEW CALL REQUEST · ") && text.split("\n")[0].includes("via chat") === (channel === "chat"), JSON.stringify(text.split("\n")[0]));
-  expect(`${name}: email carries the name whole${phone ? " and the phone formatted" : ""}`, text.includes(`\n${name}\n`) && text.includes("(000) 000-0000") === phone, JSON.stringify(text.slice(0, 200)));
-  expect(`${name}: email has ${phone ? "a Call (tel:)" : "no Call"} and ${email ? "a Reply (mailto:)" : "no Reply"} button`, /href="tel:\+10000000000"[^>]*>Call</.test(html) === phone && /href="mailto:[^"]+"[^>]*>Reply</.test(html) === email);
+  expect(`${name}: email carries the name whole${phone ? " and the phone formatted" : ""}`, text.includes(`\n${name}\n`) && text.includes("(615) 555-0199") === phone, JSON.stringify(text.slice(0, 200)));
+  expect(`${name}: email has ${phone ? "a Call (tel:)" : "no Call"} and ${email ? "a Reply (mailto:)" : "no Reply"} button`, /href="tel:\+16155550199"[^>]*>Call</.test(html) === phone && /href="mailto:[^"]+"[^>]*>Reply</.test(html) === email);
   if (channel === "form") {
     const [, l1, l2] = text.split("\n");
     expect(`${name}: "Referred by" and "Heard about us" are the email's first lines (Ben, 2026-10-26)`, l1 === `Referred by: ${referredBy ?? "Not given"}`.replace("Referred by: ", "Referred by:".padEnd(13)) && l2 === `Heard about us: ${heardAbout ?? "Not given"}`, JSON.stringify([l1, l2]));
@@ -453,7 +455,7 @@ function expectText(name, { from = env.DIALPAD_SMS_FROM ?? "+16155550100" }) {
   expect(`${name}: text is exactly Ben's words with HELP/STOP, first word of the name only`, body === SMS_EXACT(firstWord(name)) && !body.includes("Tester"), JSON.stringify(body));
   const seg = segments(body);
   expect(`${name}: text is GSM-7, two segments (${seg.units} units)`, seg.gsm7 && seg.segments === 2, JSON.stringify(seg));
-  expect(`${name}: text goes to the number given`, JSON.stringify(t.body.to_numbers) === JSON.stringify(["+10000000000"]), JSON.stringify(t.body.to_numbers));
+  expect(`${name}: text goes to the number given`, JSON.stringify(t.body.to_numbers) === JSON.stringify(["+16155550199"]), JSON.stringify(t.body.to_numbers));
   expect(`${name}: text comes from ${from}`, t.body.from_number === from, String(t.body.from_number));
 }
 
@@ -475,7 +477,7 @@ function expectForward(name, { center, consent, whoFor = null, updated = null })
   const first = list[0];
   if (!first) return;
   expect(`${name}: platform post carries the secret header`, first.secretPresent === true);
-  expect(`${name}: platform post phone/center`, first.body.phone === "0000000000" && first.body.preferredCenter === center, JSON.stringify([first.body.phone, first.body.preferredCenter]));
+  expect(`${name}: platform post phone/center`, first.body.phone === "6155550199" && first.body.preferredCenter === center, JSON.stringify([first.body.phone, first.body.preferredCenter]));
   expect(`${name}: platform post honeypot present and empty`, first.body.website === "", JSON.stringify(first.body.website));
   expect(
     `${name}: platform post ${consent ? "carries no" : "carries the"} no-consent line`,
@@ -506,7 +508,7 @@ function expectForward(name, { center, consent, whoFor = null, updated = null })
     if (updated.heardAbout) {
       expect(`${name}: update post carries "Heard about us:"`, String(second.body.message ?? "").includes(`Heard about us: ${updated.heardAbout}`), JSON.stringify(second.body.message));
     }
-    expect(`${name}: update post keeps name/phone/center`, second.body.firstName === name && second.body.phone === "0000000000" && second.body.preferredCenter === center, JSON.stringify(second.body));
+    expect(`${name}: update post keeps name/phone/center`, second.body.firstName === name && second.body.phone === "6155550199" && second.body.preferredCenter === center, JSON.stringify(second.body));
   }
 }
 
@@ -547,7 +549,7 @@ async function latePageTwo() {
   const res = await fetch(`${BASE}/api/consultation`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: false, sms_consent_text: FORM_CONSENT_TEXT }),
+    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "6155550199", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: false, sms_consent_text: FORM_CONSENT_TEXT }),
   });
   const body = await res.json().catch(() => null);
   expect(`${name}: accepted (201)`, res.status === 201 && Boolean(body?.id), String(res.status));
@@ -764,7 +766,7 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
   // check cares about do not exist yet, so the reveal gate is still real.
   // `note` is accepted for the callers' sake and typed on step two now (pathSave).
   void note;
-  const fields = [["#first-name", typed], ...(phone ? [["#phone", "0000000000"]] : []), ...(email ? [["#email", email]] : []), ...(referral ? [["#referred-by", referral]] : [])];
+  const fields = [["#first-name", typed], ...(phone ? [["#phone", "6155550199"]] : []), ...(email ? [["#email", email]] : []), ...(referral ? [["#referred-by", referral]] : [])];
   for (const [sel, val] of fields) {
     const r = await page.eval(setValue(sel, val));
     if (r !== "ok") throw new Error(r);
@@ -1109,19 +1111,19 @@ async function chatConversation(consent, n) {
   const email = `${CHAT_PREFIX.toLowerCase()}${consent ? "yes" : "no"}@example.test`;
   const center = consent ? "Nashville" : "Concierge";
   const time = consent ? "Afternoon" : "Any time";
-  const readBack = (address) => `Here’s what I have: ${name}, (000) 000-0000, ${address}, ${center}, ${time}. ${CHAT_CONSENT_QUESTION}`;
+  const readBack = (address) => `Here’s what I have: ${name}, (615) 555-0199, ${address}, ${center}, ${time}. ${CHAT_CONSENT_QUESTION}`;
 
   await turn("I'd like to book a call", "What’s your name and the best number to reach you?");
   chatSessions.push(sessionId);
   if (consent) {
-    await turn(`${typed} 0000000000`, "What email should we send your confirmation to?");
+    await turn(`${typed} 6155550199`, "What email should we send your confirmation to?");
     await turn("my email is at gmail", "That doesn’t look like an email address — could you type it again, like name@gmail.com?");
     await turn(email, "Which center?", CENTER_BUTTONS);
     await turn("Franklin", "Our Franklin center isn’t open yet — Nashville and Murfreesboro are open now, or we can come to you. Which center?", CENTER_BUTTONS);
     await turn("Nashvile", "Who’s this for, and what’s going on? A sentence is plenty.");
   } else {
     await turn(typed, `Thanks, ${firstWord(name)}. What’s the best number to reach you?`);
-    await turn("0000000000", "What email should we send your confirmation to?");
+    await turn("6155550199", "What email should we send your confirmation to?");
     await turn(email, "Which center?", CENTER_BUTTONS);
     await turn("Come to me", "Who’s this for, and what’s going on? A sentence is plenty.");
   }
@@ -1165,7 +1167,7 @@ async function forgedConsent() {
   const res = await fetch(`${BASE}/api/consultation`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "0000000000", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: true }),
+    body: JSON.stringify({ type: "consultation", source: "form", first_name: name, phone: "6155550199", email: emailFor(name), preferred_center: "Nashville", best_time: "Any time", website: "", source_page: "/contact", sms_consent: true }),
   });
   expect(`${name}: still accepted (201) — consent is never a condition`, res.status === 201, String(res.status));
   await sleep(300);
@@ -1208,9 +1210,9 @@ async function postRefusals() {
   const post = (payload) => fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "consultation", source: "form", first_name: name, preferred_center: "Nashville", website: "", source_page: "/contact", ...payload }) }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
   const missing = await post({});
   expect("POST from the form with neither a phone nor an email is refused (400), and says so", missing.status === 400 && /phone number or an email/i.test(missing.body?.error ?? ""), JSON.stringify(missing));
-  const noName = await post({ first_name: "", phone: "0000000000" });
+  const noName = await post({ first_name: "", phone: "6155550199" });
   expect("POST from the form without a name is refused (400)", noName.status === 400, JSON.stringify(noName));
-  const bad = await post({ phone: "0000000000", email: "not-an-address" });
+  const bad = await post({ phone: "6155550199", email: "not-an-address" });
   expect("POST with a malformed email is refused (400)", bad.status === 400 && /doesn't look right/.test(bad.body?.error ?? ""), JSON.stringify(bad));
   await sleep(200);
   expect("refused POSTs wrote no row, sent no email, no post, no text", (await rowsNamed(name)).length === 0 && emailsNaming(name).length === 0 && forwardsNaming(name).length === 0 && textsNaming(name).length === 0);
@@ -1233,7 +1235,7 @@ async function patchRefusals(row) {
   expect("PATCH to an unknown id answers 404", (await patch("00000000-0000-4000-8000-000000000000", { note: "x" })) === 404);
   expect("PATCH to a non-uuid answers 404", (await patch("not-a-uuid", { note: "x" })) === 404);
   const [after] = await rest(`consultation_requests?id=eq.${row.id}&select=phone,email,first_name,preferred_center,best_time,contact_method,sms_consent`);
-  expect("refused PATCHes changed nothing", after.phone === "0000000000" && after.email === row.email && after.first_name === row.first_name && after.preferred_center === row.preferred_center && after.best_time === row.best_time && after.contact_method === row.contact_method && after.sms_consent === row.sms_consent, JSON.stringify(after));
+  expect("refused PATCHes changed nothing", after.phone === "6155550199" && after.email === row.email && after.first_name === row.first_name && after.preferred_center === row.preferred_center && after.best_time === row.best_time && after.contact_method === row.contact_method && after.sms_consent === row.sms_consent, JSON.stringify(after));
   expect("refused PATCHes posted nothing to the platform", forwardsNaming(row.first_name).length === 2, `${forwardsNaming(row.first_name).length} post(s)`);
 }
 
