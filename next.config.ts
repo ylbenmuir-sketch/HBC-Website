@@ -423,6 +423,15 @@ const nextConfig: NextConfig = {
         source,
         headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
       })),
+      // /review (the page staff text a client to leave a Google review) and
+      // /start (the Instagram landing page), 2026-11-09: noindex by header
+      // as well as by meta, so a CDN and a crawler both see it. Neither is
+      // in the sitemap or a menu; neither is disallowed in robots.txt, which
+      // would hide the noindex from the crawler that already has the URL.
+      ...["/review", "/start"].map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      })),
     ];
   },
 

@@ -3299,3 +3299,31 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .center-facts dl { grid-template-columns: 1fr; gap: 14px; }
   .center-facts h3 { font-size: 23px; }
 }
+
+/* ── /review (Ben, 2026-11-09): two big buttons, or one. ─────────────── */
+.review-page { min-height: 60vh; }
+.review-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 36px; }
+.review-btn { min-width: 220px; min-height: 64px; font-size: 18px; }
+@media (max-width: 480px) {
+  .review-buttons { flex-direction: column; align-items: stretch; }
+  .review-btn { width: 100%; }
+}
+
+/* ── /start, the Instagram landing page (Ben, 2026-11-09) ─────────────
+   The compact /contact rhythm, tighter: the headline, two sentences and the
+   proof line, then step one. Measured at 390×844 (see the note in
+   app/start/page.tsx). */
+.start-page .page-hero.compact { padding: 22px 0 14px; }
+.start-page .page-hero.compact h1 { margin: 0 auto 10px; }
+.start-page .sub { font-size: 16.5px; line-height: 1.5; }
+.start-proof { margin: 12px auto 0; text-align: center; font-size: 13.5px; }
+.start-page .sec.sec-form { padding-top: 18px; }
+.start-ways { margin-top: 28px; }
+.start-ways .contact-ways { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.start-ways .contact-ways-line { margin: 0; }
+.start-chips { margin-top: 28px; text-align: center; }
+.start-chips .hero-chips-list { justify-content: center; }
+@media (max-width: 767px) {
+  .start-page .page-hero.compact { padding: 14px 0 10px; }
+  .start-page .sub { font-size: 15.5px; }
+}
