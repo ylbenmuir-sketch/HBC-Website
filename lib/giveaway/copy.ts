@@ -73,6 +73,8 @@ export const SHARED = {
   unsubscribe: D("Unsubscribe"),
   /** Under every transactional email. */
   whyYouGotThisTransactional: D("You're getting this because you entered the 10-year giveaway at"),
+  /** The "You're on the list" email only (Ben, 2026-11-09): they asked for a reminder; they haven't entered. */
+  whyYouGotThisReminder: D("You're getting this because you asked for a reminder about the 10-year giveaway at"),
   /** The chair clause, when a prize is listed. */
   /** One prize per drawing (Ben, 2026-11-03): a current client's Brain Map becomes a certificate for someone new. */
   /** "Redeemed directly with Skye Chiropractic, valid through TBD." — the date from config (PARTNER_GIFTS). */
@@ -97,7 +99,7 @@ export const EMAILS = {
     heading: (firstName: string) => D(`${firstName ? `${firstName}, you're` : "You're"} on the list.`),
     body: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken} Central. Enter on the giveaway page then. We'll also email you a one-tap entry button to make it quicker.`),
     button: D("See the prizes"),
-    small: D("Didn't sign up? Ignore this email. Every reminder after it has an unsubscribe link."),
+    small: D("Didn't sign up? Ignore this email or unsubscribe below."),
   },
 
   /** 2. "It's live" — the one-tap entry. */

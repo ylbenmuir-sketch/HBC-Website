@@ -37,8 +37,14 @@ export const PATHS = {
  * then the canonical SITE_URL. Not NEXT_PUBLIC_SITE_URL: that is inlined at
  * build time, so a server started with another value could not change it.
  */
-export function siteUrl(): string {
-  return (process.env.GIVEAWAY_SITE_URL?.trim() || SITE_URL).replace(/\/$/, "");
+/** The live site. Production emails never link anywhere else (Ben, 2026-11-09). */
+export const PRODUCTION_SITE_URL = "https://harmonizedbraincenterstn.com";
+
+export function siteUrl(env: Record<string, string | undefined> = process.env): string {
+  const url = (env.GIVEAWAY_SITE_URL?.trim() || SITE_URL).replace(/\/$/, "");
+  // On the production deployment a vercel.app (preview) address must never reach an email's links or footer.
+  if (env.VERCEL_ENV === "production" && /\.vercel\.app(?:[/:]|$)/i.test(url.replace(/^https?:\/\//i, ""))) return PRODUCTION_SITE_URL;
+  return url;
 }
 
 export function tokenLink(kind: TokenKind, subject: string, env: GiveawayEnv, opts: { expiresAt?: Date | null; secret?: string } = {}): string {

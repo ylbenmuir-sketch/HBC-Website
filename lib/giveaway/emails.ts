@@ -69,8 +69,8 @@ const code = (text: string) => `<div style="font-family:${SANS};font-size:20px;f
 const gap = (px: number) => `<tr><td style="height:${px}px;font-size:0;line-height:0;">&nbsp;</td></tr>`;
 const host = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-function visitorFooter(f: Footing, marketing: boolean): string {
-  const why = marketing ? SHARED.whyYouGotThis : SHARED.whyYouGotThisTransactional;
+/** `why` overrides the "You're getting this because…" line (the reminder email's, Ben 2026-11-09). */
+function visitorFooter(f: Footing, marketing: boolean, why: string = marketing ? SHARED.whyYouGotThis : SHARED.whyYouGotThisTransactional): string {
   const lines = [
     esc(f.identityLine),
     `${esc(why)} <a href="${esc(f.siteUrl)}" style="color:${C.slate};">${esc(host(f.siteUrl))}</a>.${
@@ -80,8 +80,7 @@ function visitorFooter(f: Footing, marketing: boolean): string {
   return footer(lines);
 }
 
-function visitorFooterText(f: Footing, marketing: boolean): string[] {
-  const why = marketing ? SHARED.whyYouGotThis : SHARED.whyYouGotThisTransactional;
+function visitorFooterText(f: Footing, marketing: boolean, why: string = marketing ? SHARED.whyYouGotThis : SHARED.whyYouGotThisTransactional): string[] {
   return [f.identityLine, `${why} ${host(f.siteUrl)}.`, f.unsubscribeUrl ? `${SHARED.unsubscribe}: ${f.unsubscribeUrl}` : null].filter((l): l is string => Boolean(l));
 }
 
@@ -141,13 +140,13 @@ export function notifyOnListEmail(input: { firstName: string; pageUrl: string; f
     section(buttons([[c.button, input.pageUrl]]), "16px 20px 0"),
     section(small(c.small), "8px 20px 0"),
     gap(16),
-    visitorFooter(input.footing, false),
+    visitorFooter(input.footing, false, SHARED.whyYouGotThisReminder),
   ];
   return {
     subject: c.subject,
     preheader: c.preheader,
     html: page({ title: c.subject, preheader: c.preheader, rows }),
-    text: textOf([heading, body, "", `${c.button}: ${input.pageUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false)]),
+    text: textOf([heading, body, "", `${c.button}: ${input.pageUrl}`, "", c.small, "", ...visitorFooterText(input.footing, false, SHARED.whyYouGotThisReminder)]),
   };
 }
 
