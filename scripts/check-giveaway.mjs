@@ -486,7 +486,8 @@ try {
   expect("the page shows the neighbors message for it", /neighbors within driving distance/.test((await get("/10years?error=not_eligible")).text));
   expect("B's Kentucky ZIP (Louisville) was accepted", (await dump("giveaway_notify")).some((r) => r.email === B.email && r.zip === "40202"));
   const bot = await postForm("/10years/signup", signupFields(person("Bot", "bot@example.test"), { website: "http://spam.example" }), person("Bot1", ""));
-  expect("a filled honeypot is swallowed as a success", /\?sent=1$/.test(bot.location), bot.location);
+  // Ben, 2026-11-09: the /contact spam guard on this form too — a filled honeypot is refused (always on, even with the guard off locally).
+  expect("a filled honeypot is refused back to the form (?error=not_sent), nothing saved", /\?error=not_sent#enter$/.test(bot.location) && !(await dump("giveaway_notify")).some((r) => r.email === "bot@example.test"), bot.location);
   let fresh = newEmails();
   expect("three on-the-list emails, none for the bot", fresh.length === 3 && !fresh.some((e) => to(e) === "bot@example.test") && fresh.every((e) => /You're on the list/.test(e.body.subject)), `${fresh.length}`);
   expect("no follow-up email carries a verify link (the submit was the signup)", fresh.every((e) => !linkIn(e, "/10years/verify")));

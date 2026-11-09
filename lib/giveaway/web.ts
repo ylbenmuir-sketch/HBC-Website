@@ -101,8 +101,10 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
     // One courtesy email per address per ten minutes (no inbox flooding).
     const perEmail = await rateLimit(counter, "verify_email", r.row.email, { now: ctx.now, salt: secret });
     if (perEmail.allowed) {
-      const email = notifyOnListEmail({ firstName: r.row.first_name, pageUrl: `${siteUrl()}/10years`, footing: footingFor(r.row.email, store.env, false, secret) });
-      const sent = await sendGiveawayEmail({ to: r.row.email, email, marketing: false, footing: null });
+      // With the one-click unsubscribe link (Ben, 2026-11-09): the same signed /unsubscribe the countdown emails use.
+      const footing = footingFor(r.row.email, store.env, true, secret);
+      const email = notifyOnListEmail({ firstName: r.row.first_name, pageUrl: `${siteUrl()}/10years`, footing });
+      const sent = await sendGiveawayEmail({ to: r.row.email, email, marketing: false, footing });
       if (sent.status !== "sent") console.error(`[giveaway signup] on-the-list email not sent (the signup stands): ${sent.error}`);
     }
     return back("?sent=1");
@@ -184,7 +186,8 @@ async function sendYoureIn(store: GiveawayStore, secret: string, personId: strin
   const { data } = await store.select("giveaway_people", "*").eq("id", personId).single();
   const p = data as { email: string; first_name: string; referral_code: string };
   const next = DRAWINGS.find((d) => d.at.getTime() > now.getTime()) ?? null;
-  const footing = footingFor(p.email, store.env, false, secret);
+  // With the one-click unsubscribe link (Ben, 2026-11-09); unsubscribing stops the emails, never the entry.
+  const footing = footingFor(p.email, store.env, true, secret);
   const email = youreInEmail({ firstName: p.first_name, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), footing });
   const sent = await sendGiveawayEmail({ to: p.email, email, marketing: false, footing });
   if (sent.status !== "sent") console.error(`[giveaway] You're in not sent: ${sent.error}`);

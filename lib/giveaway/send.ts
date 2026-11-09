@@ -101,7 +101,8 @@ export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<SendR
     return { status: "failed", messageId: null, error: "refusing to send [DRAFT] copy outside a testing env" };
   }
   const headers: Record<string, string> = {};
-  if (input.marketing && input.footing?.unsubscribeUrl) {
+  // Any email that carries an unsubscribe link gets the one-click headers too ("You're on the list" and "You're in" since 2026-11-09).
+  if (input.footing?.unsubscribeUrl) {
     headers["List-Unsubscribe"] = `<${input.footing.unsubscribeUrl}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }

@@ -5,6 +5,7 @@ import AssistantOff from "./AssistantOff";
 import Countdown from "./Countdown";
 import CopyLink from "./CopyLink";
 import EntryBar from "./EntryBar";
+import FormGuard from "./FormGuard";
 import Ladder from "./Ladder";
 import Seal from "./Seal";
 import UtmCapture from "./UtmCapture";
@@ -108,7 +109,7 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
               </h1>
               {/* Notify-me: the countdown right under "A week of prizes." (Ben, 2026-11-09), phone and desktop. Live keeps it under the sub line. */}
               {notify && countdown}
-              <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
+              <p className="ty-value">{notify ? t.valueLineNotify(total, opensDay) : open ? t.valueLine(total) : t.valueLinePast(total)}</p>
               {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
               {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
               <p className="ty-sub">{sub}</p>
@@ -154,6 +155,9 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
           <input key={f} type="hidden" name={f} defaultValue={utm[f] ?? ""} />
         ))}
         <UtmCapture formId="ty-entry-form" />
+        {/* The spam guard (Ben, 2026-11-09): the page token goes here, filled by FormGuard on submit. */}
+        <input type="hidden" name="form_token" defaultValue="" />
+        <FormGuard formId="ty-entry-form" sending={t.sending} />
         <div className={mode === "live" ? "ty-fields ty-fields-phone" : "ty-fields"}>
           <div>
             <label htmlFor="first_name">{t.firstName}</label>
@@ -364,7 +368,6 @@ const cardTime = (d: Drawing) => t.cardTime(d.dayName.slice(0, 3), shortCentralT
 /** "$44.95", "$150" — cents only when there are any. */
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
 
-const validThroughLabel = (d: Date | null) => (d ? new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" }).format(d) : null);
 
 /** The short words for one part — the card's "+" lines and the phone row. */
 function partWords(part: PrizePart): string {
@@ -384,28 +387,34 @@ function partWords(part: PrizePart): string {
   }
 }
 
-/** The prize in plain words: the main line, then "+" lines (Ben's order, from config). */
+/** The prize in plain words: the main line, then "+" lines (Ben's order, from config).
+ *  The grand prize, collapsed, shows its first "+" line and "+ N more" (Ben, 2026-11-09). */
 function PrizeWords({ p }: { p: PrizeSpec }) {
   const parts = prizeBreakdown(p);
   const main = parts.filter((x) => x.kind === "brainMap" || x.kind === "sessions").map(partWords).join(" + ");
   const rest = parts.filter((x) => x.kind !== "brainMap" && x.kind !== "sessions");
+  const shown = p.slot === "grand" && rest.length > 2 ? rest.slice(0, 1) : rest;
   return (
     <>
       <span className="ty-prize-main">{main}</span>
-      {rest.map((x) => (
+      {shown.map((x) => (
         <span key={`${x.kind}-${x.partner?.id ?? x.device ?? ""}`} className="ty-prize-line">
           {t.plusLine(partWords(x))}
         </span>
       ))}
+      {shown.length < rest.length && <span className="ty-prize-line">{t.plusLine(t.breakdown.card.more(rest.length - shown.length))}</span>}
     </>
   );
 }
 
 const valueBig = (p: PrizeSpec) => t.valueBig(prizeRetailUsd(p));
 
-/** The phone row's line: "Brain Map + 3 LENS sessions + Hoolest Mini + 1 BrainMD bottle". */
+/** The phone row's line: "Brain Map + 3 LENS sessions + Hoolest Mini + 1 BrainMD bottle".
+ *  The grand prize: "Brain Map + 12 LENS sessions + Hoolest VeRelief + 3 more" (Ben, 2026-11-09). */
 function rowWords(p: PrizeSpec): string {
-  return prizeBreakdown(p).map(partWords).join(" + ");
+  const words = prizeBreakdown(p).map(partWords);
+  if (p.slot === "grand" && words.length > 4) return [...words.slice(0, 3), t.breakdown.card.more(words.length - 3)].join(" + ");
+  return words.join(" + ");
 }
 
 /** The gold bar: this day's value as a share of the grand prize's. */
@@ -414,16 +423,20 @@ function barShare(p: PrizeSpec): number {
   return grand > 0 ? Math.max(6, Math.round((prizeRetailUsd(p) / grand) * 100)) : 100;
 }
 
-/** One row of the expanded card: the part and its value; a partner gift says how it's redeemed. */
+/** One row of the expanded card: a short name, the partner (or what a device is) on a small gray
+ *  second line, and the value. No unit math, no "valid through" (Ben, 2026-11-09; the rules keep both). */
 function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
   const b = t.breakdown;
+  const c = b.card;
+  const partner = part.kind === "partner" ? c.partner[part.partner!.id] : null;
   const label =
     part.kind === "brainMap" ? b.brainMap
     : part.kind === "sessions" ? b.sessions(part.count)
-    : part.kind === "chair" ? b.chair(part.count, part.unitUsd)
-    : part.kind === "brainMd" ? b.brainMd(part.count, usd(part.unitUsd))
-    : part.kind === "partner" ? b.partnerGift(part.partner!.gift, part.count, usd(part.unitUsd))
-    : DEVICES[part.device!].name;
+    : part.kind === "chair" ? c.chair
+    : part.kind === "brainMd" ? c.brainMd(part.count)
+    : partner ? partner.name(part.count)
+    : DEVICES[part.device!].short;
+  const sub = part.kind === "hoolest" ? c.deviceSub : partner ? partner.sub : null;
   return (
     <li className="ty-bd-row" data-part={part.kind}>
       <span className="ty-bd-label">
@@ -434,13 +447,7 @@ function PartRow({ part, thumb }: { part: PrizePart; thumb: boolean }) {
         )}
         <span>
           {label}
-          {part.kind === "partner" && (
-            <small className="ty-bd-note">
-              {" "}
-              · {b.partnerNote(validThroughLabel(part.partner!.validThrough))}
-              {part.partner!.terms ? ` · ${part.partner!.terms}` : ""}
-            </small>
-          )}
+          {sub && <small className="ty-bd-sub">{sub}</small>}
         </span>
       </span>
       <span className="ty-bd-usd">{usd(part.usd)}</span>

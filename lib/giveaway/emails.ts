@@ -74,7 +74,7 @@ function visitorFooter(f: Footing, marketing: boolean): string {
   const lines = [
     esc(f.identityLine),
     `${esc(why)} <a href="${esc(f.siteUrl)}" style="color:${C.slate};">${esc(host(f.siteUrl))}</a>.${
-      marketing && f.unsubscribeUrl ? ` <a href="${esc(f.unsubscribeUrl)}" style="color:${C.slate};">${esc(SHARED.unsubscribe)}</a>` : ""
+      f.unsubscribeUrl ? ` <a href="${esc(f.unsubscribeUrl)}" style="color:${C.slate};">${esc(SHARED.unsubscribe)}</a>` : ""
     }`,
   ];
   return footer(lines);
@@ -82,7 +82,7 @@ function visitorFooter(f: Footing, marketing: boolean): string {
 
 function visitorFooterText(f: Footing, marketing: boolean): string[] {
   const why = marketing ? SHARED.whyYouGotThis : SHARED.whyYouGotThisTransactional;
-  return [f.identityLine, `${why} ${host(f.siteUrl)}.`, marketing && f.unsubscribeUrl ? `${SHARED.unsubscribe}: ${f.unsubscribeUrl}` : null].filter((l): l is string => Boolean(l));
+  return [f.identityLine, `${why} ${host(f.siteUrl)}.`, f.unsubscribeUrl ? `${SHARED.unsubscribe}: ${f.unsubscribeUrl}` : null].filter((l): l is string => Boolean(l));
 }
 
 /** The prize line for a drawing (one prize per drawing — Ben, 2026-11-03),

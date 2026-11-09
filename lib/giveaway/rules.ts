@@ -33,7 +33,6 @@ import {
   REFERRAL,
   SCHEDULE,
   TAX_FORM_THRESHOLD_USD,
-  TAX_THRESHOLD_CONFIRMED,
   centralParts,
   prizeTotalUsd,
 } from "./config";
@@ -224,7 +223,7 @@ export function rulesSections(input: RulesInput): RulesSection[] {
       title: "Taxes",
       blocks: [
         {
-          p: `Winners pay any taxes on their prizes. For prizes awarded in ${year}, the Sponsor will issue IRS Form 1099-MISC to any winner whose total prize value from the Sponsor in ${year} is ${usd(TAX_FORM_THRESHOLD_USD)} or more. That winner must complete Form W-9 before receiving the prize.${TAX_THRESHOLD_CONFIRMED ? "" : ` (Accountant to confirm the ${usd(TAX_FORM_THRESHOLD_USD)} threshold.)`}`,
+          p: `Winners pay any taxes on their prizes. For prizes awarded in ${year}, the Sponsor will issue IRS Form 1099-MISC to any winner whose total prize value from the Sponsor in ${year} is ${usd(TAX_FORM_THRESHOLD_USD)} or more. That winner must complete Form W-9 before receiving the prize.`,
         },
       ],
     },

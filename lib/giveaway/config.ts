@@ -274,8 +274,9 @@ export const DEVICES = {
  *  Aggregated per PERSON, not per prize — a daily winner who also wins the
  *  grand prize is judged on both. */
 export const TAX_FORM_THRESHOLD_USD = 2000;
-/** False until HBC's accountant confirms the threshold; while false the
- *  rules add "Accountant to confirm." after the tax line. */
+/** False until HBC's accountant confirms the threshold. Internal only since
+ *  2026-11-09: the public rules no longer print the "(Accountant to confirm …)"
+ *  note (Ben). */
 export const TAX_THRESHOLD_CONFIRMED = false;
 
 /** Whether a person whose HBC prizes this year total `totalUsd` needs a tax form. */
@@ -617,4 +618,4 @@ export function chatSuppressedOn10Years(now: Date): boolean {
 }
 
 /** The current rules text version recorded on every acceptance. */
-export const RULES_VERSION = "2026-11-08";
+export const RULES_VERSION = "2026-11-09";

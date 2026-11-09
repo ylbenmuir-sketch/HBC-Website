@@ -2914,7 +2914,9 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-ref { font-size: 13.5px; line-height: 1.5; color: var(--sage-deep); margin: 10px 0 -4px; }
 .ty-submit { width: 100%; margin-top: 14px; padding: 13px 24px; min-height: 46px; }
 /* Notify-me, under the button (Ben, 2026-11-09): small but plainly readable. */
-.ty-not-entry { margin: 8px 0 0; font-family: var(--sans); font-size: 14px; font-weight: 600; line-height: 1.4; color: #152230; text-align: center; }
+/* Ben, 2026-11-09: a little bigger and in brand gold. Gold TEXT (#b8924a) on the white card is 2.9:1 — too faint to
+   read easily — so the gold is the ground and the words stay navy (5.6:1), like the COMING SOON label. */
+.ty-not-entry { margin: 10px 0 0; padding: 7px 10px; background: #b8924a; color: #152230; border-radius: 4px; font-family: var(--sans); font-size: 15.5px; font-weight: 700; line-height: 1.35; text-align: center; }
 .form.ty-form .ty-optin { margin-top: 10px; font-size: 13px; color: var(--slate); }
 .form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
 .ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
@@ -3005,6 +3007,9 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-bd-usd { flex: none; font-variant-numeric: tabular-nums; color: var(--slate); }
 .ty-bd-total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 8px; font-weight: 600; }
 .ty-bd-total .ty-bd-usd { color: var(--gold-ink); font-weight: 600; }
+/* The partner, or what a device is, on a small gray line under the item (Ben, 2026-11-09). */
+.ty-bd-sub { display: block; font-size: 11.5px; line-height: 1.35; color: var(--slate); margin-top: 1px; }
+.ty-step-grand .ty-bd-sub { color: rgba(251, 248, 241, 0.72); }
 .ty-bd-thumb { flex: none; width: 40px; height: 40px; border-radius: 6px; overflow: hidden; background: #f2f2f2; }
 .ty-bd-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .ty-bd-link { display: inline-block; margin: 4px 16px 14px; font-size: 12.5px; color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
@@ -3213,6 +3218,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   /* Closed: zero rows AND visibility hidden (after the fold-up), so its text is neither read nor measured. */
   .ty-step-panel { position: static; width: auto; display: grid; grid-template-rows: 0fr; opacity: 1; transform: none; border: 0; border-radius: 0 0 8px 8px; box-shadow: none; background: transparent; transition: grid-template-rows 0.22s ease, visibility 0s linear 0.22s; }
   .ty-step[data-open] .ty-step-panel { grid-template-rows: 1fr; }
+  /* Open, the list under the row says it all: the long combined line steps aside (Ben, 2026-11-09). */
+  .ty-step[data-open] .ty-row-words:not(.ty-row-winner) { display: none; }
   .ty-step-grand .ty-step-panel { background: transparent; }
   .ty-bd { margin: 0 14px; padding: 2px 0 4px; border-top: 1px solid var(--line); }
   .ty-step-grand .ty-bd { border-color: rgba(251, 248, 241, 0.2); }
@@ -3232,6 +3239,14 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-entrybar[data-show] { transform: none; }
   .ty-entrybar-btn { width: 100%; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
   .slim-row { justify-content: center; text-align: center; }
+}
+/* Notify-me on phones (Ben, 2026-11-09): less above the form. The label, headline, countdown, prize
+   line and the form stay; the gift line inside the form stays. Desktop unchanged. */
+@media (max-width: 639px) {
+  .ty[data-mode="notify_me"] .ty-gift-tease,
+  .ty[data-mode="notify_me"] .ty-sub,
+  .ty[data-mode="notify_me"] .ty-proof,
+  .ty[data-mode="notify_me"] .ty-count-label { display: none; }
 }
 @media (max-width: 359px) {
   .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
