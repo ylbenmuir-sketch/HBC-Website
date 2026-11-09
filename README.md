@@ -374,6 +374,7 @@ submission requires Supabase credentials.
 | `GIVEAWAY_FAKE_NOW` | **Testing envs only.** An ISO instant that pins the giveaway clock on every server instance (a Vercel preview runs many, so the in-process test clock can't). Honoured only when the giveaway env is `test` or `local`; set on the `giveaway/fix-list-rev2` preview (Nov 17, live mode) for the end-to-end test. |
 | `CRON_SECRET` | Also protects `/api/cron/giveaway` (every minute: due drawings, then due scheduled emails) and the test-only `/api/giveaway/test-clock`. Unset = the giveaway cron refuses (503) and nothing is drawn or sent. |
 | `FORM_TOKEN_SECRET` | **Contact-form spam guard** (`lib/form-guard.ts`, 2026-11-08). Signs the page token the form and the guide signup fetch from `/api/form-token`. Any long random string — `openssl rand -hex 32`. Recommended. Unset = a key derived from `SUPABASE_SERVICE_ROLE_KEY` is used, so the guard works without it (rotating that key then also expires open forms' tokens, which retry once on their own). Changing it is harmless for the same reason. Server-side. |
+| `TAP_LOG` | **Tap log switch** (`lib/tap.ts`, 2026-11-09). Unset = taps on the site's call and text buttons are recorded (POST `/api/track/tap` → `contact_taps`) on the Production deployment only, read from `VERCEL_ENV`; previews and local servers drop them. `on` records them anywhere (how it is tested locally); `off` stops recording on Production too. Nothing about the visitor is kept either way — see "Tap log and tap → conversation matching". |
 | `FORM_GUARD` | **Contact-form spam guard switch.** Unset = the page token, the 3-second minimum and the per-address rate limit are enforced on Vercel (production and preview, read from `VERCEL_ENV`) and off on a local server, so `check:contact` / `check:giveaway` post as before. `on` forces them locally (that is how they were tested); `off` turns them off on Vercel too — the emergency switch if a real visitor is ever refused (redeploy after changing it). The honeypot and the real-US-phone check are always on, whatever this says. |
 | `CHAT_LOG_TRANSCRIPTS` | **Defaults to off, in code.** The conversation log keeps timing, outcome, grounding, and safety flags; message text is dropped. Set to exactly `"true"` to turn transcripts on for a bounded window — §8 asks Ben to read 20 real ones in week one — then unset it. |
 
@@ -427,6 +428,17 @@ in Vercel (production) and redeploying:
    Editor → paste → Run; additive, safe to run twice), then run
    `npm run check:giveaway -- --db`: the check sees the column and checks
    that the phone is saved and shown in the alert.
+   **`0019_attribution_and_contact_taps.sql` is NOT applied yet** (written
+   2026-11-09; the Supabase connector has no permission on this project
+   from a session): it adds `utm_source/medium/campaign/content` and
+   `lead_source` to `consultation_requests` (the Instagram bio link's
+   attribution — `lib/attribution.ts`) and creates `contact_taps` (the tap
+   log). Until it is applied, leads save without the attribution columns
+   (the route retries without them and logs that 0019 is missing), no tap
+   is recorded (the tap route logs it once per instance), the nightly
+   `/api/cron/tap-match` answers 503, and `/api/internal/phone-stats`
+   returns `taps_*` as null with a note. Apply it by hand (SQL Editor →
+   paste → Run; additive, safe to run twice).
 2. **`GIVEAWAY_TOKEN_SECRET`** set in Vercel (`openssl rand -hex 32`).
 3. **`GIVEAWAY_ADMINS`** set to Ben's address only (the admin screen is
    Ben's backup; staff never sign in), and the two Supabase Auth settings
@@ -1351,9 +1363,33 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   "What it costs", `/lens-neurofeedback`'s first-visit step, FAQ 12.
 - **`contact_link_click` locations are lowercase snake_case** (Ben,
   2026-11-02): `header`, `drawer`, `footer`, `home_hero`, `location_hero`,
-  `contact_page`, `confirmation`, `mobile_bar`, `other` — `LINK_LOCATIONS`
-  in `lib/analytics.ts`, tested. A `data-link-location` with a space reports
-  as `other`.
+  `contact_page`, `confirmation`, `mobile_bar`, `local_page` (the
+  /brain-map and /lens-neurofeedback heroes, the center blocks under them,
+  /start — 2026-11-09), `other` — `LINK_LOCATIONS` in `lib/analytics.ts`,
+  tested. A `data-link-location` with a space reports as `other`. The same
+  value is what the tap log stores as `location`.
+- **The Google "write a review" links render on `/review` and nowhere
+  else** (Ben, 2026-11-09; `reviewWriteUrl` in `lib/locations.ts`). That
+  page is noindex, in no menu or sitemap, and asks every client the same
+  way — no rating shown, no incentive, no happy/unhappy gate (Google's
+  policy forbids review gating). Staff text `/review?center=nashville` or
+  `/review?center=murfreesboro` after a client's third session.
+- **The local search pass (2026-11-09) added no URLs.** "neurofeedback
+  nashville/murfreesboro", "brain mapping nashville", "lens neurofeedback"
+  and "neurofeedback near Franklin" live on `/locations/[slug]`,
+  `/brain-map` and `/lens-neurofeedback` (QUERY-TO-PAGE-MAP.md rule 6 and
+  the brief's rule 1: strengthen the page that exists). Each carries one
+  Google review from that center's listing (`googleReviewNamed`), 4–6 FAQs
+  built only from facts already on the site (`locationFaqs`, and the FAQS
+  consts in the two page files) published as FAQPage mainEntity, the proof
+  line with the partner badge (`components/LocalProof.tsx`), Call/Text
+  beside Get Started, and a directions link (`components/CenterFacts.tsx`).
+  Don't mint `/neurofeedback-nashville` or the like beside them.
+- **`/start` is the Instagram landing page** (noindex): bio link
+  `https://harmonizedbraincenterstn.com/start?utm_source=instagram&utm_medium=social&utm_campaign=bio`.
+  The visit's first utm tags and whether it came from Instagram ride onto
+  the lead row as `utm_*` / `lead_source` (`lib/attribution.ts`, migration
+  0019), wherever on the site the form is finally sent.
 - **The founder page draft**: `/about/founder/draft` renders
   `components/FounderStory.tsx` while `FOUNDER_PAGE_PUBLISHED`
   (`lib/site-config.ts`) is false — noindex, disallowed in robots.txt, off
@@ -1403,8 +1439,47 @@ id, message, recording, transcript or recap. Code: `lib/phone-stats.ts`
 - **Cache:** each day's counts sit in Vercel's runtime cache for 6 hours (today
   15 minutes), so the bot cannot make the site hammer Dialpad. A day Dialpad
   failed on is not cached.
+- **Tap counts (2026-11-09):** every row also carries `taps_phone`,
+  `taps_text`, `taps_phone_matched`, `taps_phone_matched_answered`,
+  `taps_phone_matched_2min_plus`, `taps_text_matched`,
+  `taps_text_matched_replied`, and `by_location` — the same seven per
+  button location (`header`, `mobile_bar`, `location_hero`, …). Read fresh
+  from `contact_taps` on every request (never cached with the Dialpad
+  rows: the nightly match changes a finished day). Null, with a note, for
+  days before 2026-11-09 and whenever the table cannot be read. The notes
+  carry the start date and that matching is a 0–3 minute window estimate.
 - Not indexed (`X-Robots-Tag`, and `/api/` is disallowed in robots.txt), not
   in the sitemap, and no GA — it is JSON, with no page or tag.
+
+### Tap log and tap → conversation matching
+
+GA's `contact_link_click` says a button was tapped and nothing after. Since
+2026-11-09 (Ben) every tap on a `tel:` or `sms:` link is ALSO posted — with
+`navigator.sendBeacon`, so it never delays the tap — to `POST /api/track/tap`
+(`components/Analytics.tsx` → `lib/tap.ts`), and the server keeps one row in
+`contact_taps` (migration 0019): the time, phone or text, the button's
+`data-link-location`, which center's line the href dials (`nashville`,
+`murfreesboro`, `other` — the digits are read in the browser to pick the
+center and never sent), the page path, and a device class (`mobile` /
+`desktop`). **No IP address, no user or session id, no user agent, no
+number.** Bots (by user agent), `/admin`, and every deployment but
+Production (unless `TAP_LOG=on`) are dropped before the insert. Nothing was
+backfilled: rows start at the deploy.
+
+**Matching** (`lib/tap-match.ts`, pure and tested): `GET /api/cron/tap-match`
+runs nightly (vercel.json, 08:15 UTC) and pairs each phone tap with the
+FIRST inbound Dialpad call to that center's line that started 0–3 minutes
+after it, and each text tap with the first inbound text, one Dialpad event
+per tap (the earliest tap takes it; the event id is stored, unique). For a
+call: `answered` (a person, not voicemail) and `duration_bucket` (`<30s`,
+`30s-2m`, `>2m` of talk time). For a text: `replied_within_24h`, decided only
+once the 24 hours have passed (null until then; re-checked the next night).
+It is an estimate — two taps a minute apart cannot be told apart — and the
+stats endpoint's notes say so. Auth: `Authorization: Bearer <CRON_SECRET>`
+(Vercel Cron) or `<PHONE_STATS_TOKEN>`; `?day=YYYY-MM-DD` rematches a
+completed day from scratch, for the bot or a person who wants it now. Reads
+Dialpad with `DIALPAD_STATS_API_KEY`, the same two read-only readers as the
+stats endpoint; the raw records never leave the function.
 
 **Rotate `PHONE_STATS_TOKEN`:** `openssl rand -hex 32` → Vercel → Project →
 Settings → Environment Variables → `PHONE_STATS_TOKEN` (Production) → Edit →
@@ -1468,6 +1543,12 @@ The list below is the one-time project setup.
 /contact                three-step form → POST /api/consultation (saves the
                         lead, sends the email) → PATCH /api/consultation/[id]
                         (optional context, same row) → the first-visit video
+/start                  the Instagram landing page (noindex): the same form,
+                        Call/Text and three chips; lead_source + utm on the row
+/review                 "How was your experience?" — a button per center to its
+                        Google write-a-review link (noindex; ?center= shows one)
+/api/track/tap          POST, sendBeacon from every tel:/sms: tap → contact_taps
+/api/cron/tap-match     nightly: pairs taps with the Dialpad call/text after them
 /resources              learning center
 /resources/[slug]       articles (homework-battles seeded)
 /resources/feed.xml     RSS 2.0 of the published articles

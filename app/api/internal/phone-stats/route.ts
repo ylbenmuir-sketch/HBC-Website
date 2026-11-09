@@ -2,14 +2,21 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCache } from "@vercel/functions";
 import {
+  CENTERS,
   NOTE,
+  addDays,
   buildResponse,
   chicagoDate,
+  dayStartMs,
+  emptyTapRowCounts,
   fetchDays,
   fillNote,
   parseRange,
   type DayRow,
 } from "@/lib/phone-stats";
+import { supabaseAdmin } from "@/lib/consultation";
+import { TAP_LOGGING_START } from "@/lib/tap";
+import { TAP_FIELDS, countTaps, type TapStatRow } from "@/lib/tap-stats";
 
 /**
  * GET /api/internal/phone-stats?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -26,6 +33,12 @@ import {
  * finished day, 15 minutes for today — so however often the bot asks,
  * Dialpad is read at most that often per day. Days whose calls or texts
  * could not be read are not cached and are retried on the next request.
+ *
+ * The tap counts (taps_*, by_location — Ben, 2026-11-09; lib/tap-stats.ts)
+ * are read from the contact_taps table on every request and merged AFTER
+ * the cache: the nightly match (/api/cron/tap-match) changes a finished
+ * day's numbers, and a six-hour-old copy would be wrong until it expired.
+ * One query, counts only.
  */
 
 export const runtime = "nodejs";
@@ -180,8 +193,46 @@ export async function GET(request: Request) {
   if (keyRejected.length) notes.push(fillNote(NOTE.keyRejected, keyRejected));
   if (days.includes(today)) notes.push(fillNote(NOTE.today, [today]));
 
-  return reply(
-    buildResponse({ days, rows: days.flatMap((d) => byDay.get(d)!.rows), notes, now: new Date(now) }),
-    200
-  );
+  // The tap counts, fresh (see the header). Every row starts null; a day
+  // on or after TAP_LOGGING_START with the table readable gets zeros and
+  // counts; days before the log existed stay null — nothing was recorded.
+  const rows: DayRow[] = days.flatMap((d) => byDay.get(d)!.rows.map((r) => ({ ...r, ...emptyTapRowCounts(), by_location: null })));
+  const taps = await readTaps(days);
+  if (taps === null) notes.push(NOTE.tapsUnavailable);
+  else {
+    notes.push(fillNote(NOTE.taps, [TAP_LOGGING_START]));
+    for (const row of rows) {
+      if (row.date < TAP_LOGGING_START) continue;
+      const counts = taps.get(`${row.date}|${row.center}`);
+      for (const f of TAP_FIELDS) row[f] = counts?.[f] ?? 0;
+      row.by_location = counts ? counts.by_location as DayRow["by_location"] : {};
+    }
+  }
+
+  return reply(buildResponse({ days, rows, notes, now: new Date(now) }), 200);
+}
+
+/** The tap rows for `days`, counted per day per center (lib/tap-stats.ts).
+ *  Null when the table cannot be read, and the response says so. */
+async function readTaps(days: string[]) {
+  const supabase = supabaseAdmin();
+  if (!supabase) return null;
+  const from = new Date(dayStartMs(days[0])).toISOString();
+  const to = new Date(dayStartMs(addDays(days[days.length - 1], 1))).toISOString();
+  try {
+    const { data, error } = await supabase
+      .from("contact_taps")
+      .select("ts, center, link_type, location, match_status, answered, duration_bucket, replied_within_24h")
+      .gte("ts", from)
+      .lt("ts", to)
+      .limit(50_000);
+    if (error) {
+      console.error(`[phone-stats] taps not read: ${error.message}${error.code ? ` (code ${error.code})` : ""}`);
+      return null;
+    }
+    return countTaps((data ?? []) as TapStatRow[], days, CENTERS);
+  } catch (err) {
+    console.error(`[phone-stats] taps not read: ${err instanceof Error ? err.name : "unknown error"}`);
+    return null;
+  }
 }

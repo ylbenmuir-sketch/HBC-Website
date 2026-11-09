@@ -37,6 +37,19 @@ export const CENTER_LINES: Record<Exclude<Center, "other">, readonly string[]> =
   murfreesboro: ["6152032650"],
 };
 
+/** The seven tap counts (lib/tap-stats.ts; Ben, 2026-11-09), on every row
+ *  and again per button location in `by_location`. Null, with a note, when
+ *  the tap table cannot be read. */
+export const TAP_ROW_FIELDS = [
+  "taps_phone",
+  "taps_text",
+  "taps_phone_matched",
+  "taps_phone_matched_answered",
+  "taps_phone_matched_2min_plus",
+  "taps_text_matched",
+  "taps_text_matched_replied",
+] as const;
+
 export const ROW_FIELDS = [
   "date",
   "center",
@@ -48,7 +61,11 @@ export const ROW_FIELDS = [
   "texts_outbound",
   "unique_inbound_callers",
   "first_time_inbound_callers",
+  ...TAP_ROW_FIELDS,
+  "by_location",
 ] as const;
+
+export type TapRowCounts = Record<(typeof TAP_ROW_FIELDS)[number], number | null>;
 
 export type DayRow = {
   date: string;
@@ -61,6 +78,11 @@ export type DayRow = {
   texts_outbound: number | null;
   unique_inbound_callers: number | null;
   first_time_inbound_callers: number | null;
+} & TapRowCounts & {
+  /** The same seven counts per `data-link-location` (lib/analytics.ts →
+   *  LINK_LOCATIONS): only locations with at least one tap that day. Null
+   *  when taps are. */
+  by_location: Record<string, TapRowCounts> | null;
 };
 
 /** Every note the endpoint can emit. Notes are chosen from here, never
@@ -78,6 +100,9 @@ export const NOTE = {
   keyRejected:
     "calls and texts are null for {days}: Dialpad rejected DIALPAD_STATS_API_KEY (revoked, or missing the List calls scope, calls:list).",
   today: "{days} is today and still in progress; it refreshes every 15 minutes.",
+  taps:
+    "taps_* count taps on the website's call and text buttons, logged server-side from {days} (the deploy that added the tap log; nothing earlier is recorded). taps_*_matched pairs each tap with the first inbound Dialpad call or text to that center's line starting 0–3 minutes after it, one Dialpad event per tap: matching is a 0–3 min window estimate, not a confirmed attribution. Phone taps: answered = a person picked up; 2min_plus = answered with over two minutes of talk time. Text taps: replied = a staff text went back to that number within 24 hours. Matching runs nightly, so today's and yesterday's taps can still be unmatched; by_location breaks the same counts out by which button was tapped.",
+  tapsUnavailable: "taps_* and by_location are null: the tap log could not be read (the contact_taps table is missing — migration 0019 — or the database is not configured).",
 } as const;
 
 export function fillNote(template: string, days: string[]): string {
@@ -172,6 +197,13 @@ function centerOf(line: unknown): Center {
 
 type Counts = Omit<DayRow, "date" | "center">;
 
+/** Tap counts start null: the route fills them from the tap table after the
+ *  Dialpad counts (they are never cached with them — a nightly match changes
+ *  a finished day's numbers). */
+export function emptyTapRowCounts(): TapRowCounts {
+  return Object.fromEntries(TAP_ROW_FIELDS.map((f) => [f, null])) as TapRowCounts;
+}
+
 function emptyCounts(): Counts {
   return {
     calls_inbound: 0,
@@ -182,6 +214,8 @@ function emptyCounts(): Counts {
     texts_outbound: 0,
     unique_inbound_callers: 0,
     first_time_inbound_callers: null,
+    ...emptyTapRowCounts(),
+    by_location: null,
   };
 }
 
@@ -212,17 +246,40 @@ type CallCounts = Record<
 >;
 
 /**
- * Counts calls per Chicago day per center. `records` are Dialpad call objects
- * (List calls); every field is read here and nothing is kept.
+ * One client call, as the counting and the tap matching (lib/tap-match.ts)
+ * both see it. `external` is the caller's ten digits and `id` Dialpad's call
+ * id: both exist only inside this module and lib/tap-match.ts — the matcher
+ * uses the number to pair a text with its reply and then drops it, and the
+ * id is what the tap row keeps so one call matches at most one tap. Neither
+ * ever reaches a response.
+ */
+export type CallEvent = {
+  id: string;
+  /** The group's start, ms since epoch. */
+  ts: number;
+  center: Center;
+  direction: "inbound" | "outbound";
+  external: string;
+  /** A person picked up (not voicemail), on any leg. */
+  answered: boolean;
+  /** Talk time in ms across the legs that connected, or null when unknown. */
+  talkMs: number | null;
+};
+
+/**
+ * Dialpad call records (List calls) → one event per call, desk-to-desk and
+ * undated records dropped.
  *
  * A call is a group: a parent record (empty entry_point_call_id) plus its
  * legs, and since the Sep 2026 routing change a record whose master_call_id
  * names another record joins that record's group (the main line's hand-off
  * to the department, or a second pass of the same call). The group's root
  * gives the start time, direction and center; answered is decided across all
- * of it — the parent can read missed while a leg answered.
+ * of it — the parent can read missed while a leg answered. Talk time is
+ * connected→ended on the legs a person answered (Dialpad's `duration` on a
+ * leg stands in when the end stamp is missing).
  */
-export function countCalls(records: unknown[], days: string[]): Map<string, CallCounts> {
+export function callEvents(records: unknown[]): CallEvent[] {
   type Rec = Record<string, unknown>;
   const byId = new Map<string, Rec>();
   for (const r of records) {
@@ -254,43 +311,68 @@ export function countCalls(records: unknown[], days: string[]): Map<string, Call
     else groups.set(root, [byId.get(id)!]);
   }
 
-  const wanted = new Set(days);
-  const out = new Map<string, CallCounts>();
-  const callers = new Map<string, Set<string>>();
+  const personAnswered = (l: Rec) =>
+    parseTs(l.date_connected) != null &&
+    String(l.state ?? "").toLowerCase() !== "voicemail" &&
+    !l.voicemail_link &&
+    !l.voicemail_recording_id;
+
+  const out: CallEvent[] = [];
   for (const [rootId, legs] of groups) {
     const root = byId.get(rootId)!;
     const ts = parseTs(root.date_started);
     if (ts == null) continue;
-    const date = chicagoDate(ts);
-    if (!wanted.has(date)) continue;
-
     const external = tenDigits(root.external_number);
     if (LINE_CENTER.has(external)) continue; // desk ringing desk
-    const key = `${date}|${centerOf(root.internal_number)}`;
+    const direction = String(root.direction ?? "").toLowerCase();
+    if (direction !== "inbound" && direction !== "outbound") continue;
+    const answeredLegs = legs.filter(personAnswered);
+    let talkMs: number | null = null;
+    for (const l of answeredLegs) {
+      const connected = parseTs(l.date_connected)!;
+      const ended = parseTs(l.date_ended);
+      const own = ended != null && ended >= connected ? ended - connected : typeof l.duration === "number" && l.duration >= 0 ? l.duration : null;
+      if (own != null) talkMs = (talkMs ?? 0) + own;
+    }
+    out.push({
+      id: rootId,
+      ts,
+      center: centerOf(root.internal_number),
+      direction,
+      external,
+      answered: answeredLegs.length > 0,
+      talkMs,
+    });
+  }
+  return out;
+}
+
+/**
+ * Counts calls per Chicago day per center. `records` are Dialpad call objects
+ * (List calls); every field is read in callEvents() and nothing is kept.
+ */
+export function countCalls(records: unknown[], days: string[]): Map<string, CallCounts> {
+  const wanted = new Set(days);
+  const out = new Map<string, CallCounts>();
+  const callers = new Map<string, Set<string>>();
+  for (const call of callEvents(records)) {
+    const date = chicagoDate(call.ts);
+    if (!wanted.has(date)) continue;
+    const key = `${date}|${call.center}`;
     const c =
       out.get(key) ??
       { calls_inbound: 0, calls_inbound_answered: 0, calls_inbound_missed: 0, calls_outbound: 0, unique_inbound_callers: 0 };
     out.set(key, c);
-
-    const direction = String(root.direction ?? "").toLowerCase();
-    if (direction === "outbound") {
+    if (call.direction === "outbound") {
       c.calls_outbound++;
       continue;
     }
-    if (direction !== "inbound") continue;
     c.calls_inbound++;
-    const answered = legs.some(
-      (l) =>
-        parseTs(l.date_connected) != null &&
-        String(l.state ?? "").toLowerCase() !== "voicemail" &&
-        !l.voicemail_link &&
-        !l.voicemail_recording_id
-    );
-    if (answered) c.calls_inbound_answered++;
+    if (call.answered) c.calls_inbound_answered++;
     else c.calls_inbound_missed++;
-    if (external) {
+    if (call.external) {
       const set = callers.get(key) ?? new Set<string>();
-      set.add(external);
+      set.add(call.external);
       callers.set(key, set);
       c.unique_inbound_callers = set.size;
     }
@@ -308,6 +390,78 @@ const TEXT_DIRECTION: Record<string, "inbound" | "outbound"> = {
   outbound: "outbound",
   inbound: "inbound",
 };
+
+/**
+ * One text, as the matcher sees it (lib/tap-match.ts). Same privacy rule as
+ * CallEvent: `external` and `id` never leave this module and the matcher.
+ */
+export type TextEvent = {
+  id: string;
+  /** ms since epoch, from the export's Chicago wall-clock stamp. */
+  ts: number;
+  center: Center;
+  direction: "inbound" | "outbound";
+  external: string;
+};
+
+/**
+ * The export's `date` — "2026-10-28 10:01:25.17", wall time in
+ * America/Chicago because the export is requested in that timezone — as ms
+ * since epoch. The day's own UTC offset is used for the whole day, so a
+ * stamp inside the 1–2am DST hour may be off by an hour; nothing here
+ * matches at that hour.
+ */
+export function textStampMs(date: unknown): number | null {
+  const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?/.exec(String(date ?? "").trim());
+  if (!m) return null;
+  const day = m[1];
+  if (!isRealDate(day)) return null;
+  const ms = Number(m[5] ?? 0) * 1000 + (m[6] ? Math.round(Number(`0.${m[6]}`) * 1000) : 0);
+  return dayStartMs(day) + Number(m[2]) * 3_600_000 + Number(m[3]) * 60_000 + ms;
+}
+
+/**
+ * The export's rows → one event per message, deduplicated by message id,
+ * desk-to-desk dropped. Direction comes from which side a clinic line is on,
+ * falling back to Dialpad's label for other lines; the center is the clinic
+ * side. Rows whose stamp cannot be read are dropped.
+ */
+export function textEvents(rows: Record<string, string>[]): TextEvent[] {
+  const out: TextEvent[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    const id = idOf(r.message_id);
+    if (id) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+    }
+    const ts = textStampMs(r.date);
+    if (ts == null) continue;
+    const from = tenDigits(r.from_phone);
+    const to = tenDigits(r.to_phone);
+    let dir: "inbound" | "outbound" | undefined;
+    let center: Center;
+    let external: string;
+    if (LINE_CENTER.has(from) && !LINE_CENTER.has(to)) {
+      dir = "outbound";
+      center = LINE_CENTER.get(from)!;
+      external = to;
+    } else if (LINE_CENTER.has(to) && !LINE_CENTER.has(from)) {
+      dir = "inbound";
+      center = LINE_CENTER.get(to)!;
+      external = from;
+    } else if (LINE_CENTER.has(to) && LINE_CENTER.has(from)) {
+      continue; // desk to desk
+    } else {
+      dir = TEXT_DIRECTION[String(r.direction ?? "").trim().toLowerCase()];
+      center = "other";
+      external = dir === "inbound" ? from : to;
+    }
+    if (!dir) continue;
+    out.push({ id, ts, center, direction: dir, external });
+  }
+  return out;
+}
 
 /**
  * Counts texts per day per center from the export's rows (already reduced to
@@ -611,6 +765,18 @@ export function buildResponse(input: {
 }): PhoneStatsResponse {
   const count = (v: unknown): number | null =>
     typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null;
+  const tapCounts = (src: unknown): TapRowCounts =>
+    Object.fromEntries(TAP_ROW_FIELDS.map((f) => [f, count((src as Record<string, unknown> | null)?.[f])])) as TapRowCounts;
+  // by_location: keys from the fixed location list only, values rebuilt.
+  const byLocation = (src: unknown): Record<string, TapRowCounts> | null => {
+    if (!src || typeof src !== "object") return null;
+    const out: Record<string, TapRowCounts> = {};
+    for (const [k, v] of Object.entries(src as Record<string, unknown>)) {
+      if (!/^[a-z]+(_[a-z]+)*$/.test(k)) continue;
+      out[k] = tapCounts(v);
+    }
+    return out;
+  };
   const rows = input.rows.map((r) => ({
     date: DATE_RE.test(r.date) ? r.date : "",
     center: (CENTERS as readonly string[]).includes(r.center) ? r.center : "other",
@@ -622,6 +788,8 @@ export function buildResponse(input: {
     texts_outbound: count(r.texts_outbound),
     unique_inbound_callers: count(r.unique_inbound_callers),
     first_time_inbound_callers: count(r.first_time_inbound_callers),
+    ...tapCounts(r),
+    by_location: byLocation(r.by_location),
   })) as DayRow[];
   return {
     generated_at: input.now.toISOString(),

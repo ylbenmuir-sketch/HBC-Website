@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/giveaway",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/tap-match",
+      "schedule": "15 8 * * *"
     }
   ]
 }

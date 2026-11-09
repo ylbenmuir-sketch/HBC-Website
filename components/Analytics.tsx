@@ -4,6 +4,7 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ANALYTICS_ENABLED, GA_ID, analyticsActive, contactLinkEvent, trackEvent } from "@/lib/analytics";
+import { sendTap, tapAllowedHost, tapIgnoredPath, tapPayload } from "@/lib/tap";
 
 /**
  * The GA4 tag, rendered only while NEXT_PUBLIC_GA_ID is set — see
@@ -70,6 +71,29 @@ export default function Analytics() {
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [active]);
+
+  // The tap log (lib/tap.ts; Ben, 2026-11-09): every tel:/sms: tap is also
+  // posted to /api/track/tap with sendBeacon, so the server can pair it with
+  // the call or text that followed. Its own listener, NOT gated on GA: a
+  // visitor with gtag blocked still taps, and the server decides whether
+  // this deployment records anything (tapLoggingEnabled). Same capture-phase
+  // document listener, same data-link-location, same scheme-only read of
+  // the href; the center comes from the line's digits and the digits stay
+  // in the browser. Sent only from the site's own hosts and a local server.
+  useEffect(() => {
+    if (!tapAllowedHost(window.location.hostname)) return;
+    const onTap = (e: MouseEvent) => {
+      const link =
+        e.target instanceof Element ? e.target.closest('a[href^="tel:" i], a[href^="sms:" i]') : null;
+      if (!link) return;
+      const path = window.location.pathname;
+      if (tapIgnoredPath(path)) return;
+      const tap = tapPayload(link.getAttribute("href"), link.closest("[data-link-location]")?.getAttribute("data-link-location"), path);
+      if (tap) sendTap(tap);
+    };
+    document.addEventListener("click", onTap, true);
+    return () => document.removeEventListener("click", onTap, true);
+  }, []);
 
   if (!ANALYTICS_ENABLED || !active) return null;
 
