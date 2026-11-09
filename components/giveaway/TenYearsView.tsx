@@ -66,11 +66,23 @@ const WEEK_YEAR = centralParts(DRAWINGS[0].at).year;
 const headingLines = t.heading.split(/(?<=[.!])\s+/);
 const YEARS = WEEK_YEAR - ESTABLISHED_YEAR.value;
 
+/* When entries open, in the shapes the notify-me copy uses (Ben, 2026-11-09), all from config. */
+const OPENS = SCHEDULE.entriesOpen.at;
+const opensTime = shortCentralTime(OPENS).replace(/\b(am|pm)$/, (m) => m.toUpperCase());
+/** "Sunday" */
+const opensDay = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "long" }).format(OPENS);
+/** "Sun, Nov 15 at 6 PM" — the gold label. */
+const opensShort = `${new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" }).format(OPENS)} at ${opensTime}`;
+/** "Sunday at 6 PM" — step 1. */
+const opensDayTime = `${opensDay} at ${opensTime}`;
+
 export default function TenYearsView({ mode, now, card, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
   const total = prizeTotalFloorUsd();
   const open = mode === "notify_me" || mode === "live";
   const next = nextDrawing(now);
   const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
+  const notify = mode === "notify_me";
+  const countdown = countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={notify ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />;
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
   return (
     <>
@@ -81,6 +93,12 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
           <div className="wrap ty-hero-grid">
             <div className="ty-hero-text">
               <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
+              {/* Notify-me (Ben, 2026-11-09): say plainly that entries are not open yet, in gold, before anything else is read. */}
+              {notify && (
+                <p className="ty-soon" data-coming-soon>
+                  {t.comingSoon(opensShort)}
+                </p>
+              )}
               <h1>
                 {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
                 {/* A draft build's "[DRAFT] " tag sits on its own small line, so the headline keeps its one phone line. */}
@@ -88,11 +106,13 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
                 <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
                 {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
               </h1>
+              {/* Notify-me: the countdown right under "A week of prizes." (Ben, 2026-11-09), phone and desktop. Live keeps it under the sub line. */}
+              {notify && countdown}
               <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
               {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
               {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
               <p className="ty-sub">{sub}</p>
-              {countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={mode === "notify_me" ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />}
+              {!notify && countdown}
               <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
             </div>
             <div className="ty-card" id="enter">
@@ -103,7 +123,7 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
         <HowItWorks mode={mode} now={now} />
         <PrizeLadder mode={mode} now={now} winners={winners} />
         <PhotoStrip />
-        <QuestionsRow />
+        <QuestionsRow mode={mode} />
         {open && <EntryBar label={mode === "notify_me" ? t.entryBarNotify : t.entryBarLive} />}
       </div>
     </>
@@ -177,6 +197,11 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
         <button type="submit" className="btn btn-primary ty-submit">
           {mode === "notify_me" ? t.notifyButton : t.liveButton}
         </button>
+        {mode === "notify_me" && (
+          <p className="ty-not-entry" data-not-entry>
+            {t.notifyNotEntry(opensDay)}
+          </p>
+        )}
         <label className="ty-optin">
           <input type="checkbox" name="marketing" />
           <span>{t.marketing}</span>
@@ -305,7 +330,7 @@ function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
       ? h.step3LineGrandNext(grand.dayName, shortTime(grand))
       : h.step3LineLive(`${next.dayName.slice(0, 3)} at ${shortTime(next)}`, grand.dayName, shortTime(grand));
   const steps = [
-    [h.step1Title, h.step1Line],
+    mode === "notify_me" ? [h.step1TitleNotify, h.step1LineNotify(opensDayTime)] : [h.step1Title, h.step1Line],
     [h.step2Title, h.step2Line(REFERRAL.referrerBonus)],
     [h.step3Title, step3],
   ];
@@ -581,9 +606,10 @@ function PhotoStrip() {
 /* Three questions                                                     */
 /* ------------------------------------------------------------------ */
 
-export function giveawayQuestions() {
+/** `mode` is /10years' own: notify-me swaps in the reminder answer (Ben, 2026-11-09). The rules page passes nothing and keeps the entry answer. */
+export function giveawayQuestions(mode?: ViewMode) {
   return {
-    enter: { q: t.qa.enterQ, a: t.qa.enterA(eligibilityPhrase()) },
+    enter: { q: t.qa.enterQ, a: mode === "notify_me" ? t.qa.enterANotify(spokenCentralDateTime(OPENS)) : t.qa.enterA(eligibilityPhrase()) },
     more: { q: t.qa.moreQ, a: t.qa.moreA(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap) },
     when: { q: t.qa.whenQ, a: t.qa.whenA(DRAWINGS.filter((d) => d.kind === "daily").map((d) => d.dayName).join(", "), spokenCentral(DRAWINGS[DRAWINGS.length - 1].at)) },
     win: { q: t.qa.winQ, a: t.qa.winA(Math.round(RESPONSE_WINDOW_MS / 3_600_000)) },
@@ -598,8 +624,8 @@ export function giveawayQuestions() {
   };
 }
 
-function QuestionsRow() {
-  const q = giveawayQuestions();
+function QuestionsRow({ mode }: { mode: ViewMode }) {
+  const q = giveawayQuestions(mode);
   return (
     <section className="ty-qa">
       <div className="wrap">

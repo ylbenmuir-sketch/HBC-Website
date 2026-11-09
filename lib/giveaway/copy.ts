@@ -255,8 +255,9 @@ export const PAGES = {
   /** The site-wide banner (fix list rev 2, P0-7). Never mentions the gift: non-entrants can't claim it. */
   banner: {
     label: D("10-year giveaway"),
-    notify: D("HBC turns 10 — a week of prizes starts Nov 16. Get on the list →"),
-    live: D("Our 10-year giveaway is live — enter once for six drawings →"),
+    /** Notify-week clarity (Ben, 2026-11-09): the date entries open, and "Get reminded", never "enter". */
+    notify: D("HBC turns 10! A week of prizes. Entries open Sun, Nov 15. Get reminded →"),
+    live: D("HBC turns 10! Entries are open. Enter now →"),
     closed: D("Thank you for 10 years — see this week's winners →"),
     dismiss: D("Dismiss the 10-year giveaway banner"),
   },
@@ -301,6 +302,8 @@ export const PAGES = {
     /** The hero, every mode: "Celebrating 10 Years!" is the focal line, the
      *  second sentence under it (Ben, 2026-11-06). */
     heading: D("Celebrating 10 Years! A week of prizes."),
+    /** Notify-me only (Ben, 2026-11-09): the gold label over the headline. "Sun, Nov 15 at 6 PM" from config. */
+    comingSoon: (entriesOpenShort: string) => D(`COMING SOON · Entries open ${entriesOpenShort}`),
     /** The total is the six prizes' retail value, floored to $500 (config): "Over $5,500". */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
@@ -331,9 +334,12 @@ export const PAGES = {
     /** "10 years · 140,000+ sessions · Nashville & Murfreesboro" — the count is STAT_SESSIONS. */
     proofLine: (years: number, sessions: string) => D(`${years} years · ${sessions} sessions · Nashville & Murfreesboro`),
     /** The form card — notify-me (Nov 9–15). */
-    notifyFormTitle: D("Get on the list."),
-    notifyFormLine: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. We'll remind you.`),
-    notifyButton: D("Put me on the list"),
+    /** Notify-week clarity (Ben, 2026-11-09): a reminder, plainly not the entry. */
+    notifyFormTitle: D("Get reminded when it opens"),
+    notifyFormLine: (entriesOpenSpoken: string) => D(`We'll email you ${entriesOpenSpoken} when entries open.`),
+    notifyButton: D("Remind me when entries open"),
+    /** Under the notify-me button. The day name is config's. */
+    notifyNotEntry: (entriesOpenDay: string) => D(`This isn't your entry yet. Entries open ${entriesOpenDay}.`),
     /** The form card — live (Nov 15–21). */
     liveFormTitle: D("Enter the giveaway"),
     liveFormLine: (nextSpoken: string) => D(`Next drawing: ${nextSpoken}`),
@@ -397,6 +403,9 @@ export const PAGES = {
       title: D("How it works"),
       step1Title: D("Enter once."),
       step1Line: D("Fill in the form one time. You're in every drawing."),
+      /** Notify-me only (Ben, 2026-11-09). "Sunday at 6 PM" from config. */
+      step1TitleNotify: D("Get reminded."),
+      step1LineNotify: (entriesOpenDayTime: string) => D(`Join the list now. We'll email you when entries open ${entriesOpenDayTime}.`),
       step2Title: D("Share your link."),
       step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
       step3Title: D("Win."),
@@ -462,6 +471,8 @@ export const PAGES = {
       enterQ: D("How do I enter?"),
       /** The eligibility is config's eligibilityPhrase(): "Tennessee and neighboring states (KY, …)". */
       enterA: (eligibility: string) => D(`Fill in the form and submit it. That's your entry, and it counts in every drawing still to come. We email you a copy, but you don't need to open it. Free to enter, nothing to buy. One entry per person; residents of ${eligibility}, 18 and over.`),
+      /** Notify-me only, on /10years (Ben, 2026-11-09). "Sunday, Nov 15 at 6 PM" from config. The rules page keeps enterA. */
+      enterANotify: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. The form on this page gets you a reminder email, it isn't your entry yet. Once entries open, fill in the form and submit it. That's your entry.`),
       moreQ: D("How do bonus entries work?"),
       moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters through it gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
       whenQ: D("When are the drawings?"),

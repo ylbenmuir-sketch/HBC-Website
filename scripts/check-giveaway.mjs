@@ -432,7 +432,7 @@ try {
   await clock(ct(2026, 11, 10, 10));
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
-  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Put me on the list/.test(page.text) && !/entry link/.test(page.text), String(page.status));
+  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Remind me when entries open/.test(page.text) && !/entry link/.test(page.text), String(page.status));
   // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
@@ -1132,7 +1132,14 @@ async function browserChecks() {
           await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()");
           await sleep(100);
           const f360 = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), overflow: document.documentElement.scrollWidth > innerWidth })"));
-          expect(`${mode} at 360×740: email field and button above the fold (email ${f360.email}px, button ${f360.submit}px)`, f360.email <= 740 && f360.submit <= 740 && !f360.overflow, JSON.stringify(f360));
+          if (mode === "notify-me") {
+            // Ben, 2026-11-09: the gold COMING SOON label and the countdown moved above the card. At 360×740 they
+            // and the email field make the first screen; the button no longer can (it was the trade-off, reported).
+            const soon = JSON.parse(await page.eval("JSON.stringify({ soon: Math.ceil(document.querySelector('[data-coming-soon]')?.getBoundingClientRect().bottom ?? 9999), count: Math.ceil(document.querySelector('[data-countdown]')?.getBoundingClientRect().bottom ?? 9999), card: Math.floor(document.querySelector('.ty-card').getBoundingClientRect().top) })"));
+            expect(`notify at 360×740: COMING SOON label, countdown (above the card) and email field on the first screen (label ${soon.soon}px, countdown ${soon.count}px, email ${f360.email}px)`, soon.soon <= 740 && soon.count < soon.card && f360.email <= 740 && !f360.overflow, JSON.stringify({ ...soon, ...f360 }));
+          } else {
+            expect(`${mode} at 360×740: email field and button above the fold (email ${f360.email}px, button ${f360.submit}px)`, f360.email <= 740 && f360.submit <= 740 && !f360.overflow, JSON.stringify(f360));
+          }
           await page.setViewport(390, 844);
         }
         if (width === 1440) {
