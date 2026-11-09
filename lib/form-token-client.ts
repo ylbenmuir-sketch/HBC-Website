@@ -82,3 +82,11 @@ export async function postWithFormToken(url: string, payload: Record<string, unk
   held = null;
   return send();
 }
+
+/**
+ * The token for a plain HTML form post (the /10years form, Ben 2026-11-09):
+ * the same wait-out-the-minimum as postWithFormToken, for a caller that puts
+ * the token in a hidden field and submits the form itself. Null when no
+ * token could be fetched (the server then refuses; the visitor can retry).
+ */
+export const formTokenForSubmit = tokenForSubmit;

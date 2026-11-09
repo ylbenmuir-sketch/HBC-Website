@@ -307,6 +307,8 @@ export const PAGES = {
     /** The total is the six prizes' retail value, floored to $500 (config): "Over $5,500". */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
+    /** Notify-me only (Ben, 2026-11-09): "Over $5,500 in prizes, starting Sunday." The day is config's. */
+    valueLineNotify: (totalUsd: number, entriesOpenDay: string) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes, starting ${entriesOpenDay}.`),
     /** The mystery-gift tease (fix list rev 2, P0-4): notify and live only. "Gift", never "prize"; never names the visit. */
     giftTeaseHero: D("Every entrant receives a 10-year thank-you gift, revealed Saturday night."),
     giftTeaseCard: (revealShort: string) => D(`Plus a thank-you gift for every entrant, revealed ${revealShort}.`),
@@ -397,7 +399,11 @@ export const PAGES = {
       rules: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
       unavailable: D("The giveaway isn't available right now. Please try again shortly."),
+      /** A submit the spam guard refused (Ben, 2026-11-09). A real visitor only sees this if the page's script never ran. */
+      not_sent: D("We couldn't send that just now. Please refresh the page and try again."),
     },
+    /** The button while the form waits out the spam guard's 3 seconds. */
+    sending: D("Sending…"),
     /** "How it works": three steps between the hero and the ladder. Counts, days and times from config. */
     how: {
       title: D("How it works"),
@@ -443,6 +449,20 @@ export const PAGES = {
       partnerNote: (validThrough: string | null) => D(`Redeemed directly with the partner · valid through ${validThrough ?? "TBD"}`),
       total: D("Total"),
       whatsBrainMap: D("What's a Brain Map?"),
+      /** The /10years cards' expanded list (Ben, 2026-11-09): short names, the partner on a small gray
+       *  second line, no "(12 × $40)" math, no "valid through". The rules page keeps the long forms above. */
+      card: {
+        chair: D("Vibro chair with each session"),
+        brainMd: (n: number) => D(n === 1 ? "BrainMD supplement bottle" : `${n} BrainMD supplement bottles`),
+        deviceSub: D("Vagus nerve stimulator"),
+        partner: {
+          envision: { name: (n: number) => D(`${n} lymphatic therapy sessions`), sub: D("Victoria Bailey, Envision Thermography & Wellness") as string | null },
+          amabel: { name: () => D("Women's health coaching session"), sub: D("90 minutes with Amabel Luers, Be Well with Amabel. Giftable to a woman of your choice.") as string | null },
+          skye: { name: () => D("Skye Chiropractic gift"), sub: null as string | null },
+        },
+        /** The collapsed grand card (Ben, 2026-11-09): "+ 3 more" in place of the last lines. */
+        more: (n: number) => D(`${n} more`),
+      },
     },
     nextTag: D("Next"),
     drawnTag: D("Drawn"),
