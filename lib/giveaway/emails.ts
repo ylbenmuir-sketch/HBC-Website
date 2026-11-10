@@ -17,7 +17,7 @@
  * scripts/render-email-previews.mjs renders every one at 390 and 640.
  */
 
-import { escapeHtml as esc, formatCentral, telHref } from "../email/format";
+import { displayPhone, escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
 import { EMAILS, SHARED } from "./copy";
 import { CALENDAR_PATHS, CALENDAR_UTM, SHARE_UTM } from "./calendar";
@@ -278,7 +278,7 @@ export function notifyOnListEmail(input: { firstName: string; pageUrl: string; f
 }
 
 /* ------------------------------------------------------------------ */
-/* 2. "It's live" — one-tap entry                                      */
+/* 2. "It's live" — the one-tap link to the entry form                  */
 /* ------------------------------------------------------------------ */
 
 export function itsLiveEmail(input: { firstName: string; enterUrl: string; firstDrawing: Drawing; footing: Footing }): Email {
@@ -637,8 +637,9 @@ export type StaffWinner = {
   email: string;
   zip: string;
   city: string | null;
-  /** "Best phone if you win" from the entry form, or null (left blank, or
-   *  entered through notify-me, whose form has no phone). */
+  /** The entry form's phone as stored (E.164 since it became required,
+   *  2026-11-10), or null on a row from before. Shown "(615) 555-0134",
+   *  linked tel:, so staff can call. */
   phone: string | null;
 };
 
@@ -648,6 +649,7 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
   const subject = c.subject(input.drawing.dayName, input.drawing.kind, input.winner.name);
   const heading = c.heading(input.drawing.dayName, input.drawing.kind);
   const where = [input.winner.city, input.winner.zip].filter(Boolean).join(" ");
+  const phone = input.winner.phone ? displayPhone(input.winner.phone) : null;
   // Current client? Staff ask on the call; their Brain Map becomes this day's gift certificate.
   const giftLine = c.giftCodeLine(GIFT_CODES[input.drawing.slot]);
   const noAnswer = c.noAnswerLine(Math.round(RESPONSE_WINDOW_MS / 3_600_000));
@@ -665,7 +667,7 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
       factGrid([
         [c.prize, esc(prize.name)],
         [c.reach, `<b>${esc(c.reachLine)}</b>`],
-        [c.phone, input.winner.phone ? `<b><a href="${esc(telHref(input.winner.phone))}" style="color:${C.ink};text-decoration:none;">${esc(input.winner.phone)}</a></b>` : esc(c.phoneNone)],
+        [c.phone, phone ? `<b><a href="${esc(telHref(phone))}" style="color:${C.ink};text-decoration:none;">${esc(phone)}</a></b>` : esc(c.phoneNone)],
         [c.noAnswer, esc(noAnswer)],
         [c.giftCode, esc(giftLine)],
         [c.taxForm, input.taxFormRequired ? `<b class="hbc-no" style="color:${C.alert};">${esc(c.taxYes)}</b>` : esc(c.taxNo)],
@@ -691,7 +693,7 @@ export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWi
       "",
       `${c.prize}: ${prize.name}`,
       `${c.reach}: ${c.reachLine}`,
-      `${c.phone}: ${input.winner.phone ?? c.phoneNone}`,
+      `${c.phone}: ${phone ?? c.phoneNone}`,
       `${c.noAnswer} ${noAnswer}`,
       `${c.giftCode} ${giftLine}`,
       `${c.taxForm}: ${input.taxFormRequired ? c.taxYes : c.taxNo}`,

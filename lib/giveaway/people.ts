@@ -9,10 +9,14 @@
  * (or, for rows from before this change, "clicked the old link").
  *
  *   notify-me  → giveaway_notify row, verified_at set at submit
- *                (notifyFromForm). Nobody is entered yet.
- *   It's live  → the optional one-tap link turns a notify row into a person
- *                + base entry; +1 early_bird before Monday's noon drawing.
- *                Idempotent.
+ *                (notifyFromForm). A REMINDER, never an entry (Ben,
+ *                2026-11-10): an email address and, if given, a first
+ *                name. Nobody is entered yet.
+ *   It's live  → the one-tap link opens the entry form with what the
+ *                reminder knows filled in (tapLookup); the rest — last
+ *                name, ZIP, phone, the 18+/rules box — is asked there, and
+ *                the entry counts when that form is submitted. +1
+ *                early_bird before Monday's noon drawing.
  *   entry      → enterFromForm: the giveaway_people row, then at once
  *                verified_at, the base entry, the referred_bonus (+1) when
  *                a referral code was carried, the referrer's three
@@ -35,8 +39,7 @@ import type { GiveawayStore } from "./store";
 import { offerCode, referralCode, sha256Hex } from "./tokens";
 import { zipInfo } from "./zip";
 import type { Attribution } from "./channel";
-import { looksLikeUsPhone } from "../lead-options";
-import { displayPhone } from "../email/format";
+import { normalizeUsPhone } from "./phone";
 
 export const MARKETING_OPT_IN_WORDING = "Yes, send me news from Harmonized Brain Centers after the giveaway.";
 
@@ -72,10 +75,14 @@ export type SignupInput = {
   sourcePage?: string | null;
   /** First-touch UTM tags + channel (P1-6, lib/giveaway/channel.ts). */
   attribution?: Attribution | null;
-  /** "Best phone if you win" (Ben, 2026-11-06): optional, on the live entry
-   *  form only (never notify-me). Saved on the person for the staff alert. */
+  /** The entry form's phone (Ben, 2026-11-10): REQUIRED to enter, never
+   *  asked by the reminder. Saved on the person as E.164 for the staff
+   *  winner alert; nothing texts it. */
   phone?: string | null;
 };
+
+/** The reminder signup (Ben, 2026-11-10): an email address, and a first name if they gave one. */
+export type ReminderInput = Pick<SignupInput, "email" | "marketingOptIn" | "sourcePage" | "attribution"> & { firstName?: string | null };
 
 /** The attribution columns (migration 0016). */
 const ATTRIBUTION_COLUMNS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "channel"] as const;
@@ -131,8 +138,8 @@ export type Validated = {
   zip: string;
   city: string | null;
   nearestCenter: "nashville" | "murfreesboro" | null;
-  /** "(615) 555-0134", or null when left blank. */
-  phone: string | null;
+  /** E.164, "+16155550134". Required to enter (Ben, 2026-11-10). */
+  phone: string;
 };
 
 const clean = (s: string, max: number) => s.replace(/\s+/g, " ").trim().slice(0, max);
@@ -150,10 +157,9 @@ export function validateSignup(input: SignupInput): { ok: true; value: Validated
   if (!info.eligible) return { ok: false, reason: "not_eligible" };
   if (!input.ageConfirmed) return { ok: false, reason: "age" };
   if (!input.rulesAccepted) return { ok: false, reason: "rules" };
-  // Optional: blank is fine; anything typed must look like a US number.
-  const phoneTyped = clean(input.phone ?? "", 40);
-  if (phoneTyped && !looksLikeUsPhone(phoneTyped)) return { ok: false, reason: "invalid_phone" };
-  const phone = phoneTyped ? displayPhone(phoneTyped) : null;
+  // Required (Ben, 2026-11-10): a US number, kept as E.164. Blank or unreadable is the same refusal.
+  const phone = normalizeUsPhone(clean(input.phone ?? "", 40));
+  if (!phone) return { ok: false, reason: "invalid_phone" };
   return { ok: true, value: { firstName, lastName, email, emailDisplay: input.email.trim().slice(0, 254), zip, city: info.city, nearestCenter: info.nearestCenter, phone } };
 }
 
@@ -167,25 +173,27 @@ export type NotifyOutcome =
   | { ok: true; row: NotifyRow; verifyTokenSubject: string; alreadyVerified: boolean }
   | { ok: false; reason: SignupRefusal };
 
+/** A column 0021 made optional was sent null to a database without 0021 (Postgres 23502). */
+const notNullRefused = (error: unknown): boolean => (error as { code?: string } | null)?.code === "23502";
+
+/** What a reminder row holds for a name or ZIP it was never given, on a database without 0021. */
+export const REMINDER_BLANK = { first_name: "", last_name: "", zip: "00000" } as const;
+
 /**
- * A notify-me signup. A repeat signup from the same address updates the
- * details and (if unverified) gets another verification email; a verified
- * one is told it is already on the list and gets no email.
+ * A reminder signup (Ben, 2026-11-10): an email address and, if given, a
+ * first name — no last name, ZIP or rules box; it is not an entry. A repeat
+ * from the same address keeps what the row already holds (rows from the
+ * earlier, longer form stay whole) and is told it is already on the list.
  */
-export async function notifySignup(store: GiveawayStore, input: SignupInput, ctx: SignupContext): Promise<NotifyOutcome> {
-  const v = validateSignup(input);
-  if (!v.ok) return v;
-  const { value } = v;
-  const existing = await store.select("giveaway_notify", "*").eq("email", value.email).maybeSingle();
+export async function notifySignup(store: GiveawayStore, input: ReminderInput, ctx: SignupContext): Promise<NotifyOutcome> {
+  const email = normalizeEmail(input.email ?? "");
+  if (!email) return { ok: false, reason: "invalid_email" };
+  const firstName = clean(input.firstName ?? "", 60) || null;
+  const existing = await store.select("giveaway_notify", "*").eq("email", email).maybeSingle();
   if (existing.error) throw fail("notify lookup", existing.error);
   const fields = {
-    email_display: value.emailDisplay,
-    first_name: value.firstName,
-    last_name: value.lastName,
-    zip: value.zip,
-    age_confirmed: true,
-    rules_accepted_at: ctx.now.toISOString(),
-    rules_version: RULES_VERSION,
+    email_display: input.email.trim().slice(0, 254),
+    ...(firstName ? { first_name: firstName } : {}),
     marketing_opt_in: input.marketingOptIn,
     marketing_opt_in_wording: MARKETING_OPT_IN_WORDING,
     marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null,
@@ -200,7 +208,13 @@ export async function notifySignup(store: GiveawayStore, input: SignupInput, ctx
     return { ok: true, row: data as NotifyRow, verifyTokenSubject: row.id, alreadyVerified: Boolean(row.verified_at) };
   }
   // First touch: the tags go on the INSERT only; a repeat signup keeps the first.
-  const { data, error } = await insertAttributed(store, "giveaway_notify", { email: value.email, ...fields, ...attributionColumns(input.attribution), created_at: ctx.now.toISOString() });
+  const insert = { email, first_name: null, last_name: null, zip: null, age_confirmed: false, ...fields, ...attributionColumns(input.attribution), created_at: ctx.now.toISOString() };
+  let { data, error } = await insertAttributed(store, "giveaway_notify", insert);
+  if (notNullRefused(error)) {
+    // Before migration 0021 those three columns are NOT NULL: save the reminder anyway, with blanks.
+    console.error("[giveaway] giveaway_notify: migration 0021 is not applied (name and ZIP are still required columns); saving the reminder with blanks.");
+    ({ data, error } = await insertAttributed(store, "giveaway_notify", { ...insert, first_name: firstName ?? REMINDER_BLANK.first_name, last_name: REMINDER_BLANK.last_name, zip: REMINDER_BLANK.zip }));
+  }
   if (error) throw fail("notify insert", error);
   const row = data as NotifyRow;
   await audit(store, { actor: "visitor", action: "notify_signup", targetTable: "giveaway_notify", targetId: row.id, ipHash: ctx.ipHash });
@@ -225,7 +239,7 @@ export async function verifyNotify(store: GiveawayStore, notifyId: string, now: 
  * and, in the same request, verified_at. `alreadyVerified` = this address
  * was on the list before this submit.
  */
-export async function notifyFromForm(store: GiveawayStore, input: SignupInput, ctx: SignupContext): Promise<NotifyOutcome> {
+export async function notifyFromForm(store: GiveawayStore, input: ReminderInput, ctx: SignupContext): Promise<NotifyOutcome> {
   const r = await notifySignup(store, input, ctx);
   if (!r.ok || r.alreadyVerified) return r;
   const v = await verifyNotify(store, r.row.id, ctx.now);
@@ -252,8 +266,7 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
   if (existing.data) {
     const person = existing.data as PersonRow;
     if (person.verified_at) return { ok: true, person, alreadyVerified: true };
-    // A blank phone on a repeat keeps the one already given.
-    const fields = { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION, ...(value.phone ? { phone: value.phone } : {}) };
+    const fields = { first_name: value.firstName, last_name: value.lastName, zip: value.zip, city: value.city, nearest_center: value.nearestCenter, marketing_opt_in: input.marketingOptIn, marketing_opt_in_at: input.marketingOptIn ? ctx.now.toISOString() : null, rules_accepted_at: ctx.now.toISOString(), rules_version: RULES_VERSION, phone: value.phone };
     const { data, error } = await writeTolerant("giveaway_people", fields, (r) => store.update("giveaway_people", r).eq("id", person.id).select("*").single());
     if (error) throw fail("person update", error);
     return { ok: true, person: data as PersonRow, alreadyVerified: false };
@@ -267,7 +280,7 @@ export async function entrySignup(store: GiveawayStore, input: SignupInput, ctx:
     zip: value.zip,
     city: value.city,
     nearest_center: value.nearestCenter,
-    ...(value.phone ? { phone: value.phone } : {}),
+    phone: value.phone,
     age_confirmed: true,
     rules_accepted_at: ctx.now.toISOString(),
     rules_version: RULES_VERSION,
@@ -345,37 +358,56 @@ export type FormEntryOutcome =
 /**
  * The entry form, as the official entry (Ben, 2026-11-08): entrySignup and
  * verifyEntry in one request — base entry, referral credit, offer code —
- * then the notify-me early bird when it applies. A repeat from an address
+ * then the reminder early bird when it applies. A repeat from an address
  * already entered changes nothing (`alreadyEntered`).
+ *
+ * `notifyId` is the reminder row behind a one-tap link (Ben, 2026-11-10):
+ * the form it opened was posted. That row's first touch becomes the
+ * entrant's, and the row is the one marked entered even if the address was
+ * edited on the form.
  */
-export async function enterFromForm(store: GiveawayStore, input: SignupInput, ctx: SignupContext): Promise<FormEntryOutcome> {
-  const r = await entrySignup(store, input, ctx);
+export async function enterFromForm(store: GiveawayStore, input: SignupInput, ctx: SignupContext, opts: { notifyId?: string | null } = {}): Promise<FormEntryOutcome> {
+  const tapped = opts.notifyId ? await notifyById(store, opts.notifyId) : null;
+  const fromNotify = tapped as (NotifyRow & Partial<Attribution>) | null;
+  const r = await entrySignup(store, fromNotify?.channel ? { ...input, attribution: fromNotify as Attribution } : input, ctx);
   if (!r.ok) return r;
   if (r.alreadyVerified) return { ok: true, person: r.person, alreadyEntered: true, first: false, referredBonus: false, earlyBird: false };
   const v = await verifyEntry(store, r.person.id, ctx.now);
   if (!v.ok) throw new Error("entry: person vanished between signup and confirm");
-  const earlyBird = await carryNotifySignup(store, v.person, ctx.now);
+  const earlyBird = await carryNotifySignup(store, v.person, ctx.now, tapped);
   return { ok: true, person: v.person, alreadyEntered: false, first: v.first, referredBonus: v.referredBonus, earlyBird };
 }
 
+async function notifyById(store: GiveawayStore, id: string): Promise<NotifyRow | null> {
+  const { data, error } = await store.select("giveaway_notify", "*").eq("id", id).maybeSingle();
+  if (error) throw fail("notify lookup", error);
+  return (data as NotifyRow | null) ?? null;
+}
+
 /**
- * A notify-me signup who enters by the form rather than the one-tap link
- * gets exactly what the tap gives: the notify row is marked entered
- * (tapped_at + person_id, so the Monday "you're not in yet" reminder skips
- * them) and +1 early_bird before Monday's noon drawing. The same address
- * after Gmail folding (normalizeEmail) is the same signup.
+ * A reminder signup who enters gets the early bird: the notify row is
+ * marked entered (tapped_at + person_id, so the Monday "you're not in yet"
+ * reminder skips them) and +1 early_bird before Monday's noon drawing. The
+ * row is the one-tap link's (`tapped`, when it is on the list and not
+ * already someone else's entry), otherwise the one with the same address
+ * after Gmail folding (normalizeEmail).
  */
-export async function carryNotifySignup(store: GiveawayStore, person: PersonRow, now: Date): Promise<boolean> {
-  const { data, error } = await store.select("giveaway_notify", "*").eq("email", person.email).maybeSingle();
-  if (error) throw fail("notify carry lookup", error);
-  const row = data as NotifyRow | null;
+export async function carryNotifySignup(store: GiveawayStore, person: PersonRow, now: Date, tapped: NotifyRow | null = null): Promise<boolean> {
+  let row = tapped && tapped.verified_at && (!tapped.person_id || tapped.person_id === person.id) ? tapped : null;
+  if (!row) {
+    const { data, error } = await store.select("giveaway_notify", "*").eq("email", person.email).maybeSingle();
+    if (error) throw fail("notify carry lookup", error);
+    row = data as NotifyRow | null;
+  }
   if (!row) return false;
   const upd = await store.update("giveaway_notify", { tapped_at: row.tapped_at ?? now.toISOString(), person_id: person.id }).eq("id", row.id);
   if (upd.error) throw fail("notify carry", upd.error);
+  // Someone who unsubscribed from the reminder emails and then used their link stays unsubscribed.
+  if (row === tapped && row.unsubscribed_at && !person.unsubscribed_at) await store.update("giveaway_people", { unsubscribed_at: row.unsubscribed_at }).eq("id", person.id);
   if (now.getTime() >= EARLY_BIRD.before.at.getTime()) return false;
   const { error: ebErr } = await store.insert("giveaway_entries", { person_id: person.id, kind: "early_bird", created_at: now.toISOString() });
   if (ebErr && ebErr.code !== "23505") throw fail("early bird (form)", ebErr);
-  if (!ebErr) await audit(store, { actor: "visitor", action: "early_bird_form", targetTable: "giveaway_people", targetId: person.id, after: { notify_id: row.id } });
+  if (!ebErr) await audit(store, { actor: "visitor", action: row === tapped ? "live_tap" : "early_bird_form", targetTable: "giveaway_people", targetId: person.id, after: { notify_id: row.id } });
   return true;
 }
 
@@ -449,84 +481,35 @@ export async function ensureOffer(store: GiveawayStore, person: PersonRow, now: 
 }
 
 /* ------------------------------------------------------------------ */
-/* The one-tap entry from notify-me (decision 13)                      */
+/* The one-tap link from the reminder (decision 13; Ben, 2026-11-10)   */
 /* ------------------------------------------------------------------ */
 
 export type TapOutcome =
-  | { ok: true; person: PersonRow; first: boolean; earlyBird: boolean; offer: OfferRow }
+  | { ok: true; state: "entered"; person: PersonRow; earlyBird: boolean; offer: OfferRow }
+  | { ok: true; state: "form"; row: NotifyRow }
   | { ok: false; reason: "unknown" | "not_verified" | "not_open" };
 
 /**
- * Turn a verified notify row into a person + base entry, with no second
- * verification; +1 early_bird when tapped before Monday's noon drawing.
- * Works all week. Idempotent: a second tap finds the person and adds nothing.
+ * The one-tap link from the "It's live" email (Ben, 2026-11-10). It no
+ * longer enters anyone by itself — a reminder holds an email address and
+ * maybe a first name, and an entry needs a last name, ZIP, phone and the
+ * 18+/rules box. So the tap answers one of two things, and writes nothing:
+ *
+ *   form     the reminder row, for the entry form to open filled in with
+ *            what it holds. The entry counts when that form is submitted
+ *            (enterFromForm with this row's id).
+ *   entered  this reminder's entrant already exists (a second tap, or they
+ *            entered by the form): the person, for the "You're in" card.
  */
-export async function liveTap(store: GiveawayStore, notifyId: string, now: Date): Promise<TapOutcome> {
-  const { data, error } = await store.select("giveaway_notify", "*").eq("id", notifyId).maybeSingle();
-  if (error) throw fail("tap lookup", error);
-  if (!data) return { ok: false, reason: "unknown" };
-  const row = data as NotifyRow;
+export async function tapLookup(store: GiveawayStore, notifyId: string, now: Date): Promise<TapOutcome> {
+  const row = await notifyById(store, notifyId);
+  if (!row) return { ok: false, reason: "unknown" };
   if (!row.verified_at) return { ok: false, reason: "not_verified" };
   if (now.getTime() < SCHEDULE.entriesOpen.at.getTime() || now.getTime() >= SCHEDULE.entriesClose.at.getTime()) return { ok: false, reason: "not_open" };
-
-  let person = row.person_id ? await personById(store, row.person_id) : await personByEmail(store, row.email);
-  let first = false;
-  if (!person) {
-    const info = zipInfo(row.zip);
-    // The notify-me row's first touch carries over to the person (P1-6).
-    const fromNotify = row as NotifyRow & Partial<Attribution>;
-    const { data: created, error: insErr } = await insertAttributed(store, "giveaway_people", {
-        email: row.email,
-        email_display: row.email_display,
-        first_name: row.first_name,
-        last_name: row.last_name,
-        zip: row.zip,
-        city: info.city,
-        nearest_center: info.nearestCenter,
-        age_confirmed: row.age_confirmed,
-        rules_accepted_at: now.toISOString(),
-        rules_version: RULES_VERSION,
-        verified_at: now.toISOString(),
-        referral_code: referralCode(),
-        source_page: row.source_page,
-        ip_hash: row.ip_hash,
-        ua_hash: row.ua_hash,
-        marketing_opt_in: row.marketing_opt_in,
-        marketing_opt_in_wording: row.marketing_opt_in_wording,
-        marketing_opt_in_at: row.marketing_opt_in_at,
-        unsubscribed_at: row.unsubscribed_at,
-        created_at: now.toISOString(),
-        ...attributionColumns(fromNotify.channel ? fromNotify : null),
-      });
-    if (insErr) {
-      if (insErr.code !== "23505") throw fail("tap person insert", insErr);
-      person = await personByEmail(store, row.email);
-      if (!person) throw new Error("tap: person vanished");
-    } else {
-      person = created as PersonRow;
-      first = true;
-    }
-  } else if (!person.verified_at) {
-    // Entered by hand earlier but never clicked the link: the tap verifies.
-    const upd = await store.update("giveaway_people", { verified_at: now.toISOString() }).eq("id", person.id).select("*").single();
-    person = upd.data as PersonRow;
-    first = true;
-  }
-  await writeBaseEntry(store, person.id, now);
-  let earlyBird = false;
-  // One early_bird row = EARLY_BIRD.bonusEntries (1); the unique index allows one per person.
-  if (now.getTime() < EARLY_BIRD.before.at.getTime()) {
-    const { error: ebErr } = await store.insert("giveaway_entries", { person_id: person.id, kind: "early_bird", created_at: now.toISOString() });
-    if (ebErr && ebErr.code !== "23505") throw fail("early bird", ebErr);
-    earlyBird = true;
-  } else {
-    const eb = await store.select("giveaway_entries", "id").eq("person_id", person.id).eq("kind", "early_bird").maybeSingle();
-    earlyBird = Boolean(eb.data);
-  }
-  await store.update("giveaway_notify", { tapped_at: row.tapped_at ?? now.toISOString(), person_id: person.id }).eq("id", row.id);
-  const offer = await ensureOffer(store, person, now);
-  if (first) await audit(store, { actor: "visitor", action: "live_tap", targetTable: "giveaway_people", targetId: person.id, after: { early_bird: earlyBird, notify_id: row.id } });
-  return { ok: true, person, first, earlyBird, offer };
+  const person = row.person_id ? await personById(store, row.person_id) : await personByEmail(store, row.email);
+  if (!person?.verified_at) return { ok: true, state: "form", row };
+  const eb = await store.select("giveaway_entries", "id").eq("person_id", person.id).eq("kind", "early_bird").maybeSingle();
+  return { ok: true, state: "entered", person, earlyBird: Boolean(eb.data), offer: await ensureOffer(store, person, now) };
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,7 +1,8 @@
 /**
  * Scheduled emails (GIVEAWAY-PLAN.md §3 scheduled_sends, §4 Emails):
  *
- *   its_live          Sun Nov 15 6 pm  → verified notify-me signups, one-tap
+ *   its_live          Sun Nov 15 6 pm  → reminder signups: the one-tap link
+ *                                        to their entry form
  *   monday_reminder   Mon Nov 16 9 am  → signups who have not tapped
  *   daily_<day>       Mon–Fri 4 pm,    → the drawing-week countdown email
  *                     Sat 9 am           (Ben, 2026-11-04): every verified,
@@ -149,7 +150,7 @@ async function notifyJob(store: GiveawayStore, job: ScheduledSendRow, kind: "its
       continue;
     }
     const footing = deps.footingFor(n.email, true);
-    const input = { firstName: n.first_name, enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
+    const input = { firstName: n.first_name ?? "", enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
     const email = kind === "its_live" ? itsLiveEmail(input) : mondayReminderEmail(input);
     const r = await deps.send({ to: n.email, email, marketing: true, footing });
     await stamp(store, id, r, now);

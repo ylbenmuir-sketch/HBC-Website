@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import TenYearsView, { MessageCard, YoureInCard } from "@/components/giveaway/TenYearsView";
+import TenYearsView, { MessageCard, ReminderCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { entryPageMode } from "@/lib/giveaway/config";
@@ -28,5 +28,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
   ) : (
     <MessageCard title={copy.onListTitle} message={r.message} ok />
   );
-  return <TenYearsView mode={mode} now={giveawayNow()} card={card} />;
+  // Before entries open the page has no card in its hero: the answer sits there as a notice, the reminder strip stays below.
+  if (mode === "notify_me") return <TenYearsView mode={mode} now={now} card={<ReminderCard error={null} />} notice={card} />;
+  return <TenYearsView mode={mode} now={now} card={card} />;
 }

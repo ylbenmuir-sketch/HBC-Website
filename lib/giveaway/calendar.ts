@@ -13,14 +13,18 @@ import { SCHEDULE } from "./config";
 import { EMAILS } from "./copy";
 
 export const CALENDAR_UTM = "utm_source=email&utm_medium=giveaway&utm_campaign=notify_calendar";
+/** The same two routes from the /10years page's "Add to my calendar" button (Ben, 2026-11-10). */
+export const SITE_CALENDAR_UTM = "utm_source=site&utm_medium=giveaway&utm_campaign=notify_calendar";
+/** Which tags the event's own link back carries: the page's when the request came from the page. */
+export const calendarUtmFor = (requestUrl: string): string => (new URL(requestUrl).searchParams.get("utm_source") === "site" ? SITE_CALENDAR_UTM : CALENDAR_UTM);
 export const SHARE_UTM = "utm_source=email&utm_medium=referral&utm_campaign=notify_share";
 export const CALENDAR_PATHS = { google: "/10years/calendar/google", ics: "/10years/entries-open.ics" } as const;
 
 export type CalendarEvent = { title: string; start: Date; end: Date; description: string; url: string };
 
-export function entriesOpenEvent(siteUrl: string): CalendarEvent {
+export function entriesOpenEvent(siteUrl: string, utm: string = CALENDAR_UTM): CalendarEvent {
   const start = SCHEDULE.entriesOpen.at;
-  const url = `${siteUrl}/10years?${CALENDAR_UTM}`;
+  const url = `${siteUrl}/10years?${utm}`;
   return { title: EMAILS.notifyOnList.calendarTitle, start, end: new Date(start.getTime() + 15 * 60_000), description: EMAILS.notifyOnList.calendarDescription(url), url };
 }
 

@@ -94,23 +94,23 @@ emails only — the Unsubscribe link.
 ### 2. "It's live" *(marketing; Sun Nov 15, 6:00 pm CT, to verified notify-me signups)*
 
 - **Subject:** It's live. Monday's prize: *{Brain Map + 2 sessions}*
-- **Preview:** One tap enters you in every drawing this week.
+- **Preview:** Entries are open. One tap opens your entry form.
 - **Heading:** *{Sarah}*, it's live.
-- **Body:** One tap and you're in every drawing this week. First up, *{Monday at noon}*: *{Brain Map + 2 sessions}*.
+- **Body:** Entries are open. Enter once and you're in every drawing this week. First up, *{Monday at noon}*: *{Brain Map + 2 sessions}*.
 - **Partner line** *(only when Monday's partner is named)*: Plus from *{partner}*: *{prize}*.
-- **Small print 1:** Tap before that first drawing and you get a bonus entry.
-- **Button:** Enter me — one tap
-- **Small print 2:** Nothing to fill in — your details are already on file from your signup.
+- **Small print 1:** Enter before that first drawing and you get a bonus entry.
+- **Button:** Enter now *(Ben, 2026-11-10: opens the entry form with their email, and first name if given, filled in; the entry counts when they add last name, ZIP, phone and the 18+/rules box and submit)*
+- **Small print 2:** Your email is already filled in. Add your name, ZIP and a phone number we can reach you at if you win.
 - **Footer:** identity line · marketing "why you got this" · Unsubscribe.
 - **From config:** the first drawing's day and time (spoken from the schedule), its prize in the reader's version (new client / current client, from the "already a client" box). The word "Monday's" in the *subject* is typed, because the subject builder is handed only the prize name.
 
 ### 3. Monday reminder *(marketing; Mon Nov 16, 9:00 am CT, to signups who have not tapped)*
 
 - **Subject:** Today at noon: *{Brain Map + 2 sessions}*. You're not in yet.
-- **Preview:** One tap and you're in today's drawing.
+- **Preview:** Finish your entry and you're in today's drawing.
 - **Heading:** *{Sarah}*, you're not in yet.
-- **Body:** *{Monday}*'s drawing is today at noon — *{Brain Map + 2 sessions}*. One tap puts you in it, and in every drawing after.
-- **Button:** Enter me — one tap
+- **Body:** *{Monday}*'s drawing is today at noon — *{Brain Map + 2 sessions}*. Finish your entry and you're in it, and in every drawing after.
+- **Button:** Enter now
 - **Footer:** identity line · marketing line · Unsubscribe.
 - **From config:** the first drawing's day name and prize (reader's version). "Today at noon" is typed: this email is scheduled for the morning of the first drawing, and the engine test checks for that phrase.
 
@@ -208,7 +208,7 @@ admin screen; they work from this email and reply to it.
 - **Fact grid:**
   - **Prize:** *{prize}*
   - **Reach them:** Today, by phone and email. They haven't been told they won. Note the time of your first attempt.
-  - **Phone:** the entrant's "Best phone if you win" from the entry form, e.g. **(615) 555-0134** (tap to call). Left blank (or entered through notify-me, which has no phone field): No phone given, email first.
+  - **Phone:** the entrant's phone from the entry form (required since 2026-11-10, stored +16155550134), shown **(615) 555-0134** (tap to call). A row from before that with none: No phone given, email first.
   - **No answer?** *{72}* hours after your first attempt, a new winner may be drawn. Reply to this email and Ben decides.
   - **Current client?** Ask on the call. If so, their Brain Map becomes gift certificate *{GIFT-MON}*, to give to someone new.
   - **Tax form:** "Required: they complete a W-9 before receiving the prize" or "Not required"
@@ -260,8 +260,11 @@ show the same page with the result in the card.
 
 ### The form (both modes)
 
-Fields (label inside each box): **First name** · **Last name** (one row) · **Email** · **ZIP code** (one row)
-Live only, optional (Ben, 2026-11-06): **Best phone if you win**, with *Optional* in the empty box. Email takes its own row and ZIP shares a row with the phone. Never on the notify-me form. Saved on the entrant and shown in the staff winner alert.
+**Before entries open (Ben, 2026-11-10) there is no entry form.** The page is a hype page: hero button **Add to my calendar** (Google Calendar · Apple / Outlook), link **See the prizes ↓**, and near the foot a light reminder — heading **Want a heads-up when it opens?**, fields **Email** (required) · **First name (optional)**, button **Remind me**, small line **Just a reminder. You'll enter on Sunday.**, unticked **Email me HBC news after the giveaway**. Phone bar: **Add to calendar**.
+
+The entry form (live week, and the form the one-tap link opens, titled **Finish your entry** / *We filled in what we have. Add the rest and you're in.*):
+Fields (label inside each box): **First name** · **Last name** (one row) · **Email** (its own row) · **Phone** · **ZIP code** (one row)
+**Phone** is required (Ben, 2026-11-10); under it: *Only used to reach you if you win.* A number that isn't a 10-digit US number: *Please add a 10-digit US phone number, like 615-555-0134.* Saved on the entrant as +1XXXXXXXXXX and shown in the staff winner alert. Never texted; no SMS box here.
 Checkbox: **I'm 18+ and agree to the Official Rules** (required; link on **Official Rules**). No new/current question (removed 2026-11-03).
 Under the button, unticked: **Email me HBC news after the giveaway**
 Hidden honeypot label (never seen): Website

@@ -113,24 +113,26 @@ export const EMAILS = {
     bannerAlt: D("Harmonized Brain Centers — 10-year giveaway"),
   },
 
-  /** 2. "It's live" — the one-tap entry. */
+  /** 2. "It's live" — the one-tap link. It opens the entry form with their
+   *  email filled in; the entry counts when they add the rest and submit
+   *  (Ben, 2026-11-10). */
   itsLive: {
     subject: (firstPrize: string) => D(`It's live. Monday's prize: ${firstPrize}`),
-    preheader: D("One tap enters you in every drawing this week."),
+    preheader: D("Entries are open. One tap opens your entry form."),
     heading: (firstName: string) => D(`${firstName ? `${firstName}, it` : "It"}'s live.`),
-    body: (first: Drawing, firstPrize: string) => D(`One tap and you're in every drawing this week. First up, ${when(first)}: ${firstPrize}.`),
-    earlyBird: D("Tap before that first drawing and you get a bonus entry."),
-    button: D("Enter me — one tap"),
-    small: D("Nothing to fill in — your details are already on file from your signup."),
+    body: (first: Drawing, firstPrize: string) => D(`Entries are open. Enter once and you're in every drawing this week. First up, ${when(first)}: ${firstPrize}.`),
+    earlyBird: D("Enter before that first drawing and you get a bonus entry."),
+    button: D("Enter now"),
+    small: D("Your email is already filled in. Add your name, ZIP and a phone number we can reach you at if you win."),
   },
 
   /** 3. Monday 9 am reminder to signups who have not tapped. */
   mondayReminder: {
     subject: (prize: string) => D(`Today at noon: ${prize}. You're not in yet.`),
-    preheader: D("One tap and you're in today's drawing."),
+    preheader: D("Finish your entry and you're in today's drawing."),
     heading: (firstName: string) => D(`${firstName ? `${firstName}, you` : "You"}'re not in yet.`),
-    body: (first: Drawing, firstPrize: string) => D(`${first.dayName}'s drawing is today at noon — ${firstPrize}. One tap puts you in it, and in every drawing after.`),
-    button: D("Enter me — one tap"),
+    body: (first: Drawing, firstPrize: string) => D(`${first.dayName}'s drawing is today at noon — ${firstPrize}. Finish your entry and you're in it, and in every drawing after.`),
+    button: D("Enter now"),
   },
 
   /** 5. "You're in" — referral link + offer (+ forward line). */
@@ -238,7 +240,7 @@ export const EMAILS = {
     reach: D("Reach them"),
     reachLine: D("Today, by phone and email. They haven't been told they won. Note the time of your first attempt."),
     phone: D("Phone"),
-    /** The entry form's optional "Best phone if you win" was left blank (Ben, 2026-11-06). */
+    /** A row from before the phone was required (Ben, 2026-11-10) may have none. */
     phoneNone: D("No phone given, email first."),
     noAnswer: D("No answer?"),
     /** The hours come from config (RESPONSE_WINDOW_MS). */
@@ -268,8 +270,8 @@ export const PAGES = {
   /** The site-wide banner (fix list rev 2, P0-7). Never mentions the gift: non-entrants can't claim it. */
   banner: {
     label: D("10-year giveaway"),
-    /** Notify-week clarity (Ben, 2026-11-09): the date entries open, and "Get reminded", never "enter". */
-    notify: D("HBC turns 10! A week of prizes. Entries open Sun, Nov 15. Get reminded →"),
+    /** The hype week (Ben, 2026-11-10): the date the week starts and the prizes, never "enter". The date and the arrow never split across the phone's two lines (no-break spaces). */
+    notify: D("HBC turns 10! A week of prizes starts Sun,\u00a0Nov\u00a015. See the prizes\u00a0→"),
     live: D("HBC turns 10! Entries are open. Enter now →"),
     closed: D("Thank you for 10 years — see this week's winners →"),
     dismiss: D("Dismiss the 10-year giveaway banner"),
@@ -320,8 +322,13 @@ export const PAGES = {
     /** The total is the six prizes' retail value, floored to $500 (config): "Over $5,500". */
     valueLine: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes. One entry.`),
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
-    /** Notify-me only (Ben, 2026-11-09): "Over $5,500 in prizes, starting Sunday." The day is config's. */
-    valueLineNotify: (totalUsd: number, entriesOpenDay: string) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes, starting ${entriesOpenDay}.`),
+    /** Notify-me only (Ben, 2026-11-10): "Over $5,500 in prizes · Six drawings, Nov 16–21". All three from config. */
+    valueLineNotify: (totalUsd: number, drawings: number, span: string) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes · ${countWord(drawings)} drawings, ${span}`),
+    /** Notify-me's hero (Ben, 2026-11-10): the one button is the calendar, with its two kinds; the link scrolls to the ladder. */
+    calendarButton: D("Add to my calendar"),
+    calendarGoogle: D("Google Calendar"),
+    calendarIcs: D("Apple / Outlook"),
+    seePrizes: D("See the prizes ↓"),
     /** The mystery-gift tease (fix list rev 2, P0-4): notify and live only. "Gift", never "prize"; never names the visit. */
     giftTeaseHero: D("Every entrant receives a 10-year thank-you gift, revealed Saturday night."),
     giftTeaseCard: (revealShort: string) => D(`Plus a thank-you gift for every entrant, revealed ${revealShort}.`),
@@ -330,7 +337,7 @@ export const PAGES = {
     closedSub: D("Entries are closed. Thank you, neighbors."),
     thankYouSub: D("Here's who won our anniversary week."),
     /** The slim bottom bar on phones once the form is off screen. */
-    entryBarNotify: D("Remind me"),
+    entryBarNotify: D("Add to calendar"),
     entryBarLive: D("Enter the giveaway"),
     /** The share preview (Open Graph). Dates and the total come from config. */
     og: {
@@ -348,13 +355,14 @@ export const PAGES = {
     countdownUnits: { days: D("days"), hours: D("hrs"), minutes: D("min"), seconds: D("sec") },
     /** "10 years · 140,000+ sessions · Nashville & Murfreesboro" — the count is STAT_SESSIONS. */
     proofLine: (years: number, sessions: string) => D(`${years} years · ${sessions} sessions · Nashville & Murfreesboro`),
-    /** The form card — notify-me (Nov 9–15). */
-    /** Notify-week clarity (Ben, 2026-11-09): a reminder, plainly not the entry. */
-    notifyFormTitle: D("Get reminded when it opens"),
-    notifyFormLine: (entriesOpenSpoken: string) => D(`We'll email you ${entriesOpenSpoken} when entries open.`),
-    notifyButton: D("Remind me when entries open"),
-    /** Under the notify-me button. The day name is config's. */
-    notifyNotEntry: (entriesOpenDay: string) => D(`This isn't your entry yet. Entries open ${entriesOpenDay}.`),
+    /** The light reminder — notify-me (Nov 9–15). A strip near the foot of the
+     *  page, not a form card (Ben, 2026-11-10): an email, an optional first
+     *  name, and a line that says it is only a reminder. */
+    notifyFormTitle: D("Want a heads-up when it opens?"),
+    notifyButton: D("Remind me"),
+    /** Under the reminder. The day name is config's. */
+    notifyNotEntry: (entriesOpenDay: string) => D(`Just a reminder. You'll enter on ${entriesOpenDay}.`),
+    firstNameOptional: D("First name (optional)"),
     /** The form card — live (Nov 15–21). */
     liveFormTitle: D("Enter the giveaway"),
     liveFormLine: (nextSpoken: string) => D(`Next drawing: ${nextSpoken}`),
@@ -362,11 +370,11 @@ export const PAGES = {
     refNote: D("A friend sent you. You'll both get bonus entries."),
     /** The card after a submit (Ben, 2026-11-08: the submit IS the signup or
      *  the entry; the email that follows is a copy, not a step). */
-    notifySent: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. Come back then to enter. We'll also email you a reminder with a one-tap entry button.`),
+    notifySent: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. Come back then to enter. We'll also email you a reminder with a one-tap button to the entry form.`),
     liveSent: D("You're entered in every drawing still to come. We've emailed you a copy with your share link."),
     liveSentEarlyBird: D("You're entered in every drawing still to come, with an early-bird bonus entry. We've emailed you a copy with your share link."),
     alreadyNotifyTitle: D("You're on the list."),
-    notifyAlready: D("You're already signed up. When entries open, enter here or with the one-tap button we email you."),
+    notifyAlready: D("You're already signed up for the reminder. When entries open, enter here or with the one-tap button we email you."),
     alreadyLiveTitle: D("You're already in."),
     liveAlready: D("Watch your inbox each afternoon for the next drawing."),
     /** The card after a submit, an old email link (verify) or the one tap. */
@@ -395,9 +403,9 @@ export const PAGES = {
     lastName: D("Last name"),
     email: D("Email"),
     zip: D("ZIP code"),
-    /** The live entry form only, optional (Ben, 2026-11-06). Never on notify-me. */
-    phone: D("Best phone if you win"),
-    phoneHint: D("Optional"),
+    /** The entry form only, required (Ben, 2026-11-10). Never on the reminder. */
+    phone: D("Phone"),
+    phoneHelp: D("Only used to reach you if you win."),
     /** One box for both (age and rules); the link sits on "Official Rules". */
     ageRules: D("I'm 18+ and agree to the"),
     rulesLink: D("Official Rules"),
@@ -407,7 +415,7 @@ export const PAGES = {
       invalid_name: D("Please add your first and last name."),
       invalid_email: D("That email address doesn't look right."),
       invalid_zip: D("Please add your five-digit ZIP code."),
-      invalid_phone: D("That phone number doesn't look right. Check it, or leave it blank."),
+      invalid_phone: D("Please add a 10-digit US phone number, like 615-555-0134."),
       age: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rules: D("Please confirm you're 18 or older and agree to the Official Rules."),
       rate_limited: D("Too many tries from this connection. Please wait a little and try again."),
@@ -423,8 +431,8 @@ export const PAGES = {
       step1Title: D("Enter once."),
       step1Line: D("Fill in the form one time. You're in every drawing."),
       /** Notify-me only (Ben, 2026-11-09). "Sunday at 6 PM" from config. */
-      step1TitleNotify: D("Get reminded."),
-      step1LineNotify: (entriesOpenDayTime: string) => D(`Join the list now. We'll email you when entries open ${entriesOpenDayTime}.`),
+      step1TitleNotify: D("Mark your calendar."),
+      step1LineNotify: (entriesOpenDayTime: string) => D(`Entries open ${entriesOpenDayTime}. Add it to your calendar or get a reminder email.`),
       step2Title: D("Share your link."),
       step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
       step3Title: D("Win."),
@@ -505,14 +513,14 @@ export const PAGES = {
       /** The eligibility is config's eligibilityPhrase(): "Tennessee and neighboring states (KY, …)". */
       enterA: (eligibility: string) => D(`Fill in the form and submit it. That's your entry, and it counts in every drawing still to come. We email you a copy, but you don't need to open it. Free to enter, nothing to buy. One entry per person; residents of ${eligibility}, 18 and over.`),
       /** Notify-me only, on /10years (Ben, 2026-11-09). "Sunday, Nov 15 at 6 PM" from config. The rules page keeps enterA. */
-      enterANotify: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. The form on this page gets you a reminder email, it isn't your entry yet. Once entries open, fill in the form and submit it. That's your entry.`),
+      enterANotify: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}, right here on this page. Want a heads-up? Add it to your calendar or get a reminder email.`),
       moreQ: D("How do bonus entries work?"),
       moreA: (referrer: number, referred: number, cap: number) => D(`Share your personal link. Each friend who enters through it gives you ${referrer} more entries and gives them ${referred}, up to ${cap} friends.`),
       whenQ: D("When are the drawings?"),
       whenA: (dailyList: string, grandSpoken: string) => D(`Daily drawings at noon Central: ${dailyList}. The grand prize is drawn ${grandSpoken}, from every entry of the week.`),
       winQ: D("How will I know if I won?"),
-      /** Ben's wording, verbatim (2026-11-04). The rules keep the staff sentence. */
-      winA: (hours: number) => D(`Our team will reach out by email and phone soon after the drawing. If we don't hear back within ${hours} hours of our first attempt, a new winner may be drawn.`),
+      /** Ben's wording (2026-11-04), with the phone they gave named (2026-11-10). The rules keep the staff sentence. */
+      winA: (hours: number) => D(`Our team will reach out by email and at the phone number you gave when you entered, soon after the drawing. If we don't hear back within ${hours} hours of our first attempt, a new winner may be drawn.`),
       /** After the reveal only (P0-2). */
       offerQ: D("What's my thank-you gift?"),
       offerA: (bookBySpoken: string, visitBySpoken: string, packageSessions: number) => D(`Everyone who enters gets a free first visit — a Brain Map and consultation — booked by ${bookBySpoken} for any day through ${visitBySpoken}. Start the in-center ${packageSessions}-session package at that visit and the ${packageSessions + 1}th session is free.`),
@@ -528,6 +536,9 @@ export const PAGES = {
     verifiedEntry: (entries: number) => D(`Confirmed, with ${entries} ${entries === 1 ? "entry" : "entries"}. Your thank-you gift arrives by email Saturday night.`),
     verifyInvalid: D("That link isn't valid or has expired. You can sign up or enter with the form."),
     /** The one-tap page. */
+    /** The form the one-tap link opens (Ben, 2026-11-10). */
+    tapFormTitle: D("Finish your entry"),
+    tapFormLine: D("We filled in what we have. Add the rest and you're in."),
     tapped: (earlyBird: boolean) => D(earlyBird ? "Confirmed, with an early-bird bonus entry. Your thank-you gift arrives by email Saturday night." : "Confirmed. Your thank-you gift arrives by email Saturday night."),
     tapNotOpen: D("Entries aren't open yet — this link works the moment they do."),
     tapClosed: D("Entries have closed — thank you for wanting in."),

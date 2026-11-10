@@ -2,11 +2,13 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import FAQAccordion from "@/components/FAQAccordion";
 import AssistantOff from "./AssistantOff";
+import CalendarMenu from "./CalendarMenu";
 import Countdown from "./Countdown";
 import CopyLink from "./CopyLink";
 import EntryBar from "./EntryBar";
 import FormGuard from "./FormGuard";
 import Ladder from "./Ladder";
+import PhoneField from "./PhoneField";
 import Seal from "./Seal";
 import UtmCapture from "./UtmCapture";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
@@ -35,8 +37,9 @@ import {
   type PrizePart,
   type PrizeSpec,
 } from "@/lib/giveaway/config";
+import { CALENDAR_PATHS, SITE_CALENDAR_UTM } from "@/lib/giveaway/calendar";
 import { PAGES } from "@/lib/giveaway/copy";
-import type { PublicWinner } from "@/lib/giveaway/web";
+import type { PublicWinner, TapPrefill } from "@/lib/giveaway/web";
 import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
 
 /**
@@ -57,6 +60,14 @@ import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
  * (PathProvider) that the form's required choice and the ladder's toggle
  * share; the ladder is a vertical list on phones with a gold bar per day;
  * a slim entry bar follows the visitor once the form is off screen.
+ *
+ * BEFORE ENTRIES OPEN the page is a hype page, not a form (Ben,
+ * 2026-11-10): the old notify-me form looked like an entry form. Its hero
+ * has no form — the gold COMING SOON label, the headline, the countdown,
+ * the prize line, one "Add to my calendar" button and a link down to the
+ * prizes — then the ladder, how it works, the photos, a light reminder
+ * strip (an email, an optional first name, "Just a reminder."), and the
+ * questions. Live, closed and thank-you are laid out as before.
  */
 
 const t = PAGES.tenYears;
@@ -77,43 +88,101 @@ const opensShort = `${new Intl.DateTimeFormat("en-US", { timeZone: "America/Chic
 /** "Sunday at 6 PM" — step 1. */
 const opensDayTime = `${opensDay} at ${opensTime}`;
 
-export default function TenYearsView({ mode, now, card, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
+/** The two calendar links, tagged as coming from the page. */
+const CALENDAR = {
+  google: { label: t.calendarGoogle, href: `${CALENDAR_PATHS.google}?${SITE_CALENDAR_UTM}` },
+  ics: { label: t.calendarIcs, href: `${CALENDAR_PATHS.ics}?${SITE_CALENDAR_UTM}` },
+};
+
+/** `card` is the form or message card — in the hero, or (before entries open) the reminder strip near the foot.
+ *  `notice` is a message for the hero before entries open: an old verify link's or an early one-tap's answer. */
+export default function TenYearsView({ mode, now, card, notice = null, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; notice?: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
   const total = prizeTotalFloorUsd();
   const open = mode === "notify_me" || mode === "live";
   const next = nextDrawing(now);
   const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
   const notify = mode === "notify_me";
   const countdown = countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={notify ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />;
-  const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short"));
+  const span = spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short");
+  const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, span);
+  const heading = (
+    <h1>
+      {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
+      {/* A draft build's "[DRAFT] " tag sits on its own small line, so the headline keeps its one phone line. */}
+      {headingLines[0].startsWith("[DRAFT] ") && <span className="ty-h1-draft">[DRAFT]</span>}
+      <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
+      {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
+    </h1>
+  );
+  const seal = <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />;
+  // The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase.
+  const assistant = (assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />;
+
+  if (notify) {
+    return (
+      <div className="ty" data-mode={mode}>
+        {assistant}
+        {/* The hype hero (Ben, 2026-11-10): no form. Nothing here can be taken for an entry. */}
+        <section className="ty-hero ty-hype">
+          <div className="wrap ty-hype-inner">
+            {seal}
+            <p className="ty-soon" data-coming-soon>
+              {t.comingSoon(opensShort)}
+            </p>
+            {heading}
+            {countdown}
+            {/* One line on a wide screen; on a phone each half takes its own line and the dot between them steps aside. */}
+            <p className="ty-value" data-hype-value>
+              {t.valueLineNotify(total, DRAWINGS.length, span).split(" · ").map((part, i) => (
+                <span key={part} className="ty-value-part">
+                  {i > 0 && <span className="ty-value-dot"> · </span>}
+                  {part}
+                </span>
+              ))}
+            </p>
+            {notice && <div className="ty-card ty-hype-notice">{notice}</div>}
+            <div className="ty-hype-cta" id="ty-cal-hero">
+              <CalendarMenu label={t.calendarButton} google={CALENDAR.google} ics={CALENDAR.ics} />
+            </div>
+            <a className="ty-textlink ty-hype-prizes" href="#ty-prizes" data-see-prizes>
+              {t.seePrizes}
+            </a>
+            {/* The mystery gift (fix list rev 2, P0-4): one quiet line, desktop only; never named here. */}
+            <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>
+            <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
+          </div>
+        </section>
+        <PrizeLadder mode={mode} now={now} winners={winners} />
+        <HowItWorks mode={mode} now={now} />
+        <PhotoStrip />
+        {/* The light reminder: a strip, not a form card. `#enter` is where the signup route sends its answer. */}
+        <section className="ty-remind" id="enter" data-reminder>
+          <div className="wrap">
+            <div className="ty-remind-inner">{card}</div>
+          </div>
+        </section>
+        <QuestionsRow mode={mode} />
+        <EntryBar watchId="ty-cal-hero">
+          <CalendarMenu label={t.entryBarNotify} google={CALENDAR.google} ics={CALENDAR.ics} variant="bar" />
+        </EntryBar>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="ty" data-mode={mode}>
-        {/* The assistant is off this route inside the window — decided here, from the giveaway clock (lib/giveaway/assistant.ts) — and always in the showcase. */}
-        {(assistantOff || assistantSuppressedByGiveaway(now)) && <AssistantOff />}
+        {assistant}
         <section className="ty-hero">
           <div className="wrap ty-hero-grid">
             <div className="ty-hero-text">
-              <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />
-              {/* Notify-me (Ben, 2026-11-09): say plainly that entries are not open yet, in gold, before anything else is read. */}
-              {notify && (
-                <p className="ty-soon" data-coming-soon>
-                  {t.comingSoon(opensShort)}
-                </p>
-              )}
-              <h1>
-                {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
-                {/* A draft build's "[DRAFT] " tag sits on its own small line, so the headline keeps its one phone line. */}
-                {headingLines[0].startsWith("[DRAFT] ") && <span className="ty-h1-draft">[DRAFT]</span>}
-                <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
-                {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
-              </h1>
-              {/* Notify-me: the countdown right under "A week of prizes." (Ben, 2026-11-09), phone and desktop. Live keeps it under the sub line. */}
-              {notify && countdown}
-              <p className="ty-value">{notify ? t.valueLineNotify(total, opensDay) : open ? t.valueLine(total) : t.valueLinePast(total)}</p>
+              {seal}
+              {heading}
+              <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
               {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
               {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
               <p className="ty-sub">{sub}</p>
-              {!notify && countdown}
+              {countdown}
               <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
             </div>
             <div className="ty-card" id="enter">
@@ -125,7 +194,7 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
         <PrizeLadder mode={mode} now={now} winners={winners} />
         <PhotoStrip />
         <QuestionsRow mode={mode} />
-        {open && <EntryBar label={mode === "notify_me" ? t.entryBarNotify : t.entryBarLive} />}
+        {mode === "live" && <EntryBar label={t.entryBarLive} />}
       </div>
     </>
   );
@@ -135,58 +204,74 @@ export default function TenYearsView({ mode, now, card, winners = [], assistantO
 /* The cards                                                           */
 /* ------------------------------------------------------------------ */
 
-/** `showcase` is the ?mode= value while the page is the showcase (lib/giveaway/showcase.ts): the submit then carries it, so the success message lands on the same stage. */
-export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} }: { mode: "notify_me" | "live"; now: Date; refCode: string; error: string | null; showcase?: string | null; utm?: Partial<Record<UtmField, string>> }) {
-  const next = nextDrawing(now) ?? DRAWINGS[0];
+/** The hidden fields, the spam guard and the honeypot every /10years form carries. */
+function FormPlumbing({ refCode = "", utm }: { refCode?: string; utm: Partial<Record<UtmField, string>> }) {
   return (
     <>
-      <h2 className="ty-card-title">{mode === "notify_me" ? t.notifyFormTitle : t.liveFormTitle}</h2>
-      <p className="ty-card-line">{mode === "notify_me" ? t.notifyFormLine(spokenCentralDateTime(SCHEDULE.entriesOpen.at)) : t.liveFormLine(spokenCentral(next.at))}</p>
-      {error && (
+      <input type="hidden" name="ref" defaultValue={refCode} />
+      <input type="hidden" name="source_page" value="/10years" />
+      {/* First-touch tags (P1-6): this request's own, replaced by the stored first touch in the browser. */}
+      {UTM_FIELDS.map((f) => (
+        <input key={f} type="hidden" name={f} defaultValue={utm[f] ?? ""} />
+      ))}
+      <UtmCapture formId="ty-entry-form" />
+      {/* The spam guard (Ben, 2026-11-09): the page token goes here, filled by FormGuard on submit. */}
+      <input type="hidden" name="form_token" defaultValue="" />
+      <FormGuard formId="ty-entry-form" sending={t.sending} />
+      {/* The honeypot — a field no person sees or fills. Same pattern as the contact form. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+        <label htmlFor="website">{t.honeypot}</label>
+        <input id="website" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
+    </>
+  );
+}
+
+const signupAction = (showcase: string | null) => (showcase ? `/10years/signup?mode=${encodeURIComponent(showcase)}` : "/10years/signup");
+
+/**
+ * The entry form (live mode). Phone is required (Ben, 2026-11-10), after
+ * Email, only ever used to reach a winner. `tap` is the one-tap link's
+ * form: the same form, opened with what the reminder holds (`prefill`) and
+ * carrying the link's token, so the entry is tied to that reminder.
+ * `showcase` is the ?mode= value while the page is the showcase
+ * (lib/giveaway/showcase.ts): the submit then carries it, so the success
+ * message lands on the same stage.
+ */
+export function FormCard({ now, refCode, error, errorCode = null, showcase = null, utm = {}, prefill = null, tap = null }: { now: Date; refCode: string; error: string | null; errorCode?: string | null; showcase?: string | null; utm?: Partial<Record<UtmField, string>>; prefill?: TapPrefill | null; tap?: string | null }) {
+  const next = nextDrawing(now) ?? DRAWINGS[0];
+  const phoneError = errorCode === "invalid_phone";
+  return (
+    <>
+      <h2 className="ty-card-title">{tap ? t.tapFormTitle : t.liveFormTitle}</h2>
+      <p className="ty-card-line">{tap ? t.tapFormLine : t.liveFormLine(spokenCentral(next.at))}</p>
+      {/* A phone refusal is said under the phone field instead. */}
+      {error && !phoneError && (
         <p className="ty-error" role="alert">
           {error}
         </p>
       )}
-      <form id="ty-entry-form" method="post" action={showcase ? `/10years/signup?mode=${encodeURIComponent(showcase)}` : "/10years/signup"} className="form ty-form">
-        <input type="hidden" name="ref" defaultValue={refCode} />
-        <input type="hidden" name="source_page" value="/10years" />
-        {/* First-touch tags (P1-6): this request's own, replaced by the stored first touch in the browser. */}
-        {UTM_FIELDS.map((f) => (
-          <input key={f} type="hidden" name={f} defaultValue={utm[f] ?? ""} />
-        ))}
-        <UtmCapture formId="ty-entry-form" />
-        {/* The spam guard (Ben, 2026-11-09): the page token goes here, filled by FormGuard on submit. */}
-        <input type="hidden" name="form_token" defaultValue="" />
-        <FormGuard formId="ty-entry-form" sending={t.sending} />
-        <div className={mode === "live" ? "ty-fields ty-fields-phone" : "ty-fields"}>
+      <form id="ty-entry-form" method="post" action={signupAction(showcase)} className="form ty-form" data-entry-form={tap ? "tap" : "live"}>
+        <FormPlumbing refCode={refCode} utm={utm} />
+        {tap && <input type="hidden" name="tap" value={tap} />}
+        <div className="ty-fields ty-fields-live">
           <div>
             <label htmlFor="first_name">{t.firstName}</label>
-            <input id="first_name" name="first_name" autoComplete="given-name" required maxLength={60} />
+            <input id="first_name" name="first_name" autoComplete="given-name" required maxLength={60} defaultValue={prefill?.firstName ?? ""} />
           </div>
           <div>
             <label htmlFor="last_name">{t.lastName}</label>
-            <input id="last_name" name="last_name" autoComplete="family-name" required maxLength={60} />
+            <input id="last_name" name="last_name" autoComplete="family-name" required maxLength={60} defaultValue={prefill?.lastName ?? ""} />
           </div>
           <div>
             <label htmlFor="email">{t.email}</label>
-            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} />
+            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} defaultValue={prefill?.email ?? ""} />
           </div>
+          <PhoneField label={t.phone} help={t.phoneHelp} invalid={t.errors.invalid_phone} initialError={phoneError} />
           <div>
             <label htmlFor="zip">{t.zip}</label>
-            <input id="zip" name="zip" inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{5}" required maxLength={5} />
+            <input id="zip" name="zip" inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{5}" required maxLength={5} defaultValue={prefill?.zip ?? ""} />
           </div>
-          {/* "Best phone if you win" (Ben, 2026-11-06): the drawing entry form only, optional; never notify-me. */}
-          {mode === "live" && (
-            <div>
-              <label htmlFor="phone">{t.phone}</label>
-              <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={40} placeholder={t.phoneHint} />
-            </div>
-          )}
-        </div>
-        {/* The honeypot — a field no person sees or fills. Same pattern as the contact form. */}
-        <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
-          <label htmlFor="website">{t.honeypot}</label>
-          <input id="website" name="website" tabIndex={-1} autoComplete="off" />
         </div>
         <div className="ty-checks">
           <label className="ty-check">
@@ -196,16 +281,54 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
             </span>
           </label>
         </div>
-        {refCode && mode === "live" && <p className="ty-ref">{t.refNote}</p>}
+        {refCode && <p className="ty-ref">{t.refNote}</p>}
         <p className="ty-gift-card" data-gift-tease>{t.giftTeaseCard(revealShort())}</p>
         <button type="submit" className="btn btn-primary ty-submit">
-          {mode === "notify_me" ? t.notifyButton : t.liveButton}
+          {t.liveButton}
         </button>
-        {mode === "notify_me" && (
-          <p className="ty-not-entry" data-not-entry>
-            {t.notifyNotEntry(opensDay)}
-          </p>
-        )}
+        <label className="ty-optin">
+          <input type="checkbox" name="marketing" defaultChecked={prefill?.marketing ?? false} />
+          <span>{t.marketing}</span>
+        </label>
+      </form>
+    </>
+  );
+}
+
+/**
+ * The light reminder, before entries open (Ben, 2026-11-10): an email
+ * address, an optional first name, "Remind me", and a line that says it is
+ * only a reminder. No last name, ZIP, phone or rules box — nothing an entry
+ * form has — so it cannot be taken for one. Same route, spam guard and
+ * confirmation email as before.
+ */
+export function ReminderCard({ error, showcase = null, utm = {} }: { error: string | null; showcase?: string | null; utm?: Partial<Record<UtmField, string>> }) {
+  return (
+    <>
+      <h2 className="ty-remind-title">{t.notifyFormTitle}</h2>
+      {error && (
+        <p className="ty-error" role="alert">
+          {error}
+        </p>
+      )}
+      <form id="ty-entry-form" method="post" action={signupAction(showcase)} className="form ty-form ty-remind-form" data-entry-form="reminder">
+        <FormPlumbing utm={utm} />
+        <div className="ty-fields ty-remind-fields">
+          <div>
+            <label htmlFor="email">{t.email}</label>
+            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} />
+          </div>
+          <div>
+            <label htmlFor="first_name">{t.firstNameOptional}</label>
+            <input id="first_name" name="first_name" autoComplete="given-name" maxLength={60} />
+          </div>
+          <button type="submit" className="btn btn-primary ty-submit">
+            {t.notifyButton}
+          </button>
+        </div>
+        <p className="ty-not-entry" data-not-entry>
+          {t.notifyNotEntry(opensDay)}
+        </p>
         <label className="ty-optin">
           <input type="checkbox" name="marketing" />
           <span>{t.marketing}</span>

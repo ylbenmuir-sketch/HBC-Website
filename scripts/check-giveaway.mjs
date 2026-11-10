@@ -34,11 +34,15 @@
  *   Nov 8 (pinned)   the clock moved back: the real notify-me page before
  *                    Nov 9 (noindex, robots-disallowed, not in the sitemap,
  *                    ?mode= previews), and an early signup
- *   Nov 10           notify-me: three signups (one from Kentucky) + an Ohio ZIP refused +
- *                    a honeypot swallowed; three verification emails; links
- *                    clicked (one twice); /10years still never in the sitemap
- *   Nov 15 6 pm      cron → "It's live" to the three; A taps Sunday night
- *                    (early bird), B taps Monday afternoon (no early bird),
+ *   Nov 10           the hype page (Ben, 2026-11-10): no form in the hero, "Add to
+ *                    my calendar", the ladder before "How it works", and a light
+ *                    reminder — three signups (A and C with a first name, B with
+ *                    an email address ONLY) + a honeypot refused; three
+ *                    on-the-list emails; nobody entered
+ *   Nov 15 6 pm      cron → "It's live" to the three; A's one-tap link opens the
+ *                    entry form filled in — no entry yet; without a phone it is
+ *                    refused; with one A is in (early bird). B (email only)
+ *                    finishes the same way Monday afternoon (no early bird),
  *                    C never taps; Monday 9 am reminder to B and C
  *   Mon 8 am         live entries by form: D; E through D's link (+3/+1);
  *                    F from D's own device (voided); eleven more friends
@@ -391,10 +395,12 @@ try {
   expect("/10years?mode=notify (a preview, not production) is the showcase posting with ?mode=", showNotify.status === 200 && showNotify.text.includes('action="/10years/signup?mode=notify"'), String(showNotify.status));
   {
     const EARLY = person("Early", "early.bird.nov7@example.test");
-    const r = await postForm("/10years/signup", { first_name: "Early", last_name: "Tester", email: EARLY.email, zip: "37064", age_rules: "on" }, EARLY);
+    // Ben, 2026-11-10: the reminder is an email address and nothing else.
+    const r = await postForm("/10years/signup", { email: EARLY.email }, EARLY);
     const row = (await dump("giveaway_notify")).find((n) => n.email === EARLY.email);
     const mail = newEmails();
     // Ben, 2026-11-08: the submit is the signup — on the list at once; the email is a follow-up with no link to click.
+    expect("an email-only reminder saves a row with no name, ZIP or rules acceptance", Boolean(row) && row.first_name == null && row.last_name == null && row.zip == null && !row.age_confirmed && row.rules_accepted_at == null, JSON.stringify(row && { f: row.first_name, l: row.last_name, z: row.zip, a: row.age_confirmed }));
     expect("before Nov 9: a real notify signup saves a row, ON THE LIST at once, and sends the on-the-list email", /\?sent=1$/.test(r.location) && Boolean(row?.verified_at) && mail.length === 1 && to(mail[0]) === EARLY.email && /You're on the list/.test(mail[0].body.subject) && !linkIn(mail[0], "/10years/verify"), `${r.location} row=${Boolean(row)} verified=${Boolean(row?.verified_at)} mails=${mail.length}`);
     // Ben, 2026-11-09: the on-the-list email carries the one-click unsubscribe (link + List-Unsubscribe headers).
     earlyUnsub = mail[0] ? unsubLinkIn(mail[0]) : null;
@@ -456,41 +462,84 @@ try {
     const FORBIDDEN = /free first visit|first visit|13th|thank-you offer/i;
     const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
     expect("notify-me: no page surface names the gift (/10years, /10years/rules)", !FORBIDDEN.test(visible(pub.text)) && !FORBIDDEN.test(visible((await get("/10years/rules")).text)));
-    expect("notify-me: the hero and card tease the gift", (visible(pub.text).match(/data-gift-tease="true"/g) ?? []).length === 2 && /thank-you gift/.test(pub.text));
+    // Ben, 2026-11-10: the reminder strip carries no "Plus a thank-you gift…" line; the hero's one line stays.
+    expect("notify-me: the hero teases the gift once; the reminder has no gift line", (visible(pub.text).match(/data-gift-tease="true"/g) ?? []).length === 1 && /thank-you gift/.test(pub.text) && !/Plus a thank-you gift/.test(visible(pub.text)));
     expect("the meta description is the new one", /name="description" content="Harmonized Brain Centers turns 10: six drawings Nov 16–21/.test(pub.text));
     expect("og:description teases the gift", /property="og:description" content="Six drawings Nov 16–21, and a thank-you gift for every entrant\."/.test(pub.text.replace(/\[DRAFT\] /g, "")));
   }
   await clock(ct(2026, 11, 10, 10));
   await clock(ct(2026, 11, 10, 10));
   const page = await get("/10years");
-  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && /Remind me when entries open/.test(page.text) && !/entry link/.test(page.text), String(page.status));
+  expect("/10years answers 200 in notify-me mode (the real page, not the showcase)", page.status === 200 && page.text.includes('data-mode="notify_me"') && page.text.includes('action="/10years/signup"') && !/signup\?mode=/.test(page.text) && !/entry link/.test(page.text), String(page.status));
+  /* ── The hype page (Ben, 2026-11-10): nothing on it can be taken for an entry form ── */
+  {
+    const html = page.text.replace(/<script[\s\S]*?<\/script>/g, "").replace(/\[DRAFT\] /g, "").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/<!--\s*-->/g, "");
+    const at = (needle) => html.indexOf(needle);
+    const hero = html.slice(at('class="ty-hero ty-hype"'), at('id="ty-prizes"'));
+    const heroWords = hero.replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+    expect("hero: COMING SOON label, the headline, the countdown, then 'Over $5,500 in prizes · Six drawings, Nov 16–21'", /COMING SOON · Entries open Sun, Nov 15 at 6 PM/.test(hero) && /A week of prizes\./.test(hero) && /A week of prizes\.\s*05\s*days[\s\S]*until entries open\s*Over \$5,500 in prizes · Six drawings, Nov 16–21\s*Add to my calendar/.test(heroWords), heroWords.slice(0, 300));
+    expect("hero: NO form, no input, no rules box", !/<form|<input|age_rules|Official Rules/.test(hero));
+    const cal = "utm_source=site&utm_medium=giveaway&utm_campaign=notify_calendar";
+    expect("hero: the primary button is 'Add to my calendar' with Google and Apple/Outlook, tagged from the site", />Add to my calendar</.test(hero) && hero.includes(`href="/10years/calendar/google?${cal}"`) && hero.includes(`href="/10years/entries-open.ics?${cal}"`) && /Google Calendar/.test(hero) && /Apple \/ Outlook/.test(hero), (hero.match(/href="\/10years\/[^"]+"/g) ?? []).join(" "));
+    expect("hero: 'See the prizes ↓' links to the ladder", /<a[^>]*href="#ty-prizes"[^>]*>See the prizes ↓<\/a>/.test(hero));
+    const order = ['class="ty-hero ty-hype"', 'id="ty-prizes"', 'class="ty-how"', 'class="ty-photos"', 'data-reminder', 'class="ty-qa"'].map(at);
+    expect("order: hero → prize ladder → How it works → photos → reminder → FAQ", order.every((n, i) => n > 0 && (i === 0 || n > order[i - 1])), order.join(" "));
+    const strip = html.slice(at("data-reminder"), at('class="ty-qa"'));
+    expect("reminder: 'Want a heads-up when it opens?', Email (required), First name (optional), 'Remind me'", /Want a heads-up when it opens\?/.test(strip) && /<input id="email"[^>]*required/.test(strip) && /<input id="first_name"[^>]*>/.test(strip) && !/<input id="first_name"[^>]*required/.test(strip) && /First name \(optional\)/.test(strip) && />Remind me<\/button>/.test(strip));
+    expect("reminder: the small line reads 'Just a reminder. You'll enter on Sunday.'", /Just a reminder\. You'll enter on Sunday\./.test(strip));
+    expect("reminder: no last name, ZIP, phone or 18+/rules box anywhere on the page; no 'Best phone'", !/name="last_name"|name="zip"|name="phone"|name="age_rules"|I'm 18\+|Best phone if you win/.test(html));
+    expect("reminder: the honeypot is still there, hidden (off screen, aria-hidden); the spam-guard token field too", /aria-hidden="true" style="position:absolute;left:-10000px[^"]*"><label for="website">/.test(strip) && /name="form_token"/.test(strip));
+    expect("FAQ 'How do I enter?' is the heads-up answer", html.includes("Entries open Sunday, Nov 15 at 6 PM, right here on this page. Want a heads-up? Add it to your calendar or get a reminder email."));
+    expect("How it works step 1: 'Mark your calendar.'", /<b>Mark your calendar\.<\/b>\s*Entries open Sunday at 6 PM\. Add it to your calendar or get a reminder email\./.test(html));
+    expect("the phone bar says 'Add to calendar' (never 'Remind me' or 'Get on the list')", /data-entry-bar[\s\S]*?>Add to calendar</.test(html) && !/Get on the list|Put me on the list/.test(html));
+    // The two calendar routes answer, and the event links back with the site's tags.
+    const g = await fetch(`${BASE}/10years/calendar/google?${cal}`, { redirect: "manual" });
+    expect("calendar: the Google route redirects to Google Calendar, its link back tagged utm_source=site", g.status === 302 && /^https:\/\/calendar\.google\.com\/calendar\/render\?/.test(g.headers.get("location") ?? "") && decodeURIComponent(g.headers.get("location") ?? "").includes(`/10years?${cal}`), `${g.status} ${g.headers.get("location")?.slice(0, 120)}`);
+    const ics = await fetch(`${BASE}/10years/entries-open.ics?${cal}`);
+    const icsText = (await ics.text()).replace(/\r\n /g, "");
+    expect("calendar: the .ics file is a calendar event at Sun Nov 15 6 PM CT with the site-tagged link", ics.status === 200 && /text\/calendar/.test(ics.headers.get("content-type") ?? "") && /DTSTART:20261116T000000Z/.test(icsText) && icsText.includes("utm_source=site"), String(ics.status));
+    const mailIcs = (await (await fetch(`${BASE}/10years/entries-open.ics?utm_source=email&utm_medium=giveaway&utm_campaign=notify_calendar`)).text()).replace(/\r\n /g, "");
+    expect("calendar: the email's own link still tags the event utm_source=email", mailIcs.includes("utm_source=email") && !mailIcs.includes("utm_source=site"));
+  }
   // The assistant is off this route inside the window — said by the page, from the giveaway clock (Ben, 2026-10-19).
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
   // Rev 2, P0-6: public from Nov 9 — the page and the rules are listed, never a token route.
   expect("from Nov 9 the sitemap lists /10years and /10years/rules only", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text) && !/\/10years\/(claim|enter|verify|signup)/.test((await get("/sitemap.xml")).text));
-  const A = person("A", "alice.notify@example.test");
-  // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES).
+  // A gives a first name with the reminder; B gives an email address and nothing else.
+  const A = person("A", "alice.notify@example.test", { first: "Alice" });
+  // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES). The ZIP is asked on the entry form.
   const B = person("B", "bob.notify@example.test", { existing: true, zip: "40202" });
-  const Cc = person("C", "cara.notify@example.test");
+  const Cc = person("C", "cara.notify@example.test", { first: "Cara" });
   // New or current client is a required two-way choice (Ben, 2026-10-20): "yes" | "no".
-  const signupFields = (p, extra = {}) => ({ first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", ...(p.phone ? { phone: p.phone } : {}), ...extra });
+  // The ENTRY form. A phone is required to enter (Ben, 2026-11-10); `phone: null` in `extra` posts none.
+  let phoneCounter = 1000;
+  const signupFields = (p, extra = {}) => {
+    const f = { first_name: p.name, last_name: "Tester", email: p.email, zip: p.zip ?? "37064", age_rules: "on", phone: p.phone ?? `615-555-${phoneCounter++}`, ...extra };
+    if (f.phone == null) delete f.phone;
+    return f;
+  };
+  // The REMINDER (Ben, 2026-11-10): an email address, and a first name only if they gave one.
+  const reminderFields = (p, extra = {}) => ({ email: p.email, ...(p.first ? { first_name: p.first } : {}), ...extra });
   // One prize per drawing (Ben, 2026-11-03): the form asks nothing about new or current.
   const notifyPage = (await get("/10years")).text;
   expect("the entry form has no new/current question", !/name="existing_client"|data-client-choice|data-path-picker/.test(notifyPage));
-  // "Best phone if you win" (Ben, 2026-11-06) is on the drawing entry form only.
-  expect("notify-me: the form has no phone field", !/name="phone"/.test(notifyPage) && !/Best phone if you win/.test(notifyPage));
   expect("the header reads 'Celebrating 10 Years!' and step 3 'We'll call and email you.'", /(?:<span class="ty-h1-draft">\[DRAFT\]<\/span>)?<span class="ty-h1-years">Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(notifyPage) && /We(?:&#x27;|')ll call and email you\./.test(notifyPage) && !/We(?:&#x27;|')ll call you\./.test(notifyPage));
   for (const p of [A, B, Cc]) {
-    // A posts a phone anyway (no such field on this form): notify-me ignores it.
-    const r = await postForm("/10years/signup", signupFields(p, p === A ? { phone: "6155550111" } : {}), p);
-    expect(`${p.name}: notify signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
+    // A posts a phone and a ZIP anyway (no such fields on this form): the reminder ignores them.
+    const r = await postForm("/10years/signup", reminderFields(p, p === A ? { phone: "6155550111", zip: "37064", last_name: "Tester" } : {}), p);
+    expect(`${p.name}: reminder signup → ?sent=1`, /\?sent=1$/.test(r.location), r.location);
   }
-  const nonTn = await postForm("/10years/signup", signupFields(person("Z", "zed@example.test"), { zip: "43215" }), person("Z1", ""));
-  expect("an Ohio ZIP is refused with the neighbors message", /error=not_eligible/.test(nonTn.location), nonTn.location);
-  expect("the page shows the neighbors message for it", /neighbors within driving distance/.test((await get("/10years?error=not_eligible")).text));
-  expect("B's Kentucky ZIP (Louisville) was accepted", (await dump("giveaway_notify")).some((r) => r.email === B.email && r.zip === "40202"));
-  const bot = await postForm("/10years/signup", signupFields(person("Bot", "bot@example.test"), { website: "http://spam.example" }), person("Bot1", ""));
+  {
+    const rows = await dump("giveaway_notify");
+    const a = rows.find((r) => r.email === A.email);
+    const b = rows.find((r) => r.email === B.email);
+    expect("A's reminder row: the email and first name only (the posted phone, ZIP and last name are ignored)", a?.first_name === "Alice" && a.last_name == null && a.zip == null && !("phone" in a && a.phone), JSON.stringify(a && { f: a.first_name, l: a.last_name, z: a.zip }));
+    expect("B's reminder row: an email address and nothing else", Boolean(b) && b.first_name == null && b.last_name == null && b.zip == null && !b.age_confirmed && b.rules_accepted_at == null && Boolean(b.verified_at), JSON.stringify(b && { f: b.first_name, l: b.last_name, z: b.zip }));
+    const noEmail = await postForm("/10years/signup", { first_name: "Nobody" }, person("N", ""));
+    expect("a reminder with no email address is refused", /error=invalid_email/.test(noEmail.location), noEmail.location);
+  }
+  const bot = await postForm("/10years/signup", reminderFields(person("Bot", "bot@example.test"), { website: "http://spam.example" }), person("Bot1", ""));
   // Ben, 2026-11-09: the /contact spam guard on this form too — a filled honeypot is refused (always on, even with the guard off locally).
   expect("a filled honeypot is refused back to the form (?error=not_sent), nothing saved", /\?error=not_sent#enter$/.test(bot.location) && !(await dump("giveaway_notify")).some((r) => r.email === "bot@example.test"), bot.location);
   let fresh = newEmails();
@@ -504,14 +553,14 @@ try {
     expect("the early one: the on-the-list unsubscribe link works (200) and sets unsubscribed_at; the row stays", u.status === 200 && /unsubscribed/i.test(u.text) && Boolean(row?.unsubscribed_at) && Boolean(row?.verified_at), `${u.status} unsub=${Boolean(row?.unsubscribed_at)}`);
   }
   {
-    const repeat = await postForm("/10years/signup", signupFields(A), A);
+    const repeat = await postForm("/10years/signup", reminderFields(A), A);
     expect("A again: ?already=1 and no second email", /\?already=1$/.test(repeat.location) && newEmails().length === 0, repeat.location);
   }
   expect("a garbage verify token is refused", /data-ok="0"/.test((await get("/10years/verify?t=nonsense")).text));
   // Plus the early signup from before Nov 9 (Ben, 2026-11-07) — on the list too, now that the submit is the signup.
   const allNotify = await dump("giveaway_notify");
   expect("four notify rows (A, B, C and the early one), all on the list with no click; nobody entered yet", allNotify.length === 4 && allNotify.every((r) => r.verified_at) && (await dump("giveaway_people")).length === 0, `${allNotify.length}`);
-  expect("no email was sent for the honeypot or the non-TN ZIP", newEmails().length === 0);
+  expect("no email was sent for the honeypot or the address-less post", newEmails().length === 0);
 
   /* ── It's live ──────────────────────────────────────────────────────── */
   section("Nov 15 6 pm: It's live");
@@ -523,12 +572,37 @@ try {
   const enterLinks = Object.fromEntries(fresh.map((e) => [to(e), linkIn(e, "/10years/enter/")]));
   expect("each carries a one-tap /10years/enter link", Object.values(enterLinks).every(Boolean));
   expect("the live page shows the entry form", /Enter me/.test((await get("/10years")).text));
-  // A taps Sunday night → early bird.
+  expect("the It's live email no longer says 'nothing to fill in'; it says the email is filled in and asks for the rest", fresh.every((e) => !/Nothing to fill in|One tap and you're in/.test(e.body.text) && /Your email is already filled in/.test(e.body.text)));
+  /* ── One-tap entry (Ben, 2026-11-10): the link opens the entry form filled in; the entry counts when it is submitted, with a phone ── */
   await clock(ct(2026, 11, 15, 21));
-  const tapA = await get(new URL(enterLinks[A.email]).pathname, A);
-  expect("A: Sunday-night tap enters with the early-bird bonus", /data-ok="1"/.test(tapA.text) && /early-bird/.test(tapA.text));
-  const tapA2 = await get(new URL(enterLinks[A.email]).pathname, A);
-  expect("A: a second tap adds nothing", /data-ok="1"/.test(tapA2.text));
+  const tapPath = (p) => new URL(enterLinks[p.email]).pathname;
+  const tapToken = (p) => decodeURIComponent(tapPath(p).split("/").pop());
+  const plain = (h) => h.replace(/\[DRAFT\] /g, "").replace(/&#x27;/g, "'");
+  const tapA = await get(tapPath(A), A);
+  {
+    const h = plain(tapA.text);
+    expect("A: the one-tap link opens the LIVE entry form, filled in with the email and the first name", tapA.status === 200 && /data-entry-form="tap"/.test(h) && new RegExp(`<input id="email"[^>]*value="${A.email.replace(/\./g, "\\.")}"`).test(h) && /<input id="first_name"[^>]*value="Alice"/.test(h) && /Finish your entry/.test(h), String(tapA.status));
+    expect("A: it asks for the rest — last name, ZIP, phone (required) and the 18+/rules box, none filled in", /<input id="last_name"(?=[^>]*required)(?=[^>]*value="")[^>]*>/.test(h) && /<input id="zip"(?=[^>]*required)(?=[^>]*value="")[^>]*>/.test(h) && /<input id="phone"(?=[^>]*required)(?=[^>]*value="")[^>]*>/.test(h) && /<input(?=[^>]*type="checkbox")(?=[^>]*name="age_rules")(?=[^>]*required)[^>]*>/.test(h) && !/name="age_rules"[^>]*checked/.test(h), (h.match(/<input id="(last_name|zip|phone)"[^>]*>/g) ?? []).join(" "));
+    expect("A: the form carries the link's token", h.includes(`name="tap" value="${tapToken(A)}"`));
+    expect("A: the tap alone enters NOBODY (no person, no entry, no email)", (await dump("giveaway_people")).length === 0 && (await dump("giveaway_entries")).length === 0 && newEmails().length === 0);
+    const rest = { first_name: "Alice", last_name: "Tester", email: A.email, zip: "37064", age_rules: "on", tap: tapToken(A) };
+    const noPhone = await postForm("/10years/signup", rest, A);
+    expect("A: the one-tap form WITHOUT a phone is refused, back to the same filled-in form", noPhone.location.includes(`${tapPath(A)}?error=invalid_phone`), noPhone.location);
+    const back = plain((await get(noPhone.location.replace(/^https?:\/\/[^/]+/, ""), A)).text);
+    expect("A: …which says so under the phone field, still filled in", /data-phone-error/.test(back) && /Please add a 10-digit US phone number/.test(back) && /<input id="first_name"[^>]*value="Alice"/.test(back));
+    const badPhone = await postForm("/10years/signup", { ...rest, phone: "555-0134" }, A);
+    const noRules = await postForm("/10years/signup", { ...rest, phone: "615-555-0111", age_rules: "" }, A);
+    expect("A: nor with a seven-digit phone, or without the 18+/rules box", /error=invalid_phone/.test(badPhone.location) && /error=age/.test(noRules.location), `${badPhone.location} ${noRules.location}`);
+    expect("A: still nobody entered, and A's reminder is not marked entered", (await dump("giveaway_people")).length === 0 && (await dump("giveaway_notify")).find((n) => n.email === A.email)?.tapped_at == null && newEmails().length === 0);
+    const done = await postForm("/10years/signup", { ...rest, phone: "(615) 555-0111" }, A);
+    expect("A: with the rest and a phone → entered, with the early-bird bonus", /\/10years\?sent=1&share=HBC-[A-Z0-9]{6}&eb=1$/.test(done.location), done.location);
+    const aPerson = (await dump("giveaway_people")).find((p) => p.email === A.email);
+    const aEntries = (await dump("giveaway_entries")).filter((e) => e.person_id === aPerson?.id).map((e) => e.kind).sort();
+    expect("A: one person, a base entry + the early bird, the phone stored as E.164", Boolean(aPerson?.verified_at) && aEntries.join() === "base,early_bird" && aPerson.phone === "+16155550111", `${aEntries.join()} ${aPerson?.phone}`);
+    expect("A: the reminder row is marked entered (the Monday reminder will skip A)", (await dump("giveaway_notify")).find((n) => n.email === A.email)?.person_id === aPerson?.id);
+  }
+  const tapA2 = await get(tapPath(A), A);
+  expect("A: the link again says You're in (early bird) and adds nothing", /data-ok="1"/.test(tapA2.text) && /early-bird/.test(tapA2.text) && !/data-entry-form/.test(tapA2.text) && (await dump("giveaway_entries")).length === 2);
   let youreIn = newEmails();
   // Rev 2, P0-2: no code and no named gift before the reveal — a tease instead.
   expect("A: one You're in email, with the share link, the gift tease and NO code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && !/10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text) && /thank-you gift for every entrant/.test(youreIn[0].body.text) && !/first visit/i.test(youreIn[0].body.text), `${youreIn.length}`);
@@ -539,12 +613,21 @@ try {
   const rem = await tick("Monday reminder");
   fresh = newEmails();
   expect("Monday 9 am: reminder to B and C only (not A, not the unsubscribed early one)", rem.sends.sent === 2 && fresh.length === 2 && !fresh.some((e) => to(e) === A.email || to(e) === "early.bird.nov7@example.test") && fresh.every((e) => /Today at noon/.test(e.body.subject)), JSON.stringify(rem.sends));
-  // B taps Monday 2 pm → no early bird; C never taps.
+  // B — the email-only reminder — finishes Monday 2 pm → no early bird; C never taps.
   await clock(ct(2026, 11, 16, 14));
-  const tapB = await get(new URL(enterLinks[B.email]).pathname, B);
-  expect("B: Monday-afternoon tap enters without the early bird", /data-ok="1"/.test(tapB.text) && !/early-bird/.test(tapB.text));
+  {
+    const tapB = plain((await get(tapPath(B), B)).text);
+    expect("B (email only): the one-tap form has the email filled in and the first name empty", /data-entry-form="tap"/.test(tapB) && new RegExp(`<input id="email"[^>]*value="${B.email.replace(/\./g, "\\.")}"`).test(tapB) && /<input id="first_name"(?=[^>]*value="")[^>]*>/.test(tapB));
+    const rest = { first_name: "B", last_name: "Tester", email: B.email, zip: B.zip, age_rules: "on", tap: tapToken(B) };
+    const noPhone = await postForm("/10years/signup", rest, B);
+    expect("B: cannot complete the entry without a phone", /error=invalid_phone/.test(noPhone.location) && !(await dump("giveaway_people")).some((p) => p.email === B.email), noPhone.location);
+    const done = await postForm("/10years/signup", { ...rest, phone: "502.555.0122" }, B);
+    expect("B: an email-only reminder completes an entry through the one-tap link (Monday afternoon: no early bird)", /\/10years\?sent=1&share=HBC-[A-Z0-9]{6}$/.test(done.location), done.location);
+    const again = await get(tapPath(B), B);
+    expect("B: the link again says You're in, without the early bird", /data-ok="1"/.test(again.text) && !/early-bird/.test(again.text));
+  }
   const bPerson = (await dump("giveaway_people")).find((r) => r.email === B.email);
-  expect("B's row: city Louisville, nearer center Nashville (out of state, by the road in)", Boolean(bPerson) && bPerson.city === "Louisville" && bPerson.nearest_center === "nashville", JSON.stringify(bPerson && { city: bPerson.city, center: bPerson.nearest_center }));
+  expect("B's row: one base entry, the phone as E.164, city Louisville, nearer center Nashville (out of state, by the road in)", Boolean(bPerson) && bPerson.phone === "+15025550122" && (await dump("giveaway_entries")).filter((e) => e.person_id === bPerson.id).map((e) => e.kind).join() === "base" && bPerson.city === "Louisville" && bPerson.nearest_center === "nashville", JSON.stringify(bPerson && { city: bPerson.city, center: bPerson.nearest_center }));
   youreIn = newEmails();
   expect("B (a current client): You're in names no gift and has no forward line yet", youreIn.length === 1 && !/Forward this to a friend|first visit/i.test(youreIn[0].body.text));
 
@@ -554,12 +637,23 @@ try {
   const D = person("D", "dan.entrant@example.test", { phone: "615.555.0101" });
   {
     const livePage = (await get("/10years")).text;
-    expect("live: the entry form has an optional 'Best phone if you win' field", /<label for="phone">(?:\[DRAFT\] )?Best phone if you win<\/label>/.test(livePage) && /<input id="phone"(?=[^>]*type="tel")(?=[^>]*name="phone")[^>]*>/.test(livePage) && !/<input id="phone"[^>]*required/.test(livePage));
+    const lp = livePage.replace(/\[DRAFT\] /g, "");
+    expect("live: the entry form has a REQUIRED 'Phone' field after Email, with 'Only used to reach you if you win.' under it", /<label for="phone">Phone<\/label>/.test(lp) && /<input id="phone"(?=[^>]*type="tel")(?=[^>]*name="phone")(?=[^>]*required)(?=[^>]*pattern=)[^>]*>/.test(lp) && /Only used to reach you if you win\./.test(lp) && lp.indexOf('id="email"') < lp.indexOf('id="phone"') && lp.indexOf('id="phone"') < lp.indexOf('id="zip"') && !/Best phone if you win/.test(lp));
+    expect("live: no SMS box on the entry form", !/name="sms_consent"|Text me/i.test(lp.slice(lp.indexOf('id="ty-entry-form"'), lp.indexOf("</form>", lp.indexOf('id="ty-entry-form"')))));
     expect("live: the header is 'Celebrating 10 Years!' here too", /(?:<span class="ty-h1-draft">\[DRAFT\]<\/span>)?<span class="ty-h1-years">Celebrating 10(?:\u00a0|&nbsp;| )Years!<\/span>/.test(livePage));
     const Q = person("Q", "quinn.badphone@example.test", { phone: "555-12" });
     const bad = await postForm("/10years/signup", signupFields(Q), Q);
     expect("a phone that isn't a US number is refused with ?error=invalid_phone", /error=invalid_phone/.test(bad.location), bad.location);
-    expect("…and nothing is saved or sent for it", !(await dump("giveaway_people")).some((p) => p.email === Q.email) && newEmails().length === 0);
+    const none = await postForm("/10years/signup", signupFields(Q, { phone: null }), Q);
+    expect("a live entry WITHOUT a phone fails (?error=invalid_phone) — the no-JavaScript post too", /\/10years\?error=invalid_phone/.test(none.location), none.location);
+    expect("…and nothing is saved or sent for either", !(await dump("giveaway_people")).some((p) => p.email === Q.email) && newEmails().length === 0);
+    const errPage = (await get("/10years?error=invalid_phone", Q)).text.replace(/\[DRAFT\] /g, "");
+    expect("the page says so under the phone field (inline), and the field is marked invalid", /data-phone-error/.test(errPage) && /Please add a 10-digit US phone number, like 615-555-0134\./.test(errPage) && /<input id="phone"[^>]*aria-invalid="true"/.test(errPage));
+    // The ZIP is asked on the entry form now (the reminder has none): an Ohio ZIP is refused here.
+    const nonTn = await postForm("/10years/signup", signupFields(person("Z", "zed@example.test"), { zip: "43215" }), person("Z1", ""));
+    expect("an Ohio ZIP is refused with the neighbors message", /error=not_eligible/.test(nonTn.location), nonTn.location);
+    expect("the page shows the neighbors message for it", /neighbors within driving distance/.test((await get("/10years?error=not_eligible")).text));
+    newEmails();
   }
   // Ben, 2026-11-08: the submit IS the entry. No click anywhere below.
   const entriesOf = async (email) => {
@@ -567,7 +661,7 @@ try {
     return p ? (await dump("giveaway_entries")).filter((e) => e.person_id === p.id && !e.void_reason).length : -1;
   };
   let r = await postForm("/10years/signup", signupFields(D), D);
-  expect("D: entry submit → ?sent=1 with the share code", /\?sent=1&share=HBC-[A-Z0-9]{6}$/.test(r.location), r.location);
+  expect("D: a live entry WITH a valid phone passes → ?sent=1 with the share code", /\?sent=1&share=HBC-[A-Z0-9]{6}$/.test(r.location), r.location);
   expect("D: entered with 1 entry by the submit alone", (await entriesOf(D.email)) === 1, String(await entriesOf(D.email)));
   {
     const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), D);
@@ -584,9 +678,7 @@ try {
   // Migration 0018 adds giveaway_people.phone. Memory mode always has it; --db has it once Ben applies 0018.
   HAS_PHONE_COLUMN = Boolean(dPerson) && "phone" in dPerson;
   if (HAS_PHONE_COLUMN) {
-    expect("D: the phone is saved on the entrant, formatted", dPerson.phone === "(615) 555-0101", JSON.stringify(dPerson?.phone));
-    const aPerson = (await dump("giveaway_people")).find((p) => p.email === A.email);
-    expect("A (entered through notify-me): no phone on the entrant", aPerson && aPerson.phone == null, JSON.stringify(aPerson?.phone));
+    expect("D: the phone is saved on the entrant as E.164", dPerson.phone === "+16155550101", JSON.stringify(dPerson?.phone));
   } else {
     console.log("  · giveaway_people.phone is missing — migration 0018 is not applied here; checking that entries still save without it.");
     expect("before 0018: D's entry saved anyway (the phone is dropped, not the entry)", Boolean(dPerson) && Boolean(dPerson.verified_at));
@@ -623,7 +715,7 @@ try {
   expect("an audit line names the self-referral", (await dump("giveaway_audit")).some((a) => a.action === "referral_voided"));
   // Eleven more friends: the 11th credits nothing.
   for (let i = 1; i <= 11; i++) {
-    const G = person(`G${i}`, `friend${i}.of.dan@example.test`, i % 2 ? { phone: `(629) 555-01${String(i).padStart(2, "0")}` } : {});
+    const G = person(`G${i}`, `friend${i}.of.dan@example.test`, { phone: `(629) 555-01${String(i).padStart(2, "0")}` });
     r = await postForm("/10years/signup", signupFields(G, { ref: dRef }), G);
     if (i === 11) expect("the 11th friend still gets their +1", (await entriesOf(G.email)) === 2, String(await entriesOf(G.email)));
     newEmails();
@@ -788,22 +880,20 @@ try {
   expect(`the grand pool is every valid entry of the week (${allEntries.length}), daily winners included`, grand.pool_size === allEntries.length, `${grand.pool_size}`);
   fresh = newEmails();
   expect("Saturday: alert to the OWNER route", fresh.some((e) => /GRAND PRIZE/.test(e.body.subject) && to(e) === "ben@example.test"));
-  /* Every staff alert of the week shows the winner's own phone, or "No phone given, email first." */
+  /* Every staff alert of the week shows the winner's own phone, so staff can call (every entrant has one now). */
   {
     const people = await dump("giveaway_people");
     const alerts = emails().filter((e) => /10 years — .*(winner|GRAND PRIZE)/.test(e.body.subject));
     const wrong = [];
-    let withPhone = 0;
     for (const a of alerts) {
       const p = people.find((x) => a.body.text.includes(x.email_display));
-      const want = HAS_PHONE_COLUMN && p?.phone ? `Phone: ${p.phone}` : "Phone: No phone given, email first.";
-      if (!p || !a.body.text.replaceAll("[DRAFT] ", "").includes(want)) wrong.push(`${a.body.subject}: wanted "${want}"`);
-      if (HAS_PHONE_COLUMN && p?.phone) {
-        withPhone++;
-        if (!a.body.html.includes(`href="tel:+1${p.phone.replace(/\D/g, "")}"`)) wrong.push(`${a.body.subject}: no tel: link`);
-      }
+      const d = (p?.phone ?? "").replace(/^\+1/, "");
+      const want = HAS_PHONE_COLUMN ? `Phone: (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : "Phone: No phone given, email first.";
+      if (!p || (HAS_PHONE_COLUMN && !/^\+1\d{10}$/.test(p.phone ?? "")) || !a.body.text.replaceAll("[DRAFT] ", "").includes(want)) wrong.push(`${a.body.subject}: wanted "${want}"`);
+      if (HAS_PHONE_COLUMN && !a.body.html.includes(`href="tel:${p?.phone}"`)) wrong.push(`${a.body.subject}: no tel: link`);
     }
-    expect(`all ${alerts.length} staff alerts show the winner's phone (${withPhone}) or "No phone given, email first." (${alerts.length - withPhone})`, alerts.length >= 7 && wrong.length === 0, wrong.join(" | "));
+    expect(`all ${alerts.length} staff alerts show the winner's phone with a tel: link`, alerts.length >= 7 && wrong.length === 0, wrong.join(" | "));
+    expect("every entrant of the week has a phone, stored as E.164", !HAS_PHONE_COLUMN || people.every((p) => /^\+1\d{10}$/.test(p.phone ?? "")), people.filter((p) => !/^\+1\d{10}$/.test(p.phone ?? "")).map((p) => p.email).join(" "));
   }
   const closedPage = await get("/10years");
   expect("closed mode: no form, winners list present", !closedPage.text.includes('action="/10years/signup"') && /data-winners/.test(closedPage.text));
@@ -1032,9 +1122,9 @@ async function engineOffChecks() {
   // The form: a normal success, no row (there is no store to write to — a
   // write would have answered ?error=unavailable), no email.
   const P = person("showcase", "showcase@example.test");
-  const notify = await postForm("/10years/signup?mode=notify", { first_name: "Show", last_name: "Case", email: P.email, zip: "37064", age_rules: "on" }, P);
+  const notify = await postForm("/10years/signup?mode=notify", { email: P.email }, P);
   expect("off: the notify-me form → 303 to ?mode=notify&sent=1", notify.status === 303 && /\/10years\?mode=notify&sent=1$/.test(notify.location), `${notify.status} ${notify.location}`);
-  const liveForm = await postForm("/10years/signup?mode=live", { first_name: "Show", last_name: "Case", email: P.email, zip: "37064", age_rules: "on" }, P);
+  const liveForm = await postForm("/10years/signup?mode=live", { first_name: "Show", last_name: "Case", email: P.email, phone: "615-555-0100", zip: "37064", age_rules: "on" }, P);
   expect("off: the live form → 303 to ?mode=live&sent=1", liveForm.status === 303 && /\/10years\?mode=live&sent=1$/.test(liveForm.location), `${liveForm.status} ${liveForm.location}`);
   const sent = await get("/10years?mode=live&sent=1");
   expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /You(?:&#x27;|')re in\./.test(sent.text));
@@ -1140,14 +1230,23 @@ async function browserChecks() {
         // One prize per drawing (Ben, 2026-11-03): no picker, no toggle, no client choice.
         expect(`${mode} at ${width}: no "Which one are you?" picker, ladder toggle or client choice`, await page.eval("!document.querySelector('[data-path-picker], #ty-v-cur, #ty-v-new, [data-client-choice]')"));
         if (width === 390) {
-          // The entry bar: off while the form card is on screen, on once it is past (Ben, 2026-10-20).
-          await page.eval("document.getElementById('enter').scrollIntoView({ block: 'start' })");
+          // The phone bar: off while the thing it stands in for is on screen, on once it is past (Ben, 2026-10-20).
+          // Live: the form card. Before entries open (Ben, 2026-11-10): the hero's calendar button, and the bar is "Add to calendar".
+          await page.eval(`document.getElementById('${mode === "live" ? "enter" : "ty-cal-hero"}').scrollIntoView({ block: 'start' })`);
           await sleep(500);
           const hiddenAtForm = await page.eval("!document.querySelector('[data-entry-bar]').hasAttribute('data-show')");
           await page.eval("window.scrollTo(0, document.body.scrollHeight)");
           await sleep(600);
           const shownBelow = await page.eval("(() => { const b = document.querySelector('[data-entry-bar]'); return b.hasAttribute('data-show') && b.getBoundingClientRect().bottom <= innerHeight + 1 && b.getBoundingClientRect().height > 40; })()");
-          expect(`${mode} at 390: the entry bar hides at the form and shows past it`, hiddenAtForm && shownBelow, `hiddenAtForm=${hiddenAtForm} shownBelow=${shownBelow}`);
+          expect(`${mode} at 390: the phone bar hides at ${mode === "live" ? "the form" : "the calendar button"} and shows past it`, hiddenAtForm && shownBelow, `hiddenAtForm=${hiddenAtForm} shownBelow=${shownBelow}`);
+          if (mode !== "live") {
+            const barText = await page.eval("document.querySelector('[data-entry-bar] summary')?.textContent.replace('[DRAFT] ', '') ?? ''");
+            await page.eval("document.querySelector('[data-entry-bar] summary').click()");
+            await sleep(200);
+            const menu = JSON.parse(await page.eval("JSON.stringify((() => { const m = document.querySelector('[data-entry-bar] .ty-cal-menu'); const r = m.getBoundingClientRect(); return { links: [...m.querySelectorAll('a')].map((a) => a.getAttribute('href')), top: Math.floor(r.top), bottom: Math.ceil(r.bottom), h: Math.round(r.height) }; })())"));
+            expect(`notify at 390: the bar is "Add to calendar" and opens Google + Apple/Outlook above itself, on screen`, barText === "Add to calendar" && menu.links.length === 2 && /calendar\/google\?utm_source=site/.test(menu.links[0]) && /entries-open\.ics\?utm_source=site/.test(menu.links[1]) && menu.h > 80 && menu.top >= 0 && menu.bottom <= 844, `${barText} ${JSON.stringify(menu)}`);
+            await page.eval("document.querySelector('[data-entry-bar] details').open = false");
+          }
           const noSwipe = await page.eval("getComputedStyle(document.querySelector('.ty-ladder')).overflowX !== 'auto' && document.querySelector('.ty-ladder').scrollWidth <= document.querySelector('.ty-ladder').clientWidth + 1");
           expect(`${mode} at 390: the ladder is a vertical list (no swipe row)`, noSwipe);
           const bars = await page.eval("[...document.querySelectorAll('.ty-step')].map(li => Math.round(li.querySelector('.ty-row-fill').getBoundingClientRect().width))");
@@ -1163,35 +1262,78 @@ async function browserChecks() {
         await sleep(350);
         const oneOpen = await page.eval("[...document.querySelectorAll('.ty-step-head[aria-expanded=\"true\"]')].map(b => b.closest('li').dataset.slot).join()");
         expect(`${mode} at ${width}: tapping Saturday switches (one open at a time)`, oneOpen === "grand", oneOpen);
+        const stripDraft = "(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()";
+        // The hype hero's parts, top to bottom, and where the first form field sits (Ben, 2026-11-10).
+        const hypeProbe = "JSON.stringify((() => { const b = (q) => Math.ceil(document.querySelector(q)?.getBoundingClientRect().bottom ?? 9999); const t = (q) => Math.floor(document.querySelector(q)?.getBoundingClientRect().top ?? -1); return { soon: b('[data-coming-soon]'), h1: b('.ty-hype h1'), count: b('.ty-hype [data-countdown]'), value: b('[data-hype-value]'), cal: b('#ty-cal-hero summary'), calW: Math.round(document.querySelector('#ty-cal-hero summary').getBoundingClientRect().width), prizes: b('[data-see-prizes]'), ladderTop: t('#ty-prizes'), emailTop: t('#email'), remindTop: t('[data-reminder]'), howTop: t('.ty-how'), photosTop: t('.ty-photos'), qaTop: t('.ty-qa'), heroForm: Boolean(document.querySelector('.ty-hype form, .ty-hype input')), optinLines: (() => { const o = document.querySelector('.ty-remind .ty-optin span'); return o ? Math.round(o.getBoundingClientRect().height / parseFloat(getComputedStyle(o).lineHeight)) : 0; })(), overflow: document.documentElement.scrollWidth > innerWidth }; })())";
         if (width === 390) {
-          // P1-7: the email field and the button are on the first 390×844 screen (no scrolling).
           await page.goto(`${BASE}/10years`, { settle: 300 });
           // Measure the copy as it will ship: this run shows "[DRAFT] " on every string (the subject checks need it).
-          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()");
+          await page.eval(stripDraft);
           await sleep(100);
-          const fold = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none' })"));
-          expect(`${mode} at 390×844: email field and button above the fold (email ${fold.email}px, button ${fold.submit}px); the hero picker is hidden`, fold.email <= 844 && fold.submit <= 844 && fold.picker === "none", JSON.stringify(fold));
-          // Ben, 2026-11-03: the same at 360×740 (the 18+/rules line stays on one line there).
-          await page.setViewport(360, 740);
-          await page.goto(`${BASE}/10years`, { settle: 300 });
-          await page.eval("(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n; (n = w.nextNode()); ) if (n.nodeValue.includes('[DRAFT] ')) n.nodeValue = n.nodeValue.replaceAll('[DRAFT] ', ''); document.querySelectorAll('.ty-h1-draft').forEach((e) => e.remove()); })()");
-          await sleep(100);
-          const f360 = JSON.parse(await page.eval("JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), overflow: document.documentElement.scrollWidth > innerWidth })"));
           if (mode === "notify-me") {
-            // Ben, 2026-11-09: the gold COMING SOON label and the countdown moved above the card. At 360×740 they
-            // and the email field make the first screen; the button no longer can (it was the trade-off, reported).
-            const soon = JSON.parse(await page.eval("JSON.stringify({ soon: Math.ceil(document.querySelector('[data-coming-soon]')?.getBoundingClientRect().bottom ?? 9999), count: Math.ceil(document.querySelector('[data-countdown]')?.getBoundingClientRect().bottom ?? 9999), card: Math.floor(document.querySelector('.ty-card').getBoundingClientRect().top) })"));
-            expect(`notify at 360×740: COMING SOON label, countdown (above the card) and email field on the first screen (label ${soon.soon}px, countdown ${soon.count}px, email ${f360.email}px)`, soon.soon <= 740 && soon.count < soon.card && f360.email <= 740 && !f360.overflow, JSON.stringify({ ...soon, ...f360 }));
+            const f = JSON.parse(await page.eval(hypeProbe));
+            const inOrder = f.soon < f.h1 && f.h1 < f.count && f.count < f.value && f.value < f.cal && f.cal < f.prizes;
+            expect(`notify at 390×844: label, headline, countdown, prize line, "Add to my calendar" and "See the prizes" in that order on the first screen (button ${f.cal}px, link ${f.prizes}px), no form in the hero`, inOrder && f.prizes <= 844 && !f.heroForm && f.calW >= 300, JSON.stringify(f));
+            expect(`notify at 390: the page runs ladder (${f.ladderTop}) → how it works (${f.howTop}) → photos (${f.photosTop}) → reminder (${f.remindTop}) → questions (${f.qaTop}); the first field is far below the first screen (${f.emailTop}px)`, f.ladderTop > f.prizes && f.howTop > f.ladderTop && f.photosTop > f.howTop && f.remindTop > f.photosTop && f.qaTop > f.remindTop && f.emailTop > 844, JSON.stringify(f));
+            expect("notify at 390: 'Email me HBC news after the giveaway' fits on one line", f.optinLines === 1, String(f.optinLines));
+            // The calendar button opens its two links under itself.
+            await page.eval("document.querySelector('#ty-cal-hero summary').click()");
+            await sleep(200);
+            const menu = JSON.parse(await page.eval("JSON.stringify((() => { const m = document.querySelector('#ty-cal-hero .ty-cal-menu'); const r = m.getBoundingClientRect(); return { n: m.querySelectorAll('a').length, h: Math.round(r.height), bottom: Math.ceil(r.bottom), words: m.textContent }; })())"));
+            expect("notify at 390: 'Add to my calendar' opens Google Calendar and Apple / Outlook on the first screen", menu.n === 2 && menu.h > 80 && menu.bottom <= 844 && /Google Calendar/.test(menu.words) && /Apple \/ Outlook/.test(menu.words), JSON.stringify(menu));
+            // Ben, 2026-11-03: the same at 360×740, and nothing sideways at 320.
+            await page.setViewport(360, 740);
+            await page.goto(`${BASE}/10years`, { settle: 300 });
+            await page.eval(stripDraft);
+            await sleep(100);
+            const f360 = JSON.parse(await page.eval(hypeProbe));
+            expect(`notify at 360×740: the calendar button and "See the prizes" on the first screen (button ${f360.cal}px, link ${f360.prizes}px), no sideways scroll`, f360.prizes <= 740 && !f360.overflow && !f360.heroForm && f360.optinLines === 1, JSON.stringify(f360));
+            await page.setViewport(320, 640);
+            await page.goto(`${BASE}/10years`, { settle: 300 });
+            await page.eval(stripDraft);
+            await sleep(100);
+            const f320 = JSON.parse(await page.eval(hypeProbe));
+            expect(`notify at 320: no sideways scroll, the calendar button on the first screen (${f320.cal}px), the news box on one line`, !f320.overflow && f320.cal <= 640 && f320.optinLines === 1, JSON.stringify(f320));
           } else {
-            expect(`${mode} at 360×740: email field and button above the fold (email ${f360.email}px, button ${f360.submit}px)`, f360.email <= 740 && f360.submit <= 740 && !f360.overflow, JSON.stringify(f360));
+            // P1-7: the email field and the button are on the first 390×844 screen (no scrolling).
+            const liveProbe = "JSON.stringify({ email: Math.ceil(document.querySelector('#email').getBoundingClientRect().bottom), phone: Math.ceil(document.querySelector('#phone').getBoundingClientRect().bottom), note: Math.round(document.querySelector('#phone-note').getBoundingClientRect().height), noteWords: document.querySelector('#phone-note').textContent, submit: Math.ceil(document.querySelector('.ty-submit').getBoundingClientRect().bottom), picker: document.querySelector('[data-path-picker]') ? 'present' : 'none', overflow: document.documentElement.scrollWidth > innerWidth })";
+            const fold = JSON.parse(await page.eval(liveProbe));
+            expect(`${mode} at 390×844: email, phone and button above the fold (email ${fold.email}px, phone ${fold.phone}px, button ${fold.submit}px); the phone's helper on one line; the hero picker is hidden`, fold.email <= 844 && fold.phone <= 844 && fold.submit <= 844 && fold.picker === "none" && fold.note <= 20 && fold.noteWords === "Only used to reach you if you win.", JSON.stringify(fold));
+            // Ben, 2026-11-03: the same at 360×740 (the 18+/rules line stays on one line there).
+            await page.setViewport(360, 740);
+            await page.goto(`${BASE}/10years`, { settle: 300 });
+            await page.eval(stripDraft);
+            await sleep(100);
+            const f360 = JSON.parse(await page.eval(liveProbe));
+            expect(`${mode} at 360×740: email, phone and button above the fold (email ${f360.email}px, phone ${f360.phone}px, button ${f360.submit}px)`, f360.email <= 740 && f360.phone <= 740 && f360.submit <= 740 && !f360.overflow && f360.note <= 20, JSON.stringify(f360));
+            await page.setViewport(390, 844);
+            await page.goto(`${BASE}/10years`, { settle: 300 });
+            // The inline error (Ben, 2026-11-10): a number that doesn't read as one is said under the field on leaving it, and clears once fixed.
+            const typed = async (v) => {
+              await page.eval(`(() => { const i = document.querySelector('#phone'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; i.focus(); set.call(i, ${JSON.stringify(v)}); i.dispatchEvent(new Event('input', { bubbles: true })); i.blur(); i.dispatchEvent(new FocusEvent('focusout', { bubbles: true })); })()`);
+              await sleep(150);
+              return JSON.parse(await page.eval("JSON.stringify({ error: Boolean(document.querySelector('[data-phone-error]')), words: document.querySelector('#phone-note').textContent.replace('[DRAFT] ', ''), valid: document.querySelector('#phone').checkValidity(), formValid: document.querySelector('#ty-entry-form').checkValidity() })"));
+            };
+            const bad = await typed("615-555");
+            const good = await typed("(615) 555-0134");
+            const empty = JSON.parse(await page.eval("(() => { const i = document.querySelector('#phone'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, ''); return JSON.stringify({ valid: i.checkValidity(), required: i.required }); })()"));
+            expect("live at 390: a bad phone shows the inline error and holds the form; a good one clears it; an empty one is invalid (required)", bad.error && /10-digit US phone number/.test(bad.words) && !bad.valid && !good.error && good.valid && good.words === "Only used to reach you if you win." && empty.required && !empty.valid, JSON.stringify({ bad, good, empty }));
           }
           await page.setViewport(390, 844);
         }
         if (width === 1440) {
-          // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.
-          const cardBottom = await page.eval("Math.ceil(document.querySelector('.ty-card').getBoundingClientRect().bottom)");
-          const textBottom = await page.eval("Math.ceil(document.querySelector('.ty-hero-text').getBoundingClientRect().bottom)");
-          expect(`${mode} at 1440×900: the hero fits the first screen (card ${cardBottom}px, text ${textBottom}px)`, cardBottom <= 900 && textBottom <= 900);
+          if (mode === "notify-me") {
+            await page.goto(`${BASE}/10years`, { settle: 300 });
+            await page.eval(stripDraft);
+            await sleep(100);
+            const f = JSON.parse(await page.eval(hypeProbe));
+            expect(`notify at 1440×900: the hype hero — through "See the prizes" — fits the first screen (button ${f.cal}px, link ${f.prizes}px), no form in it; the reminder is below the photos`, f.prizes <= 900 && !f.heroForm && f.remindTop > f.photosTop && f.photosTop > f.howTop && f.howTop > f.ladderTop, JSON.stringify(f));
+          } else {
+            // Ben, 2026-10-19 (second brief): the hero — headline, value, countdown, form — fits the first 1440×900 screen.
+            const cardBottom = await page.eval("Math.ceil(document.querySelector('.ty-card').getBoundingClientRect().bottom)");
+            const textBottom = await page.eval("Math.ceil(document.querySelector('.ty-hero-text').getBoundingClientRect().bottom)");
+            expect(`${mode} at 1440×900: the hero fits the first screen (card ${cardBottom}px, text ${textBottom}px)`, cardBottom <= 900 && textBottom <= 900);
+          }
         }
       }
     }

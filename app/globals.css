@@ -2842,8 +2842,6 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-h1-rest { font-size: clamp(42px, 4vw, 58px); line-height: 1.05; letter-spacing: -0.015em; color: var(--navy); margin-top: 8px; }
 /* Notify-me (Ben, 2026-11-09): "COMING SOON · Entries open …" in brand gold, navy text (5.6:1), over the headline. */
 .ty-soon { display: inline-block; margin: 2px 0 14px; padding: 7px 14px; background: #b8924a; color: #152230; border-radius: 4px; font-family: var(--sans); font-size: 15px; font-weight: 700; line-height: 1.3; letter-spacing: 0.02em; }
-/* Notify-me: the countdown sits right under "A week of prizes.". */
-.ty[data-mode="notify_me"] .ty-count { margin: 4px 0 16px; }
 .ty-value { font-family: var(--sans); font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--navy); margin: 0 0 6px; letter-spacing: -0.005em; }
 .ty-sub { font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0; max-width: 40ch; }
 /* The mystery-gift tease (fix list rev 2, P0-4): one gold-ink line with a
@@ -2890,11 +2888,17 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-fields > div { grid-column: span 6; position: relative; }
 .ty-fields > div:nth-child(3) { grid-column: span 7; }
 .ty-fields > div:nth-child(4) { grid-column: span 5; }
-/* Live: "Best phone if you win" (Ben, 2026-11-06). Email takes the row, ZIP
-   and the phone share the next, so a phone adds no row. */
-.ty-fields-phone > div:nth-child(3) { grid-column: span 12; }
-.ty-fields-phone > div:nth-child(4) { grid-column: span 4; }
-.ty-fields-phone > div:nth-child(5) { grid-column: span 8; }
+/* The entry form (Ben, 2026-11-10): Email takes the row; the required Phone
+   comes after it and shares the next row with ZIP. Under the phone, one
+   small line — what it is for, or what is wrong with it. */
+.ty-fields-live > div:nth-child(3) { grid-column: span 12; }
+.ty-fields-live > div:nth-child(4) { grid-column: span 8; }
+.ty-fields-live > div:nth-child(5) { grid-column: span 4; }
+.ty-field-note { font-size: 12px; line-height: 1.35; color: var(--slate); margin: 4px 2px 0; }
+/* The helper keeps its one line at 360 (it may run on under the ZIP; nothing sits there). The error may wrap. */
+.ty-field-note:not(.ty-field-error) { white-space: nowrap; }
+.ty-field-error { color: #9a3b2e; font-weight: 600; }
+.form.ty-form input[aria-invalid="true"] { border-color: #9a3b2e; }
 .form.ty-form .ty-fields input::placeholder { color: var(--slate); opacity: 1; }
 .form.ty-form .ty-fields label { position: absolute; z-index: 1; top: 8px; left: 14px; right: 10px; margin: 0; font-size: 10.5px; line-height: 1.2; letter-spacing: 0.1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .form.ty-form input:not([type="checkbox"]) { height: 52px; padding: 19px 14px 5px; }
@@ -2913,10 +2917,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-check a { color: var(--sage-deep); text-decoration: none; border-bottom: 1px solid var(--gold-soft); }
 .ty-ref { font-size: 13.5px; line-height: 1.5; color: var(--sage-deep); margin: 10px 0 -4px; }
 .ty-submit { width: 100%; margin-top: 14px; padding: 13px 24px; min-height: 46px; }
-/* Notify-me, under the button (Ben, 2026-11-09): small but plainly readable. */
-/* Ben, 2026-11-09: a little bigger and in brand gold. Gold TEXT (#b8924a) on the white card is 2.9:1 — too faint to
-   read easily — so the gold is the ground and the words stay navy (5.6:1), like the COMING SOON label. */
-.ty-not-entry { margin: 10px 0 0; padding: 7px 10px; background: #b8924a; color: #152230; border-radius: 4px; font-family: var(--sans); font-size: 15.5px; font-weight: 700; line-height: 1.35; text-align: center; }
+/* Under the reminder (Ben, 2026-11-10): one small line, "Just a reminder. You'll enter on Sunday." */
+.ty-not-entry { margin: 10px 0 0; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1.4; color: var(--ink); }
 .form.ty-form .ty-optin { margin-top: 10px; font-size: 13px; color: var(--slate); }
 .form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
 .ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
@@ -2930,6 +2932,44 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-winners li { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); }
 .ty-winners li:first-child { border-top: 0; padding-top: 0; }
 .ty-winners li[data-state="pending"], .ty-winners li[data-state="reaching"] { color: var(--slate); }
+
+/* ── Before entries open: the hype page (Ben, 2026-11-10) ──────────────
+   No form in the hero — the gold label, the headline, the countdown, the
+   prize line, one calendar button and a link to the prizes, centred. The
+   reminder is a quiet strip near the foot (.ty-remind), not a card. */
+.ty-hype { padding: 18px 0 36px; }
+.ty-hype-inner { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ty-hype .ty-seal { margin: 0 0 8px; }
+.ty-hype h1 { align-items: center; margin-bottom: 14px; }
+.ty-hype .ty-count { margin: 0 0 16px; }
+.ty-hype .ty-count-boxes { justify-content: center; }
+.ty-hype .ty-value { margin: 0 0 18px; }
+.ty-hype .ty-gift-tease { margin: 16px 0 0; }
+.ty-hype .ty-proof { margin-top: 10px; }
+.ty-hype-notice { width: 100%; max-width: 480px; margin: 0 0 18px; text-align: left; }
+.ty-hype-prizes { margin-top: 14px; font-size: 16px; }
+/* "Add to my calendar": a button that opens its two kinds (a <details>, so it works without the script). */
+.ty-cal { position: relative; display: inline-block; }
+.ty-cal > summary { list-style: none; min-width: 300px; min-height: 54px; padding: 14px 34px; font-size: 17px; user-select: none; }
+.ty-cal > summary::-webkit-details-marker { display: none; }
+.ty-cal > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.ty-cal-menu { position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; right: 0; display: grid; gap: 2px; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 24px 50px -28px rgba(21, 34, 48, 0.5); }
+.ty-cal-menu a { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 14px; border-radius: 6px; font-family: var(--sans); font-size: 15.5px; font-weight: 600; color: var(--navy); text-decoration: none; }
+.ty-cal-menu a:hover, .ty-cal-menu a:focus-visible { background: var(--ivory-2); }
+.ty-cal-bar { display: block; }
+.ty-cal-bar > summary { width: 100%; min-width: 0; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
+.ty-cal-bar .ty-cal-menu { top: auto; bottom: calc(100% + 8px); }
+/* The light reminder: a strip between the photos and the questions. */
+.ty-remind { border-top: 1px solid var(--line); padding: 30px 0 32px; scroll-margin-top: 70px; }
+.ty-remind-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+.ty-remind-title { font-family: var(--serif); font-size: 27px; font-weight: 500; line-height: 1.15; color: var(--navy); margin: 0 0 14px; }
+.ty-remind .ty-form { margin-top: 0; }
+.ty-remind-fields { margin-top: 0; text-align: left; }
+.ty-remind-fields > div:nth-child(1) { grid-column: span 5; }
+.ty-remind-fields > div:nth-child(2) { grid-column: span 4; }
+.ty-remind-fields > .ty-submit { grid-column: span 3; width: 100%; height: 52px; min-height: 0; margin-top: 0; padding: 0 16px; }
+.form.ty-form.ty-remind-form .ty-optin { display: inline-flex; margin-top: 8px; white-space: nowrap; }
+.ty-remind .ty-message .ty-card-line { font-size: 15.5px; }
 
 /* How it works: three numbered steps, one quiet strip between two hairlines. */
 .ty-how { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 20px 0; }
@@ -3135,8 +3175,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   /* The form on a phone: ZIP full width, shorter fields, a tighter rhythm. */
   .ty-fields { row-gap: 8px; margin-top: 14px; }
   .ty-fields > div:nth-child(3), .ty-fields > div:nth-child(4) { grid-column: span 12; }
-  .ty-fields-phone > div:nth-child(4) { grid-column: span 4; }
-  .ty-fields-phone > div:nth-child(5) { grid-column: span 8; }
+  .ty-fields-live > div:nth-child(4) { grid-column: span 8; }
+  .ty-fields-live > div:nth-child(5) { grid-column: span 4; }
   .form.ty-form input:not([type="checkbox"]):not([type="radio"]) { height: 48px; padding: 18px 14px 4px; }
   .form.ty-form .ty-choice { margin-top: 10px; }
   .ty-choice-opt span { min-height: 44px; font-size: 13.5px; padding: 8px 6px; }
@@ -3150,34 +3190,36 @@ footer.site.slim a:hover { color: var(--sage-deep); }
      headline steps down; and the "Which one are you?" picker hides — the
      form's required new/current choice asks the same thing once and drives
      the ladder through PathProvider. Desktop is unchanged. */
-  .ty[data-mode="notify_me"] .ty-hero-grid, .ty[data-mode="live"] .ty-hero-grid { position: relative; row-gap: 0; }
-  .ty[data-mode="notify_me"] .ty-hero-text, .ty[data-mode="live"] .ty-hero-text { display: contents; }
+  .ty[data-mode="live"] .ty-hero-grid { position: relative; row-gap: 0; }
+  .ty[data-mode="live"] .ty-hero-text { display: contents; }
   /* "Celebrating 10 Years!" (Ben, 2026-11-06) on ONE line, full width, so
      the form keeps its first screen at 360×740 and 390×844; the seal badge
      that sat beside "10 years." steps aside (the headline says it now).
      Closed and thank-you keep the seal above the headline. */
   .ty[data-mode="notify_me"] .ty-seal, .ty[data-mode="live"] .ty-seal { display: none; }
-  .ty[data-mode="notify_me"] .ty-hero h1, .ty[data-mode="live"] .ty-hero h1 { margin: 0 0 8px; }
+  .ty[data-mode="live"] .ty-hero h1 { margin: 0 0 8px; }
   .ty[data-mode="notify_me"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-years { font-size: min(56px, calc((100vw - 48px) / 8)); }
   .ty[data-mode="notify_me"] .ty-h1-rest, .ty[data-mode="live"] .ty-h1-rest { font-size: 30px; }
-  .ty[data-mode="notify_me"] .ty-path, .ty[data-mode="live"] .ty-path { display: none; }
-  .ty[data-mode="notify_me"] .ty-card, .ty[data-mode="live"] .ty-card { order: 1; margin-top: 14px; }
+  .ty[data-mode="live"] .ty-path { display: none; }
+  .ty[data-mode="live"] .ty-card { order: 1; margin-top: 14px; }
   .ty[data-mode="live"] .ty-count { order: 2; margin-top: 20px; }
-  /* Notify-me (Ben, 2026-11-09): the gold label first, the countdown under the headline, both above the card. */
-  /* One line from 360 up (12.5px needs ~300px); below 360 it wraps, balanced. */
-  .ty-soon { justify-self: start; margin: 0 0 10px; padding: 5px 9px; font-size: 12.5px; letter-spacing: 0; text-wrap: balance; }
-  /* A slimmer countdown here, so the form card starts as high as it can. */
-  .ty[data-mode="notify_me"] .ty-count { margin: 0 0 12px; }
-  .ty[data-mode="notify_me"] .ty-count-box { padding: 6px 4px 5px; }
-  .ty[data-mode="notify_me"] .ty-count-n { font-size: 22px; }
-  .ty[data-mode="notify_me"] .ty-count-u { margin-top: 3px; }
-  .ty[data-mode="notify_me"] .ty-count-label { margin-top: 5px; font-size: 12.5px; }
-  /* …and a few px back from the gaps around them, so the button still makes 390×844. */
-  .ty[data-mode="notify_me"] .ty-soon { margin-bottom: 8px; }
-  .ty[data-mode="notify_me"] .ty-hero h1 { margin-bottom: 4px; }
-  .ty[data-mode="notify_me"] .ty-count { margin-bottom: 10px; }
-  .ty[data-mode="notify_me"] .ty-card { margin-top: 6px; }
-  .ty[data-mode="notify_me"] .ty-proof, .ty[data-mode="live"] .ty-proof { order: 2; }
+  /* The gold label: one line from 360 up (12.5px needs ~300px); below 360 it wraps, balanced. */
+  .ty-soon { margin: 0 0 10px; padding: 5px 9px; font-size: 12.5px; letter-spacing: 0; text-wrap: balance; }
+  /* The hype hero on a phone: the button is the full width, the menu opens under it. */
+  .ty-hype { padding: 18px 0 28px; }
+  .ty-hype h1 { margin-bottom: 12px; }
+  .ty-hype .ty-count { align-self: stretch; margin: 0 0 14px; }
+  .ty-hype .ty-value { font-size: 19px; margin-bottom: 16px; }
+  .ty-hype .ty-value-part { display: block; }
+  .ty-hype .ty-value-dot { display: none; }
+  .ty-hype .ty-proof { letter-spacing: 0; text-wrap: balance; }
+  .ty-hype-cta, .ty-hype .ty-cal { display: block; align-self: stretch; }
+  .ty-hype .ty-cal > summary { width: 100%; min-width: 0; }
+  .ty-remind { padding: 24px 0 26px; scroll-margin-top: 64px; }
+  .ty-remind-title { font-size: 24px; }
+  .ty-remind-fields > div:nth-child(1), .ty-remind-fields > div:nth-child(2), .ty-remind-fields > .ty-submit { grid-column: span 12; }
+  .ty-remind-fields > .ty-submit { height: 48px; }
+  .ty[data-mode="live"] .ty-proof { order: 2; }
   .ty-how { padding: 16px 0; }
   .ty-how-steps { grid-template-columns: 1fr; gap: 12px; }
   .ty-prizes { padding: 24px 0 24px; scroll-margin-top: 64px; }
@@ -3240,18 +3282,15 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-entrybar-btn { width: 100%; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
   .slim-row { justify-content: center; text-align: center; }
 }
-/* Notify-me on phones (Ben, 2026-11-09): less above the form. The label, headline, countdown, prize
-   line and the form stay; the gift line inside the form stays. Desktop unchanged. */
+/* Before entries open, on phones: the gift line steps aside (Ben, 2026-11-09), so the first screen is
+   the label, headline, countdown, prize line, the calendar button and the link to the prizes. */
 @media (max-width: 639px) {
-  .ty[data-mode="notify_me"] .ty-gift-tease,
-  .ty[data-mode="notify_me"] .ty-sub,
-  .ty[data-mode="notify_me"] .ty-proof,
-  .ty[data-mode="notify_me"] .ty-count-label { display: none; }
+  .ty[data-mode="notify_me"] .ty-gift-tease { display: none; }
 }
 @media (max-width: 359px) {
   .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
-  /* Below 360 the phone's label needs the full row. */
-  .ty-fields-phone > div:nth-child(4), .ty-fields-phone > div:nth-child(5) { grid-column: span 12; }
+  /* Below 360 the phone and the ZIP each take the full row. */
+  .ty-fields-live > div:nth-child(4), .ty-fields-live > div:nth-child(5) { grid-column: span 12; }
   .ty-h1-years { font-size: 60px; }
   .ty-h1-rest { font-size: 30px; }
   /* The ladder rows at 320: the grand row's label stays on the day's line and its words fit two lines. */

@@ -19,8 +19,10 @@ export type PersonRow = {
   city: string | null;
   nearest_center: Center | null;
   is_existing_client: boolean;
-  /** "Best phone if you win" (migration 0018), "(615) 555-0134"; optional.
-   *  Undefined until 0018 is applied. */
+  /** The entry form's phone (migration 0018), required since 2026-11-10 and
+   *  stored as E.164, "+16155550134". Null on rows from before that (it
+   *  was optional, and formatted "(615) 555-0134"). For staff to call a
+   *  winner; never texted. Undefined until 0018 is applied. */
   phone?: string | null;
   age_confirmed: boolean;
   rules_accepted_at: string | null;
@@ -44,9 +46,13 @@ export type NotifyRow = {
   created_at: string;
   email: string;
   email_display: string;
-  first_name: string;
-  last_name: string;
-  zip: string;
+  /** A reminder is an email address and, if given, a first name (Ben,
+   *  2026-11-10; migration 0021). Rows from the earlier, longer form hold
+   *  all three; a database without 0021 holds "" / "" / "00000" for the
+   *  ones never given (people.ts REMINDER_BLANK). */
+  first_name: string | null;
+  last_name: string | null;
+  zip: string | null;
   is_existing_client: boolean;
   age_confirmed: boolean;
   rules_accepted_at: string | null;

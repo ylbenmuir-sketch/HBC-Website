@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import PageSchema from "@/components/PageSchema";
-import TenYearsView, { FormCard, MessageCard, WinnersCard, YoureInCard } from "@/components/giveaway/TenYearsView";
+import TenYearsView, { FormCard, MessageCard, ReminderCard, WinnersCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { SCHEDULE, entryPageMode, giftRevealed, pageMode, spokenCentralDateTime } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
@@ -20,8 +20,10 @@ import { pageMetadata } from "@/lib/pages";
  * Four modes, switched by the config clock, never by a deploy:
  *   hidden     before Nov 9      → engine on: the real notify-me page, but
  *                                  noindex, robots-disallowed, no banner
- *   notify_me  Nov 9 – Nov 15    → the full form (so the Sunday email can
- *                                  be one tap), the prizes, three questions
+ *   notify_me  Nov 9 – Nov 15    → a hype page (Ben, 2026-11-10): countdown,
+ *                                  "Add to my calendar", the prizes, and a
+ *                                  light reminder (an email address) that
+ *                                  cannot be taken for an entry
  *   live       Nov 15 – Nov 21   → the same form, now entering; the prizes
  *                                  row marks the next drawing and the drawn
  *   closed     Nov 21 – Dec 5    → the card becomes the winners list
@@ -93,7 +95,8 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
     if (sp.sent && mode === "notify_me") card = <MessageCard title={t.onListTitle} message={t.notifySent(spokenCentralDateTime(SCHEDULE.entriesOpen.at))} ok />;
     else if (sp.sent) card = <YoureInCard message={sp.eb === "1" ? t.liveSentEarlyBird : t.liveSent} shareUrl={shareOf(sp.share)} back />;
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
-    else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
+    else if (mode === "notify_me") card = <ReminderCard error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
+    else card = <FormCard now={now} refCode={ref} error={error} errorCode={sp.error ?? null} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
   } else {
     // The gift is named only after the reveal on the REAL clock — never the showcase's stage "now" (P0-2).
     // P1-3: the claim button carries a code the visitor arrived with (the reveal email's links go straight to /contact).
