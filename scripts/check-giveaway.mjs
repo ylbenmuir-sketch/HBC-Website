@@ -401,6 +401,8 @@ try {
     expect("the on-the-list email has an unsubscribe link and the List-Unsubscribe headers", Boolean(earlyUnsub) && Boolean(mail[0]?.body?.headers?.["List-Unsubscribe"]) && mail[0]?.body?.headers?.["List-Unsubscribe-Post"] === "List-Unsubscribe=One-Click", JSON.stringify(mail[0]?.body?.headers ?? {}));
     const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), EARLY);
     expect("…and the card after it says 'You're on the list.', not 'Check your inbox'", /You(?:&#x27;|')re on the list\./.test(card.text) && !/Check your inbox/.test(card.text));
+    // Ben, 2026-11-10: the stand-out box that points to Spam / Promotions.
+    expect("…with the 'Check your Spam or Promotions folder.' box under it", /data-spam-note/.test(card.text) && /Check your Spam or Promotions folder\./.test(card.text));
   }
   for (const [m, dm] of [["live", "live"], ["closed", "closed"], ["thanks", "thank_you"]]) {
     const pg = await get(`/10years?mode=${m}`);
@@ -1038,6 +1040,7 @@ async function engineOffChecks() {
   expect("off: the live form → 303 to ?mode=live&sent=1", liveForm.status === 303 && /\/10years\?mode=live&sent=1$/.test(liveForm.location), `${liveForm.status} ${liveForm.location}`);
   const sent = await get("/10years?mode=live&sent=1");
   expect("off: the success message shows on the same stage", sent.status === 200 && sent.text.includes('data-mode="live"') && /You(?:&#x27;|')re in\./.test(sent.text));
+  expect("off: the Spam / Promotions box is for the reminder signup only, not the live card", !/data-spam-note/.test(sent.text) && (await get("/10years?mode=notify&sent=1")).text.includes("data-spam-note"));
   expect("off: no email was sent", emails().length === before, `${emails().length - before} sent`);
   {
     const off = await stats();

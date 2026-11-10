@@ -216,11 +216,17 @@ export function FormCard({ mode, now, refCode, error, showcase = null, utm = {} 
 }
 
 /** A title and one line — after a submit, or a verify/tap that needs no share link. */
-export function MessageCard({ title, message, ok, back = false }: { title: string; message: string; ok?: boolean; back?: boolean }) {
+export function MessageCard({ title, message, ok, back = false, note }: { title: string; message: string; ok?: boolean; back?: boolean; note?: { title: string; line: string } }) {
   return (
     <div className="ty-message" role="status" data-ok={ok === undefined ? undefined : ok ? "1" : "0"}>
       <h2 className="ty-card-title">{title}</h2>
       <p className="ty-card-line">{message}</p>
+      {note && (
+        <div className="ty-spam-note" data-spam-note>
+          <p className="ty-spam-note-title">{note.title}</p>
+          <p className="ty-spam-note-line">{note.line}</p>
+        </div>
+      )}
       {back && (
         <a className="ty-textlink" href="/10years#enter">
           {t.backToForm}

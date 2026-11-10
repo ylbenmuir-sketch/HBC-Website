@@ -363,6 +363,9 @@ export const PAGES = {
     /** The card after a submit (Ben, 2026-11-08: the submit IS the signup or
      *  the entry; the email that follows is a copy, not a step). */
     notifySent: (entriesOpenSpoken: string) => D(`Entries open ${entriesOpenSpoken}. Come back then to enter. We'll also email you a reminder with a one-tap entry button.`),
+    /** The stand-out box under it (Ben, 2026-11-10): the on-the-list email can land in Spam or Promotions. */
+    notifySpamTitle: D("Check your Spam or Promotions folder."),
+    notifySpamLine: D("We just emailed you. If it landed there, mark it “Not spam” or move it to your inbox so Sunday's reminder reaches you."),
     liveSent: D("You're entered in every drawing still to come. We've emailed you a copy with your share link."),
     liveSentEarlyBird: D("You're entered in every drawing still to come, with an early-bird bonus entry. We've emailed you a copy with your share link."),
     alreadyNotifyTitle: D("You're on the list."),

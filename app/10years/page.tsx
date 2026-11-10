@@ -90,7 +90,7 @@ export default async function TenYearsPage({ searchParams }: { searchParams: Pro
   let card;
   if (mode === "notify_me" || mode === "live") {
     // The submit is the signup or the entry (Ben, 2026-11-08); the card says so, with the share link at once on an entry.
-    if (sp.sent && mode === "notify_me") card = <MessageCard title={t.onListTitle} message={t.notifySent(spokenCentralDateTime(SCHEDULE.entriesOpen.at))} ok />;
+    if (sp.sent && mode === "notify_me") card = <MessageCard title={t.onListTitle} message={t.notifySent(spokenCentralDateTime(SCHEDULE.entriesOpen.at))} ok note={{ title: t.notifySpamTitle, line: t.notifySpamLine }} />;
     else if (sp.sent) card = <YoureInCard message={sp.eb === "1" ? t.liveSentEarlyBird : t.liveSent} shareUrl={shareOf(sp.share)} back />;
     else if (sp.already) card = mode === "notify_me" ? <MessageCard title={t.alreadyNotifyTitle} message={t.notifyAlready} /> : <MessageCard title={t.alreadyLiveTitle} message={t.liveAlready} />;
     else card = <FormCard mode={mode} now={now} refCode={ref} error={error} showcase={showcase?.param ?? null} utm={utmOf(sp)} />;
