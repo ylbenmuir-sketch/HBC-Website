@@ -15,6 +15,8 @@
  *                derived today; anything that is not "instagram" is null,
  *                not a free string.
  *
+ *   hook         /start's headline code (`h`), a letter and a digit or two.
+ *
  * First touch wins. The tags are read on the first page of the visit and
  * kept in sessionStorage (one tab, one visit, gone when the tab closes), so a
  * visitor who lands on /start and then taps through to /contact still saves
@@ -36,12 +38,26 @@ export type UtmField = (typeof UTM_FIELDS)[number];
 export const AD_FIELDS = ["utm_term", "fbclid", "gclid"] as const;
 export type AdField = (typeof AD_FIELDS)[number];
 
+/**
+ * The ad headline the visitor landed on (Ben, 2026-11-11; migration 0022):
+ * /start's `h` parameter, saved on the lead as `hook`. A short CODE and
+ * nothing else — one letter then one or two digits (g1, k2, a3) — so a word
+ * can never ride in on it. Anything else is null.
+ */
+export function cleanHook(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim().toLowerCase();
+  return /^[a-z][0-9]{1,2}$/.test(v) ? v : null;
+}
+
 export const LEAD_SOURCES = ["instagram"] as const;
 export type LeadSourceTag = (typeof LEAD_SOURCES)[number];
 
 export type Attribution = Record<UtmField, string | null> &
   Record<AdField, string | null> & {
     lead_source: LeadSourceTag | null;
+    /** /start's headline code (`h` on the URL), or null. */
+    hook?: string | null;
     /** When the first touch was recorded (ms) — Meta's fbc needs it. Never saved on the row. */
     landed_at?: number | null;
   };
@@ -96,11 +112,11 @@ export function isLeadSource(value: unknown): value is LeadSourceTag {
 export function attributionFrom(search: string, referrer: unknown): Attribution {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const utm = Object.fromEntries(UTM_FIELDS.map((f) => [f, cleanUtm(params.get(f))])) as Record<UtmField, string | null>;
-  return { ...utm, ...adFieldsFrom((f) => params.get(f)), lead_source: leadSourceFor(utm.utm_source, referrer) };
+  return { ...utm, ...adFieldsFrom((f) => params.get(f)), lead_source: leadSourceFor(utm.utm_source, referrer), hook: cleanHook(params.get("h")) };
 }
 
 export function hasAttribution(a: Attribution): boolean {
-  return UTM_FIELDS.some((f) => a[f] !== null) || AD_FIELDS.some((f) => a[f] != null) || a.lead_source !== null;
+  return UTM_FIELDS.some((f) => a[f] !== null) || AD_FIELDS.some((f) => a[f] != null) || a.lead_source !== null || a.hook != null;
 }
 
 /** The stored attribution, or null; anything malformed reads as nothing. */
@@ -111,7 +127,7 @@ export function parseStored(raw: unknown): Attribution | null {
     if (!v || typeof v !== "object") return null;
     const utm = Object.fromEntries(UTM_FIELDS.map((f) => [f, cleanUtm(v[f])])) as Record<UtmField, string | null>;
     const landedAt = typeof v.landed_at === "number" && Number.isFinite(v.landed_at) ? v.landed_at : null;
-    return { ...utm, ...adFieldsFrom((f) => v[f]), lead_source: isLeadSource(v.lead_source) ? v.lead_source : null, landed_at: landedAt };
+    return { ...utm, ...adFieldsFrom((f) => v[f]), lead_source: isLeadSource(v.lead_source) ? v.lead_source : null, hook: cleanHook(v.hook), landed_at: landedAt };
   } catch {
     return null;
   }
@@ -147,12 +163,17 @@ export function attributionForSubmit(search: string, referrer: unknown, storage:
   } catch {
     a = null;
   }
-  if (!a || !hasAttribution(a)) a = attributionFrom(search, referrer);
+  const here = attributionFrom(search, referrer);
+  if (!a || !hasAttribution(a)) a = here;
+  // A first touch that carried no headline code (the visit began on another
+  // page) still saves the code of the page the form is sent from.
+  else if (!a.hook && here.hook) a = { ...a, hook: here.hook };
   if (!hasAttribution(a)) return {};
   const out: Partial<Attribution> = {};
   for (const f of UTM_FIELDS) if (a[f]) out[f] = a[f];
   for (const f of AD_FIELDS) if (a[f]) out[f] = a[f];
   if (a.lead_source) out.lead_source = a.lead_source;
+  if (a.hook) out.hook = a.hook;
   if (a.landed_at) out.landed_at = a.landed_at;
   return out;
 }

@@ -36,7 +36,7 @@ import {
   guardEnforced,
   isInternalSubmit,
 } from "@/lib/form-guard";
-import { AD_FIELDS, UTM_FIELDS, cleanClickId, cleanUtm, isLeadSource } from "@/lib/attribution";
+import { AD_FIELDS, UTM_FIELDS, cleanClickId, cleanHook, cleanUtm, isLeadSource } from "@/lib/attribution";
 import { metaContext, sendMetaEvent } from "@/lib/meta-capi";
 import { isMetaEventId } from "@/lib/meta";
 import { SITE_URL } from "@/lib/site-config";
@@ -106,6 +106,8 @@ type Payload = {
   utm_campaign?: unknown;
   utm_content?: unknown;
   lead_source?: unknown;
+  /** Migration 0022 (2026-11-11): /start's headline code (`h`). */
+  hook?: unknown;
   /** Migration 0020 (2026-11-09): utm_term and the ad click ids. */
   utm_term?: unknown;
   fbclid?: unknown;
@@ -219,6 +221,17 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       values = rest;
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
+    // hook (migration 0022, 2026-11-11) may not exist yet: the lead is
+    // saved without it and the log says what to apply.
+    // Checked again after the 0020/0019 retries below: the database names
+    // one missing column at a time, in no promised order.
+    const withoutHook = async () => {
+      if (!(error && "hook" in values && isMissingColumn(error, "hook"))) return;
+      console.error("[destination: supabase] hook column missing — migration 0022 is not applied; saving the lead without it.");
+      values = Object.fromEntries(Object.entries(values).filter(([k]) => k !== "hook"));
+      ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
+    };
+    await withoutHook();
     // utm_term / fbclid / gclid (migration 0020, 2026-11-09) may not exist
     // yet: the lead is saved without them and the log says what to apply.
     if (error && AD_FIELDS.some((c) => c in values && isMissingColumn(error!, c))) {
@@ -234,6 +247,7 @@ async function saveRow(values: Record<string, unknown>): Promise<string | null> 
       values = Object.fromEntries(Object.entries(values).filter(([k]) => !([...ATTRIBUTION_COLUMNS, ...AD_FIELDS] as readonly string[]).includes(k)));
       ({ data, error } = await supabase.from("consultation_requests").insert(values).select("id").single());
     }
+    await withoutHook();
     if (error && "giveaway_code" in values && isMissingColumn(error, "giveaway_code")) {
       console.error("[destination: supabase] giveaway_code column missing — migration 0017 is not applied; saving the lead without it.");
       const { giveaway_code: _gc, ...rest } = values;
@@ -718,6 +732,9 @@ export async function POST(request: Request) {
   // Migration 0020: utm_term cleaned like the others; the click ids keep their case.
   const utmTerm = cleanUtm(body.utm_term);
   if (utmTerm) attribution.utm_term = utmTerm;
+  // Migration 0022: /start's headline code — a letter and a digit or two, or nothing.
+  const hook = cleanHook(body.hook);
+  if (hook) attribution.hook = hook;
   for (const field of ["fbclid", "gclid"] as const) {
     const v = cleanClickId(body[field]);
     if (v) attribution[field] = v;

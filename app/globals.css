@@ -3363,21 +3363,78 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .review-btn { width: 100%; }
 }
 
-/* ── /start, the Instagram landing page (Ben, 2026-11-09) ─────────────
-   The compact /contact rhythm, tighter: the headline, two sentences and the
-   proof line, then step one. Measured at 390×844 (see the note in
-   app/start/page.tsx). */
-.start-page .page-hero.compact { padding: 22px 0 14px; }
-.start-page .page-hero.compact h1 { margin: 0 auto 10px; }
-.start-page .sub { font-size: 16.5px; line-height: 1.5; }
-.start-proof { margin: 12px auto 0; text-align: center; font-size: 13.5px; }
-.start-page .sec.sec-form { padding-top: 18px; }
-.start-ways { margin-top: 28px; }
+/* ── /start, the ad landing page (Ben, 2026-11-11; the Instagram page of
+   2026-11-09 before it) ──────────────────────────────────────────────
+   Desktop: the pitch (headline, sub, what you get, the guarantee) beside
+   the form. Phone: one column in that order, cut tight so the form card
+   starts on the first screen (measured at 390×844 — app/start/page.tsx).
+   The header is the logo and one phone link; the footer is short. */
+header.site.start-header .logo { cursor: default; }
+.start-tel { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; font-size: 15px; font-weight: 600; color: var(--navy); text-decoration: none; white-space: nowrap; letter-spacing: 0.01em; }
+.start-tel svg { flex: none; color: var(--sage-deep); }
+.start-top { padding: 40px 0 28px; }
+.start-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 56px; align-items: start; }
+.start-pitch h1 { font-size: clamp(34px, 3.6vw, 50px); line-height: 1.08; margin: 6px 0 16px; max-width: 16ch; }
+.start-sub { margin: 0; font-size: 18px; line-height: 1.5; color: var(--ink); max-width: 46ch; }
+.start-values { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 10px; max-width: 50ch; }
+.start-values li { position: relative; padding-left: 28px; font-size: 16px; line-height: 1.45; color: var(--ink); }
+.start-values li::before { content: ""; position: absolute; left: 3px; top: 0.3em; width: 12px; height: 7px; border-left: 2px solid var(--sage-deep); border-bottom: 2px solid var(--sage-deep); transform: rotate(-45deg); }
+.start-guarantee { margin: 24px 0 0; padding: 16px 18px; max-width: 50ch; background: #fff; border: 1px solid var(--gold-soft); border-left: 3px solid var(--gold); border-radius: 4px; font-size: 15.5px; line-height: 1.5; color: var(--navy); font-weight: 500; }
+.start-form-heading { margin: 0 0 14px; font-family: var(--serif); font-size: 26px; line-height: 1.15; font-weight: 600; color: var(--navy); }
+.start-page .form-card { padding: 26px 30px !important; }
+.start-ways { margin-top: 18px; }
+.start-address { margin: 0; text-align: center; font-size: 14.5px; line-height: 1.5; color: var(--slate); font-weight: 500; }
 .start-ways .contact-ways { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.start-ways .contact-ways-line { margin: 0; }
-.start-chips { margin-top: 28px; text-align: center; }
-.start-chips .hero-chips-list { justify-content: center; }
+.start-ways .contact-ways-line { margin: 14px 0 0; }
+.start-more { padding: 28px 0 64px; }
+.start-more-col { max-width: 760px; display: grid; gap: 44px; }
+.start-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.start-steps li { display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.4; color: var(--ink); font-weight: 500; }
+.start-step-n { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--gold); font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--navy); }
+.start-reviews { display: grid; gap: 18px; }
+.start-review { margin: 0; padding: 20px 22px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+.start-stars { color: var(--gold); font-size: 15px; letter-spacing: 2px; line-height: 1; }
+.start-review blockquote { margin: 10px 0 10px; font-size: 16px; line-height: 1.55; color: var(--ink); }
+.start-review figcaption { font-size: 13.5px; color: var(--slate); font-weight: 500; }
+.start-proof { margin: 4px 0 0; text-align: center; }
+.start-vary { margin: -10px 0 0; text-align: center; font-size: 12.5px; color: var(--slate); }
+.start-faq h2 { margin: 0 0 8px; font-size: 28px; }
+.start-faq details { border-bottom: 1px solid var(--line); }
+.start-faq summary { cursor: pointer; padding: 15px 28px 15px 0; font-size: 16.5px; font-weight: 600; color: var(--navy); list-style: none; position: relative; min-height: 44px; }
+.start-faq summary::-webkit-details-marker { display: none; }
+.start-faq summary::after { content: "+"; position: absolute; right: 4px; top: 12px; font-size: 22px; font-weight: 400; color: var(--sage-deep); }
+.start-faq details[open] summary::after { content: "–"; }
+.start-faq details p { margin: 0 0 16px; font-size: 15.5px; line-height: 1.6; color: var(--ink); max-width: 62ch; }
+.start-back { margin: 0; text-align: center; }
+footer.site.start-footer { padding: 22px 0 26px; font-size: 12.5px; line-height: 1.6; }
+.start-footer p { margin: 0; max-width: 92ch; }
+.start-footer-id { color: var(--ink); }
+footer.site.start-footer a { display: inline; min-height: 0; text-decoration: underline; text-underline-offset: 2px; padding: 6px 0; }
+.start-footer-disclaimer { margin-top: 10px !important; color: var(--slate); }
+@media (max-width: 960px) {
+  .start-grid { grid-template-columns: 1fr; gap: 22px; }
+  .start-form { max-width: 560px; width: 100%; margin: 0 auto; }
+  .start-pitch { max-width: 560px; width: 100%; margin: 0 auto; }
+  .start-pitch h1 { max-width: none; }
+}
 @media (max-width: 767px) {
-  .start-page .page-hero.compact { padding: 14px 0 10px; }
-  .start-page .sub { font-size: 15.5px; }
+  header.site.start-header .nav { height: 56px; }
+  .start-top { padding: 12px 0 22px; }
+  .start-grid { gap: 14px; }
+  .start-pitch h1 { font-size: 29px; line-height: 1.1; margin: 0 0 8px; }
+  .start-sub { font-size: 15.5px; line-height: 1.42; }
+  .start-values { margin-top: 12px; gap: 5px; }
+  .start-values li { font-size: 14px; line-height: 1.35; padding-left: 24px; }
+  .start-guarantee { margin-top: 12px; padding: 10px 12px; font-size: 13.5px; line-height: 1.4; }
+  .start-form-heading { font-size: 21px; margin-bottom: 10px; }
+  .start-page .form-card { padding: 14px 16px 14px !important; }
+  .start-more { padding: 14px 0 44px; }
+  .start-more-col { gap: 32px; }
+  .start-steps { grid-template-columns: 1fr; gap: 12px; }
+  .start-steps li { flex-direction: row; align-items: center; gap: 12px; font-size: 15.5px; }
+  .start-step-n { flex: none; width: 30px; height: 30px; font-size: 17px; }
+  .start-review { padding: 16px 16px; }
+  .start-review blockquote { font-size: 15px; }
+  .start-faq h2 { font-size: 24px; }
+  .start-back .btn { width: 100%; }
 }

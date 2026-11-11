@@ -25,6 +25,8 @@ import {
 } from "@/lib/lead-options";
 import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
 import { attributionForSubmit } from "@/lib/attribution";
+import { START_OFFER } from "@/lib/start";
+import { setStartCenter } from "@/lib/start-center";
 import { newMetaEventId } from "@/lib/meta";
 import { trackMetaLead } from "@/lib/meta-pixel";
 import type { Video } from "@/lib/videos";
@@ -279,6 +281,7 @@ export default function ContactForm({
   video,
   giveaway = null,
   variant = "default",
+  hook = null,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -296,6 +299,9 @@ export default function ContactForm({
    * same form, so the lead is the same lead.
    */
   variant?: "default" | "start";
+  /** /start's headline code, for the no-JavaScript post only (the JSON
+   *  submit reads it from the visit's first touch — lib/attribution.ts). */
+  hook?: string | null;
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -355,6 +361,14 @@ export default function ContactForm({
       if (match === CONCIERGE_CHOICE) setShowConcierge(true);
     }
   }, []);
+
+  // /start's header phone, Call and Text buttons and address line follow
+  // the center picked here (lib/start-center.ts). "Not sure" is Nashville.
+  useEffect(() => {
+    if (variant !== "start") return;
+    setStartCenter(preferredCenter === "Murfreesboro" ? "murfreesboro" : preferredCenter ? "nashville" : null);
+    return () => setStartCenter(null);
+  }, [variant, preferredCenter]);
 
   // The page token for step one's POST (lib/form-token-client.ts — the spam
   // guard), fetched now so it is old enough by the time she sends.
@@ -583,7 +597,7 @@ export default function ContactForm({
         heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll reach out soon.</>}
       >
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
-        <p className="done-line">Free call, no obligation.</p>
+        <p className="done-line">{variant === "start" ? START_OFFER.underButton : "Free call, no obligation."}</p>
         <p className="done-line done-phones" data-link-location="confirmation">
           Want to talk now?{" "}
           {lines.map(({ name: center, phone: line }, i) => (
@@ -730,7 +744,14 @@ export default function ContactForm({
       onClick={onFirstInteraction}
       noValidate
     >
-      <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
+      {variant === "start" ? (
+        // /start (Ben, 2026-11-11): the offer by name and price, an H2 so it
+        // shows on a phone, where the eyebrow is hidden.
+        <h2 className="start-form-heading">{START_OFFER.formHeading}</h2>
+      ) : (
+        <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
+      )}
+      {variant === "start" && hook && <input type="hidden" name="hook" value={hook} />}
       {/* For the no-JavaScript post only (see the file comment): the JSON
           submit builds its own body. The center mirrors the chips' state;
           the wording is the same constant the JSON path sends. */}
@@ -934,13 +955,19 @@ export default function ContactForm({
         type="submit"
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending…" : "Send My Request"}
+        {status === "submitting" ? "Sending…" : variant === "start" ? START_OFFER.button : "Send My Request"}
       </button>
-      <p className="micro" style={{ textAlign: "center" }}>
-        No payment details, no intake forms today. We never share your
-        information, and there&rsquo;s no obligation after we talk.{" "}
-        <Link href="/privacy-policy">What happens to what you tell us</Link>.
-      </p>
+      {variant === "start" ? (
+        <p className="micro" style={{ textAlign: "center" }}>
+          {START_OFFER.underButton}
+        </p>
+      ) : (
+        <p className="micro" style={{ textAlign: "center" }}>
+          No payment details, no intake forms today. We never share your
+          information, and there&rsquo;s no obligation after we talk.{" "}
+          <Link href="/privacy-policy">What happens to what you tell us</Link>.
+        </p>
+      )}
     </form>
   );
 }

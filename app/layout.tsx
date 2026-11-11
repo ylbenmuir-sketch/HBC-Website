@@ -19,6 +19,8 @@ import GiveawayBanner from "@/components/giveaway/GiveawayBanner";
 import { bannerScript } from "@/lib/giveaway/banner";
 import { PAGES as GIVEAWAY_PAGES } from "@/lib/giveaway/copy";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
+import { startCenters } from "@/lib/start-centers";
+import StartFooter from "@/components/StartFooter";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
 import "./globals.css";
@@ -149,6 +151,10 @@ export const metadata: Metadata = {
   },
 };
 
+/** /start's header numbers, one per open center (lib/start-centers.ts). */
+const START_CENTERS = startCenters();
+const START_PHONES = { nashville: START_CENTERS.nashville.phone, murfreesboro: START_CENTERS.murfreesboro.phone };
+
 export const viewport: Viewport = {
   themeColor: "#fbf8f1",
   viewportFit: "cover",
@@ -211,11 +217,11 @@ export default function RootLayout({
               route has exactly one block. See lib/schema.ts. */}
           <RevealOnScroll />
           {giveawayEngineEnabled() && <GiveawayBanner copy={GIVEAWAY_PAGES.banner} />}
-          <Header />
+          <Header startPhones={START_PHONES} />
           <main id="main" tabIndex={-1}>
             {children}
           </main>
-          <RouteFooter full={<Footer />} slim={<SlimFooter />} />
+          <RouteFooter full={<Footer />} slim={<SlimFooter />} start={<StartFooter />} />
           {/* Site assistant — OFF. Renders only with
               NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
               .env.example, not in draft mode, not in dev. Wired in so Ben can

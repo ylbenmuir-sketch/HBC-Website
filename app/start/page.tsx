@@ -1,96 +1,136 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
-import StartChips from "@/components/StartChips";
+import StartCenterDetails from "@/components/StartCenterDetails";
 import { getVideo } from "@/lib/videos";
-import { locationPhone, locations } from "@/lib/locations";
-import { PHONE_DISPLAY, PHONE_TEL, PROOF_LINE_SHORT, SHOW_PHONE, SITE_NAME } from "@/lib/site-config";
+import { cleanHook } from "@/lib/attribution";
+import { EXPERIENCES_DISCLAIMER, PROOF_LINE_SHORT, SHOW_PHONE, SITE_NAME, googleReviewNamed } from "@/lib/site-config";
+import { START_FAQS, START_OFFER, START_REVIEWERS, startHook } from "@/lib/start";
+import { startCenters } from "@/lib/start-centers";
 
 /**
- * /start — the Instagram landing page (Ben, 2026-11-09; Instagram referral
- * sessions went from 2 to 18 in a week). The bio link is
+ * /start — the ad landing page (Ben, 2026-11-11; it began on 2026-11-09 as
+ * the Instagram bio link's page, and that link still lands here). Cold Meta
+ * and Google ad traffic, one job: the request form.
  *
- *   https://harmonizedbraincenterstn.com/start?utm_source=instagram&utm_medium=social&utm_campaign=bio
+ *   /start?h=k1&center=murfreesboro&utm_source=…
  *
- * One short, phone-first page: the headline, two sentences, the proof line,
- * then the contact form's step one — the same component /contact renders,
- * same route, same funnel events and Key event — in its "start" variant
- * (no referral field), so step one sits as high on a 390×844 screen as the
- * headline allows. Call and Text and three concern chips come after the
- * form, not before it. The lead saves with lead_source "instagram" and the
- * utm tags of the first page (lib/attribution.ts, migration 0019), whether
- * the form is sent here or later on /contact.
+ * - `h` picks the headline (lib/start.ts). It is a code, never a word, and
+ *   the <title> and description below are the same for every variant: the
+ *   page address and title are what the Meta pixel and GA see, and they
+ *   must not say what a visitor is dealing with. The code is saved on the
+ *   lead as `hook` (lib/attribution.ts, migration 0022).
+ * - The offer is the "Brain Map Session", worded in one constant
+ *   (START_OFFER). The form is /contact's own component in its "start"
+ *   variant: same route, same spam guard, same funnel events and Key event.
+ * - `center=murfreesboro`, or the Murfreesboro chip, switches the header
+ *   number, the Call and Text buttons and the address line to that center
+ *   (lib/start-center.ts); otherwise Nashville.
+ * - No exits: the header is the logo and the phone (components/Header.tsx),
+ *   no 10-year banner (lib/giveaway/banner.ts), a short footer
+ *   (components/StartFooter.tsx), no phone action bar, no assistant, and no
+ *   link to any concern page.
  *
- * Hidden from search the way /review is: noindex here and by header
- * (next.config.ts), not in the sitemap, in no menu — it exists for one
- * link. Not disallowed in robots.txt (see /review). The phone action bar and
- * the assistant stay off it, like /contact (lib/site-config.ts): the page
- * is the form. No JSON-LD: not indexable.
+ * Rendered per request (it reads the query), so the right headline and
+ * number are in the first HTML — no swap after load. Hidden from search the
+ * way /review is: noindex here and by header (next.config.ts), not in the
+ * sitemap, in no menu. No JSON-LD: not indexable.
  */
 export const metadata: Metadata = {
-  title: "Feel like yourself again",
-  description: `Tell ${SITE_NAME} what's going on and we'll reach out. LENS neurofeedback in Nashville & Murfreesboro.`,
+  title: "Book a Brain Map Session",
+  description: `Request a Brain Map Session at ${SITE_NAME} in Nashville or Murfreesboro. We'll reach out to pick a time.`,
   robots: { index: false, follow: false, nocache: true },
 };
 
-/** The first-visit video the form shows once the call is requested. */
+/** The first-visit video the form shows once the request is sent. */
 const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
 
-export default function StartPage() {
-  const centerPhones = locations
-    .filter((l) => !l.comingSoon)
-    .flatMap((l) => {
-      const phone = locationPhone(l);
-      return phone ? [{ name: l.name, phone }] : [];
-    });
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+export default async function StartPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const h = one(params.h);
+  const hook = startHook(h);
+  const initialCenter = one(params.center)?.trim().toLowerCase() === "murfreesboro" ? "murfreesboro" : "nashville";
+  const centers = startCenters();
+  const centerPhones = [centers.nashville, centers.murfreesboro].map((c) => ({ name: c.name, phone: c.phone }));
+  const reviews = START_REVIEWERS.flatMap((r) => {
+    const t = googleReviewNamed(r.firstName, r.center);
+    return t ? [t] : [];
+  });
+
   return (
     <div className="desk-compact start-page">
-      <section className="page-hero center compact">
-        <div className="wrap rv">
-          <h1>Feel like yourself again</h1>
-          <p className="sub" style={{ maxWidth: "52ch" }}>
-            LENS neurofeedback is passive and brief &mdash; nothing to
-            practice, nothing a child has to get right. Tell us what&rsquo;s
-            going on and a real person reaches out.
-          </p>
-          <p className="proof-line start-proof">{PROOF_LINE_SHORT}</p>
+      <section className="start-top">
+        <div className="wrap start-grid">
+          <div className="start-pitch">
+            <h1>{hook.headline}</h1>
+            <p className="start-sub">{hook.sub}</p>
+            <ul className="start-values">
+              {START_OFFER.values.map((v) => (
+                <li key={v}>{v}</li>
+              ))}
+            </ul>
+            <p className="start-guarantee">{START_OFFER.guarantee}</p>
+          </div>
+
+          <div className="start-form" id="send-a-message">
+            <ContactForm centerPhones={centerPhones} video={FIRST_VISIT_VIDEO} variant="start" hook={cleanHook(h)} />
+            <StartCenterDetails centers={centers} initial={initialCenter} showPhone={SHOW_PHONE} />
+          </div>
         </div>
       </section>
 
-      <section className="sec sec-form" id="send-a-message">
-        <div className="wrap form-solo">
-          <ContactForm centerPhones={centerPhones} video={FIRST_VISIT_VIDEO} variant="start" />
-          {/* Call and Text, the /contact row, under the form (location
-              local_page for contact_link_click and the tap log). */}
-          {SHOW_PHONE && (
-            <div className="start-ways" data-link-location="local_page">
-              <p className="contact-ways-line">Rather talk now?</p>
-              <div className="contact-ways">
-                <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span className="contact-way-title">Call us</span>
-                </a>
-                <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text ${PHONE_DISPLAY}`}>
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span className="contact-way-title">Text us</span>
-                </a>
-              </div>
+      <section className="start-more">
+        <div className="wrap start-more-col">
+          <ol className="start-steps">
+            {START_OFFER.steps.map((s, i) => (
+              <li key={s}>
+                <span className="start-step-n" aria-hidden="true">
+                  {i + 1}
+                </span>
+                {s}
+              </li>
+            ))}
+          </ol>
+
+          {reviews.length > 0 && (
+            <div className="start-reviews">
+              {reviews.map((t) => (
+                <figure key={t.firstName} className="start-review">
+                  <div className="start-stars" role="img" aria-label="5 out of 5 stars">
+                    ★★★★★
+                  </div>
+                  <blockquote>{t.text}</blockquote>
+                  <figcaption>
+                    {t.firstName}
+                    {t.lastInitial ? ` ${t.lastInitial}` : ""} &middot; Google review
+                  </figcaption>
+                </figure>
+              ))}
+              <p className="proof-line start-proof">{PROOF_LINE_SHORT}</p>
+              <p className="start-vary">{EXPERIENCES_DISCLAIMER}</p>
             </div>
           )}
-          <StartChips />
+
+          <div className="start-faq">
+            <h2>Questions</h2>
+            {START_FAQS.map((f) => (
+              <details key={f.q}>
+                <summary>{f.q}</summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
+
+          <p className="start-back">
+            <a className="btn btn-primary" href="#send-a-message">
+              {START_OFFER.button}
+            </a>
+          </p>
         </div>
       </section>
     </div>

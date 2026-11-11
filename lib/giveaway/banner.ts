@@ -1,6 +1,6 @@
 /**
  * The site-wide 10-year banner (fix list rev 2, P0-7): a slim bar at the
- * top of every page but /10years* and /admin*, shown only while the giveaway
+ * top of every page but /10years*, /admin* and /start, shown only while the giveaway
  * engine is on, its copy following the config clock:
  *
  *   notify   Mon Nov 9 12:00 AM  – Sun Nov 15 6:00 PM CT
@@ -37,7 +37,8 @@ export const BANNER_BOUNDS: readonly [number, number, number, number] = [
 
 /** Routes the bar never shows on. */
 export function bannerExcludedPath(path: string): boolean {
-  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/");
+  // /start (2026-11-11): the ad landing page has one job and no exits.
+  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/") || path === "/start" || path.startsWith("/start/");
 }
 
 export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b: readonly number[] = BANNER_BOUNDS): BannerMode {
@@ -55,7 +56,7 @@ export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b:
  * ES5, with the bounds baked in from config. Any error leaves the bar off.
  */
 export function bannerScript(b: readonly number[] = BANNER_BOUNDS): string {
-  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
+  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0||p==="/start"||p.indexOf("/start/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
 }
 
 /** The link, tagged so GA4 and the stats endpoint can tell the banner's traffic apart. */

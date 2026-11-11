@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { LogoMark, LogoName } from "./Logo";
 import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE, SHOW_TEAM } from "@/lib/site-config";
+import { useStartCenter, type StartCenterSlug } from "@/lib/start-center";
 
 /**
  * The column labels in the mega-menu and the drawer are `<p class="h5">`,
@@ -70,8 +71,17 @@ function isHelpActive(pathname: string) {
   );
 }
 
-export default function Header() {
+type CenterPhone = { display: string; tel: string };
+
+export default function Header({
+  startPhones,
+}: {
+  /** The open centers' own lines, for /start's header (lib/start-centers.ts). */
+  startPhones?: Record<StartCenterSlug, CenterPhone>;
+} = {}) {
   const pathname = usePathname();
+  // /start only: the center picked in the form (lib/start-center.ts).
+  const startCenter = useStartCenter();
   const [open, setOpen] = useState(false);
   // The drawer's "What We Help With" accordion (Ben, 2026-10-19): the top row
   // opens two section rows, Adults and Children & Families, one open at a
@@ -190,6 +200,36 @@ export default function Header() {
       if (!e.currentTarget.contains(e.relatedTarget)) setDismissed(null);
     },
   });
+
+  // /start, the ad landing page (Ben, 2026-11-11): the logo and the phone,
+  // nothing else — no menu, no button, and the logo is not a link. The
+  // number is the picked center's own line (Nashville until one is picked).
+  if (pathname === "/start") {
+    const line = startPhones?.[startCenter] ?? { display: PHONE_DISPLAY, tel: PHONE_TEL };
+    return (
+      <header data-link-location="header" ref={headerRef} className={`site campaign start-header${scrolled ? " scrolled" : ""}`}>
+        <div className="nav">
+          <span className="logo">
+            <LogoMark />
+            <LogoName />
+          </span>
+          {SHOW_PHONE && (
+            <a className="start-tel" href={`tel:${line.tel}`} aria-label={`Call ${line.display}`}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>{line.display}</span>
+            </a>
+          )}
+        </div>
+      </header>
+    );
+  }
 
   // The giveaway's pages (/10years and below) get a quiet header: the
   // logo, one way back into the site, the phone. No menu and no call

@@ -10,7 +10,9 @@ import type { ReactNode } from "react";
  * and handed in; this only picks, because the root layout cannot see the
  * route.
  */
-export default function RouteFooter({ full, slim }: { full: ReactNode; slim: ReactNode }) {
+export default function RouteFooter({ full, slim, start }: { full: ReactNode; slim: ReactNode; start: ReactNode }) {
   const pathname = usePathname() ?? "";
+  // /start, the ad landing page: its own short footer (components/StartFooter.tsx).
+  if (pathname === "/start") return <>{start}</>;
   return <>{pathname === "/10years" || pathname.startsWith("/10years/") ? slim : full}</>;
 }
