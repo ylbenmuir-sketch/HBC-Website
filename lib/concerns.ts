@@ -296,7 +296,7 @@ export const concerns: Concern[] = [
       answer:
         "LENS is a gentle, drug-free option many clients choose for anxiety and stress. Many clients tell us they feel more settled after a series of sessions.",
       support:
-        "Sessions are quiet and passive: small sensors, a comfortable chair, nothing to perform. No medication.",
+        "Sessions are quiet and passive: small sensors, a comfortable chair, nothing to perform.",
     },
     overview: {
       recognize:
@@ -360,7 +360,7 @@ export const concerns: Concern[] = [
       answer:
         "LENS is a gentle, drug-free option many families and adults choose for focus and follow-through.",
       support:
-        "Nothing to practice and no tasks to perform. Progress is checked at every visit. No medication.",
+        "Nothing to practice and no tasks to perform. Progress is checked at every visit.",
     },
     overview: {
       recognize:
