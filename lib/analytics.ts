@@ -139,6 +139,9 @@ export const LINK_LOCATIONS = [
   // /lens-neurofeedback heroes and the center blocks under them, the /start
   // Instagram landing page. The location pages keep location_hero.
   "local_page",
+  // The answer-first concern heroes' "or text us" link (2026-11-12;
+  // /concerns/anxiety and /concerns/focus-adhd).
+  "concern_hero",
   "other",
 ] as const;
 

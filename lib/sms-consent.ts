@@ -69,19 +69,28 @@ export const SMS_OPT_IN_DATA_SENTENCE =
 export type ConsentPart = string | { href: string; label: string };
 
 /**
- * The contact form's checkbox (Ben, 2026-11-02): a short label on the box
- * and the full disclosure directly under it, both always visible, both in
- * the server-rendered HTML, the box unticked and never required. Together
- * they replace the one long sentence that was the label until 2026-11-02;
- * the chat's question below keeps its own wording. Each is one string,
- * rendered as one text node (components/ScannerText.tsx), so it reaches the
- * raw HTML unbroken for scanners that match bytes. Change them here and
- * nowhere else, and re-check the Dialpad registration when you do.
+ * The contact form's checkbox: a short label on the box and the disclosure
+ * directly under it, both always visible, both in the server-rendered HTML,
+ * the box unticked and never required. Each is one string, rendered as one
+ * text node (components/ScannerText.tsx), so it reaches the raw HTML
+ * unbroken for scanners that match bytes. Change them here and nowhere else,
+ * and re-check the Dialpad registration when you do.
+ *
+ * Wording of 2026-11-12 (Ben): the label and the disclosure are his, shorter
+ * than the 2026-11-02 pair ("Text me updates about my request" / "Optional.
+ * Texts from … Msg frequency varies; msg & data rates may apply. Reply HELP
+ * for help, STOP to opt out."). Two things his draft left out are kept:
+ * the brand ("from Harmonized Brain Centers") and "Msg frequency varies." The October
+ * 2026 rejection named a missing frequency disclosure (CR4003–CR4006), and
+ * carriers look for the brand in the opt-in — flagged to Ben; drop them only
+ * once the registration is confirmed not to need them.
  */
-export const FORM_CONSENT_LABEL = "Text me updates about my request";
-export const FORM_CONSENT_DISCLOSURE =
-  `Optional. Texts from ${DBA_NAME} about your inquiry and appointments. ` +
-  `Msg frequency varies; msg & data rates may apply. Reply HELP for help, STOP to opt out.`;
+export const FORM_CONSENT_LABEL = "Yes, you can text me about my request (no marketing)";
+// One literal, no `+`: the build dropped the tail of the first template
+// when a second template starting with `${…}` was concatenated to it
+// (seen 2026-11-12 — the page read "…Brain CentersMsg frequency varies").
+// scripts/check-contact.mjs matches the whole sentence in the raw HTML.
+export const FORM_CONSENT_DISCLOSURE = `Texts from ${DBA_NAME} about your inquiry and appointments only. Msg frequency varies. Msg & data rates may apply. Reply STOP to opt out, HELP for help.`;
 
 /**
  * The disclosure under the label, with its two links. Everything a reviewer

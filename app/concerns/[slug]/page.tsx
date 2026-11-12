@@ -16,7 +16,7 @@ import PageSchema from "@/components/PageSchema";
 import ReadMore from "@/components/ReadMore";
 import VideoBand from "@/components/VideoBand";
 import { concerns, getConcern } from "@/lib/concerns";
-import { EXPERIENCES_DISCLAIMER, storyForConcern } from "@/lib/site-config";
+import { EXPERIENCES_DISCLAIMER, PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE, storyForConcern } from "@/lib/site-config";
 import { articlesForConcern } from "@/lib/resources";
 import { faqQuestions } from "@/lib/schema";
 import { videoForPage } from "@/lib/videos";
@@ -95,7 +95,15 @@ export default async function ConcernPage({
             : {}),
         }}
       />
-      <Breadcrumbs trail={trail} />
+      {/* On the two answer-first pages the crumb is hidden on phones
+          (globals.css → `.crumb-desk`): it was 48–70px of the first screen. */}
+      {concern.firstScreen ? (
+        <div className="crumb-desk">
+          <Breadcrumbs trail={trail} />
+        </div>
+      ) : (
+        <Breadcrumbs trail={trail} />
+      )}
 
       {/* The opening, both layouts (Ben, 2026-11-02): eyebrow, H1, the intro
           sentence, then — where the concern has a quote — the compact review
@@ -147,8 +155,40 @@ export default async function ConcernPage({
           </div>
         </section>
       ) : (
-        <section className="page-hero concern-hero">
+        <section className={`page-hero concern-hero${concern.firstScreen ? " concern-first" : ""}`}>
           <div className="wrap split" style={{ alignItems: "center" }}>
+            {concern.firstScreen ? (
+              /* The answer-first opening (Ben, 2026-11-12; lib/concerns.ts →
+                 firstScreen): H1, the plain answer, one supporting line,
+                 Get Started with "or text us" beside it, then the review.
+                 "How LENS works" follows the review, below a phone's first
+                 screen. The sms: link reports contact_link_click with
+                 location concern_hero through the document listener
+                 (components/Analytics.tsx) — nothing fires from here. */
+              <div className="rv">
+                <div className="eyebrow">Concern &middot; {concern.who}</div>
+                <h1>
+                  {concern.firstScreen.h1Lead}
+                  <em className="sage">{concern.firstScreen.h1Accent}</em>
+                </h1>
+                <p className="concern-answer">{concern.firstScreen.answer}</p>
+                <p className="sub">{concern.firstScreen.support}</p>
+                <div className="concern-first-ctas" data-link-location="concern_hero">
+                  <TalkCta />
+                  {SHOW_PHONE && (
+                    <a className="concern-text-us" href={`sms:${PHONE_TEL}`} aria-label={`Text us at ${PHONE_DISPLAY}`}>
+                      or text us
+                    </a>
+                  )}
+                </div>
+                {story && <CompactReview review={story} />}
+                <p className="concern-first-more">
+                  <Btn href="/how-lens-works" variant="ghost" arrow>
+                    How LENS works
+                  </Btn>
+                </p>
+              </div>
+            ) : (
             <div className="rv">
               <div className="eyebrow">Concern &middot; {concern.who}</div>
               <h1>
@@ -165,6 +205,7 @@ export default async function ConcernPage({
                 <CtaReassure />
               </div>
             </div>
+            )}
             {/* The photo: beside the copy on a desktop, after it — under
                 Get Started — once the grid stacks (globals.css ≤1060px). */}
             <div className="rv">

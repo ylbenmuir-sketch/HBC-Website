@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { BANNER_STORAGE_KEY, bannerHref, bannerModeAt, type BannerMode } from "@/lib/giveaway/banner";
+import { BANNER_HREF, BANNER_STORAGE_KEY, bannerFirstTouch, bannerModeAt, type BannerMode } from "@/lib/giveaway/banner";
+import { UTM_STORAGE_KEY } from "@/lib/giveaway/channel";
 import { trackEvent } from "@/lib/analytics";
 
 /**
@@ -13,7 +14,10 @@ import { trackEvent } from "@/lib/analytics";
  *   - re-decides on client-side navigation (the head script runs once per
  *     document, so a Link from / to /10years must hide it here);
  *   - dismisses for the tab session (sessionStorage), and
- *   - sends the two GA4 events, with the mode and nothing else.
+ *   - sends the two GA4 events, with the mode and nothing else, and
+ *   - on a tap, leaves the banner as the giveaway's first touch in
+ *     sessionStorage (the link itself is a plain /10years — no utm tags on
+ *     an internal link; Ben, 2026-11-12). An earlier first touch is kept.
  */
 
 type Copy = { notify: string; live: string; closed: string; label: string; dismiss: string };
@@ -57,11 +61,20 @@ export default function GiveawayBanner({ copy }: { copy: Copy }) {
     if (mode !== "off") trackEvent({ name: "giveaway_banner_dismiss", params: { mode } });
   };
 
+  const follow = (m: (typeof MODES)[number]) => {
+    try {
+      if (!sessionStorage.getItem(UTM_STORAGE_KEY)) sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(bannerFirstTouch(m)));
+    } catch {
+      // Private mode: the entry counts as direct.
+    }
+    trackEvent({ name: "giveaway_banner_click", params: { mode: m } });
+  };
+
   return (
     <aside className="hbc10y-banner" aria-label={copy.label} data-giveaway-banner>
       <div className="hbc10y-banner-inner">
         {MODES.map((m) => (
-          <a key={m} className="hbc10y-banner-link" data-copy={m} href={bannerHref(m)} onClick={() => trackEvent({ name: "giveaway_banner_click", params: { mode: m } })}>
+          <a key={m} className="hbc10y-banner-link" data-copy={m} href={BANNER_HREF} onClick={() => follow(m)}>
             {copy[m]}
           </a>
         ))}

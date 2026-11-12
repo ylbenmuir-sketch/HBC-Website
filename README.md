@@ -1365,9 +1365,22 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   2026-11-02): `header`, `drawer`, `footer`, `home_hero`, `location_hero`,
   `contact_page`, `confirmation`, `mobile_bar`, `local_page` (the
   /brain-map and /lens-neurofeedback heroes, the center blocks under them,
-  /start — 2026-11-09), `other` — `LINK_LOCATIONS` in `lib/analytics.ts`,
+  /start — 2026-11-09), `concern_hero` (the "or text us" link in the
+  answer-first heroes of /concerns/anxiety and /concerns/focus-adhd —
+  2026-11-12), `other` — `LINK_LOCATIONS` in `lib/analytics.ts`,
   tested. A `data-link-location` with a space reports as `other`. The same
   value is what the tap log stores as `location`.
+- **No `utm_` tags on internal links** (Ben, 2026-11-12). A tagged internal
+  link restarts the GA4 session's attribution; the 10-year banner did it
+  ("site / banner"). The banner now links to plain `/10years`, reports
+  `giveaway_banner_click`, and leaves its first touch in sessionStorage so
+  the giveaway stats still count `site_banner` (`lib/giveaway/banner.ts`).
+  The /10years "Add to calendar" buttons keep their tags: they open a
+  redirect and a file, not a page.
+- **`form_start` means a real input since 2026-11-12**: a keystroke, an
+  autofill, a ticked box or a center chip — not a focus or a touch
+  (`onFirstInteraction` in `components/ContactForm.tsx`). Counts before that
+  date included thumbs scrolling over the card and are not comparable.
 - **The Google "write a review" links render on `/review` and nowhere
   else** (Ben, 2026-11-09; `reviewWriteUrl` in `lib/locations.ts`). That
   page is noindex, in no menu or sitemap, and asks every client the same
