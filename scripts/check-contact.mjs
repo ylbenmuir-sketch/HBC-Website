@@ -783,7 +783,7 @@ async function stepOne(page, width, name, { phone = true, email = emailFor(name)
     };
   })())`));
   // "Anything we should know?" moved to step two on 2026-11-02 (Ben): step one fits a 390×844 screen whole.
-  expect(`${name}: step one is name, phone, email, center — nothing else`, JSON.stringify(look.labels) === JSON.stringify(["Name", "Phone", "Email", "Which center?"]), JSON.stringify(look.labels));
+  expect(`${name}: step one is name, phone, email, center — nothing else`, JSON.stringify(look.labels) === JSON.stringify(["Name", "Phone", "Email (or just phone)", "Which center?"]), JSON.stringify(look.labels));
   expect(`${name}: step one requires only the name and the center (phone/email checked as either-or)`, JSON.stringify(look.required) === JSON.stringify(["first-name", "center-label"]), JSON.stringify(look.required));
   expect(`${name}: centers are Nashville · Murfreesboro · Not sure, none preselected`, JSON.stringify(look.centers) === JSON.stringify([["Nashville", "false"], ["Murfreesboro", "false"], ["Not sure", "false"]]), JSON.stringify(look.centers));
   expect(`${name}: the button reads "Send My Request"`, look.button === "Send My Request", String(look.button));
