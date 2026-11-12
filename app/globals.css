@@ -2420,7 +2420,7 @@ body[data-bottombar] footer.site {
 /* The disclosure, under the label, the card's full width and small (Ben,
    2026-11-12: one or two short lines on a desktop, three on a phone; it was
    five lines indented under the label). Slate on white is 5.69:1. */
-.form .sms-consent-note { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--slate); }
+.form .sms-consent-note { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: #6b7580; /* fine print: 4.7:1 on white, a step lighter than --slate */ }
 .form .sms-consent a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 2px; }
 .form-skip:disabled { opacity: 0.5; cursor: default; }
 /* Step panels mount after a submit and may land with the viewport scrolled
@@ -2775,19 +2775,20 @@ body[data-bottombar] footer.site {
   .desk-compact .sec.sec-form { padding-top: 10px; }
   .desk-compact .form-card { padding: 14px 16px 14px !important; }
   .desk-compact form.form-card > .eyebrow { display: none; }
-  .desk-compact .form-compact label { margin: 6px 0 3px; font-size: 11px; letter-spacing: 0.12em; line-height: 1.2; }
+  /* +5px between fields (Ben, 2026-11-12: the card read as congested). */
+  .desk-compact .form-compact label { margin: 11px 0 3px; font-size: 11px; letter-spacing: 0.12em; line-height: 1.2; }
   .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
   .desk-compact .form-compact input:not([type="checkbox"]), .desk-compact .form-compact select { padding: 10px 14px; font-size: 16px; line-height: 1.3; min-height: 44px; }
-  /* Back on phones as one short line (Ben, 2026-11-12): without it nothing
-     said that the phone OR the email is enough. */
-  .desk-compact .form-compact .either-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.3; }
   /* The consent label keeps its sentence styling here: the caption rule
      above (11px, tracked) is later than the base rule and the same
      specificity, so every property it sets is reset. */
-  .desk-compact .form .sms-consent { margin-top: 8px; column-gap: 12px; }
+  .desk-compact .form .sms-consent { margin-top: 14px; column-gap: 12px; }
   .desk-compact .form .sms-consent label { margin: 0; font-size: 15px; line-height: 1.35; letter-spacing: 0; }
   .desk-compact .form .sms-consent label { min-height: 40px; }
-  .desk-compact .form .sms-consent-note { font-size: 11px; line-height: 1.35; }
+  .desk-compact .form .sms-consent-note { font-size: 12px; line-height: 1.4; }
+  /* The "Whatever's easiest… Or email" line under the form is gone on
+     phones (Ben, 2026-11-12); Text us and Call us are above the card. */
+  .desk-compact .contact-ways-line-phone { display: none; }
   .desk-compact .reach-chips { gap: 6px; flex-wrap: nowrap; }
   .desk-compact .reach-chips .chip { padding: 9px 12px; font-size: 13.5px; flex: 1 1 0; text-align: center; white-space: nowrap; }
   /* 320px: three chips in 258px — "Not sure" overflowed the viewport by 4px (check:layout). */
@@ -3495,16 +3496,16 @@ footer.site.start-footer a { display: inline; min-height: 0; text-decoration: un
   .desk-compact .page-hero.compact .eyebrow { display: none; }
   .desk-compact .page-hero.compact h1 { font-size: 38px; margin: 0 auto 6px; }
   .desk-compact .page-hero.compact .sub { font-size: 16px; line-height: 1.5; max-width: none !important; }
-  .desk-compact .contact-ways-sec { padding: 10px 0 0; }
+  /* Air above the three buttons and above the card (Ben, 2026-11-12). */
+  .desk-compact .contact-ways-sec { padding: 28px 0 0; }
   .desk-compact .contact-way { padding: 10px 12px; min-height: 46px; }
   .desk-compact .contact-ways-line { margin-top: 8px; font-size: 14px; line-height: 1.4; }
-  .desk-compact .sec.sec-form { padding-top: 10px; }
+  .desk-compact .sec.sec-form { padding-top: 22px; }
   .desk-compact form.form-card { padding: 18px 28px 14px !important; }
   .desk-compact form.form-card > .eyebrow { display: none; }
   .desk-compact .form-compact label { margin: 7px 0 4px; line-height: 1.2; }
   .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
   .desk-compact .form-compact input:not([type="checkbox"]) { padding: 8px 14px; line-height: 1.4; }
-  .desk-compact .form-compact .either-note { margin: 8px 0 -2px; font-size: 13px; line-height: 1.3; }
   .desk-compact .reach-chips .chip { padding: 8px 18px; }
   .desk-compact .form .sms-consent { margin-top: 8px; }
   .desk-compact .form .sms-consent label { margin: 0; min-height: 36px; font-size: 15.5px; }

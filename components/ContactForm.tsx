@@ -810,9 +810,6 @@ export default function ContactForm({
         required
       />
 
-      <p className="micro either-note" id="reach-either">
-        A phone number or an email &mdash; either one is fine.
-      </p>
       <label htmlFor="phone">
         {giveaway ? (
           <>
@@ -830,11 +827,15 @@ export default function ContactForm({
         autoComplete="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        aria-describedby="reach-either"
         aria-invalid={invalid("phone")}
       />
 
-      <label htmlFor="email">Email</label>
+      {/* The label says the either-or (Ben, 2026-11-12): the sentence that
+          used to sit above the pair is gone on every width. Not on the
+          giveaway path, where the phone is the optional one. */}
+      <label htmlFor="email">
+        Email{!giveaway && <> <span style={OPTIONAL_STYLE}>(or just phone)</span></>}
+      </label>
       <input
         id="email"
         name="email"
@@ -844,7 +845,6 @@ export default function ContactForm({
         autoCapitalize="off"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        aria-describedby="reach-either"
         aria-invalid={invalid("email")}
       />
 
