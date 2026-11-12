@@ -739,6 +739,28 @@ a.partner-badge:hover .partner-badge-line { color: var(--navy); }
   .page-hero.concern-hero h1 { font-size: 40px; line-height: 1.1; margin: 14px 0 14px; }
   .page-hero.concern-hero .sub { font-size: 16px; line-height: 1.5; }
 }
+/* The answer-first concern hero (Ben, 2026-11-12; /concerns/anxiety and
+   /concerns/focus-adhd — lib/concerns.ts → firstScreen): H1, the plain
+   answer in the navy a size up from the supporting line, Get Started with
+   "or text us" beside it, the review, then "How LENS works". On a phone the
+   crumb and the eyebrow go, so Get Started ends well above the action bar at
+   375×667 with the 10-year banner showing (bar top 605; measured). */
+.concern-answer { margin: 0 0 14px; max-width: 54ch; font-size: 21px; line-height: 1.45; color: var(--navy); font-weight: 500; }
+.concern-first-ctas { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; margin-top: 30px; }
+.concern-text-us { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; font-family: var(--sans); font-size: 16px; font-weight: 600; color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px; }
+.concern-text-us:hover { text-decoration-color: var(--navy); }
+.concern-first .compact-review { margin-top: 30px; }
+.concern-first-more { margin: 14px 0 0; }
+@media (max-width: 760px) {
+  .crumb-desk { display: none; }
+  .concern-first .eyebrow { display: none; }
+  .page-hero.concern-hero.concern-first { padding-top: 22px; }
+  .page-hero.concern-hero.concern-first h1 { font-size: 36px; margin: 0 0 12px; }
+  .concern-answer { font-size: 17.5px; margin-bottom: 10px; }
+  .page-hero.concern-hero.concern-first .sub { font-size: 15.5px; }
+  .concern-first-ctas { gap: 20px; margin-top: 18px; }
+  .concern-first .compact-review { margin: 22px 0 0; }
+}
 
 /* quotes / stories */
 .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
@@ -2395,8 +2417,10 @@ body[data-bottombar] footer.site {
 /* The label is the tap target (Ben, 2026-11-02): 44px tall, the box centred
    on it. Sentence case, body size and colour — a sentence, not a caption. */
 .form .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 16px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
-/* The disclosure, under the label and aligned with its text, not the box. */
-.form .sms-consent-note { grid-column: 2; margin: 0; font-size: 13px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--slate); }
+/* The disclosure, under the label, the card's full width and small (Ben,
+   2026-11-12: one or two short lines on a desktop, three on a phone; it was
+   five lines indented under the label). Slate on white is 5.69:1. */
+.form .sms-consent-note { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--slate); }
 .form .sms-consent a { color: var(--sage-deep); text-decoration: underline; text-underline-offset: 2px; }
 .form-skip:disabled { opacity: 0.5; cursor: default; }
 /* Step panels mount after a submit and may land with the viewport scrolled
@@ -2736,8 +2760,10 @@ body[data-bottombar] footer.site {
    in the server HTML, still beside the phone field. Scoped to the page's own
    `.desk-compact` wrapper and to phones; nothing at 768px and up changes. */
 @media (max-width: 767px) {
-  .desk-compact .crumb { padding-top: 10px; padding-bottom: 4px; }
-  .desk-compact .page-hero.compact { padding: 8px 0 6px; }
+  /* No breadcrumb on a phone (Ben, 2026-11-12): ~50px above the form. The
+     BreadcrumbList markup is PageSchema's and does not depend on it. */
+  .desk-compact .crumb { display: none; }
+  .desk-compact .page-hero.compact { padding: 12px 0 6px; }
   /* The eyebrow ("Talk with our team") goes with the sub: the H1 says it. */
   .desk-compact .page-hero.compact .eyebrow { display: none; }
   .desk-compact .page-hero.compact h1 { font-size: 31px; margin: 0 auto; }
@@ -2752,13 +2778,16 @@ body[data-bottombar] footer.site {
   .desk-compact .form-compact label { margin: 6px 0 3px; font-size: 11px; letter-spacing: 0.12em; line-height: 1.2; }
   .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
   .desk-compact .form-compact input:not([type="checkbox"]), .desk-compact .form-compact select { padding: 10px 14px; font-size: 16px; line-height: 1.3; min-height: 44px; }
-  .desk-compact .form-compact .either-note { display: none; }
+  /* Back on phones as one short line (Ben, 2026-11-12): without it nothing
+     said that the phone OR the email is enough. */
+  .desk-compact .form-compact .either-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.3; }
   /* The consent label keeps its sentence styling here: the caption rule
      above (11px, tracked) is later than the base rule and the same
      specificity, so every property it sets is reset. */
   .desk-compact .form .sms-consent { margin-top: 8px; column-gap: 12px; }
   .desk-compact .form .sms-consent label { margin: 0; font-size: 15px; line-height: 1.35; letter-spacing: 0; }
-  .desk-compact .form .sms-consent-note { font-size: 12px; }
+  .desk-compact .form .sms-consent label { min-height: 40px; }
+  .desk-compact .form .sms-consent-note { font-size: 11px; line-height: 1.35; }
   .desk-compact .reach-chips { gap: 6px; flex-wrap: nowrap; }
   .desk-compact .reach-chips .chip { padding: 9px 12px; font-size: 13.5px; flex: 1 1 0; text-align: center; white-space: nowrap; }
   /* 320px: three chips in 258px — "Not sure" overflowed the viewport by 4px (check:layout). */
@@ -3450,4 +3479,35 @@ footer.site.start-footer a { display: inline; min-height: 0; text-decoration: un
   .start-review blockquote { font-size: 15px; }
   .start-faq h2 { font-size: 24px; }
   .start-back .btn { width: 100%; }
+}
+
+/* ── /contact on a desktop: step one inside 1280×800 (Ben, 2026-11-12) ────
+   The card had been running the wrap's full width (1,020px at 1280: the
+   `:where(.desk-compact) .wrap` rule above is later than `.form-solo` at the
+   same specificity, so the 640px cap never applied) and "Send My Request"
+   ended at 1,082px. The column is capped so the card is 560px, and the hero,
+   the three ways and the fields are one step tighter. Measured at 1280×800:
+   see the commit. From 768px up only — the phone block above is untouched. */
+@media (min-width: 768px) {
+  .desk-compact .wrap.form-solo { max-width: 640px; }
+  .desk-compact .crumb { padding-top: 8px; padding-bottom: 0; }
+  .desk-compact .page-hero.compact { padding: 8px 0 2px; }
+  .desk-compact .page-hero.compact .eyebrow { display: none; }
+  .desk-compact .page-hero.compact h1 { font-size: 38px; margin: 0 auto 6px; }
+  .desk-compact .page-hero.compact .sub { font-size: 16px; line-height: 1.5; max-width: none !important; }
+  .desk-compact .contact-ways-sec { padding: 10px 0 0; }
+  .desk-compact .contact-way { padding: 10px 12px; min-height: 46px; }
+  .desk-compact .contact-ways-line { margin-top: 8px; font-size: 14px; line-height: 1.4; }
+  .desk-compact .sec.sec-form { padding-top: 10px; }
+  .desk-compact form.form-card { padding: 18px 28px 14px !important; }
+  .desk-compact form.form-card > .eyebrow { display: none; }
+  .desk-compact .form-compact label { margin: 7px 0 4px; line-height: 1.2; }
+  .desk-compact .form-compact label[for="first-name"] { margin-top: 0; }
+  .desk-compact .form-compact input:not([type="checkbox"]) { padding: 8px 14px; line-height: 1.4; }
+  .desk-compact .form-compact .either-note { margin: 8px 0 -2px; font-size: 13px; line-height: 1.3; }
+  .desk-compact .reach-chips .chip { padding: 8px 18px; }
+  .desk-compact .form .sms-consent { margin-top: 8px; }
+  .desk-compact .form .sms-consent label { margin: 0; min-height: 36px; font-size: 15.5px; }
+  .desk-compact form.form-card button[type="submit"] { margin-top: 8px !important; padding: 12px 20px; }
+  .desk-compact form.form-card .micro { margin-top: 8px; font-size: 12.5px; line-height: 1.45; }
 }

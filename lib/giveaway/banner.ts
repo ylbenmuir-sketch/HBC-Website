@@ -38,7 +38,9 @@ export const BANNER_BOUNDS: readonly [number, number, number, number] = [
 /** Routes the bar never shows on. */
 export function bannerExcludedPath(path: string): boolean {
   // /start (2026-11-11): the ad landing page has one job and no exits.
-  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/") || path === "/start" || path.startsWith("/start/");
+  // /contact (Ben, 2026-11-12): the bar cost the form 57px of a phone's
+  // first screen and offered an exit from the page whose job is the request.
+  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/") || path === "/start" || path.startsWith("/start/") || path === "/contact" || path.startsWith("/contact/");
 }
 
 export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b: readonly number[] = BANNER_BOUNDS): BannerMode {
@@ -56,10 +58,27 @@ export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b:
  * ES5, with the bounds baked in from config. Any error leaves the bar off.
  */
 export function bannerScript(b: readonly number[] = BANNER_BOUNDS): string {
-  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0||p==="/start"||p.indexOf("/start/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
+  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0||p==="/start"||p.indexOf("/start/")===0||p==="/contact"||p.indexOf("/contact/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
 }
 
-/** The link, tagged so GA4 and the stats endpoint can tell the banner's traffic apart. */
-export function bannerHref(mode: Exclude<BannerMode, "off">): string {
-  return `/10years?utm_source=site&utm_medium=banner&utm_campaign=hbc10y&utm_content=${mode}`;
+/**
+ * The link: plain /10years (Ben, 2026-11-12). It carried
+ * ?utm_source=site&utm_medium=banner until then, and a utm tag on an
+ * internal link restarts the GA4 session's attribution — the visit's real
+ * source was overwritten by "site / banner". GA4 still sees the tap as
+ * giveaway_banner_click; the giveaway's own stats still see it through
+ * bannerFirstTouch below.
+ */
+export const BANNER_HREF = "/10years";
+
+/**
+ * What the banner's click handler leaves in sessionStorage under
+ * UTM_STORAGE_KEY (lib/giveaway/channel.ts) when no first touch is stored
+ * yet — the same four values the link used to carry, so an entrant who came
+ * through the banner still counts as channel `site_banner`
+ * (components/giveaway/UtmCapture.tsx fills the entry form from it). Never
+ * in a URL, so GA4 never reads it.
+ */
+export function bannerFirstTouch(mode: Exclude<BannerMode, "off">): Record<"utm_source" | "utm_medium" | "utm_campaign" | "utm_content", string> {
+  return { utm_source: "site", utm_medium: "banner", utm_campaign: "hbc10y", utm_content: mode };
 }

@@ -40,8 +40,10 @@ import ScannerText from "./ScannerText";
  *      no example text in it, the phone or the email — Ben, 2026-10-30: a
  *      placeholder at the field's ink read as pre-filled), a phone OR an email
  *      (either one; the phone in any common US format), the center
- *      (Nashville · Murfreesboro · Not sure, nothing preselected), and two
- *      optional lines: "Who referred you?" and "Anything we should know?".
+ *      (Nashville · Murfreesboro · Not sure, nothing preselected). "Who
+ *      referred you?" left step one on 2026-11-12 (Ben): step two asks it
+ *      when a referral is picked, and it was 66px between Email and the
+ *      button on a phone.
  *      Nothing else is asked before the lead exists. "Send My Request" saves
  *      the row and starts the office's email (held so it can carry step two —
  *      lib/held-notification.ts: it goes on Save, on Skip, or at two
@@ -78,9 +80,9 @@ import ScannerText from "./ScannerText";
  *
  * ## The funnel
  *
- * contact_view (mount), form_start (the first touch of anything in step one —
- * a focus, a tap on a center chip, a keystroke, an autofill; see
- * onFirstInteraction),
+ * contact_view (mount), form_start (the first real input in step one — a
+ * keystroke, an autofill, a ticked box, or a tap on a center chip; NOT a
+ * focus or a touch, since 2026-11-12; see onFirstInteraction),
  * step1_submit_attempt, step1_success (+ the Key event submit_lead_form and
  * generate_lead), step1_error {reason}, step2_success, step2_skipped
  * {method} — lib/analytics.ts. Fired here, so any page that embeds the form
@@ -315,7 +317,6 @@ export default function ContactForm({
   // A valid 10-year code preselects the entrant's nearer center; ?center= still wins (below).
   const [preferredCenter, setPreferredCenter] = useState<string | null>(giveaway?.center ?? null);
   const [showConcierge, setShowConcierge] = useState(false);
-  const [referredBy, setReferredBy] = useState("");
   const [note, setNote] = useState("");
   // Unchecked by default, and never required (lib/sms-consent.ts).
   const [smsConsent, setSmsConsent] = useState(false);
@@ -342,7 +343,6 @@ export default function ContactForm({
   // What step one actually sent, for step two's choices.
   const sentPhone = useRef(false);
   const sentEmail = useRef(false);
-  const sentReferral = useRef(false);
   const sentConsent = useRef(false);
 
   // Funnel bookkeeping: form_start once, step two's outcome once.
@@ -392,16 +392,23 @@ export default function ContactForm({
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  // The first touch of anything in step one, whatever form it takes. Focus
-  // alone missed real starts: WebKit (iPhone and Mac Safari) does not focus a
-  // <button> on tap, so a visitor whose first move was a center chip was not
-  // counted; a browser autofill fires input events without a focus; a
-  // pointer on a field arrives before its focus. Verified on production
-  // 2026-10-30: a chip tap alone sent no form_start.
-  function onFirstInteraction() {
-    // A tab left open past the token's life gets a fresh one here, not at
-    // the submit. A no-op while the one it has is good.
+  // A tab left open past the token's life gets a fresh one at the first
+  // touch, not at the submit. A no-op while the one it has is good.
+  function onTouch() {
     prefetchFormToken();
+  }
+
+  // form_start: the first real input in step one — a keystroke, an autofill
+  // or a ticked box (all `input` events), or a tap on a center chip (the
+  // chips are buttons and fire no input event; WebKit does not even focus
+  // them — verified on production 2026-10-30). Until 2026-11-12 a focus or
+  // a pointerdown anywhere on the card counted too, and on a phone the card
+  // fills the screen: a thumb starting a scroll on it was a "start", so the
+  // step read as abandoned by people who never began it (Ben, GA Oct 30 –
+  // Nov 11: 23 starts, 12 submit attempts, 0 errors). Counts from before
+  // that date are not comparable with counts after it.
+  function onFirstInteraction() {
+    onTouch();
     if (started.current) return;
     started.current = true;
     trackFunnel("form_start", pathname);
@@ -471,7 +478,6 @@ export default function ContactForm({
         ...(tel ? { phone: tel } : {}),
         ...(mail ? { email: mail } : {}),
         preferred_center: preferredCenter,
-        ...(referredBy.trim() ? { referred_by: referredBy.trim() } : {}),
         website,
         source_page: from || pathname,
         // A yes only with a number to text. The wording is sent ticked or
@@ -501,7 +507,6 @@ export default function ContactForm({
 
       sentPhone.current = Boolean(tel);
       sentEmail.current = Boolean(mail);
-      sentReferral.current = Boolean(referredBy.trim());
       sentConsent.current = !giveaway && Boolean(tel) && smsConsent;
       setStatus("idle");
       // Step two needs a row to add to; without an id there is nothing to
@@ -519,7 +524,7 @@ export default function ContactForm({
     }
   }
 
-  const askLaterReferral = isReferral(heardAbout) && !sentReferral.current;
+  const askLaterReferral = isReferral(heardAbout);
 
   /* ── Step two: add to the saved row, or don't ──────────────────────── */
   async function saveDetails(e: React.FormEvent) {
@@ -738,10 +743,9 @@ export default function ContactForm({
       action="/api/consultation"
       method="post"
       onSubmit={sendRequest}
-      onFocus={onFirstInteraction}
-      onPointerDown={onFirstInteraction}
+      onFocus={onTouch}
+      onPointerDown={onTouch}
       onInput={onFirstInteraction}
-      onClick={onFirstInteraction}
       noValidate
     >
       {variant === "start" ? (
@@ -850,26 +854,12 @@ export default function ContactForm({
         idPrefix="center"
         options={centerOptions}
         value={preferredCenter}
-        onChange={(v) => setPreferredCenter(v)}
+        onChange={(v) => {
+          onFirstInteraction();
+          setPreferredCenter(v);
+        }}
         required
       />
-
-      {variant !== "start" && (
-        <>
-          <label htmlFor="referred-by">
-            Who referred you? <span style={OPTIONAL_STYLE}>(optional)</span>
-          </label>
-          <input
-            id="referred-by"
-            name="referred_by"
-            autoComplete="off"
-            maxLength={200}
-            placeholder="A doctor, a practice, a friend…"
-            value={referredBy}
-            onChange={(e) => setReferredBy(e.target.value)}
-          />
-        </>
-      )}
 
       {/* Text-message consent, last before the button (Ben, 2026-11-02).
           A2P 10DLC: carrier reviewers read it in the server-rendered HTML,

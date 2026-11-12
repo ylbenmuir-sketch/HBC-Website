@@ -99,6 +99,20 @@ export type Concern = {
   heroEyebrow?: string;
   heroSub: string;
   /**
+   * The answer-first opening (Ben, 2026-11-12; anxiety and focus-adhd only,
+   * measured before any other concern gets one). GA showed landings on
+   * these two pages leaving in seconds: the first phone screen was a topic
+   * label, an audience sentence and a button behind the action bar. With
+   * this set, the hero reads H1 → `answer` (one plain line on whether LENS
+   * is for this) → `support` → Get Started and a text-us link → the review.
+   * No "you/your" about the concern anywhere in it — these pages may become
+   * ad landing pages, and an ad platform reads "your anxiety" as asserting
+   * a health condition. No treat/cure wording either (README → Compliance
+   * guardrails). `heroSub` stays for the meta description's family of copy
+   * and is not rendered while this is set.
+   */
+  firstScreen?: { h1Lead: string; h1Accent: string; answer: string; support: string };
+  /**
    * "Who we work with" — short cards straight after the hero, naming the
    * groups the page is for (Ben, 2026-10-15; /concerns/performance only). Each
    * says what people in that group commonly come in WANTING, never what they
@@ -276,6 +290,14 @@ export const concerns: Concern[] = [
     who: "Adults & children",
     heroSub:
       "LENS neurofeedback for people whose bodies stay on alert long after the moment has passed — and who are tired of being told to just relax.",
+    firstScreen: {
+      h1Lead: "Neurofeedback for ",
+      h1Accent: "anxiety & stress",
+      answer:
+        "LENS is a gentle, drug-free option many clients choose for anxiety and stress. Many clients tell us they feel more settled after a series of sessions.",
+      support:
+        "Sessions are quiet and passive: small sensors, a comfortable chair, nothing to perform. No medication.",
+    },
     overview: {
       recognize:
         "A body that stays braced long after the stressful moment has passed. Racing thoughts at bedtime. Overreacting to small stressors, and unable to relax even when life is calm.",
@@ -332,6 +354,14 @@ export const concerns: Concern[] = [
     who: "Adults & children",
     heroSub:
       "LENS neurofeedback for bright kids whose homework takes three hours, and adults whose projects stall at 90 percent — people who care, try hard, and still can't stay on task.",
+    firstScreen: {
+      h1Lead: "Neurofeedback for ",
+      h1Accent: "focus & ADHD",
+      answer:
+        "LENS is a gentle, drug-free option many families and adults choose for focus and follow-through.",
+      support:
+        "Nothing to practice and no tasks to perform. Progress is checked at every visit. No medication.",
+    },
     overview: {
       recognize:
         "Homework that takes three hours and ends in tears. Projects that stall at 90 percent. Losing track mid-task, and procrastinating on things you genuinely care about.",

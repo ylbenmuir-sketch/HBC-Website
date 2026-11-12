@@ -942,7 +942,7 @@ try {
     expect("/contact (plain) is unchanged: Text us link and the texting box", /href="sms:/.test(plain.text) && /name="sms_consent"/.test(plain.text) && !/data-giveaway-code/.test(plain.text));
     const gp = await get(`/contact?from=10years&code=${dCode}`);
     expect("/contact?from=10years&code=…: 200, a visible 'ready' code banner", gp.status === 200 && /data-giveaway-code="true" data-state="ok"/.test(gp.text) && new RegExp(`${dCode} is ready`).test(visible(gp.text)), String(gp.status));
-    expect("giveaway path: no sms: link and no texting box", !/href="sms:/.test(gp.text) && !/name="sms_consent"/.test(gp.text) && !/Text me updates/.test(visible(gp.text)));
+    expect("giveaway path: no sms: link and no texting box", !/href="sms:/.test(gp.text) && !/name="sms_consent"/.test(gp.text) && !/you can text me/.test(visible(gp.text)));
     expect("giveaway path: both numbers as call links", /href="tel:\+?1?6153318762"/.test(gp.text) && /href="tel:\+?1?6152032650"/.test(gp.text), (gp.text.match(/href="tel:[^"]+"/g) ?? []).join(" "));
     expect("giveaway path: hidden source=giveaway, the code field pre-filled, the phone label, an unticked call-me box", /name="source" value="giveaway"/.test(gp.text) && new RegExp(`name="offer_code"[^>]*value="${dCode}"`).test(gp.text) && /Best number to call you to book/.test(gp.text) && /name="call_me"/.test(gp.text) && !/name="call_me"[^>]*checked/.test(gp.text));
     expect("giveaway path: noindex", /name="robots" content="noindex, nofollow"/.test(gp.text));
