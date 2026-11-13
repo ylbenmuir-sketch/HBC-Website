@@ -16,10 +16,11 @@ import { startCenters } from "@/lib/start-centers";
  *   /start?h=k1&center=murfreesboro&utm_source=…
  *
  * Ultra simple since 2026-11-13 (Ben, of the phone view: "too wordy and over
- * stimulating"). A phone's first screen is the logo and the phone, one
- * photo, a headline of six words or fewer, one line, one quiet trust line,
- * three fields and the button. Below it: the one guarantee sentence, "How
- * it works" (the sample heat map and three numbered lines), the footer. No lists, cards, badges or
+ * stimulating"). A phone's first screen is the logo and the phone, the
+ * sample brain map with its caption, a headline of six words or fewer, one
+ * line, one quiet trust line and the start of the form. Below: the rest of
+ * the form, one guarantee sentence, "How it works" (the session photo and
+ * three numbered lines), the footer. No lists, cards, badges or
  * bands, and one accent (the gold star).
  *
  * - `h` picks the headline (lib/start.ts). It is a code, never a word, and
@@ -69,35 +70,24 @@ export default async function StartPage({
   return (
     <div className="start-page">
       <section className="start-hero">
-        {/* The page's one photo, and its LCP element: a real HBC photo
-            (Ben, 2026-11-13). Full-bleed on a phone, a tall rounded panel
-            beside the form on a desktop. No overlay. */}
-        <div className="start-photo">
-          <Image
-            src="/images/concierge.jpg"
-            alt="A practitioner places a small sensor behind a client's ear during a LENS session"
-            fill
-            priority
-            sizes="(min-width: 900px) 660px, 100vw"
-          />
-        </div>
+        {/* The hero is the sample brain map (Ben, 2026-11-13; the session
+            photo it replaced is under "How it works" now): the home page's
+            own heat map (components/BrainMapHeat.tsx, without its legend),
+            centered on a soft ivory panel with its caption. `eager`: it is
+            on the first screen, so its field is in the server's HTML. */}
+        <figure className="start-map">
+          <BrainMapHeat legend={false} eager />
+          <figcaption>{START_HOW.caption}</figcaption>
+        </figure>
 
         <div className="start-pane">
           <h1>{hook.headline}</h1>
           <p className="start-line">{START_OFFER.line}</p>
-          {/* The trust line, and on a phone a small link beside it that
-              scrolls to "How it works" — on the same row, so the button
-              stays on the first 390×844 screen. */}
           <p className="start-trust">
-            <span>
-              <span className="start-star" aria-hidden="true">
-                {START_TRUST.star}
-              </span>{" "}
-              {START_TRUST.text}
-            </span>
-            <a className="start-jump" href={`#${START_HOW.id}`}>
-              {START_HOW.jump} <span aria-hidden="true">↓</span>
-            </a>
+            <span className="start-star" aria-hidden="true">
+              {START_TRUST.star}
+            </span>{" "}
+            {START_TRUST.text}
           </p>
 
           <div className="start-form" id="send-a-message">
@@ -112,14 +102,17 @@ export default async function StartPage({
         </div>
       </section>
 
-      {/* How it works (Ben, 2026-11-13): the home page's own sample heat
-          map (components/BrainMapHeat.tsx, without its legend), one caption,
-          three numbered lines. Nothing else. */}
+      {/* How it works (Ben, 2026-11-13): the session photo, small and
+          rounded — a real HBC photo — then three numbered lines. */}
       <section className="start-how" id={START_HOW.id}>
-        <figure className="start-how-map">
-          <BrainMapHeat legend={false} />
-          <figcaption>{START_HOW.caption}</figcaption>
-        </figure>
+        <div className="start-how-photo">
+          <Image
+            src="/images/concierge.jpg"
+            alt="A practitioner places a small sensor behind a client's ear during a LENS session"
+            fill
+            sizes="(min-width: 900px) 440px, (min-width: 701px) 512px, calc(100vw - 48px)"
+          />
+        </div>
         <div className="start-how-copy">
           <h2>{START_HOW.heading}</h2>
           <ol>

@@ -62,9 +62,9 @@ export const START_OFFER = {
 
 /**
  * "How it works", under the form (Ben, 2026-11-13; it replaced the three
- * "What you get" lines): the sample heat map the home page shows, one
- * caption, three numbered steps. Ben's words, verbatim. `jump` is the small
- * phone-only link beside the trust line that scrolls here.
+ * "What you get" lines): the session photo and three numbered steps. Ben's
+ * words, verbatim. `caption` sits under the hero, which is the sample heat
+ * map the home page shows.
  */
 export const START_HOW = {
   id: "how-it-works",
@@ -75,7 +75,6 @@ export const START_HOW = {
     "We walk you through your results and how they can show up in everyday life.",
     "We build a customized brain plan based on your results.",
   ],
-  jump: "What’s a brain map?",
 } as const;
 
 /**
