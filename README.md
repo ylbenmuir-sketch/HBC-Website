@@ -1400,12 +1400,12 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   Don't mint `/neurofeedback-nashville` or the like beside them.
 - **`/start` is the Instagram landing page** (noindex): bio link
   `https://harmonizedbraincenterstn.com/start?utm_source=instagram&utm_medium=social&utm_campaign=bio`.
-  It is also the Meta ad landing page, ultra simple since 2026-11-13: one
-  photo, a headline of six words or fewer picked by the `?h=` code
+  It is also the Meta ad landing page, ultra simple since 2026-11-13: the
+  sample brain map as the hero, a headline of six words or fewer picked by the `?h=` code
   (`lib/start.ts`; `lib/start.test.mjs` holds the word rules), one offer
   line, one trust line, name / phone / center with the email field behind
   "Add email (optional)", the button, one guarantee sentence, then "How it
-  works" (the home page heat map, three numbered lines). `?center=murfreesboro` selects that chip in the server HTML.
+  works" (the session photo, three numbered lines). `?center=murfreesboro` selects that chip in the server HTML.
   The visit's first utm tags and whether it came from Instagram ride onto
   the lead row as `utm_*` / `lead_source` (`lib/attribution.ts`, migration
   0019), wherever on the site the form is finally sent.
