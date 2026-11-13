@@ -140,14 +140,22 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
                 </span>
               ))}
             </p>
+            {/* What the ad names (Ben, 2026-11-13): the grand prize, on the first screen. Count and value from config. */}
+            <p className="ty-grand" data-hype-grand>
+              {t.grandLineNotify(prizeFor("grand").sessions, usd(prizeRetailUsd(prizeFor("grand"))))}
+            </p>
             {notice && <div className="ty-card ty-hype-notice">{notice}</div>}
             <div className="ty-hype-cta" id="ty-cal-hero">
-              <CalendarMenu label={t.calendarButton} google={CALENDAR.google} ics={CALENDAR.ics} />
+              <CalendarMenu label={t.calendarButton} google={CALENDAR.google} ics={CALENDAR.ics} fallback={t.calendarFallback} />
             </div>
+            {/* The backup (Ben, 2026-11-13): a text link to the reminder strip, which sits far down the page. Not a second button. */}
+            <a className="ty-textlink ty-hype-remind" href="#enter" data-remind-link>
+              {t.remindLink}
+            </a>
             <a className="ty-textlink ty-hype-prizes" href="#ty-prizes" data-see-prizes>
               {t.seePrizes}
             </a>
-            {/* The mystery gift (fix list rev 2, P0-4): one quiet line, desktop only; never named here. */}
+            {/* The mystery gift (fix list rev 2, P0-4): one quiet line, never named here. On phones too since 2026-11-13. */}
             <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>
             <p className="ty-proof">{t.proofLine(YEARS, STAT_SESSIONS.value)}</p>
           </div>
@@ -163,7 +171,7 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
         </section>
         <QuestionsRow mode={mode} />
         <EntryBar watchId="ty-cal-hero">
-          <CalendarMenu label={t.entryBarNotify} google={CALENDAR.google} ics={CALENDAR.ics} variant="bar" />
+          <CalendarMenu label={t.entryBarNotify} google={CALENDAR.google} ics={CALENDAR.ics} fallback={t.calendarFallback} variant="bar" />
         </EntryBar>
       </div>
     );

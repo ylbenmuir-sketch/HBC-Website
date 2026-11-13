@@ -324,10 +324,18 @@ export const PAGES = {
     valueLinePast: (totalUsd: number) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
     /** Notify-me only (Ben, 2026-11-10): "Over $5,500 in prizes · Six drawings, Nov 16–21". All three from config. */
     valueLineNotify: (totalUsd: number, drawings: number, span: string) => D(`Over $${totalUsd.toLocaleString("en-US")} in prizes · ${countWord(drawings)} drawings, ${span}`),
+    /** Notify-me only (Ben, 2026-11-13): the grand prize, under the prize line — what the ad names. The session
+     *  count and the value come from config; "and more" because the value is the whole prize (the chair, the
+     *  device, the partner sessions, the bottles), not the map and the sessions alone. */
+    grandLineNotify: (sessions: number, value: string) => D(`Grand prize: a Brain Map, ${sessions} LENS sessions and more. ${value} value.`),
     /** Notify-me's hero (Ben, 2026-11-10): the one button is the calendar, with its two kinds; the link scrolls to the ladder. */
     calendarButton: D("Add to my calendar"),
     calendarGoogle: D("Google Calendar"),
     calendarIcs: D("Apple / Outlook"),
+    /** In Facebook's or Instagram's in-app browser only, under the two links (Ben, 2026-11-13). */
+    calendarFallback: D("If Google doesn't open, use Apple / Outlook."),
+    /** Under the button (Ben, 2026-11-13): a text link down to the reminder strip — the backup, not a second button. */
+    remindLink: D("Or email me a reminder"),
     seePrizes: D("See the prizes ↓"),
     /** The mystery-gift tease (fix list rev 2, P0-4): notify and live only. "Gift", never "prize"; never names the visit. */
     giftTeaseHero: D("Every entrant receives a 10-year thank-you gift, revealed Saturday night."),

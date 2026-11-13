@@ -169,6 +169,23 @@ export type LinkLocation = (typeof LINK_LOCATIONS)[number];
 export const REVIEW_CENTERS = ["nashville", "murfreesboro"] as const;
 export type ReviewCenter = (typeof REVIEW_CENTERS)[number];
 
+/** The /10years form that was sent: the reminder before entries open, the entry after. */
+export const GIVEAWAY_FORM_TYPES = ["reminder", "entry"] as const;
+export type GiveawayFormType = (typeof GIVEAWAY_FORM_TYPES)[number];
+/** The form's own `data-entry-form` → one of the two: "reminder" is the reminder, anything else an entry. */
+export function giveawayFormType(value: unknown): GiveawayFormType {
+  return value === "reminder" ? "reminder" : "entry";
+}
+
+/** The two calendar links on /10years. */
+export const CALENDAR_TYPES = ["google", "ics"] as const;
+export type CalendarType = (typeof CALENDAR_TYPES)[number];
+/** A calendar-link tap; null for anything that is not one of the two links. */
+export function addToCalendarEvent(calendarType: unknown, pageLocation: unknown): SiteEvent | null {
+  if (!(CALENDAR_TYPES as readonly unknown[]).includes(calendarType)) return null;
+  return { name: "add_to_calendar", params: { calendar_type: calendarType as CalendarType, page_location: typeof pageLocation === "string" ? pageLocation.slice(0, 500) : "" } };
+}
+
 type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
 
 export type SiteEvent =
@@ -184,7 +201,11 @@ export type SiteEvent =
   | { name: "giveaway_banner_click"; params: { mode: "notify" | "live" | "closed" } }
   | { name: "giveaway_banner_dismiss"; params: { mode: "notify" | "live" | "closed" } }
   /** The /10years form was sent (P1-6): the normalized channel only. */
-  | { name: "giveaway_signup_submit"; params: { channel: Channel } }
+  | { name: "giveaway_signup_submit"; params: { channel: Channel; form_type: GiveawayFormType } }
+  /** A tap on a /10years calendar link (Ben, 2026-11-13): which of the two
+   *  links, and the page address GA already holds for the visit. "ics" is the
+   *  "Apple / Outlook" file — one link, so the two are not told apart. */
+  | { name: "add_to_calendar"; params: { calendar_type: CalendarType; page_location: string } }
   | { name: "guide_download"; params: { page_path: string } }
   /** /review (2026-11-09): a tap on a center's "write a review" button. The
    *  center only — the page is noindex and carries nothing about the client. */
