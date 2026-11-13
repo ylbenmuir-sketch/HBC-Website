@@ -47,8 +47,8 @@ export function startHook(h: unknown): StartHook {
  * "clarity session" or a "free call" on this page. Every line the page and
  * its form print about the offer comes from here. Since 2026-11-13 (Ben: the
  * phone view was "too wordy and over stimulating") that is one line under
- * the headline, the same for every code, one guarantee sentence under the
- * button, and three short lines below.
+ * the headline, the same for every code, and one guarantee sentence under
+ * the button.
  */
 export const START_OFFER = {
   name: "Brain Map Session",
@@ -58,8 +58,24 @@ export const START_OFFER = {
   guarantee: "If we don’t deliver the map and the plan, you don’t pay.",
   /** The confirmation's one line, once the request is sent. Not on the form. */
   afterSend: "No payment today. We’ll call or text within 1 business day to pick a time.",
-  getsHeading: "What you get",
-  gets: ["A full map of your brain.", "A plain-English walkthrough.", "A written plan to take home."],
+} as const;
+
+/**
+ * "How it works", under the form (Ben, 2026-11-13; it replaced the three
+ * "What you get" lines): the sample heat map the home page shows, one
+ * caption, three numbered steps. Ben's words, verbatim. `jump` is the small
+ * phone-only link beside the trust line that scrolls here.
+ */
+export const START_HOW = {
+  id: "how-it-works",
+  heading: "How it works",
+  caption: "Your brain map, in plain English.",
+  steps: [
+    "We measure all 21 sites of your brain to see what’s doing well, what’s in overdrive, and what’s underperforming.",
+    "We walk you through your results and how they can show up in everyday life.",
+    "We build a customized brain plan based on your results.",
+  ],
+  jump: "What’s a brain map?",
 } as const;
 
 /**
