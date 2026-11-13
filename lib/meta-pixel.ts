@@ -7,9 +7,11 @@
  * www — never `next dev`, a preview, or the *.vercel.app alias. On top of
  * that, the pixel itself only on general pages (metaAllowedPath).
  *
- * Events carry no parameters at all: `fbq('track', 'Lead', {}, { eventID })`.
- * The same eventID reaches Meta from the server (lib/meta-capi.ts), which is
- * how the two copies are counted once.
+ * Lead and Contact carry no parameters at all:
+ * `fbq('track', 'Lead', {}, { eventID })`. The same eventID reaches Meta from
+ * the server (lib/meta-capi.ts), which is how the two copies are counted once.
+ * The /10years calendar tap (trackMetaCalendar) is a custom event, browser
+ * only, with one fixed value: which of the two calendar links.
  */
 
 import { PRODUCTION_DEPLOY, analyticsAllowedHost } from "./analytics";
@@ -49,6 +51,21 @@ function fbqTrack(event: "Lead" | "Contact", eventId: string): void {
 /** A saved lead: the browser Lead, with the id the server copy was (or will be) sent with. */
 export function trackMetaLead(eventId: unknown): void {
   if (typeof eventId === "string" && eventId) fbqTrack("Lead", eventId);
+}
+
+/**
+ * A /10years calendar-link tap (Ben, 2026-11-13): a CUSTOM event — never
+ * Lead or CompleteRegistration, nobody signed up for anything. Only where
+ * the pixel already runs (metaPixelActive); the one parameter is "google"
+ * or "ics". No server copy, no user fields.
+ */
+export function trackMetaCalendar(calendarType: "google" | "ics"): void {
+  if (typeof window === "undefined" || !metaPixelActive(window.location.pathname) || typeof window.fbq !== "function") return;
+  try {
+    window.fbq("trackCustom", "AddToCalendar", { calendar_type: calendarType }, { eventID: newMetaEventId() });
+  } catch {
+    // Measurement never surfaces as an error to a visitor.
+  }
 }
 
 /** The visit's landing fbclid and time, for the server's fbc fallback. */

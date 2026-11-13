@@ -2973,11 +2973,14 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-hype h1 { align-items: center; margin-bottom: 14px; }
 .ty-hype .ty-count { margin: 0 0 16px; }
 .ty-hype .ty-count-boxes { justify-content: center; }
-.ty-hype .ty-value { margin: 0 0 18px; }
+.ty-hype .ty-value { margin: 0 0 6px; }
+/* The grand prize, under the prize line (Ben, 2026-11-13): plain, one step quieter than the line above. */
+.ty-grand { font-family: var(--sans); font-size: 17px; font-weight: 500; line-height: 1.4; color: var(--navy); margin: 0 0 18px; max-width: 34em; text-wrap: balance; }
 .ty-hype .ty-gift-tease { margin: 16px 0 0; }
 .ty-hype .ty-proof { margin-top: 10px; }
 .ty-hype-notice { width: 100%; max-width: 480px; margin: 0 0 18px; text-align: left; }
-.ty-hype-prizes { margin-top: 14px; font-size: 16px; }
+.ty-hype-remind { margin-top: 14px; font-size: 16px; }
+.ty-hype-prizes { margin-top: 12px; font-size: 16px; }
 /* "Add to my calendar": a button that opens its two kinds (a <details>, so it works without the script). */
 .ty-cal { position: relative; display: inline-block; }
 .ty-cal > summary { list-style: none; min-width: 300px; min-height: 54px; padding: 14px 34px; font-size: 17px; user-select: none; }
@@ -2986,6 +2989,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-cal-menu { position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; right: 0; display: grid; gap: 2px; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 24px 50px -28px rgba(21, 34, 48, 0.5); }
 .ty-cal-menu a { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 14px; border-radius: 6px; font-family: var(--sans); font-size: 15.5px; font-weight: 600; color: var(--navy); text-decoration: none; }
 .ty-cal-menu a:hover, .ty-cal-menu a:focus-visible { background: var(--ivory-2); }
+/* In Facebook's in-app browser only: what to do if the Google link does not open. */
+.ty-cal-note { margin: 2px 0 4px; padding: 0 10px; font-family: var(--sans); font-size: 13px; line-height: 1.4; color: var(--slate); text-align: center; }
 .ty-cal-bar { display: block; }
 .ty-cal-bar > summary { width: 100%; min-width: 0; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
 .ty-cal-bar .ty-cal-menu { top: auto; bottom: calc(100% + 8px); }
@@ -3239,7 +3244,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-hype { padding: 18px 0 28px; }
   .ty-hype h1 { margin-bottom: 12px; }
   .ty-hype .ty-count { align-self: stretch; margin: 0 0 14px; }
-  .ty-hype .ty-value { font-size: 19px; margin-bottom: 16px; }
+  .ty-hype .ty-value { font-size: 19px; margin-bottom: 6px; }
+  .ty-grand { font-size: 15.5px; margin-bottom: 14px; }
   .ty-hype .ty-value-part { display: block; }
   .ty-hype .ty-value-dot { display: none; }
   .ty-hype .ty-proof { letter-spacing: 0; text-wrap: balance; }
@@ -3312,11 +3318,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-entrybar-btn { width: 100%; min-height: 48px; padding: 12px 20px; font-size: 15.5px; }
   .slim-row { justify-content: center; text-align: center; }
 }
-/* Before entries open, on phones: the gift line steps aside (Ben, 2026-11-09), so the first screen is
-   the label, headline, countdown, prize line, the calendar button and the link to the prizes. */
-@media (max-width: 639px) {
-  .ty[data-mode="notify_me"] .ty-gift-tease { display: none; }
-}
+/* Before entries open, on phones: the gift line was hidden (Ben, 2026-11-09) and is shown again
+   (Ben, 2026-11-13) — it sits under the links, so it takes nothing from the first screen. */
 @media (max-width: 359px) {
   .ty-path-btns, .form.ty-form .ty-choice { grid-template-columns: 1fr; }
   /* Below 360 the phone and the ZIP each take the full row. */
