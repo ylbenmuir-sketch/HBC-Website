@@ -3400,7 +3400,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
    2026-11-13 — "too wordy and over stimulating" on a phone) ───────────
    Phone: the logo and the phone, one full-bleed photo, a short headline,
    one line, one quiet trust line, three fields on the bare page and the
-   button — all on a 390×844 first screen (app/start/page.tsx). Desktop
+   button — all on a 390×844 first screen (app/start/page.tsx); under it,
+   "How it works" (the sample heat map and three numbered lines). Desktop
    (900px and up): the photo beside that column. No cards, lists, badges or
    bands; the gold star is the one accent. Type is --slate or darker on
    --ivory (5.4:1 and up); field and chip borders are --line-control, the
@@ -3445,20 +3446,33 @@ header.site.start-header .logo { cursor: default; }
 .start-guarantee { margin: 12px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: var(--slate); }
 /* After the send, steps two and three are the form's own cards. */
 .start-page .form-card { padding: 22px 22px !important; border-radius: 10px !important; }
-.start-get { padding: 44px 24px 40px; }
-.start-get h2 { margin: 0 0 12px; font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1.15; color: var(--navy); }
-.start-get ul { list-style: none; margin: 0; padding: 0; }
-.start-get li { font-size: 15px; line-height: 1.9; color: var(--ink); }
+/* "What's a brain map? ↓" beside the trust line, phones only: a 44px tap
+   target that adds no height (the padding is taken back by the margin). */
+.start-trust { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; }
+.start-jump { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -13px 0; color: var(--navy); text-decoration: underline; text-decoration-color: var(--line-control); text-underline-offset: 3px; white-space: nowrap; }
+/* How it works: the sample heat map, its caption, three numbered lines.
+   The numerals are navy serif — no discs, no gold. */
+.start-how { padding: 56px 24px 52px; scroll-margin-top: 60px; }
+.start-how-map { width: 100%; margin: 0 auto; max-width: 420px; }
+.start-how-map figcaption { margin-top: 4px; text-align: center; font-size: 13.5px; line-height: 1.4; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); }
+.start-how h2 { margin: 40px 0 18px; font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1.15; color: var(--navy); }
+.start-how ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.start-how li { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: baseline; font-size: 15px; line-height: 1.55; color: var(--ink); }
+.start-how-n { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1; color: var(--navy); font-variant-numeric: lining-nums; }
 footer.site.start-footer { padding: 18px 0 28px; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.5; color: var(--slate); }
 .start-footer-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 .start-footer p { margin: 0 0 6px; }
 footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 @media (min-width: 701px) and (max-width: 899px) {
   .start-photo { height: 260px; }
-  .start-pane, .start-get { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .start-pane, .start-how { max-width: 560px; margin-left: auto; margin-right: auto; }
 }
 @media (max-width: 767px) {
   header.site.start-header .nav { height: 52px; }
+}
+/* The trust line and the link stay on one row on a narrow phone. */
+@media (max-width: 374px) {
+  .start-trust { font-size: 12px; gap: 0 8px; }
 }
 @media (min-width: 900px) {
   /* The logo and the phone line up with the photo and the form. */
@@ -3469,10 +3483,14 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .start-pane h1 { font-size: 50px; }
   .start-line { font-size: 17px; }
   .start-trust { font-size: 14px; }
-  .start-get { display: flex; gap: 72px; align-items: baseline; max-width: 1180px; margin: 0 auto; padding: 72px 48px 56px; }
-  .start-get h2 { min-width: 200px; margin: 0; font-size: 30px; }
-  .start-get ul { display: flex; flex-wrap: wrap; gap: 8px 40px; }
-  .start-get li { font-size: 16px; }
+  .start-jump { display: none; }
+  .start-how { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 96px 48px 88px; }
+  .start-how-map { max-width: 520px; }
+  .start-how-map figcaption { font-size: 15px; }
+  .start-how h2 { margin: 0 0 24px; font-size: 30px; }
+  .start-how ol { gap: 22px; }
+  .start-how li { grid-template-columns: 32px minmax(0, 1fr); font-size: 16px; }
+  .start-how-n { font-size: 26px; }
   footer.site.start-footer { padding: 22px 0 32px; }
   .start-footer-in { padding: 0 48px; }
 }

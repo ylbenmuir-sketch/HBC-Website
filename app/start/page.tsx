@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import BrainMapHeat from "@/components/BrainMapHeat";
 import ContactForm from "@/components/ContactForm";
 import { getVideo } from "@/lib/videos";
 import { cleanHook } from "@/lib/attribution";
 import { SITE_NAME } from "@/lib/site-config";
-import { START_OFFER, START_TRUST, startHook } from "@/lib/start";
+import { START_HOW, START_OFFER, START_TRUST, startHook } from "@/lib/start";
 import { startCenters } from "@/lib/start-centers";
 
 /**
@@ -17,8 +18,8 @@ import { startCenters } from "@/lib/start-centers";
  * Ultra simple since 2026-11-13 (Ben, of the phone view: "too wordy and over
  * stimulating"). A phone's first screen is the logo and the phone, one
  * photo, a headline of six words or fewer, one line, one quiet trust line,
- * three fields and the button. Below it: the one guarantee sentence, three
- * short lines under "What you get", the footer. No lists, cards, badges or
+ * three fields and the button. Below it: the one guarantee sentence, "How
+ * it works" (the sample heat map and three numbered lines), the footer. No lists, cards, badges or
  * bands, and one accent (the gold star).
  *
  * - `h` picks the headline (lib/start.ts). It is a code, never a word, and
@@ -84,11 +85,19 @@ export default async function StartPage({
         <div className="start-pane">
           <h1>{hook.headline}</h1>
           <p className="start-line">{START_OFFER.line}</p>
+          {/* The trust line, and on a phone a small link beside it that
+              scrolls to "How it works" — on the same row, so the button
+              stays on the first 390×844 screen. */}
           <p className="start-trust">
-            <span className="start-star" aria-hidden="true">
-              {START_TRUST.star}
-            </span>{" "}
-            {START_TRUST.text}
+            <span>
+              <span className="start-star" aria-hidden="true">
+                {START_TRUST.star}
+              </span>{" "}
+              {START_TRUST.text}
+            </span>
+            <a className="start-jump" href={`#${START_HOW.id}`}>
+              {START_HOW.jump} <span aria-hidden="true">↓</span>
+            </a>
           </p>
 
           <div className="start-form" id="send-a-message">
@@ -103,13 +112,27 @@ export default async function StartPage({
         </div>
       </section>
 
-      <section className="start-get">
-        <h2>{START_OFFER.getsHeading}</h2>
-        <ul>
-          {START_OFFER.gets.map((g) => (
-            <li key={g}>{g}</li>
-          ))}
-        </ul>
+      {/* How it works (Ben, 2026-11-13): the home page's own sample heat
+          map (components/BrainMapHeat.tsx, without its legend), one caption,
+          three numbered lines. Nothing else. */}
+      <section className="start-how" id={START_HOW.id}>
+        <figure className="start-how-map">
+          <BrainMapHeat legend={false} />
+          <figcaption>{START_HOW.caption}</figcaption>
+        </figure>
+        <div className="start-how-copy">
+          <h2>{START_HOW.heading}</h2>
+          <ol>
+            {START_HOW.steps.map((step, i) => (
+              <li key={step}>
+                <span className="start-how-n" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
     </div>
   );
