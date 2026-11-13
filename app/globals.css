@@ -3396,93 +3396,85 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .review-btn { width: 100%; }
 }
 
-/* ── /start, the ad landing page (Ben, 2026-11-11; the Instagram page of
-   2026-11-09 before it) ──────────────────────────────────────────────
-   Desktop: the pitch (headline, sub, what you get, the guarantee) beside
-   the form. Phone: one column in that order, cut tight so the form card
-   starts on the first screen (measured at 390×844 — app/start/page.tsx).
-   The header is the logo and one phone link; the footer is short. */
+/* ── /start, the ad landing page (Ben, 2026-11-11; ultra simple since
+   2026-11-13 — "too wordy and over stimulating" on a phone) ───────────
+   Phone: the logo and the phone, one full-bleed photo, a short headline,
+   one line, one quiet trust line, three fields on the bare page and the
+   button — all on a 390×844 first screen (app/start/page.tsx). Desktop
+   (900px and up): the photo beside that column. No cards, lists, badges or
+   bands; the gold star is the one accent. Type is --slate or darker on
+   --ivory (5.4:1 and up); field and chip borders are --line-control, the
+   site's 3:1 control border. The header is the logo and one phone link;
+   the footer is short. */
 header.site.start-header .logo { cursor: default; }
 .start-tel { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; font-size: 15px; font-weight: 600; color: var(--navy); text-decoration: none; white-space: nowrap; letter-spacing: 0.01em; }
 .start-tel svg { flex: none; color: var(--sage-deep); }
-.start-top { padding: 40px 0 28px; }
-.start-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 56px; align-items: start; }
-.start-pitch h1 { font-size: clamp(34px, 3.6vw, 50px); line-height: 1.08; margin: 6px 0 16px; max-width: 16ch; }
-.start-sub { margin: 0; font-size: 18px; line-height: 1.5; color: var(--ink); max-width: 46ch; }
-.start-values { list-style: none; margin: 26px 0 0; padding: 0; display: grid; gap: 10px; max-width: 50ch; }
-.start-values li { position: relative; padding-left: 28px; font-size: 16px; line-height: 1.45; color: var(--ink); }
-.start-values li::before { content: ""; position: absolute; left: 3px; top: 0.3em; width: 12px; height: 7px; border-left: 2px solid var(--sage-deep); border-bottom: 2px solid var(--sage-deep); transform: rotate(-45deg); }
-.start-guarantee { margin: 24px 0 0; padding: 16px 18px; max-width: 50ch; background: #fff; border: 1px solid var(--gold-soft); border-left: 3px solid var(--gold); border-radius: 4px; font-size: 15.5px; line-height: 1.5; color: var(--navy); font-weight: 500; }
-.start-form-heading { margin: 0 0 14px; font-family: var(--serif); font-size: 26px; line-height: 1.15; font-weight: 600; color: var(--navy); }
-.start-page .form-card { padding: 26px 30px !important; }
-.start-ways { margin-top: 18px; }
-.start-address { margin: 0; text-align: center; font-size: 14.5px; line-height: 1.5; color: var(--slate); font-weight: 500; }
-.start-ways .contact-ways { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-.start-ways .contact-ways-line { margin: 14px 0 0; }
-.start-more { padding: 28px 0 64px; }
-.start-more-col { max-width: 760px; display: grid; gap: 44px; }
-.start-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.start-steps li { display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.4; color: var(--ink); font-weight: 500; }
-.start-step-n { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--gold); font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--navy); }
-.start-reviews { display: grid; gap: 18px; }
-.start-review { margin: 0; padding: 20px 22px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
-.start-stars { color: var(--gold); font-size: 15px; letter-spacing: 2px; line-height: 1; }
-.start-review blockquote { margin: 10px 0 10px; font-size: 16px; line-height: 1.55; color: var(--ink); }
-.start-review figcaption { font-size: 13.5px; color: var(--slate); font-weight: 500; }
-.start-proof { margin: 4px 0 0; text-align: center; }
-.start-vary { margin: -10px 0 0; text-align: center; font-size: 12.5px; color: var(--slate); }
-.start-faq h2 { margin: 0 0 8px; font-size: 28px; }
-.start-faq details { border-bottom: 1px solid var(--line); }
-.start-faq summary { cursor: pointer; padding: 15px 28px 15px 0; font-size: 16.5px; font-weight: 600; color: var(--navy); list-style: none; position: relative; min-height: 44px; }
-.start-faq summary::-webkit-details-marker { display: none; }
-.start-faq summary::after { content: "+"; position: absolute; right: 4px; top: 12px; font-size: 22px; font-weight: 400; color: var(--sage-deep); }
-.start-faq details[open] summary::after { content: "–"; }
-.start-faq details p { margin: 0 0 16px; font-size: 15.5px; line-height: 1.6; color: var(--ink); max-width: 62ch; }
-.start-back { margin: 0; text-align: center; }
-footer.site.start-footer { padding: 22px 0 26px; font-size: 12.5px; line-height: 1.6; }
-.start-footer p { margin: 0; max-width: 92ch; }
-.start-footer-id { color: var(--ink); }
-footer.site.start-footer a { display: inline; min-height: 0; text-decoration: underline; text-underline-offset: 2px; padding: 6px 0; }
-.start-footer-disclaimer { margin-top: 10px !important; color: var(--slate); }
-@media (max-width: 960px) {
-  .start-grid { grid-template-columns: 1fr; gap: 22px; }
-  .start-form { max-width: 560px; width: 100%; margin: 0 auto; }
-  .start-pitch { max-width: 560px; width: 100%; margin: 0 auto; }
-  .start-pitch h1 { max-width: none; }
+.start-photo { position: relative; height: 168px; overflow: hidden; background: var(--ivory-2); }
+.start-photo img { object-fit: cover; object-position: center 32%; filter: saturate(0.85); }
+.start-pane { padding: 26px 24px 0; }
+.start-pane h1 { margin: 0 0 10px; font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; color: var(--navy); }
+.start-line { margin: 0; font-size: 15px; line-height: 1.4; color: var(--slate); }
+.start-trust { margin: 8px 0 0; font-size: 13px; line-height: 1.4; color: var(--slate); }
+.start-star { color: var(--gold-ink); font-weight: 600; }
+.start-form { margin-top: 24px; }
+/* The fields, straight on the page. Small sentence-case labels above them;
+   no placeholders (Ben, 2026-10-30). */
+.start-page .start-fields label { display: block; margin: 0 0 5px; font-size: 12.5px; line-height: 1.3; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--slate); }
+.start-page .start-fields input:not([type="checkbox"]) { height: 46px; padding: 0 14px; margin: 0 0 10px; border: 1px solid var(--line-control); border-radius: 8px; background: #fff; font-size: 16px; line-height: 1.3; }
+.start-page .start-fields [aria-invalid="true"] { border-color: #9a3b2e; }
+/* The center chips: white pills in one row. Picked is a navy border and
+   bold type, not a fill. The grid holds each width, so the bold does not
+   shift its neighbours. */
+.start-page .start-fields .chips { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 8px; }
+.start-page .start-fields .chip { height: 44px; padding: 0 6px; border: 1px solid var(--line-control); background: #fff; font-size: 14px; line-height: 1; color: var(--navy); white-space: nowrap; }
+.start-page .start-fields .chip.on { background: #fff; color: var(--navy); border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); font-weight: 700; }
+/* "Add email (optional)": a button that reads as a quiet link, 44px tall
+   for a thumb. The field it adds sits where it was. */
+.start-add-email { display: inline-flex; align-items: center; min-height: 44px; margin: 2px 0 0; padding: 0; background: none; border: 0; font-family: var(--sans); font-size: 13px; line-height: 1.3; color: var(--slate); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.start-page .start-fields .chips + label { margin-top: 14px; }
+.start-page .start-fields input[type="email"] { margin-bottom: 0; }
+/* Text-message consent: the same box, label, disclosure and links as
+   /contact, word for word — only smaller and in slate (Ben, 2026-11-13).
+   The label row is still the 44px tap target. */
+.start-page .form .sms-consent { grid-template-columns: 16px minmax(0, 1fr); column-gap: 9px; margin-top: 0; }
+.start-page .form .sms-consent input[type="checkbox"] { width: 16px; height: 16px; }
+.start-page .start-fields .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 12.5px; line-height: 1.35; font-weight: 400; color: var(--slate); }
+.start-page .form .sms-consent-note { grid-column: 1 / -1; margin: -8px 0 0; font-size: 10.5px; line-height: 1.4; color: var(--slate); }
+.start-page .form .sms-consent a { color: inherit; }
+.start-page .start-fields .start-submit { height: 54px; padding: 0 20px; margin-top: 14px !important; border-radius: 10px; background: var(--navy); color: #fff; font-size: 16.5px; }
+.start-guarantee { margin: 12px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: var(--slate); }
+/* After the send, steps two and three are the form's own cards. */
+.start-page .form-card { padding: 22px 22px !important; border-radius: 10px !important; }
+.start-get { padding: 44px 24px 40px; }
+.start-get h2 { margin: 0 0 12px; font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1.15; color: var(--navy); }
+.start-get ul { list-style: none; margin: 0; padding: 0; }
+.start-get li { font-size: 15px; line-height: 1.9; color: var(--ink); }
+footer.site.start-footer { padding: 18px 0 28px; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.5; color: var(--slate); }
+.start-footer-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.start-footer p { margin: 0 0 6px; }
+footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 701px) and (max-width: 899px) {
+  .start-photo { height: 260px; }
+  .start-pane, .start-get { max-width: 560px; margin-left: auto; margin-right: auto; }
 }
 @media (max-width: 767px) {
   header.site.start-header .nav { height: 52px; }
-  .start-top { padding: 6px 0 22px; }
-  .start-grid { gap: 10px; }
-  .start-pitch h1 { font-size: 27px; line-height: 1.08; margin: 0; }
-  .start-sub { font-size: 15px; line-height: 1.36; }
-  .start-values { margin-top: 0; gap: 4px; }
-  .start-values li { font-size: 13.5px; line-height: 1.3; padding-left: 22px; }
-  /* The guarantee sits below the form on a phone (Ben, 2026-11-11), so the
-     button is on the first 390×844 screen: the pitch's children join the
-     one-column grid and are ordered around the form. */
-  .start-pitch { display: contents; }
-  .start-pitch > h1, .start-pitch > .start-sub, .start-pitch > .start-values { order: 0; }
-  .start-form { order: 1; }
-  .start-guarantee { order: 2; margin: 0; padding: 12px 14px; font-size: 14px; line-height: 1.45; max-width: none; }
-  .start-form-heading { font-size: 20px; margin-bottom: 6px; }
-  .start-page .form-card { padding: 10px 14px 10px !important; }
-  .start-page .form-compact label { margin: 4px 0 2px; }
-  .start-page .form .sms-consent { margin-top: 4px; }
-  .start-page .form .sms-consent label { min-height: 40px; }
-  /* The disclosure runs the card's full width here: three lines, not four. */
-  .start-page .form .sms-consent-note { grid-column: 1 / -1; line-height: 1.35; }
-  .start-page form.form-card button[type="submit"] { margin-top: 8px !important; }
-  .start-page form.form-card .micro { margin-top: 8px; }
-  .start-more { padding: 14px 0 44px; }
-  .start-more-col { gap: 32px; }
-  .start-steps { grid-template-columns: 1fr; gap: 12px; }
-  .start-steps li { flex-direction: row; align-items: center; gap: 12px; font-size: 15.5px; }
-  .start-step-n { flex: none; width: 30px; height: 30px; font-size: 17px; }
-  .start-review { padding: 16px 16px; }
-  .start-review blockquote { font-size: 15px; }
-  .start-faq h2 { font-size: 24px; }
-  .start-back .btn { width: 100%; }
+}
+@media (min-width: 900px) {
+  /* The logo and the phone line up with the photo and the form. */
+  header.site.start-header .nav { max-width: 1180px; padding: 0 48px; }
+  .start-hero { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: start; max-width: 1180px; margin: 0 auto; padding: 40px 48px 0; }
+  .start-photo { height: 620px; border-radius: 16px; }
+  .start-pane { padding: 36px 0 0; }
+  .start-pane h1 { font-size: 50px; }
+  .start-line { font-size: 17px; }
+  .start-trust { font-size: 14px; }
+  .start-get { display: flex; gap: 72px; align-items: baseline; max-width: 1180px; margin: 0 auto; padding: 72px 48px 56px; }
+  .start-get h2 { min-width: 200px; margin: 0; font-size: 30px; }
+  .start-get ul { display: flex; flex-wrap: wrap; gap: 8px 40px; }
+  .start-get li { font-size: 16px; }
+  footer.site.start-footer { padding: 22px 0 32px; }
+  .start-footer-in { padding: 0 48px; }
 }
 
 /* ── /contact on a desktop: step one inside 1280×800 (Ben, 2026-11-12) ────
