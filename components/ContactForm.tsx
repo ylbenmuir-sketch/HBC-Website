@@ -284,6 +284,7 @@ export default function ContactForm({
   giveaway = null,
   variant = "default",
   hook = null,
+  initialCenter = null,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -292,18 +293,20 @@ export default function ContactForm({
   /** The 10-year giveaway path (/contact?from=10years), or null. */
   giveaway?: GiveawayBooking | null;
   /**
-   * "start" is the Instagram landing page's form (/start, Ben, 2026-11-09):
-   * step one without "Who referred you?" — a visitor arriving from the bio
-   * link was not referred by a person, and the field is the one optional
-   * line standing between the center chips and the button on a 390×844
-   * screen. Step two still asks it when a referral is picked. Everything
-   * else — the fields, the consent box, the request, the funnel — is the
-   * same form, so the lead is the same lead.
+   * "start" is the ad landing page's form (/start; Ben, 2026-11-09, ultra
+   * simple since 2026-11-13): no card and no heading, the fields straight
+   * on the page — name, phone, center — with the email field behind an
+   * "Add email (optional)" link, and one guarantee sentence under the
+   * button. The consent box, the request, the spam guard, the funnel and
+   * the Key event are the same form's, so the lead is the same lead.
    */
   variant?: "default" | "start";
   /** /start's headline code, for the no-JavaScript post only (the JSON
    *  submit reads it from the visit's first touch — lib/attribution.ts). */
   hook?: string | null;
+  /** /start only: the center its link named (?center=murfreesboro), chosen
+   *  in the server's HTML so the chip is on at first paint, not after mount. */
+  initialCenter?: "Nashville" | "Murfreesboro" | null;
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -314,8 +317,12 @@ export default function ContactForm({
   const [givenName, setGivenName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  // /start keeps the email field behind "Add email (optional)" (Ben,
+  // 2026-11-13); it opens on a tap, or by itself when a send has no phone.
+  const [emailOpen, setEmailOpen] = useState(false);
+  const focusEmail = useRef(false);
   // A valid 10-year code preselects the entrant's nearer center; ?center= still wins (below).
-  const [preferredCenter, setPreferredCenter] = useState<string | null>(giveaway?.center ?? null);
+  const [preferredCenter, setPreferredCenter] = useState<string | null>(giveaway?.center ?? initialCenter ?? null);
   const [showConcierge, setShowConcierge] = useState(false);
   const [note, setNote] = useState("");
   // Unchecked by default, and never required (lib/sms-consent.ts).
@@ -362,7 +369,7 @@ export default function ContactForm({
     }
   }, []);
 
-  // /start's header phone, Call and Text buttons and address line follow
+  // /start's header phone and the footer's center line follow
   // the center picked here (lib/start-center.ts). "Not sure" is Nashville.
   useEffect(() => {
     if (variant !== "start") return;
@@ -388,6 +395,14 @@ export default function ContactForm({
     window.addEventListener("pagehide", onHide);
     return () => window.removeEventListener("pagehide", onHide);
   }, []);
+
+  // The email field, once "Add email" has put it on the page, takes the cursor.
+  useEffect(() => {
+    if (emailOpen && focusEmail.current) {
+      focusEmail.current = false;
+      document.getElementById("email")?.focus();
+    }
+  }, [emailOpen]);
 
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -431,6 +446,9 @@ export default function ContactForm({
     const mail = email.trim();
     if (!name) return refuse("missing_name", "Please add your name.", "first-name");
     if (!tel && !mail) {
+      // /start: the email field is behind a link, so put it on the page —
+      // the message offers it as the other way to be reached.
+      setEmailOpen(true);
       return refuse("missing_contact", "Please add a phone number or an email so we can reach you.", "phone");
     }
     // A real US number: in-service area code, dialable exchange (the spam
@@ -602,7 +620,7 @@ export default function ContactForm({
         heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll reach out soon.</>}
       >
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
-        <p className="done-line">{variant === "start" ? START_OFFER.underButton : "Free call, no obligation."}</p>
+        <p className="done-line">{variant === "start" ? START_OFFER.afterSend : "Free call, no obligation."}</p>
         <p className="done-line done-phones" data-link-location="confirmation">
           Want to talk now?{" "}
           {lines.map(({ name: center, phone: line }, i) => (
@@ -736,10 +754,34 @@ export default function ContactForm({
   /* ── Step one ───────────────────────────────────────────────────────── */
   const centerOptions = showConcierge ? [...CENTER_CHOICES, CONCIERGE_CHOICE] : CENTER_CHOICES;
   const invalid = (id: string) => (invalidField === id ? true : undefined);
+  const isStart = variant === "start";
+  const showEmail = !isStart || emailOpen || email.length > 0;
+  const emailField = showEmail && (
+    <>
+      {/* The label says the either-or (Ben, 2026-11-12): the sentence that
+          used to sit above the pair is gone on every width. Not on the
+          giveaway path, where the phone is the optional one. */}
+      <label htmlFor="email">
+        Email{!giveaway && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+        autoCapitalize="off"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        aria-invalid={invalid("email")}
+      />
+    </>
+  );
   return (
     <form
-      className="form form-compact rv above-fold form-card"
-      style={CARD_STYLE}
+      // /start (Ben, 2026-11-13): no card — the fields sit on the page.
+      className={`form form-compact rv above-fold ${isStart ? "start-fields" : "form-card"}`}
+      style={isStart ? undefined : CARD_STYLE}
       action="/api/consultation"
       method="post"
       onSubmit={sendRequest}
@@ -748,13 +790,7 @@ export default function ContactForm({
       onInput={onFirstInteraction}
       noValidate
     >
-      {variant === "start" ? (
-        // /start (Ben, 2026-11-11): the offer by name and price, an H2 so it
-        // shows on a phone, where the eyebrow is hidden.
-        <h2 className="start-form-heading">{START_OFFER.formHeading}</h2>
-      ) : (
-        <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
-      )}
+      {!isStart && <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>}
       {variant === "start" && hook && <input type="hidden" name="hook" value={hook} />}
       {/* For the no-JavaScript post only (see the file comment): the JSON
           submit builds its own body. The center mirrors the chips' state;
@@ -830,23 +866,8 @@ export default function ContactForm({
         aria-invalid={invalid("phone")}
       />
 
-      {/* The label says the either-or (Ben, 2026-11-12): the sentence that
-          used to sit above the pair is gone on every width. Not on the
-          giveaway path, where the phone is the optional one. */}
-      <label htmlFor="email">
-        Email{!giveaway && <> <span style={OPTIONAL_STYLE}>(or just phone)</span></>}
-      </label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        autoCapitalize="off"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        aria-invalid={invalid("email")}
-      />
+      {/* Everywhere but /start the email field comes before the center. */}
+      {!isStart && emailField}
 
       <label id="center-label">Which center?</label>
       <ChoiceChips
@@ -860,6 +881,24 @@ export default function ContactForm({
         }}
         required
       />
+
+      {/* /start: three fields, then a quiet link that adds the email one —
+          a real button, so it is in the tab order. The field takes the
+          cursor when it appears. */}
+      {isStart && !showEmail && (
+        <button
+          type="button"
+          className="start-add-email"
+          aria-expanded={false}
+          onClick={() => {
+            focusEmail.current = true;
+            setEmailOpen(true);
+          }}
+        >
+          Add email (optional)
+        </button>
+      )}
+      {isStart && emailField}
 
       {/* Text-message consent, last before the button (Ben, 2026-11-02).
           A2P 10DLC: carrier reviewers read it in the server-rendered HTML,
@@ -940,7 +979,7 @@ export default function ContactForm({
       )}
 
       <button
-        className="btn btn-primary"
+        className={`btn btn-primary${isStart ? " start-submit" : ""}`}
         style={{ width: "100%", marginTop: 16 }}
         type="submit"
         disabled={status === "submitting"}
@@ -948,9 +987,8 @@ export default function ContactForm({
         {status === "submitting" ? "Sending…" : variant === "start" ? START_OFFER.button : "Send My Request"}
       </button>
       {variant === "start" ? (
-        <p className="micro" style={{ textAlign: "center" }}>
-          {START_OFFER.underButton}
-        </p>
+        // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
+        <p className="start-guarantee">{START_OFFER.guarantee}</p>
       ) : (
         <p className="micro" style={{ textAlign: "center" }}>
           No payment details, no intake forms today. We never share your

@@ -1400,6 +1400,12 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   Don't mint `/neurofeedback-nashville` or the like beside them.
 - **`/start` is the Instagram landing page** (noindex): bio link
   `https://harmonizedbraincenterstn.com/start?utm_source=instagram&utm_medium=social&utm_campaign=bio`.
+  It is also the Meta ad landing page, ultra simple since 2026-11-13: one
+  photo, a headline of six words or fewer picked by the `?h=` code
+  (`lib/start.ts`; `lib/start.test.mjs` holds the word rules), one offer
+  line, one trust line, name / phone / center with the email field behind
+  "Add email (optional)", the button, one guarantee sentence, "What you
+  get". `?center=murfreesboro` selects that chip in the server HTML.
   The visit's first utm tags and whether it came from Instagram ride onto
   the lead row as `utm_*` / `lead_source` (`lib/attribution.ts`, migration
   0019), wherever on the site the form is finally sent.
@@ -1556,8 +1562,8 @@ The list below is the one-time project setup.
 /contact                three-step form → POST /api/consultation (saves the
                         lead, sends the email) → PATCH /api/consultation/[id]
                         (optional context, same row) → the first-visit video
-/start                  the Instagram landing page (noindex): the same form,
-                        Call/Text and three chips; lead_source + utm on the row
+/start                  the ad + Instagram landing page (noindex): the same form
+                        without its card, three chips; hook + utm on the row
 /review                 "How was your experience?" — a button per center to its
                         Google write-a-review link (noindex; ?center= shows one)
 /api/track/tap          POST, sendBeacon from every tel:/sms: tap → contact_taps
