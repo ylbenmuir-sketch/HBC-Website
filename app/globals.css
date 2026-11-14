@@ -2959,18 +2959,34 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
 .ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
 .ty-small { font-size: 13px; line-height: 1.5; color: var(--slate); margin: 10px 0 0; }
-/* The card after an entry (Ben, 2026-11-14): "You're in." small, then the share block as the main thing —
-   the headline, the link, a full-width "Copy link", and small Facebook / Email (and the phone's Share) buttons. */
-.ty-in-kicker { margin: 0 0 8px; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sage-deep); }
-.ty-card-title.ty-share-head { font-size: 30px; line-height: 1.12; margin: 0 0 8px; text-wrap: balance; }
-.ty-share-sub { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--slate); }
-.ty-share { margin-top: 10px; }
-.ty-share-link { margin: 0; border: 1px solid var(--line-control); border-radius: 4px; background: var(--ivory); padding: 11px 12px; font-family: var(--sans); font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--ink); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
-.ty-share-copy { width: 100%; margin-top: 8px; padding: 15px 24px; min-height: 52px; font-size: 17px; }
-.ty-share-more { display: flex; gap: 8px; margin-top: 8px; }
-.ty-share-more .btn { flex: 1; min-width: 0; padding: 9px 10px; min-height: 44px; font-size: 14px; }
-.ty-in .ty-share-friend { margin-top: 12px; }
-.ty-in .ty-in-line { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; }
+/* The card after an entry — Ben's mockup, 2026-11-14: gold "You're in" label, thin rule, the serif headline with
+   "3 more entries" in gold, rule, the link in a soft box, two large navy buttons, three small outline ones, one sage line.
+   The gold is his #b8924a (--gold-lift) on the headline's three large words; the small label takes --gold-ink (AA). */
+.ty-card:has(> .ty-in) { background: var(--ivory); padding: 28px 30px 26px; }
+.ty-in-kicker { margin: 0; padding-bottom: 18px; border-bottom: 1px solid var(--gold-soft); font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-ink); }
+.ty-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.ty-share-head { margin: 0; padding: 22px 0 24px; border-bottom: 1px solid var(--line); font-family: var(--serif); font-size: 46px; font-weight: 500; line-height: 1.14; letter-spacing: -0.005em; color: var(--navy-deep); }
+/* The mockup's four lines: "Get 3 more entries" / "for every friend" / "who enters" / "through you." */
+.ty-share-head-1 { display: block; white-space: nowrap; }
+.ty-share-head-1 b { font-weight: inherit; color: var(--gold-lift); }
+.ty-share-head-2 { display: block; max-width: 6.5em; }
+/* The link breaks after the site's name, never inside the code. */
+.ty-share-link span { white-space: nowrap; }
+.ty-share-sub { margin: 22px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink); }
+.ty-share { margin-top: 12px; }
+.ty-share-link { margin: 0; border: 1px solid var(--line); border-radius: 5px; background: #f2ede4; padding: 14px 16px; font-family: var(--sans); font-size: 15px; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+.ty-share-big { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.ty-share-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 78px; padding: 14px 8px; border: 0; border-radius: 5px; background: var(--navy-deep); color: #fff; font-family: var(--sans); text-align: center; text-decoration: none; cursor: pointer; transition: background 0.2s; }
+.ty-share-btn:hover { background: #0e1822; }
+.ty-share-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ty-share-btn-name { font-size: 19px; font-weight: 400; line-height: 1.2; }
+.ty-share-btn-sub { font-size: 12px; line-height: 1.3; color: var(--gold-lift); }
+.ty-share-note { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--sage-deep); text-align: center; }
+.ty-share-note:not(:empty) { margin-top: 10px; }
+.ty-share-more { display: flex; gap: 10px; margin-top: 12px; }
+.ty-share-more .btn { flex: 1; min-width: 0; padding: 9px 8px; min-height: 46px; border-color: var(--line); border-radius: 5px; background: rgba(255, 255, 255, 0.5); font-size: 14.5px; font-weight: 400; color: var(--navy-deep); }
+.ty-share-more .btn:hover { border-color: var(--navy); }
+.ty-share-friend { margin: 22px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--sage-deep); text-align: center; }
 .ty-winners { list-style: none; margin: 14px 0 14px; padding: 0; }
 .ty-winners li { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); }
 .ty-winners li:first-child { border-top: 0; padding-top: 0; }
@@ -3219,6 +3235,12 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-proof { font-size: 12.5px; margin-top: 16px; }
   .ty-card { padding: 22px 18px 18px; box-shadow: 0 20px 44px -34px rgba(21, 34, 48, 0.45); }
   .ty-card-title { font-size: 25px; }
+  .ty-card:has(> .ty-in) { padding: 24px 18px 22px; }
+  .ty-share-head { font-size: min(38px, calc((100vw - 72px) / 7.9)); padding: 18px 0 20px; }
+  .ty-share-sub { margin-top: 18px; }
+  .ty-share-big, .ty-share-more { gap: 8px; }
+  .ty-share-btn-name { font-size: 18px; }
+  .ty-share-more .btn { font-size: 14px; }
   .ty-pill label { font-size: 12.5px; padding: 6px 12px; }
   /* The form on a phone: ZIP full width, shorter fields, a tighter rhythm. */
   .ty-fields { row-gap: 8px; margin-top: 14px; }

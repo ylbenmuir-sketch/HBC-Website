@@ -394,13 +394,24 @@ export const PAGES = {
      *  "You're in" email lead with it. The bonus comes only from friends who
      *  enter — never "share on Facebook for more entries". Numbers from REFERRAL. */
     shareHeadline: (referrer: number) => D(`Get ${referrer} more entries for every friend who enters through you.`),
+    /** The same sentence in three pieces, so the middle one can be gold (Ben's mockup, 2026-11-14). */
+    shareHeadlineParts: (referrer: number): [string, string, string] => [D("Get "), `${referrer} more entries`, " for every friend who enters through you."],
     shareSub: (cap: number) => D(`Up to ${cap} friends. Here's your link:`),
     shareLabel: D("Your link"),
     shareFriendLine: D("Your friend gets a bonus entry too."),
     copy: D("Copy link"),
     copied: D("Copied"),
+    /** No clipboard in this browser: the link is selected instead. */
+    copyFailed: D("Your link is selected. Copy it from the box above."),
+    /** Instagram has no share link: the button copies the link for a Story's link sticker. */
+    shareInstagram: D("Instagram"),
+    shareInstagramSub: D("Copy link for a Story"),
+    shareInstagramCopied: D("Copied. Paste it with a link sticker in your Story"),
     shareFacebook: D("Facebook"),
+    shareFacebookSub: D("Share with friends"),
     shareEmail: D("Email"),
+    /** The email's button to the entrant's own card, where one tap copies. */
+    shareCopyMine: D("Copy my link"),
     /** The phone's own share sheet, shown only where the browser has one. */
     sharePhone: D("Share"),
     /** The prefilled words — Email, the phone's share sheet and Copy. Facebook takes the link alone. */

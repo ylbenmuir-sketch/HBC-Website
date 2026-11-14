@@ -665,7 +665,7 @@ try {
   expect("D: entered with 1 entry by the submit alone", (await entriesOf(D.email)) === 1, String(await entriesOf(D.email)));
   {
     const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), D);
-    expect("D: the card says You're in and shows the share link at once", /data-ok="1"/.test(card.text) && /You(?:&#x27;|')re in\./.test(card.text) && /\?ref=HBC-[A-Z0-9]{6}/.test(card.text) && !/Check your inbox/.test(card.text));
+    expect("D: the card says You're in and shows the share link at once", /data-ok="1"/.test(card.text) && /ty-in-kicker">[^<]*You(?:&#x27;|')re in</.test(card.text) && /\?ref=HBC-[A-Z0-9]{6}/.test(card.text) && !/Check your inbox/.test(card.text));
   }
   const dMail = newEmails();
   expect("D: exactly one email, You're in (no confirmation email)", dMail.length === 1 && /You're in\./.test(dMail[0].body.subject) && !linkIn(dMail[0], "/10years/verify"), dMail.map((e) => e.body.subject).join(" | "));
