@@ -2959,11 +2959,18 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .form.ty-form .ty-optin input { width: 15px; height: 15px; margin-top: 2px; }
 .ty-message .ty-textlink { display: inline-block; margin-top: 14px; }
 .ty-small { font-size: 13px; line-height: 1.5; color: var(--slate); margin: 10px 0 0; }
-.ty-share { margin-top: 18px; }
-.ty-share label { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--slate); font-weight: 600; margin: 0 0 6px; }
-.ty-share-row { display: flex; gap: 8px; }
-.ty-share-row input { flex: 1; min-width: 0; border: 1px solid var(--line-control); border-radius: 4px; background: var(--ivory); padding: 11px 12px; font-family: var(--sans); font-size: 15px; color: var(--ink); }
-.ty-share-row .btn { padding: 11px 20px; flex: none; }
+/* The card after an entry (Ben, 2026-11-14): "You're in." small, then the share block as the main thing —
+   the headline, the link, a full-width "Copy link", and small Facebook / Email (and the phone's Share) buttons. */
+.ty-in-kicker { margin: 0 0 8px; font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sage-deep); }
+.ty-card-title.ty-share-head { font-size: 30px; line-height: 1.12; margin: 0 0 8px; text-wrap: balance; }
+.ty-share-sub { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+.ty-share { margin-top: 10px; }
+.ty-share-link { margin: 0; border: 1px solid var(--line-control); border-radius: 4px; background: var(--ivory); padding: 11px 12px; font-family: var(--sans); font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--ink); overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+.ty-share-copy { width: 100%; margin-top: 8px; padding: 15px 24px; min-height: 52px; font-size: 17px; }
+.ty-share-more { display: flex; gap: 8px; margin-top: 8px; }
+.ty-share-more .btn { flex: 1; min-width: 0; padding: 9px 10px; min-height: 44px; font-size: 14px; }
+.ty-in .ty-share-friend { margin-top: 12px; }
+.ty-in .ty-in-line { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13.5px; }
 .ty-winners { list-style: none; margin: 14px 0 14px; padding: 0; }
 .ty-winners li { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 8px 0; border-top: 1px solid var(--line); }
 .ty-winners li:first-child { border-top: 0; padding-top: 0; }

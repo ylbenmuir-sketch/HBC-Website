@@ -419,7 +419,7 @@ try {
   expect("before Nov 9: the sitemap does not list /10years", !/\/10years</.test((await get("/sitemap.xml")).text));
   // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
   const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
-  expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
+  expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*10-Year Giveaway/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
   const refPreview = await get("/10years?mode=notify&ref=HBC-TEST01");
   expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPreview.text)?.[1] ?? "x") === ogUrl);
   const og = await fetch(`${BASE}/10years/opengraph-image`);

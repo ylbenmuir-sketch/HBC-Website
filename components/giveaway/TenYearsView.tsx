@@ -4,12 +4,12 @@ import FAQAccordion from "@/components/FAQAccordion";
 import AssistantOff from "./AssistantOff";
 import CalendarMenu from "./CalendarMenu";
 import Countdown from "./Countdown";
-import CopyLink from "./CopyLink";
 import EntryBar from "./EntryBar";
 import FormGuard from "./FormGuard";
 import Ladder from "./Ladder";
 import PhoneField from "./PhoneField";
 import Seal from "./Seal";
+import SharePanel from "./SharePanel";
 import UtmCapture from "./UtmCapture";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
@@ -39,6 +39,7 @@ import {
 } from "@/lib/giveaway/config";
 import { CALENDAR_PATHS, SITE_CALENDAR_UTM } from "@/lib/giveaway/calendar";
 import { PAGES } from "@/lib/giveaway/copy";
+import { emailShareUrl, facebookShareUrl, shareText } from "@/lib/giveaway/share";
 import type { PublicWinner, TapPrefill } from "@/lib/giveaway/web";
 import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
 
@@ -361,16 +362,35 @@ export function MessageCard({ title, message, ok, back = false }: { title: strin
   );
 }
 
-/** A confirmed entry: "You're in", the count, the share link with a copy button. */
+/**
+ * A confirmed entry. With a share link (Ben, 2026-11-14) the card leads with
+ * the share block: "You're in." as a small line, the big headline, the link
+ * with "Copy link", the small Facebook and Email buttons, then the entry's
+ * own line. Without one it is the plain "You're in" card.
+ */
 export function YoureInCard({ message, shareUrl, back = false }: { message: string; shareUrl?: string; back?: boolean }) {
   return (
-    <div className="ty-message" role="status" data-ok="1">
-      <h2 className="ty-card-title">{t.inTitle}</h2>
-      <p className="ty-card-line">{message}</p>
-      {shareUrl && (
+    <div className={`ty-message${shareUrl ? " ty-in" : ""}`} role="status" data-ok="1">
+      {shareUrl ? (
         <>
-          <CopyLink url={shareUrl} label={t.shareLabel} copy={t.copy} copied={t.copied} />
-          <p className="ty-small">{t.shareLine(REFERRAL.referrerBonus, REFERRAL.referredBonus)}</p>
+          <p className="ty-in-kicker">{t.inTitle}</p>
+          <h2 className="ty-card-title ty-share-head">{t.shareHeadline(REFERRAL.referrerBonus)}</h2>
+          <p className="ty-share-sub">{t.shareSub(REFERRAL.friendCap)}</p>
+          <SharePanel
+            url={shareUrl}
+            text={shareText(shareUrl)}
+            facebookHref={facebookShareUrl(shareUrl)}
+            emailHref={emailShareUrl(shareUrl)}
+            emailSubject={t.shareEmailSubject}
+            labels={{ link: t.shareLabel, copy: t.copy, copied: t.copied, facebook: t.shareFacebook, email: t.shareEmail, phone: t.sharePhone }}
+          />
+          <p className="ty-small ty-share-friend">{t.shareFriendLine}</p>
+          <p className="ty-card-line ty-in-line">{message}</p>
+        </>
+      ) : (
+        <>
+          <h2 className="ty-card-title">{t.inTitle}</h2>
+          <p className="ty-card-line">{message}</p>
         </>
       )}
       {/* After a submit the URL carries ?sent=1; someone it is forwarded to still needs a way to the form. */}

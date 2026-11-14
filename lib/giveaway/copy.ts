@@ -142,9 +142,7 @@ export const EMAILS = {
     heading: (firstName: string) => D(`${firstName ? `${firstName}, you` : "You"}'re in.`),
     body: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? `Next drawing: ${when(next)} — ${prizeName}. Your entry counts in it and every one after.` : "Your entry counts in every drawing still to come."),
     referredBonus: D("A friend's link brought you here, so you start with a bonus entry."),
-    shareHeading: D("Add entries"),
-    shareBody: (referrerBonus: number, referredBonus: number, cap: number) => D(`Share your link. Each friend who enters through it adds ${referrerBonus} entries for you and ${referredBonus} for them, up to ${cap} friends.`),
-    shareButton: D("Share my link"),
+    /** The share block's words are the page's (PAGES.tenYears.share…), so the card and the email read the same. */
     /** The gift is NOT named before the reveal (fix list rev 2, P0-2). */
     giftTease: (revealSpoken: string) => D(`Plus a thank-you gift for every entrant, revealed by email ${revealSpoken}.`),
     /** The offer panel's heading — the reveal email only. */
@@ -195,7 +193,7 @@ export const EMAILS = {
     /** Split so the count can be bold: "You have" + "4 entries". */
     entriesLead: "You have",
     entriesCount: (n: number) => `${n} ${n === 1 ? "entry" : "entries"}`,
-    button: (bonus: number) => D(`Share and get ${bonus} more entries`),
+    button: (bonus: number) => D(`Get ${bonus} more entries per friend`),
     hint: {
       daily: (bonus: number) => D(`Each friend who enters adds ${bonus} to yours.`),
       fri: (closeTime: string) => D(`Friends must enter by ${closeTime} tomorrow.`),
@@ -349,7 +347,10 @@ export const PAGES = {
     entryBarLive: D("Enter the giveaway"),
     /** The share preview (Open Graph). Dates and the total come from config. */
     og: {
-      title: D("10 Years. A Week of Prizes."),
+      /** The bold line of a Facebook preview names the centers (Ben, 2026-11-14). The card image keeps the page's own heading. */
+      title: D(`${BRAND}' 10-Year Giveaway`),
+      /** The card image's own line, when the page heading has no second sentence to lend it. */
+      cardLine: D("10 Years. A Week of Prizes."),
       description: (drawings: number, span: string) => D(`${countWord(drawings)} drawings ${span}, and a thank-you gift for every entrant.`),
       tease: D("+ a thank-you gift for every entrant"),
       /** The card's footer line: short, so it never meets the brand name. */
@@ -389,10 +390,22 @@ export const PAGES = {
     onListTitle: D("You're on the list."),
     inTitle: D("You're in."),
     notYetTitle: D("Not yet."),
-    shareLabel: D("Your share link"),
-    shareLine: (referrer: number, referred: number) => D(`Each friend who enters through it adds ${referrer} entries for you and ${referred} for them.`),
-    copy: D("Copy"),
+    /** The share block (Ben, 2026-11-14): the card after an entry and the
+     *  "You're in" email lead with it. The bonus comes only from friends who
+     *  enter — never "share on Facebook for more entries". Numbers from REFERRAL. */
+    shareHeadline: (referrer: number) => D(`Get ${referrer} more entries for every friend who enters through you.`),
+    shareSub: (cap: number) => D(`Up to ${cap} friends. Here's your link:`),
+    shareLabel: D("Your link"),
+    shareFriendLine: D("Your friend gets a bonus entry too."),
+    copy: D("Copy link"),
     copied: D("Copied"),
+    shareFacebook: D("Facebook"),
+    shareEmail: D("Email"),
+    /** The phone's own share sheet, shown only where the browser has one. */
+    sharePhone: D("Share"),
+    /** The prefilled words — Email, the phone's share sheet and Copy. Facebook takes the link alone. */
+    shareText: (totalUsd: number, link: string) => `I just entered ${BRAND}' 10-year giveaway. Over $${totalUsd.toLocaleString("en-US")} in prizes, free to enter: ${link}`,
+    shareEmailSubject: `${BRAND}' 10-year giveaway`,
     backToForm: D("Back to the form"),
     /** The card in closed and thank-you modes. */
     /** After the reveal only (P0-2): the gift, named. */

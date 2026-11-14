@@ -19,7 +19,8 @@
 
 import { displayPhone, escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
-import { EMAILS, SHARED } from "./copy";
+import { EMAILS, PAGES, SHARED } from "./copy";
+import { copyPageUrl, emailShareUrl, facebookShareUrl } from "./share";
 import { CALENDAR_PATHS, CALENDAR_UTM, SHARE_UTM } from "./calendar";
 import {
   CLINIC_DAYS_AFTER_REVEAL,
@@ -342,12 +343,27 @@ export function youreInEmail(input: {
   const prize = input.nextDrawing ? prizeLineFor(input.nextDrawing) : null;
   const heading = c.heading(input.firstName);
   const body = c.body(input.nextDrawing, prize?.name ?? null);
-  const share = c.shareBody(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap);
   const tease = c.giftTease(revealSpoken());
+  // The share block (Ben, 2026-11-14) is the main thing: the page's own words
+  // (PAGES.tenYears), the link, a big "Copy link" and small Facebook / Email
+  // buttons. An email cannot copy, so "Copy link" opens the entrant's own card
+  // on /10years, where one tap does. Facebook and Email are plain links.
+  const s = PAGES.tenYears;
+  const link = input.referralUrl;
+  const headline = s.shareHeadline(REFERRAL.referrerBonus);
+  const sub = s.shareSub(REFERRAL.friendCap);
+  const shareBlock =
+    `<div class="hbc-name" style="font-family:${SANS};font-size:24px;font-weight:700;color:${C.navy};line-height:1.2;">${esc(headline)}</div>` +
+    `<div class="hbc-muted" style="font-family:${SANS};font-size:14px;color:${C.slate};line-height:1.45;padding-top:8px;">${esc(sub)}</div>` +
+    `<div style="font-family:${SANS};font-size:16px;font-weight:600;line-height:1.4;padding-top:4px;word-break:break-all;"><a class="hbc-link" href="${esc(link)}" style="color:${C.sageDeep};text-decoration:underline;">${esc(link)}</a></div>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;"><tr><td class="hbc-btn" align="center" bgcolor="${C.navy}" style="background:${C.navy};border:1px solid ${C.navy};border-radius:6px;"><a href="${esc(copyPageUrl(link))}" style="display:block;padding:15px 10px;font-family:${SANS};font-size:18px;font-weight:700;color:${C.white};text-decoration:none;line-height:1.2;text-align:center;">${esc(s.copy)}</a></td></tr></table>` +
+    `<div style="padding-top:8px;">${buttons([[s.shareFacebook, facebookShareUrl(link)], [s.shareEmail, emailShareUrl(link)]], { quiet: true })}</div>` +
+    `<div class="hbc-muted" style="font-family:${SANS};font-size:13px;color:${C.slate};line-height:1.45;padding-top:10px;">${esc(s.shareFriendLine)}</div>`;
   const rows = [
-    section(`${h1(heading)}${p(body)}${prize?.partner ? p(prize.partner) : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "18px 20px 0"),
-    section(panel(`${panelTitle(c.shareHeading)}<div class="hbc-text" style="font-family:${SANS};font-size:14px;line-height:1.45;color:${C.ink};">${esc(share)}</div><div style="padding-top:8px;">${buttons([[c.shareButton, input.referralUrl]])}</div><div class="hbc-muted" style="font-family:${SANS};font-size:12px;color:${C.slate};padding-top:6px;word-break:break-all;">${esc(input.referralUrl)}</div>`), "14px 20px 0"),
-    section(p(tease, "padding-top:0;"), "14px 20px 0"),
+    section(`<div class="hbc-name" style="font-family:${SANS};font-size:16px;font-weight:700;color:${C.navy};line-height:1.3;">${esc(heading)}</div>`, "18px 20px 0"),
+    section(panel(shareBlock), "10px 20px 0"),
+    section(`${p(body, "padding-top:0;font-size:15px;")}${prize?.partner ? p(prize.partner, "font-size:15px;") : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "14px 20px 0"),
+    section(p(tease, "padding-top:0;font-size:15px;"), "10px 20px 0"),
     gap(16),
     visitorFooter(input.footing, false),
   ];
@@ -357,13 +373,16 @@ export function youreInEmail(input: {
     html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([
       heading,
+      "",
+      headline,
+      `${sub} ${link}`,
+      s.shareFriendLine,
+      "",
+      `${s.shareFacebook}: ${facebookShareUrl(link)}`,
+      "",
       body,
       prize?.partner ?? null,
       input.referredBonus ? c.referredBonus : null,
-      "",
-      c.shareHeading,
-      share,
-      `${c.shareButton}: ${input.referralUrl}`,
       "",
       tease,
       "",
