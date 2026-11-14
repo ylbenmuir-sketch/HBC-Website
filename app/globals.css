@@ -3453,8 +3453,22 @@ header.site.start-header .logo { cursor: default; }
 .start-page .start-fields .start-submit { height: 56px; padding: 0 20px; margin-top: 16px !important; border-radius: 8px; background: var(--pine); color: var(--ivory); font-family: var(--serif); font-weight: 600; font-size: 21px; letter-spacing: 0.005em; }
 .start-submit-arrow { font-family: var(--sans); font-weight: 400; font-size: 18px; }
 .start-guarantee { margin: 12px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--ink) 82%, var(--sage-mist)); }
-/* After the send, steps two and three are the form's own cards. */
-.start-page .form-card { padding: 22px 22px !important; border-radius: 10px !important; }
+/* After the send (Ben, 2026-11-13): two optional questions, then a plain
+   thank-you — on the same sage band, no card, the page's serif heading,
+   sentence-case labels and 48px controls. */
+.start-step { scroll-margin-top: 90px; }
+.start-step .start-form-heading { outline: none; }
+.start-step .start-form-sub { margin-bottom: 24px; }
+.start-page .start-follow .chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 22px; }
+.start-page .start-follow .chip { height: 48px; padding: 0 4px; border: 1px solid var(--line-control); border-radius: 6px; background: var(--ivory); font-size: 14.5px; line-height: 1; color: var(--ink); white-space: nowrap; }
+.start-page .start-follow .chip.on { background: var(--pine); border-color: var(--pine); color: var(--ivory); font-weight: 600; }
+.start-page .start-follow select { margin-bottom: 0; }
+.start-page .start-follow .form-exits { gap: 4px; margin-top: 26px; }
+.start-page .start-follow .start-submit { margin-top: 0 !important; }
+.start-page .start-follow .form-skip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 14.5px; color: var(--ink); text-decoration-color: var(--line-control); }
+.start-done .start-form-heading { margin-bottom: 14px; }
+.start-done-tel { margin: 0; font-size: 16px; line-height: 1.4; color: var(--ink); }
+.start-done-tel a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; color: var(--pine); text-decoration: underline; text-underline-offset: 3px; }
 /* How it works: the sample heat map with its caption, then three numbered
    lines. The numerals are serif — no discs, no gold. */
 .start-how { padding: 52px 20px 52px; scroll-margin-top: 60px; }
@@ -3498,6 +3512,9 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .start-page .start-fields input[type="email"] { margin-bottom: 4px; }
   .start-page .start-fields .sms-consent label { margin: 0; }
   .start-page .start-fields .start-submit { margin-top: 12px !important; }
+  /* The follow-up step keeps its 48px controls and its own air. */
+  .start-page .start-follow select { height: 48px; margin-bottom: 0; }
+  .start-page .start-follow label { margin-bottom: 6px; }
   .start-form-heading { font-size: 34px; }
   .start-how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 96px 48px 88px; }
   .start-how-map { max-width: 460px; }
