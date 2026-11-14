@@ -3482,14 +3482,22 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   /* The photo fills the left half and stays while the right half scrolls. */
   .start-photo { position: sticky; top: 63px; height: calc(100vh - 63px); min-height: 560px; }
   .start-photo img { object-position: 60% 30%; }
-  .start-side { display: flex; flex-direction: column; align-items: center; padding: 40px 48px 64px; }
+  .start-side { display: flex; flex-direction: column; align-items: center; padding: 24px 48px 64px; }
   .start-pane, .start-form { width: 100%; max-width: 500px; }
-  .start-pane { padding: 0 0 24px; }
+  .start-pane { padding: 0 0 18px; }
   .start-eyebrow { font-size: 13px; }
-  .start-pane h1 { margin: 14px 0 16px; font-size: 64px; }
+  .start-pane h1 { margin: 10px 0 12px; font-size: 64px; }
   .start-sub { font-size: 17.5px; }
-  .start-meta { margin-top: 18px; font-size: 15px; }
-  .start-form { padding: 26px 32px 30px; border-radius: 14px; }
+  .start-meta { margin-top: 12px; font-size: 15px; }
+  /* Cut close so the button is on a 1440×900 first screen (Ben,
+     2026-11-13): its bottom edge is measured there. Fields stay 44px. */
+  .start-form { padding: 20px 32px 26px; border-radius: 14px; }
+  .start-form-sub { margin-bottom: 12px; }
+  .start-page .start-fields label { margin-bottom: 5px; }
+  .start-page .start-fields input:not([type="checkbox"]), .start-page .start-fields select { height: 44px; margin-bottom: 10px; }
+  .start-page .start-fields input[type="email"] { margin-bottom: 4px; }
+  .start-page .start-fields .sms-consent label { margin: 0; }
+  .start-page .start-fields .start-submit { margin-top: 12px !important; }
   .start-form-heading { font-size: 34px; }
   .start-how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 96px 48px 88px; }
   .start-how-map { max-width: 460px; }
