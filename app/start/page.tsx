@@ -15,13 +15,13 @@ import { startCenters } from "@/lib/start-centers";
  *
  *   /start?h=k1&center=murfreesboro&utm_source=…
  *
- * Ultra simple since 2026-11-13 (Ben, of the phone view: "too wordy and over
- * stimulating"). A phone's first screen is the logo and the phone, the
- * sample brain map with its caption, a headline of six words or fewer, one
- * line, one quiet trust line and the start of the form. Below: the rest of
- * the form, one guarantee sentence, "How it works" (the session photo and
- * three numbered lines), the footer. No lists, cards, badges or
- * bands, and one accent (the gold star).
+ * Editorial since 2026-11-13, to Ben's reference image (the same day's
+ * ultra-simple page before it: he had called the phone view "too wordy and
+ * over stimulating"). Top to bottom on a phone: the logo and the phone, one
+ * photo, an eyebrow, a serif headline with its last line in italic, one
+ * sentence, the offer and the reviews on one row; then the form on a sage
+ * band; then "How it works" and the footer. On a desktop the photo is the
+ * left half and the text and form the right.
  *
  * - `h` picks the headline (lib/start.ts). It is a code, never a word, and
  *   the <title> and description below are the same for every variant: the
@@ -70,25 +70,40 @@ export default async function StartPage({
   return (
     <div className="start-page">
       <section className="start-hero">
-        {/* The hero is the sample brain map (Ben, 2026-11-13; the session
-            photo it replaced is under "How it works" now): the home page's
-            own heat map (components/BrainMapHeat.tsx, without its legend),
-            centered on a soft ivory panel with its caption. `eager`: it is
-            on the first screen, so its field is in the server's HTML. */}
-        <figure className="start-map">
-          <BrainMapHeat legend={false} eager />
-          <figcaption>{START_HOW.caption}</figcaption>
-        </figure>
+        {/* The hero photo: a real HBC photo of a practitioner with a client
+            (Ben, 2026-11-13), and the page's LCP element. Full width on a
+            phone; the left half, staying put, on a desktop.
+            TODO(Ben): swap in a real HBC photo of a practitioner going over
+            a brain map with a client once one exists — none of the photos
+            in public/images shows a map review. */}
+        <div className="start-photo">
+          <Image
+            src="/images/concierge.jpg"
+            alt="A practitioner places a small sensor behind a client's ear during a LENS session"
+            fill
+            priority
+            sizes="(min-width: 900px) 50vw, 100vw"
+          />
+        </div>
 
-        <div className="start-pane">
-          <h1>{hook.headline}</h1>
-          <p className="start-line">{START_OFFER.line}</p>
-          <p className="start-trust">
-            <span className="start-star" aria-hidden="true">
-              {START_TRUST.star}
-            </span>{" "}
-            {START_TRUST.text}
-          </p>
+        <div className="start-side">
+          <div className="start-pane">
+            <p className="start-eyebrow">{START_OFFER.eyebrow}</p>
+            {/* The last line in the italic, for every code (lib/start.ts). */}
+            <h1>
+              {hook.lead} <em>{hook.tail}</em>
+            </h1>
+            <p className="start-sub">{START_OFFER.sub}</p>
+            <p className="start-meta">
+              <span className="start-meta-offer">{START_OFFER.meta}</span>
+              <span>
+                <span className="start-star" aria-hidden="true">
+                  {START_TRUST.star}
+                </span>{" "}
+                {START_TRUST.text}
+              </span>
+            </p>
+          </div>
 
           <div className="start-form" id="send-a-message">
             <ContactForm
@@ -102,17 +117,14 @@ export default async function StartPage({
         </div>
       </section>
 
-      {/* How it works (Ben, 2026-11-13): the session photo, small and
-          rounded — a real HBC photo — then three numbered lines. */}
+      {/* How it works (Ben, 2026-11-13): the home page's own sample heat
+          map (components/BrainMapHeat.tsx, without its legend) with its
+          caption, and three numbered lines. */}
       <section className="start-how" id={START_HOW.id}>
-        <div className="start-how-photo">
-          <Image
-            src="/images/concierge.jpg"
-            alt="A practitioner places a small sensor behind a client's ear during a LENS session"
-            fill
-            sizes="(min-width: 900px) 440px, (min-width: 701px) 512px, calc(100vw - 48px)"
-          />
-        </div>
+        <figure className="start-how-map">
+          <BrainMapHeat legend={false} />
+          <figcaption>{START_HOW.caption}</figcaption>
+        </figure>
         <div className="start-how-copy">
           <h2>{START_HOW.heading}</h2>
           <ol>

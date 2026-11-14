@@ -294,8 +294,8 @@ export default function ContactForm({
   giveaway?: GiveawayBooking | null;
   /**
    * "start" is the ad landing page's form (/start; Ben, 2026-11-09, ultra
-   * simple since 2026-11-13): no card and no heading, the fields straight
-   * on the page — name, phone, center — with the email field behind an
+   * editorial since 2026-11-13): no card, its own heading, the fields on
+   * the page's sage band — name, phone, center as a select — with the email field behind an
    * "Add email (optional)" link, and one guarantee sentence under the
    * button. The consent box, the request, the spam guard, the funnel and
    * the Key event are the same form's, so the lead is the same lead.
@@ -460,7 +460,7 @@ export default function ContactForm({
       return refuse("bad_email", "That email address doesn't look right — please check it.", "email");
     }
     if (!preferredCenter) {
-      return refuse("missing_center", "Please choose a center — or Not sure.", `center-${CENTER_CHOICES[0].id}`);
+      return refuse("missing_center", "Please choose a center — or Not sure.", variant === "start" ? "center-select" : `center-${CENTER_CHOICES[0].id}`);
     }
     setStatus("submitting");
     setErrorMessage("");
@@ -790,7 +790,15 @@ export default function ContactForm({
       onInput={onFirstInteraction}
       noValidate
     >
-      {!isStart && <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>}
+      {isStart ? (
+        // /start (Ben, 2026-11-13): the form's own heading and one line.
+        <>
+          <h2 className="start-form-heading">{START_OFFER.formHeading}</h2>
+          <p className="start-form-sub">{START_OFFER.formSub}</p>
+        </>
+      ) : (
+        <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
+      )}
       {variant === "start" && hook && <input type="hidden" name="hook" value={hook} />}
       {/* For the no-JavaScript post only (see the file comment): the JSON
           submit builds its own body. The center mirrors the chips' state;
@@ -851,6 +859,8 @@ export default function ContactForm({
           <>
             {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
           </>
+        ) : isStart ? (
+          "Phone number"
         ) : (
           "Phone"
         )}
@@ -869,18 +879,45 @@ export default function ContactForm({
       {/* Everywhere but /start the email field comes before the center. */}
       {!isStart && emailField}
 
-      <label id="center-label">Which center?</label>
-      <ChoiceChips
-        labelId="center-label"
-        idPrefix="center"
-        options={centerOptions}
-        value={preferredCenter}
-        onChange={(v) => {
-          onFirstInteraction();
-          setPreferredCenter(v);
-        }}
-        required
-      />
+      {isStart ? (
+        // /start (Ben, 2026-11-13): the same three centers as a select.
+        // Nothing chosen until she chooses — or the link named one
+        // (?center=murfreesboro, in the server's HTML). Its `input` event
+        // reaches the form, so it counts as form_start like any field. No
+        // `name`: the hidden preferred_center above is what a post carries.
+        <>
+          <label htmlFor="center-select">Preferred center</label>
+          <select
+            id="center-select"
+            value={preferredCenter ?? ""}
+            onChange={(e) => setPreferredCenter(e.target.value || null)}
+            aria-invalid={invalid("center-select")}
+            required
+          >
+            <option value="">Select a center</option>
+            {centerOptions.map((o) => (
+              <option key={o.id} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : (
+        <>
+          <label id="center-label">Which center?</label>
+          <ChoiceChips
+            labelId="center-label"
+            idPrefix="center"
+            options={centerOptions}
+            value={preferredCenter}
+            onChange={(v) => {
+              onFirstInteraction();
+              setPreferredCenter(v);
+            }}
+            required
+          />
+        </>
+      )}
 
       {/* /start: three fields, then a quiet link that adds the email one —
           a real button, so it is in the tab order. The field takes the
@@ -984,7 +1021,18 @@ export default function ContactForm({
         type="submit"
         disabled={status === "submitting"}
       >
-        {status === "submitting" ? "Sending…" : variant === "start" ? START_OFFER.button : "Send My Request"}
+        {status === "submitting" ? (
+          "Sending…"
+        ) : isStart ? (
+          <>
+            {START_OFFER.button}
+            <span className="start-submit-arrow" aria-hidden="true">
+              →
+            </span>
+          </>
+        ) : (
+          "Send My Request"
+        )}
       </button>
       {variant === "start" ? (
         // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
