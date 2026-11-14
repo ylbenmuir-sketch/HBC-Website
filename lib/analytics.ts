@@ -186,6 +186,21 @@ export function addToCalendarEvent(calendarType: unknown, pageLocation: unknown)
   return { name: "add_to_calendar", params: { calendar_type: calendarType as CalendarType, page_location: typeof pageLocation === "string" ? pageLocation.slice(0, 500) : "" } };
 }
 
+/**
+ * A tap on a share button on the /10years card after an entry (Ben,
+ * 2026-11-14). "phone" is the phone's own share sheet. The event carries the
+ * method and the plain page address — `origin` + /10years, written here so
+ * the card's own address (it holds the entrant's share code, or a one-tap
+ * token) is never the one reported. Nothing about the person.
+ */
+export const GIVEAWAY_SHARE_METHODS = ["facebook", "email", "copy", "phone"] as const;
+export type GiveawayShareMethod = (typeof GIVEAWAY_SHARE_METHODS)[number];
+export function giveawayShareEvent(method: unknown, origin: unknown): SiteEvent | null {
+  if (!(GIVEAWAY_SHARE_METHODS as readonly unknown[]).includes(method)) return null;
+  const host = typeof origin === "string" && /^https?:\/\/[a-z0-9.:-]+$/i.test(origin) ? origin : "";
+  return { name: "giveaway_share_click", params: { method: method as GiveawayShareMethod, page_location: `${host}/10years` } };
+}
+
 type LeadParams = { lead_source: LeadSource; center: LeadCenter; page_path: string };
 
 export type SiteEvent =
@@ -206,6 +221,8 @@ export type SiteEvent =
    *  links, and the page address GA already holds for the visit. "ics" is the
    *  "Apple / Outlook" file — one link, so the two are not told apart. */
   | { name: "add_to_calendar"; params: { calendar_type: CalendarType; page_location: string } }
+  /** A share button on the card after an entry: the method only (see giveawayShareEvent). */
+  | { name: "giveaway_share_click"; params: { method: GiveawayShareMethod; page_location: string } }
   | { name: "guide_download"; params: { page_path: string } }
   /** /review (2026-11-09): a tap on a center's "write a review" button. The
    *  center only — the page is noindex and carries nothing about the client. */
