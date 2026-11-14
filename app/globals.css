@@ -149,6 +149,12 @@
   --line-control: rgba(28, 43, 58, 0.54);
   --sage: #8fa08d;
   --sage-soft: #e6ebe2;
+  /* /start's form band (Ben, 2026-11-13, from his reference): a muted sage a
+     step deeper than --sage-soft. --ink on it is 9.6:1; --slate is 4.2:1, so
+     small type there is --ink. --pine is that page's button and italic: a
+     deep green-navy, 13:1 under --ivory type. */
+  --sage-mist: #dbe0d4;
+  --pine: #16322f;
   /* Was #5e7360. Darkened 5.1% along its own ray — the smallest move that
      leaves the hue where it is — for contrast: every section eyebrow, the
      italic accent inside a heading, the inline links in FAQ answers,
@@ -3396,102 +3402,102 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .review-btn { width: 100%; }
 }
 
-/* ── /start, the ad landing page (Ben, 2026-11-11; ultra simple since
-   2026-11-13 — "too wordy and over stimulating" on a phone) ───────────
-   Phone: the logo and the phone, the sample brain map with its caption, a
-   short headline, one line, one quiet trust line and the fields on the
-   bare page — the map, the headline and the Name field are on a 390×844
-   first screen (app/start/page.tsx); under the form, "How it works" (the
-   session photo and three numbered lines). Desktop (900px and up): the
-   map beside that column. No cards, lists, badges or
-   bands; the gold star is the one accent. Type is --slate or darker on
-   --ivory (5.4:1 and up); field and chip borders are --line-control, the
-   site's 3:1 control border. The header is the logo and one phone link;
-   the footer is short. */
+/* ── /start, the ad landing page (Ben, 2026-11-11; editorial since
+   2026-11-13, to his reference image) ─────────────────────────────────
+   Phone, top to bottom: the logo and the phone over a hairline; one
+   full-width photo; on ivory, a small letter-spaced eyebrow, a large serif
+   headline whose last line is italic, one sentence, and a row with the
+   offer on the left and the reviews on the right; then the form on a soft
+   sage band (--sage-mist) with ivory fields and a deep green button
+   (--pine); then "How it works" and the short footer. Desktop (900px and
+   up): the photo fills the left half and stays put while the text and the
+   form scroll on the right. Type on the sage band is --ink or a mix of it
+   (5.6:1 and up); --slate is 4.2:1 there and is not used on it. Field
+   borders are --line-control, the site's 3:1 control border. */
+header.site.start-header { border-bottom-color: var(--line); }
 header.site.start-header .logo { cursor: default; }
 .start-tel { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; font-size: 15px; font-weight: 600; color: var(--navy); text-decoration: none; white-space: nowrap; letter-spacing: 0.01em; }
-.start-tel svg { flex: none; color: var(--sage-deep); }
-/* The hero: the sample brain map, about 220px tall on a phone, centered on
-   a soft ivory panel (--ivory-2) with its caption under it. The chart's
-   drawing is 640×572, so the width sets the height. */
-.start-map { margin: 0; padding: 10px 24px 12px; background: var(--ivory-2); }
-.start-map .bmh { width: 246px; max-width: 100%; margin: 0 auto; }
-/* At 246px the site names would be under 8px type: the dots stay, the
-   names show from 701px up. */
-@media (max-width: 700px) { .start-map .bmh-label { display: none; } }
-.start-map figcaption { margin-top: 0; text-align: center; font-size: 13.5px; line-height: 1.4; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); }
-.start-pane { padding: 20px 24px 0; }
-.start-pane h1 { margin: 0 0 10px; font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; color: var(--navy); }
-.start-line { margin: 0; font-size: 15px; line-height: 1.4; color: var(--slate); }
-.start-trust { margin: 8px 0 0; font-size: 13px; line-height: 1.4; color: var(--slate); }
+.start-tel svg { flex: none; color: var(--pine); }
+.start-photo { position: relative; height: 240px; overflow: hidden; background: var(--ivory-2); }
+.start-photo img { object-fit: cover; object-position: center 30%; }
+.start-pane { padding: 24px 20px 22px; }
+.start-eyebrow { margin: 0; font-size: 12.5px; line-height: 1.3; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pine); }
+.start-pane h1 { margin: 10px 0 12px; font-family: var(--serif); font-weight: 600; font-size: 46px; line-height: 0.98; letter-spacing: -0.01em; color: var(--navy); text-wrap: initial; }
+.start-pane h1 em { display: block; font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--pine); }
+.start-sub { margin: 0; font-size: 16px; line-height: 1.4; color: var(--ink); }
+.start-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin: 14px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink); }
+.start-meta-offer { font-weight: 600; }
 .start-star { color: var(--gold-ink); font-weight: 600; }
-.start-form { margin-top: 24px; }
-/* The fields, straight on the page. Small sentence-case labels above them;
-   no placeholders (Ben, 2026-10-30). */
-.start-page .start-fields label { display: block; margin: 0 0 5px; font-size: 12.5px; line-height: 1.3; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--slate); }
-.start-page .start-fields input:not([type="checkbox"]) { height: 46px; padding: 0 14px; margin: 0 0 10px; border: 1px solid var(--line-control); border-radius: 8px; background: #fff; font-size: 16px; line-height: 1.3; }
+/* The form, on the sage band. Its heading and one line are the form's own
+   (components/ContactForm.tsx), so they go when the request is sent. */
+.start-form { padding: 26px 20px 30px; background: var(--sage-mist); }
+.start-form-heading { margin: 0 0 6px; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.1; color: var(--navy); }
+.start-form-sub { margin: 0 0 16px; font-size: 15.5px; line-height: 1.4; color: var(--ink); }
+/* Sentence-case labels above ivory fields; no placeholders (Ben, 2026-10-30). */
+.start-page .start-fields label { display: block; margin: 0 0 6px; font-size: 13.5px; line-height: 1.3; letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--ink); }
+.start-page .start-fields input:not([type="checkbox"]), .start-page .start-fields select { height: 48px; padding: 0 14px; margin: 0 0 14px; border: 1px solid var(--line-control); border-radius: 6px; background-color: var(--ivory); font-size: 16px; line-height: 1.3; color: var(--ink); }
+.start-page .start-fields select { -webkit-appearance: none; appearance: none; padding-right: 40px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none'%3E%3Cpath d='M1 1.5l6 6 6-6' stroke='%231c2b3a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; cursor: pointer; }
 .start-page .start-fields [aria-invalid="true"] { border-color: #9a3b2e; }
-/* The center chips: white pills in one row. Picked is a navy border and
-   bold type, not a fill. The grid holds each width, so the bold does not
-   shift its neighbours. */
-.start-page .start-fields .chips { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 8px; }
-.start-page .start-fields .chip { height: 44px; padding: 0 6px; border: 1px solid var(--line-control); background: #fff; font-size: 14px; line-height: 1; color: var(--navy); white-space: nowrap; }
-.start-page .start-fields .chip.on { background: #fff; color: var(--navy); border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); font-weight: 700; }
-/* "Add email (optional)": a button that reads as a quiet link, 44px tall
-   for a thumb. The field it adds sits where it was. */
-.start-add-email { display: inline-flex; align-items: center; min-height: 44px; margin: 2px 0 0; padding: 0; background: none; border: 0; font-family: var(--sans); font-size: 13px; line-height: 1.3; color: var(--slate); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.start-page .start-fields .chips + label { margin-top: 14px; }
-.start-page .start-fields input[type="email"] { margin-bottom: 0; }
+/* "Add email (optional)": a button that reads as a link, 44px tall for a
+   thumb. The field it adds sits where it was. */
+.start-add-email { display: inline-flex; align-items: center; min-height: 44px; margin: -10px 0 0; padding: 0; background: none; border: 0; font-family: var(--sans); font-size: 14.5px; line-height: 1.3; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.start-page .start-fields input[type="email"] { margin-bottom: 4px; }
 /* Text-message consent: the same box, label, disclosure and links as
-   /contact, word for word — only smaller and in slate (Ben, 2026-11-13).
-   The label row is still the 44px tap target. */
-.start-page .form .sms-consent { grid-template-columns: 16px minmax(0, 1fr); column-gap: 9px; margin-top: 0; }
-.start-page .form .sms-consent input[type="checkbox"] { width: 16px; height: 16px; }
-.start-page .start-fields .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 12.5px; line-height: 1.35; font-weight: 400; color: var(--slate); }
-.start-page .form .sms-consent-note { grid-column: 1 / -1; margin: -8px 0 0; font-size: 10.5px; line-height: 1.4; color: var(--slate); }
+   /contact, word for word — only smaller and quieter. The label row is
+   still the 44px tap target. */
+.start-page .form .sms-consent { grid-template-columns: 18px minmax(0, 1fr); column-gap: 10px; margin-top: 0; }
+.start-page .form .sms-consent input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--pine); }
+.start-page .start-fields .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 12.5px; line-height: 1.35; font-weight: 400; color: var(--ink); }
+.start-page .form .sms-consent-note { grid-column: 1 / -1; margin: -6px 0 0; font-size: 10.5px; line-height: 1.4; color: color-mix(in srgb, var(--ink) 82%, var(--sage-mist)); }
 .start-page .form .sms-consent a { color: inherit; }
-.start-page .start-fields .start-submit { height: 54px; padding: 0 20px; margin-top: 14px !important; border-radius: 10px; background: var(--navy); color: #fff; font-size: 16.5px; }
-.start-guarantee { margin: 12px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: var(--slate); }
+.start-page .start-fields .start-submit { height: 56px; padding: 0 20px; margin-top: 16px !important; border-radius: 8px; background: var(--pine); color: var(--ivory); font-family: var(--serif); font-weight: 600; font-size: 21px; letter-spacing: 0.005em; }
+.start-submit-arrow { font-family: var(--sans); font-weight: 400; font-size: 18px; }
+.start-guarantee { margin: 12px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--ink) 82%, var(--sage-mist)); }
 /* After the send, steps two and three are the form's own cards. */
 .start-page .form-card { padding: 22px 22px !important; border-radius: 10px !important; }
-/* How it works: the session photo, small and rounded, then three numbered
-   lines. The numerals are navy serif — no discs, no gold. */
-.start-how { padding: 56px 24px 52px; scroll-margin-top: 60px; }
-.start-how-photo { position: relative; height: 150px; overflow: hidden; border-radius: 12px; background: var(--ivory-2); }
-.start-how-photo img { object-fit: cover; object-position: center 32%; filter: saturate(0.85); }
-.start-how h2 { margin: 28px 0 18px; font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1.15; color: var(--navy); }
+/* How it works: the sample heat map with its caption, then three numbered
+   lines. The numerals are serif — no discs, no gold. */
+.start-how { padding: 52px 20px 52px; scroll-margin-top: 60px; }
+.start-how-map { width: 100%; margin: 0 auto; max-width: 340px; }
+.start-how-map figcaption { margin-top: 0; text-align: center; font-size: 13.5px; line-height: 1.4; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--slate); }
+.start-how h2 { margin: 36px 0 18px; font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.1; color: var(--navy); }
 .start-how ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
-.start-how li { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: baseline; font-size: 15px; line-height: 1.55; color: var(--ink); }
-.start-how-n { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1; color: var(--navy); font-variant-numeric: lining-nums; }
+.start-how li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: baseline; font-size: 15.5px; line-height: 1.55; color: var(--ink); }
+.start-how-n { font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1; color: var(--pine); font-variant-numeric: lining-nums; }
 footer.site.start-footer { padding: 18px 0 28px; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.5; color: var(--slate); }
 .start-footer-in { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 .start-footer p { margin: 0 0 6px; }
 footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 @media (min-width: 701px) and (max-width: 899px) {
-  .start-map .bmh { width: 300px; }
-  .start-how-photo { height: 220px; }
-  .start-pane, .start-how { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .start-photo { height: 340px; }
+  .start-pane, .start-form, .start-how { padding-left: max(20px, calc((100% - 560px) / 2)); padding-right: max(20px, calc((100% - 560px) / 2)); }
 }
 @media (max-width: 767px) {
   header.site.start-header .nav { height: 52px; }
 }
 @media (min-width: 900px) {
-  /* The logo and the phone line up with the photo and the form. */
-  header.site.start-header .nav { max-width: 1180px; padding: 0 48px; }
-  .start-hero { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 72px; align-items: start; max-width: 1180px; margin: 0 auto; padding: 40px 48px 0; }
-  .start-map { display: flex; flex-direction: column; justify-content: center; min-height: 620px; padding: 32px; border-radius: 16px; }
-  .start-map .bmh { width: 100%; max-width: 480px; }
-  .start-map figcaption { margin-top: 8px; font-size: 15px; }
-  .start-pane { padding: 36px 0 0; }
-  .start-pane h1 { font-size: 50px; }
-  .start-line { font-size: 17px; }
-  .start-trust { font-size: 14px; }
-  .start-how { display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 72px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 96px 48px 88px; }
-  .start-how-photo { height: 300px; border-radius: 16px; }
-  .start-how h2 { margin: 0 0 24px; font-size: 30px; }
+  /* The logo and the phone line up with the page's two halves. */
+  header.site.start-header .nav { max-width: none; padding: 0 48px; }
+  .start-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  /* The photo fills the left half and stays while the right half scrolls. */
+  .start-photo { position: sticky; top: 63px; height: calc(100vh - 63px); min-height: 560px; }
+  .start-photo img { object-position: 60% 30%; }
+  .start-side { display: flex; flex-direction: column; align-items: center; padding: 40px 48px 64px; }
+  .start-pane, .start-form { width: 100%; max-width: 500px; }
+  .start-pane { padding: 0 0 24px; }
+  .start-eyebrow { font-size: 13px; }
+  .start-pane h1 { margin: 14px 0 16px; font-size: 64px; }
+  .start-sub { font-size: 17.5px; }
+  .start-meta { margin-top: 18px; font-size: 15px; }
+  .start-form { padding: 26px 32px 30px; border-radius: 14px; }
+  .start-form-heading { font-size: 34px; }
+  .start-how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 96px 48px 88px; }
+  .start-how-map { max-width: 460px; }
+  .start-how-map figcaption { font-size: 15px; }
+  .start-how h2 { margin: 0 0 24px; font-size: 38px; }
   .start-how ol { gap: 22px; }
-  .start-how li { grid-template-columns: 32px minmax(0, 1fr); font-size: 16px; }
-  .start-how-n { font-size: 26px; }
+  .start-how li { grid-template-columns: 34px minmax(0, 1fr); font-size: 16.5px; }
+  .start-how-n { font-size: 28px; }
   footer.site.start-footer { padding: 22px 0 32px; }
   .start-footer-in { padding: 0 48px; }
 }

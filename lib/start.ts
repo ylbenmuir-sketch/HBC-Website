@@ -12,11 +12,17 @@
 
 import { BRAIN_MAP_PRICE_USD, REVIEWS, REVIEW_COUNT_ROUNDED } from "./site-config";
 
-/** One headline per code, six words or fewer (Ben, 2026-11-13). Nothing else varies. */
-export type StartHook = { headline: string };
+/**
+ * One headline per code, six words or fewer. `lead` is set in the serif,
+ * `tail` under it in the italic (Ben, 2026-11-13); `headline` is the two
+ * together, for anything that wants the sentence.
+ */
+export type StartHook = { lead: string; tail: string; headline: string };
+
+const hook = (lead: string, tail: string): StartHook => ({ lead, tail, headline: `${lead} ${tail}` });
 
 /** The default headline: no `h`, `h=g1`, or any code not listed below. */
-export const START_DEFAULT_HOOK: StartHook = { headline: "See what your brain is doing." };
+export const START_DEFAULT_HOOK: StartHook = hook("Get to know", "your brain.");
 
 /**
  * Codes are a letter and one or two digits (lib/attribution.ts → cleanHook).
@@ -26,14 +32,14 @@ export const START_DEFAULT_HOOK: StartHook = { headline: "See what your brain is
  */
 export const START_HOOKS: Record<string, StartHook> = {
   g1: START_DEFAULT_HOOK,
-  k1: { headline: "When homework is a daily battle." },
-  k2: { headline: "For kids who can’t calm down." },
-  a1: { headline: "When your mind won’t turn off." },
-  a2: { headline: "A drug-free look at sleep." },
-  a3: { headline: "Clear the fog." },
-  a4: { headline: "See what’s going on with focus." },
-  a5: { headline: "A drug-free look at stress." },
-  n1: { headline: "LENS starts with a brain map." },
+  k1: hook("When homework is", "a daily battle."),
+  k2: hook("For kids who", "can’t calm down."),
+  a1: hook("When your mind", "won’t turn off."),
+  a2: hook("A drug-free look", "at sleep."),
+  a3: hook("Clear", "the fog."),
+  a4: hook("See what’s going on", "with focus."),
+  a5: hook("A drug-free look", "at stress."),
+  n1: hook("LENS starts with", "a brain map."),
 };
 
 /** The headline for an `h` value; anything missing or unknown gets the default. */
@@ -45,14 +51,19 @@ export function startHook(h: unknown): StartHook {
 /**
  * The offer, as /start words it. Always "Brain Map Session" — never a
  * "clarity session" or a "free call" on this page. Every line the page and
- * its form print about the offer comes from here. Since 2026-11-13 (Ben: the
- * phone view was "too wordy and over stimulating") that is one line under
- * the headline, the same for every code, and one guarantee sentence under
- * the button.
+ * its form print about the offer comes from here: the eyebrow, one
+ * sentence under the headline (the same for every code), the offer half of
+ * the row under it, the form's heading and line, the button and the one
+ * guarantee sentence.
  */
 export const START_OFFER = {
   name: "Brain Map Session",
-  line: `60-minute Brain Map Session · $${BRAIN_MAP_PRICE_USD} · written plan included`,
+  eyebrow: "The Brain Map Session",
+  sub: "Sit down with a practitioner to understand your brain map and leave with a written plan.",
+  meta: `60 minutes · $${BRAIN_MAP_PRICE_USD}`,
+  formHeading: "Request your session",
+  formSub: "We’ll call to find a time that works for you.",
+  /** The button's words. The arrow after them is decoration (components/ContactForm.tsx). */
   button: "Request My Consultation",
   /** The only guarantee text on the page: centered under the button. */
   guarantee: "If we don’t deliver the map and the plan, you don’t pay.",
@@ -61,10 +72,9 @@ export const START_OFFER = {
 } as const;
 
 /**
- * "How it works", under the form (Ben, 2026-11-13; it replaced the three
- * "What you get" lines): the session photo and three numbered steps. Ben's
- * words, verbatim. `caption` sits under the hero, which is the sample heat
- * map the home page shows.
+ * "How it works", under the form (Ben, 2026-11-13): the sample heat map the
+ * home page shows with its caption, and three numbered steps. Ben's words,
+ * verbatim.
  */
 export const START_HOW = {
   id: "how-it-works",
@@ -78,7 +88,7 @@ export const START_HOW = {
 } as const;
 
 /**
- * The quiet trust line under the offer line: "★ 5.0 · 160+ Google reviews".
+ * The reviews half of the row under the headline: "★ 5.0 · 160+ Google reviews".
  * The same review constants PROOF_LINE_SHORT is built from, so the figures
  * cannot disagree with the rest of the site. The star is kept apart from the
  * text because it alone takes the gold.
