@@ -25,7 +25,7 @@ import {
 } from "@/lib/lead-options";
 import { postWithFormToken, prefetchFormToken } from "@/lib/form-token-client";
 import { attributionForSubmit } from "@/lib/attribution";
-import { START_OFFER } from "@/lib/start";
+import { START_FOLLOW, START_OFFER } from "@/lib/start";
 import { setStartCenter } from "@/lib/start-center";
 import { newMetaEventId } from "@/lib/meta";
 import { trackMetaLead } from "@/lib/meta-pixel";
@@ -205,11 +205,15 @@ function StepPanel({
   heading,
   children,
   className = "",
+  plain = false,
 }: {
   eyebrow?: string;
   heading: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** /start: no card — the panel sits on the page's sage band, its heading
+   *  in the page's serif (app/globals.css → .start-step). */
+  plain?: boolean;
 }) {
   const panel = useRef<HTMLDivElement>(null);
   const title = useRef<HTMLHeadingElement>(null);
@@ -218,6 +222,16 @@ function StepPanel({
     panel.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
     title.current?.focus({ preventScroll: true });
   }, []);
+  if (plain) {
+    return (
+      <div ref={panel} className={`rv form-step start-step ${className}`.trim()}>
+        <h2 ref={title} tabIndex={-1} className="start-form-heading">
+          {heading}
+        </h2>
+        {children}
+      </div>
+    );
+  }
   return (
     <div ref={panel} className={`rv form-card form-step ${className}`.trim()} style={CARD_STYLE}>
       {eyebrow && <div className="eyebrow">{eyebrow}</div>}
@@ -606,6 +620,20 @@ export default function ContactForm({
   /* ── Step three ─────────────────────────────────────────────────────── */
   // Exactly four things (Ben, 2026-10-14): the headline, the video, one line
   // about the call, one line with both numbers. It must fit 390×844.
+  // /start (Ben, 2026-11-13): a plain thank-you and the center's number —
+  // the picked center's own line, else the first (Nashville, the main line).
+  if (step === "three" && variant === "start") {
+    const picked = centerPhones.find((c) => c.name === preferredCenter);
+    const line = (picked ?? centerPhones[0])?.phone ?? { display: PHONE_DISPLAY, tel: PHONE_TEL };
+    return (
+      <StepPanel key="three" plain className="start-done" heading={START_FOLLOW.thanks}>
+        <p className="start-done-tel" data-link-location="confirmation">
+          {picked ? `${picked.name} center · ` : ""}
+          <a href={`tel:${line.tel}`}>{line.display}</a>
+        </p>
+      </StepPanel>
+    );
+  }
   if (step === "three") {
     const lines = centerPhones.length > 0
       ? centerPhones
@@ -620,7 +648,7 @@ export default function ContactForm({
         heading={<>Thanks{name ? `, ${name}` : ""}. We&rsquo;ll reach out soon.</>}
       >
         <VideoEmbed video={video} sizes="(max-width: 1060px) calc(100vw - 48px), 600px" />
-        <p className="done-line">{variant === "start" ? START_OFFER.afterSend : "Free call, no obligation."}</p>
+        <p className="done-line">Free call, no obligation.</p>
         <p className="done-line done-phones" data-link-location="confirmation">
           Want to talk now?{" "}
           {lines.map(({ name: center, phone: line }, i) => (
@@ -636,6 +664,47 @@ export default function ContactForm({
   }
 
   /* ── Step two ───────────────────────────────────────────────────────── */
+  // /start (Ben, 2026-11-13): two questions only — who it is for (chips)
+  // and what is going on (one select, saved as a one-item `concerns`).
+  // Same PATCH, same skip, same funnel events as the longer step below.
+  if (step === "two" && variant === "start") {
+    return (
+      <StepPanel key="two" plain heading={START_FOLLOW.heading}>
+        <p className="start-form-sub">{START_FOLLOW.sub}</p>
+        <form className="form form-compact start-fields start-follow" onSubmit={saveDetails} noValidate>
+          <label id="helping-label">{START_FOLLOW.who}</label>
+          <ChoiceChips
+            labelId="helping-label"
+            idPrefix="helping"
+            options={HELPING_OPTIONS.map((o) => ({ id: o.toLowerCase().replace(/\s+/g, "-"), label: o, value: o }))}
+            value={helpingWho}
+            onChange={setHelpingWho}
+          />
+
+          <label htmlFor="concern-select">{START_FOLLOW.what}</label>
+          <select
+            id="concern-select"
+            value={selectedConcerns[0] ?? ""}
+            onChange={(e) => setSelectedConcerns(e.target.value ? [e.target.value] : [])}
+          >
+            <option value="">{START_FOLLOW.whatEmpty}</option>
+            {CONCERN_OPTIONS.map((opt) => (
+              <option key={opt}>{opt}</option>
+            ))}
+          </select>
+
+          <div className="form-exits">
+            <button className="btn btn-primary start-submit" type="submit" disabled={status === "submitting"}>
+              {status === "submitting" ? "Sending…" : START_FOLLOW.send}
+            </button>
+            <button className="form-skip" type="button" onClick={() => skip("skip_link")} disabled={status === "submitting"}>
+              {START_FOLLOW.skip}
+            </button>
+          </div>
+        </form>
+      </StepPanel>
+    );
+  }
   if (step === "two") {
     // "Text" only when she agreed to texts on step one: without that tick
     // the office cannot text her, so it is not offered.

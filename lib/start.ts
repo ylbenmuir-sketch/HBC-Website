@@ -67,8 +67,24 @@ export const START_OFFER = {
   button: "Request My Consultation",
   /** The only guarantee text on the page: centered under the button. */
   guarantee: "If we don’t deliver the map and the plan, you don’t pay.",
-  /** The confirmation's one line, once the request is sent. Not on the form. */
-  afterSend: "No payment today. We’ll call or text within 1 business day to pick a time.",
+} as const;
+
+/**
+ * After the request is sent (Ben, 2026-11-13): two optional questions in
+ * the page's own calm style, then a plain thank-you with the center's
+ * number. /contact's longer step two (best time, best way to reach, how did
+ * you hear, anything we should know) is not asked here; those columns stay
+ * and are simply left empty by a /start lead.
+ */
+export const START_FOLLOW = {
+  heading: "Got it — we’ll reach out soon.",
+  sub: "Two quick questions, if you have a moment.",
+  who: "Who is this for?",
+  what: "What’s going on?",
+  whatEmpty: "Select one",
+  send: "Send",
+  skip: "Skip",
+  thanks: "Thank you. We’ll call you soon.",
 } as const;
 
 /**

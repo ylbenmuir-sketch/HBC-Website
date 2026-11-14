@@ -1407,7 +1407,9 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   the form on a sage band (`--sage-mist`, button `--pine`): name, phone,
   center as a select, the email field behind "Add email (optional)", one
   guarantee sentence; then "How it works" (the home page heat map, three
-  numbered lines). `?center=murfreesboro` selects that center in the server HTML.
+  numbered lines). After the send, /start asks two optional questions (who it
+  is for, what is going on as one select) and then shows a plain thank-you
+  with the center's number (`START_FOLLOW`); /contact keeps its longer step two. `?center=murfreesboro` selects that center in the server HTML.
   The visit's first utm tags and whether it came from Instagram ride onto
   the lead row as `utm_*` / `lead_source` (`lib/attribution.ts`, migration
   0019), wherever on the site the form is finally sent.
