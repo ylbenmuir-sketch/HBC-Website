@@ -366,17 +366,20 @@ export function MessageCard({ title, message, ok, back = false }: { title: strin
  * A confirmed entry. With a share link the card is Ben's mockup (2026-11-14):
  * the gold "You're in" label, a thin rule, the headline with "3 more
  * entries" in gold, a rule, the link, the two large buttons, the three small
- * ones and the friend's line — nothing else on screen. The entry's own
- * sentence (and the early-bird bonus) is still read out by a screen reader.
+ * ones and the friend's line. Under the label, one small line confirms
+ * the entry, and the early-bird bonus for someone who got it (Ben, 2026-11-15).
  * Without a share link it is the plain "You're in" card.
  */
-export function YoureInCard({ message, shareUrl, back = false }: { message: string; shareUrl?: string; back?: boolean }) {
+export function YoureInCard({ message, shareUrl, earlyBird = false, back = false }: { message: string; shareUrl?: string; earlyBird?: boolean; back?: boolean }) {
   if (shareUrl) {
     const [lead, gold, rest] = t.shareHeadlineParts(REFERRAL.referrerBonus);
     return (
       <div className="ty-message ty-in" role="status" data-ok="1">
         <p className="ty-in-kicker">{t.inTitle.replace(/\.$/, "")}</p>
-        <p className="ty-sr">{message}</p>
+        <p className="ty-in-line" data-in-line>
+          {t.inLine}
+          {earlyBird && <> {t.inLineEarlyBird}</>}
+        </p>
         {/* Two blocks so the lines fall as in the mockup: "Get 3 more entries" alone on the first, the rest balanced under it. */}
         <h2 className="ty-share-head">
           <span className="ty-share-head-1">

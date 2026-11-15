@@ -334,6 +334,8 @@ export function mondayReminderEmail(input: { firstName: string; enterUrl: string
 /** The share block's colors (Ben's mockup, 2026-11-14): the site's deep navy, his gold, the link's soft box. */
 const SHARE_NAVY = "#152230";
 const SHARE_GOLD = "#b8924a";
+/** The site's --gold-ink: the gold for words on a light ground (3:1 and better). */
+const SHARE_GOLD_INK = "#856831";
 const SHARE_RULE = "#e3d6ba";
 const SHARE_BOX = "#f2ede4";
 
@@ -366,7 +368,7 @@ export function youreInEmail(input: {
   const cutAt = bare.indexOf("/") + 1;
   const linkShown = cutAt > 0 ? `${esc(bare.slice(0, cutAt))}<wbr><span style="white-space:nowrap;">${esc(bare.slice(cutAt))}</span>` : esc(bare);
   const shareBlock =
-    `<div class="hbc-name" style="font-family:${SERIF};font-size:30px;font-weight:400;color:${SHARE_NAVY};line-height:1.2;padding:16px 0 18px;border-top:1px solid ${SHARE_RULE};border-bottom:1px solid ${C.line};">${esc(lead)}<span style="color:${SHARE_GOLD};">${esc(gold)}</span>${esc(rest)}</div>` +
+    `<div class="hbc-name" style="font-family:${SERIF};font-size:30px;font-weight:400;color:${SHARE_NAVY};line-height:1.2;padding:16px 0 18px;border-top:1px solid ${SHARE_RULE};border-bottom:1px solid ${C.line};">${esc(lead)}<span style="color:${SHARE_GOLD_INK};">${esc(gold)}</span>${esc(rest)}</div>` +
     `<div class="hbc-text" style="font-family:${SANS};font-size:14px;color:${C.ink};line-height:1.45;padding-top:16px;">${esc(sub)}</div>` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td class="hbc-panel" bgcolor="${SHARE_BOX}" style="background:${SHARE_BOX};border:1px solid ${C.line};border-radius:5px;padding:12px 14px;font-family:${SANS};font-size:15px;line-height:1.5;word-break:break-word;"><a class="hbc-text" href="${esc(link)}" style="color:${C.ink};text-decoration:none;">${linkShown}</a></td></tr></table>` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;"><tr><td class="hbc-btn" align="center" bgcolor="${SHARE_NAVY}" style="background:${SHARE_NAVY};border:1px solid ${SHARE_NAVY};border-radius:5px;"><a href="${esc(facebookShareUrl(link))}" style="display:block;padding:14px 10px;font-family:${SANS};color:${C.white};text-decoration:none;text-align:center;"><span style="display:block;font-size:19px;line-height:1.2;">${esc(s.shareFacebook)}</span><span style="display:block;font-size:12px;line-height:1.3;color:${SHARE_GOLD};padding-top:5px;">${esc(s.shareFacebookSub)}</span></a></td></tr></table>` +

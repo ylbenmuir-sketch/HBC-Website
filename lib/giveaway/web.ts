@@ -130,7 +130,7 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
 }
 
 /** `shareUrl` is set once an entry is confirmed (the card shows it with a copy button). */
-export type VerifyPageResult = { ok: true; kind: "notify" | "entry"; message: string; shareUrl?: string } | { ok: false; message: string };
+export type VerifyPageResult = { ok: true; kind: "notify" | "entry"; message: string; shareUrl?: string; earlyBird?: boolean } | { ok: false; message: string };
 
 /** What the reminder knows, for the entry form the one-tap link opens. */
 export type TapPrefill = { email: string; firstName: string; lastName: string; zip: string; marketing: boolean };
@@ -188,7 +188,7 @@ export async function handleTap(token: string | null): Promise<TapPageResult> {
     if (r.reason === "not_open") return { ok: false, message: entryPageMode(now) === "notify_me" ? PAGES.tenYears.tapNotOpen : PAGES.tenYears.tapClosed };
     return { ok: false, message: PAGES.tenYears.verifyInvalid };
   }
-  if (r.state === "entered") return { ok: true, kind: "entry", message: PAGES.tenYears.tapped(r.earlyBird), shareUrl: await shareUrlFor(store, r.person.id) };
+  if (r.state === "entered") return { ok: true, kind: "entry", message: PAGES.tenYears.tapped(r.earlyBird), earlyBird: r.earlyBird, shareUrl: await shareUrlFor(store, r.person.id) };
   const n = r.row;
   // A database without 0021 holds blanks for what a reminder never gave (people.ts REMINDER_BLANK).
   const zip = n.zip && n.zip !== REMINDER_BLANK.zip ? n.zip : "";

@@ -389,6 +389,9 @@ export const PAGES = {
     /** The card after a submit, an old email link (verify) or the one tap. */
     onListTitle: D("You're on the list."),
     inTitle: D("You're in."),
+    /** The one small line under the "You're in" label on the share card (Ben, 2026-11-15). */
+    inLine: D("You're entered in every drawing."),
+    inLineEarlyBird: D("Early-bird bonus included."),
     notYetTitle: D("Not yet."),
     /** The share block (Ben, 2026-11-14): the card after an entry and the
      *  "You're in" email lead with it. The bonus comes only from friends who
