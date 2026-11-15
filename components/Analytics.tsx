@@ -60,7 +60,8 @@ export default function Analytics() {
         e.target instanceof Element
           ? e.target.closest('a[href^="tel:" i], a[href^="mailto:" i], a[href^="sms:" i]')
           : null;
-      if (!link) return;
+      // A share button (the /10years card's Email link) is not a message to the centers; it reports giveaway_share_click itself.
+      if (!link || link.hasAttribute("data-share")) return;
       const event = contactLinkEvent(
         link.getAttribute("href"),
         link.closest("[data-link-location]")?.getAttribute("data-link-location"),

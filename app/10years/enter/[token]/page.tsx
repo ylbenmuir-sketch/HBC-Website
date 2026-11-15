@@ -35,7 +35,7 @@ export default async function EnterPage({ params, searchParams }: { params: Prom
   ) : r.kind === "form" ? (
     <FormCard now={now} refCode="" error={errorCode ? errorText(errorCode) : null} errorCode={errorCode} prefill={r.prefill} tap={r.token} />
   ) : (
-    <YoureInCard message={r.message} shareUrl={r.shareUrl} />
+    <YoureInCard message={r.message} shareUrl={r.shareUrl} earlyBird={r.earlyBird} />
   );
   // Before entries open the page has no card in its hero: the answer sits there as a notice, the reminder strip stays below.
   if (mode === "notify_me") return <TenYearsView mode={mode} now={now} card={<ReminderCard error={null} />} notice={card} />;

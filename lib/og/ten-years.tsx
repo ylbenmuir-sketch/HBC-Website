@@ -37,7 +37,7 @@ export async function renderTenYearsCard() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", marginLeft: 56 }}>
             <div style={{ fontFamily: "Cormorant Garamond", fontSize: 168, lineHeight: 0.9, color: SAGE, letterSpacing: "-0.03em", display: "flex" }}>{t.og.years(years)}</div>
-            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 66, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 10 }}>{heading.length > 1 ? heading.slice(1).join(" ") : ogTitle()}</div>
+            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 66, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 10 }}>{heading.length > 1 ? heading.slice(1).join(" ") : t.og.cardLine}</div>
             <div style={{ fontSize: 34, lineHeight: 1.2, color: GOLD_INK, display: "flex", marginTop: 22, fontWeight: 500 }}>{t.og.value(total)}</div>
             {/* The mystery gift (fix list rev 2, P0-4): "gift", never the visit. */}
             <div style={{ fontSize: 26, lineHeight: 1.2, color: NAVY, display: "flex", marginTop: 10, fontWeight: 500 }}>{t.og.tease}</div>
@@ -94,7 +94,7 @@ export async function renderTenYearsEmailBanner() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", marginLeft: 52 }}>
             <div style={{ fontFamily: "Cormorant Garamond", fontSize: 148, lineHeight: 0.9, color: SAGE, letterSpacing: "-0.03em", display: "flex" }}>{t.og.years(years)}</div>
-            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 60, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 12 }}>{heading.length > 1 ? heading.slice(1).join(" ") : ogTitle()}</div>
+            <div style={{ fontFamily: "Cormorant Garamond", fontSize: 60, lineHeight: 1, color: NAVY, letterSpacing: "-0.01em", display: "flex", marginTop: 12 }}>{heading.length > 1 ? heading.slice(1).join(" ") : t.og.cardLine}</div>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "2px solid rgba(169,133,63,0.5)", paddingTop: 18 }}>

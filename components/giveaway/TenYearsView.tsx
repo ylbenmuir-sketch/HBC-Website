@@ -4,12 +4,12 @@ import FAQAccordion from "@/components/FAQAccordion";
 import AssistantOff from "./AssistantOff";
 import CalendarMenu from "./CalendarMenu";
 import Countdown from "./Countdown";
-import CopyLink from "./CopyLink";
 import EntryBar from "./EntryBar";
 import FormGuard from "./FormGuard";
 import Ladder from "./Ladder";
 import PhoneField from "./PhoneField";
 import Seal from "./Seal";
+import SharePanel from "./SharePanel";
 import UtmCapture from "./UtmCapture";
 import { UTM_FIELDS, type UtmField } from "@/lib/giveaway/channel";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
@@ -39,6 +39,7 @@ import {
 } from "@/lib/giveaway/config";
 import { CALENDAR_PATHS, SITE_CALENDAR_UTM } from "@/lib/giveaway/calendar";
 import { PAGES } from "@/lib/giveaway/copy";
+import { emailShareUrl, facebookShareUrl, shareText } from "@/lib/giveaway/share";
 import type { PublicWinner, TapPrefill } from "@/lib/giveaway/web";
 import { ESTABLISHED_YEAR, STAT_SESSIONS } from "@/lib/site-config";
 
@@ -361,18 +362,61 @@ export function MessageCard({ title, message, ok, back = false }: { title: strin
   );
 }
 
-/** A confirmed entry: "You're in", the count, the share link with a copy button. */
-export function YoureInCard({ message, shareUrl, back = false }: { message: string; shareUrl?: string; back?: boolean }) {
+/**
+ * A confirmed entry. With a share link the card is Ben's mockup (2026-11-14):
+ * the gold "You're in" label, a thin rule, the headline with "3 more
+ * entries" in gold, a rule, the link, the two large buttons, the three small
+ * ones and the friend's line. Under the label, one small line confirms
+ * the entry, and the early-bird bonus for someone who got it (Ben, 2026-11-15).
+ * Without a share link it is the plain "You're in" card.
+ */
+export function YoureInCard({ message, shareUrl, earlyBird = false, back = false }: { message: string; shareUrl?: string; earlyBird?: boolean; back?: boolean }) {
+  if (shareUrl) {
+    const [lead, gold, rest] = t.shareHeadlineParts(REFERRAL.referrerBonus);
+    return (
+      <div className="ty-message ty-in" role="status" data-ok="1">
+        <p className="ty-in-kicker">{t.inTitle.replace(/\.$/, "")}</p>
+        <p className="ty-in-line" data-in-line>
+          {t.inLine}
+          {earlyBird && <> {t.inLineEarlyBird}</>}
+        </p>
+        {/* Two blocks so the lines fall as in the mockup: "Get 3 more entries" alone on the first, the rest balanced under it. */}
+        <h2 className="ty-share-head">
+          <span className="ty-share-head-1">
+            {lead}
+            <b>{gold}</b>
+          </span>
+          <span className="ty-share-head-2">{rest}</span>
+        </h2>
+        <p className="ty-share-sub">{t.shareSub(REFERRAL.friendCap)}</p>
+        <SharePanel
+          url={shareUrl}
+          text={shareText(shareUrl)}
+          facebookHref={facebookShareUrl(shareUrl)}
+          emailHref={emailShareUrl(shareUrl)}
+          emailSubject={t.shareEmailSubject}
+          labels={{
+            link: t.shareLabel,
+            instagram: t.shareInstagram,
+            instagramSub: t.shareInstagramSub,
+            instagramCopied: t.shareInstagramCopied,
+            facebook: t.shareFacebook,
+            facebookSub: t.shareFacebookSub,
+            copy: t.copy,
+            copied: t.copied,
+            copyFailed: t.copyFailed,
+            email: t.shareEmail,
+            phone: t.sharePhone,
+          }}
+        />
+        <p className="ty-share-friend">{t.shareFriendLine}</p>
+      </div>
+    );
+  }
   return (
     <div className="ty-message" role="status" data-ok="1">
       <h2 className="ty-card-title">{t.inTitle}</h2>
       <p className="ty-card-line">{message}</p>
-      {shareUrl && (
-        <>
-          <CopyLink url={shareUrl} label={t.shareLabel} copy={t.copy} copied={t.copied} />
-          <p className="ty-small">{t.shareLine(REFERRAL.referrerBonus, REFERRAL.referredBonus)}</p>
-        </>
-      )}
       {/* After a submit the URL carries ?sent=1; someone it is forwarded to still needs a way to the form. */}
       {back && (
         <a className="ty-textlink" href="/10years#enter">

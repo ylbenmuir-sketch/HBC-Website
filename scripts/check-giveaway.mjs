@@ -419,7 +419,7 @@ try {
   expect("before Nov 9: the sitemap does not list /10years", !/\/10years</.test((await get("/sitemap.xml")).text));
   // The share preview (Ben, 2026-10-20): og:image is the page's own card, and a referral link gets the same one.
   const ogUrl = /property="og:image" content="([^"]+)"/.exec(todayPage.text)?.[1] ?? "";
-  expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*A Week of Prizes/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
+  expect("/10years carries its own og:image, title and description", /\/10years\/opengraph-image/.test(ogUrl) && /property="og:title" content="[^"]*10-Year Giveaway/.test(todayPage.text) && /name="twitter:card" content="summary_large_image"/.test(todayPage.text), ogUrl);
   const refPreview = await get("/10years?mode=notify&ref=HBC-TEST01");
   expect("a referral link shares the same preview", (/property="og:image" content="([^"]+)"/.exec(refPreview.text)?.[1] ?? "x") === ogUrl);
   const og = await fetch(`${BASE}/10years/opengraph-image`);
@@ -602,7 +602,7 @@ try {
     expect("A: the reminder row is marked entered (the Monday reminder will skip A)", (await dump("giveaway_notify")).find((n) => n.email === A.email)?.person_id === aPerson?.id);
   }
   const tapA2 = await get(tapPath(A), A);
-  expect("A: the link again says You're in (early bird) and adds nothing", /data-ok="1"/.test(tapA2.text) && /early-bird/.test(tapA2.text) && !/data-entry-form/.test(tapA2.text) && (await dump("giveaway_entries")).length === 2);
+  expect("A: the link again says You're in (early bird) and adds nothing", /data-ok="1"/.test(tapA2.text) && /Early-bird bonus included\./.test(tapA2.text) && !/data-entry-form/.test(tapA2.text) && (await dump("giveaway_entries")).length === 2);
   let youreIn = newEmails();
   // Rev 2, P0-2: no code and no named gift before the reveal — a tease instead.
   expect("A: one You're in email, with the share link, the gift tease and NO code", youreIn.length === 1 && /ref=HBC-/.test(youreIn[0].body.text) && !/10Y-[A-Z0-9]{6}/.test(youreIn[0].body.text) && /thank-you gift for every entrant/.test(youreIn[0].body.text) && !/first visit/i.test(youreIn[0].body.text), `${youreIn.length}`);
@@ -624,7 +624,7 @@ try {
     const done = await postForm("/10years/signup", { ...rest, phone: "502.555.0122" }, B);
     expect("B: an email-only reminder completes an entry through the one-tap link (Monday afternoon: no early bird)", /\/10years\?sent=1&share=HBC-[A-Z0-9]{6}$/.test(done.location), done.location);
     const again = await get(tapPath(B), B);
-    expect("B: the link again says You're in, without the early bird", /data-ok="1"/.test(again.text) && !/early-bird/.test(again.text));
+    expect("B: the link again says You're in, without the early bird", /data-ok="1"/.test(again.text) && /entered in every drawing\./.test(again.text) && !/[Ee]arly-bird bonus/.test(again.text));
   }
   const bPerson = (await dump("giveaway_people")).find((r) => r.email === B.email);
   expect("B's row: one base entry, the phone as E.164, city Louisville, nearer center Nashville (out of state, by the road in)", Boolean(bPerson) && bPerson.phone === "+15025550122" && (await dump("giveaway_entries")).filter((e) => e.person_id === bPerson.id).map((e) => e.kind).join() === "base" && bPerson.city === "Louisville" && bPerson.nearest_center === "nashville", JSON.stringify(bPerson && { city: bPerson.city, center: bPerson.nearest_center }));
@@ -665,7 +665,7 @@ try {
   expect("D: entered with 1 entry by the submit alone", (await entriesOf(D.email)) === 1, String(await entriesOf(D.email)));
   {
     const card = await get(r.location.replace(/^https?:\/\/[^/]+/, ""), D);
-    expect("D: the card says You're in and shows the share link at once", /data-ok="1"/.test(card.text) && /You(?:&#x27;|')re in\./.test(card.text) && /\?ref=HBC-[A-Z0-9]{6}/.test(card.text) && !/Check your inbox/.test(card.text));
+    expect("D: the card says You're in and shows the share link at once", /data-ok="1"/.test(card.text) && /ty-in-kicker">[^<]*You(?:&#x27;|')re in</.test(card.text) && /\?ref=HBC-[A-Z0-9]{6}/.test(card.text) && !/Check your inbox/.test(card.text));
   }
   const dMail = newEmails();
   expect("D: exactly one email, You're in (no confirmation email)", dMail.length === 1 && /You're in\./.test(dMail[0].body.subject) && !linkIn(dMail[0], "/10years/verify"), dMail.map((e) => e.body.subject).join(" | "));

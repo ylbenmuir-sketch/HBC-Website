@@ -19,7 +19,8 @@
 
 import { displayPhone, escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
-import { EMAILS, SHARED } from "./copy";
+import { EMAILS, PAGES, SHARED } from "./copy";
+import { copyPageUrl, emailShareUrl, facebookShareUrl } from "./share";
 import { CALENDAR_PATHS, CALENDAR_UTM, SHARE_UTM } from "./calendar";
 import {
   CLINIC_DAYS_AFTER_REVEAL,
@@ -330,6 +331,14 @@ export function mondayReminderEmail(input: { firstName: string; enterUrl: string
 /* 5. "You're in"                                                       */
 /* ------------------------------------------------------------------ */
 
+/** The share block's colors (Ben's mockup, 2026-11-14): the site's deep navy, his gold, the link's soft box. */
+const SHARE_NAVY = "#152230";
+const SHARE_GOLD = "#b8924a";
+/** The site's --gold-ink: the gold for words on a light ground (3:1 and better). */
+const SHARE_GOLD_INK = "#856831";
+const SHARE_RULE = "#e3d6ba";
+const SHARE_BOX = "#f2ede4";
+
 export function youreInEmail(input: {
   firstName: string;
   /** Came in through a friend's link (+1). */
@@ -342,12 +351,35 @@ export function youreInEmail(input: {
   const prize = input.nextDrawing ? prizeLineFor(input.nextDrawing) : null;
   const heading = c.heading(input.firstName);
   const body = c.body(input.nextDrawing, prize?.name ?? null);
-  const share = c.shareBody(REFERRAL.referrerBonus, REFERRAL.referredBonus, REFERRAL.friendCap);
   const tease = c.giftTease(revealSpoken());
+  // The share block (Ben's mockup, 2026-11-14), right under "…, you're in.":
+  // the page's own words (PAGES.tenYears) — the serif headline with "3 more
+  // entries" in gold between two thin rules, the link, then plain links only:
+  // Facebook (the sharer), "Copy my link" (an email cannot copy, so it opens
+  // the entrant's own card on /10years, where one tap does) and Email (a
+  // mailto). No Instagram here: its button only copies, which needs the page.
+  const s = PAGES.tenYears;
+  const link = input.referralUrl;
+  const headline = s.shareHeadline(REFERRAL.referrerBonus);
+  const [lead, gold, rest] = s.shareHeadlineParts(REFERRAL.referrerBonus);
+  const sub = s.shareSub(REFERRAL.friendCap);
+  // The link as the card shows it: no "https://", breaking after the site's name and never inside the code.
+  const bare = link.replace(/^https?:\/\//, "");
+  const cutAt = bare.indexOf("/") + 1;
+  const linkShown = cutAt > 0 ? `${esc(bare.slice(0, cutAt))}<wbr><span style="white-space:nowrap;">${esc(bare.slice(cutAt))}</span>` : esc(bare);
+  const shareBlock =
+    `<div class="hbc-name" style="font-family:${SERIF};font-size:30px;font-weight:400;color:${SHARE_NAVY};line-height:1.2;padding:16px 0 18px;border-top:1px solid ${SHARE_RULE};border-bottom:1px solid ${C.line};">${esc(lead)}<span style="color:${SHARE_GOLD_INK};">${esc(gold)}</span>${esc(rest)}</div>` +
+    `<div class="hbc-text" style="font-family:${SANS};font-size:14px;color:${C.ink};line-height:1.45;padding-top:16px;">${esc(sub)}</div>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;"><tr><td class="hbc-panel" bgcolor="${SHARE_BOX}" style="background:${SHARE_BOX};border:1px solid ${C.line};border-radius:5px;padding:12px 14px;font-family:${SANS};font-size:15px;line-height:1.5;word-break:break-word;"><a class="hbc-text" href="${esc(link)}" style="color:${C.ink};text-decoration:none;">${linkShown}</a></td></tr></table>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;"><tr><td class="hbc-btn" align="center" bgcolor="${SHARE_NAVY}" style="background:${SHARE_NAVY};border:1px solid ${SHARE_NAVY};border-radius:5px;"><a href="${esc(facebookShareUrl(link))}" style="display:block;padding:14px 10px;font-family:${SANS};color:${C.white};text-decoration:none;text-align:center;"><span style="display:block;font-size:19px;line-height:1.2;">${esc(s.shareFacebook)}</span><span style="display:block;font-size:12px;line-height:1.3;color:${SHARE_GOLD};padding-top:5px;">${esc(s.shareFacebookSub)}</span></a></td></tr></table>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;table-layout:fixed;border-collapse:separate;"><tr>${[[s.shareCopyMine, copyPageUrl(link)], [s.shareEmail, emailShareUrl(link)]]
+      .map(([label, href], i) => `${i > 0 ? `<td width="10" style="width:10px;font-size:0;line-height:0;">&nbsp;</td>` : ""}<td class="hbc-btn-quiet" align="center" bgcolor="${C.white}" style="background:${C.white};border:1px solid ${C.line};border-radius:5px;"><a href="${esc(href)}" style="display:block;padding:12px 6px;font-family:${SANS};font-size:15px;color:${SHARE_NAVY};text-decoration:none;line-height:1.2;text-align:center;">${esc(label)}</a></td>`)
+      .join("")}</tr></table>` +
+    `<div class="hbc-muted" style="font-family:${SANS};font-size:13px;color:${C.sageDeep};line-height:1.45;padding-top:16px;text-align:center;">${esc(s.shareFriendLine)}</div>`;
   const rows = [
-    section(`${h1(heading)}${p(body)}${prize?.partner ? p(prize.partner) : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "18px 20px 0"),
-    section(panel(`${panelTitle(c.shareHeading)}<div class="hbc-text" style="font-family:${SANS};font-size:14px;line-height:1.45;color:${C.ink};">${esc(share)}</div><div style="padding-top:8px;">${buttons([[c.shareButton, input.referralUrl]])}</div><div class="hbc-muted" style="font-family:${SANS};font-size:12px;color:${C.slate};padding-top:6px;word-break:break-all;">${esc(input.referralUrl)}</div>`), "14px 20px 0"),
-    section(p(tease, "padding-top:0;"), "14px 20px 0"),
+    section(`<div class="hbc-name" style="font-family:${SANS};font-size:16px;font-weight:700;color:${C.navy};line-height:1.3;padding-bottom:14px;">${esc(heading)}</div>${shareBlock}`, "18px 20px 0"),
+    section(`${p(body, "padding-top:0;font-size:15px;")}${prize?.partner ? p(prize.partner, "font-size:15px;") : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "20px 20px 0"),
+    section(p(tease, "padding-top:0;font-size:15px;"), "10px 20px 0"),
     gap(16),
     visitorFooter(input.footing, false),
   ];
@@ -357,13 +389,17 @@ export function youreInEmail(input: {
     html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([
       heading,
+      "",
+      headline,
+      `${sub} ${link}`,
+      s.shareFriendLine,
+      "",
+      `${s.shareFacebook}: ${facebookShareUrl(link)}`,
+      `${s.shareCopyMine}: ${copyPageUrl(link)}`,
+      "",
       body,
       prize?.partner ?? null,
       input.referredBonus ? c.referredBonus : null,
-      "",
-      c.shareHeading,
-      share,
-      `${c.shareButton}: ${input.referralUrl}`,
       "",
       tease,
       "",
