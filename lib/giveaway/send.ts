@@ -91,6 +91,8 @@ export type GiveawaySendInput = {
   footing?: Footing | null;
   cc?: string[];
   replyTo?: string | null;
+  /** Passed to Resend so a retried send can never become a second email. */
+  idempotencyKey?: string | null;
 };
 
 /**
@@ -120,5 +122,42 @@ export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<SendR
     text: input.email.text,
     replyTo: input.replyTo ?? null,
     headers,
+    idempotencyKey: input.idempotencyKey ?? null,
   });
+}
+
+/** One row of Resend's own record of what it accepted. */
+export type SentLogRow = { to: string[]; subject: string; createdAt: Date | null };
+
+/**
+ * Resend's list of the emails it accepted, newest first, back to `since`
+ * (GET /emails, 100 a page). A refused send never appears here, so an
+ * address in this list was sent that subject. Throws on anything unexpected
+ * — the caller must not treat a failed read as "nobody was sent anything".
+ */
+export async function listSentEmails(since: Date, opts: { maxPages?: number; pauseMs?: number } = {}): Promise<SentLogRow[]> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("sent log: RESEND_API_KEY is not set");
+  const out: SentLogRow[] = [];
+  let after: string | null = null;
+  for (let page = 0; page < (opts.maxPages ?? 100); page++) {
+    const url = `https://api.resend.com/emails?limit=100${after ? `&after=${encodeURIComponent(after)}` : ""}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(10_000) });
+    const body = (await res.json().catch(() => null)) as { data?: unknown; has_more?: unknown; name?: unknown; message?: unknown } | null;
+    if (!res.ok || !body || !Array.isArray(body.data)) throw new Error(`sent log: Resend ${res.status} ${[body?.name, body?.message].filter((v) => typeof v === "string").join(": ")}`.slice(0, 300));
+    const rows = body.data as Array<{ id?: unknown; to?: unknown; subject?: unknown; created_at?: unknown }>;
+    let reachedSince = false;
+    for (const r of rows) {
+      if (typeof r.id !== "string" || typeof r.subject !== "string") throw new Error("sent log: a row without an id or a subject");
+      const to = Array.isArray(r.to) ? r.to.filter((t): t is string => typeof t === "string") : typeof r.to === "string" ? [r.to] : [];
+      const ms = typeof r.created_at === "string" ? Date.parse(r.created_at.replace(" ", "T").replace(/([+-]\d\d)$/, "$1:00")) : NaN;
+      const createdAt = Number.isNaN(ms) ? null : new Date(ms);
+      if (createdAt && createdAt.getTime() < since.getTime()) reachedSince = true;
+      else out.push({ to, subject: r.subject, createdAt });
+    }
+    if (reachedSince || body.has_more !== true || rows.length === 0) return out;
+    after = rows[rows.length - 1].id as string;
+    await new Promise((r) => setTimeout(r, opts.pauseMs ?? 600));
+  }
+  throw new Error("sent log: more pages than expected");
 }

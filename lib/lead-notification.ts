@@ -74,6 +74,8 @@ export type Outbound = {
   text: string;
   replyTo?: string | null;
   headers?: Record<string, string>;
+  /** Resend's Idempotency-Key: a retry of the same send within 24 hours is answered with the first result, never a second email. */
+  idempotencyKey?: string | null;
 };
 
 /**
@@ -81,7 +83,7 @@ export type Outbound = {
  * a SendResult for the caller to log against the lead's id and store. No
  * submitted value is put in an error string.
  */
-export async function deliver({ to, cc = [], subject, html, text, replyTo, headers }: Outbound): Promise<SendResult> {
+export async function deliver({ to, cc = [], subject, html, text, replyTo, headers, idempotencyKey }: Outbound): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return { status: "not_configured", messageId: null, error: "RESEND_API_KEY is not set" };
@@ -96,6 +98,7 @@ export async function deliver({ to, cc = [], subject, html, text, replyTo, heade
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: senderAddress(),

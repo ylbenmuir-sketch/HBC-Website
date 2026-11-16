@@ -14,6 +14,7 @@ import { notifyOnListEmail, youreInEmail } from "./emails";
 import { REMINDER_BLANK, enterFromForm, entryCount, hashes, notifyFromForm, tapLookup, verifyEntry, verifyNotify, type SignupInput } from "./people";
 import { clientAddress, rateLimit, supabaseCounter } from "./rate-limit";
 import type { WinnerRow } from "./rows";
+import { reportEmailFailure } from "./failure-alert";
 import { footingFor, referralLink, sendGiveawayEmail, siteUrl } from "./send";
 import { attributionFrom } from "./channel";
 import { requireGiveawayStore, type GiveawayStore } from "./store";
@@ -91,7 +92,10 @@ export async function handleSignup(request: Request, form: FormData | null): Pro
       const footing = footingFor(r.row.email, store.env, true, secret);
       const email = notifyOnListEmail({ firstName: r.row.first_name ?? "", pageUrl: `${siteUrl()}/10years`, footing });
       const sent = await sendGiveawayEmail({ to: r.row.email, email, marketing: false, footing });
-      if (sent.status !== "sent") console.error(`[giveaway signup] on-the-list email not sent (the signup stands): ${sent.error}`);
+      if (sent.status !== "sent") {
+        console.error(`[giveaway signup] on-the-list email not sent (the signup stands): ${sent.error}`);
+        await reportEmailFailure(store, { what: "You're on the list", error: sent.error ?? "unknown", willRetry: false });
+      }
     }
     return back("?sent=1");
   }
@@ -209,7 +213,10 @@ async function sendYoureIn(store: GiveawayStore, secret: string, personId: strin
   const footing = footingFor(p.email, store.env, true, secret);
   const email = youreInEmail({ firstName: p.first_name, referredBonus, nextDrawing: next, referralUrl: referralLink(p.referral_code), footing });
   const sent = await sendGiveawayEmail({ to: p.email, email, marketing: false, footing });
-  if (sent.status !== "sent") console.error(`[giveaway] You're in not sent: ${sent.error}`);
+  if (sent.status !== "sent") {
+    console.error(`[giveaway] You're in not sent: ${sent.error}`);
+    await reportEmailFailure(store, { what: "You're in", error: sent.error ?? "unknown", willRetry: false });
+  }
 }
 
 /* ------------------------------------------------------------------ */

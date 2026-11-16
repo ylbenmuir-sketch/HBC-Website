@@ -12,7 +12,9 @@ import { alertRecipients } from "./alerts";
 import { drawing } from "./config";
 import type { DrawResult, Notifier } from "./drawings";
 import { staffWinnerAlertEmail } from "./emails";
-import { bookLink, footingFor, referralLink, sendGiveawayEmail, tokenLink } from "./send";
+import { reportEmailFailure } from "./failure-alert";
+import type { PersonRow, WinnerRow } from "./rows";
+import { bookLink, footingFor, listSentEmails, referralLink, sendGiveawayEmail, tokenLink } from "./send";
 import type { SendDeps } from "./sends";
 import type { GiveawayStore } from "./store";
 import { tokenSecret } from "./tokens";
@@ -36,19 +38,56 @@ export function liveNotifier(store: GiveawayStore, now: () => Date, log: Pick<Co
         return;
       }
       const sent = await sendGiveawayEmail({ to: to.to, cc: to.cc, email: alert, marketing: false, footing: null });
-      if (sent.status !== "sent") log.error(`[giveaway notify] staff alert for ${d.slot} not sent: ${sent.error}`);
+      if (sent.status !== "sent") {
+        log.error(`[giveaway notify] staff alert for ${d.slot} not sent: ${sent.error}`);
+        await reportEmailFailure(store, { what: `staff winner alert (${d.slot})`, error: sent.error ?? "unknown", willRetry: false }, { now: now() });
+      }
       await store.update("giveaway_winners", { notes: sent.status === "sent" ? null : `staff alert ${sent.status}: ${sent.error}` }).eq("id", r.winner.id);
     },
   };
 }
 
+/** Resend answers two requests a second; a broadcast keeps under that. */
+const SEND_GAP_MS = 550;
+
 /** The deps for lib/giveaway/sends.ts → runDueSends. */
 export function sendDeps(store: GiveawayStore, log: Pick<Console, "log" | "error"> = console): SendDeps {
   const secret = tokenSecret();
+  let lastSend = 0;
   return {
-    send: async ({ to, email, marketing, footing, cc }) => {
-      const r = await sendGiveawayEmail({ to, email, marketing, footing, cc });
+    send: async ({ to, email, marketing, footing, cc, idempotencyKey }) => {
+      const wait = lastSend + SEND_GAP_MS - Date.now();
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      lastSend = Date.now();
+      const r = await sendGiveawayEmail({ to, email, marketing, footing, cc, idempotencyKey });
       return { ok: r.status === "sent", messageId: r.messageId, error: r.error };
+    },
+    onFailure: async ({ kind, failed, error }) => {
+      await reportEmailFailure(store, { what: `scheduled email ${kind}`, count: failed, error, willRetry: true });
+    },
+    sentLog: (since) => listSentEmails(since),
+    // The Monday alert again (2026-11-16): the same email the drawing sends, from the rows as they stand. Reads only.
+    staffAlert: async (slot) => {
+      const d = drawing(slot as Parameters<typeof drawing>[0]);
+      const { data: row } = await store.select("giveaway_drawings", "id, drawn_at").eq("slot", d.slot).maybeSingle();
+      const drawingId = (row as { id: string } | null)?.id;
+      const drawnAt = (row as { drawn_at: string | null } | null)?.drawn_at;
+      if (!drawingId) return null;
+      const { data: winners } = await store.select("giveaway_winners", "*").eq("drawing_id", drawingId).neq("status", "redrawn").order("created_at", { ascending: false }).limit(1);
+      const winner = ((winners ?? []) as WinnerRow[])[0];
+      if (!winner) return null;
+      const { data: p } = await store.select("giveaway_people", "*").eq("id", winner.person_id).maybeSingle();
+      const person = p as PersonRow | null;
+      const to = alertRecipients(d.slot);
+      if (!person || !to.to) return null;
+      const email = staffWinnerAlertEmail({
+        drawing: d,
+        winner: { name: `${person.first_name} ${person.last_name}`, email: person.email_display, zip: person.zip, city: person.city, phone: person.phone ?? null },
+        taxFormRequired: winner.tax_form_required,
+        // The footer reads "Drawn …": the drawing's own time, not the resend's.
+        now: new Date(drawnAt ?? winner.created_at),
+      });
+      return { personId: person.id, to: to.to, cc: to.cc, email };
     },
     footingFor: (email, marketing) => footingFor(email, store.env, marketing, secret),
     links: {
