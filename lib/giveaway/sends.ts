@@ -56,6 +56,8 @@ export const JOB_STALE_MS = 10 * 60_000;
 export const RETRY_WINDOW_MS = 6 * 60 * 60_000;
 /** A run stops sending here (the cron function is cut off at 60 s). */
 export const RUN_BUDGET_MS = 40_000;
+/** Retryable refusals in a row that end a run (the next minute tries again). */
+export const RUN_STRIKES = 3;
 /** A receipt claimed this long ago with no result: its runner died. */
 export const RECEIPT_STALE_MS = 5 * 60_000;
 
@@ -136,7 +138,8 @@ export async function runDueSends(store: GiveawayStore, now: Date, deps: SendDep
   const out: RunSendsOutcome = { jobs: 0, sent: 0, skipped: 0, failed: 0 };
   const clock = deps.clock ?? Date.now;
   const stopAt = clock() + (deps.budgetMs ?? RUN_BUDGET_MS);
-  const run: Run = { over: () => clock() >= stopAt };
+  // Stops at the budget, and after RUN_STRIKES refusals in a row: when the provider is refusing everything (a quota), three tries a minute find out as well as three hundred.
+  const run: Run = { strikes: 0, over: () => clock() >= stopAt || run.strikes >= RUN_STRIKES };
   const { data, error } = await store.select("scheduled_sends", "*").is("person_id", null).is("notify_id", null).is("sent_at", null).is("skipped_reason", null).lte("due_at", now.toISOString()).order("due_at");
   if (error) {
     log.error(`[giveaway sends] due query failed: ${error.message}`);
@@ -162,8 +165,8 @@ export async function runDueSends(store: GiveawayStore, now: Date, deps: SendDep
       const open = r.retry > 0 || r.incomplete;
       if (!open) await store.update("scheduled_sends", { sent_at: now.toISOString(), skipped_reason: r.reason ?? null, claimed_at: null, error: r.undelivered ? `${r.undelivered} not delivered` : null }).eq("id", job.id);
       else await store.update("scheduled_sends", { claimed_at: null, error: r.retry ? `${r.retry} to retry` : null }).eq("id", job.id);
-      // One audit row when something was sent or refused, and one when the job closes — not one a minute while it waits.
-      if (r.sent || r.failed || !open) await audit(store, { actor: "cron", action: "send_job", targetTable: "scheduled_sends", targetId: job.id, after: { kind: job.kind, sent: r.sent, skipped: r.skipped, failed: r.failed, retry: r.retry, undelivered: r.undelivered, incomplete: r.incomplete, done: !open, ...(r.reason ? { reason: r.reason } : {}), ...(r.plan ? { plan: r.plan } : {}) } });
+      // One audit row when something was sent and one when the job closes — not one a minute while it waits on a refusing provider (the log and the failure alert carry those).
+      if (r.sent || !open) await audit(store, { actor: "cron", action: "send_job", targetTable: "scheduled_sends", targetId: job.id, after: { kind: job.kind, sent: r.sent, skipped: r.skipped, failed: r.failed, retry: r.retry, undelivered: r.undelivered, incomplete: r.incomplete, done: !open, ...(r.reason ? { reason: r.reason } : {}), ...(r.plan ? { plan: r.plan } : {}) } });
       if (r.failed && deps.onFailure) {
         try {
           await deps.onFailure({ kind: job.kind, failed: r.failed, error: r.lastError ?? "unknown" });
@@ -180,7 +183,7 @@ export async function runDueSends(store: GiveawayStore, now: Date, deps: SendDep
   return out;
 }
 
-type Run = { over: () => boolean };
+type Run = { strikes: number; over: () => boolean };
 
 type JobResult = {
   sent: number;
@@ -209,7 +212,7 @@ async function runJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, de
   if (kind === "gift_reminder" || kind === "gift_last_call") return giftReminderJob(store, job, kind, now, deps, log, run);
   if (kind.startsWith("daily_")) return dailyJob(store, job, kind, now, deps, log, run);
   if (job.kind === RESEND_YOURE_IN || job.kind === RESEND_YOURE_IN_PLAN) return youreInResendJob(store, job, now, deps, log, run);
-  if (job.kind.startsWith(RESEND_STAFF_ALERT_PREFIX)) return staffAlertResendJob(store, job, now, deps, log);
+  if (job.kind.startsWith(RESEND_STAFF_ALERT_PREFIX)) return staffAlertResendJob(store, job, now, deps, log, run);
   return { ...emptyResult(), skipped: 1, reason: `unknown kind ${kind}` };
 }
 
@@ -267,14 +270,16 @@ function passOver(out: JobResult, t: { id: null; why: "sent" | "final" | "expire
 }
 
 /** Record the result on the receipt and in the job's tally. */
-async function settle(store: GiveawayStore, job: ScheduledSendRow, receiptId: string, r: { ok: boolean; messageId: string | null; error: string | null }, now: Date, out: JobResult): Promise<boolean> {
+async function settle(store: GiveawayStore, job: ScheduledSendRow, receiptId: string, r: { ok: boolean; messageId: string | null; error: string | null }, now: Date, out: JobResult, run: Run): Promise<boolean> {
   await store.update("scheduled_sends", r.ok ? { sent_at: now.toISOString(), message_id: r.messageId, claimed_at: null, error: null } : { error: r.error, claimed_at: null }).eq("id", receiptId);
   if (r.ok) {
     out.sent++;
+    run.strikes = 0;
     return true;
   }
   out.failed++;
   out.lastError = r.error ?? "unknown";
+  if (retryable(r.error)) run.strikes++;
   if (retryable(r.error) && now.getTime() - new Date(job.due_at).getTime() <= RETRY_WINDOW_MS) out.retry++;
   else out.undelivered++;
   return false;
@@ -300,7 +305,7 @@ async function notifyJob(store: GiveawayStore, job: ScheduledSendRow, kind: "its
     const input = { firstName: n.first_name ?? "", enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
     const email = kind === "its_live" ? itsLiveEmail(input) : mondayReminderEmail(input);
     const r = await deps.send({ to: n.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (await settle(store, job, t.id, r, now, out)) await store.update("giveaway_notify", kind === "its_live" ? { sent_live_at: now.toISOString() } : { reminded_at: now.toISOString() }).eq("id", n.id);
+    if (await settle(store, job, t.id, r, now, out, run)) await store.update("giveaway_notify", kind === "its_live" ? { sent_live_at: now.toISOString() } : { reminded_at: now.toISOString() }).eq("id", n.id);
     else log.error(`[giveaway sends] ${kind} to notify ${n.id}: ${r.error}`);
   }
   return out;
@@ -337,7 +342,7 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
     // This entrant's own valid (unvoided) entries, counted now.
     const email = hypeEmail({ day, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
+    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -361,7 +366,7 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     const footing = deps.footingFor(p.email, true);
     const email = thankYouEmail({ firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out))) log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
+    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -388,7 +393,7 @@ async function giftReminderJob(store: GiveawayStore, job: ScheduledSendRow, kind
     const footing = deps.footingFor(p.email, true);
     const email = giftReminderEmail({ kind: kind === "gift_reminder" ? "reminder" : "last_call", firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
+    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -417,6 +422,7 @@ async function allPeople(store: GiveawayStore): Promise<PersonRow[]> {
 async function youreInResendJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">, run: Run): Promise<JobResult> {
   if (!deps.sentLog) throw new Error("youre_in_resend: no sent log to check against");
   const out = emptyResult();
+  if (run.over()) return { ...out, incomplete: true };
   const people = await allPeople(store);
   const next = DRAWINGS.find((d) => d.at.getTime() > now.getTime()) ?? null;
   const blank: Footing = deps.footingFor("nobody@example.test", true);
@@ -460,14 +466,15 @@ async function youreInResendJob(store: GiveawayStore, job: ScheduledSendRow, now
     const footing = deps.footingFor(p.email, true);
     const email = youreInEmail({ firstName: p.first_name, referredBonus: Boolean(bonus.data), nextDrawing: next, referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: false, footing, idempotencyKey: t.id });
-    if (!(await settle(store, sendJob, t.id, r, now, out))) log.error(`[giveaway sends] ${job.kind} to ${p.id}: ${r.error}`);
+    if (!(await settle(store, sendJob, t.id, r, now, out, run))) log.error(`[giveaway sends] ${job.kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
 
 /** The staff winner alert for one drawn slot, again, once. Reads the winner; writes only its own receipt. */
-async function staffAlertResendJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">): Promise<JobResult> {
+async function staffAlertResendJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">, run: Run): Promise<JobResult> {
   if (!deps.staffAlert) throw new Error("staff_alert_resend: no alert builder");
+  if (run.over()) return { ...emptyResult(), incomplete: true };
   const slot = job.kind.slice(RESEND_STAFF_ALERT_PREFIX.length);
   const alert = await deps.staffAlert(slot);
   if (!alert) throw new Error(`staff_alert_resend: no winner or no recipient for ${slot}`);
@@ -478,7 +485,7 @@ async function staffAlertResendJob(store: GiveawayStore, job: ScheduledSendRow, 
     return out;
   }
   const r = await deps.send({ to: alert.to, cc: alert.cc, email: alert.email, marketing: false, footing: null, idempotencyKey: t.id });
-  if (!(await settle(store, job, t.id, r, now, out))) log.error(`[giveaway sends] ${job.kind}: ${r.error}`);
+  if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${job.kind}: ${r.error}`);
   out.plan = { recipients: 1 + alert.cc.length };
   return out;
 }
