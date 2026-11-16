@@ -95,15 +95,6 @@ const CALENDAR = {
   ics: { label: t.calendarIcs, href: `${CALENDAR_PATHS.ics}?${SITE_CALENDAR_UTM}` },
 };
 
-/** The grand drawing, and its prize's parts in the hero sentence's words: the short names, the chair as
- *  "vibro chair each session", the partner gift by its own name without the partner ("3 Assisted Lymphatic Therapy sessions"). */
-const GRAND = DRAWINGS.find((d) => d.kind === "grand") ?? DRAWINGS[DRAWINGS.length - 1];
-function grandWords(part: PrizePart): string {
-  if (part.kind === "chair") return t.grandChair;
-  if (part.kind === "partner") return t.grandPartner(part.count, part.partner!.gift.split(" with ")[0]);
-  return partWords(part);
-}
-
 /** `card` is the form or message card — in the hero, or (before entries open) the reminder strip near the foot.
  *  `notice` is a message for the hero before entries open: an old verify link's or an early one-tap's answer. */
 export default function TenYearsView({ mode, now, card, notice = null, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; notice?: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
@@ -112,7 +103,7 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
   const next = nextDrawing(now);
   const countdownTarget = mode === "notify_me" ? SCHEDULE.entriesOpen.at : mode === "live" && next ? next.at : null;
   const notify = mode === "notify_me";
-  const countdown = countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={notify ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />;
+  const countdown = countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={notify ? t.countdownNotify : t.countdownLive} lead={mode === "live" ? t.countdownLead : undefined} units={t.countdownUnits} />;
   const span = spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short");
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, span);
   const grandValue = usd(prizeRetailUsd(prizeFor("grand")));
@@ -125,7 +116,7 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
       <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
       {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
       {/* Phones, while entries are open (Ben's mockup, 2026-11-15): the grand prize is the headline. CSS shows one or the other. */}
-      {/* From 1024px it is the headline there too (Ben, 2026-11-16), the amount in gold: the span carries no style below that. */}
+      {/* From 768px it is the headline there too (Ben, 2026-11-16), the amount in gold: the span carries no style below that. */}
       {mode === "live" && (
         <span className="ty-h1-win" data-win-heading>
           {winParts[0]}
@@ -210,22 +201,19 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
                   All four are phone-only (globals.css); a wide screen keeps the hero it had. */}
               {mode === "live" && <p className="ty-win-kicker" data-win-kicker>{t.winKicker(YEARS)}</p>}
               {heading}
-              {mode === "live" && <p className="ty-win-sub" data-win-sub>{t.winSub(DRAWINGS.length, span, total)}</p>}
-              {/* A wide screen only (Ben, 2026-11-16): the grand prize in one sentence, every item from config, and the way down to the ladder. */}
+              {mode === "live" && <p className="ty-win-sub" data-win-sub><span className="ty-phone-only">{t.winSub(DRAWINGS.length, span, total)}</span><span className="ty-wide-only">{t.winSubWide(DRAWINGS.length, total)}</span></p>}
+              {/* From 768px (Ben, 2026-11-16): one link down to the ladder, under the line. */}
               {mode === "live" && (
-                <p className="ty-grand-live" data-grand-line>
-                  {t.grandLineLive(spokenCentralDateTime(GRAND.at), prizeBreakdown(prizeFor("grand")).map(grandWords))}{" "}
-                  <a className="ty-textlink" href="#ty-prizes" data-see-all-prizes>
-                    {t.seeAllPrizes(DRAWINGS.length)}
-                  </a>
-                </p>
+                <a className="ty-textlink ty-see-all" href="#ty-prizes" data-see-all-prizes>
+                  {t.seeAllPrizes(DRAWINGS.length)} <span aria-hidden="true">→</span>
+                </a>
               )}
               {mode === "live" && (
                 <div className="ty-band" data-bonus-band>
                   <p className="ty-band-n">{t.bonusNumber(REFERRAL.referrerBonus)}</p>
                   <div className="ty-band-text">
                     <p className="ty-band-title">{t.bonusTitle}</p>
-                    <p className="ty-band-line">{t.bonusLine(REFERRAL.referrerBonus)}</p>
+                    <p className="ty-band-line"><span className="ty-phone-only">{t.bonusLine(REFERRAL.referrerBonus)}</span><span className="ty-wide-only">{t.bonusLineWide(REFERRAL.referrerBonus)}</span></p>
                   </div>
                 </div>
               )}
@@ -581,8 +569,8 @@ function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
                 {i + 1}
               </span>
               <span className="ty-how-text">
-                {/* Step 2 has a wide screen's wording (Ben, 2026-11-16); CSS shows one of the two from 1024px. */}
-                <b>{title}</b> {wide ? <><span className="ty-how-narrow">{line}</span><span className="ty-how-wide">{wide}</span></> : line}
+                {/* Step 2 has a wide screen's wording (Ben, 2026-11-16); CSS shows one of the two from 768px. */}
+                <b>{title}</b> {wide ? <><span className="ty-phone-only">{line}</span><span className="ty-wide-only">{wide}</span></> : line}
               </span>
             </li>
           ))}

@@ -382,12 +382,11 @@ export const PAGES = {
     bonusTitle: D("Bonus entries"),
     bonusLine: (referrer: number) => D(`Get your personal link after you enter. Each friend who enters through it earns you ${referrer} more entries.`),
     viewPrizes: (drawings: number) => D(`View all ${countWord(drawings).toLowerCase()} prizes`),
-    /** A wide screen's live hero (Ben, 2026-11-16): the phone's headline, line and band, plus the grand prize in
-     *  one sentence under the headline — "Saturday, Nov 21 at 5 PM: Brain Map, 12 LENS sessions, … and 3 BrainMD
-     *  bottles." The date and every item come from config; the link goes down to the ladder. */
-    grandLineLive: (when: string, items: string[]) => D(`${when}: ${items.length > 1 ? `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}` : items.join("")}.`),
-    grandChair: "vibro chair each session",
-    grandPartner: (n: number, gift: string) => `${n} ${gift}`,
+    /** From 768px (Ben, 2026-11-16, second pass): a shorter line, a shorter band, one link to the ladder, and
+     *  "Next drawing in" over a large countdown. The count, the total and the bonus come from config. */
+    winSubWide: (drawings: number, totalUsd: number) => D(`One entry. ${countWord(drawings)} drawings. Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
+    bonusLineWide: (referrer: number) => D(`Each friend who enters through your link earns you ${referrer} more entries.`),
+    countdownLead: D("Next drawing in"),
     seeAllPrizes: (drawings: number) => D(`See all ${countWord(drawings).toLowerCase()} prizes`),
     /** The phone's field label and button (the mockup's words). A wide screen keeps "Email" and "Enter me". */
     emailPhone: D("Email Address"),

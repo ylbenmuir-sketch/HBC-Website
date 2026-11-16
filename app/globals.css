@@ -3457,6 +3457,12 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   /* Below the form: the countdown, the gift line, the proof line. The two old hero lines say what the new one says. */
   .ty[data-mode="live"] .ty-value, .ty[data-mode="live"] .ty-sub { display: none; }
   .ty[data-mode="live"] .ty-count { order: 1; margin-top: 22px; }
+  /* Larger (Ben, 2026-11-16), still below the form, so the button keeps its place. */
+  .ty[data-mode="live"] .ty-count-lead { margin: 0 0 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; line-height: 1.5; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); }
+  .ty[data-mode="live"] .ty-count-boxes { gap: 8px; }
+  .ty[data-mode="live"] .ty-count-box { padding: 12px 4px 9px; }
+  .ty[data-mode="live"] .ty-count-n { font-size: 42px; }
+  .ty[data-mode="live"] .ty-count-u { font-size: 11px; letter-spacing: 0.14em; margin-top: 7px; }
   .ty[data-mode="live"] .ty-gift-tease { order: 2; margin: 16px 0 0; }
   .ty[data-mode="live"] .ty-proof { order: 3; margin-top: 10px; }
 }
@@ -3486,48 +3492,43 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty[data-mode="live"] .ty-submit { margin-top: 12px; min-height: 52px; }
 }
 
-/* A wide screen while entries are open (Ben, 2026-11-16): the phone's page is the model. From 1024px the left
-   column reads, top to bottom: the gold label, "Win the $2,839 grand prize." (the biggest text on the page, the
-   amount in gold), the one line, the grand prize in a sentence with "See all six prizes", the sage "+3 Bonus
-   entries" band at the column's full width, then — smaller — the seal beside the countdown, and the proof line.
-   The old headline, value line, sub line and gift line step aside (the form's own gift line stays). The form
-   card is untouched; the two columns now share a top edge. Under 1024px nothing here applies. */
-.ty-grand-live, .ty-how-wide { display: none; }
-@media (min-width: 1024px) {
+/* From 768px while entries are open (Ben, 2026-11-16; tightened the same day): the phone's page is the model.
+   The left column reads, top to bottom: the gold label, "Win the $2,839 grand prize." (the biggest text on the
+   page, the amount in gold), one short line, "See all six prizes →", the sage "+3 Bonus entries" band at the
+   column's full width, then "NEXT DRAWING IN" over a large countdown as wide as the band. The old headline,
+   value line, sub line, gift line, seal and proof line step aside (the form's own gift line stays). The form
+   card is untouched; the two columns share a top edge (one column up to 900px, the card under the countdown).
+   Under 768px nothing here applies. */
+.ty-see-all, .ty-count-lead { display: none; }
+.ty[data-mode="live"] .ty-count-lead { display: block; }
+@media (min-width: 768px) {
   .ty[data-mode="live"] .ty-hero { padding: 26px 0 36px; }
   .ty[data-mode="live"] .ty-hero-grid { align-items: start; }
-  .ty[data-mode="live"] .ty-hero-text { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; container-type: inline-size; }
-  .ty[data-mode="live"] .ty-hero-text > * { grid-column: 1 / -1; }
-  .ty[data-mode="live"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-rest, .ty[data-mode="live"] .ty-value, .ty[data-mode="live"] .ty-sub, .ty[data-mode="live"] .ty-hero-text > .ty-gift-tease { display: none; }
+  .ty[data-mode="live"] .ty-hero-text { display: grid; grid-template-columns: minmax(0, 1fr); container-type: inline-size; }
+  .ty[data-mode="live"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-rest, .ty[data-mode="live"] .ty-value, .ty[data-mode="live"] .ty-sub, .ty[data-mode="live"] .ty-hero-text > .ty-gift-tease, .ty[data-mode="live"] .ty-seal, .ty[data-mode="live"] .ty-proof { display: none; }
   .ty[data-mode="live"] .ty-win-kicker { display: block; order: -6; margin: 0 0 12px; font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1.5; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); }
   .ty[data-mode="live"] .ty-hero h1 { order: -5; margin: 0 0 16px; }
   /* Two lines, "Win the $2,839" / "grand prize.", sized to the column (the first line is about 7.3 of its own ems). */
   .ty[data-mode="live"] .ty-h1-win { display: block; font-size: min(76px, calc(100cqw / 7.5)); line-height: 1.02; letter-spacing: -0.02em; color: var(--navy); font-variant-numeric: lining-nums; text-wrap: balance; }
   /* #b8924a is 2.7:1 on ivory; --gold (#a9853f) is 3.2:1, which large text needs. */
   .ty[data-mode="live"] .ty-h1-amt { color: var(--gold); }
-  .ty[data-mode="live"] .ty-win-sub { display: block; order: -4; margin: 0 0 12px; font-family: var(--sans); font-size: 19px; font-weight: 500; line-height: 1.4; color: var(--navy); text-wrap: pretty; }
-  .ty[data-mode="live"] .ty-grand-live { display: block; order: -3; margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
-  .ty-grand-live .ty-textlink { white-space: nowrap; }
-  .ty[data-mode="live"] .ty-band { display: grid; order: -2; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 22px; margin: 0 0 22px; padding: 16px 24px 17px; background: var(--sage-deep); color: #fff; border-radius: 8px; }
+  .ty[data-mode="live"] .ty-win-sub { display: block; order: -4; margin: 0 0 10px; font-family: var(--sans); font-size: 20px; font-weight: 500; line-height: 1.4; color: var(--navy); text-wrap: balance; }
+  .ty[data-mode="live"] .ty-see-all { display: inline-block; order: -3; justify-self: start; margin: 0 0 22px; font-size: 16px; line-height: 1.5; }
+  .ty[data-mode="live"] .ty-band { display: grid; order: -2; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 22px; margin: 0 0 24px; padding: 16px 24px 17px; background: var(--sage-deep); color: #fff; border-radius: 8px; }
   .ty-band p { margin: 0; color: #fff; }
   .ty-band-n { font-family: var(--serif); font-size: 72px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: lining-nums; }
   .ty-band-text { border-left: 1px solid rgba(255, 255, 255, 0.45); padding-left: 22px; }
   .ty-band-title { font-family: var(--serif); font-size: 26px; font-weight: 600; line-height: 1.15; }
-  .ty-band-line { margin-top: 4px; font-family: var(--sans); font-size: 15.5px; line-height: 1.4; }
+  .ty-band-line { margin-top: 4px; font-family: var(--sans); font-size: 15.5px; line-height: 1.4; text-wrap: balance; }
   /* Someone who has just entered sees the same offer in the share card, with the link itself: the band steps aside, as on a phone. */
   .ty[data-mode="live"] .ty-hero-grid:has(.ty-in) .ty-band { display: none; }
-  /* Smaller, so the prize and the band lead: a 60px seal beside the countdown on one row, its label beside the boxes. */
-  .ty[data-mode="live"] .ty-seal { order: 1; grid-column: 1; width: 60px; height: 60px; margin: 0; }
-  .ty[data-mode="live"] .ty-count { order: 1; grid-column: 2; display: flex; align-items: center; gap: 12px; margin: 0; }
-  .ty[data-mode="live"] .ty-count-boxes { gap: 6px; }
-  .ty[data-mode="live"] .ty-count-box { min-width: 50px; padding: 7px 6px 5px; }
-  .ty[data-mode="live"] .ty-count-n { font-size: 22px; }
-  .ty[data-mode="live"] .ty-count-u { font-size: 9.5px; letter-spacing: 0.12em; margin-top: 4px; }
-  .ty[data-mode="live"] .ty-count-label { margin: 0; font-size: 13px; }
-  .ty[data-mode="live"] .ty-proof { order: 2; margin-top: 12px; font-size: 12.5px; }
-  /* Step 2 of the strip: "Each friend who enters earns you +3 entries." */
-  .ty-how-narrow { display: none; }
-  .ty-how-wide { display: inline; }
+  /* The countdown: its own row under the band and as wide, the numbers large in the serif, navy; the gold label over it. */
+  .ty[data-mode="live"] .ty-count { order: 1; margin: 0; }
+  .ty[data-mode="live"] .ty-count-lead { margin: 0 0 10px; font-family: var(--sans); font-size: 13px; font-weight: 600; line-height: 1.5; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); }
+  .ty[data-mode="live"] .ty-count-boxes { gap: 12px; }
+  .ty[data-mode="live"] .ty-count-box { flex: 1; min-width: 0; padding: 16px 8px 12px; border-radius: 8px; }
+  .ty[data-mode="live"] .ty-count-n { font-size: min(60px, 13cqw); font-weight: 500; color: var(--navy); }
+  .ty[data-mode="live"] .ty-count-u { font-size: 12px; letter-spacing: 0.18em; margin-top: 9px; }
   /* The ladder: Saturday reads as the top prize — a gold edge on the navy card and a larger amount at every wide width. */
   .ty-step-grand { border: 2px solid var(--gold-lift); box-shadow: 0 0 0 4px rgba(184, 146, 74, 0.18), 0 26px 50px -30px rgba(21, 34, 48, 0.55); }
   .ty-step-grand .ty-step-label { font-size: 12.5px; letter-spacing: 0.2em; margin-bottom: 8px; }
@@ -3538,7 +3539,7 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 /* Six in a row (from 1201px): Saturday's card is half again as wide as a weekday's, and taller. */
 @media (min-width: 1201px) {
   .ty-ladder { grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, 1.55fr); }
-  .ty-step[data-slot="grand"] { --step-h: 300px; }
+  .ty[data-mode] .ty-step[data-slot="grand"] { --step-h: 300px; }
   .ty-step-grand .ty-step-head { padding: 18px 20px 16px; }
   .ty-step-grand .ty-step-amount { font-size: 58px; }
 }

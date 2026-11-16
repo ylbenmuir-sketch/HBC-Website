@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
  * sides and the client ticks from the server's idea of now, not its own.
  * Stops at zero; the page's mode flips on the next load.
  */
-export default function Countdown({ targetIso, nowIso, label, units }: { targetIso: string; nowIso: string; label: string; units: { days: string; hours: string; minutes: string; seconds: string } }) {
+export default function Countdown({ targetIso, nowIso, label, lead, units }: { targetIso: string; nowIso: string; label: string; lead?: string; units: { days: string; hours: string; minutes: string; seconds: string } }) {
   const target = Date.parse(targetIso);
   const [remaining, setRemaining] = useState(() => Math.max(0, target - Date.parse(nowIso)));
   useEffect(() => {
@@ -29,6 +29,8 @@ export default function Countdown({ targetIso, nowIso, label, units }: { targetI
   ] as const;
   return (
     <div className="ty-count" role="timer" aria-label={`${parts.map(([n, u]) => `${n} ${u}`).join(", ")} ${label}`} data-countdown>
+      {/* While entries are open (Ben, 2026-11-16): "Next drawing in" over the boxes, in place of the line under them. */}
+      {lead && <p className="ty-count-lead">{lead}</p>}
       <div className="ty-count-boxes">
         {parts.map(([n, u]) => (
           <div className="ty-count-box" key={u}>
@@ -39,7 +41,7 @@ export default function Countdown({ targetIso, nowIso, label, units }: { targetI
           </div>
         ))}
       </div>
-      <p className="ty-count-label">{label}</p>
+      {!lead && <p className="ty-count-label">{label}</p>}
     </div>
   );
 }
