@@ -88,13 +88,18 @@ function visitorFooterText(f: Footing, marketing: boolean, why: string = marketi
 }
 
 /** The prize line for a drawing (one prize per drawing — Ben, 2026-11-03),
- *  and, when it has a partner gift, how that gift is redeemed. */
-export function prizeLineFor(d: Drawing): { name: string; partner: string | null } {
+ *  and, when it has a partner gift, how that gift is redeemed.
+ *
+ *  An entrant never reads "valid through TBD" (Ben, 2026-11-16): a partner
+ *  gift whose date is not in config yet has no line at all in an email to
+ *  an entrant. The staff alert (`forStaff`) keeps it — the office needs to
+ *  see that the date is still owed. */
+export function prizeLineFor(d: Drawing, opts: { forStaff?: boolean } = {}): { name: string; partner: string | null } {
   const p = prizeFor(d.slot);
-  const notes = p.partners.map((id) => {
-    const g = PARTNER_GIFTS[id];
-    return SHARED.partnerLine(g.partner, g.validThrough ? spokenDate(g.validThrough) : null, g.terms ?? null);
-  });
+  const notes = p.partners
+    .map((id) => PARTNER_GIFTS[id])
+    .filter((g) => opts.forStaff || g.validThrough)
+    .map((g) => SHARED.partnerLine(g.partner, g.validThrough ? spokenDate(g.validThrough) : null, g.terms ?? null));
   return { name: prizeName(p), partner: notes.length ? notes.join(" ") : null };
 }
 
@@ -352,6 +357,10 @@ export function youreInEmail(input: {
   const heading = c.heading(input.firstName);
   const body = c.body(input.nextDrawing, prize?.name ?? null);
   const tease = c.giftTease(revealSpoken());
+  // The grand prize in one line, from its own PrizeSpec (Ben, 2026-11-16) — until the grand prize is itself the next drawing, which `body` then names.
+  const grand = drawing("grand");
+  const grandSpec = prizeFor("grand");
+  const grandLine = input.nextDrawing && input.nextDrawing.kind !== "grand" ? c.grandLine(grand.dayName, usd(prizeRetailUsd(grandSpec)), grandSpec.brainMap, grandSpec.sessions) : null;
   // The share block (Ben's mockup, 2026-11-14), right under "…, you're in.":
   // the page's own words (PAGES.tenYears) — the serif headline with "3 more
   // entries" in gold between two thin rules, the link, then plain links only:
@@ -378,8 +387,10 @@ export function youreInEmail(input: {
     `<div class="hbc-muted" style="font-family:${SANS};font-size:13px;color:${C.sageDeep};line-height:1.45;padding-top:16px;text-align:center;">${esc(s.shareFriendLine)}</div>`;
   const rows = [
     section(`<div class="hbc-name" style="font-family:${SANS};font-size:16px;font-weight:700;color:${C.navy};line-height:1.3;padding-bottom:14px;">${esc(heading)}</div>${shareBlock}`, "18px 20px 0"),
-    section(`${p(body, "padding-top:0;font-size:15px;")}${prize?.partner ? p(prize.partner, "font-size:15px;") : ""}${input.referredBonus ? small(c.referredBonus) : ""}`, "20px 20px 0"),
-    section(p(tease, "padding-top:0;font-size:15px;"), "10px 20px 0"),
+    // Below the buttons, only (Ben, 2026-11-16): the grand prize, the next drawing, the thank-you gift — and, small, the bonus line for someone a friend's link brought. No "Redeemed directly with…" here.
+    ...(grandLine ? [section(p(grandLine, "padding-top:0;font-size:15px;"), "20px 20px 0")] : []),
+    section(p(body, "padding-top:0;font-size:15px;"), grandLine ? "10px 20px 0" : "20px 20px 0"),
+    section(`${p(tease, "padding-top:0;font-size:15px;")}${input.referredBonus ? small(c.referredBonus) : ""}`, "10px 20px 0"),
     gap(16),
     visitorFooter(input.footing, false),
   ];
@@ -397,11 +408,11 @@ export function youreInEmail(input: {
       `${s.shareFacebook}: ${facebookShareUrl(link)}`,
       `${s.shareCopyMine}: ${copyPageUrl(link)}`,
       "",
+      grandLine,
       body,
-      prize?.partner ?? null,
-      input.referredBonus ? c.referredBonus : null,
       "",
       tease,
+      input.referredBonus ? c.referredBonus : null,
       "",
       ...visitorFooterText(input.footing, false),
     ]),
@@ -681,7 +692,7 @@ export type StaffWinner = {
 
 export function staffWinnerAlertEmail(input: { drawing: Drawing; winner: StaffWinner; taxFormRequired: boolean; now: Date }): Email {
   const c = EMAILS.staffWinnerAlert;
-  const prize = prizeLineFor(input.drawing);
+  const prize = prizeLineFor(input.drawing, { forStaff: true });
   const subject = c.subject(input.drawing.dayName, input.drawing.kind, input.winner.name);
   const heading = c.heading(input.drawing.dayName, input.drawing.kind);
   const where = [input.winner.city, input.winner.zip].filter(Boolean).join(" ");

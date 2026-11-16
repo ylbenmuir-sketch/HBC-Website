@@ -142,6 +142,8 @@ export const EMAILS = {
     heading: (firstName: string) => D(`${firstName ? `${firstName}, you` : "You"}'re in.`),
     body: (next: Drawing | null, prizeName: string | null) => D(next && prizeName ? `Next drawing: ${when(next)} — ${prizeName}. Your entry counts in it and every one after.` : "Your entry counts in every drawing still to come."),
     referredBonus: D("A friend's link brought you here, so you start with a bonus entry."),
+    /** "Saturday's grand prize: $2,839 — Brain Map + 12 LENS sessions and more." — every part from config (Ben, 2026-11-16). */
+    grandLine: (dayName: string, value: string, brainMap: boolean, sessions: number) => D(`${dayName}'s grand prize: ${value} — ${[brainMap ? "Brain Map" : null, sessions ? `${sessions} LENS sessions` : null].filter(Boolean).join(" + ")} and more.`),
     /** The share block's words are the page's (PAGES.tenYears.share…), so the card and the email read the same. */
     /** The gift is NOT named before the reveal (fix list rev 2, P0-2). */
     giftTease: (revealSpoken: string) => D(`Plus a thank-you gift for every entrant, revealed by email ${revealSpoken}.`),
