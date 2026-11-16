@@ -382,6 +382,13 @@ export const PAGES = {
     bonusTitle: D("Bonus entries"),
     bonusLine: (referrer: number) => D(`Get your personal link after you enter. Each friend who enters through it earns you ${referrer} more entries.`),
     viewPrizes: (drawings: number) => D(`View all ${countWord(drawings).toLowerCase()} prizes`),
+    /** A wide screen's live hero (Ben, 2026-11-16): the phone's headline, line and band, plus the grand prize in
+     *  one sentence under the headline — "Saturday, Nov 21 at 5 PM: Brain Map, 12 LENS sessions, … and 3 BrainMD
+     *  bottles." The date and every item come from config; the link goes down to the ladder. */
+    grandLineLive: (when: string, items: string[]) => D(`${when}: ${items.length > 1 ? `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}` : items.join("")}.`),
+    grandChair: "vibro chair each session",
+    grandPartner: (n: number, gift: string) => `${n} ${gift}`,
+    seeAllPrizes: (drawings: number) => D(`See all ${countWord(drawings).toLowerCase()} prizes`),
     /** The phone's field label and button (the mockup's words). A wide screen keeps "Email" and "Enter me". */
     emailPhone: D("Email Address"),
     liveButtonPhone: D("Enter the giveaway"),
@@ -483,6 +490,8 @@ export const PAGES = {
       step1LineNotify: (entriesOpenDayTime: string) => D(`Entries open ${entriesOpenDayTime}. Add it to your calendar or get a reminder email.`),
       step2Title: D("Share your link."),
       step2Line: (referrerBonus: number) => D(`Each friend who enters adds ${referrerBonus} entries for you.`),
+      /** A wide screen's step 2 (Ben, 2026-11-16). The bonus comes from a friend ENTERING, never from the share itself. */
+      step2LineWide: (referrerBonus: number) => D(`Each friend who enters earns you +${referrerBonus} entries.`),
       step3Title: D("Win."),
       /** "Drawings at noon, Mon–Fri. Grand prize Saturday at 5 PM. We'll call and email you." (Ben, 2026-11-06: matches the FAQ.) */
       step3Line: (dailyTime: string, dailySpan: string, grandDay: string, grandTime: string) => D(`Drawings at ${dailyTime}, ${dailySpan}. Grand prize ${grandDay} at ${grandTime}. We'll call and email you.`),

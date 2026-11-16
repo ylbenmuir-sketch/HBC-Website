@@ -95,6 +95,15 @@ const CALENDAR = {
   ics: { label: t.calendarIcs, href: `${CALENDAR_PATHS.ics}?${SITE_CALENDAR_UTM}` },
 };
 
+/** The grand drawing, and its prize's parts in the hero sentence's words: the short names, the chair as
+ *  "vibro chair each session", the partner gift by its own name without the partner ("3 Assisted Lymphatic Therapy sessions"). */
+const GRAND = DRAWINGS.find((d) => d.kind === "grand") ?? DRAWINGS[DRAWINGS.length - 1];
+function grandWords(part: PrizePart): string {
+  if (part.kind === "chair") return t.grandChair;
+  if (part.kind === "partner") return t.grandPartner(part.count, part.partner!.gift.split(" with ")[0]);
+  return partWords(part);
+}
+
 /** `card` is the form or message card — in the hero, or (before entries open) the reminder strip near the foot.
  *  `notice` is a message for the hero before entries open: an old verify link's or an early one-tap's answer. */
 export default function TenYearsView({ mode, now, card, notice = null, winners = [], assistantOff = false }: { mode: ViewMode; now: Date; card: ReactNode; notice?: ReactNode; winners?: PublicWinner[]; assistantOff?: boolean }) {
@@ -106,6 +115,8 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
   const countdown = countdownTarget && <Countdown targetIso={countdownTarget.toISOString()} nowIso={now.toISOString()} label={notify ? t.countdownNotify : t.countdownLive} units={t.countdownUnits} />;
   const span = spokenCentralRange(DRAWINGS[0].at, DRAWINGS[DRAWINGS.length - 1].at, "short");
   const sub = mode === "closed" ? t.closedSub : mode === "thank_you" ? t.thankYouSub : t.sub(DRAWINGS.length, span);
+  const grandValue = usd(prizeRetailUsd(prizeFor("grand")));
+  const winParts = t.winHeading(grandValue).replace(/^\[DRAFT\] /, "").split(grandValue);
   const heading = (
     <h1>
       {/* "Celebrating 10 Years!" is the focal point (Ben, 2026-11-06; was "10 years.", 2026-10-20), the second sentence under it. Every mode. "10 Years!" never splits, so desktop breaks after "Celebrating". */}
@@ -114,7 +125,14 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
       <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
       {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
       {/* Phones, while entries are open (Ben's mockup, 2026-11-15): the grand prize is the headline. CSS shows one or the other. */}
-      {mode === "live" && <span className="ty-h1-win" data-win-heading>{t.winHeading(usd(prizeRetailUsd(prizeFor("grand")))).replace(/^\[DRAFT\] /, "")}</span>}
+      {/* From 1024px it is the headline there too (Ben, 2026-11-16), the amount in gold: the span carries no style below that. */}
+      {mode === "live" && (
+        <span className="ty-h1-win" data-win-heading>
+          {winParts[0]}
+          <span className="ty-h1-amt">{grandValue}</span>
+          {winParts[1]}
+        </span>
+      )}
     </h1>
   );
   const seal = <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />;
@@ -193,6 +211,15 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
               {mode === "live" && <p className="ty-win-kicker" data-win-kicker>{t.winKicker(YEARS)}</p>}
               {heading}
               {mode === "live" && <p className="ty-win-sub" data-win-sub>{t.winSub(DRAWINGS.length, span, total)}</p>}
+              {/* A wide screen only (Ben, 2026-11-16): the grand prize in one sentence, every item from config, and the way down to the ladder. */}
+              {mode === "live" && (
+                <p className="ty-grand-live" data-grand-line>
+                  {t.grandLineLive(spokenCentralDateTime(GRAND.at), prizeBreakdown(prizeFor("grand")).map(grandWords))}{" "}
+                  <a className="ty-textlink" href="#ty-prizes" data-see-all-prizes>
+                    {t.seeAllPrizes(DRAWINGS.length)}
+                  </a>
+                </p>
+              )}
               {mode === "live" && (
                 <div className="ty-band" data-bonus-band>
                   <p className="ty-band-n">{t.bonusNumber(REFERRAL.referrerBonus)}</p>
@@ -541,20 +568,21 @@ function HowItWorks({ mode, now }: { mode: ViewMode; now: Date }) {
       : h.step3LineLive(`${next.dayName.slice(0, 3)} at ${shortTime(next)}`, grand.dayName, shortTime(grand));
   const steps = [
     mode === "notify_me" ? [h.step1TitleNotify, h.step1LineNotify(opensDayTime)] : [h.step1Title, h.step1Line],
-    [h.step2Title, h.step2Line(REFERRAL.referrerBonus)],
+    [h.step2Title, h.step2Line(REFERRAL.referrerBonus), h.step2LineWide(REFERRAL.referrerBonus)],
     [h.step3Title, step3],
   ];
   return (
     <section className="ty-how" aria-label={h.title}>
       <div className="wrap">
         <ol className="ty-how-steps" data-how>
-          {steps.map(([title, line], i) => (
+          {steps.map(([title, line, wide], i) => (
             <li key={title}>
               <span className="ty-how-n" aria-hidden="true">
                 {i + 1}
               </span>
               <span className="ty-how-text">
-                <b>{title}</b> {line}
+                {/* Step 2 has a wide screen's wording (Ben, 2026-11-16); CSS shows one of the two from 1024px. */}
+                <b>{title}</b> {wide ? <><span className="ty-how-narrow">{line}</span><span className="ty-how-wide">{wide}</span></> : line}
               </span>
             </li>
           ))}
