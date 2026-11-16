@@ -17,13 +17,14 @@ export default function FormGuard({ formId, sending }: { formId: string; sending
     if (!form) return;
     prefetchFormToken();
     const button = form.querySelector<HTMLButtonElement>("button[type=submit]");
-    const label = button?.textContent ?? "";
+    // The button's own markup, not its text: the entry button holds two labels, one per screen width.
+    const label = button?.innerHTML ?? "";
     let busy = false;
     const reset = () => {
       busy = false;
       if (button) {
         button.disabled = false;
-        button.textContent = label;
+        button.innerHTML = label;
       }
     };
     const onSubmit = async (e: SubmitEvent) => {

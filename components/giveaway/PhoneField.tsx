@@ -14,7 +14,7 @@ export default function PhoneField({ label, help, invalid, defaultValue = "", in
   const [error, setError] = useState(initialError);
   return (
     <div className="ty-field-phone">
-      <label htmlFor="phone">{label}</label>
+      {/* The input before its label, with a blank placeholder: see the entry form's note (TenYearsView). */}
       <input
         id="phone"
         name="phone"
@@ -25,6 +25,7 @@ export default function PhoneField({ label, help, invalid, defaultValue = "", in
         maxLength={40}
         pattern={US_PHONE_PATTERN}
         title={invalid}
+        placeholder=" "
         defaultValue={defaultValue}
         aria-describedby="phone-note"
         aria-invalid={error || undefined}
@@ -34,6 +35,7 @@ export default function PhoneField({ label, help, invalid, defaultValue = "", in
           if (error && normalizeUsPhone(e.currentTarget.value)) setError(false);
         }}
       />
+      <label htmlFor="phone">{label}</label>
       {error ? (
         <p id="phone-note" className="ty-field-note ty-field-error" role="alert" data-phone-error>
           {invalid}

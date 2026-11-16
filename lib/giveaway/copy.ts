@@ -372,6 +372,19 @@ export const PAGES = {
     /** Under the reminder. The day name is config's. */
     notifyNotEntry: (entriesOpenDay: string) => D(`Just a reminder. You'll enter on ${entriesOpenDay}.`),
     firstNameOptional: D("First name (optional)"),
+    /** The phone's live hero (Ben's mockup, 2026-11-15): a gold label, the grand prize as the headline, one
+     *  line under it, the sage "+3" band, then the form. Phones only; a wide screen keeps its own hero.
+     *  Every number comes from config: the years, the grand prize's value, the dates, the total, the bonus. */
+    winKicker: (years: number) => D(`${years}th Anniversary Giveaway`),
+    winHeading: (grandValue: string) => D(`Win the ${grandValue} grand prize.`),
+    winSub: (drawings: number, span: string, totalUsd: number) => D(`Enter once for all ${countWord(drawings).toLowerCase()} drawings, ${span}. Over $${totalUsd.toLocaleString("en-US")} in prizes.`),
+    bonusNumber: (referrer: number) => `+${referrer}`,
+    bonusTitle: D("Bonus entries"),
+    bonusLine: (referrer: number) => D(`Get your personal link after you enter. Each friend who enters through it earns you ${referrer} more entries.`),
+    viewPrizes: (drawings: number) => D(`View all ${countWord(drawings).toLowerCase()} prizes`),
+    /** The phone's field label and button (the mockup's words). A wide screen keeps "Email" and "Enter me". */
+    emailPhone: D("Email Address"),
+    liveButtonPhone: D("Enter the giveaway"),
     /** The form card — live (Nov 15–21). */
     liveFormTitle: D("Enter the giveaway"),
     liveFormLine: (nextSpoken: string) => D(`Next drawing: ${nextSpoken}`),

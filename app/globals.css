@@ -3394,6 +3394,98 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .nav-campaign { gap: 14px; }
 }
 
+/* The phone's page while entries are open (Ben's mockup, 2026-11-15). Top to
+   bottom: a gold label, "Win the $2,839 grand prize.", one line, the sage
+   "+3 Bonus entries" band edge to edge, "Enter the giveaway" and the form at
+   once (no card around it), then "View all six prizes ↓". The countdown, the
+   gift line and the proof line sort below; the ladder and the rest follow.
+   Look only: the form's fields, checks and plumbing are the ones it had.
+   Everything here is under 768px and data-mode="live"; from 768px up the six
+   phone-only pieces below are simply not shown, so a wide screen is as it was. */
+.ty-phone-only, .ty-h1-win, .ty-win-kicker, .ty-win-sub, .ty-band, .ty-view-prizes { display: none; }
+@media (max-width: 767px) {
+  .ty-phone-only { display: inline; }
+  .ty-wide-only { display: none; }
+  .ty[data-mode="live"] .ty-hero { padding: 12px 0 26px; }
+  .ty[data-mode="live"] .ty-win-kicker { display: block; order: -6; margin: 0 0 8px; font-family: var(--sans); font-size: 12px; font-weight: 600; line-height: 1.5; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); }
+  .ty[data-mode="live"] .ty-hero h1 { order: -5; margin: 0 0 10px; }
+  .ty[data-mode="live"] .ty-h1-years, .ty[data-mode="live"] .ty-h1-rest { display: none; }
+  /* Two lines at every phone width: "Win the $2,839" / "grand prize." (the last two words never part). */
+  .ty[data-mode="live"] .ty-h1-win { display: block; font-size: min(46px, calc((100vw - 48px) / 7.3)); line-height: 1.02; letter-spacing: -0.02em; color: var(--navy); font-variant-numeric: lining-nums; text-wrap: balance; }
+  .ty[data-mode="live"] .ty-win-sub { display: block; order: -4; margin: 0 0 16px; font-size: 16.5px; line-height: 1.4; color: var(--ink); text-wrap: pretty; }
+  /* The band runs to both screen edges: the 24px page gutter, given back as its own padding.
+     White on --sage-deep (#596e5b) is 5.5:1, so its 14.5px line passes AA with room. */
+  .ty[data-mode="live"] .ty-band { display: grid; order: -3; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 18px; margin: 0 -24px 22px; padding: 14px 24px 15px; background: var(--sage-deep); color: #fff; }
+  .ty-band p { margin: 0; color: #fff; }
+  .ty-band-n { font-family: var(--serif); font-size: 66px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: lining-nums; }
+  .ty-band-text { border-left: 1px solid rgba(255, 255, 255, 0.45); padding-left: 18px; }
+  .ty-band-title { font-family: var(--serif); font-size: 23px; font-weight: 600; line-height: 1.15; }
+  .ty-band-line { margin-top: 3px; font-family: var(--sans); font-size: 14.5px; line-height: 1.4; }
+  /* Someone who has just entered sees the same offer in the share card, with the link itself: the band steps aside. */
+  .ty[data-mode="live"] .ty-hero-grid:has(.ty-in) .ty-band { display: none; }
+  /* The form sits on the page; a message or the share card keeps the box it had (same edge, same padding). */
+  .ty[data-mode="live"] .ty-card { order: -2; margin-top: 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+  .ty[data-mode="live"] .ty-card > .ty-message { padding: 22px 18px 18px; background: #fff; border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 20px 44px -34px rgba(21, 34, 48, 0.45); }
+  .ty[data-mode="live"] .ty-card > .ty-message.ty-in { padding: 24px 18px 22px; background: var(--ivory); }
+  .ty[data-mode="live"] .ty-card > .ty-card-title { font-size: 30px; line-height: 1.12; margin: 0 0 12px; }
+  .ty[data-mode="live"] .ty-card > .ty-card-next { display: none; }
+  .ty[data-mode="live"] .ty-card > .ty-error { margin: 0 0 12px; }
+  /* The form is a column so the news box can sit above the button here and after it on a wide screen. */
+  .ty[data-mode="live"] .form.ty-form { display: flex; flex-direction: column; margin-top: 0; }
+  .ty[data-mode="live"] .ty-fields { margin-top: 0; column-gap: 10px; row-gap: 10px; }
+  .ty[data-mode="live"] .ty-fields-live > div:nth-child(4) { grid-column: span 7; }
+  .ty[data-mode="live"] .ty-fields-live > div:nth-child(5) { grid-column: span 5; }
+  /* 16px text in every field: an iPhone zooms the page on a field under 16px. */
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:not([type="checkbox"]) { height: 50px; padding: 20px 14px 5px; border-radius: 6px; font-size: 16px; }
+  /* The label rests in the field like the mockup's placeholder; with focus or a value it steps up
+     small, so what a field is for stays readable while typing and on a prefilled one-tap form. */
+  .ty[data-mode="live"] .form.ty-form .ty-fields label { top: 0; left: 15px; right: 8px; font-family: var(--serif); font-size: 17.5px; font-weight: 400; line-height: 50px; letter-spacing: 0; text-transform: capitalize; color: var(--slate); pointer-events: none; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:focus + label,
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:not(:placeholder-shown) + label { top: 8px; font-family: var(--sans); font-size: 10.5px; font-weight: 600; line-height: 1.2; letter-spacing: 0.1em; text-transform: uppercase; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:-webkit-autofill + label { top: 8px; font-family: var(--sans); font-size: 10.5px; font-weight: 600; line-height: 1.2; letter-spacing: 0.1em; text-transform: uppercase; }
+  .ty[data-mode="live"] .ty-field-note { font-size: 12.5px; margin-top: 5px; }
+  .ty[data-mode="live"] .ty-checks { margin-top: 14px; }
+  .ty[data-mode="live"] .form.ty-form .ty-check, .ty[data-mode="live"] .form.ty-form .ty-optin { align-items: center; gap: 12px; min-height: 28px; font-size: 15.5px; line-height: 1.35; color: var(--ink); }
+  .ty[data-mode="live"] .form.ty-form .ty-check input, .ty[data-mode="live"] .form.ty-form .ty-optin input { width: 22px; height: 22px; margin: 0; }
+  .ty[data-mode="live"] .form.ty-form .ty-optin { order: 1; margin-top: 8px; }
+  .ty[data-mode="live"] .ty-check > span::after, .ty[data-mode="live"] .ty-optin > span::after { content: "."; }
+  .ty[data-mode="live"] .ty-ref { order: 2; margin: 12px 0 0; font-size: 14px; }
+  .ty[data-mode="live"] .ty-gift-card { display: none; }
+  .ty[data-mode="live"] .ty-submit { order: 3; margin-top: 18px; min-height: 54px; border-radius: 6px; font-size: 17px; }
+  .ty[data-mode="live"] .ty-view-prizes { display: block; order: -1; margin: 12px auto 0; padding: 8px 6px; font-family: var(--sans); font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--sage-deep); text-align: center; text-decoration: none; }
+  .ty-view-prizes > span:first-child { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+  /* Below the form: the countdown, the gift line, the proof line. The two old hero lines say what the new one says. */
+  .ty[data-mode="live"] .ty-value, .ty[data-mode="live"] .ty-sub { display: none; }
+  .ty[data-mode="live"] .ty-count { order: 1; margin-top: 22px; }
+  .ty[data-mode="live"] .ty-gift-tease { order: 2; margin: 16px 0 0; }
+  .ty[data-mode="live"] .ty-proof { order: 3; margin-top: 10px; }
+}
+/* Narrow phones (under 390): the same page a little tighter, so the button is still on the
+   first 360×740 screen (Ben's rule of 2026-11-03) and the news box keeps to one line. */
+@media (max-width: 389px) {
+  .ty[data-mode="live"] .ty-hero { padding-top: 8px; }
+  .ty[data-mode="live"] .ty-win-kicker { margin-bottom: 6px; font-size: 11px; }
+  .ty[data-mode="live"] .ty-hero h1 { margin-bottom: 8px; }
+  .ty[data-mode="live"] .ty-win-sub { margin-bottom: 12px; font-size: 15.5px; }
+  .ty[data-mode="live"] .ty-band { column-gap: 14px; margin-bottom: 16px; padding: 10px 24px 11px; }
+  .ty-band-n { font-size: 52px; }
+  .ty-band-text { padding-left: 14px; }
+  .ty-band-title { font-size: 21px; }
+  .ty-band-line { margin-top: 2px; font-size: 13.5px; }
+  .ty[data-mode="live"] .ty-card > .ty-card-title { font-size: 27px; margin-bottom: 9px; }
+  .ty[data-mode="live"] .ty-fields { row-gap: 8px; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:not([type="checkbox"]) { height: 48px; padding: 19px 13px 5px; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields label { left: 14px; font-size: 17px; line-height: 48px; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:focus + label,
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:not(:placeholder-shown) + label { top: 7px; font-size: 10.5px; line-height: 1.2; }
+  .ty[data-mode="live"] .form.ty-form .ty-fields input:-webkit-autofill + label { top: 7px; font-size: 10.5px; line-height: 1.2; }
+  .ty[data-mode="live"] .ty-field-note { margin-top: 4px; }
+  .ty[data-mode="live"] .ty-checks { margin-top: 10px; }
+  .ty[data-mode="live"] .form.ty-form .ty-check, .ty[data-mode="live"] .form.ty-form .ty-optin { gap: 10px; font-size: 15px; }
+  .ty[data-mode="live"] .form.ty-form .ty-optin { margin-top: 4px; }
+  .ty[data-mode="live"] .ty-submit { margin-top: 12px; min-height: 52px; }
+}
+
 /* ── The local search pages (Ben, 2026-11-09) ──────────────────────────
    components/CenterFacts.tsx — one center's address, week, parking,
    directions and the three ways in; components/LocalProof.tsx — the proof

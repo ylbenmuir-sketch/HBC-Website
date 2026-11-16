@@ -113,6 +113,8 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
       {headingLines[0].startsWith("[DRAFT] ") && <span className="ty-h1-draft">[DRAFT]</span>}
       <span className="ty-h1-years">{headingLines[0].replace(/^\[DRAFT\] /, "").replace(/(\d+) (?=\S+$)/, "$1\u00a0")}</span>
       {headingLines.length > 1 && <span className="ty-h1-rest">{headingLines.slice(1).join(" ")}</span>}
+      {/* Phones, while entries are open (Ben's mockup, 2026-11-15): the grand prize is the headline. CSS shows one or the other. */}
+      {mode === "live" && <span className="ty-h1-win" data-win-heading>{t.winHeading(usd(prizeRetailUsd(prizeFor("grand")))).replace(/^\[DRAFT\] /, "")}</span>}
     </h1>
   );
   const seal = <Seal number={YEARS} years={t.sealYears(YEARS)} span={t.sealSpan(ESTABLISHED_YEAR.value, WEEK_YEAR)} />;
@@ -186,7 +188,20 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
           <div className="wrap ty-hero-grid">
             <div className="ty-hero-text">
               {seal}
+              {/* The phone's live hero (Ben's mockup, 2026-11-15): gold label, headline, one line, the sage band — then the form.
+                  All four are phone-only (globals.css); a wide screen keeps the hero it had. */}
+              {mode === "live" && <p className="ty-win-kicker" data-win-kicker>{t.winKicker(YEARS)}</p>}
               {heading}
+              {mode === "live" && <p className="ty-win-sub" data-win-sub>{t.winSub(DRAWINGS.length, span, total)}</p>}
+              {mode === "live" && (
+                <div className="ty-band" data-bonus-band>
+                  <p className="ty-band-n">{t.bonusNumber(REFERRAL.referrerBonus)}</p>
+                  <div className="ty-band-text">
+                    <p className="ty-band-title">{t.bonusTitle}</p>
+                    <p className="ty-band-line">{t.bonusLine(REFERRAL.referrerBonus)}</p>
+                  </div>
+                </div>
+              )}
               <p className="ty-value">{open ? t.valueLine(total) : t.valueLinePast(total)}</p>
               {/* The mystery gift (fix list rev 2, P0-4): named only after the reveal, never here. */}
               {open && <p className="ty-gift-tease" data-gift-tease>{t.giftTeaseHero}</p>}
@@ -197,6 +212,12 @@ export default function TenYearsView({ mode, now, card, notice = null, winners =
             <div className="ty-card" id="enter">
               {card}
             </div>
+            {/* Phones only: the way down to the ladder, which now sits below the form. */}
+            {mode === "live" && (
+              <a className="ty-view-prizes" href="#ty-prizes" data-view-prizes>
+                <span>{t.viewPrizes(DRAWINGS.length)}</span> <span aria-hidden="true">↓</span>
+              </a>
+            )}
           </div>
         </section>
         <HowItWorks mode={mode} now={now} />
@@ -253,7 +274,8 @@ export function FormCard({ now, refCode, error, errorCode = null, showcase = nul
   return (
     <>
       <h2 className="ty-card-title">{tap ? t.tapFormTitle : t.liveFormTitle}</h2>
-      <p className="ty-card-line">{tap ? t.tapFormLine : t.liveFormLine(spokenCentral(next.at))}</p>
+      {/* "Next drawing: …" steps aside on a phone (the countdown under the form says it); the one-tap form's line stays. */}
+      <p className={tap ? "ty-card-line" : "ty-card-line ty-card-next"}>{tap ? t.tapFormLine : t.liveFormLine(spokenCentral(next.at))}</p>
       {/* A phone refusal is said under the phone field instead. */}
       {error && !phoneError && (
         <p className="ty-error" role="alert">
@@ -264,22 +286,28 @@ export function FormCard({ now, refCode, error, errorCode = null, showcase = nul
         <FormPlumbing refCode={refCode} utm={utm} />
         {tap && <input type="hidden" name="tap" value={tap} />}
         <div className="ty-fields ty-fields-live">
+          {/* Each input comes before its label and carries a blank placeholder: on a phone the label rests in the
+              field like the mockup's placeholder and steps up small once the field has focus or a value
+              (input:placeholder-shown + label). The label is positioned over the field at every width, so a wide screen looks as it did. */}
           <div>
+            <input id="first_name" name="first_name" autoComplete="given-name" required maxLength={60} placeholder=" " defaultValue={prefill?.firstName ?? ""} />
             <label htmlFor="first_name">{t.firstName}</label>
-            <input id="first_name" name="first_name" autoComplete="given-name" required maxLength={60} defaultValue={prefill?.firstName ?? ""} />
           </div>
           <div>
+            <input id="last_name" name="last_name" autoComplete="family-name" required maxLength={60} placeholder=" " defaultValue={prefill?.lastName ?? ""} />
             <label htmlFor="last_name">{t.lastName}</label>
-            <input id="last_name" name="last_name" autoComplete="family-name" required maxLength={60} defaultValue={prefill?.lastName ?? ""} />
           </div>
           <div>
-            <label htmlFor="email">{t.email}</label>
-            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} defaultValue={prefill?.email ?? ""} />
+            <input id="email" name="email" type="email" autoComplete="email" required maxLength={254} placeholder=" " defaultValue={prefill?.email ?? ""} />
+            <label htmlFor="email">
+              <span className="ty-wide-only">{t.email}</span>
+              <span className="ty-phone-only">{t.emailPhone}</span>
+            </label>
           </div>
           <PhoneField label={t.phone} help={t.phoneHelp} invalid={t.errors.invalid_phone} initialError={phoneError} />
           <div>
+            <input id="zip" name="zip" inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{5}" required maxLength={5} placeholder=" " defaultValue={prefill?.zip ?? ""} />
             <label htmlFor="zip">{t.zip}</label>
-            <input id="zip" name="zip" inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{5}" required maxLength={5} defaultValue={prefill?.zip ?? ""} />
           </div>
         </div>
         <div className="ty-checks">
@@ -292,9 +320,12 @@ export function FormCard({ now, refCode, error, errorCode = null, showcase = nul
         </div>
         {refCode && <p className="ty-ref">{t.refNote}</p>}
         <p className="ty-gift-card" data-gift-tease>{t.giftTeaseCard(revealShort())}</p>
+        {/* Two labels, one shown: "Enter me" on a wide screen, the mockup's "Enter the giveaway" on a phone. */}
         <button type="submit" className="btn btn-primary ty-submit">
-          {t.liveButton}
+          <span className="ty-wide-only">{t.liveButton}</span>
+          <span className="ty-phone-only">{t.liveButtonPhone}</span>
         </button>
+        {/* After the button in the markup (a wide screen's order); a phone shows it above the button (CSS order). */}
         <label className="ty-optin">
           <input type="checkbox" name="marketing" defaultChecked={prefill?.marketing ?? false} />
           <span>{t.marketing}</span>
