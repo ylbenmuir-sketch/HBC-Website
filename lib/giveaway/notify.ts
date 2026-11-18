@@ -38,7 +38,8 @@ export function liveNotifier(store: GiveawayStore, now: () => Date, log: Pick<Co
         return;
       }
       const sent = await sendGiveawayEmail({ to: to.to, cc: to.cc, email: alert, marketing: false, footing: null });
-      if (sent.status !== "sent") {
+      if (sent.status === "skipped") log.log(`[giveaway notify] staff alert for ${d.slot} skipped: ${sent.error}`);
+      else if (sent.status !== "sent") {
         log.error(`[giveaway notify] staff alert for ${d.slot} not sent: ${sent.error}`);
         await reportEmailFailure(store, { what: `staff winner alert (${d.slot})`, error: sent.error ?? "unknown", willRetry: false }, { now: now() });
       }
@@ -60,10 +61,10 @@ export function sendDeps(store: GiveawayStore, log: Pick<Console, "log" | "error
       if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       lastSend = Date.now();
       const r = await sendGiveawayEmail({ to, email, marketing, footing, cc, idempotencyKey });
-      return { ok: r.status === "sent", messageId: r.messageId, error: r.error };
+      return { ok: r.status === "sent", messageId: r.messageId, error: r.error, skipped: r.status === "skipped" };
     },
-    onFailure: async ({ kind, failed, error }) => {
-      await reportEmailFailure(store, { what: `scheduled email ${kind}`, count: failed, error, willRetry: true });
+    onFailure: async ({ kind, failed, error, willRetry }) => {
+      await reportEmailFailure(store, { what: `scheduled email ${kind}`, count: failed, error, willRetry });
     },
     sentLog: (since) => listSentEmails(since),
     // The Monday alert again (2026-11-16): the same email the drawing sends, from the rows as they stand. Reads only.

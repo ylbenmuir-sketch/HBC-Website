@@ -17,6 +17,7 @@ import { DBA_NAME } from "../sms-consent";
 import { REGISTERED_ADDRESS_LINE } from "../sms-identity";
 import type { Email, Footing } from "./emails";
 import { giveawayEnv, isTestingEnv, type GiveawayEnv } from "./env";
+import { isTestAddress, TEST_ADDRESS_SKIP } from "./recipients";
 import { signToken, tokenSecret, type TokenKind } from "./tokens";
 
 export const IDENTITY_LINE = `${DBA_NAME} · ${REGISTERED_ADDRESS_LINE}`;
@@ -95,12 +96,17 @@ export type GiveawaySendInput = {
   idempotencyKey?: string | null;
 };
 
+/** A send that was deliberately not attempted (a test address): not a failure. */
+export type GiveawaySendResult = SendResult | { status: "skipped"; messageId: null; error: string };
+
 /**
  * Deliver one giveaway email. Refuses [DRAFT] copy outside a testing env —
  * the whole copy file is draft until Ben approves it, and that must never
- * reach an entrant by accident.
+ * reach an entrant by accident. A recipient on a test domain is skipped
+ * before Resend is asked (lib/giveaway/recipients.ts).
  */
-export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<SendResult> {
+export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<GiveawaySendResult> {
+  if (isTestAddress(input.to)) return { status: "skipped", messageId: null, error: TEST_ADDRESS_SKIP };
   const env = giveawayEnv();
   // Two locks, either one holds: the copy file is still draft (whatever the
   // subject looks like — GIVEAWAY_HIDE_DRAFT_TAGS can hide the prefix on

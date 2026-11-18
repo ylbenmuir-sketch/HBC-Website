@@ -46,6 +46,7 @@ import { DRAWINGS, SCHEDULE, drawing } from "./config";
 import { giftReminderEmail, hypeEmail, hypeSendAt, itsLiveEmail, mondayReminderEmail, thankYouEmail, youreInEmail, type Email, type Footing, type HypeDay } from "./emails";
 import { entryCount } from "./people";
 import { type NotifyRow, type PersonRow, type ScheduledSendRow } from "./rows";
+import { isBadAddress } from "./recipients";
 import type { GiveawayStore } from "./store";
 
 export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "daily_sat", "thank_you", "gift_reminder", "gift_last_call"] as const;
@@ -78,6 +79,7 @@ const RESERVED_DOMAIN = /@(?:[^@]*\.)?(?:example\.(?:com|org|net)|[^@.]+\.(?:tes
 export function retryable(error: string | null | undefined): boolean {
   if (!error) return true;
   if (/refusing to send \[DRAFT\]/.test(error)) return false;
+  if (isBadAddress(error)) return false;
   const m = /^Resend (\d{3})/.exec(error);
   if (!m) return true;
   const status = Number(m[1]);
@@ -115,7 +117,8 @@ export async function scheduleJobs(store: GiveawayStore): Promise<number> {
 
 export type SendDeps = {
   /** Deliver one email; resolve with Resend's id or an error string. */
-  send: (input: { to: string; email: Email; marketing: boolean; footing: Footing | null; cc?: string[]; idempotencyKey?: string }) => Promise<{ ok: boolean; messageId: string | null; error: string | null }>;
+  /** `skipped`: deliberately not sent (a test address) — recorded as skipped, never retried, never a failure. */
+  send: (input: { to: string; email: Email; marketing: boolean; footing: Footing | null; cc?: string[]; idempotencyKey?: string }) => Promise<{ ok: boolean; messageId: string | null; error: string | null; skipped?: boolean }>;
   footingFor: (email: string, marketing: boolean) => Footing;
   links: { enterUrl: (notifyId: string) => string; referralUrl: (code: string) => string; bookUrl: (offerCode: string) => string };
   log?: Pick<Console, "log" | "error">;
@@ -123,7 +126,7 @@ export type SendDeps = {
   clock?: () => number;
   budgetMs?: number;
   /** Told once per job that had a send refused (the failure alert). */
-  onFailure?: (info: { kind: string; failed: number; error: string }) => Promise<void> | void;
+  onFailure?: (info: { kind: string; failed: number; error: string; willRetry: boolean }) => Promise<void> | void;
   /** Resend's own list of accepted emails since a time — the resend job's proof of who already has one. */
   sentLog?: (since: Date) => Promise<Array<{ to: string[]; subject: string }>>;
   /** The staff winner alert for a drawn slot, built and addressed (lib/giveaway/notify.ts); null when there is no winner or nobody to send to. */
@@ -167,9 +170,10 @@ export async function runDueSends(store: GiveawayStore, now: Date, deps: SendDep
       else await store.update("scheduled_sends", { claimed_at: null, error: r.retry ? `${r.retry} to retry` : null }).eq("id", job.id);
       // One audit row when something was sent and one when the job closes — not one a minute while it waits on a refusing provider (the log and the failure alert carry those).
       if (r.sent || !open) await audit(store, { actor: "cron", action: "send_job", targetTable: "scheduled_sends", targetId: job.id, after: { kind: job.kind, sent: r.sent, skipped: r.skipped, failed: r.failed, retry: r.retry, undelivered: r.undelivered, incomplete: r.incomplete, done: !open, ...(r.reason ? { reason: r.reason } : {}), ...(r.plan ? { plan: r.plan } : {}) } });
-      if (r.failed && deps.onFailure) {
+      // The alert is for the provider or the setup going wrong — not for one bad address (Ben, 2026-11-18), which is logged where it happened.
+      if (r.alertable && deps.onFailure) {
         try {
-          await deps.onFailure({ kind: job.kind, failed: r.failed, error: r.lastError ?? "unknown" });
+          await deps.onFailure({ kind: job.kind, failed: r.alertable, error: r.lastError ?? "unknown", willRetry: r.retry > 0 });
         } catch (err) {
           log.error(`[giveaway sends] failure alert threw: ${err instanceof Error ? err.message : "unknown"}`);
         }
@@ -194,6 +198,8 @@ type JobResult = {
   retry: number;
   /** Refused for good (a final error, or the retry window closed). */
   undelivered: number;
+  /** Refused in this run for a reason other than a bad address: worth the failure alert. */
+  alertable: number;
   /** The run stopped before every recipient was reached, or another runner holds a receipt. */
   incomplete: boolean;
   lastError?: string;
@@ -202,7 +208,7 @@ type JobResult = {
 };
 
 function emptyResult(): JobResult {
-  return { sent: 0, skipped: 0, failed: 0, retry: 0, undelivered: 0, incomplete: false };
+  return { sent: 0, skipped: 0, failed: 0, retry: 0, undelivered: 0, alertable: 0, incomplete: false };
 }
 
 async function runJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">, run: Run): Promise<JobResult> {
@@ -231,7 +237,8 @@ async function receiptsOf(store: GiveawayStore, job: ScheduledSendRow): Promise<
   }
 }
 
-type Taken = { id: string } | { id: null; why: "sent" | "final" | "expired" | "inflight" };
+type Why = "sent" | "skipped" | "final" | "expired" | "inflight";
+type Taken = { id: string } | { id: null; why: Why };
 
 /**
  * The receipt for one recipient: a new row, or an earlier one whose send was
@@ -251,6 +258,7 @@ async function take(store: GiveawayStore, job: ScheduledSendRow, who: { person_i
     if (!existing) return { id: null, why: "inflight" };
   }
   if (existing.sent_at) return { id: null, why: "sent" };
+  if (existing.skipped_reason) return { id: null, why: "skipped" };
   if (existing.claimed_at && now.getTime() - new Date(existing.claimed_at).getTime() < RECEIPT_STALE_MS) return { id: null, why: "inflight" };
   if (!retryable(existing.error)) return { id: null, why: "final" };
   if (now.getTime() - new Date(job.due_at).getTime() > RETRY_WINDOW_MS) return { id: null, why: "expired" };
@@ -263,26 +271,40 @@ async function take(store: GiveawayStore, job: ScheduledSendRow, who: { person_i
 }
 
 /** Count a recipient that was not sent to in this run. */
-function passOver(out: JobResult, t: { id: null; why: "sent" | "final" | "expired" | "inflight" }) {
+function passOver(out: JobResult, t: { id: null; why: Why }) {
   out.skipped++;
   if (t.why === "inflight") out.incomplete = true;
-  else if (t.why !== "sent") out.undelivered++;
+  else if (t.why !== "sent" && t.why !== "skipped") out.undelivered++;
 }
 
-/** Record the result on the receipt and in the job's tally. */
-async function settle(store: GiveawayStore, job: ScheduledSendRow, receiptId: string, r: { ok: boolean; messageId: string | null; error: string | null }, now: Date, out: JobResult, run: Run): Promise<boolean> {
+/**
+ * Record the result on the receipt and in the job's tally. "skipped" (a test
+ * address) closes the receipt without a failure; a bad address (Resend's
+ * 422) is final and does not count against the provider; only a refusal
+ * worth retrying counts toward the three-in-a-row stop.
+ */
+async function settle(store: GiveawayStore, job: ScheduledSendRow, receiptId: string, r: { ok: boolean; messageId: string | null; error: string | null; skipped?: boolean }, now: Date, out: JobResult, run: Run): Promise<"sent" | "skipped" | "failed"> {
+  if (r.skipped) {
+    await store.update("scheduled_sends", { skipped_reason: (r.error ?? "skipped").slice(0, 300), claimed_at: null }).eq("id", receiptId);
+    out.skipped++;
+    return "skipped";
+  }
   await store.update("scheduled_sends", r.ok ? { sent_at: now.toISOString(), message_id: r.messageId, claimed_at: null, error: null } : { error: r.error, claimed_at: null }).eq("id", receiptId);
   if (r.ok) {
     out.sent++;
     run.strikes = 0;
-    return true;
+    return "sent";
   }
   out.failed++;
-  out.lastError = r.error ?? "unknown";
-  if (retryable(r.error)) run.strikes++;
-  if (retryable(r.error) && now.getTime() - new Date(job.due_at).getTime() <= RETRY_WINDOW_MS) out.retry++;
+  const again = retryable(r.error);
+  if (again) run.strikes++;
+  if (!isBadAddress(r.error)) {
+    out.alertable++;
+    out.lastError = r.error ?? "unknown";
+  }
+  if (again && now.getTime() - new Date(job.due_at).getTime() <= RETRY_WINDOW_MS) out.retry++;
   else out.undelivered++;
-  return false;
+  return "failed";
 }
 
 async function notifyJob(store: GiveawayStore, job: ScheduledSendRow, kind: "its_live" | "monday_reminder", now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">, run: Run): Promise<JobResult> {
@@ -305,8 +327,9 @@ async function notifyJob(store: GiveawayStore, job: ScheduledSendRow, kind: "its
     const input = { firstName: n.first_name ?? "", enterUrl: deps.links.enterUrl(n.id), firstDrawing: first, footing };
     const email = kind === "its_live" ? itsLiveEmail(input) : mondayReminderEmail(input);
     const r = await deps.send({ to: n.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (await settle(store, job, t.id, r, now, out, run)) await store.update("giveaway_notify", kind === "its_live" ? { sent_live_at: now.toISOString() } : { reminded_at: now.toISOString() }).eq("id", n.id);
-    else log.error(`[giveaway sends] ${kind} to notify ${n.id}: ${r.error}`);
+    const result = await settle(store, job, t.id, r, now, out, run);
+    if (result === "sent") await store.update("giveaway_notify", kind === "its_live" ? { sent_live_at: now.toISOString() } : { reminded_at: now.toISOString() }).eq("id", n.id);
+    else if (result === "failed") log.error(`[giveaway sends] ${kind} to notify ${n.id}: ${r.error}`);
   }
   return out;
 }
@@ -342,7 +365,7 @@ async function dailyJob(store: GiveawayStore, job: ScheduledSendRow, kind: SendK
     // This entrant's own valid (unvoided) entries, counted now.
     const email = hypeEmail({ day, entries: await entryCount(store, p.id), referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
+    if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -366,7 +389,7 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     const footing = deps.footingFor(p.email, true);
     const email = thankYouEmail({ firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
+    if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -393,7 +416,7 @@ async function giftReminderJob(store: GiveawayStore, job: ScheduledSendRow, kind
     const footing = deps.footingFor(p.email, true);
     const email = giftReminderEmail({ kind: kind === "gift_reminder" ? "reminder" : "last_call", firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
-    if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
+    if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] ${kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -466,7 +489,7 @@ async function youreInResendJob(store: GiveawayStore, job: ScheduledSendRow, now
     const footing = deps.footingFor(p.email, true);
     const email = youreInEmail({ firstName: p.first_name, referredBonus: Boolean(bonus.data), nextDrawing: next, referralUrl: deps.links.referralUrl(p.referral_code), footing });
     const r = await deps.send({ to: p.email, email, marketing: false, footing, idempotencyKey: t.id });
-    if (!(await settle(store, sendJob, t.id, r, now, out, run))) log.error(`[giveaway sends] ${job.kind} to ${p.id}: ${r.error}`);
+    if ((await settle(store, sendJob, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] ${job.kind} to ${p.id}: ${r.error}`);
   }
   return out;
 }
@@ -485,7 +508,7 @@ async function staffAlertResendJob(store: GiveawayStore, job: ScheduledSendRow, 
     return out;
   }
   const r = await deps.send({ to: alert.to, cc: alert.cc, email: alert.email, marketing: false, footing: null, idempotencyKey: t.id });
-  if (!(await settle(store, job, t.id, r, now, out, run))) log.error(`[giveaway sends] ${job.kind}: ${r.error}`);
+  if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] ${job.kind}: ${r.error}`);
   out.plan = { recipients: 1 + alert.cc.length };
   return out;
 }

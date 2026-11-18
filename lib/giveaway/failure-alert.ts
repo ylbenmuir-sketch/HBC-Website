@@ -20,6 +20,7 @@
 import { deliver, type SendResult } from "../lead-notification";
 import { audit } from "./audit";
 import { isTestingEnv } from "./env";
+import { isBadAddress } from "./recipients";
 import type { GiveawayStore } from "./store";
 
 /** Ben's inbox (his instruction, 2026-11-16). GIVEAWAY_FAILURE_ALERT overrides it without a deploy. */
@@ -52,6 +53,8 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 /** Never throws: a failure report must not break the signup or the cron run that makes it. */
 export async function reportEmailFailure(store: GiveawayStore | null, f: EmailFailure, deps: FailureAlertDeps = {}): Promise<"alerted" | "logged" | "alert_failed"> {
   const log = deps.log ?? console;
+  // One wrong address (Resend's 422) is not an outage: its caller has logged it once; no second line, no alert email (Ben, 2026-11-18).
+  if (isBadAddress(f.error)) return "logged";
   const now = deps.now ?? new Date();
   const count = f.count ?? 1;
   log.error(`[giveaway EMAIL FAILED] what="${f.what}" count=${count} retry=${f.willRetry ? "yes" : "no"} error=${f.error}`);
