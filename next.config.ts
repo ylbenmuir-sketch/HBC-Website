@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import { execFileSync } from "node:child_process";
 import { SHOW_TEAM } from "./lib/site-config";
 
 /**
@@ -35,6 +36,25 @@ function legacyPattern(sources: string[]): string {
     .join("|");
 }
 
+/**
+ * The homepage's content date: the day of the last commit that touched
+ * app/page.tsx, as git has it at build time, else today (lib/home-date.ts
+ * says why and what its limits are). Committer date, as YYYY-MM-DD.
+ */
+function homeContentDate(): string {
+  try {
+    const out = execFileSync("git", ["log", "-1", "--format=%cs", "--", "app/page.tsx"], {
+      cwd: dirname(fileURLToPath(import.meta.url)),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(out)) return out;
+  } catch {
+    // No git, or not a repository: the build date.
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 const nextConfig: NextConfig = {
   /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
    *  scanner wants (SEO-AUDIT-3 §2.4). */
@@ -49,6 +69,8 @@ const nextConfig: NextConfig = {
    */
   env: {
     HBC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
+    // The homepage's dateModified, for its schema and its sitemap entry.
+    HBC_HOME_DATE: homeContentDate(),
   },
 
   /**
