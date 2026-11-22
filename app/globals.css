@@ -1734,6 +1734,17 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero h1 { font-size: clamp(34px, 11.3vw, 50px); }
   .hero .sub { margin: 14px 0 24px; }
 }
+/* The two small-phone headline sizes from above, restated because the 640px
+   block now follows them: 11.3vw is 40.7px at 360, which is larger than the
+   38px that rule protects, and one more line in the fallback font
+   (check:fonts). */
+@media (max-width: 360px) {
+  .hero h1 { font-size: 38px; }
+}
+@media (max-width: 340px) and (max-height: 640px) {
+  .hero h1 { font-size: 35px; }
+  .hero .sub { margin: 14px 0 22px; }
+}
 
 /* ============================================================
    SITE ASSISTANT — phase-8-chatbot.md §6, dressed in the design
