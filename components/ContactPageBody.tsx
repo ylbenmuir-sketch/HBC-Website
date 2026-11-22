@@ -25,6 +25,12 @@ import PageSchema from "@/components/PageSchema";
  *  one URL its markup lives on. */
 const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
 
+/** Each open center's Google reviews link, keyed by the form's center chip
+ *  value (its name): the `reviewReadUrl` its location page links to. */
+const REVIEW_LINKS: Record<string, string> = Object.fromEntries(
+  locations.filter((l) => !l.comingSoon && l.reviewReadUrl).map((l) => [l.name, l.reviewReadUrl as string])
+);
+
 export default function ContactPageBody({ giveaway = null }: { giveaway?: GiveawayBooking | null }) {
   const trail = hubTrail("/contact");
   /**
@@ -168,6 +174,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
             centerPhones={centerPhones}
             video={FIRST_VISIT_VIDEO}
             giveaway={giveaway}
+            reviewLinks={REVIEW_LINKS}
           />
           {/* Phones only: the same line, under the form (Ben, 2026-10-30). */}
           {SHOW_PHONE && (
