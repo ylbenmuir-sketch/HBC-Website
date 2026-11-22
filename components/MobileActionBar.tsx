@@ -11,6 +11,7 @@ import {
   SHOW_PHONE,
 } from "@/lib/site-config";
 import { getLocation, locationPhone } from "@/lib/locations";
+import { contactHrefFor } from "@/lib/contact-href";
 import { useBottomBar } from "./BottomBarContext";
 
 /**
@@ -117,7 +118,7 @@ export default function MobileActionBar() {
           </a>
         </>
       )}
-      <Link className="cta-bar-btn" href="/contact">
+      <Link className="cta-bar-btn" href={contactHrefFor(pathname)}>
         Get Started
       </Link>
       {askAvailable && (
