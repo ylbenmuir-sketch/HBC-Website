@@ -1721,6 +1721,38 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero .sub { margin: 14px 0 22px; }
 }
 
+/* The homepage hero on a phone, 640px and under (Ben, 2026-11-21): the photo
+   is capped at about 40% of the screen instead of a fixed 700px, so the H1,
+   Get Started and the "Free 10-minute call" line all sit on the first
+   screen above the action bar (at 390x844 the line ends at y=648; it used
+   to end at 807, under the bar at 772).
+
+   The photo is as wide as the phone, so everything about the faces scales
+   with the WIDTH, and the crop and the copy are placed in vw to follow them:
+   the image is slid up 17vw (the wall above the mother's hair and the very
+   top of it), which puts her chin about 36vw and the daughter's about 47vw
+   down the frame, and the copy starts at 43vw. The frame's HEIGHT is 40svh,
+   with a 62vw floor so a short screen never cuts the daughter's face and an
+   83vw ceiling (324px at 390x844, 38% of the screen). The ceiling is also
+   what keeps `npm run check:layout` honest: it lays the page out in a window
+   as tall as the document, where a bare 40svh is a 4,000px photo painted
+   over the page. The scrim's stops are vw for the same reason as the crop:
+   light over both faces to 35vw, 0.9 navy by the eyebrow at 43vw.
+
+   The copy itself is unchanged; the headline is one size down (11.3vw, 44px
+   at 390, from 12.5vw) and the sentence's margins are 14/24 instead of
+   18/32. That is where the 157px came from, with the shorter photo. 641 to
+   760px keeps the 700px hero above. After the 360px and 340px rules on
+   purpose: it replaces their padding-top and scrim. */
+@media (max-width: 640px) {
+  .hero-media { min-height: 0; }
+  .hero-media .hero-ph { --ph-pos-active: 50% -17vw; height: 83vw !important; height: min(max(40svh, 62vw), 83vw) !important; -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent); mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+  .hero-scrim { background: linear-gradient(to bottom, rgba(21, 34, 48, 0.22) 0, rgba(21, 34, 48, 0.1) 24vw, rgba(21, 34, 48, 0.22) 35vw, rgba(21, 34, 48, 0.9) 43vw, rgba(21, 34, 48, 0.95) 80vw, rgba(21, 34, 48, 0.97) 100%); }
+  .hero-copy { padding-top: 43vw; }
+  .hero h1 { font-size: clamp(34px, 11.3vw, 50px); }
+  .hero .sub { margin: 14px 0 24px; }
+}
+
 /* ============================================================
    SITE ASSISTANT — phase-8-chatbot.md §6, dressed in the design
    system (phase 11).
