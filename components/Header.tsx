@@ -343,8 +343,10 @@ export default function Header({
         {/* The phone on a phone (Ben, 2026-11-02): a tappable tel: link in
             the header itself, outside the hamburger, where `.nav > .nav-tel`
             is hidden (under 1060px). Icon and number; the number steps
-            aside under 400px, where the logo and the burger leave no room
-            for it, and the aria-label still says it. Reports
+            aside under 400px (globals.css; it was under 360 until 2026-11-22,
+            and at 360 it pushed the burger off the screen), where the logo
+            and the burger leave no room for it, and the aria-label still
+            says it. Reports
             contact_link_click with location "header" like the desktop one. */}
         {SHOW_PHONE && (
           <a className="nav-tel-m" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>

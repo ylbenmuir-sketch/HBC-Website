@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { CSSProperties } from "react";
 import localFont from "next/font/local";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -113,6 +114,9 @@ const dmSans = localFont({
   fallback: ["DM Sans Tuned Fallback"],
 });
 
+/** The first family in a next/font `fontFamily` list: the real face. */
+const faceName = (fontFamily: string) => fontFamily.split(",")[0].trim();
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -167,6 +171,19 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cormorant.variable} ${cormorantItalic.variable} ${dmSans.variable}`}
+      // The three real faces' own family names, without the fallback each
+      // `--font-*` variable carries after it (2026-11-22). Two elements need
+      // the real face with a DIFFERENT fallback behind it — the homepage
+      // eyebrow and /lens-neurofeedback's H1, see "Per-element fallbacks" in
+      // globals.css — and next/font generates the names, so they are read
+      // here rather than typed there.
+      style={
+        {
+          "--face-serif": faceName(cormorant.style.fontFamily),
+          "--face-serif-italic": faceName(cormorantItalic.style.fontFamily),
+          "--face-sans": faceName(dmSans.style.fontFamily),
+        } as CSSProperties
+      }
       // The inline script below adds `js` to this element before React
       // hydrates, by design (see the reveal gate). React compares the
       // attribute and reports a mismatch on every page in development

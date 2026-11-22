@@ -268,7 +268,7 @@ export default function LensNeurofeedbackPage() {
             {/* The query leads (Ben, 2026-11-09). Not "how it works": the
                 mechanism is /how-lens-works's cluster, and the H1 is where
                 a page declares what it competes for (the split above). */}
-            <h1>
+            <h1 className="h1-lower-fallback">
               LENS neurofeedback: what it is, and{" "}
               <em className="sage">who it&rsquo;s for.</em>
             </h1>
