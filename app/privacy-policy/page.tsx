@@ -214,13 +214,13 @@ export default function PrivacyPolicyPage() {
                 browser-storage sentence follows FEATURE_ASSISTANT: the ask
                 bar's one-time cue (components/StickyAskBar.tsx → CUE_KEY)
                 is the site's only use of localStorage. The session-storage
-                sentence covers all three sessionStorage keys: the visit's
+                sentence covers both sessionStorage keys: the visit's
                 first touch (components/UtmCapture.tsx → lib/attribution.ts:
                 utm tags, ad click ids, landing time — sent with a call
-                request, and read for Meta's fbc), the giveaway's own utm
+                request, and read for Meta's fbc) and the giveaway's own utm
                 capture (components/giveaway/UtmCapture.tsx — sent with a
-                signup), and the 10-year banner's dismissal
-                (components/giveaway/GiveawayBanner.tsx — never sent).
+                signup). (A third, the 10-year banner's dismissal, went with
+                the banner on 2026-11-21.)
 
                 Adding any other tag, pixel, widget, embed, or font, script or
                 image from another origin falsifies it. Whoever does that edits
@@ -233,8 +233,8 @@ export default function PrivacyPolicyPage() {
                 ? " It keeps a note on your device that you have already seen the “Ask us” nudge, so it is not shown again; that note is never sent to us."
                 : ""}
               {" "}Until you close the tab, it also keeps the tags on the link
-              that brought you here (such as which ad or post you followed)
-              and whether you closed our 10-year banner. The link tags are sent
+              that brought you here (such as which ad or post you followed).
+              The link tags are sent
               with a call request or a 10-year giveaway signup, so we know
               where it came from.
             </p>
