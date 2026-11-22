@@ -6,6 +6,7 @@ import { Fragment, useEffect, useRef, useState, type FocusEvent, type KeyboardEv
 import { LogoMark, LogoName } from "./Logo";
 import { PHONE_DISPLAY, PHONE_TEL, SHOW_PHONE, SHOW_TEAM } from "@/lib/site-config";
 import { useStartCenter, type StartCenterSlug } from "@/lib/start-center";
+import { contactHrefFor } from "@/lib/contact-href";
 
 /**
  * The column labels in the mega-menu and the drawer are `<p class="h5">`,
@@ -155,7 +156,8 @@ export default function Header({
 
   /**
    * The "Get Started" buttons in the chrome, desktop and drawer.
-   * On every other page they are plain links to /contact. On /contact
+   * On every other page they are plain links to /contact (with
+   * ?center=nashville from /locations/franklin — lib/contact-href.ts). On /contact
    * itself a link to the current page does nothing — the drawer stayed open
    * and the tap looked dead (Ben, 2026-10-20) — so there the click closes
    * the drawer and scrolls to the form (#send-a-message carries the
@@ -337,7 +339,7 @@ export default function Header({
             {PHONE_DISPLAY}
           </a>
         )}
-        <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
+        <ChromeLink className="nav-cta" href={contactHrefFor(pathname)} onClick={onContactCta}>
           Get Started
         </ChromeLink>
         {/* The phone on a phone (Ben, 2026-11-02): a tappable tel: link in
@@ -475,7 +477,7 @@ export default function Header({
             ))}
           </nav>
           <div className="d-cta">
-            <ChromeLink className="nav-cta" href="/contact" onClick={onContactCta}>
+            <ChromeLink className="nav-cta" href={contactHrefFor(pathname)} onClick={onContactCta}>
               Get Started
             </ChromeLink>
             {SHOW_PHONE && (

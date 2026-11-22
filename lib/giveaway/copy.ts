@@ -267,15 +267,6 @@ export const EMAILS = {
 /* ------------------------------------------------------------------ */
 
 export const PAGES = {
-  /** The site-wide banner (fix list rev 2, P0-7). Never mentions the gift: non-entrants can't claim it. */
-  banner: {
-    label: D("10-year giveaway"),
-    /** The hype week (Ben, 2026-11-10): the date the week starts and the prizes, never "enter". The date and the arrow never split across the phone's two lines (no-break spaces). */
-    notify: D("HBC turns 10! A week of prizes starts Sun,\u00a0Nov\u00a015. See the prizes\u00a0→"),
-    live: D("HBC turns 10! Entries are open. Enter now →"),
-    closed: D("Thank you for 10 years — see this week's winners →"),
-    dismiss: D("Dismiss the 10-year giveaway banner"),
-  },
   unsubscribe: {
     title: D("You're unsubscribed"),
     done: D("You won't get any more giveaway emails from us. If you win a drawing you've already entered, we'll still reach you about that."),

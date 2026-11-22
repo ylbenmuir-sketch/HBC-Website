@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import { execFileSync } from "node:child_process";
 import { SHOW_TEAM } from "./lib/site-config";
 
 /**
@@ -8,10 +9,11 @@ import { SHOW_TEAM } from "./lib/site-config";
  * once: `rewrites()` sends them to app/api/gone/route.ts, and the trailing-
  * slash catch-all at the end of `redirects()` steps around them so the slash
  * form reaches the rewrite in one hop. Literal slugs first, then WordPress's
- * numeric auto-slugs (`6200-2`, and `6200` for good measure).
+ * numeric auto-slugs (`6200-2`, and `6200` for good measure). The two foot
+ * detox URLs joined on 2026-11-21 (Ben): a retired service, like the chair.
  */
 const GONE_PATTERN =
-  "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|\\d+(?:-\\d+)?)";
+  "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|footdetox|time-try-foot-detoxing|\\d+(?:-\\d+)?)";
 
 /**
  * The legacy redirect sources as one regex alternation, for the trailing-slash
@@ -34,6 +36,25 @@ function legacyPattern(sources: string[]): string {
     .join("|");
 }
 
+/**
+ * The homepage's content date: the day of the last commit that touched
+ * app/page.tsx, as git has it at build time, else today (lib/home-date.ts
+ * says why and what its limits are). Committer date, as YYYY-MM-DD.
+ */
+function homeContentDate(): string {
+  try {
+    const out = execFileSync("git", ["log", "-1", "--format=%cs", "--", "app/page.tsx"], {
+      cwd: dirname(fileURLToPath(import.meta.url)),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(out)) return out;
+  } catch {
+    // No git, or not a repository: the build date.
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 const nextConfig: NextConfig = {
   /** `X-Powered-By: Next.js` says nothing a visitor needs and one thing a
    *  scanner wants (SEO-AUDIT-3 §2.4). */
@@ -48,6 +69,8 @@ const nextConfig: NextConfig = {
    */
   env: {
     HBC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
+    // The homepage's dateModified, for its schema and its sitemap entry.
+    HBC_HOME_DATE: homeContentDate(),
   },
 
   /**
@@ -88,14 +111,22 @@ const nextConfig: NextConfig = {
      * site came back with `Cache-Control: public, max-age=60`, so a visitor
      * who read two pages a minute apart re-fetched the header-to-footer set
      * of images on the second one, and Lighthouse's `uses-long-cache-ttl`
-     * listed all of them. Thirty-one days, not a year: the source files in
-     * public/images are replaced in place occasionally, and a month is the
-     * longest a stale copy may outlive its replacement. (Next's own advice
+     * listed all of them. Thirty days (2,592,000 s; Ben, 2026-11-21 — it
+     * was thirty-one), not a year: the source files in public/images are
+     * replaced in place occasionally, and a month is the longest a stale
+     * copy may outlive its replacement. (Next's own advice
      * is to change the filename when an image changes; do that and the TTL
      * is moot.) Fonts and JS are content-hashed and already immutable; this
      * only touches /_next/image.
+     *
+     * What this does NOT change, measured on production 2026-11-21: Vercel
+     * answers /_next/image with `Cache-Control: public, max-age=0,
+     * must-revalidate` to the browser whatever this says. On Vercel the
+     * value is how long ITS edge keeps the optimized image (the second
+     * request for the same URL is `x-vercel-cache: HIT`); a `next start`
+     * server is where the browser sees `max-age=2592000`.
      */
-    minimumCacheTTL: 2678400,
+    minimumCacheTTL: 2592000,
   },
 
   /**
@@ -183,7 +214,8 @@ const nextConfig: NextConfig = {
       // whose subject it is.
       ...to(["/stress"], "/concerns/stress-resilience"),
       ...to(["/sleepproblems", "/sleep-disorder"], "/concerns/sleep"),
-      ...to(["/concussion-and-tbi", "/concussion-tbi1"], "/concerns/concussion"),
+      // /concussion-tbi (no suffix) still 404'd after launch (Ben, 2026-11-21).
+      ...to(["/concussion-and-tbi", "/concussion-tbi", "/concussion-tbi1"], "/concerns/concussion"),
       ...to(["/emotional-balance", "/emotional-balance22"], "/concerns/emotional-regulation"),
       // The hub until Oct 2026 (approved, Ben, Aug 2026: "a destination is
       // read as an answer, and no concern page offers depression care").
@@ -240,6 +272,9 @@ const nextConfig: NextConfig = {
         ],
         "/contact"
       ),
+      // The old fees page (Ben, 2026-11-21): /first-visit is where the new
+      // site says what the first visit involves and costs.
+      ...to(["/fees"], "/first-visit"),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),
@@ -453,6 +488,9 @@ const nextConfig: NextConfig = {
       //   QUERY-TO-PAGE-MAP.md.
       // - /positive-outcomes-from-vibro-acoustic-therapy-research — the one
       //   post on the same subject (Ben, 2026-10-13), retired with it.
+      // - /footdetox and /time-try-foot-detoxing — the foot detox page and
+      //   its post (Ben, 2026-11-21): a service the practice no longer
+      //   offers, retired the same way.
       // - WordPress's numeric auto-slugs (`/6200-2/`): 34 of the 56 posts.
       //   Nothing to carry over, so they are retired by pattern.
       { source: `/:gone(${GONE_PATTERN})`, destination: "/api/gone" },

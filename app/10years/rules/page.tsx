@@ -7,7 +7,7 @@ import { PAGES } from "@/lib/giveaway/copy";
 import { NO_PURCHASE_LINE, rulesSections } from "@/lib/giveaway/rules";
 import { locationPhone, locations } from "@/lib/locations";
 import { assistantSuppressedByGiveaway } from "@/lib/giveaway/assistant";
-import { showcaseActive, tenYearsPublic } from "@/lib/giveaway/showcase";
+import { showcaseActive } from "@/lib/giveaway/showcase";
 import AssistantOff from "@/components/giveaway/AssistantOff";
 import { EMAIL_ADDRESS, SITE_URL } from "@/lib/site-config";
 import { LEGAL_ENTITY } from "@/lib/sms-identity";
@@ -24,20 +24,23 @@ import { LEGAL_ENTITY } from "@/lib/sms-identity";
  * (config test), and the pocket device and partner prizes read TBD.
  *
  * Before the gift reveal (Sat Nov 21, 7 PM CT, on the REAL clock) neither
- * the questions nor §13 name the thank-you gift (P0-2). Indexed on the same
- * clock as /10years (P0-6).
+ * the questions nor §13 name the thank-you gift (P0-2). Noindex and out of
+ * the sitemap since the giveaway ended (Ben, 2026-11-21), like /10years;
+ * the page itself stays.
  */
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const DESCRIPTION = "Official Rules and prize details for the Harmonized Brain Centers 10-year giveaway: who may enter, how entries and drawings work, each prize and its value, and how winners are notified.";
+/** Under 155 characters, and the whole <title> under 60 (Ben, 2026-11-21):
+ *  an absolute title, so the site name is counted here, not appended. */
+const DESCRIPTION = "Official Rules and prize details for the Harmonized Brain Centers 10-year giveaway: who could enter, how the drawings worked, each prize and its value.";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Official Rules and prize details — 10-year giveaway",
+    title: { absolute: "10-Year Giveaway Official Rules — Harmonized Brain Centers" },
     description: DESCRIPTION,
     alternates: { canonical: "/10years/rules" },
-    robots: tenYearsPublic() ? { index: true, follow: true } : { index: false, follow: true },
+    robots: { index: false, follow: true },
   };
 }
 

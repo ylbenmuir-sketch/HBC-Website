@@ -4,7 +4,7 @@ import TenYearsView, { FormCard, MessageCard, ReminderCard, WinnersCard, YoureIn
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { SCHEDULE, entryPageMode, giftRevealed, pageMode, spokenCentralDateTime } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
-import { showcaseActiveFor, showcaseFor, tenYearsPublic } from "@/lib/giveaway/showcase";
+import { showcaseActiveFor, showcaseFor, tenYearsRobots } from "@/lib/giveaway/showcase";
 import { giveawayStore } from "@/lib/giveaway/store";
 import { publicWinners } from "@/lib/giveaway/web";
 import { referralLink } from "@/lib/giveaway/send";
@@ -46,22 +46,26 @@ import { pageMetadata } from "@/lib/pages";
  * absent from the sitemap, linked from nowhere.
  *
  * UN-HIDDEN ON THE CLOCK (fix list rev 2, P0-6): from the moment the real
- * page shows — engine on and Nov 9 reached (tenYearsPublic) — the meta
- * robots says index, robots.txt drops the /10years disallow (the token
- * routes stay disallowed and noindex) and the sitemap lists /10years and
- * /10years/rules. No deploy needed: this route, robots and the sitemap
- * are all answered per request. ?mode= is ignored on the
- * production deployment (lib/giveaway/showcase.ts, P0-3).
+ * page shows — engine on and Nov 9 reached (tenYearsPublic) — robots.txt
+ * drops the /10years disallow (the token routes stay disallowed and
+ * noindex). No deploy needed: this route and robots are answered per
+ * request. ?mode= is ignored on the production deployment
+ * (lib/giveaway/showcase.ts, P0-3).
+ *
+ * AFTER THE GIVEAWAY (Ben, 2026-11-21): the page and /10years/rules stay
+ * live, but the week it was indexed and in the sitemap is over — the meta
+ * robots is noindex for good (tenYearsRobots) and app/sitemap.ts no longer
+ * lists either. robots.txt still allows both, so the noindex can be read.
  */
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const indexable = tenYearsPublic();
   return {
     ...pageMetadata("/10years"),
-    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
+    // Never indexed again (the giveaway is over; Ben, 2026-11-21).
+    robots: tenYearsRobots(),
     // The share preview (Ben, 2026-10-20): its own title and line over the
     // shared set, WITHOUT its default image — an `images` set here would
     // beat the file-based card, app/10years/opengraph-image.tsx.

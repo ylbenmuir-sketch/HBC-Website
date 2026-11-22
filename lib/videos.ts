@@ -72,9 +72,11 @@ export type VideoLink = { label: string; href: string };
 
 export type Video = {
   /**
-   * A shorter <title> for a video whose YouTube title runs past 60
-   * characters (2026-11-02). The H1, the schema name and the card keep the
-   * video's own title; only the browser tab and the search snippet use this.
+   * The <title>, when the video's own title should not be it: a shorter one
+   * for a YouTube title that runs past 60 characters (2026-11-02), or one
+   * that adds the service and the place to a title that names neither
+   * (2026-11-21). The H1, the schema name and the card keep the video's own
+   * title; only the browser tab and the search snippet use this.
    */
   seoTitle?: string;
   /** The YouTube video id — `youtube.com/watch?v=<id>`. */
@@ -284,6 +286,9 @@ export const videos: Video[] = [
   {
     id: "9_3_EByrX6A",
     slug: "understanding-the-adhd-brain",
+    // The <title> only (Ben, 2026-11-21): the video's own title names
+    // neither the service nor the place. The H1 and the schema keep it.
+    seoTitle: "Understanding the ADHD Brain — Neurofeedback in Nashville",
     title: "Understanding the ADHD Brain",
     sourceTitle: "Understanding the ADHD Brain",
     description:
@@ -363,7 +368,7 @@ export const videos: Video[] = [
     title: "What to Expect: Appointment #1",
     sourceTitle: "Your First Appointment at Harmonized Brain Centers: What to Expect",
     description:
-      "A walk through a first appointment at Harmonized Brain Centers, from the practice's own channel — what the visit looks like before anyone decides anything.",
+      "A walk through a first appointment at Harmonized Brain Centers, from our own channel — what the visit looks like before anyone decides anything.",
     durationSeconds: VIDEO_APPOINTMENT_ONE_DURATION,
     uploadDate: VIDEO_APPOINTMENT_ONE_UPLOAD_DATE,
     posterPath: "/images/videos/FCUyUqzE3Dk.jpg",
@@ -396,6 +401,8 @@ export const videos: Video[] = [
   {
     id: "Ky6CMY3L9ek",
     slug: "relief-from-add-adhd",
+    // The <title> only (Ben, 2026-11-21), as above.
+    seoTitle: "Relief from ADD + ADHD — LENS Neurofeedback in Nashville",
     title: "Relief from ADD + ADHD",
     sourceTitle: "Relief from ADD + ADHD",
     description:

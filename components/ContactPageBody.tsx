@@ -25,6 +25,12 @@ import PageSchema from "@/components/PageSchema";
  *  one URL its markup lives on. */
 const FIRST_VISIT_VIDEO = getVideo("FCUyUqzE3Dk");
 
+/** Each open center's Google reviews link, keyed by the form's center chip
+ *  value (its name): the `reviewReadUrl` its location page links to. */
+const REVIEW_LINKS: Record<string, string> = Object.fromEntries(
+  locations.filter((l) => !l.comingSoon && l.reviewReadUrl).map((l) => [l.name, l.reviewReadUrl as string])
+);
+
 export default function ContactPageBody({ giveaway = null }: { giveaway?: GiveawayBooking | null }) {
   const trail = hubTrail("/contact");
   /**
@@ -120,7 +126,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
               </div>
             ) : (
             <div className="contact-ways">
-              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text ${PHONE_DISPLAY}`}>
+              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text us at ${PHONE_DISPLAY}`}>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
@@ -131,7 +137,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
                 </svg>
                 <span className="contact-way-title">Text us</span>
               </a>
-              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
+              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call us at ${PHONE_DISPLAY}`}>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"
@@ -168,6 +174,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
             centerPhones={centerPhones}
             video={FIRST_VISIT_VIDEO}
             giveaway={giveaway}
+            reviewLinks={REVIEW_LINKS}
           />
           {/* Phones only: the same line, under the form (Ben, 2026-10-30). */}
           {SHOW_PHONE && (

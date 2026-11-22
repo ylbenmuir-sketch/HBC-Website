@@ -67,6 +67,21 @@
  * actually stand behind, which today means the founder and nobody else, since
  * every practitioner on the roster is still a [placeholder].
  *
+ * ## 6. Titles and descriptions
+ *
+ * Strict since 2026-11-21 (Ben): every <title> under 60 characters and every
+ * meta description under 155, counted as the browser gets them. Sixty and
+ * 155 themselves fail — five pages sat exactly on a limit, which is how a
+ * one-word edit puts a title past what Google prints.
+ *
+ * Read from the records every route builds its metadata from, the way the
+ * route does: a static page's title with the " — Harmonized Brain Centers"
+ * suffix unless it is absolute (lib/pages.ts), a concern's and an article's
+ * `metaTitle` (absolute), a location's `metaTitle` or its suffixed fallback,
+ * a video's `seoTitle` or its own title. The handful of routes that type
+ * their metadata inline (/10years/rules, /review, /start, the admin and
+ * token pages) are not in any of those lists and are not read here.
+ *
  * Runs on plain Node, with no build step — Node's own TypeScript stripping
  * reads lib/ directly. site-copy.ts still holds no runtime imports, which is
  * why the inventory names tags as strings instead of importing them and why
@@ -478,6 +493,50 @@ for (const t of TESTIMONIALS) {
   }
 }
 
+// ── 6. Titles and descriptions ─────────────────────────────────────────────
+const TITLE_LIMIT = 60;
+const DESCRIPTION_LIMIT = 155;
+let metaChecks = 0;
+{
+  const { SITE_NAME, SHOW_DRAFT_CONTENT } = await import("../lib/site-config.ts");
+  const { staticPages, renderedTitle } = await import("../lib/pages.ts");
+  const { concerns } = await import("../lib/concerns.ts");
+  const { locations } = await import("../lib/locations.ts");
+  const { isPublishable } = await import("../lib/resources.ts");
+  const { videos, videoPath } = await import("../lib/videos.ts");
+  const suffixed = (title) => `${title} — ${SITE_NAME}`;
+  const rows = [
+    ...staticPages.map((p) => ({ path: p.path, title: renderedTitle(p, SITE_NAME), description: p.description, source: "lib/pages.ts" })),
+    ...concerns.map((c) => ({ path: `/concerns/${c.slug}`, title: c.metaTitle, description: c.metaDescription, source: "lib/concerns.ts" })),
+    // app/locations/[slug]/page.tsx: metaTitle is absolute; without one the
+    // template applies to the name (or "<name> — Coming Soon").
+    ...locations.map((l) => ({
+      path: `/locations/${l.slug}`,
+      title: l.metaTitle ?? suffixed(l.comingSoon ? `${l.name} — Coming Soon` : l.name),
+      description: l.metaDescription,
+      source: "lib/locations.ts",
+    })),
+    ...resources
+      .filter((r) => SHOW_DRAFT_CONTENT || isPublishable(r))
+      .map((r) => ({ path: `/resources/${r.slug}`, title: r.metaTitle, description: r.metaDescription, source: "lib/resources.ts" })),
+    ...videos.map((v) => ({ path: videoPath(v), title: v.seoTitle ?? v.title, description: v.description, source: "lib/videos.ts" })),
+  ];
+  // Code points, not UTF-16 units: a title with an astral character must not
+  // count double. (None has one today; the curly quotes and dashes are BMP.)
+  const len = (text) => [...(text ?? "")].length;
+  for (const row of rows) {
+    metaChecks += 1;
+    if (!row.title) failures.push(`${row.path} (${row.source})\n    has no title`);
+    else if (len(row.title) >= TITLE_LIMIT) {
+      failures.push(`${row.path} (${row.source})\n    title is ${len(row.title)} characters; it must be under ${TITLE_LIMIT}:\n    "${row.title}"`);
+    }
+    if (!row.description) failures.push(`${row.path} (${row.source})\n    has no description`);
+    else if (len(row.description) >= DESCRIPTION_LIMIT) {
+      failures.push(`${row.path} (${row.source})\n    description is ${len(row.description)} characters; it must be under ${DESCRIPTION_LIMIT}:\n    "${row.description}"`);
+    }
+  }
+}
+
 const taggedPages = Object.keys(CONFIRM_TAG_INVENTORY).length;
 const taggedCount = Object.values(CONFIRM_TAG_INVENTORY).reduce(
   (n, tags) => n + Object.keys(tags).length,
@@ -488,7 +547,9 @@ if (failures.length > 0) {
   console.error(`\n❌  content index out of date — ${failures.length} problem(s):\n`);
   for (const failure of failures) console.error(`  • ${failure}\n`);
   console.error(
-    "  Re-read the page and update lib/chat/site-copy.ts. To see the page's\n" +
+    "  For a mirrored passage: re-read the page and update\n" +
+      "  lib/chat/site-copy.ts. For a title or description: shorten it where the\n" +
+      "  line names (the limits are in this script, section 6). To see the page's\n" +
       "  prose as this check reads it:\n" +
       "    npm run check:index -- --dump <path to page>\n"
   );
@@ -500,5 +561,6 @@ console.log(
     `✓ [CONFIRM] tags: ${taggedCount} accounted for across ${taggedPages} page(s)\n` +
     `✓ static guide: ${guideChecks} site-config value(s) still match ${guideFile}\n` +
     `✓ bylines: ${bylineChecks} article(s) credit no unconfirmed person\n` +
-    `✓ testimonials: ${quoteChecks} quote(s) name nobody but the client`
+    `✓ testimonials: ${quoteChecks} quote(s) name nobody but the client\n` +
+    `✓ titles and descriptions: ${metaChecks} page(s), every title under ${TITLE_LIMIT} characters and every description under ${DESCRIPTION_LIMIT}`
 );

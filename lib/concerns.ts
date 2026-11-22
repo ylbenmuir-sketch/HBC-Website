@@ -888,7 +888,8 @@ export const concerns: Concern[] = [
     related: ["brain-fog", "stress-resilience", "focus-adhd"],
     // Names the three groups (Ben, 2026-10-15) — the queries are
     // "neurofeedback for musicians / executives / athletes".
-    metaTitle: "Nashville Neurofeedback for Musicians, Executives & Athletes",
+    // 58 characters (2026-11-21): the "&" version sat at exactly 60.
+    metaTitle: "Nashville Neurofeedback for Musicians, Executives, Athletes",
     // "peak performance" lives here, in a decline frame — the query is
     // targeted without the title or the page promising the peak.
     metaDescription:

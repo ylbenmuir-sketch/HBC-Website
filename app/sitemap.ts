@@ -6,19 +6,20 @@ import { staticPages } from "@/lib/pages";
 import { resources, isPublishable, lastChanged } from "@/lib/resources";
 import { team } from "@/lib/team";
 import { VIDEO_PAGES_DATE, videoPath, videos } from "@/lib/videos";
-import { RULES_VERSION } from "@/lib/giveaway/config";
-import { tenYearsPublic } from "@/lib/giveaway/showcase";
 
-/** Never listed from staticPages: /admin is staff-only, and the giveaway
- *  routes are added below only on the clock. Prefix matches, so every
- *  sub-route (verify, enter; the admin screens) goes with them. */
+/** Never listed: /admin is staff-only, and /10years with everything under
+ *  it left the sitemap for good when the giveaway ended (Ben, 2026-11-21) —
+ *  /10years and /10years/rules stay live but noindex
+ *  (lib/giveaway/showcase.ts → tenYearsRobots), and a sitemap lists only
+ *  pages meant for the index. Prefix matches, so every sub-route (verify,
+ *  enter; the admin screens) goes with them.
+ *
+ *  Still answered per request, as it was while the giveaway's clock decided
+ *  the list: nothing here reads the clock now, and the output is the same on
+ *  every request. */
 const NEVER_LISTED = ["/10years", "/admin"];
 
-/** /10years and /10years/rules join once the page is public (engine on,
- *  Nov 9 reached — fix list rev 2, P0-6), dated by the rules version. The
- *  token routes never do. Answered per request so no deploy is needed. */
 export const dynamic = "force-dynamic";
-const tenYearsEntries = () => (tenYearsPublic() ? ["/10years", "/10years/rules"].map((path) => ({ path, lastModified: RULES_VERSION })) : []);
 const neverListed = (path: string) => NEVER_LISTED.some((p) => path === p || path.startsWith(`${p}/`));
 
 /**
@@ -76,7 +77,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // One watch page per video. Their videos are listed again, with the
     // video fields Google reads, in /video-sitemap.xml.
     ...videos.map((v) => ({ path: videoPath(v), lastModified: VIDEO_PAGES_DATE })),
-    ...tenYearsEntries(),
   ];
 
   return entries.map(({ path, lastModified }) => ({

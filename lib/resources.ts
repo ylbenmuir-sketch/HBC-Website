@@ -914,7 +914,8 @@ export const resources: Resource[] = [
     finalHeading: "Not sure whether this is you? That’s what the call is for.",
     finalSub:
       "Tell us what’s actually stalling. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — on the phone, before you book anything.",
-    metaTitle: "Can’t Finish What You Start? The Last Ten Percent, Explained",
+    // 59 characters (2026-11-21): with the comma it sat at exactly 60.
+    metaTitle: "Can’t Finish What You Start? The Last Ten Percent Explained",
     metaDescription:
       "Work that stalls at 90 percent isn’t unfinished for the reason it looks like — a plain-language look at why finishing draws on something starting doesn’t.",
   },
@@ -2028,7 +2029,7 @@ export const resources: Resource[] = [
       "The weeks, not just the weekends. We’ll listen, answer honestly, and say plainly if LENS isn’t the right fit — before you book anything.",
     metaTitle: "Time Off Not Helping? Why Rest Stops Restoring You",
     metaDescription:
-      "A long weekend or a week away, and you’re running on empty again by Tuesday. Why rest stops restoring when you’re functioning near burnout, and what helps.",
+      "A long weekend or a week away, and you’re running on empty by Tuesday. Why rest stops restoring when you’re functioning near burnout, and what helps.",
   },
   {
     slug: "brain-fog-after-55",

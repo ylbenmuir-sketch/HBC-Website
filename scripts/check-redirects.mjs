@@ -51,7 +51,12 @@ const ROWS = [
   ["/sleepproblems", "/concerns/sleep", 301],
   ["/sleep-disorder", "/concerns/sleep", 301],
   ["/concussion-and-tbi", "/concerns/concussion", 301],
+  ["/concussion-tbi", "/concerns/concussion", 301],
   ["/concussion-tbi1", "/concerns/concussion", 301],
+  // Still 404ing after launch (Ben, 2026-11-21).
+  ["/fees", "/first-visit", 301],
+  ["/footdetox", null, 410],
+  ["/time-try-foot-detoxing", null, 410],
   ["/emotional-balance", "/concerns/emotional-regulation", 301],
   ["/emotional-balance22", "/concerns/emotional-regulation", 301],
   ["/depression", "/concerns/depression", 301],

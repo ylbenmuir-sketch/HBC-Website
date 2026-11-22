@@ -135,15 +135,15 @@ export default async function LocationPage({
   // Written from the `hours` data in lib/locations.ts, not from copy stored
   // per page — the same call the LocalBusiness schema and the cards make.
   const hoursLines = formattedHours(location);
-  // Where this page's two call CTAs (hero, final band) send people. An open
-  // center preselects itself on the form. A coming-soon center sends people
-  // to the form with nothing preselected: there is no Franklin option on it
-  // (no waitlist, by decision — see CENTER_OPTIONS in
-  // components/ContactForm.tsx), and `?center=franklin` would be a key the
-  // form no longer knows.
-  const contactHref = location.comingSoon
-    ? "/contact"
-    : `/contact?center=${location.slug}`;
+  // Where this page's "Get Started" buttons send people: the form with a
+  // center preselected. An open center preselects itself. A coming-soon
+  // center preselects the open center that serves it — Nashville for
+  // Franklin (Ben, 2026-11-21; it was plain /contact, nothing preselected).
+  // There is still no Franklin option on the form and no waitlist (by
+  // decision — CENTER_OPTIONS in components/ContactForm.tsx). The header,
+  // drawer and phone-bar buttons follow on this page through
+  // lib/contact-href.ts, and check:cta holds all of them to it.
+  const contactHref = `/contact?center=${servingCenter(location).slug}`;
   // The open center a coming-soon page points at: Nashville (the one whose
   // communities list already includes Franklin's towns) — servingCenter()
   // in lib/locations.ts, so the facts block, the review and the FAQs below
@@ -781,7 +781,7 @@ export default async function LocationPage({
                       can tap (2026-11-09). Null until the address is. */}
                   {directions && (
                     <p style={{ marginTop: 8 }}>
-                      <a href={directions} target="_blank" rel="noopener">
+                      <a className="tap-24" href={directions} target="_blank" rel="noopener">
                         Get directions &rarr;
                       </a>
                     </p>

@@ -61,6 +61,19 @@ export function tenYearsPublic(now: Date = giveawayNow(), env: Record<string, st
   return !showcaseActive(now, env);
 }
 
+/**
+ * The meta robots for /10years and /10years/rules. The giveaway is over
+ * (Ben, 2026-11-21): both pages stay live for the winners and the rules,
+ * and neither is indexed or listed in the sitemap again. "follow" once the
+ * page is the real one, so the links on it still count; the hidden showcase
+ * keeps its nofollow on /10years. robots.txt must go on ALLOWING the two
+ * (app/robots.ts): a crawler that may not fetch a page never reads its
+ * noindex.
+ */
+export function tenYearsRobots(now: Date = giveawayNow(), env: Record<string, string | undefined> = process.env): { index: false; follow: boolean } {
+  return { index: false, follow: tenYearsPublic(now, env) };
+}
+
 export function showcaseMode(param: string | string[] | undefined): ShowcaseMode {
   const key = (Array.isArray(param) ? param[0] : param)?.trim().toLowerCase() ?? "";
   return SHOWCASE_PARAMS[key] ?? "notify_me";

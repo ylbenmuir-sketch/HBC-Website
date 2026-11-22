@@ -7,7 +7,7 @@
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --widths 390
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --routes /locations
  *   CHECK_BASE=http://localhost:3000 npm run check:layout -- --also /10years,/10years/rules
- *   CHECK_NOW=2026-11-10T16:00:00Z CHECK_BASE=… npm run check:layout   (browser clock moved; banner on)
+ *   CHECK_NOW=2026-11-10T16:00:00Z CHECK_BASE=… npm run check:layout   (browser clock moved)
  *
  * Needs Google Chrome installed; it drives a headless instance over the
  * DevTools protocol (scripts/layout/cdp.mjs) with no npm dependency.
@@ -230,8 +230,9 @@ try {
   process.exit(1);
 }
 // CHECK_NOW=<ISO instant> (optional): run every page with the browser's
-// clock moved to that instant, so clock-driven UI — the 10-year banner's
-// head script and client component — is swept as it will look then.
+// clock moved to that instant, so clock-driven UI (the /10years countdown;
+// the 10-year banner, until it was retired on 2026-11-21) is swept as it
+// will look then.
 const CHECK_NOW = process.env.CHECK_NOW ? Date.parse(process.env.CHECK_NOW) : null;
 if (process.env.CHECK_NOW && !Number.isFinite(CHECK_NOW)) {
   console.error(`\n  CHECK_NOW is not a date: ${process.env.CHECK_NOW}`);
