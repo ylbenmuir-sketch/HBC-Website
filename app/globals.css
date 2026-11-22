@@ -105,6 +105,55 @@
   size-adjust: 86.5%;
 }
 
+/* Per-element fallbacks (2026-11-22). The three faces above are tuned for
+   the site as a whole, and two first-screen elements sat on the wrong side
+   of a line break under them, so each jumped when the real font landed
+   (check:fonts). Each gets the same real face with its own fallback behind
+   it, measured on its own text (real width / fallback width, same probe):
+
+   - The homepage eyebrow, which is inside the H1: upper case with tracking,
+     where Arial at 104.53% runs 10% wider than DM Sans (336px against 305).
+     At 360px that was one line in the real font and two in the fallback,
+     17px. 104.53% x 0.90.
+   - /lens-neurofeedback's H1: almost all lower case, where Times at 93.2%
+     runs 4% NARROWER than Cormorant, so "neurofeedback: what" fitted one
+     line in the fallback (340.8px of 342) and not in the real font: three
+     lines, then four, 49px at 390 and 52px at 412. Upright 93.2% x 1.04,
+     italic 86.5% x 1.036.
+
+   Ascent and descent are the site-wide faces' values divided by the same
+   factor, so the em box is the one they describe. Nothing about the real
+   fonts changes: these are only ever painted before the font loads. The
+   real family names come from <html style> (app/layout.tsx). */
+@font-face {
+  font-family: "DM Sans Caps Fallback";
+  src: local("Arial");
+  ascent-override: 105.44%;
+  descent-override: 32.96%;
+  line-gap-override: 0%;
+  size-adjust: 94.08%;
+}
+@font-face {
+  font-family: "Cormorant Lowercase Fallback";
+  font-style: normal;
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Tinos"),
+    local("Liberation Serif");
+  ascent-override: 95.32%;
+  descent-override: 29.61%;
+  line-gap-override: 0%;
+  size-adjust: 96.93%;
+}
+@font-face {
+  font-family: "Cormorant Lowercase Fallback";
+  font-style: italic;
+  src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"),
+    local("Tinos Italic"), local("Liberation Serif Italic");
+  ascent-override: 103.1%;
+  descent-override: 32.03%;
+  line-gap-override: 0%;
+  size-adjust: 89.61%;
+}
+
 @theme {
   --color-navy: #1c2b3a;
   --color-navy-deep: #152230;
@@ -233,7 +282,7 @@ h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
 /* The homepage eyebrow lives inside the H1 (app/page.tsx). `.eyebrow` already
    resets the type; this resets what the H1 would otherwise add, and draws the
    separating dot as generated content — seen, not read. */
-.hero h1 .hero-kicker { margin: 0; text-wrap: initial; }
+.hero h1 .hero-kicker { margin: 0; text-wrap: initial; font-family: var(--face-sans), "DM Sans Caps Fallback", Helvetica, Arial, sans-serif; }
 /* The gold line never shrinks to make room for the text — it wraps instead,
    as the standalone eyebrow's did. */
 .hero h1 .hero-kicker::before { flex: none; }
@@ -247,6 +296,9 @@ h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
    it can stay out of the preload (app/layout.tsx). Without this the em
    inherits the upright family from its heading and Chrome fakes the slant. */
 em.sage { font-family: var(--serif-italic); font-style: italic; color: var(--sage-deep); }
+/* /lens-neurofeedback's H1: its own fallback (see "Per-element fallbacks"). */
+.h1-lower-fallback { font-family: var(--face-serif), "Cormorant Lowercase Fallback", Georgia, serif; }
+.h1-lower-fallback em.sage { font-family: var(--face-serif-italic), "Cormorant Lowercase Fallback", Georgia, serif; }
 
 /* gold placeholder tags ([CONFIRM] / [Insert …]) — dev/draft mode only */
 .todo-tag { color: var(--gold); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -1695,7 +1747,12 @@ html.js .rv.in { opacity: 1; transform: none; }
   .nav-tel-m { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; min-height: 44px; padding: 0 8px; font-size: 14px; font-weight: 600; color: var(--navy); text-decoration: none; white-space: nowrap; letter-spacing: 0.01em; }
   .nav-tel-m svg { flex: none; color: var(--sage-deep); }
 }
-@media (max-width: 359px) {
+/* Under 400px (Ben, 2026-11-22; it was under 360) the number's text steps
+   aside and the link is the icon alone, still a 44px target and still
+   "Call (615) 331-8762" to a screen reader. At 360 the number took the
+   burger's room and pushed it 31px off the right edge; at 390 it was 1px
+   over. Same link, href, class and contact_link_click (location header). */
+@media (max-width: 399px) {
   .nav-tel-m span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .nav-tel-m { padding: 0 10px; }
 }
