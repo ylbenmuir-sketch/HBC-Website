@@ -8,10 +8,11 @@ import { SHOW_TEAM } from "./lib/site-config";
  * once: `rewrites()` sends them to app/api/gone/route.ts, and the trailing-
  * slash catch-all at the end of `redirects()` steps around them so the slash
  * form reaches the rewrite in one hop. Literal slugs first, then WordPress's
- * numeric auto-slugs (`6200-2`, and `6200` for good measure).
+ * numeric auto-slugs (`6200-2`, and `6200` for good measure). The two foot
+ * detox URLs joined on 2026-11-21 (Ben): a retired service, like the chair.
  */
 const GONE_PATTERN =
-  "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|\\d+(?:-\\d+)?)";
+  "(?:vibro-acoustic-chair|positive-outcomes-from-vibro-acoustic-therapy-research|footdetox|time-try-foot-detoxing|\\d+(?:-\\d+)?)";
 
 /**
  * The legacy redirect sources as one regex alternation, for the trailing-slash
@@ -183,7 +184,8 @@ const nextConfig: NextConfig = {
       // whose subject it is.
       ...to(["/stress"], "/concerns/stress-resilience"),
       ...to(["/sleepproblems", "/sleep-disorder"], "/concerns/sleep"),
-      ...to(["/concussion-and-tbi", "/concussion-tbi1"], "/concerns/concussion"),
+      // /concussion-tbi (no suffix) still 404'd after launch (Ben, 2026-11-21).
+      ...to(["/concussion-and-tbi", "/concussion-tbi", "/concussion-tbi1"], "/concerns/concussion"),
       ...to(["/emotional-balance", "/emotional-balance22"], "/concerns/emotional-regulation"),
       // The hub until Oct 2026 (approved, Ben, Aug 2026: "a destination is
       // read as an answer, and no concern page offers depression care").
@@ -240,6 +242,9 @@ const nextConfig: NextConfig = {
         ],
         "/contact"
       ),
+      // The old fees page (Ben, 2026-11-21): /first-visit is where the new
+      // site says what the first visit involves and costs.
+      ...to(["/fees"], "/first-visit"),
       ...to(["/what-we-help-with-1"], "/what-we-help-with"),
       // Category and tag archives — 20 thin URLs, all indexed. One rule.
       ...to(["/category/:path*", "/tag/:path*"], "/resources"),
@@ -453,6 +458,9 @@ const nextConfig: NextConfig = {
       //   QUERY-TO-PAGE-MAP.md.
       // - /positive-outcomes-from-vibro-acoustic-therapy-research — the one
       //   post on the same subject (Ben, 2026-10-13), retired with it.
+      // - /footdetox and /time-try-foot-detoxing — the foot detox page and
+      //   its post (Ben, 2026-11-21): a service the practice no longer
+      //   offers, retired the same way.
       // - WordPress's numeric auto-slugs (`/6200-2/`): 34 of the 56 posts.
       //   Nothing to carry over, so they are retired by pattern.
       { source: `/:gone(${GONE_PATTERN})`, destination: "/api/gone" },

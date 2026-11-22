@@ -191,7 +191,10 @@ the inherited surface on day one rather than carrying it over.
 | `/sleepproblems/` | `/concerns/sleep/` | ✅ |
 | `/concussion-and-tbi/` | `/concerns/concussion/` | ✅ |
 | `/depression/` | `/concerns/depression/` | ✅ — the hub until Oct 2026 (approved, Ben, Aug 2026, when no page offered the answer); the page exists now and the redirect follows it |
+| `/concussion-tbi/` | `/concerns/concussion/` | ✅ — added 2026-11-21 (Ben): it still 404'd after launch |
+| `/fees/` | `/first-visit/` | ✅ — added 2026-11-21 (Ben) |
 | `/vibro-acoustic-chair/` | **410 Gone** | n/a — **approved, Ben, Aug 2026** |
+| `/footdetox/`, `/time-try-foot-detoxing/` | **410 Gone** | n/a — added 2026-11-21 (Ben): a retired service, like the chair |
 | `/trisha-yearwood/` | `/stories/` | ✅ — **approved, Ben, Aug 2026** |
 | `/peakperformance/` | `/concerns/performance/` | ✅ — **approved, Ben, Sept 2026** |
 | `/self-development/` | `/concerns/performance/` | ✅ — direct, no chain through `/peakperformance/` — **approved, Ben, Sept 2026** |
