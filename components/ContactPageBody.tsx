@@ -126,7 +126,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
               </div>
             ) : (
             <div className="contact-ways">
-              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text ${PHONE_DISPLAY}`}>
+              <a className="contact-way" href={`sms:${PHONE_TEL}`} aria-label={`Text us at ${PHONE_DISPLAY}`}>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"
@@ -137,7 +137,7 @@ export default function ContactPageBody({ giveaway = null }: { giveaway?: Giveaw
                 </svg>
                 <span className="contact-way-title">Text us</span>
               </a>
-              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call ${PHONE_DISPLAY}`}>
+              <a className="contact-way" href={`tel:${PHONE_TEL}`} aria-label={`Call us at ${PHONE_DISPLAY}`}>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"

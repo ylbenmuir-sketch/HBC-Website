@@ -105,7 +105,7 @@ export default function MobileActionBar() {
             </svg>
             <span>Call</span>
           </a>
-          <a className="cta-bar-act" href={`sms:${phone.tel}`} aria-label={`Text ${phone.display}`}>
+          <a className="cta-bar-act" href={`sms:${phone.tel}`} aria-label={`Text us at ${phone.display}`}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-4.5 4v-4A1.5 1.5 0 0 1 4 14.5v-9z"

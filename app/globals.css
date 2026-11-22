@@ -984,6 +984,18 @@ footer.site .logo-name span { color: var(--gold); }
 .foot-identity { padding-top: 28px; font-size: 13.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.68); }
 .foot-identity a { color: rgba(251, 248, 241, 0.86); text-decoration: underline; text-decoration-color: rgba(251, 248, 241, 0.35); text-underline-offset: 3px; }
 .foot-identity a:hover { color: var(--ivory); text-decoration-color: currentColor; }
+/* 24px-tall tap areas (2026-11-21): the footer's phone, email, Privacy and
+   SMS Terms links were 17px tall, and "Get directions" 18 to 21px.
+   In the footer the links sit on consecutive lines, so each is an
+   inline-block exactly one line tall and the line is 24.3px (1.8, from
+   1.75: under a pixel a line). Padding instead would have made neighbours
+   on adjacent lines overlap (check:layout).
+   `.tap-24` is for a link on a line of its own: 3px of padding above and
+   below with the same 3px taken back as negative margin, so the box a
+   finger hits is 6px taller and nothing moves. */
+.foot-identity { line-height: 1.8; }
+.foot-identity a { display: inline-block; }
+.tap-24 { display: inline-block; padding: 3px 0; margin: -3px 0; }
 /* A phone number is one thing: never "(615)" on one line and the rest on the next. */
 .foot-identity a[href^="tel:"] { white-space: nowrap; }
 .disclaimer { padding-top: 28px; font-size: 12.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.55); max-width: 112ch; }

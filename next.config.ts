@@ -111,14 +111,22 @@ const nextConfig: NextConfig = {
      * site came back with `Cache-Control: public, max-age=60`, so a visitor
      * who read two pages a minute apart re-fetched the header-to-footer set
      * of images on the second one, and Lighthouse's `uses-long-cache-ttl`
-     * listed all of them. Thirty-one days, not a year: the source files in
-     * public/images are replaced in place occasionally, and a month is the
-     * longest a stale copy may outlive its replacement. (Next's own advice
+     * listed all of them. Thirty days (2,592,000 s; Ben, 2026-11-21 — it
+     * was thirty-one), not a year: the source files in public/images are
+     * replaced in place occasionally, and a month is the longest a stale
+     * copy may outlive its replacement. (Next's own advice
      * is to change the filename when an image changes; do that and the TTL
      * is moot.) Fonts and JS are content-hashed and already immutable; this
      * only touches /_next/image.
+     *
+     * What this does NOT change, measured on production 2026-11-21: Vercel
+     * answers /_next/image with `Cache-Control: public, max-age=0,
+     * must-revalidate` to the browser whatever this says. On Vercel the
+     * value is how long ITS edge keeps the optimized image (the second
+     * request for the same URL is `x-vercel-cache: HIT`); a `next start`
+     * server is where the browser sees `max-age=2592000`.
      */
-    minimumCacheTTL: 2678400,
+    minimumCacheTTL: 2592000,
   },
 
   /**

@@ -781,7 +781,7 @@ export default async function LocationPage({
                       can tap (2026-11-09). Null until the address is. */}
                   {directions && (
                     <p style={{ marginTop: 8 }}>
-                      <a href={directions} target="_blank" rel="noopener">
+                      <a className="tap-24" href={directions} target="_blank" rel="noopener">
                         Get directions &rarr;
                       </a>
                     </p>
