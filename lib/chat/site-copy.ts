@@ -890,11 +890,39 @@ export const MIRRORED_PAGES: MirroredPage[] = [
       },
     ],
   },
-  // Four homepage passages left the index on 2026-11-22 with the copy they
-  // mirrored — page:home:why-now, page:home:goals, page:home:steps and
-  // page:home:children. The restructured homepage (app/page.tsx) no longer
-  // carries those sections, and a passage may only quote what a visitor can
-  // find on the page it names. Restore a passage with its section.
+  {
+    sourceFile: "app/page.tsx",
+    href: "/first-visit",
+    passages: [
+      {
+        id: "page:home:steps",
+        title: "How it works, in three steps",
+        question: "How do I get started?",
+        keywords: [
+          "start",
+          "begin",
+          "step",
+          "process",
+          "first",
+          "call",
+          "book",
+        ],
+        text: "Three steps. No homework, no screens, nothing to perform. Talk: A free call — or send the form and we'll call you. Tell us what's going on, and we'll tell you honestly whether LENS is a fit. Map: Your first visit: you sit down with a practitioner, we record a baseline of your brain activity, we walk you through what we see, and you leave with a written plan. Sessions: Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
+        mirror: [
+          "Three steps. No homework, no screens, nothing to perform.",
+          "A free call — or send the form and we'll call you. Tell us what's going on, and we'll tell you honestly whether LENS is a fit.",
+          "Your first visit: you sit down with a practitioner, we record a baseline of your brain activity, we walk you through what we see, and you leave with a written plan.",
+          "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
+        ],
+      },
+    ],
+  },
+  // Three homepage passages left the index on 2026-11-22 with the copy they
+  // mirrored — page:home:why-now, page:home:goals and page:home:children.
+  // The restructured homepage (app/page.tsx) no longer carries those
+  // sections, and a passage may only quote what a visitor can find on the
+  // page it names. Restore a passage with its section. (page:home:steps,
+  // above, came back the same day with the Talk / Map / Sessions strip.)
 ];
 
 /**
@@ -943,9 +971,10 @@ export const CONFIRM_TAG_INVENTORY: Record<string, Record<string, string>> = {
   // his approved wording and is back in the index.
   "app/about/page.tsx": {},
   "app/page.tsx": {
-    // START_TIMING.note!, FOUNDER_QUOTE.note! and FOUNDER_LAST_NAME.note!
-    // left this list 2026-11-22: the restructured homepage renders none of
-    // the three (no start-timing line, no founder quote, no surname tag).
+    // START_TIMING.note! left this list 2026-11-22: the restructured
+    // homepage has no start-timing line.
+    "FOUNDER_QUOTE.note!": "not indexed — the founder quote is in no passage",
+    "FOUNDER_LAST_NAME.note!": "Verifiable-gated — and verified; FOUNDER_DISPLAY_NAME is not indexed regardless",
     "FRANKLIN_OPENING.note!": "Verifiable-gated — location:franklin:coming-soon omits the date by construction",
     // The `REVIEWS.note!` tag was here. Ben confirmed the rating and both
     // review counts, so the tag is gone from the band along with the

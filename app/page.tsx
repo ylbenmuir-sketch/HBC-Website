@@ -31,7 +31,9 @@ import {
   FEATURE_CELEBRITY,
   FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
+  FOUNDER_LAST_NAME,
   FOUNDER_PAGE_PUBLISHED,
+  FOUNDER_QUOTE,
   FRANKLIN_OPENING,
   GOOGLE_REVIEW_QUOTES,
   HSA_FSA_ACCEPTED,
@@ -92,6 +94,7 @@ export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
   const sessionCount = verifiedOr(STAT_SESSIONS);
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
+  const founderQuote = verifiedOr(FOUNDER_QUOTE);
   // The featured story is the first permissioned client story; beside it,
   // one public Google review, labelled as one (components/
   // GoogleReviewQuote.tsx). The sleep review: the story is a parent's about
@@ -449,7 +452,51 @@ export default function HomePage() {
         </div>
       </section>
 
-            {/* The Harmonized Brain Map — the 1-2-3 stage (Ben, 2026-10-19): Scan,
+            {/* How it works, as a compact strip (Ben, 2026-11-22): Talk, Map,
+          Sessions — the heading and the three paragraphs exactly as the
+          How it works section carried them, on one light band between the
+          concerns and the Brain Map. Its two links ("See what the first
+          visit is like", "See how LENS works") are in the "Your first
+          visit" card below. Mirrored in lib/chat/site-copy.ts
+          (page:home:steps) — edit both. */}
+      <section className="home-steps" aria-labelledby="home-steps-h">
+        <div className="wrap">
+          <div className="home-steps-head rv">
+            <div className="eyebrow">How it works</div>
+            <h2 id="home-steps-h">
+              Three steps. No homework, no screens, nothing to perform.
+            </h2>
+          </div>
+          <ol className="home-steps-list rv">
+            {[
+              {
+                h: "Talk",
+                p: "A free call — or send the form and we'll call you. Tell us what's going on, and we'll tell you honestly whether LENS is a fit.",
+              },
+              {
+                h: "Map",
+                p: "Your first visit: you sit down with a practitioner, we record a baseline of your brain activity, we walk you through what we see, and you leave with a written plan.",
+              },
+              {
+                h: "Sessions",
+                p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
+              },
+            ].map((step, i) => (
+              <li key={step.h}>
+                <span className="home-steps-n" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <div>
+                  <h3>{step.h}</h3>
+                  <p>{step.p}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* The Harmonized Brain Map — the 1-2-3 stage (Ben, 2026-10-19): Scan,
           Results, Plan, with one large visual that follows the step. On a
           navy band since 2026-11-22: the copy and the three steps on one
           side, the map on the other, stacked under 1024px (globals.css
@@ -675,21 +722,51 @@ export default function HomePage() {
                   )}
                   .
                 </p>
-                {/* Both links are /about's own: its label, and its button to
-                    the founder page — which keeps that page linked from
-                    here, as the founder note it replaced did. */}
-                <div className="home-team-links">
-                  <Btn href="/about" variant="ghost" arrow>
-                    About Harmonized Brain Centers
-                  </Btn>
-                  <Btn href="/about/founder" variant="ghost" arrow>
-                    The founder&rsquo;s story
-                  </Btn>
-                </div>
+                <Btn href="/about" variant="ghost" arrow>
+                  About Harmonized Brain Centers
+                </Btn>
               </div>
             </>
           )}
         </div>
+        {/* The founder note, as the homepage carried it (Ben, 2026-11-22):
+            her photo, the line, and "Her story" — the route to her page.
+            Under the team version only; the founder version above is
+            already hers. */}
+        {!FOUNDER_PAGE_PUBLISHED && (
+          <div className="wrap">
+            <div className="founder-note rv">
+              <PhotoFrame
+                src="/images/founder.jpg"
+                alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
+                position="center 22%"
+                height={230}
+                sizes="200px"
+              />
+              <div>
+                {founderQuote ? (
+                  <blockquote>
+                    &ldquo;{founderQuote}&rdquo;{" "}
+                    <ConfirmTag>{FOUNDER_QUOTE.note!}</ConfirmTag>
+                  </blockquote>
+                ) : (
+                  <blockquote>
+                    Harmonized began with one practitioner and a simple promise:
+                    honest guidance, and a gentle option for every family.
+                  </blockquote>
+                )}
+                <cite>
+                  {FOUNDER_DISPLAY_NAME}{" "}
+                  {!FOUNDER_LAST_NAME.verified && (
+                    <ConfirmTag>{FOUNDER_LAST_NAME.note!}</ConfirmTag>
+                  )}{" "}
+                  &middot; Founder &amp; Clinical Director &middot;{" "}
+                  <Link href="/about/founder">Her story →</Link>
+                </cite>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Locations (Ben, 2026-11-22): the two open centers as cards — photo,

@@ -3926,7 +3926,6 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 
 /* -- the team / founder split -- */
 .home-team .split .ph { height: 460px; }
-.home-team-links { display: flex; flex-wrap: wrap; gap: 0 30px; }
 
 /* -- locations: two cards, then the Franklin strip -- */
 @media (min-width: 761px) { .loc-grid.home-loc-grid { grid-template-columns: 1fr 1fr; } }
@@ -3969,3 +3968,17 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 /* The hero's proof line is a desktop and tablet piece since 2026-11-22: on a
    phone the trust row directly under the hero carries the same facts. */
 @media (max-width: 760px) { .hero-copy .hero-proof { display: none; } }
+
+/* -- How it works, compact: Talk / Map / Sessions on one light band --
+   A strip, not a section: 56px of padding against the sections' 100px, the
+   heading at a third of the display size. --slate on --ivory-2 is 4.92:1;
+   the numerals are --gold-ink (4.52:1 there) in a gold ring. */
+.home-steps { padding: 56px 0 60px; background: var(--ivory-2); border-top: 1px solid var(--line); }
+.home-steps-head h2 { margin: 14px 0 0; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.2; }
+.home-steps-list { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin-top: 30px; }
+.home-steps-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; align-items: start; }
+.home-steps-n { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--gold); border-radius: 50%; font-family: var(--sans); font-variant-numeric: lining-nums; font-size: 16px; font-weight: 600; color: var(--gold-ink); }
+.home-steps-list h3 { margin: 6px 0 6px; font-size: 23px; }
+.home-steps-list p { font-size: 14.5px; line-height: 1.6; color: var(--slate); }
+@media (max-width: 900px) { .home-steps-list { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+@media (max-width: 760px) { .home-steps { padding: 44px 0 46px; } .home-steps-list { margin-top: 24px; } }
