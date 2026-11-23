@@ -3909,23 +3909,13 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 }
 
 /* ============================================================
-   Homepage restructure (Ben, 2026-11-22; app/page.tsx): the hero's
-   floating card, the trust row, the "What brings you in?" tabs, the
+   Homepage restructure (Ben, 2026-11-22; app/page.tsx): the trust row,
+   the "What brings you in?" tabs, the
    Brain Map stage on a navy band, the "Your first visit" block under it, the
    story pair, the two-card locations row with the Franklin strip, the
    closing band's links and the footer's contact lines. Layout only —
    every colour is an existing token, every face the serif or the sans.
    ============================================================ */
-
-/* -- hero: the small card over the photo (desktop only) -- */
-.hero-float { display: none; }
-@media (min-width: 1061px) {
-  .hero-media { position: relative; }
-  .hero-float { display: flex; flex-direction: column; align-items: center; gap: 8px; position: absolute; left: -36px; bottom: 96px; z-index: 2; margin: 0; padding: 16px 20px 13px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 0 4px 4px 0; box-shadow: 0 22px 44px -26px rgba(21, 34, 48, 0.5); }
-  .hero-float img { display: block; width: 112px; height: 112px; }
-  /* The label: the eyebrow's face at its small size; --slate on white is 5.9:1. */
-  .hero-float figcaption { font-family: var(--sans); font-size: 11.5px; line-height: 1.4; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--slate); white-space: nowrap; }
-}
 
 /* -- the images just below the hero wait for it --
    components/AfterHeroGate.tsx marks <html data-hero="wait"> until the hero
