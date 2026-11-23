@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import TenYearsView, { FormCard, MessageCard, ReminderCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
+import ClosedView from "@/components/giveaway/ClosedView";
+import { giveawayClosed, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { entryPageMode } from "@/lib/giveaway/config";
 import { PAGES } from "@/lib/giveaway/copy";
 import { handleTap } from "@/lib/giveaway/web";
@@ -23,6 +24,8 @@ export const metadata: Metadata = { title: "Finish your entry", robots: { index:
 export default async function EnterPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ error?: string }> }) {
   // Not a page at all while the engine is off (lib/giveaway/engine.ts).
   if (!giveawayEngineEnabled()) notFound();
+  // Closed for good (Ben, 2026-11-23): an old email link lands on the closed message; the token is not read.
+  if (giveawayClosed()) return <ClosedView />;
   const now = giveawayNow();
   // Before Nov 9 the real page is already notify-me (Ben, 2026-11-07).
   const mode = entryPageMode(now);

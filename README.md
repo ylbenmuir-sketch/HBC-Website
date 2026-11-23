@@ -340,6 +340,20 @@ submission requires Supabase credentials.
 
 ## Environment variables
 
+> **The 10-year giveaway is CLOSED (Ben, 2026-11-23).** Every free Brain Map
+> has been given away. `giveawayClosed()` in `lib/giveaway/engine.ts` is true
+> on the production deployment, always, and by default everywhere else:
+> `/10years` and every address under it except `/10years/rules` show the
+> closed message (`components/giveaway/ClosedView.tsx`), `/contact?from=10years`
+> shows it too, an unused `10Y-` code is refused with it (redeemed codes keep
+> their bookings; `GIFT-` prize certificates still book), the site banner is
+> deleted, and no email goes to an entrant — the cron neither schedules nor
+> runs scheduled sends (the Dec 1 reminder and Dec 3 last call are cancelled)
+> and `sendGiveawayEmail` refuses any email with a footing. The drawing
+> engine, winners, entries, admin screens and `/unsubscribe` are untouched.
+> `GIVEAWAY_REOPEN_FOR_CHECKS=1` reopens it for `check:giveaway` only and is
+> ignored on production. Everything below describes the giveaway as it ran.
+
 | Variable | Purpose |
 | --- | --- |
 | `SUPABASE_URL` | Supabase project URL (Settings → API). Server-side only. |

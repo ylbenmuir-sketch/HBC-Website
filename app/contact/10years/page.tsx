@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import ContactPageBody from "@/components/ContactPageBody";
 import type { GiveawayBooking } from "@/components/ContactForm";
-import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
+import ClosedView from "@/components/giveaway/ClosedView";
+import { giveawayClosed, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { checkGiftCode, checkOffer, giftCodeRefusalMessage, offerRefusalMessage } from "@/lib/giveaway/offers";
 import { pageMetadata } from "@/lib/pages";
 
@@ -40,9 +41,13 @@ export default async function GiveawayContactPage({ searchParams }: { searchPara
     // A Brain Map gift certificate (GIFT-MON … GIFT-SAT).
     booking.state = gift.ok ? "ok" : "unknown";
     booking.message = gift.ok ? `Your Brain Map gift certificate ${code} is ready — it books a Brain Map.` : giftCodeRefusalMessage(gift.reason);
+  } else if (giveawayClosed()) {
+    // Every free Brain Map is given away (Ben, 2026-11-23): the closed message in place of the booking form,
+    // with or without a code, and no code is looked up. A winner's gift certificate (above) still books.
+    return <ClosedView />;
   } else if (code && giveawayEngineEnabled()) {
     const check = await checkOffer(code).catch(() => ({ ok: false as const, reason: "unavailable" as const }));
-    booking.state = check.ok ? "ok" : check.reason;
+    booking.state = check.ok ? "ok" : check.reason === "closed" ? "unknown" : check.reason;
     booking.message = check.ok ? `Your 10-year code ${code} is ready — it books your free first visit.` : offerRefusalMessage(check.reason);
     // The center nearer the entrant's ZIP, preselected (Ben, 2026-11-03).
     if (check.ok) booking.center = check.nearestCenter;

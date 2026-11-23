@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { giveawayNow } from "@/lib/giveaway/clock";
-import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
+import { giveawayClosed, giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { runDueDrawings } from "@/lib/giveaway/drawings";
 import { liveNotifier, sendDeps } from "@/lib/giveaway/notify";
 import { runDueSends, scheduleJobs } from "@/lib/giveaway/sends";
@@ -34,16 +34,20 @@ export async function GET(request: Request) {
   const store = giveawayStore();
   if (!store) return NextResponse.json({ error: "database not configured" }, { status: 503 });
   const now = giveawayNow();
+  // Closed (Ben, 2026-11-23): every scheduled email to entrants is cancelled — the Dec 1 gift reminder and the
+  // Dec 3 last call with them. No job is scheduled, claimed or run, and no scheduled_sends row is read or
+  // written. The drawings line below is untouched.
+  const emailsCancelled = giveawayClosed();
   let scheduled = 0;
   try {
-    scheduled = await scheduleJobs(store);
+    if (!emailsCancelled) scheduled = await scheduleJobs(store);
   } catch (err) {
     console.error(`[giveaway cron] schedule: ${err instanceof Error ? err.message : "unknown"}`);
   }
   const drawings = await runDueDrawings(store, now, "cron", liveNotifier(store, giveawayNow));
   let sends = { jobs: 0, sent: 0, skipped: 0, failed: 0 };
   try {
-    sends = await runDueSends(store, now, sendDeps(store));
+    if (!emailsCancelled) sends = await runDueSends(store, now, sendDeps(store));
   } catch (err) {
     console.error(`[giveaway cron] sends: ${err instanceof Error ? err.message : "unknown"}`);
   }
@@ -57,5 +61,6 @@ export async function GET(request: Request) {
     scheduled,
     drawings: { due: drawings.due, drawn: drawings.drawn.map((d) => ({ slot: d.drawing.slot, winner: d.winner.id })), skipped: drawings.skipped },
     sends,
+    ...(emailsCancelled ? { emails: "cancelled" } : {}),
   });
 }

@@ -16,6 +16,7 @@ import { COPY_IS_DRAFT } from "./copy";
 import { DBA_NAME } from "../sms-consent";
 import { REGISTERED_ADDRESS_LINE } from "../sms-identity";
 import type { Email, Footing } from "./emails";
+import { CLOSED_COPY, giveawayClosed } from "./engine";
 import { giveawayEnv, isTestingEnv, type GiveawayEnv } from "./env";
 import { isTestAddress, TEST_ADDRESS_SKIP } from "./recipients";
 import { signToken, tokenSecret, type TokenKind } from "./tokens";
@@ -106,6 +107,9 @@ export type GiveawaySendResult = SendResult | { status: "skipped"; messageId: nu
  * before Resend is asked (lib/giveaway/recipients.ts).
  */
 export async function sendGiveawayEmail(input: GiveawaySendInput): Promise<GiveawaySendResult> {
+  // Closed (Ben, 2026-11-23): nothing more goes to an entrant. Every entrant email carries a footing
+  // (the identity line and unsubscribe link); the staff winner alert and the failure alert carry none.
+  if (giveawayClosed() && input.footing) return { status: "skipped", messageId: null, error: CLOSED_COPY.emailSkip };
   if (isTestAddress(input.to)) return { status: "skipped", messageId: null, error: TEST_ADDRESS_SKIP };
   const env = giveawayEnv();
   // Two locks, either one holds: the copy file is still draft (whatever the

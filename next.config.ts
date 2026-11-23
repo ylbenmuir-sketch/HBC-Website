@@ -463,7 +463,12 @@ const nextConfig: NextConfig = {
       { source: "/wp-admin/:path*", destination: "/api/gone" },
       { source: "/wp-login.php", destination: "/api/gone" },
       ],
-      fallback: [],
+      // The 10-year giveaway is closed (Ben, 2026-11-23): any address under
+      // /10years that is not a route of its own — /10years/thank-you,
+      // /10years/claim, an old link — shows the closed message
+      // (app/10years/closed). `fallback` runs only after every real route,
+      // so the rules, the calendar links and the images are untouched.
+      fallback: [{ source: "/10years/:path+", destination: "/10years/closed" }],
     };
   },
 };

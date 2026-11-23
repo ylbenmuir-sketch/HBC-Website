@@ -213,9 +213,6 @@ export type SiteEvent =
     }
   | { name: "concern_chip_click"; params: { chip_label: ConcernChip | "other"; page_path: string } }
   | { name: "brain_map_jump"; params: { page_path: string } }
-  /** The site-wide 10-year banner (fix list rev 2, P0-7): the mode only, no identifiers. */
-  | { name: "giveaway_banner_click"; params: { mode: "notify" | "live" | "closed" } }
-  | { name: "giveaway_banner_dismiss"; params: { mode: "notify" | "live" | "closed" } }
   /** The /10years form was sent (P1-6): the normalized channel only. */
   | { name: "giveaway_signup_submit"; params: { channel: Channel; form_type: GiveawayFormType } }
   /** A tap on a /10years calendar link (Ben, 2026-11-13): which of the two

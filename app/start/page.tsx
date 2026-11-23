@@ -35,7 +35,7 @@ import { startCenters } from "@/lib/start-centers";
  *   on the chip, switches the header number and adds the center's address
  *   to the footer (lib/start-center.ts); otherwise Nashville.
  * - No exits: the header is the logo and the phone (components/Header.tsx),
- *   no 10-year banner (lib/giveaway/banner.ts), a short footer
+ *   a short footer
  *   (components/StartFooter.tsx), no phone action bar, no assistant, and no
  *   link to any concern page.
  *

@@ -146,6 +146,10 @@ async function startServer(overrides = {}) {
     // The real engine: the check drives the whole week. The engine-off
     // server (engineOffChecks) overrides this.
     GIVEAWAY_ENGINE_ENABLED: "1",
+    // The giveaway closed for good on 2026-11-23 (lib/giveaway/engine.ts →
+    // giveawayClosed). The week this check drives is reopened for it here;
+    // closedChecks() runs on a server without this, as the live site is.
+    GIVEAWAY_REOPEN_FOR_CHECKS: "1",
     NODE_OPTIONS: "--import ./scripts/contact-flow/mock-resend.mjs",
     MOCK_RESEND_LOG: RESEND_LOG,
     MOCK_SMS_LOG: SMS_LOG,
@@ -350,6 +354,12 @@ try {
     // error, not a success.
     logPath = await startServer({ GIVEAWAY_ENGINE_ENABLED: "", GIVEAWAY_REPO: "" });
     await engineOffChecks();
+    server.kill("SIGTERM");
+    await sleep(800);
+    server = null;
+    // Then the site as it is live since 2026-11-23: engine on, giveaway closed.
+    logPath = await startServer({ GIVEAWAY_REOPEN_FOR_CHECKS: "" });
+    await closedChecks();
     server.kill("SIGTERM");
     await sleep(800);
     server = null;
@@ -1019,7 +1029,8 @@ try {
     const good = await stats();
     expect("stats: 200, no-store, noindex", good.status === 200 && /no-store/.test(good.headers.get("cache-control") ?? "") && /noindex/.test(good.headers.get("x-robots-tag") ?? ""), String(good.status));
     expect("stats: no email, ZIP, phone, code or hash anywhere in the payload", personalIn(good.body).length === 0, personalIn(good.body).join(" "));
-    expect("stats: six drawings, all drawn, eleven send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 11 && good.body.env === "test", JSON.stringify(good.body?.drawings?.map((d) => d.status)));
+    // Thirteen since 2026-11-23: the spots-left update and its test joined the eleven.
+    expect("stats: six drawings, all drawn, thirteen send jobs, the env is test", good.body?.drawings?.length === 6 && good.body.drawings.every((d) => d.status === "drawn" || d.status === "redrawn") && good.body.sends?.length === 13 && good.body.env === "test", `${JSON.stringify(good.body?.drawings?.map((d) => d.status))} sends=${good.body?.sends?.length}`);
     expect("stats: the facebook entrant is counted under facebook ('<5')", good.body?.people?.by_utm_source?.facebook === "<5" || USE_DB, JSON.stringify(good.body?.people?.by_utm_source));
     expect("stats: no client-status breakdown (P1-8)", !/by_path|existing|current_client/.test(JSON.stringify(good.body)));
   }
@@ -1083,6 +1094,67 @@ if (failures.length) {
 rmSync(work, { recursive: true, force: true });
 console.log("✓ check:giveaway: the whole week ran end to end; no real email, no text, no production row.");
 
+/* ── closed for good (Ben, 2026-11-23): the message, no codes, no emails ─ */
+
+async function closedChecks() {
+  section("CLOSED (engine on, no reopen — the live site since 2026-11-23): the closed message everywhere, no code accepted, no entrant email");
+  const before = emails().length;
+  const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
+  const HEADING = /We(?:&#x27;|')ve given away all the free Brain Maps\./;
+  const BODY = /Thank you for celebrating 10 years with us\. The response was incredible, and every free spot is now taken\. If you already booked, you(?:&#x27;|')re all set and we(?:&#x27;|')ll see you soon\. Want to start your own Brain Map\? Book a regular visit below\./;
+  /** The closed message and nothing to enter, request, count down or book with. */
+  const isClosedPage = (r) => {
+    const main = (r.text.match(/<main[\s\S]*?<\/main>/) ?? [""])[0];
+    const v = visible(main);
+    const buttons = main.match(/<a [^>]*class="[^"]*\bbtn\b[^"]*"[^>]*>/g) ?? [];
+    return r.status === 200 && HEADING.test(v) && BODY.test(v) && buttons.length === 1 && /href="\/contact"/.test(buttons[0]) && />Book a Brain Map</.test(main) && !/<form/.test(main) && !/<input/.test(main) && !/10years\/signup|ty-count|data-claim-gift|data-entry-form|data-winners|offer_code/.test(main);
+  };
+  for (const path of ["/10years", "/10years?sent=1&share=HBC-ABC123", "/10years?code=10Y-ABC123", "/10years?mode=live", "/10years/thank-you", "/10years/claim", "/10years/book/anything", "/10years/verify?t=whatever", "/10years/enter/whatever"]) {
+    const r = await get(path);
+    expect(`closed: ${path} shows the closed message with one button to /contact — no form, countdown or booking button`, isClosedPage(r), String(r.status));
+  }
+  const home10 = await get("/10years");
+  expect("closed: /10years is noindex and the assistant is off", /name="robots" content="noindex/.test(home10.text) && /data-assistant-off/.test(home10.text));
+  const rules = await get("/10years/rules");
+  expect("closed: /10years/rules is still the rules (200, the prize table, no closed message)", rules.status === 200 && rules.text.includes('data-arv="2838.85"') && !HEADING.test(rules.text));
+  expect("closed: the calendar file still answers", (await get("/10years/entries-open.ics")).status === 200);
+
+  // The form route: a stray post saves nothing and emails nobody.
+  const P = person("closed", "closed-check@example.test");
+  const post = await postForm("/10years/signup", { first_name: "Late", last_name: "Comer", email: P.email, phone: "615-555-0100", zip: "37064", age_rules: "on" }, P);
+  expect("closed: a post to /10years/signup → 303 to plain /10years", post.status === 303 && /\/10years$/.test(post.location), `${post.status} ${post.location}`);
+  expect("closed: it saved no person and no entry", (await dump("giveaway_people")).length === 0 && (await dump("giveaway_entries")).length === 0);
+
+  // The booking path: the closed message for any free-first-visit code, and for none.
+  for (const path of ["/contact?from=10years", "/contact?from=10years&code=10Y-ABC123"]) {
+    const r = await get(path);
+    expect(`closed: ${path} shows the closed message, not the booking form`, isClosedPage(r), String(r.status));
+  }
+  const cert = await get("/contact?from=10years&code=GIFT-MON");
+  expect("closed: a winner's gift certificate (GIFT-MON) still books", cert.status === 200 && /data-state="ok"/.test(cert.text) && /gift certificate GIFT-MON is ready/.test(visible(cert.text)) && !HEADING.test(cert.text));
+  const plain = await get("/contact");
+  expect("closed: plain /contact is the regular form", plain.status === 200 && /name="sms_consent"/.test(plain.text) && !HEADING.test(plain.text));
+  const book = await fetch(`${BASE}/api/consultation`, { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.201" }, body: JSON.stringify({ source: "giveaway", offer_code: "10Y-ABC123", first_name: "TEST Late Comer", phone: "0000000000", email: P.email, preferred_center: "Not sure yet", best_time: "Any time", source_page: "10years", sms_consent: false }) });
+  const bookJson = await book.json().catch(() => null);
+  expect("closed: booking with an unused code is refused (400) with the closed message", book.status === 400 && /given away all the free Brain Maps/.test(bookJson?.error ?? ""), `${book.status} ${JSON.stringify(bookJson)}`);
+
+  // The banner is gone from every page.
+  for (const path of ["/", "/lens-neurofeedback", "/locations"]) {
+    const r = await get(path);
+    expect(`closed: ${path} has no 10-year banner`, r.status === 200 && !/data-giveaway-banner|hbc10y-banner|data-hbc-banner/.test(r.text));
+  }
+
+  // The scheduled emails: at the Dec 1 reminder's time and the Dec 3 last call's, the cron sends nothing and schedules nothing.
+  for (const [label, at] of [["Dec 1, 9:05 AM", C.SCHEDULE.offerReminder.at], ["Dec 3, 9:05 AM", C.SCHEDULE.offerLastCall.at]]) {
+    await clock(new Date(at.getTime() + 5 * 60_000));
+    const j = await tick(`closed ${label}`);
+    expect(`closed, ${label} CT: the cron says emails cancelled — no job run, nothing sent`, j.ok === true && j.emails === "cancelled" && j.scheduled === 0 && j.sends.jobs === 0 && j.sends.sent === 0, JSON.stringify(j));
+  }
+  expect("closed: no scheduled_sends row was written", (await dump("scheduled_sends")).length === 0);
+  await clock(null);
+  expect("closed: not one email was sent in all of the above", emails().length === before, `${emails().length - before} sent`);
+}
+
 /* ── engine off: the hidden showcase and nothing else ──────────────────── */
 
 async function engineOffChecks() {
@@ -1099,7 +1171,9 @@ async function engineOffChecks() {
     const stages = ["/10years", "/10years?mode=notify", "/10years?mode=live", "/10years?mode=closed", "/10years?mode=thanks", "/10years/rules"];
     const hits = [];
     for (const path of stages) if (FORBIDDEN.test(visible((await get(path)).text))) hits.push(path);
-    expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
+    // The engine-off server runs on the real clock, and the reveal was Sat Nov 21, 7 PM CT: from then on the
+    // closed stage and the rules name the gift, as designed, so this only has something to assert before it.
+    if (Date.now() < C.SCHEDULE.giftReveal.at.getTime()) expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
     const rules = (await get("/10years/rules")).text;
     // The ask bar's input carries a placeholder= attribute when the assistant is built on; that is not rules text.
     const rulesWords = rules.replace(/\splaceholder="[^"]*"/g, "");

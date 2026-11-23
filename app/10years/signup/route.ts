@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkFormRateLimit, checkFormToken, formClientKey, guardEnforced } from "@/lib/form-guard";
+import { giveawayClosed } from "@/lib/giveaway/engine";
 import { showcaseActiveFor, showcaseFor } from "@/lib/giveaway/showcase";
 import { handleSignup } from "@/lib/giveaway/web";
 
@@ -24,6 +25,8 @@ export const dynamic = "force-dynamic";
  * back on the form with a plain "try again" — no row, no email.
  */
 export async function POST(request: Request) {
+  // Closed for good (Ben, 2026-11-23): no form posts here any more. A stray post reads nothing, saves nothing, emails nobody.
+  if (giveawayClosed()) return NextResponse.redirect(new URL("/10years", request.url), 303);
   // The showcase form posts with ?mode=; the real form posts without it (Ben, 2026-11-07).
   const modeParam = new URL(request.url).searchParams.get("mode") ?? undefined;
   if (showcaseActiveFor(modeParam)) {

@@ -621,7 +621,8 @@ export function pageMode(now: Date): PageMode {
  * with the engine ON (Ben, 2026-11-07): before notify-me start it is
  * already the real notify-me page, open to anyone with the URL. Only the
  * public signals wait for notifyMeStart — robots.txt, the sitemap, the meta
- * robots (tenYearsPublic) and the site banner (lib/giveaway/banner.ts).
+ * robots (tenYearsPublic). (The site banner waited too; it was removed on
+ * 2026-11-23.)
  */
 export function entryPageMode(now: Date): Exclude<PageMode, "hidden"> {
   const m = pageMode(now);

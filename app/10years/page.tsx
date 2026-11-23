@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import PageSchema from "@/components/PageSchema";
+import ClosedView from "@/components/giveaway/ClosedView";
+import { CLOSED_COPY, giveawayClosed } from "@/lib/giveaway/engine";
 import TenYearsView, { FormCard, MessageCard, ReminderCard, WinnersCard, YoureInCard } from "@/components/giveaway/TenYearsView";
 import { giveawayNow } from "@/lib/giveaway/clock";
 import { SCHEDULE, entryPageMode, giftRevealed, pageMode, spokenCentralDateTime } from "@/lib/giveaway/config";
@@ -58,6 +60,17 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function generateMetadata(): Promise<Metadata> {
+  // Closed (Ben, 2026-11-23): the snippet and the share preview say so, and the page leaves the index.
+  if (giveawayClosed()) {
+    const description = "Thank you for celebrating 10 years with us. Every free Brain Map has been given away.";
+    return {
+      ...pageMetadata("/10years"),
+      description,
+      robots: { index: false, follow: true },
+      openGraph: { ...(({ images: _default, ...rest }) => (void _default, rest))(SHARED_OPEN_GRAPH), type: "website", title: CLOSED_COPY.heading, description },
+      twitter: { card: "summary_large_image", title: CLOSED_COPY.heading, description },
+    };
+  }
   const indexable = tenYearsPublic();
   return {
     ...pageMetadata("/10years"),
@@ -73,6 +86,15 @@ export async function generateMetadata(): Promise<Metadata> {
 type Search = { code?: string; sent?: string; share?: string; eb?: string; already?: string; error?: string; ref?: string; mode?: string | string[]; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
 export default async function TenYearsPage({ searchParams }: { searchParams: Promise<Search> }) {
+  // Closed for good (Ben, 2026-11-23): the message and one button; nothing is read.
+  if (giveawayClosed()) {
+    return (
+      <>
+        <PageSchema path="/10years" />
+        <ClosedView />
+      </>
+    );
+  }
   const sp = await searchParams;
   const t = PAGES.tenYears;
   const ref = (sp.ref ?? "").toUpperCase().slice(0, 20);

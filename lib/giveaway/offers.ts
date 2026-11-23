@@ -9,20 +9,23 @@
 
 import { giveawayNow } from "./clock";
 import { DRAWINGS, PRIZE_USE_BY, giftCodeSlot, offerOpen, type Slot } from "./config";
-import { giveawayEngineEnabled } from "./engine";
+import { CLOSED_COPY, giveawayClosed, giveawayEngineEnabled } from "./engine";
 import type { OfferRow, PersonRow } from "./rows";
 import { giveawayStore, type GiveawayStore } from "./store";
 import { audit } from "./audit";
 
 export type OfferCheck =
   | { ok: true; offer: OfferRow; person: PersonRow; nearestCenter: "Nashville" | "Murfreesboro" | null }
-  | { ok: false; reason: "unavailable" | "unknown" | "expired" | "redeemed" };
+  | { ok: false; reason: "unavailable" | "unknown" | "expired" | "redeemed" | "closed" };
 
 export const OFFER_CODE_SHAPE = /^10Y-[A-Z0-9]{6}$/;
 
 export async function checkOffer(code: string, now = giveawayNow(), store: GiveawayStore | null = giveawayStore()): Promise<OfferCheck> {
   // No code has been issued while the engine is off, and the table may not exist.
   if (!giveawayEngineEnabled()) return { ok: false, reason: "unknown" };
+  // Every free Brain Map is given away (Ben, 2026-11-23): no code is accepted any more, and none is looked up.
+  // A code already redeemed keeps its booking — nothing here or anywhere voids one.
+  if (giveawayClosed()) return { ok: false, reason: "closed" };
   if (!store) return { ok: false, reason: "unavailable" };
   const c = code.trim().toUpperCase();
   if (!OFFER_CODE_SHAPE.test(c)) return { ok: false, reason: "unknown" };
@@ -40,6 +43,8 @@ export async function checkOffer(code: string, now = giveawayNow(), store: Givea
 /** The message a visitor sees for a refused code. */
 export function offerRefusalMessage(reason: Exclude<OfferCheck, { ok: true }>["reason"]): string {
   switch (reason) {
+    case "closed":
+      return CLOSED_COPY.line;
     case "expired":
       return "That 10-year code has expired — the offer closed on Dec 5. You can still request a free call.";
     case "redeemed":

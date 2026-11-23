@@ -26,6 +26,7 @@ import { capitalizeName } from "@/lib/name-case";
 import { RELEASE_JOB, holdEnv, holdMs, shouldHold } from "@/lib/held-notification";
 import { supabaseHeldStore } from "@/lib/held-notification-store";
 import { sweepDue } from "@/lib/release-job";
+import { giveawayClosed } from "@/lib/giveaway/engine";
 import { checkGiftCode, checkOffer, giftCenterFor, giftCodeRefusalMessage, offerRefusalMessage, redeemGift } from "@/lib/giveaway/offers";
 import { CALL_ME_TEXT } from "@/lib/call-consent";
 import { isUsPhone, looksLikeEmail } from "@/lib/lead-options";
@@ -618,7 +619,7 @@ export async function POST(request: Request) {
   }
   const offer = offerCode && !giftCert ? await checkOffer(offerCode) : null;
   if (source === "giveaway" && !giftCert && (!offer || !offer.ok)) {
-    return reply(htmlForm, request, { error: offerRefusalMessage(offer && !offer.ok ? offer.reason : "unknown") }, { status: 400 });
+    return reply(htmlForm, request, { error: offerRefusalMessage(offer && !offer.ok ? offer.reason : giveawayClosed() ? "closed" : "unknown") }, { status: 400 });
   }
 
   // The form and the chat both send first and last in one field under this
