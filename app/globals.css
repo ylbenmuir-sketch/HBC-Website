@@ -3708,28 +3708,41 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 
 /* ── /murfreesboro, the Murfreesboro ad landing page (Ben, 2026-11-22; one
    centered column since 2026-11-23) ─────────────────────────────────────
-   A short opt-in page on /start's parts (the header, the fields, the
-   button's serif, the footer are the .start-* rules above); only what
-   differs is here. Everything is centered in one column, 760px at most,
-   on ivory: a gold eyebrow, a large serif headline with a smaller pine
-   italic line under it, one sentence, the 16:9 frame, one pine button, a
-   quiet line and the guarantee. Then the footer. The form is not on the
-   page until the button is pressed (.mb-request, below). */
-.mb-hero { display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; padding: 22px 20px 44px; text-align: center; }
+   A short opt-in page on /start's parts (the header, the fields' markup,
+   the button's serif, the footer are the .start-* rules above); only what
+   differs is here. Everything is centered in one column on ivory: a gold
+   eyebrow, a large serif headline with a smaller pine italic line under
+   it, one sentence, the 16:9 frame, then the form — as wide as the frame —
+   with its button, a quiet line and the guarantee. Then the footer.
+
+   The gaps are a scale (Ben, 2026-11-23), so each piece stands alone:
+   16 / 20 / 32 / 40 / 48px from a 640px-wide screen up, and the same steps
+   in proportion on a phone (about 10 / 12 / 20 / 24 / 30px at 390). */
+.mb-hero {
+  --mb-gap-1: clamp(10px, 2.5vw, 16px);  /* eyebrow → headline */
+  --mb-gap-2: clamp(12px, 3.125vw, 20px); /* headline → italic line */
+  --mb-gap-3: clamp(18px, 5vw, 32px);     /* italic line → sentence */
+  --mb-gap-4: clamp(22px, 6.25vw, 40px);  /* sentence → frame */
+  --mb-gap-5: clamp(28px, 7.5vw, 48px);   /* frame → form */
+  /* The frame and the form share one width. */
+  --mb-col: 560px;
+  display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; padding: 22px 20px 48px; text-align: center;
+}
 .mb-page .start-eyebrow { font-size: 12px; letter-spacing: 0.18em; color: var(--gold-ink); }
-/* The headline's size is this page's own, and a clamp: two lines on a
-   phone from 360px up, two on a desktop. The italic line is its own row,
-   a step smaller. */
-.mb-hero h1 { margin: 10px 0 0; font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 9vw, 36px); line-height: 1.04; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
-.mb-hero h1 em { display: block; margin-top: 7px; font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: 0.62em; line-height: 1.15; letter-spacing: 0; color: var(--pine); }
-.mb-sub { max-width: 34em; margin: 12px 0 0; font-size: 16px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
+/* The headline's size is this page's own, and a clamp, cut to the default
+   line (73 characters): three balanced lines on a 360–430px phone, two on
+   a tablet and a desktop, no word left alone. The italic line is its own
+   row, a step smaller. */
+.mb-hero h1 { margin: var(--mb-gap-1) 0 0; font-family: var(--serif); font-weight: 600; font-size: clamp(27px, 7.8vw, 31px); line-height: 1.04; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
+.mb-hero h1 em { display: block; margin-top: var(--mb-gap-2); font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: 0.68em; line-height: 1.15; letter-spacing: 0; color: var(--pine); }
+.mb-sub { max-width: 34em; margin: var(--mb-gap-3) 0 0; font-size: 16px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
 /* The frame. The poster (next/image) is the bottom layer; the <video>,
    when there is one, sits over it and is transparent until it plays. With
    no clip: the photo and one small centered badge — a play mark and the
    question — on a pine pill; it is a label, not a control. With a clip:
    the same badge until it plays, then it goes and the two controls stay,
    top right; captions take the foot of the frame. */
-.mb-video { position: relative; width: 100%; aspect-ratio: 16 / 9; margin: 18px 0 0; overflow: hidden; border-radius: 12px; background: var(--pine); }
+.mb-video { position: relative; width: 100%; max-width: var(--mb-col); aspect-ratio: 16 / 9; margin: var(--mb-gap-4) 0 0; overflow: hidden; border-radius: 12px; background: var(--pine); }
 .mb-video img { object-fit: cover; }
 .mb-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .mb-video-label { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 9px; margin: 0; padding: 9px 16px 9px 13px; border-radius: 999px; background: rgba(22, 50, 47, 0.86); color: var(--ivory); font-family: var(--sans); font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: 0.01em; text-transform: none; white-space: nowrap; cursor: default; transition: opacity 0.3s; }
@@ -3742,77 +3755,52 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 .mb-video-controls button:focus-visible { outline: 2px solid var(--ivory); outline-offset: 2px; }
 /* Captions carry the clip while it is muted: readable at a phone's 350px frame. */
 .mb-video video::cue { font-family: var(--sans); font-size: 15px; line-height: 1.35; color: #fbf8f1; background: rgba(22, 50, 47, 0.9); }
-/* The one button: pine, ivory serif, as wide as the column on a phone. */
-.mb-cta { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: 100%; max-width: 420px; min-height: 58px; margin: 20px 0 0; padding: 0 28px; border-radius: 8px; background: var(--pine); color: var(--ivory); font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1; letter-spacing: 0.005em; text-decoration: none; transition: background 0.2s; }
-.mb-cta:hover { background: #0f2623; }
-.mb-cta:focus-visible { outline: 2px solid var(--pine); outline-offset: 3px; }
-.mb-cta-arrow { font-family: var(--sans); font-weight: 400; font-size: 18px; }
-.mb-quiet { margin: 13px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
-.mb-guarantee { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--slate); text-wrap: balance; }
-
-/* The request form (components/RequestDialog.tsx). Without JavaScript: a
-   plain section at the foot of the page, both of the form's screens shown
-   one under the other, one send button. With it (html.js): hidden until
-   the button is pressed, then over the page — a centered ivory card on a
-   pine veil on a desktop, the whole screen on a phone. */
-.mb-request { padding: 36px 20px 48px; border-top: 1px solid var(--line); scroll-margin-top: 70px; }
-.mb-request-card { position: relative; max-width: 440px; margin: 0 auto; outline: none; }
-.mb-request-backdrop, .mb-request-close { display: none; }
-.mb-request .mb-form { padding: 0; background: none; border-radius: 0; }
-html.js .mb-request { display: none; }
-html.js .mb-request.mb-request-open { position: fixed; inset: 0; z-index: 200; display: flex; padding: 0; border: 0; background: var(--ivory); }
-html.js .mb-request-open .mb-request-card { width: 100%; max-width: none; height: 100%; margin: 0; padding: 60px 22px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background: var(--ivory); }
-html.js .mb-request-open .mb-request-card > .mb-form { max-width: 440px; margin: 0 auto; }
-html.js .mb-request-open .mb-request-close { position: absolute; top: 8px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 22px; background: none; color: var(--ink); cursor: pointer; }
-html.js .mb-request-open .mb-request-close:hover { background: var(--ivory-2); }
-html.js .mb-request-open .mb-request-close:focus-visible { outline: 2px solid var(--pine); outline-offset: 0; }
-/* The two screens. The progress line is pine on a hairline track. */
-.mb-progress { display: none; height: 3px; margin: 0 0 22px; border-radius: 2px; background: var(--line); overflow: hidden; }
-.mb-progress span { display: block; width: 50%; height: 100%; border-radius: 2px; background: var(--pine); transition: width 0.3s; }
-.mb-steps[data-substep="2"] .mb-progress span { width: 100%; }
-.mb-step-count { display: none; margin: 0 0 8px; font-size: 12px; line-height: 1.3; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-ink); }
-.mb-steps .start-form-heading { font-size: 30px; }
-.mb-steps .start-form-sub { margin-bottom: 20px; }
-.mb-step + .mb-step { margin-top: 26px; }
-.mb-name-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-.mb-steps .start-add-email { margin-top: -8px; }
-.mb-steps-error { margin: 12px 0 0; font-size: 14.5px; line-height: 1.4; color: #9a3b2e; }
-.mb-page .mb-steps .start-submit { margin-top: 18px !important; }
-.mb-continue, .mb-back { display: none !important; }
-.mb-back { align-items: center; justify-content: center; width: 100%; min-height: 44px; margin: 6px 0 0; padding: 0; border: 0; background: none; font-family: var(--sans); font-size: 14.5px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-control); text-underline-offset: 3px; cursor: pointer; }
-html.js .mb-progress, html.js .mb-step-count { display: block; }
-html.js .mb-continue { display: inline-flex !important; }
-html.js .mb-back { display: inline-flex !important; }
-html.js .mb-steps[data-substep="1"] .mb-step-2, html.js .mb-steps[data-substep="2"] .mb-step-1 { display: none; }
-html.js .mb-step + .mb-step { margin-top: 0; }
+/* The form, on the page itself — no band, no card. One quiet centered
+   line, then three stacked fields with sans labels: a cream a shade
+   lighter than the page, the site's 3:1 control border at a soft radius,
+   56px tall. The text-message box, the pine button, the quiet line and
+   the guarantee follow. Labels and fields read left; the lines around
+   them are centered with the page. After the send, the follow-up
+   questions and the thank-you take this same place. */
+.mb-form { width: 100%; max-width: var(--mb-col); margin: var(--mb-gap-5) 0 0; text-align: left; scroll-margin-top: 80px; }
+.mb-form .start-form-sub { margin: 0 0 20px; text-align: center; font-size: 16px; line-height: 1.4; color: var(--ink); }
+.mb-page .mb-form .start-fields label { margin: 0 0 7px; font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink); }
+.mb-page .mb-form .start-fields input:not([type="checkbox"]), .mb-page .mb-form .start-fields select { height: 56px; padding: 0 16px; margin: 0 0 18px; border: 1px solid var(--line-control); border-radius: 10px; background-color: #fffdf8; font-size: 17px; }
+.mb-page .mb-form .start-fields input:not([type="checkbox"]):focus-visible, .mb-page .mb-form .start-fields select:focus-visible { outline: 2px solid var(--pine); outline-offset: 1px; border-color: var(--pine); }
+.mb-page .mb-form .start-fields input[type="email"] { margin-bottom: 8px; }
+/* The text-message box keeps /start's own look: the field-label rule above
+   must not reach its label. */
+.mb-page .mb-form .start-fields .sms-consent label { margin: 0; font-size: 12.5px; font-weight: 400; }
+.mb-page .mb-form .sms-consent { margin-top: 4px; }
+.mb-page .mb-form .sms-consent-note { color: var(--slate); }
+.mb-page .mb-form .start-fields .start-submit { height: 60px; margin-top: 20px !important; border-radius: 10px; font-size: 22px; }
+.start-quiet { margin: 14px 0 0; text-align: center; font-size: 14px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
+.mb-form .start-guarantee { margin-top: 6px; font-size: 12.5px; color: var(--slate); text-wrap: balance; }
+/* The follow-up and the thank-you, in the form's place. */
+.mb-form .start-step { text-align: center; }
+.mb-form .start-step .start-form-sub { margin-bottom: 24px; }
+.mb-form .start-follow { text-align: left; }
+.mb-page .mb-form .start-follow select { margin-bottom: 0; }
+.mb-page .mb-form .start-follow .start-submit { margin-top: 0 !important; }
 /* 320px phones: the Murfreesboro number is 8px wider than the header has. */
 @media (max-width: 359px) {
   header.site.mb-header .start-tel { gap: 5px; padding: 0; font-size: 13.5px; letter-spacing: 0; }
   header.site.mb-header .start-tel svg { width: 16px; height: 16px; }
-  .mb-cta { font-size: 20px; padding: 0 16px; }
+  .mb-page .mb-form .start-fields .start-submit { font-size: 20px; padding: 0 12px; }
 }
 @media (min-width: 701px) {
-  .mb-hero { padding: 34px 20px 56px; }
-  .mb-hero h1 { font-size: clamp(44px, 4.4vw, 54px); line-height: 1.02; }
-  .mb-sub { margin-top: 14px; font-size: 17.5px; }
-  .mb-video { margin-top: 22px; border-radius: 14px; }
+  .mb-hero { padding: 36px 20px 72px; }
+  .mb-hero h1 { font-size: clamp(40px, 5.6vw, 45px); line-height: 1.04; }
+  .mb-sub { font-size: 17.5px; }
+  .mb-video { border-radius: 14px; }
   .mb-video-label { padding: 11px 20px 11px 16px; font-size: 15.5px; }
-  .mb-cta { margin-top: 24px; min-height: 60px; }
-  .mb-quiet { margin-top: 14px; font-size: 15px; }
-  .mb-guarantee { font-size: 13.5px; }
-  /* The dialog: a card on a pine veil. */
-  html.js .mb-request.mb-request-open { align-items: center; justify-content: center; padding: 24px; background: none; }
-  html.js .mb-request-open .mb-request-backdrop { position: absolute; inset: 0; display: block; background: rgba(22, 50, 47, 0.62); }
-  html.js .mb-request-open .mb-request-card { max-width: 500px; height: auto; max-height: calc(100vh - 48px); padding: 44px 40px 34px; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 30, 28, 0.28); }
-  .mb-steps .start-form-heading { font-size: 34px; }
+  .mb-form .start-form-sub { margin-bottom: 24px; font-size: 17px; }
+  .start-quiet { font-size: 15px; }
+  .mb-form .start-guarantee { font-size: 13.5px; }
 }
 @media (min-width: 900px) {
   header.site.mb-header .nav { max-width: 1180px; }
-  .mb-hero { padding-top: 28px; }
-  /* Keeps the button on a short desktop's first screen: the frame gives up
-     width before the page gives up the fold. 760px wide from a 854px-tall
-     window up; never under 440px. */
-  .mb-video { width: min(100%, max(440px, calc((100vh - 426px) * 1.7778))); }
+  .mb-hero { padding-top: 30px; }
 }
 
 /* ── /contact on a desktop: step one inside 1280×800 (Ben, 2026-11-12) ────

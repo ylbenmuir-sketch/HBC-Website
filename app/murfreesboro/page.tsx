@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import BrainMapVideo from "@/components/BrainMapVideo";
 import ContactForm from "@/components/ContactForm";
-import RequestDialog from "@/components/RequestDialog";
 import { getVideo } from "@/lib/videos";
 import { cleanHook } from "@/lib/attribution";
 import { SITE_NAME } from "@/lib/site-config";
-import { START_OFFER } from "@/lib/start";
 import { startCenters } from "@/lib/start-centers";
-import { BRAIN_MAP_VIDEO, MURFREESBORO_OFFER, REQUEST_ANCHOR, murfreesboroHook } from "@/lib/murfreesboro";
+import { BRAIN_MAP_VIDEO, MURFREESBORO_OFFER, murfreesboroHook } from "@/lib/murfreesboro";
 
 /**
  * /murfreesboro — the Murfreesboro paid-ad landing page (Ben, 2026-11-22;
@@ -18,19 +16,20 @@ import { BRAIN_MAP_VIDEO, MURFREESBORO_OFFER, REQUEST_ANCHOR, murfreesboroHook }
  *
  * The rule it is cut by: if it does not raise the share of qualified
  * visitors who send the form, it is not here. So, top to bottom, centered
- * in one narrow column: the logo and the Murfreesboro phone; a gold
- * eyebrow; a short serif headline with a smaller italic line under it; one
- * sentence; the "What is a Brain Map?" frame; one button; the price and
- * reviews on one quiet line; the guarantee. Then the legal footer. Nothing
- * else — no bullets, no how-it-works, no reviews wall, no FAQ.
+ * in one narrow column with air between the pieces: the logo and the
+ * Murfreesboro phone; a gold eyebrow; a short serif headline with a
+ * smaller italic line under it; one sentence; the "What is a Brain Map?"
+ * frame; then the form, as wide as the frame — one quiet line, name, phone
+ * and email (all three required), the text-message box, the button, the
+ * price and reviews on one quiet line, the guarantee. Then the legal
+ * footer. Nothing else — no bullets, no how-it-works, no reviews wall, no
+ * FAQ, no dialog.
  *
- * - The button opens the request form over the page (components/
- *   RequestDialog.tsx): a card on a desktop, the full screen on a phone.
- *   It is /start's form component in its "start" variant — same route,
- *   spam guard, funnel events, Key event, follow-up and thank-you — asked
- *   as two short screens (`stepped`): name, then phone, optional email and
- *   the text-message box. Without JavaScript the button is a link to the
- *   same form, laid out plainly at the foot of the page.
+ * - The form is /start's component in its "start" variant — same route,
+ *   spam guard, funnel events, Key event — with `requireAll`. After the
+ *   send, the same follow-up questions and thank-you take the form's
+ *   place on the page. It is plain HTML in the first response, so it is
+ *   the same form without JavaScript.
  * - One center. The form's center is locked to Murfreesboro (a ?center= on
  *   the link is ignored), the header shows that center's line, and nothing
  *   on the page names another center.
@@ -80,31 +79,25 @@ export default async function MurfreesboroAdPage({
         </h1>
         <p className="mb-sub">{MURFREESBORO_OFFER.sub}</p>
         <BrainMapVideo video={BRAIN_MAP_VIDEO} />
-        {/* The page's one action. A link, so it works without JavaScript
-            (it jumps to the form); with it, RequestDialog opens the form. */}
-        <a className="mb-cta" href={`#${REQUEST_ANCHOR}`}>
-          {START_OFFER.button}
-          <span className="mb-cta-arrow" aria-hidden="true">
-            →
-          </span>
-        </a>
-        <p className="mb-quiet">{MURFREESBORO_OFFER.quiet}</p>
-        <p className="mb-guarantee">{MURFREESBORO_OFFER.guarantee}</p>
-      </section>
-
-      <RequestDialog label="Request a Brain Map Session">
-        <div className="start-form mb-form" id="send-a-message">
+        {/* The form, inline under the frame and as wide as it. It is the
+            page's one action, and it is here with or without JavaScript. */}
+        <div className="mb-form" id="send-a-message">
           <ContactForm
             centerPhones={[{ name: center.name, phone: center.phone }]}
             video={FIRST_VISIT_VIDEO}
             variant="start"
             hook={cleanHook(h)}
             lockedCenter="Murfreesboro"
-            stepped
-            startCopy={{ formSub: MURFREESBORO_OFFER.formSub }}
+            requireAll
+            startCopy={{
+              formHeading: null,
+              formSub: MURFREESBORO_OFFER.formSub,
+              quiet: MURFREESBORO_OFFER.quiet,
+              guarantee: MURFREESBORO_OFFER.guarantee,
+            }}
           />
         </div>
-      </RequestDialog>
+      </section>
     </div>
   );
 }

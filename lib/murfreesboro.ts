@@ -7,7 +7,7 @@
  * It is /start's sibling, not its replacement: the same form, the same
  * headline codes (`h`, lib/start.ts), the same offer name and button. The
  * differences are here — one center, a headline of its own for a link that
- * names no code, a video slot, and the lines around the one button.
+ * names no code, a video slot, and the lines around the form.
  *
  * A health business, as on /start: the address is a place name, never a
  * condition, and the <title> and description are the same for every
@@ -20,21 +20,14 @@ import { START_DEFAULT_HOOK, START_OFFER, startHook, type StartHook } from "./st
 export const MURFREESBORO_AD_PATH = "/murfreesboro";
 
 /**
- * The form's id on the page: the button is a link to `#request`, and
- * components/RequestDialog.tsx is what it points at. Here, not in that
- * client file, because the server page reads it too.
- */
-export const REQUEST_ANCHOR = "request";
-
-/**
  * The headline for a link with no code (or g1), in the two-part shape
  * /start's take: `lead` is the large serif line, `tail` the smaller pine
  * italic line under it (Ben, 2026-11-23).
  */
 export const MURFREESBORO_DEFAULT_HOOK: StartHook = {
-  lead: "See which parts of your brain are in overdrive.",
+  lead: "See which parts of your brain are in overdrive, and which are running low.",
   tail: "And what to do about it.",
-  headline: "See which parts of your brain are in overdrive. And what to do about it.",
+  headline: "See which parts of your brain are in overdrive, and which are running low. And what to do about it.",
 };
 
 /**
@@ -56,10 +49,10 @@ export const MURFREESBORO_OFFER = {
   eyebrow: `Murfreesboro · ${START_OFFER.name}`,
   /** One sentence pair under the headline — a line, not a paragraph. */
   sub: "A 60-minute Brain Map. You leave with your map and a written plan.",
-  /** Under each step's question in the form: why we ask for a number. */
+  /** The one quiet line over the fields: why we ask for a number. */
   formSub: "We’ll call to find a time that works for you.",
   /**
-   * One quiet line directly under the button. The review figures are the
+   * One quiet line directly under the form's button. The review figures are the
    * site's own verified constants (lib/site-config.ts), never typed here.
    */
   quiet: `$${BRAIN_MAP_PRICE_USD} · 60 minutes · ★ ${REVIEWS.value.rating} from ${REVIEW_COUNT_ROUNDED} Google reviews`,

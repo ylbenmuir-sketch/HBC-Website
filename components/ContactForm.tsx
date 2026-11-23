@@ -301,7 +301,7 @@ export default function ContactForm({
   initialCenter = null,
   lockedCenter = null,
   startCopy,
-  stepped = false,
+  requireAll = false,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -334,23 +334,23 @@ export default function ContactForm({
   /**
    * "start" variant: the page's own words around the fields, where they
    * differ from /start's (lib/start.ts → START_OFFER). `formHeading: null`
-   * drops the heading. The button's words are never a prop.
+   * drops the heading; `quiet` is one line between the button and the
+   * guarantee. The button's words are never a prop.
    */
   startCopy?: {
     formHeading?: string | null;
     formSub?: string;
     guarantee?: string;
+    quiet?: string;
   };
   /**
-   * "start" variant, /murfreesboro (Ben, 2026-11-23): step one asked as two
-   * short screens — first and last name, then the phone, the optional
-   * email and the text-message box — with a progress line over them. One
-   * request, sent from the second screen: the same body, guard, funnel
-   * events and Key event. Both screens are in the server's HTML and CSS
-   * shows one at a time (app/globals.css → .mb-steps), so without
-   * JavaScript the whole form is on the page at once.
+   * "start" variant, /murfreesboro (Ben, 2026-11-23): name, phone and email
+   * are all asked and all required. The email field is on the page from
+   * the first HTML — no "Add email (optional)" link — and the labels are
+   * plain "Name", "Phone", "Email". The text-message box stays as it is
+   * everywhere: unticked, never required.
    */
-  stepped?: boolean;
+  requireAll?: boolean;
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -359,10 +359,6 @@ export default function ContactForm({
 
   // Step one.
   const [givenName, setGivenName] = useState("");
-  // The stepped form (/murfreesboro) asks for the last name in its own
-  // field; the two are joined into the one name the route has always saved.
-  const [lastName, setLastName] = useState("");
-  const [subStep, setSubStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   // /start keeps the email field behind "Add email (optional)" (Ben,
@@ -456,14 +452,6 @@ export default function ContactForm({
     }
   }, [emailOpen]);
 
-  // The stepped form: the next screen's first field takes the cursor.
-  const subStepMoved = useRef(false);
-  useEffect(() => {
-    if (!stepped || !subStepMoved.current) return;
-    subStepMoved.current = false;
-    document.getElementById(subStep === 2 ? "phone" : "first-name")?.focus();
-  }, [stepped, subStep]);
-
   const toggleConcern = (c: string) =>
     setSelectedConcerns((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
@@ -500,22 +488,15 @@ export default function ContactForm({
   /* ── Step one: save the request, start the lead ────────────────────── */
   async function sendRequest(e: React.FormEvent) {
     e.preventDefault();
-    // The stepped form's first screen: "Continue" (or Enter) checks the
-    // name and shows the second. Nothing is sent yet.
-    if (stepped && subStep === 1) {
-      if (!givenName.trim()) return refuse("missing_name", "Please add your first name.", "first-name");
-      setStatus("idle");
-      setErrorMessage("");
-      setInvalidField(null);
-      subStepMoved.current = true;
-      setSubStep(2);
-      return;
-    }
     trackFunnel("step1_submit_attempt", pathname);
-    const name = stepped ? [givenName.trim(), lastName.trim()].filter(Boolean).join(" ") : givenName.trim();
+    const name = givenName.trim();
     const tel = phone.trim();
     const mail = email.trim();
     if (!name) return refuse("missing_name", "Please add your name.", "first-name");
+    // All three required (/murfreesboro): the same funnel reason as a
+    // request with no way to reach her, so the event's values do not change.
+    if (requireAll && !tel) return refuse("missing_contact", "Please add your phone number.", "phone");
+    if (requireAll && !mail) return refuse("missing_contact", "Please add your email.", "email");
     if (!tel && !mail) {
       // /start: the email field is behind a link, so put it on the page —
       // the message offers it as the other way to be reached.
@@ -525,7 +506,7 @@ export default function ContactForm({
     // A real US number: in-service area code, dialable exchange (the spam
     // guard, 2026-11-08 — the route holds it to the same check).
     if (tel && !isUsPhone(tel)) {
-      return refuse("bad_phone", "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
+      return refuse("bad_phone", requireAll ? "That phone number doesn't look right — please check it." : "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
     }
     if (mail && !looksLikeEmail(mail)) {
       return refuse("bad_email", "That email address doesn't look right — please check it.", "email");
@@ -883,14 +864,14 @@ export default function ContactForm({
   const invalid = (id: string) => (invalidField === id ? true : undefined);
   const isStart = variant === "start";
   const startHeading = startCopy?.formHeading === undefined ? START_OFFER.formHeading : startCopy.formHeading;
-  const showEmail = !isStart || emailOpen || email.length > 0;
+  const showEmail = !isStart || requireAll || emailOpen || email.length > 0;
   const emailField = showEmail && (
     <>
       {/* The label says the either-or (Ben, 2026-11-12): the sentence that
           used to sit above the pair is gone on every width. Not on the
           giveaway path, where the phone is the optional one. */}
       <label htmlFor="email">
-        Email{!giveaway && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
+        Email{!giveaway && !requireAll && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
       </label>
       <input
         id="email"
@@ -902,183 +883,10 @@ export default function ContactForm({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-invalid={invalid("email")}
+        required={requireAll || undefined}
       />
     </>
   );
-  // The text-message consent block and the honeypot, shared by both
-  // layouts of step one so the words and the fields cannot drift apart.
-  const smsConsentBlock = (
-      <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
-        <input
-          id="sms-consent"
-          name="sms_consent"
-          type="checkbox"
-          checked={smsConsent}
-          onChange={(e) => setSmsConsent(e.target.checked)}
-          aria-describedby="sms-consent-note"
-        />
-        <label htmlFor="sms-consent">{FORM_CONSENT_LABEL}</label>
-        <p className="sms-consent-note" id="sms-consent-note">
-          {FORM_CONSENT_PARTS.map((part, i) =>
-            // ScannerText: the "&" in "msg & data rates" reaches the raw
-            // HTML as itself, for scanners that match bytes.
-            typeof part === "string" ? (
-              <ScannerText key={i} text={part} />
-            ) : (
-              <a key={i} href={part.href} target="_blank" rel="noopener">
-                {part.label}
-              </a>
-            )
-          )}
-        </p>
-      </div>
-  );
-  const honeypot = (
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          clip: "rect(0 0 0 0)",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <label htmlFor="website">Website</label>
-        <input
-          id="website"
-          name="website"
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          value={website}
-          onChange={(e) => setWebsite(e.target.value)}
-        />
-      </div>
-  );
-
-  /* ── Step one, as two screens (/murfreesboro; Ben, 2026-11-23) ─────── */
-  if (isStart && stepped) {
-    const errorLine = status === "error" && (
-      <p role="alert" className="mb-steps-error">
-        {errorMessage}
-      </p>
-    );
-    const sub = startCopy?.formSub ?? START_OFFER.formSub;
-    return (
-      <form
-        className="form form-compact start-fields mb-steps"
-        data-substep={subStep}
-        action="/api/consultation"
-        method="post"
-        onSubmit={sendRequest}
-        onFocus={onTouch}
-        onPointerDown={onTouch}
-        onInput={onFirstInteraction}
-        aria-label={START_OFFER.formHeading}
-        noValidate
-      >
-        {hook && <input type="hidden" name="hook" value={hook} />}
-        <input type="hidden" name="preferred_center" value={preferredCenter ?? ""} />
-        <input type="hidden" name="sms_consent_text" value={FORM_CONSENT_TEXT} />
-        <input type="hidden" name="source_page" value={pathname} />
-
-        <div className="mb-progress" role="progressbar" aria-label="Step" aria-valuemin={1} aria-valuemax={2} aria-valuenow={subStep} aria-valuetext={`Step ${subStep} of 2`}>
-          <span />
-        </div>
-
-        <div className="mb-step mb-step-1">
-          <p className="mb-step-count">Step 1 of 2</p>
-          <h2 className="start-form-heading">What’s your name?</h2>
-          <p className="start-form-sub">{sub}</p>
-          <div className="mb-name-row">
-            <div>
-              <label htmlFor="first-name">First</label>
-              <input
-                id="first-name"
-                name="first_name"
-                autoComplete="given-name"
-                autoCapitalize="words"
-                value={givenName}
-                onChange={(e) => setGivenName(e.target.value)}
-                aria-invalid={invalid("first-name")}
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="last-name">Last</label>
-              <input
-                id="last-name"
-                name="last_name"
-                autoComplete="family-name"
-                autoCapitalize="words"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-            </div>
-          </div>
-          {subStep === 1 && errorLine}
-          <button className="btn btn-primary start-submit mb-continue" style={{ width: "100%" }} type="submit">
-            Continue
-            <span className="start-submit-arrow" aria-hidden="true">
-              →
-            </span>
-          </button>
-        </div>
-
-        <div className="mb-step mb-step-2">
-          <p className="mb-step-count">Step 2 of 2</p>
-          <h2 className="start-form-heading">Best number to reach you?</h2>
-          <p className="start-form-sub">{sub}</p>
-          <label htmlFor="phone">Phone</label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            aria-invalid={invalid("phone")}
-          />
-          {!showEmail && (
-            <button
-              type="button"
-              className="start-add-email"
-              aria-expanded={false}
-              onClick={() => {
-                focusEmail.current = true;
-                setEmailOpen(true);
-              }}
-            >
-              Add email (optional)
-            </button>
-          )}
-          {emailField}
-          {smsConsentBlock}
-          {honeypot}
-          {subStep === 2 && errorLine}
-          <button className="btn btn-primary start-submit" style={{ width: "100%" }} type="submit" disabled={status === "submitting"}>
-            {status === "submitting" ? "Sending…" : START_OFFER.button}
-          </button>
-          <button
-            type="button"
-            className="mb-back"
-            onClick={() => {
-              setStatus("idle");
-              subStepMoved.current = true;
-              setSubStep(1);
-            }}
-          >
-            Back
-          </button>
-        </div>
-      </form>
-    );
-  }
-
   return (
     <form
       // /start (Ben, 2026-11-13): no card — the fields sit on the page.
@@ -1163,7 +971,7 @@ export default function ContactForm({
             {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
           </>
         ) : isStart ? (
-          "Phone number"
+          requireAll ? "Phone" : "Phone number"
         ) : (
           "Phone"
         )}
@@ -1177,6 +985,7 @@ export default function ContactForm({
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         aria-invalid={invalid("phone")}
+        required={requireAll || undefined}
       />
 
       {/* Everywhere but /start the email field comes before the center. */}
@@ -1256,7 +1065,30 @@ export default function ContactForm({
           <label htmlFor="call-me">{CALL_ME_TEXT}</label>
         </div>
       ) : (
-        smsConsentBlock
+      <div className={`sms-consent${phone.trim() ? "" : " sms-consent-idle"}`}>
+        <input
+          id="sms-consent"
+          name="sms_consent"
+          type="checkbox"
+          checked={smsConsent}
+          onChange={(e) => setSmsConsent(e.target.checked)}
+          aria-describedby="sms-consent-note"
+        />
+        <label htmlFor="sms-consent">{FORM_CONSENT_LABEL}</label>
+        <p className="sms-consent-note" id="sms-consent-note">
+          {FORM_CONSENT_PARTS.map((part, i) =>
+            // ScannerText: the "&" in "msg & data rates" reaches the raw
+            // HTML as itself, for scanners that match bytes.
+            typeof part === "string" ? (
+              <ScannerText key={i} text={part} />
+            ) : (
+              <a key={i} href={part.href} target="_blank" rel="noopener">
+                {part.label}
+              </a>
+            )
+          )}
+        </p>
+      </div>
       )}
 
       {/*
@@ -1265,7 +1097,29 @@ export default function ContactForm({
         order, and hidden from assistive tech. Left in the DOM and left
         submitting, because a honeypot only works if a bot can find it.
       */}
-      {honeypot}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+      </div>
 
       {status === "error" && (
         <p role="alert" style={{ color: "#9a3b2e", fontSize: 14.5, marginTop: 16 }}>
@@ -1294,7 +1148,10 @@ export default function ContactForm({
       </button>
       {variant === "start" ? (
         // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
-        <p className="start-guarantee">{startCopy?.guarantee ?? START_OFFER.guarantee}</p>
+        <>
+          {startCopy?.quiet && <p className="start-quiet">{startCopy.quiet}</p>}
+          <p className="start-guarantee">{startCopy?.guarantee ?? START_OFFER.guarantee}</p>
+        </>
       ) : (
         <p className="micro" style={{ textAlign: "center" }}>
           No payment details, no intake forms today. We never share your
