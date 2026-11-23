@@ -49,6 +49,7 @@ import {
   verifiedOr,
   PHONE_DISPLAY,
   PHONE_TEL,
+  PROOF_LINE,
   SHOW_PHONE,
 } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
@@ -199,8 +200,13 @@ export default function HomePage() {
                   where `.hero-reassure-m` says it in one line. The same
                   line is under TalkCta on the concern pages. */}
               <CtaReassure />
-              {/* The compact proof line that sat here moved into the trust row
-                  under the hero (Ben, 2026-11-22), at every width. */}
+              {/* The one-line proof under the buttons, from 761px up (Ben,
+                  2026-11-22): PROOF_LINE in lib/site-config.ts — the same
+                  rating, review count, session count and founding year the
+                  trust row under the hero prints, from the same constants.
+                  Not on a phone, where the trust row is the next thing on
+                  the screen (globals.css `.hero-proof`). */}
+              <p className="hero-proof">{PROOF_LINE}</p>
               {/* The number itself, as a call and a text (Ben, 2026-11-02),
                   reporting contact_link_click with location "home_hero".
                   Not shown at any width since 2026-11-02 (Ben): the header
