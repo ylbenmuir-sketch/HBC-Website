@@ -21,6 +21,7 @@ import { PAGES as GIVEAWAY_PAGES } from "@/lib/giveaway/copy";
 import { giveawayEngineEnabled } from "@/lib/giveaway/engine";
 import { startCenters } from "@/lib/start-centers";
 import StartFooter from "@/components/StartFooter";
+import MurfreesboroFooter from "@/components/MurfreesboroFooter";
 import "@/lib/content-validation";
 import "@/lib/config-validation";
 import "./globals.css";
@@ -221,7 +222,7 @@ export default function RootLayout({
           <main id="main" tabIndex={-1}>
             {children}
           </main>
-          <RouteFooter full={<Footer />} slim={<SlimFooter />} start={<StartFooter />} />
+          <RouteFooter full={<Footer />} slim={<SlimFooter />} start={<StartFooter />} murfreesboro={<MurfreesboroFooter />} />
           {/* Site assistant — OFF. Renders only with
               NEXT_PUBLIC_FEATURE_ASSISTANT=true, which is set nowhere: not in
               .env.example, not in draft mode, not in dev. Wired in so Ben can

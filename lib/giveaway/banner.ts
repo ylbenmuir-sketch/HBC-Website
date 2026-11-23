@@ -38,9 +38,10 @@ export const BANNER_BOUNDS: readonly [number, number, number, number] = [
 /** Routes the bar never shows on. */
 export function bannerExcludedPath(path: string): boolean {
   // /start (2026-11-11): the ad landing page has one job and no exits.
+  // /murfreesboro (2026-11-22): the Murfreesboro ad page, the same.
   // /contact (Ben, 2026-11-12): the bar cost the form 57px of a phone's
   // first screen and offered an exit from the page whose job is the request.
-  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/") || path === "/start" || path.startsWith("/start/") || path === "/contact" || path.startsWith("/contact/");
+  return path.startsWith("/10years") || path === "/admin" || path.startsWith("/admin/") || path === "/start" || path.startsWith("/start/") || path === "/murfreesboro" || path.startsWith("/murfreesboro/") || path === "/contact" || path.startsWith("/contact/");
 }
 
 export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b: readonly number[] = BANNER_BOUNDS): BannerMode {
@@ -58,7 +59,7 @@ export function bannerModeAt(nowMs: number, path: string, dismissed: boolean, b:
  * ES5, with the bounds baked in from config. Any error leaves the bar off.
  */
 export function bannerScript(b: readonly number[] = BANNER_BOUNDS): string {
-  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0||p==="/start"||p.indexOf("/start/")===0||p==="/contact"||p.indexOf("/contact/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
+  return `(function(){var m="off";try{var p=location.pathname,t=Date.now(),b=${JSON.stringify(b)};if(!(p.indexOf("/10years")===0||p==="/admin"||p.indexOf("/admin/")===0||p==="/start"||p.indexOf("/start/")===0||p==="/murfreesboro"||p.indexOf("/murfreesboro/")===0||p==="/contact"||p.indexOf("/contact/")===0)){if(t>=b[0]&&t<b[1])m="notify";else if(t>=b[1]&&t<b[2])m="live";else if(t>=b[2]&&t<=b[3])m="closed";if(m!=="off"){var s=null;try{s=sessionStorage.getItem(${JSON.stringify(BANNER_STORAGE_KEY)})}catch(e){}if(s==="0")m="off"}}}catch(e){m="off"}document.documentElement.setAttribute("data-hbc-banner",m)})();`;
 }
 
 /**

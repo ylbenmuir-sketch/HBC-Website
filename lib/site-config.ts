@@ -140,11 +140,14 @@ export const FEATURE_ASSISTANT =
  * clients is two buttons, and the Instagram landing page carries the
  * contact form itself (the /contact reasoning). Neither is a page to chat on.
  *
+ * /murfreesboro (2026-11-22): the Murfreesboro ad landing page, /start's
+ * sibling — the form is the page, and it has no exits. On both lists.
+ *
  * Path prefixes, matched the way the layout audit matches them: the route
  * itself and anything beneath it. Read by components/BottomBarContext.tsx,
  * which is the one place that decides what is at the bottom of the screen.
  */
-export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin", "/review", "/start"] as const;
+export const ASSISTANT_SUPPRESSED_ROUTES = ["/contact", "/admin", "/review", "/start", "/murfreesboro"] as const;
 
 /**
  * The window (decision 14): /10years from the notify-me date through the
@@ -170,7 +173,7 @@ export const ASSISTANT_SUPPRESSED_WINDOW = { route: "/10years", from: CHAT_SUPPR
  * form (2026-11-09), and /review is two buttons a client was texted to
  * press. Path prefixes, matched like the list above.
  */
-export const MOBILE_BAR_SUPPRESSED_ROUTES = ["/contact", "/admin", "/10years", "/review", "/start"] as const;
+export const MOBILE_BAR_SUPPRESSED_ROUTES = ["/contact", "/admin", "/10years", "/review", "/start", "/murfreesboro"] as const;
 
 /** True when the assistant must not render on this pathname, whatever the date. */
 export function assistantSuppressedOn(pathname: string | null): boolean {

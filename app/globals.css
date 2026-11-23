@@ -3706,6 +3706,75 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .start-footer-in { padding: 0 48px; }
 }
 
+/* ── /murfreesboro, the Murfreesboro ad landing page (Ben, 2026-11-22) ───
+   A short opt-in page on /start's parts (the header, the sage form band,
+   the fields, the button, the footer are the .start-* rules above); only
+   what differs is here. Phone, top to bottom: a gold eyebrow, the serif
+   headline with its last words in the pine italic, one sentence, the 16:9
+   video slot, then the form band; under it three lines between hairlines
+   and the footer. Desktop (900px and up): headline, sentence and video on
+   the left, the form on the right, all inside a 1280×720 first screen. */
+.mb-pane { padding: 20px 20px 22px; }
+.mb-page .start-eyebrow { font-size: 12px; letter-spacing: 0.18em; color: var(--gold-ink); }
+.mb-pane h1 { margin: 9px 0 11px; font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.03; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
+.mb-pane h1 em { font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--pine); }
+/* The video slot. The poster (next/image) is the bottom layer; the <video>,
+   when there is one, sits over it and is transparent until it plays. The
+   label is on a pine scrim at the foot of the frame: ivory on it is 9:1
+   and up where the type sits. Once a clip plays, label and scrim go — the
+   captions take that space — and the two controls stay, top right. */
+.mb-video { position: relative; aspect-ratio: 16 / 9; margin: 16px 0 0; overflow: hidden; border-radius: 10px; background: var(--pine); }
+.mb-video img { object-fit: cover; }
+.mb-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mb-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(22, 50, 47, 0.92) 0%, rgba(22, 50, 47, 0.7) 24%, rgba(22, 50, 47, 0) 54%); pointer-events: none; transition: opacity 0.3s; }
+.mb-video-label { position: absolute; z-index: 1; left: 16px; right: 16px; bottom: 13px; display: flex; flex-direction: column; gap: 3px; margin: 0; text-align: left; letter-spacing: 0; text-transform: none; color: var(--ivory); transition: opacity 0.3s; }
+.mb-video-title { font-family: var(--serif); font-weight: 600; font-size: 23px; line-height: 1.1; }
+.mb-video-soon { font-size: 11.5px; line-height: 1.3; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.mb-video-started::after, .mb-video-started .mb-video-label { opacity: 0; }
+.mb-video-controls { position: absolute; z-index: 2; top: 8px; right: 8px; display: flex; gap: 6px; }
+.mb-video-controls button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 22px; background: rgba(22, 50, 47, 0.88); color: var(--ivory); font-family: var(--sans); font-size: 13.5px; font-weight: 600; line-height: 1; cursor: pointer; }
+.mb-video-controls button:focus-visible { outline: 2px solid var(--ivory); outline-offset: 2px; }
+/* Captions carry the clip while it is muted: readable at a phone's 350px frame. */
+.mb-video video::cue { font-family: var(--sans); font-size: 15px; line-height: 1.35; color: #fbf8f1; background: rgba(22, 50, 47, 0.9); }
+/* The form band: no heading here, so the one line over the fields leads. */
+.mb-form .start-form-sub { font-size: 16px; font-weight: 600; }
+.mb-form .start-add-email { margin-top: -8px; }
+.mb-form .start-guarantee { text-wrap: balance; }
+.start-form-meta { justify-content: center; gap: 2px 18px; margin-top: 8px; font-size: 13px; }
+/* Under the form: exactly three lines. Serif, a short gold rule before
+   each, hairlines between — no heading, no icons. */
+.mb-points { padding: 38px 20px 44px; }
+.mb-points ul { list-style: none; max-width: 640px; margin: 0 auto; padding: 0; }
+.mb-points li { position: relative; padding: 17px 0 17px 30px; border-top: 1px solid var(--line); font-family: var(--serif); font-weight: 500; font-size: 21px; line-height: 1.28; color: var(--navy); text-wrap: balance; }
+.mb-points li:first-child { border-top: 0; }
+.mb-points li::before { content: ""; position: absolute; left: 0; top: 30px; width: 16px; height: 2px; background: var(--gold); }
+/* 320px phones: the Murfreesboro number is 8px wider than the header has. */
+@media (max-width: 359px) {
+  header.site.mb-header .start-tel { gap: 5px; padding: 0; font-size: 13.5px; letter-spacing: 0; }
+  header.site.mb-header .start-tel svg { width: 16px; height: 16px; }
+}
+@media (min-width: 701px) and (max-width: 899px) {
+  .mb-pane, .mb-form { padding-left: max(20px, calc((100% - 560px) / 2)); padding-right: max(20px, calc((100% - 560px) / 2)); }
+  .mb-pane h1 { font-size: 42px; }
+}
+@media (min-width: 900px) {
+  header.site.mb-header .nav { max-width: 1180px; }
+  .mb-hero { display: grid; grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr); gap: 56px; align-items: start; max-width: 1180px; margin: 0 auto; padding: 30px 48px 40px; }
+  .mb-pane { padding: 0; }
+  .mb-page .start-eyebrow { font-size: 12.5px; }
+  .mb-pane h1 { margin: 11px 0 13px; font-size: 48px; line-height: 1.02; }
+  .mb-page .start-sub { font-size: 17px; }
+  .mb-video { margin-top: 20px; border-radius: 12px; }
+  .mb-video-label { left: 22px; bottom: 18px; }
+  .mb-video-title { font-size: 28px; }
+  .mb-video-soon { font-size: 12px; }
+  .mb-form { padding: 26px 32px 24px; }
+  .mb-form .start-form-sub { margin-bottom: 16px; font-size: 17px; }
+  .mb-points { padding: 26px 48px 72px; }
+  .mb-points li { padding: 19px 0 19px 34px; font-size: 23px; }
+  .mb-points li::before { top: 33px; }
+}
+
 /* ── /contact on a desktop: step one inside 1280×800 (Ben, 2026-11-12) ────
    The card had been running the wrap's full width (1,020px at 1280: the
    `:where(.desk-compact) .wrap` rule above is later than `.form-solo` at the
