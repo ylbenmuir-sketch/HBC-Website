@@ -168,6 +168,10 @@ export const CONCERN_CHIPS = [
   // cards that had no chip; the eight above keep their values.
   "Children & school",
   "Emotional regulation",
+  // The "More we help with" row under the cards (2026-11-22): concussion
+  // and migraines report the chip values above; these are the other two.
+  "Trauma-related stress",
+  "Performance",
 ] as const;
 export type ConcernChip = (typeof CONCERN_CHIPS)[number];
 /** Where a partner badge sits (components/PartnerBadge.tsx); snake_case like LINK_LOCATIONS. */

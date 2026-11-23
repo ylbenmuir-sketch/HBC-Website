@@ -122,3 +122,25 @@ export const HOME_CONCERN_GROUPS: HomeConcernGroup[] = [
     cards: [ENTRIES.school, ENTRIES.focus, ENTRIES.regulation, ENTRIES.sleep].map(card),
   },
 ];
+
+/**
+ * The "More we help with" row under the tabs (Ben, 2026-11-22): the four
+ * concern pages that have no card, so each keeps a link from the homepage
+ * body. A link's words are that concern's own short name (`shortTitle` in
+ * lib/concerns.ts — the name the footer and the menus use), never typed
+ * here. `chip` is the label concern_chip_click reports, as for the cards.
+ */
+export type HomeConcernLink = { slug: string; label: string; href: string; chip: ConcernChip };
+
+const MORE: { slug: string; chip: ConcernChip }[] = [
+  { slug: "concussion", chip: "Concussion" },
+  { slug: "migraines", chip: "Migraines" },
+  { slug: "trauma", chip: "Trauma-related stress" },
+  { slug: "performance", chip: "Performance" },
+];
+
+export const HOME_MORE_CONCERNS: HomeConcernLink[] = MORE.map(({ slug, chip }) => {
+  const concern = getConcern(slug);
+  if (!concern) throw new Error(`home concern link: no concern "${slug}"`);
+  return { slug: concern.slug, label: concern.shortTitle, href: `/concerns/${concern.slug}`, chip };
+});

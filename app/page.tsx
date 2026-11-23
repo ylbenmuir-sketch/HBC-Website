@@ -20,7 +20,7 @@ import CheckIcon from "@/components/CheckIcon";
 import HeroBrainMapJump from "@/components/HeroBrainMapJump";
 import { REFERRAL_FAQ, locations } from "@/lib/locations";
 import { FIRST_VISIT_COST_SENTENCE, SITE_FAQS } from "@/lib/faq";
-import { HOME_CONCERN_GROUPS } from "@/lib/home-concerns";
+import { HOME_CONCERN_GROUPS, HOME_MORE_CONCERNS } from "@/lib/home-concerns";
 import {
   AMEN_PARTNER_ENABLED,
   BRAIN_MAP_CALLOUTS,
@@ -418,6 +418,7 @@ export default function HomePage() {
           </div>
           <div className="rv">
             <ConcernTabs
+              more={HOME_MORE_CONCERNS}
               groups={HOME_CONCERN_GROUPS.map((g) => ({
                 id: g.id,
                 label: g.label,
@@ -544,6 +545,15 @@ export default function HomePage() {
                   <span>{HSA_FSA_ACCEPTED}</span>
                 </p>
                 <p className="bm-visit-cost">{FIRST_VISIT_COST_SENTENCE}</p>
+                {/* Body links to the two pages that explain the visit and
+                    the method, in the words the homepage's steps used for
+                    them (Ben, 2026-11-22). */}
+                <p className="bm-visit-links">
+                  <Link href="/first-visit">
+                    See what the first visit is like &rarr;
+                  </Link>
+                  <Link href="/how-lens-works">See how LENS works &rarr;</Link>
+                </p>
               </div>
             }
             about={

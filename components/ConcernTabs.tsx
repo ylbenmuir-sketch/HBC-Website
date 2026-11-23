@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { concernChipEvent, trackEvent } from "@/lib/analytics";
-import type { HomeConcernCard, HomeConcernIcon } from "@/lib/home-concerns";
+import type { HomeConcernCard, HomeConcernIcon, HomeConcernLink } from "@/lib/home-concerns";
 
 /**
  * The homepage's "What brings you in?" tabs (Ben, 2026-11-22): "For adults"
@@ -96,7 +96,15 @@ function Icon({ name }: { name: HomeConcernIcon }) {
   );
 }
 
-export default function ConcernTabs({ groups }: { groups: ConcernTabGroup[] }) {
+export default function ConcernTabs({
+  groups,
+  more = [],
+}: {
+  groups: ConcernTabGroup[];
+  /** The "More we help with" row under the panels: concerns with no card.
+   *  Outside the tabs, so it shows whichever tab is open. */
+  more?: HomeConcernLink[];
+}) {
   const [active, setActive] = useState(0);
   const pathname = usePathname();
   const base = useId();
@@ -171,6 +179,22 @@ export default function ConcernTabs({ groups }: { groups: ConcernTabGroup[] }) {
           <div className="hc-photo">{g.photo}</div>
         </div>
       ))}
+      {more.length > 0 && (
+        <nav className="hc-more" aria-labelledby={`${base}-more`}>
+          <span className="hc-more-label" id={`${base}-more`}>
+            More we help with
+          </span>
+          <ul>
+            {more.map((l) => (
+              <li key={l.slug}>
+                <Link href={l.href} onClick={() => trackEvent(concernChipEvent(l.chip, pathname))}>
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }
