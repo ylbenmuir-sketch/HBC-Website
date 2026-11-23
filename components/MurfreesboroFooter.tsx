@@ -14,7 +14,8 @@ import { formattedHours, getLocation } from "@/lib/locations";
 export default function MurfreesboroFooter() {
   const center = getLocation("murfreesboro");
   const a = center?.address;
-  const hours = center ? formattedHours(center) : [];
+  // Open days only (Ben, 2026-11-23): "Tue–Thu 9a–6p", without the closed run.
+  const hours = center ? formattedHours(center).filter((line) => !line.startsWith("Closed")) : [];
   return (
     <footer className="site slim start-footer" data-link-location="footer">
       <div className="start-footer-in">

@@ -35,8 +35,9 @@ import { BRAIN_MAP_VIDEO, MURFREESBORO_BULLETS, MURFREESBORO_OFFER, murfreesboro
  *   codes are /start's). A code, never a word; the <title> and description
  *   below are the same for every variant, and the address is a place name:
  *   nothing the Meta pixel or GA sees says what a visitor is dealing with.
- * - The video slot is a marked placeholder until the clip is recorded
- *   (lib/murfreesboro.ts → BRAIN_MAP_VIDEO has the one TODO).
+ * - The video slot is a plain still — the poster photo, nothing on it —
+ *   until the clip is recorded (lib/murfreesboro.ts → BRAIN_MAP_VIDEO has
+ *   the one TODO).
  * - No exits: no menu, no 10-year banner, no assistant, no phone action
  *   bar, no link to any other page but Privacy and SMS Terms.
  *

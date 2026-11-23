@@ -3719,17 +3719,17 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 .mb-pane h1 { margin: 9px 0 11px; font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.03; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
 .mb-pane h1 em { font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--pine); }
 /* The video slot. The poster (next/image) is the bottom layer; the <video>,
-   when there is one, sits over it and is transparent until it plays. The
+   when there is one, sits over it and is transparent until it plays. With
+   no clip the poster is a plain still: no label, no scrim. With one, the
    label is on a pine scrim at the foot of the frame: ivory on it is 9:1
    and up where the type sits. Once a clip plays, label and scrim go — the
    captions take that space — and the two controls stay, top right. */
 .mb-video { position: relative; aspect-ratio: 16 / 9; margin: 16px 0 0; overflow: hidden; border-radius: 10px; background: var(--pine); }
 .mb-video img { object-fit: cover; }
 .mb-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.mb-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(22, 50, 47, 0.92) 0%, rgba(22, 50, 47, 0.7) 24%, rgba(22, 50, 47, 0) 54%); pointer-events: none; transition: opacity 0.3s; }
+.mb-video-live::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(22, 50, 47, 0.92) 0%, rgba(22, 50, 47, 0.7) 24%, rgba(22, 50, 47, 0) 54%); pointer-events: none; transition: opacity 0.3s; }
 .mb-video-label { position: absolute; z-index: 1; left: 16px; right: 16px; bottom: 13px; display: flex; flex-direction: column; gap: 3px; margin: 0; text-align: left; letter-spacing: 0; text-transform: none; color: var(--ivory); transition: opacity 0.3s; }
 .mb-video-title { font-family: var(--serif); font-weight: 600; font-size: 23px; line-height: 1.1; }
-.mb-video-soon { font-size: 11.5px; line-height: 1.3; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 .mb-video-started::after, .mb-video-started .mb-video-label { opacity: 0; }
 .mb-video-controls { position: absolute; z-index: 2; top: 8px; right: 8px; display: flex; gap: 6px; }
 .mb-video-controls button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 22px; background: rgba(22, 50, 47, 0.88); color: var(--ivory); font-family: var(--sans); font-size: 13.5px; font-weight: 600; line-height: 1; cursor: pointer; }
@@ -3767,7 +3767,6 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .mb-video { margin-top: 20px; border-radius: 12px; }
   .mb-video-label { left: 22px; bottom: 18px; }
   .mb-video-title { font-size: 28px; }
-  .mb-video-soon { font-size: 12px; }
   .mb-form { padding: 26px 32px 24px; }
   .mb-form .start-form-sub { margin-bottom: 16px; font-size: 17px; }
   .mb-points { padding: 26px 48px 72px; }

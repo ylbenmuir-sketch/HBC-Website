@@ -8,9 +8,8 @@ import { useEffect, useRef, useState } from "react";
  * frame directly under the headline and the sentence.
  *
  * Until the clip exists (lib/murfreesboro.ts → BRAIN_MAP_VIDEO.src is
- * null) it is the poster — a real HBC photo — with "What is a Brain Map?"
- * and "Video coming soon." on it. Nothing to press, so nothing pretends to
- * be a player.
+ * null) it is the poster alone — a real HBC photo as a plain still: no
+ * label, no scrim, no play button, no placeholder text (Ben, 2026-11-23).
  *
  * With a clip: self-hosted <video>, no third-party script. It starts by
  * itself only muted, only once the page has finished loading and the slot
@@ -28,7 +27,6 @@ export type BrainMapVideoSource = {
   poster: string;
   posterAlt: string;
   title: string;
-  soon: string;
 };
 
 export default function BrainMapVideo({ video }: { video: BrainMapVideoSource }) {
@@ -113,10 +111,11 @@ export default function BrainMapVideo({ video }: { video: BrainMapVideoSource })
           {video.captions && <track kind="captions" src={video.captions} srcLang="en" label="English" default />}
         </video>
       )}
-      <figcaption className="mb-video-label">
-        <span className="mb-video-title">{video.title}</span>
-        {!live && <span className="mb-video-soon">{video.soon}</span>}
-      </figcaption>
+      {live && (
+        <figcaption className="mb-video-label">
+          <span className="mb-video-title">{video.title}</span>
+        </figcaption>
+      )}
       {live && (
         <div className="mb-video-controls">
           <button type="button" onClick={togglePlay} aria-label={playing ? "Pause the video" : "Play the video"}>

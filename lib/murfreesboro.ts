@@ -21,9 +21,9 @@ export const MURFREESBORO_AD_PATH = "/murfreesboro";
 
 /** The headline for a link with no code (or g1): the outcome, in the two-part shape /start's take. */
 export const MURFREESBORO_DEFAULT_HOOK: StartHook = {
-  lead: "See what’s going on in your brain —",
-  tail: "and leave with a written plan.",
-  headline: "See what’s going on in your brain — and leave with a written plan.",
+  lead: "See which parts of your brain are in overdrive, which are running quiet,",
+  tail: "and what to do about it.",
+  headline: "See which parts of your brain are in overdrive, which are running quiet, and what to do about it.",
 };
 
 /**
@@ -43,7 +43,7 @@ export function murfreesboroHook(h: unknown): StartHook {
  */
 export const MURFREESBORO_OFFER = {
   eyebrow: `Murfreesboro · ${START_OFFER.name}`,
-  sub: `A $${BRAIN_MAP_PRICE_USD}, 60-minute ${START_OFFER.name} at our Murfreesboro center. No medication, nothing to practice, nothing to perform.`,
+  sub: `A 60-minute ${START_OFFER.name} at our Murfreesboro center. You leave with your map and a written plan. $${BRAIN_MAP_PRICE_USD}, no medication.`,
   /** The one line over the fields: why we ask for a number. */
   formSub: "We’ll call to find a time that works for you.",
   guarantee: "If we don’t deliver the map and the written plan, you don’t pay.",
@@ -51,10 +51,13 @@ export const MURFREESBORO_OFFER = {
   badges: `$${BRAIN_MAP_PRICE_USD} · 60 minutes`,
 } as const;
 
-/** Under the form: exactly three, the most common objection first. */
+/**
+ * Under the form: exactly three, the most common objection first. The
+ * guarantee is not one of them — it is said once, under the button.
+ */
 export const MURFREESBORO_BULLETS = [
-  "You leave with the map and the written plan, or you don’t pay.",
-  "No medication, nothing to practice, nothing to perform — the session is about 60 minutes.",
+  "Painless. Sensors simply read your brain’s activity while you sit comfortably.",
+  "About 60 minutes, and you leave with your map and written plan the same day.",
   "No referral needed, and nothing is booked that day unless you want it to be.",
 ] as const;
 
@@ -69,7 +72,8 @@ export const MURFREESBORO_BULLETS = [
  *   captions its WebVTT captions, e.g. "/videos/what-is-a-brain-map.vtt".
  *            The clip starts muted, so the captions carry it.
  *   poster   a 16:9 still, ideally a frame from the clip, in public/images.
- * While `src` is null the slot shows the poster and "Video coming soon."
+ * While `src` is null the slot is the poster alone — a plain still, with
+ * no label, no play button and no placeholder text (Ben, 2026-11-23).
  */
 export const BRAIN_MAP_VIDEO: {
   src: string | null;
@@ -77,7 +81,6 @@ export const BRAIN_MAP_VIDEO: {
   poster: string;
   posterAlt: string;
   title: string;
-  soon: string;
 } = {
   src: null,
   captions: null,
@@ -85,5 +88,4 @@ export const BRAIN_MAP_VIDEO: {
   poster: "/images/map-points.jpg",
   posterAlt: "A practitioner points to the labeled sites of a brain map on a glass model of a head",
   title: "What is a Brain Map?",
-  soon: "Video coming soon.",
 };
