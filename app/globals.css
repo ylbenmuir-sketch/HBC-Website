@@ -3982,3 +3982,6 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 .home-steps-list p { font-size: 14.5px; line-height: 1.6; color: var(--slate); }
 @media (max-width: 900px) { .home-steps-list { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
 @media (max-width: 760px) { .home-steps { padding: 44px 0 46px; } .home-steps-list { margin-top: 24px; } }
+
+/* The Franklin strip's county line: the location cards' `.city` type. */
+.franklin-strip .franklin-county { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--gold-ink); }

@@ -14,6 +14,7 @@ import GoogleReviewQuote from "@/components/GoogleReviewQuote";
 import HomeLocationCard from "@/components/HomeLocationCard";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
+import GuideCta from "@/components/GuideCta";
 import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
@@ -802,6 +803,8 @@ export default function HomePage() {
                 {franklin.name} <span className="soon">Coming soon</span>{" "}
                 <ConfirmTag>{FRANKLIN_OPENING.note!}</ConfirmTag>
               </b>
+              {/* The county, as the Franklin card and page name it. */}
+              <span className="franklin-county">{franklin.county}</span>
               <span>
                 Start at Nashville or Murfreesboro now and transfer when we
                 open.
@@ -839,6 +842,10 @@ export default function HomePage() {
       {/* The closing band, with its existing copy; on this page the number
           is a call link with a text link beside it (location "home_final"). */}
       <FinalCTA contactLinks />
+      {/* The guide band, for the visitor who is not calling today — the same
+          component, heading and events the homepage carried (Ben,
+          2026-11-22), last before the footer. */}
+      <GuideCta headingLead="Four problems, one explanation. Read" />
     </div>
   );
 }
