@@ -301,6 +301,7 @@ export default function ContactForm({
   initialCenter = null,
   lockedCenter = null,
   startCopy,
+  requireAll = false,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -333,16 +334,27 @@ export default function ContactForm({
   /**
    * "start" variant: the page's own words around the fields, where they
    * differ from /start's (lib/start.ts → START_OFFER). `formHeading: null`
-   * drops the heading; `badges` and `proof` are one quiet row under the
+   * drops the heading; `quiet` is one line between the button and the
    * guarantee. The button's words are never a prop.
    */
   startCopy?: {
     formHeading?: string | null;
     formSub?: string;
     guarantee?: string;
-    badges?: string;
-    proof?: { star: string; text: string };
+    quiet?: string;
+    /** The three fields' own labels and example text (/murfreesboro's card, 2026-11-23). */
+    fields?: Partial<Record<"name" | "phone" | "email", { label: string; placeholder?: string }>>;
   };
+  /**
+   * "start" variant, /murfreesboro (Ben, 2026-11-23): name, phone and email
+   * are all asked and all required. The email field is on the page from
+   * the first HTML — no "Add email (optional)" link — and the labels are
+   * plain "Name", "Phone", "Email" unless `startCopy.fields` names them.
+   * Phone and email sit in one `.start-pair` (side by side where the page's
+   * styles say so). The text-message box stays as it is everywhere:
+   * unticked, never required.
+   */
+  requireAll?: boolean;
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -485,6 +497,10 @@ export default function ContactForm({
     const tel = phone.trim();
     const mail = email.trim();
     if (!name) return refuse("missing_name", "Please add your name.", "first-name");
+    // All three required (/murfreesboro): the same funnel reason as a
+    // request with no way to reach her, so the event's values do not change.
+    if (requireAll && !tel) return refuse("missing_contact", "Please add your phone number.", "phone");
+    if (requireAll && !mail) return refuse("missing_contact", "Please add your email.", "email");
     if (!tel && !mail) {
       // /start: the email field is behind a link, so put it on the page —
       // the message offers it as the other way to be reached.
@@ -494,7 +510,7 @@ export default function ContactForm({
     // A real US number: in-service area code, dialable exchange (the spam
     // guard, 2026-11-08 — the route holds it to the same check).
     if (tel && !isUsPhone(tel)) {
-      return refuse("bad_phone", "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
+      return refuse("bad_phone", requireAll ? "That phone number doesn't look right — please check it." : "That phone number doesn't look right — please check it, or leave it blank and use email.", "phone");
     }
     if (mail && !looksLikeEmail(mail)) {
       return refuse("bad_email", "That email address doesn't look right — please check it.", "email");
@@ -852,14 +868,15 @@ export default function ContactForm({
   const invalid = (id: string) => (invalidField === id ? true : undefined);
   const isStart = variant === "start";
   const startHeading = startCopy?.formHeading === undefined ? START_OFFER.formHeading : startCopy.formHeading;
-  const showEmail = !isStart || emailOpen || email.length > 0;
+  const showEmail = !isStart || requireAll || emailOpen || email.length > 0;
   const emailField = showEmail && (
     <>
       {/* The label says the either-or (Ben, 2026-11-12): the sentence that
           used to sit above the pair is gone on every width. Not on the
           giveaway path, where the phone is the optional one. */}
       <label htmlFor="email">
-        Email{!giveaway && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
+        {startCopy?.fields?.email?.label ?? "Email"}
+        {!giveaway && !requireAll && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
       </label>
       <input
         id="email"
@@ -868,10 +885,39 @@ export default function ContactForm({
         inputMode="email"
         autoComplete="email"
         autoCapitalize="off"
+        placeholder={startCopy?.fields?.email?.placeholder}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-invalid={invalid("email")}
+        required={requireAll || undefined}
       />
+    </>
+  );
+  const phoneField = (
+    <>
+        <label htmlFor="phone">
+          {giveaway ? (
+            <>
+              {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
+            </>
+          ) : isStart ? (
+            startCopy?.fields?.phone?.label ?? (requireAll ? "Phone" : "Phone number")
+          ) : (
+            "Phone"
+          )}
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder={startCopy?.fields?.phone?.placeholder}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          aria-invalid={invalid("phone")}
+          required={requireAll || undefined}
+        />
     </>
   );
   return (
@@ -940,39 +986,28 @@ export default function ContactForm({
 
       {/* One field, first and last (Ben, 2026-10-27); stored whole, greeted
           by the first word (lib/first-name.ts). The id predates the change. */}
-      <label htmlFor="first-name">Name</label>
+      <label htmlFor="first-name">{startCopy?.fields?.name?.label ?? "Name"}</label>
       <input
         id="first-name"
         name="first_name"
         autoComplete="name"
         autoCapitalize="words"
+        placeholder={startCopy?.fields?.name?.placeholder}
         value={givenName}
         onChange={(e) => setGivenName(e.target.value)}
         aria-invalid={invalid("first-name")}
         required
       />
 
-      <label htmlFor="phone">
-        {giveaway ? (
-          <>
-            {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
-          </>
-        ) : isStart ? (
-          "Phone number"
-        ) : (
-          "Phone"
-        )}
-      </label>
-      <input
-        id="phone"
-        name="phone"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        aria-invalid={invalid("phone")}
-      />
+      {/* All three required (/murfreesboro): phone and email are one pair. */}
+      {requireAll ? (
+        <div className="start-pair">
+          <div>{phoneField}</div>
+          <div>{emailField}</div>
+        </div>
+      ) : (
+        phoneField
+      )}
 
       {/* Everywhere but /start the email field comes before the center. */}
       {!isStart && emailField}
@@ -1033,7 +1068,7 @@ export default function ContactForm({
           Add email (optional)
         </button>
       )}
-      {isStart && emailField}
+      {isStart && !requireAll && emailField}
 
       {/* Text-message consent, last before the button (Ben, 2026-11-02).
           A2P 10DLC: carrier reviewers read it in the server-rendered HTML,
@@ -1135,20 +1170,8 @@ export default function ContactForm({
       {variant === "start" ? (
         // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
         <>
+          {startCopy?.quiet && <p className="start-quiet">{startCopy.quiet}</p>}
           <p className="start-guarantee">{startCopy?.guarantee ?? START_OFFER.guarantee}</p>
-          {(startCopy?.badges || startCopy?.proof) && (
-            <p className="start-meta start-form-meta">
-              {startCopy.badges && <span className="start-meta-offer">{startCopy.badges}</span>}
-              {startCopy.proof && (
-                <span>
-                  <span className="start-star" aria-hidden="true">
-                    {startCopy.proof.star}
-                  </span>{" "}
-                  {startCopy.proof.text}
-                </span>
-              )}
-            </p>
-          )}
         </>
       ) : (
         <p className="micro" style={{ textAlign: "center" }}>
