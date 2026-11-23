@@ -1,0 +1,1195 @@
+{
+  "page": "/",
+  "links": {
+    "360": [
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "Call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "drawer",
+        "label": "or call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "drawer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "brain_map",
+        "href": "#brain-map",
+        "where": null,
+        "label": "See What a Brain Map Shows↓",
+        "event": {
+          "name": "brain_map_jump",
+          "params": {
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_hero",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_hero",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/anxiety",
+        "where": null,
+        "label": "Anxiety & nervous-system overloadFor people whose bodies stay on alert long afte",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Anxiety",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/stress-resilience",
+        "where": null,
+        "label": "Stress & resilienceFor people who are functioning — holding the job, the family,",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/depression",
+        "where": null,
+        "label": "Low mood & lost motivationDays that feel flat. Getting started on anything feels",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Depression",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/brain-fog",
+        "where": null,
+        "label": "Brain fog, memory & mental fatigueFor thinking that feels slow or cloudy, words ",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Brain fog",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/children-school",
+        "where": null,
+        "label": "Children, school & transitionsFor the bright kid who can't show what they know.",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Children & school",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/emotional-regulation",
+        "where": null,
+        "label": "Emotional regulationFor the child who becomes overwhelmed in seconds and stays u",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Emotional regulation",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/concussion",
+        "where": null,
+        "label": "Concussion & TBI",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Concussion",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/migraines",
+        "where": null,
+        "label": "Migraines",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Migraines",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/trauma",
+        "where": null,
+        "label": "Trauma-related stress",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Trauma-related stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/performance",
+        "where": null,
+        "label": "Performance",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Performance",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_locations",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16152032650",
+        "where": "home_locations",
+        "label": "(615) 203-2650",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_final",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_final",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "mobile_bar",
+        "label": "Call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "mobile_bar",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "mobile_bar",
+        "label": "Text us at (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "mobile_bar",
+            "page_path": "/"
+          }
+        }
+      }
+    ],
+    "390": [
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "Call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "drawer",
+        "label": "or call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "drawer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "brain_map",
+        "href": "#brain-map",
+        "where": null,
+        "label": "See What a Brain Map Shows↓",
+        "event": {
+          "name": "brain_map_jump",
+          "params": {
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_hero",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_hero",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/anxiety",
+        "where": null,
+        "label": "Anxiety & nervous-system overloadFor people whose bodies stay on alert long afte",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Anxiety",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/stress-resilience",
+        "where": null,
+        "label": "Stress & resilienceFor people who are functioning — holding the job, the family,",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/depression",
+        "where": null,
+        "label": "Low mood & lost motivationDays that feel flat. Getting started on anything feels",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Depression",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/brain-fog",
+        "where": null,
+        "label": "Brain fog, memory & mental fatigueFor thinking that feels slow or cloudy, words ",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Brain fog",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/children-school",
+        "where": null,
+        "label": "Children, school & transitionsFor the bright kid who can't show what they know.",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Children & school",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/emotional-regulation",
+        "where": null,
+        "label": "Emotional regulationFor the child who becomes overwhelmed in seconds and stays u",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Emotional regulation",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/concussion",
+        "where": null,
+        "label": "Concussion & TBI",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Concussion",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/migraines",
+        "where": null,
+        "label": "Migraines",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Migraines",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/trauma",
+        "where": null,
+        "label": "Trauma-related stress",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Trauma-related stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/performance",
+        "where": null,
+        "label": "Performance",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Performance",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_locations",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16152032650",
+        "where": "home_locations",
+        "label": "(615) 203-2650",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_final",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_final",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "mobile_bar",
+        "label": "Call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "mobile_bar",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "mobile_bar",
+        "label": "Text us at (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "mobile_bar",
+            "page_path": "/"
+          }
+        }
+      }
+    ],
+    "1280": [
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "header",
+        "label": "Call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "header",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "drawer",
+        "label": "or call (615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "drawer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "brain_map",
+        "href": "#brain-map",
+        "where": null,
+        "label": "See What a Brain Map Shows↓",
+        "event": {
+          "name": "brain_map_jump",
+          "params": {
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_hero",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_hero",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_hero",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/anxiety",
+        "where": null,
+        "label": "Anxiety & nervous-system overloadFor people whose bodies stay on alert long afte",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Anxiety",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/stress-resilience",
+        "where": null,
+        "label": "Stress & resilienceFor people who are functioning — holding the job, the family,",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/depression",
+        "where": null,
+        "label": "Low mood & lost motivationDays that feel flat. Getting started on anything feels",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Depression",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/brain-fog",
+        "where": null,
+        "label": "Brain fog, memory & mental fatigueFor thinking that feels slow or cloudy, words ",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Brain fog",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/children-school",
+        "where": null,
+        "label": "Children, school & transitionsFor the bright kid who can't show what they know.",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Children & school",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/focus-adhd",
+        "where": null,
+        "label": "Focus, ADHD & follow-throughFor bright kids whose homework takes three hours, an",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Focus & ADHD",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/emotional-regulation",
+        "where": null,
+        "label": "Emotional regulationFor the child who becomes overwhelmed in seconds and stays u",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Emotional regulation",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/sleep",
+        "where": null,
+        "label": "Sleep difficultiesFor minds that won't shut off at night, 3 a.m. wakings with no",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Sleep",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/concussion",
+        "where": null,
+        "label": "Concussion & TBI",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Concussion",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/migraines",
+        "where": null,
+        "label": "Migraines",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Migraines",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/trauma",
+        "where": null,
+        "label": "Trauma-related stress",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Trauma-related stress",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "concern",
+        "href": "/concerns/performance",
+        "where": null,
+        "label": "Performance",
+        "event": {
+          "name": "concern_chip_click",
+          "params": {
+            "chip_label": "Performance",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_locations",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16152032650",
+        "where": "home_locations",
+        "label": "(615) 203-2650",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_locations",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "home_final",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "sms",
+        "href": "sms:+16153318762",
+        "where": "home_final",
+        "label": "text us",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "text",
+            "location": "home_final",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "tel",
+        "href": "tel:+16153318762",
+        "where": "footer",
+        "label": "(615) 331-8762",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "phone",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      },
+      {
+        "kind": "mailto",
+        "href": "mailto:denise@harmonizedbraincenterstn.com",
+        "where": "footer",
+        "label": "denise@harmonizedbraincenterstn.com",
+        "event": {
+          "name": "contact_link_click",
+          "params": {
+            "link_type": "email",
+            "location": "footer",
+            "page_path": "/"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -20,6 +20,7 @@
     "check:schema": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-schema.mjs",
     "check:reveal": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-reveal.mjs",
     "check:cta": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-cta.mjs",
+    "check:tracking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-tracking.mjs",
     "check:redirects": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-redirects.mjs",
     "preview:emails": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/render-email-previews.mjs",
     "build:email-thumb": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-email-thumbnail.mjs",
