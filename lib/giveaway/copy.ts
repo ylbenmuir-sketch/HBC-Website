@@ -219,7 +219,8 @@ export const EMAILS = {
 
   /** 8a. The spots-left update (Mon Nov 23, 8 am) — Ben's words, 2026-11-23. Unredeemed entrants who have not asked to book. The count is his. */
   spotsUpdate: {
-    subject: (left: number) => D(`Only ${left} free Brain Maps left`),
+    /** "Ben, only 14 free Brain Map spots left" — the name first to draw them in (Ben, 2026-11-23). */
+    subject: (firstName: string, left: number) => D(`${firstName ? `${firstName}, only` : "Only"} ${left} free Brain Map spots left`),
     preheader: D("Your free first visit is still waiting. Your code is inside."),
     heading: (firstName: string, left: number) => D(`${firstName ? `${firstName}, ${left}` : left} spots left.`),
     /** "Mon, Nov 23 and Tue, Nov 24" and "Sat, Dec 5" come from config. */

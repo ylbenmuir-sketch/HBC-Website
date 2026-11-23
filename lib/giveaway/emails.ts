@@ -651,7 +651,7 @@ export function thankYouEmail(input: { firstName: string; offerCode: string; boo
 /** The thank-you email's design, the code and the same button; for entrants who have not booked. */
 export function spotsUpdateEmail(input: { firstName: string; offerCode: string; bookUrl: string; footing: Footing }): Email {
   const c = EMAILS.spotsUpdate;
-  const subject = c.subject(SPOTS_LEFT);
+  const subject = c.subject(input.firstName, SPOTS_LEFT);
   const heading = c.heading(input.firstName, SPOTS_LEFT);
   const body = c.body(SPOTS_LEFT, openDaysSpoken(), `Sat, ${spokenDate(OFFER.bookBy.at)}`);
   const offer = offerPanel({ code: input.offerCode });
