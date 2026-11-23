@@ -48,6 +48,9 @@ export const COPY_IS_DRAFT = copyIsDraft();
  *  lib/giveaway/draft.ts); that changes what is shown, not what may be sent. */
 export const D = (s: string): string => (COPY_IS_DRAFT && !hideDraftTags() ? `[DRAFT] ${s}` : s);
 
+/** Free Brain Maps still open, as Ben counted them for the spots-left update (2026-11-23). */
+export const SPOTS_LEFT = 14;
+
 export const BRAND = "Harmonized Brain Centers";
 export const CAMPAIGN = "10 Years of Harmonized Brain Centers";
 
@@ -212,6 +215,18 @@ export const EMAILS = {
     /** "Our centers are open Mon, Nov 23 and Tue, Nov 24" — the days from config. */
     openDays: (days: string) => D(`Our centers are open ${days}, so you can book this week.`),
     button: D("Book my free first visit"),
+  },
+
+  /** 8a. The spots-left update (Mon Nov 23, 8 am) — Ben's words, 2026-11-23. Unredeemed entrants who have not asked to book. The count is his. */
+  spotsUpdate: {
+    subject: (left: number) => D(`Only ${left} free Brain Maps left`),
+    preheader: D("Your free first visit is still waiting. Your code is inside."),
+    heading: (firstName: string, left: number) => D(`${firstName ? `${firstName}, ${left}` : left} spots left.`),
+    /** "Mon, Nov 23 and Tue, Nov 24" and "Sat, Dec 5" come from config. */
+    body: (left: number, openDays: string, bookBy: string) =>
+      D(`Quick update: ${left} of the free Brain Maps from our 10-year thank-you are still open. Once they're booked, they're gone. Your code is below, and you can book in under a minute. We're open today and tomorrow (${openDays}), then back after Thanksgiving. Book by ${bookBy}.`),
+    button: D("Book my free first visit"),
+    signOff: D("Ben Muir, Harmonized Brain Centers"),
   },
 
   /** 8b. The gift reminder (Tue Dec 1) and last call (Thu Dec 3) — P1-4. Unredeemed entrants only. */

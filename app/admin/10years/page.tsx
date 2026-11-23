@@ -99,6 +99,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               ["Entries open", SCHEDULE.entriesOpen.ct],
               ...DRAWINGS.map((d) => [`${d.dayName} ${d.kind === "grand" ? "grand prize" : "drawing"}`, d.ct]),
               ["Thank-you email (gift reveal)", SCHEDULE.thankYouSend.ct],
+              ["Spots-left update", SCHEDULE.spotsUpdate.ct],
               ["Gift reminder", SCHEDULE.offerReminder.ct],
               ["Gift last call", SCHEDULE.offerLastCall.ct],
               ["Offer closes", SCHEDULE.offerEnd.ct],

@@ -19,7 +19,7 @@
 
 import { displayPhone, escapeHtml as esc, formatCentral, telHref } from "../email/format";
 import { C, SANS, SERIF, buttons, factGrid, footer, page, section, textOf, type Rendered } from "../email/templates";
-import { EMAILS, PAGES, SHARED } from "./copy";
+import { EMAILS, PAGES, SHARED, SPOTS_LEFT } from "./copy";
 import { copyPageUrl, emailShareUrl, facebookShareUrl } from "./share";
 import { CALENDAR_PATHS, CALENDAR_UTM, SHARE_UTM } from "./calendar";
 import {
@@ -641,6 +641,33 @@ export function thankYouEmail(input: { firstName: string; offerCode: string; boo
     preheader: c.preheader,
     html: giveawayPage({ title: c.subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
     text: textOf([heading, c.body, "", ...offer.text, open, `${c.button}: ${input.bookUrl}`, "", ...visitorFooterText(input.footing, true)]),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* 8a. The spots-left update (Mon Nov 23) — Ben, 2026-11-23             */
+/* ------------------------------------------------------------------ */
+
+/** The thank-you email's design, the code and the same button; for entrants who have not booked. */
+export function spotsUpdateEmail(input: { firstName: string; offerCode: string; bookUrl: string; footing: Footing }): Email {
+  const c = EMAILS.spotsUpdate;
+  const subject = c.subject(SPOTS_LEFT);
+  const heading = c.heading(input.firstName, SPOTS_LEFT);
+  const body = c.body(SPOTS_LEFT, openDaysSpoken(), `Sat, ${spokenDate(OFFER.bookBy.at)}`);
+  const offer = offerPanel({ code: input.offerCode });
+  const rows = [
+    section(`${h1(heading)}${p(body)}`, "18px 20px 0"),
+    section(offer.html, "14px 20px 0"),
+    section(buttons([[c.button, input.bookUrl]]), "12px 20px 0"),
+    section(p(c.signOff), "8px 20px 0"),
+    gap(16),
+    visitorFooter(input.footing, true),
+  ];
+  return {
+    subject,
+    preheader: c.preheader,
+    html: giveawayPage({ title: subject, preheader: c.preheader, rows, siteUrl: input.footing.siteUrl }),
+    text: textOf([heading, body, "", ...offer.text, `${c.button}: ${input.bookUrl}`, "", c.signOff, "", ...visitorFooterText(input.footing, true)]),
   };
 }
 

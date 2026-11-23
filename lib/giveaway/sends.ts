@@ -11,6 +11,11 @@
  *   thank_you         Sat Nov 21 7 pm  → the gift reveal: every verified,
  *                                        subscribed entrant, winners too
  *                                        (fix list rev 2, P0-10)
+ *   spots_update      Mon Nov 23 8 am  → verified, subscribed entrants whose
+ *                                        code is unredeemed and who have
+ *                                        sent no lead form since the reveal
+ *                                        (Ben, 2026-11-23); closed unsent if
+ *                                        first reached 30 minutes late
  *   gift_reminder     Tue Dec 1 9 am   → verified, subscribed entrants
  *   gift_last_call    Thu Dec 3 9 am     whose code is unredeemed (P1-4)
  *
@@ -42,14 +47,15 @@
  */
 
 import { audit } from "./audit";
-import { DRAWINGS, SCHEDULE, drawing } from "./config";
-import { giftReminderEmail, hypeEmail, hypeSendAt, itsLiveEmail, mondayReminderEmail, thankYouEmail, youreInEmail, type Email, type Footing, type HypeDay } from "./emails";
+import { DRAWINGS, SCHEDULE, SPOTS_UPDATE_EXTRA_EXCLUDES, SPOTS_UPDATE_LATE_MS, SPOTS_UPDATE_LEADS_SINCE, drawing } from "./config";
+import { normalizeEmail } from "./email-normalize";
+import { giftReminderEmail, hypeEmail, hypeSendAt, itsLiveEmail, mondayReminderEmail, spotsUpdateEmail, thankYouEmail, youreInEmail, type Email, type Footing, type HypeDay } from "./emails";
 import { entryCount } from "./people";
 import { type NotifyRow, type PersonRow, type ScheduledSendRow } from "./rows";
-import { isBadAddress } from "./recipients";
+import { isBadAddress, isTestAddress } from "./recipients";
 import type { GiveawayStore } from "./store";
 
-export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "daily_sat", "thank_you", "gift_reminder", "gift_last_call"] as const;
+export const SEND_KINDS = ["its_live", "monday_reminder", "daily_mon", "daily_tue", "daily_wed", "daily_thu", "daily_fri", "daily_sat", "thank_you", "spots_update", "gift_reminder", "gift_last_call"] as const;
 export type SendKind = (typeof SEND_KINDS)[number];
 
 export const JOB_STALE_MS = 10 * 60_000;
@@ -91,6 +97,7 @@ export function dueAt(kind: SendKind): Date {
   if (kind === "its_live") return SCHEDULE.entriesOpen.at;
   if (kind === "monday_reminder") return SCHEDULE.mondayReminder.at;
   if (kind === "thank_you") return SCHEDULE.thankYouSend.at;
+  if (kind === "spots_update") return SCHEDULE.spotsUpdate.at;
   if (kind === "gift_reminder") return SCHEDULE.offerReminder.at;
   if (kind === "gift_last_call") return SCHEDULE.offerLastCall.at;
   return hypeSendAt(kind.slice("daily_".length) as HypeDay);
@@ -127,6 +134,8 @@ export type SendDeps = {
   budgetMs?: number;
   /** Told once per job that had a send refused (the failure alert). */
   onFailure?: (info: { kind: string; failed: number; error: string; willRetry: boolean }) => Promise<void> | void;
+  /** Every email address on a lead form (consultation_requests) since a time, as typed — who has already asked to book (the spots-left update). Must throw if it cannot be read. */
+  leadEmailsSince?: (since: Date) => Promise<string[]>;
   /** Resend's own list of accepted emails since a time — the resend job's proof of who already has one. */
   sentLog?: (since: Date) => Promise<Array<{ to: string[]; subject: string }>>;
   /** The staff winner alert for a drawn slot, built and addressed (lib/giveaway/notify.ts); null when there is no winner or nobody to send to. */
@@ -215,6 +224,7 @@ async function runJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, de
   const kind = job.kind as SendKind;
   if (kind === "its_live" || kind === "monday_reminder") return notifyJob(store, job, kind, now, deps, log, run);
   if (kind === "thank_you") return thankYouJob(store, job, now, deps, log, run);
+  if (kind === "spots_update") return spotsUpdateJob(store, job, now, deps, log, run);
   if (kind === "gift_reminder" || kind === "gift_last_call") return giftReminderJob(store, job, kind, now, deps, log, run);
   if (kind.startsWith("daily_")) return dailyJob(store, job, kind, now, deps, log, run);
   if (job.kind === RESEND_YOURE_IN || job.kind === RESEND_YOURE_IN_PLAN) return youreInResendJob(store, job, now, deps, log, run);
@@ -390,6 +400,53 @@ async function thankYouJob(store: GiveawayStore, job: ScheduledSendRow, now: Dat
     const email = thankYouEmail({ firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
     const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
     if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] thank_you to ${p.id}: ${r.error}`);
+  }
+  return out;
+}
+
+/** Who the spots-left update goes to, read now: verified, subscribed, code unredeemed, not a test address, and no lead form since the reveal (Gmail dots and +tags are one inbox). */
+export async function spotsUpdateAudience(store: GiveawayStore, deps: Pick<SendDeps, "leadEmailsSince">): Promise<{ recipients: Array<{ person: PersonRow; code: string }>; asked: PersonRow[] }> {
+  // No reader, or a failed read, must never become "nobody has asked to book".
+  if (!deps.leadEmailsSince) throw new Error("spots_update: no lead reader");
+  const { data: offers, error } = await store.select("giveaway_offers", "person_id, code, redeemed_at");
+  if (error) throw new Error(`offers: ${error.message}`);
+  const open = new Map(((offers ?? []) as Array<{ person_id: string; code: string; redeemed_at: string | null }>).filter((o) => !o.redeemed_at).map((o) => [o.person_id, o.code]));
+  const asked = new Set<string>();
+  for (const e of [...(await deps.leadEmailsSince(SPOTS_UPDATE_LEADS_SINCE)), ...SPOTS_UPDATE_EXTRA_EXCLUDES]) {
+    const n = normalizeEmail(e ?? "");
+    if (n) asked.add(n);
+  }
+  const out = { recipients: [] as Array<{ person: PersonRow; code: string }>, asked: [] as PersonRow[] };
+  for (const p of await subscribedEntrants(store)) {
+    const code = open.get(p.id);
+    if (!code || isTestAddress(p.email)) continue;
+    if (asked.has(normalizeEmail(p.email) ?? p.email)) out.asked.push(p);
+    else out.recipients.push({ person: p, code });
+  }
+  return out;
+}
+
+/** Ben, 2026-11-23: one update to entrants who have not booked. Monday morning only. */
+async function spotsUpdateJob(store: GiveawayStore, job: ScheduledSendRow, now: Date, deps: SendDeps, log: Pick<Console, "log" | "error">, run: Run): Promise<JobResult> {
+  const out = emptyResult();
+  const held = await receiptsOf(store, job);
+  // Never started and already late: closed, nobody sent (a run that began on time still finishes).
+  if (held.size === 0 && now.getTime() - new Date(job.due_at).getTime() > SPOTS_UPDATE_LATE_MS) return { ...out, skipped: 1, reason: "late: not sent" };
+  const { recipients } = await spotsUpdateAudience(store, deps);
+  for (const { person: p, code } of recipients) {
+    if (run.over()) {
+      out.incomplete = true;
+      break;
+    }
+    const t = await take(store, job, { person_id: p.id }, now, held);
+    if (t.id === null) {
+      passOver(out, t);
+      continue;
+    }
+    const footing = deps.footingFor(p.email, true);
+    const email = spotsUpdateEmail({ firstName: p.first_name, offerCode: code, bookUrl: deps.links.bookUrl(code), footing });
+    const r = await deps.send({ to: p.email, email, marketing: true, footing, idempotencyKey: t.id });
+    if ((await settle(store, job, t.id, r, now, out, run)) === "failed") log.error(`[giveaway sends] spots_update to ${p.id}: ${r.error}`);
   }
   return out;
 }

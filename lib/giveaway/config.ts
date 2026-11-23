@@ -148,6 +148,8 @@ export const SCHEDULE = {
   giftReveal: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you gift revealed on the page"),
   /** The reveal email: every verified, subscribed entrant, winners included. */
   thankYouSend: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you + gift reveal email to every verified, subscribed entrant"),
+  /** One "spots left" update to entrants who have not booked (Ben, 2026-11-23): Monday morning, the first clinic day after the reveal. */
+  spotsUpdate: instant(centralToUtc(2026, 11, 23, 8, 0), "Mon Nov 23, 8:00 AM CT", "Spots-left update to verified, subscribed, unredeemed entrants who have not asked to book"),
   /** Offer reminder — built after Nov 21. My call: 10 am CT. */
   /** Gift reminder, with the live "X of N left" (fix list rev 2, P1-4). */
   offerReminder: instant(centralToUtc(2026, 12, 1, 9, 0), "Tue Dec 1, 9:00 AM CT", "Gift reminder to verified, subscribed, unredeemed entrants"),
@@ -174,6 +176,13 @@ export function giftRevealed(now: Date): boolean {
 /** The clinic days right after the reveal (Ben, 2026-11-03): open Monday
  *  and Tuesday of Thanksgiving week. The reveal email names them. */
 export const CLINIC_DAYS_AFTER_REVEAL = [centralToUtc(2026, 11, 23, 9, 0), centralToUtc(2026, 11, 24, 9, 0)] as const;
+
+/** The spots-left update (Ben, 2026-11-23) leaves out anyone who sent a lead form from this instant on: they have already asked to book. */
+export const SPOTS_UPDATE_LEADS_SINCE = SCHEDULE.giftReveal.at;
+/** More addresses Ben wants left out of the spots-left update (any spelling; compared normalized). */
+export const SPOTS_UPDATE_EXTRA_EXCLUDES: readonly string[] = [];
+/** The spots-left update is for Monday morning only: a job first reached this long after its time is closed unsent (Ben, 2026-11-23: past 8, do not send). */
+export const SPOTS_UPDATE_LATE_MS = 30 * 60_000;
 
 /** The Mon–Fri countdown email hour (Ben, 2026-11-04: lib/giveaway/emails.ts hypeEmail). */
 export const DAILY_EMAIL_HOUR_CT = 16;

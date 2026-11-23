@@ -17,6 +17,7 @@ import type { PersonRow, WinnerRow } from "./rows";
 import { bookLink, footingFor, listSentEmails, referralLink, sendGiveawayEmail, tokenLink } from "./send";
 import type { SendDeps } from "./sends";
 import type { GiveawayStore } from "./store";
+import { supabaseAdmin } from "../consultation";
 import { tokenSecret } from "./tokens";
 
 /** The notifier the cron and the admin "Draw now" / "Redraw" use. */
@@ -67,6 +68,19 @@ export function sendDeps(store: GiveawayStore, log: Pick<Console, "log" | "error
       await reportEmailFailure(store, { what: `scheduled email ${kind}`, count: failed, error, willRetry });
     },
     sentLog: (since) => listSentEmails(since),
+    // Who has sent a lead form since a time (the spots-left update, 2026-11-23). Reads only; throws rather than answer "nobody".
+    leadEmailsSince: async (since) => {
+      const db = supabaseAdmin();
+      if (!db) throw new Error("lead reader: database not configured");
+      const out: string[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await db.from("consultation_requests").select("email").gte("created_at", since.toISOString()).not("email", "is", null).order("id").range(from, from + 999);
+        if (error) throw new Error(`lead reader: ${error.message}`);
+        const rows = (data ?? []) as Array<{ email: string | null }>;
+        for (const r of rows) if (r.email) out.push(r.email);
+        if (rows.length < 1000) return out;
+      }
+    },
     // The Monday alert again (2026-11-16): the same email the drawing sends, from the rows as they stand. Reads only.
     staffAlert: async (slot) => {
       const d = drawing(slot as Parameters<typeof drawing>[0]);
