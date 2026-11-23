@@ -148,6 +148,8 @@ export const SCHEDULE = {
   giftReveal: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you gift revealed on the page"),
   /** The reveal email: every verified, subscribed entrant, winners included. */
   thankYouSend: instant(centralToUtc(2026, 11, 21, 19, 0), "Sat Nov 21, 7:00 PM CT", "Thank-you + gift reveal email to every verified, subscribed entrant"),
+  /** One test of the spots-left update, to Ben only, before it is switched on (Ben, 2026-11-23). */
+  spotsUpdateTest: instant(centralToUtc(2026, 11, 23, 6, 20), "Mon Nov 23, 6:20 AM CT", "Test of the spots-left update to Ben only"),
   /** One "spots left" update to entrants who have not booked (Ben, 2026-11-23): Monday morning, the first clinic day after the reveal. */
   spotsUpdate: instant(centralToUtc(2026, 11, 23, 8, 0), "Mon Nov 23, 8:00 AM CT", "Spots-left update to verified, subscribed, unredeemed entrants who have not asked to book"),
   /** Offer reminder — built after Nov 21. My call: 10 am CT. */
@@ -181,6 +183,13 @@ export const CLINIC_DAYS_AFTER_REVEAL = [centralToUtc(2026, 11, 23, 9, 0), centr
 export const SPOTS_UPDATE_LEADS_SINCE = SCHEDULE.giftReveal.at;
 /** More addresses Ben wants left out of the spots-left update (any spelling; compared normalized). */
 export const SPOTS_UPDATE_EXTRA_EXCLUDES: readonly string[] = [];
+/** Off until Ben has seen the test (2026-11-23): the job is scheduled but sends nobody anything while this is false. */
+export const SPOTS_UPDATE_ARMED = false;
+/** The test goes to this one address, with a sample code (not a real entrant's). */
+export const SPOTS_UPDATE_TEST_TO = "ben@harmonizedbraincenterstn.com";
+export const SPOTS_UPDATE_TEST_CODE = "10Y-SAMPLE";
+/** The test is closed unsent if first reached this long after its time (never near 8 am). */
+export const SPOTS_UPDATE_TEST_LATE_MS = 90 * 60_000;
 /** The spots-left update is for Monday morning only: a job first reached this long after its time is closed unsent (Ben, 2026-11-23: past 8, do not send). */
 export const SPOTS_UPDATE_LATE_MS = 30 * 60_000;
 
