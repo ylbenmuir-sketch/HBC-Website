@@ -509,11 +509,7 @@ export default function HomePage() {
           Shows" scrolls here. Every line is approved copy; the caption is
           Ben's exact line.
 
-          The "Your first visit" card under the button is the one place the
-          homepage prints the price, as body text (never a button, never the
-          hero): the duration and HSA/FSA line from lib/site-config.ts, and
-          the cost sentence as /faq's "What does it cost?" says it
-          (lib/faq.ts → FIRST_VISIT_COST_SENTENCE). */}
+          "Your first visit" is its own block directly under this band. */}
       <section className="sec sec-navy home-brain-map bm-band" id="brain-map">
         <div className="wrap">
           <BrainMapStage
@@ -589,29 +585,6 @@ export default function HomePage() {
               />
             }
             actions={<TalkCta variant="invert" />}
-            detail={
-              <div className="bm-visit">
-                <h3 className="bm-visit-h">Your first visit</h3>
-                <p className="bm-visit-facts">
-                  <span>
-                    {FIRST_VISIT_DURATION.charAt(0).toUpperCase() +
-                      FIRST_VISIT_DURATION.slice(1)}
-                  </span>{" "}
-                  &middot; <span>Map + written plan</span> &middot;{" "}
-                  <span>{HSA_FSA_ACCEPTED}</span>
-                </p>
-                <p className="bm-visit-cost">{FIRST_VISIT_COST_SENTENCE}</p>
-                {/* Body links to the two pages that explain the visit and
-                    the method, in the words the homepage's steps used for
-                    them (Ben, 2026-11-22). */}
-                <p className="bm-visit-links">
-                  <Link href="/first-visit">
-                    See what the first visit is like &rarr;
-                  </Link>
-                  <Link href="/how-lens-works">See how LENS works &rarr;</Link>
-                </p>
-              </div>
-            }
             about={
               <Link href="/brain-map" className="bms-about">
                 About the Harmonized Brain Map &rarr;
@@ -624,6 +597,39 @@ export default function HomePage() {
               </>
             }
           />
+        </div>
+      </section>
+
+      {/* "Your first visit" — its own centred block directly under the
+          Brain Map band (Ben, 2026-11-23; until then a small card inside
+          the band, under the button). The one place the homepage prints the
+          price, as body text (never a button, never the hero): the duration
+          and HSA/FSA line from lib/site-config.ts, and the cost sentence as
+          /faq's "What does it cost?" says it (lib/faq.ts →
+          FIRST_VISIT_COST_SENTENCE). The two links are the ones the
+          homepage's steps used for /first-visit and /how-lens-works. */}
+      <section className="home-visit" aria-labelledby="home-visit-h">
+        <div className="wrap">
+          <div className="home-visit-in rv">
+            <h3 className="home-visit-h" id="home-visit-h">
+              Your first visit
+            </h3>
+            <p className="home-visit-facts">
+              <span>
+                {FIRST_VISIT_DURATION.charAt(0).toUpperCase() +
+                  FIRST_VISIT_DURATION.slice(1)}
+              </span>{" "}
+              &middot; <span>Map + written plan</span> &middot;{" "}
+              <span>{HSA_FSA_ACCEPTED}</span>
+            </p>
+            <p className="home-visit-cost">{FIRST_VISIT_COST_SENTENCE}</p>
+            <p className="home-visit-links">
+              <Link href="/first-visit">
+                See what the first visit is like &rarr;
+              </Link>
+              <Link href="/how-lens-works">See how LENS works &rarr;</Link>
+            </p>
+          </div>
         </div>
       </section>
 

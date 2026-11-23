@@ -3911,7 +3911,7 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 /* ============================================================
    Homepage restructure (Ben, 2026-11-22; app/page.tsx): the hero's
    floating card, the trust row, the "What brings you in?" tabs, the
-   Brain Map stage on a navy band with its "Your first visit" card, the
+   Brain Map stage on a navy band, the "Your first visit" block under it, the
    story pair, the two-card locations row with the Franklin strip, the
    closing band's links and the footer's contact lines. Layout only —
    every colour is an existing token, every face the serif or the sans.
@@ -4009,15 +4009,24 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   /* The brand name is navy by rule; on a resting (navy) row it is ivory. */
   .bm-band .bms-tab:not([aria-selected="true"]) .brand-name { color: var(--ivory); }
 }
-/* "Your first visit": a quiet card under the button. The label is
-   --gold-lift (4.98:1 on navy), the facts ivory, the cost sentence the
-   band's body colour. Body text — the price is never a button here. */
-.bm-visit { max-width: 470px; margin-top: 26px; padding: 16px 20px 18px; border: 1px solid rgba(251, 248, 241, 0.2); border-left: 3px solid var(--gold-lift); border-radius: 0 6px 6px 0; }
-.bm-band .bm-visit-h { margin: 0 0 8px; font-family: var(--sans); font-size: 12px; line-height: 1.5; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--gold-lift); }
-.bm-band .bm-visit-facts { margin: 0 0 8px; font-size: 15.5px; line-height: 1.5; font-weight: 500; color: var(--ivory); }
-.bm-visit-facts span { white-space: nowrap; }
-.bm-band .bm-visit-cost { margin: 0; font-size: 14.5px; line-height: 1.6; color: rgba(251, 248, 241, 0.76); }
-@media (max-width: 1023px) { .bm-visit { max-width: none; } }
+/* "Your first visit": its own centred block directly under the Brain Map
+   band (Ben, 2026-11-23), 720px at most, on the page's ivory. The label is
+   the eyebrow's gold ink, the facts line 20px navy, the cost sentence 17px
+   slate (5.4:1). Body text — the price is never a button here. */
+.home-visit { padding: 64px 0 68px; border-bottom: 1px solid var(--line); }
+.home-visit-in { max-width: 720px; margin: 0 auto; text-align: center; }
+.home-visit-h { margin: 0 0 14px; font-family: var(--sans); font-size: 12.5px; line-height: 1.5; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; color: var(--gold-ink); }
+.home-visit-facts { margin: 0 0 12px; font-size: 20px; line-height: 1.45; font-weight: 500; color: var(--navy); }
+.home-visit-facts span { white-space: nowrap; }
+.home-visit-cost { margin: 0 auto; max-width: 620px; font-size: 17px; line-height: 1.65; color: var(--slate); }
+.home-visit-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 30px; margin: 14px 0 -8px; }
+.home-visit-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15.5px; font-weight: 600; color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold-soft); text-underline-offset: 5px; white-space: nowrap; }
+.home-visit-links a:hover { text-decoration-color: var(--navy); }
+@media (max-width: 760px) {
+  .home-visit { padding: 44px 0 46px; }
+  .home-visit-facts { font-size: 19px; }
+  .home-visit-links { flex-direction: column; align-items: center; gap: 0; }
+}
 
 /* -- client stories: the featured story beside one Google review -- */
 .story-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: start; }
@@ -4059,12 +4068,6 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 .hc-more a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15.5px; font-weight: 600; color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold-soft); text-underline-offset: 5px; }
 .hc-more a:hover { text-decoration-color: var(--navy); }
 @media (max-width: 760px) { .hc-more { flex-direction: column; gap: 4px; margin-top: 20px; padding-top: 18px; } .hc-more ul { gap: 0 24px; } }
-/* The two links at the foot of the "Your first visit" card: ivory on navy,
-   gold-lift rule. */
-.bm-band .bm-visit-links { display: flex; flex-wrap: wrap; gap: 0 26px; margin: 8px 0 -6px; }
-.bm-visit-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14.5px; font-weight: 600; color: var(--ivory); text-decoration: underline; text-decoration-color: var(--gold-lift); text-underline-offset: 5px; white-space: nowrap; }
-.bm-visit-links a:hover { text-decoration-color: var(--ivory); }
-
 /* The hero's proof line is a desktop and tablet piece since 2026-11-22: on a
    phone the trust row directly under the hero carries the same facts. */
 @media (max-width: 760px) { .hero-copy .hero-proof { display: none; } }

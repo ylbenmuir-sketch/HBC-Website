@@ -41,7 +41,6 @@ export default function BrainMapStage({
   plan,
   actions,
   about,
-  detail,
   caption,
 }: {
   head: ReactNode;
@@ -55,8 +54,6 @@ export default function BrainMapStage({
   plan: ReactNode;
   actions: ReactNode;
   about: ReactNode;
-  /** A small card under the buttons (the homepage's "Your first visit"). */
-  detail?: ReactNode;
   /** Shown under the visual on Scan and Results; its space is kept on Plan. */
   caption: ReactNode;
 }) {
@@ -232,7 +229,6 @@ export default function BrainMapStage({
       <div className="bms-actions-wrap">
         <div className="bms-actions">{actions}</div>
         {about}
-        {detail}
       </div>
     </div>
   );
