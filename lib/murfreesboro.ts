@@ -7,23 +7,34 @@
  * It is /start's sibling, not its replacement: the same form, the same
  * headline codes (`h`, lib/start.ts), the same offer name and button. The
  * differences are here — one center, a headline of its own for a link that
- * names no code, a video slot, and three lines under the form.
+ * names no code, a video slot, and the lines around the one button.
  *
  * A health business, as on /start: the address is a place name, never a
  * condition, and the <title> and description are the same for every
  * headline (app/murfreesboro/page.tsx).
  */
 
-import { BRAIN_MAP_PRICE_USD } from "./site-config";
+import { BRAIN_MAP_PRICE_USD, REVIEWS, REVIEW_COUNT_ROUNDED } from "./site-config";
 import { START_DEFAULT_HOOK, START_OFFER, startHook, type StartHook } from "./start";
 
 export const MURFREESBORO_AD_PATH = "/murfreesboro";
 
-/** The headline for a link with no code (or g1): the outcome, in the two-part shape /start's take. */
+/**
+ * The form's id on the page: the button is a link to `#request`, and
+ * components/RequestDialog.tsx is what it points at. Here, not in that
+ * client file, because the server page reads it too.
+ */
+export const REQUEST_ANCHOR = "request";
+
+/**
+ * The headline for a link with no code (or g1), in the two-part shape
+ * /start's take: `lead` is the large serif line, `tail` the smaller pine
+ * italic line under it (Ben, 2026-11-23).
+ */
 export const MURFREESBORO_DEFAULT_HOOK: StartHook = {
-  lead: "See which parts of your brain are in overdrive, which are running quiet,",
-  tail: "and what to do about it.",
-  headline: "See which parts of your brain are in overdrive, which are running quiet, and what to do about it.",
+  lead: "See which parts of your brain are in overdrive.",
+  tail: "And what to do about it.",
+  headline: "See which parts of your brain are in overdrive. And what to do about it.",
 };
 
 /**
@@ -43,23 +54,18 @@ export function murfreesboroHook(h: unknown): StartHook {
  */
 export const MURFREESBORO_OFFER = {
   eyebrow: `Murfreesboro · ${START_OFFER.name}`,
-  sub: `A 60-minute ${START_OFFER.name} at our Murfreesboro center. You leave with your map and a written plan. $${BRAIN_MAP_PRICE_USD}, no medication.`,
-  /** The one line over the fields: why we ask for a number. */
+  /** One sentence pair under the headline — a line, not a paragraph. */
+  sub: "A 60-minute Brain Map. You leave with your map and a written plan.",
+  /** Under each step's question in the form: why we ask for a number. */
   formSub: "We’ll call to find a time that works for you.",
+  /**
+   * One quiet line directly under the button. The review figures are the
+   * site's own verified constants (lib/site-config.ts), never typed here.
+   */
+  quiet: `$${BRAIN_MAP_PRICE_USD} · 60 minutes · ★ ${REVIEWS.value.rating} from ${REVIEW_COUNT_ROUNDED} Google reviews`,
+  /** Smaller, under that line. The only guarantee text on the page. */
   guarantee: "If we don’t deliver the map and the written plan, you don’t pay.",
-  /** Quiet, under the guarantee. */
-  badges: `$${BRAIN_MAP_PRICE_USD} · 60 minutes`,
 } as const;
-
-/**
- * Under the form: exactly three, the most common objection first. The
- * guarantee is not one of them — it is said once, under the button.
- */
-export const MURFREESBORO_BULLETS = [
-  "Painless. Sensors simply read your brain’s activity while you sit comfortably.",
-  "About 60 minutes, and you leave with your map and written plan the same day.",
-  "No referral needed, and nothing is booked that day unless you want it to be.",
-] as const;
 
 /**
  * The hero's video slot: "What is a Brain Map?"
@@ -72,8 +78,8 @@ export const MURFREESBORO_BULLETS = [
  *   captions its WebVTT captions, e.g. "/videos/what-is-a-brain-map.vtt".
  *            The clip starts muted, so the captions carry it.
  *   poster   a 16:9 still, ideally a frame from the clip, in public/images.
- * While `src` is null the slot is the poster alone — a plain still, with
- * no label, no play button and no placeholder text (Ben, 2026-11-23).
+ * While `src` is null the slot is the poster with one small centered badge
+ * reading the title — no "coming soon", nothing to press (Ben, 2026-11-23).
  */
 export const BRAIN_MAP_VIDEO: {
   src: string | null;

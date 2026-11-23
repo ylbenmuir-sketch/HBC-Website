@@ -4,12 +4,13 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The video slot in /murfreesboro's hero (Ben, 2026-11-22): a compact 16:9
- * frame directly under the headline and the sentence.
+ * The video slot in /murfreesboro's hero (Ben, 2026-11-22): a 16:9 frame,
+ * centered under the headline and the sentence.
  *
  * Until the clip exists (lib/murfreesboro.ts → BRAIN_MAP_VIDEO.src is
- * null) it is the poster alone — a real HBC photo as a plain still: no
- * label, no scrim, no play button, no placeholder text (Ben, 2026-11-23).
+ * null) it is the poster — a real HBC photo — with one small centered
+ * badge, a play mark and "What is a Brain Map?". No "coming soon", no
+ * scrim; the badge is a label and nothing is pressable (Ben, 2026-11-23).
  *
  * With a clip: self-hosted <video>, no third-party script. It starts by
  * itself only muted, only once the page has finished loading and the slot
@@ -89,7 +90,7 @@ export default function BrainMapVideo({ video }: { video: BrainMapVideoSource })
 
   return (
     <figure className={`mb-video${live ? " mb-video-live" : ""}${started ? " mb-video-started" : ""}`}>
-      <Image src={video.poster} alt={video.posterAlt} fill priority sizes="(min-width: 900px) 580px, 100vw" />
+      <Image src={video.poster} alt={video.posterAlt} fill priority sizes="(min-width: 800px) 760px, 100vw" />
       {live && (
         <video
           ref={ref}
@@ -111,11 +112,14 @@ export default function BrainMapVideo({ video }: { video: BrainMapVideoSource })
           {video.captions && <track kind="captions" src={video.captions} srcLang="en" label="English" default />}
         </video>
       )}
-      {live && (
-        <figcaption className="mb-video-label">
-          <span className="mb-video-title">{video.title}</span>
-        </figcaption>
-      )}
+      {/* The badge: a play mark and the question, centered. A label, not a
+          control — with a clip, the real controls are the buttons below. */}
+      <figcaption className="mb-video-label">
+        <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 2l10 6-10 6z" fill="currentColor" />
+        </svg>
+        <span>{video.title}</span>
+      </figcaption>
       {live && (
         <div className="mb-video-controls">
           <button type="button" onClick={togglePlay} aria-label={playing ? "Pause the video" : "Play the video"}>

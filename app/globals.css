@@ -3706,78 +3706,113 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .start-footer-in { padding: 0 48px; }
 }
 
-/* ── /murfreesboro, the Murfreesboro ad landing page (Ben, 2026-11-22) ───
-   A short opt-in page on /start's parts (the header, the sage form band,
-   the fields, the button, the footer are the .start-* rules above); only
-   what differs is here. Phone, top to bottom: a gold eyebrow, the serif
-   headline with its last words in the pine italic, one sentence, the 16:9
-   video slot, then the form band; under it three lines between hairlines
-   and the footer. Desktop (900px and up): headline, sentence and video on
-   the left, the form on the right, all inside a 1280×720 first screen. */
-.mb-pane { padding: 20px 20px 22px; }
+/* ── /murfreesboro, the Murfreesboro ad landing page (Ben, 2026-11-22; one
+   centered column since 2026-11-23) ─────────────────────────────────────
+   A short opt-in page on /start's parts (the header, the fields, the
+   button's serif, the footer are the .start-* rules above); only what
+   differs is here. Everything is centered in one column, 760px at most,
+   on ivory: a gold eyebrow, a large serif headline with a smaller pine
+   italic line under it, one sentence, the 16:9 frame, one pine button, a
+   quiet line and the guarantee. Then the footer. The form is not on the
+   page until the button is pressed (.mb-request, below). */
+.mb-hero { display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; padding: 22px 20px 44px; text-align: center; }
 .mb-page .start-eyebrow { font-size: 12px; letter-spacing: 0.18em; color: var(--gold-ink); }
-/* The headline's size is this page's own, and a clamp (Ben, 2026-11-23): the
-   default line is 97 characters, and it has to sit in three lines on a
-   390px phone (27px) and a 360px one (25px) so the name and phone fields
-   stay on the first screen. 24px is the floor for a 320px phone. */
-.mb-pane h1 { margin: 9px 0 11px; font-family: var(--serif); font-weight: 600; font-size: clamp(24px, 6.9vw, 27px); line-height: 1.06; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
-.mb-pane h1 em { font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--pine); }
-/* The video slot. The poster (next/image) is the bottom layer; the <video>,
+/* The headline's size is this page's own, and a clamp: two lines on a
+   phone from 360px up, two on a desktop. The italic line is its own row,
+   a step smaller. */
+.mb-hero h1 { margin: 10px 0 0; font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 9vw, 36px); line-height: 1.04; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
+.mb-hero h1 em { display: block; margin-top: 7px; font-family: var(--serif-italic); font-style: italic; font-weight: 500; font-size: 0.62em; line-height: 1.15; letter-spacing: 0; color: var(--pine); }
+.mb-sub { max-width: 34em; margin: 12px 0 0; font-size: 16px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
+/* The frame. The poster (next/image) is the bottom layer; the <video>,
    when there is one, sits over it and is transparent until it plays. With
-   no clip the poster is a plain still: no label, no scrim. With one, the
-   label is on a pine scrim at the foot of the frame: ivory on it is 9:1
-   and up where the type sits. Once a clip plays, label and scrim go — the
-   captions take that space — and the two controls stay, top right. */
-.mb-video { position: relative; aspect-ratio: 16 / 9; margin: 16px 0 0; overflow: hidden; border-radius: 10px; background: var(--pine); }
+   no clip: the photo and one small centered badge — a play mark and the
+   question — on a pine pill; it is a label, not a control. With a clip:
+   the same badge until it plays, then it goes and the two controls stay,
+   top right; captions take the foot of the frame. */
+.mb-video { position: relative; width: 100%; aspect-ratio: 16 / 9; margin: 18px 0 0; overflow: hidden; border-radius: 12px; background: var(--pine); }
 .mb-video img { object-fit: cover; }
 .mb-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.mb-video-live::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(22, 50, 47, 0.92) 0%, rgba(22, 50, 47, 0.7) 24%, rgba(22, 50, 47, 0) 54%); pointer-events: none; transition: opacity 0.3s; }
-.mb-video-label { position: absolute; z-index: 1; left: 16px; right: 16px; bottom: 13px; display: flex; flex-direction: column; gap: 3px; margin: 0; text-align: left; letter-spacing: 0; text-transform: none; color: var(--ivory); transition: opacity 0.3s; }
-.mb-video-title { font-family: var(--serif); font-weight: 600; font-size: 23px; line-height: 1.1; }
-.mb-video-started::after, .mb-video-started .mb-video-label { opacity: 0; }
+.mb-video-label { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 9px; margin: 0; padding: 9px 16px 9px 13px; border-radius: 999px; background: rgba(22, 50, 47, 0.86); color: var(--ivory); font-family: var(--sans); font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: 0.01em; text-transform: none; white-space: nowrap; cursor: default; transition: opacity 0.3s; }
+.mb-video-label svg { flex: none; color: var(--gold-lift); }
+/* No pointer-events: none on the badge — the layout audit reads that as
+   covered text. Gone from the layout once a clip has started. */
+.mb-video-started .mb-video-label { opacity: 0; visibility: hidden; }
 .mb-video-controls { position: absolute; z-index: 2; top: 8px; right: 8px; display: flex; gap: 6px; }
 .mb-video-controls button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 22px; background: rgba(22, 50, 47, 0.88); color: var(--ivory); font-family: var(--sans); font-size: 13.5px; font-weight: 600; line-height: 1; cursor: pointer; }
 .mb-video-controls button:focus-visible { outline: 2px solid var(--ivory); outline-offset: 2px; }
 /* Captions carry the clip while it is muted: readable at a phone's 350px frame. */
 .mb-video video::cue { font-family: var(--sans); font-size: 15px; line-height: 1.35; color: #fbf8f1; background: rgba(22, 50, 47, 0.9); }
-/* The form band: no heading here, so the one line over the fields leads. */
-.mb-form .start-form-sub { font-size: 16px; font-weight: 600; }
-.mb-form .start-add-email { margin-top: -8px; }
-.mb-form .start-guarantee { text-wrap: balance; }
-.start-form-meta { justify-content: center; gap: 2px 18px; margin-top: 8px; font-size: 13px; }
-/* Under the form: exactly three lines. Serif, a short gold rule before
-   each, hairlines between — no heading, no icons. */
-.mb-points { padding: 38px 20px 44px; }
-.mb-points ul { list-style: none; max-width: 640px; margin: 0 auto; padding: 0; }
-.mb-points li { position: relative; padding: 17px 0 17px 30px; border-top: 1px solid var(--line); font-family: var(--serif); font-weight: 500; font-size: 21px; line-height: 1.28; color: var(--navy); text-wrap: balance; }
-.mb-points li:first-child { border-top: 0; }
-.mb-points li::before { content: ""; position: absolute; left: 0; top: 30px; width: 16px; height: 2px; background: var(--gold); }
+/* The one button: pine, ivory serif, as wide as the column on a phone. */
+.mb-cta { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: 100%; max-width: 420px; min-height: 58px; margin: 20px 0 0; padding: 0 28px; border-radius: 8px; background: var(--pine); color: var(--ivory); font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1; letter-spacing: 0.005em; text-decoration: none; transition: background 0.2s; }
+.mb-cta:hover { background: #0f2623; }
+.mb-cta:focus-visible { outline: 2px solid var(--pine); outline-offset: 3px; }
+.mb-cta-arrow { font-family: var(--sans); font-weight: 400; font-size: 18px; }
+.mb-quiet { margin: 13px 0 0; font-size: 14px; line-height: 1.4; color: var(--ink); text-wrap: balance; }
+.mb-guarantee { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--slate); text-wrap: balance; }
+
+/* The request form (components/RequestDialog.tsx). Without JavaScript: a
+   plain section at the foot of the page, both of the form's screens shown
+   one under the other, one send button. With it (html.js): hidden until
+   the button is pressed, then over the page — a centered ivory card on a
+   pine veil on a desktop, the whole screen on a phone. */
+.mb-request { padding: 36px 20px 48px; border-top: 1px solid var(--line); scroll-margin-top: 70px; }
+.mb-request-card { position: relative; max-width: 440px; margin: 0 auto; outline: none; }
+.mb-request-backdrop, .mb-request-close { display: none; }
+.mb-request .mb-form { padding: 0; background: none; border-radius: 0; }
+html.js .mb-request { display: none; }
+html.js .mb-request.mb-request-open { position: fixed; inset: 0; z-index: 200; display: flex; padding: 0; border: 0; background: var(--ivory); }
+html.js .mb-request-open .mb-request-card { width: 100%; max-width: none; height: 100%; margin: 0; padding: 60px 22px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background: var(--ivory); }
+html.js .mb-request-open .mb-request-card > .mb-form { max-width: 440px; margin: 0 auto; }
+html.js .mb-request-open .mb-request-close { position: absolute; top: 8px; right: 10px; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 22px; background: none; color: var(--ink); cursor: pointer; }
+html.js .mb-request-open .mb-request-close:hover { background: var(--ivory-2); }
+html.js .mb-request-open .mb-request-close:focus-visible { outline: 2px solid var(--pine); outline-offset: 0; }
+/* The two screens. The progress line is pine on a hairline track. */
+.mb-progress { display: none; height: 3px; margin: 0 0 22px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.mb-progress span { display: block; width: 50%; height: 100%; border-radius: 2px; background: var(--pine); transition: width 0.3s; }
+.mb-steps[data-substep="2"] .mb-progress span { width: 100%; }
+.mb-step-count { display: none; margin: 0 0 8px; font-size: 12px; line-height: 1.3; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-ink); }
+.mb-steps .start-form-heading { font-size: 30px; }
+.mb-steps .start-form-sub { margin-bottom: 20px; }
+.mb-step + .mb-step { margin-top: 26px; }
+.mb-name-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.mb-steps .start-add-email { margin-top: -8px; }
+.mb-steps-error { margin: 12px 0 0; font-size: 14.5px; line-height: 1.4; color: #9a3b2e; }
+.mb-page .mb-steps .start-submit { margin-top: 18px !important; }
+.mb-continue, .mb-back { display: none !important; }
+.mb-back { align-items: center; justify-content: center; width: 100%; min-height: 44px; margin: 6px 0 0; padding: 0; border: 0; background: none; font-family: var(--sans); font-size: 14.5px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-control); text-underline-offset: 3px; cursor: pointer; }
+html.js .mb-progress, html.js .mb-step-count { display: block; }
+html.js .mb-continue { display: inline-flex !important; }
+html.js .mb-back { display: inline-flex !important; }
+html.js .mb-steps[data-substep="1"] .mb-step-2, html.js .mb-steps[data-substep="2"] .mb-step-1 { display: none; }
+html.js .mb-step + .mb-step { margin-top: 0; }
 /* 320px phones: the Murfreesboro number is 8px wider than the header has. */
 @media (max-width: 359px) {
   header.site.mb-header .start-tel { gap: 5px; padding: 0; font-size: 13.5px; letter-spacing: 0; }
   header.site.mb-header .start-tel svg { width: 16px; height: 16px; }
+  .mb-cta { font-size: 20px; padding: 0 16px; }
 }
-@media (min-width: 701px) and (max-width: 899px) {
-  .mb-pane, .mb-form { padding-left: max(20px, calc((100% - 560px) / 2)); padding-right: max(20px, calc((100% - 560px) / 2)); }
-  .mb-pane h1 { font-size: 42px; }
+@media (min-width: 701px) {
+  .mb-hero { padding: 34px 20px 56px; }
+  .mb-hero h1 { font-size: clamp(44px, 4.4vw, 54px); line-height: 1.02; }
+  .mb-sub { margin-top: 14px; font-size: 17.5px; }
+  .mb-video { margin-top: 22px; border-radius: 14px; }
+  .mb-video-label { padding: 11px 20px 11px 16px; font-size: 15.5px; }
+  .mb-cta { margin-top: 24px; min-height: 60px; }
+  .mb-quiet { margin-top: 14px; font-size: 15px; }
+  .mb-guarantee { font-size: 13.5px; }
+  /* The dialog: a card on a pine veil. */
+  html.js .mb-request.mb-request-open { align-items: center; justify-content: center; padding: 24px; background: none; }
+  html.js .mb-request-open .mb-request-backdrop { position: absolute; inset: 0; display: block; background: rgba(22, 50, 47, 0.62); }
+  html.js .mb-request-open .mb-request-card { max-width: 500px; height: auto; max-height: calc(100vh - 48px); padding: 44px 40px 34px; border-radius: 16px; box-shadow: 0 24px 60px rgba(15, 30, 28, 0.28); }
+  .mb-steps .start-form-heading { font-size: 34px; }
 }
 @media (min-width: 900px) {
   header.site.mb-header .nav { max-width: 1180px; }
-  .mb-hero { display: grid; grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr); gap: 56px; align-items: start; max-width: 1180px; margin: 0 auto; padding: 30px 48px 40px; }
-  .mb-pane { padding: 0; }
-  .mb-page .start-eyebrow { font-size: 12.5px; }
-  /* Three lines at 1280 (46px), so the photo ends inside a 720px screen;
-     smaller with the column on narrower desktops. */
-  .mb-pane h1 { margin: 11px 0 13px; font-size: clamp(36px, 3.6vw, 46px); line-height: 1.02; }
-  .mb-page .start-sub { font-size: 17px; }
-  .mb-video { margin-top: 20px; border-radius: 12px; }
-  .mb-video-label { left: 22px; bottom: 18px; }
-  .mb-video-title { font-size: 28px; }
-  .mb-form { padding: 26px 32px 24px; }
-  .mb-form .start-form-sub { margin-bottom: 16px; font-size: 17px; }
-  .mb-points { padding: 26px 48px 72px; }
-  .mb-points li { padding: 19px 0 19px 34px; font-size: 23px; }
-  .mb-points li::before { top: 33px; }
+  .mb-hero { padding-top: 28px; }
+  /* Keeps the button on a short desktop's first screen: the frame gives up
+     width before the page gives up the fold. 760px wide from a 854px-tall
+     window up; never under 440px. */
+  .mb-video { width: min(100%, max(440px, calc((100vh - 426px) * 1.7778))); }
 }
 
 /* ── /contact on a desktop: step one inside 1280×800 (Ben, 2026-11-12) ────
