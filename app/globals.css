@@ -3716,7 +3716,11 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
    the left, the form on the right, all inside a 1280×720 first screen. */
 .mb-pane { padding: 20px 20px 22px; }
 .mb-page .start-eyebrow { font-size: 12px; letter-spacing: 0.18em; color: var(--gold-ink); }
-.mb-pane h1 { margin: 9px 0 11px; font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.03; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
+/* The headline's size is this page's own, and a clamp (Ben, 2026-11-23): the
+   default line is 97 characters, and it has to sit in three lines on a
+   390px phone (27px) and a 360px one (25px) so the name and phone fields
+   stay on the first screen. 24px is the floor for a 320px phone. */
+.mb-pane h1 { margin: 9px 0 11px; font-family: var(--serif); font-weight: 600; font-size: clamp(24px, 6.9vw, 27px); line-height: 1.06; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
 .mb-pane h1 em { font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--pine); }
 /* The video slot. The poster (next/image) is the bottom layer; the <video>,
    when there is one, sits over it and is transparent until it plays. With
@@ -3762,7 +3766,9 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
   .mb-hero { display: grid; grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr); gap: 56px; align-items: start; max-width: 1180px; margin: 0 auto; padding: 30px 48px 40px; }
   .mb-pane { padding: 0; }
   .mb-page .start-eyebrow { font-size: 12.5px; }
-  .mb-pane h1 { margin: 11px 0 13px; font-size: 48px; line-height: 1.02; }
+  /* Three lines at 1280 (46px), so the photo ends inside a 720px screen;
+     smaller with the column on narrower desktops. */
+  .mb-pane h1 { margin: 11px 0 13px; font-size: clamp(36px, 3.6vw, 46px); line-height: 1.02; }
   .mb-page .start-sub { font-size: 17px; }
   .mb-video { margin-top: 20px; border-radius: 12px; }
   .mb-video-label { left: 22px; bottom: 18px; }
