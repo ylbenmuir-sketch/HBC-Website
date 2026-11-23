@@ -342,13 +342,17 @@ export default function ContactForm({
     formSub?: string;
     guarantee?: string;
     quiet?: string;
+    /** The three fields' own labels and example text (/murfreesboro's card, 2026-11-23). */
+    fields?: Partial<Record<"name" | "phone" | "email", { label: string; placeholder?: string }>>;
   };
   /**
    * "start" variant, /murfreesboro (Ben, 2026-11-23): name, phone and email
    * are all asked and all required. The email field is on the page from
    * the first HTML — no "Add email (optional)" link — and the labels are
-   * plain "Name", "Phone", "Email". The text-message box stays as it is
-   * everywhere: unticked, never required.
+   * plain "Name", "Phone", "Email" unless `startCopy.fields` names them.
+   * Phone and email sit in one `.start-pair` (side by side where the page's
+   * styles say so). The text-message box stays as it is everywhere:
+   * unticked, never required.
    */
   requireAll?: boolean;
 }) {
@@ -871,7 +875,8 @@ export default function ContactForm({
           used to sit above the pair is gone on every width. Not on the
           giveaway path, where the phone is the optional one. */}
       <label htmlFor="email">
-        Email{!giveaway && !requireAll && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
+        {startCopy?.fields?.email?.label ?? "Email"}
+        {!giveaway && !requireAll && <> <span style={OPTIONAL_STYLE}>({isStart ? "optional" : "or just phone"})</span></>}
       </label>
       <input
         id="email"
@@ -880,11 +885,39 @@ export default function ContactForm({
         inputMode="email"
         autoComplete="email"
         autoCapitalize="off"
+        placeholder={startCopy?.fields?.email?.placeholder}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         aria-invalid={invalid("email")}
         required={requireAll || undefined}
       />
+    </>
+  );
+  const phoneField = (
+    <>
+        <label htmlFor="phone">
+          {giveaway ? (
+            <>
+              {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
+            </>
+          ) : isStart ? (
+            startCopy?.fields?.phone?.label ?? (requireAll ? "Phone" : "Phone number")
+          ) : (
+            "Phone"
+          )}
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder={startCopy?.fields?.phone?.placeholder}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          aria-invalid={invalid("phone")}
+          required={requireAll || undefined}
+        />
     </>
   );
   return (
@@ -953,40 +986,28 @@ export default function ContactForm({
 
       {/* One field, first and last (Ben, 2026-10-27); stored whole, greeted
           by the first word (lib/first-name.ts). The id predates the change. */}
-      <label htmlFor="first-name">Name</label>
+      <label htmlFor="first-name">{startCopy?.fields?.name?.label ?? "Name"}</label>
       <input
         id="first-name"
         name="first_name"
         autoComplete="name"
         autoCapitalize="words"
+        placeholder={startCopy?.fields?.name?.placeholder}
         value={givenName}
         onChange={(e) => setGivenName(e.target.value)}
         aria-invalid={invalid("first-name")}
         required
       />
 
-      <label htmlFor="phone">
-        {giveaway ? (
-          <>
-            {GIVEAWAY_PHONE_LABEL} <span style={OPTIONAL_STYLE}>(optional)</span>
-          </>
-        ) : isStart ? (
-          requireAll ? "Phone" : "Phone number"
-        ) : (
-          "Phone"
-        )}
-      </label>
-      <input
-        id="phone"
-        name="phone"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        aria-invalid={invalid("phone")}
-        required={requireAll || undefined}
-      />
+      {/* All three required (/murfreesboro): phone and email are one pair. */}
+      {requireAll ? (
+        <div className="start-pair">
+          <div>{phoneField}</div>
+          <div>{emailField}</div>
+        </div>
+      ) : (
+        phoneField
+      )}
 
       {/* Everywhere but /start the email field comes before the center. */}
       {!isStart && emailField}
@@ -1047,7 +1068,7 @@ export default function ContactForm({
           Add email (optional)
         </button>
       )}
-      {isStart && emailField}
+      {isStart && !requireAll && emailField}
 
       {/* Text-message consent, last before the button (Ben, 2026-11-02).
           A2P 10DLC: carrier reviewers read it in the server-rendered HTML,
