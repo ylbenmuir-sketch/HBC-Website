@@ -76,7 +76,7 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "LENS neurofeedback in Nashville & Murfreesboro: help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map.",
-    dateModified: "2026-10-19",
+    dateModified: "2026-11-22",
     type: "WebPage",
     crumb: "Home",
   },
