@@ -184,7 +184,7 @@ export const SPOTS_UPDATE_LEADS_SINCE = SCHEDULE.giftReveal.at;
 /** More addresses Ben wants left out of the spots-left update (any spelling; compared normalized). */
 export const SPOTS_UPDATE_EXTRA_EXCLUDES: readonly string[] = [];
 /** Off until Ben has seen the test (2026-11-23): the job is scheduled but sends nobody anything while this is false. */
-export const SPOTS_UPDATE_ARMED = false;
+export const SPOTS_UPDATE_ARMED = true;
 /** The test goes to this one address, with a sample code (not a real entrant's). */
 export const SPOTS_UPDATE_TEST_TO = "ben@harmonizedbraincenterstn.com";
 export const SPOTS_UPDATE_TEST_CODE = "10Y-SAMPLE";
