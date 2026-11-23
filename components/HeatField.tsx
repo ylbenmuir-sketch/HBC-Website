@@ -15,6 +15,15 @@ import { useEffect, useRef, useState } from "react";
  * so a visitor reading down never sees the field arrive; in the first
  * screen (`eager`) it is server-rendered exactly as before.
  *
+ * A view that never scrolls never trips that observer: a full-page
+ * screenshot, a print, a crawler's render — each showed the head with 21
+ * grey dots and no colour. So the field is also fetched (2026-11-23) once
+ * the page has finished loading and the browser is idle
+ * (requestIdleCallback, 2 s at most; a timer where it is missing), and on
+ * `beforeprint`. Both come after the window's `load` event — after the hero
+ * photo and everything else the first screen asked for — so the bytes are
+ * still out of the hero's way.
+ *
  * The only loss is a browser with JavaScript off, which gets the sites and
  * labels without the painted field behind them.
  */
@@ -51,7 +60,29 @@ export default function HeatField({
       { rootMargin: "900px 0px" }
     );
     io.observe(el);
-    return () => io.disconnect();
+
+    // After `load`, when idle — for the views that never scroll.
+    let idle: number | undefined;
+    let timer: number | undefined;
+    const show = () => setNear(true);
+    const whenIdle = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        idle = window.requestIdleCallback(show, { timeout: 2000 });
+      } else {
+        timer = window.setTimeout(show, 2000);
+      }
+    };
+    if (document.readyState === "complete") whenIdle();
+    else window.addEventListener("load", whenIdle, { once: true });
+    window.addEventListener("beforeprint", show);
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("load", whenIdle);
+      window.removeEventListener("beforeprint", show);
+      if (idle !== undefined) window.cancelIdleCallback?.(idle);
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, [near]);
   return <image ref={ref} href={near ? href : undefined} {...rest} />;
 }
