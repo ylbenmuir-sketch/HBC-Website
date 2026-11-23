@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import PartnerBadge from "@/components/PartnerBadge";
 import PhotoFrame from "@/components/PhotoFrame";
+import AfterHeroGate from "@/components/AfterHeroGate";
 import BrainMapStage from "@/components/BrainMapStage";
 import BrandName from "@/components/BrandName";
 import BrainMapHeat from "@/components/BrainMapHeat";
@@ -269,6 +270,10 @@ export default function HomePage() {
               priority
               quality={62}
             />
+            {/* Directly after the hero image, before any other image is
+                parsed: the images just below the hero wait for it
+                (components/AfterHeroGate.tsx). */}
+            <AfterHeroGate />
             {/* Phones only (globals.css ≤760px): the navy scrim the copy
                 sits on. `display: none` everywhere else. */}
             <span className="hero-scrim" aria-hidden="true" />
@@ -420,6 +425,10 @@ export default function HomePage() {
                 // site and looks like nothing at all on desktop, where it was
                 // written. Same breakpoint as the rule that causes it.
                 sizes="(max-width: 760px) 100vw, 220px"
+                // 55, not the default 75 (2026-11-23): 51 KB became 22 KB
+                // at the 700px the file has, for a poster that sits under
+                // a navy gradient and a play button.
+                quality={55}
                 style={{ objectFit: "cover", objectPosition: "center 30%" }}
               />
               <span className="play">
