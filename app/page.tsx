@@ -15,7 +15,7 @@ import HomeLocationCard from "@/components/HomeLocationCard";
 import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
 import GuideCta from "@/components/GuideCta";
-import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
+import { Btn, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
 import HeroBrainMapJump from "@/components/HeroBrainMapJump";
@@ -199,11 +199,9 @@ export default function HomePage() {
                 <span>Free 10-minute call ·</span> <span>No pressure ·</span>{" "}
                 <span>{HSA_FSA_ACCEPTED}</span>
               </p>
-              {/* What "Get Started" leads to, under the buttons (Ben,
-                  2026-10-26). Its own row on a desktop; hidden on a phone,
-                  where `.hero-reassure-m` says it in one line. The same
-                  line is under TalkCta on the concern pages. */}
-              <CtaReassure />
+              {/* The "No pressure. We'll reach out…" line (CtaReassure) is
+                  off this hero since 2026-11-23 (Ben). The concern pages
+                  keep it under their TalkCta. */}
               {/* The one-line proof under the buttons, from 761px up (Ben,
                   2026-11-22): PROOF_LINE in lib/site-config.ts — the same
                   rating, review count, session count and founding year the

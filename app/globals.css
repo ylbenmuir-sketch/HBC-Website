@@ -524,6 +524,9 @@ figcaption { font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercas
      The HSA line closes up under it (22px → 14px), with the 10px above the
      reassurance line, to give 10px back: the chips end at ~819 there. */
   .cta-reassure + .hero-hsa { margin-top: -8px; }
+  /* The homepage hero has no reassurance row since 2026-11-23: its proof
+     line reads with the buttons the way that row did (22px row gap → 10px). */
+  .home .hero-btns + .hero-reassure-m + .hero-proof { margin-top: -12px; }
 }
 /* The headline about 17% under the base h1 from 1024px up (Ben, 2026-10-18):
    at 5.4vw/76px it ran four lines beside the photo and pushed the HSA line to
@@ -1150,6 +1153,9 @@ html.js .rv.in { opacity: 1; transform: none; }
      (homepage: an item of the copy column, after the buttons and before the
      chips; concern pages: a block after the inline buttons). */
   .cta-reassure { margin-top: 14px; }
+  /* The homepage hero's proof line is the item after the buttons there
+     (2026-11-23); it took the reassurance line's 14px. Hidden ≤760px. */
+  .home .hero-copy .hero-proof { margin-top: 14px; }
   .trio-quotes { grid-template-columns: 1fr; }
   .half-row { grid-template-columns: 1fr; }
   .steps4 { grid-template-columns: 1fr 1fr; }
