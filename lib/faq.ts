@@ -67,6 +67,13 @@ export type SiteFaq = {
   confirmTag?: string;
 };
 
+/**
+ * What the first visit costs and includes, as the cost answer below says
+ * it. Its own constant so the homepage's "Your first visit" card
+ * (app/page.tsx) prints the same sentence rather than a copy of it.
+ */
+export const FIRST_VISIT_COST_SENTENCE = `The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep.`;
+
 export const SITE_FAQS: SiteFaq[] = [
   {
     q: "What is LENS neurofeedback?",
@@ -158,7 +165,7 @@ export const SITE_FAQS: SiteFaq[] = [
     : []),
   {
     q: "What does it cost?",
-    a: `The phone call is free. The Brain Map — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a baseline recording of brain activity, and a written plan you keep. Regular sessions are ${SESSION_PRICE}, and a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE} — ${PACKAGE_SAVING} less than paying per session. ${PACKAGE_NOTE}`,
+    a: `The phone call is free. ${FIRST_VISIT_COST_SENTENCE} Regular sessions are ${SESSION_PRICE}, and a ${PACKAGE_SESSIONS}-session package is ${PACKAGE_PRICE} — ${PACKAGE_SAVING} less than paying per session. ${PACKAGE_NOTE}`,
   },
   {
     q: "Does insurance cover it?",

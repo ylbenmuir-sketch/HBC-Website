@@ -1165,6 +1165,13 @@ function siteAnswer(question: string): string {
   return faq.a;
 }
 
+/** The referral question, as the location pages answer it. One home: the
+ *  location FAQs below and the homepage accordion (app/page.tsx) read it. */
+export const REFERRAL_FAQ: LocalFaq = {
+  q: "Do I need a referral or a diagnosis to start?",
+  a: "No. No referral is needed, and no diagnosis is needed to start — people describe what's in front of them, not a label. The first step is a free phone call.",
+};
+
 /**
  * The 4–6 questions a location page answers under its own heading, and
  * publishes as FAQPage markup (visible answers only). Every answer is built
@@ -1179,10 +1186,7 @@ export function locationFaqs(location: Location): LocalFaq[] {
   const hours = formattedHours(center).join(" · ");
   const address = formattedAddress(center);
   const common: LocalFaq[] = [
-    {
-      q: "Do I need a referral or a diagnosis to start?",
-      a: "No. No referral is needed, and no diagnosis is needed to start — people describe what's in front of them, not a label. The first step is a free phone call.",
-    },
+    REFERRAL_FAQ,
     {
       q: "What happens at the first visit, and what does it cost?",
       a: `Plan for ${FIRST_VISIT_DURATION}. ${BRAIN_MAP_NAME} — your first visit — is ${BRAIN_MAP_PRICE} and includes the full conversation, a ${BRAIN_MAP_POINTS}-point recording of brain activity, your map explained point by point, and a written plan you keep.`,

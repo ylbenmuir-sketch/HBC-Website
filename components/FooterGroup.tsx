@@ -11,15 +11,18 @@ import { useId, useState, type ReactNode } from "react";
 export default function FooterGroup({
   heading,
   children,
+  wide = false,
 }: {
   heading: string;
   children: ReactNode;
+  /** A long list that runs as two columns on a desktop (`.fgroup-wide`). */
+  wide?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
 
   return (
-    <div className={`fgroup${open ? " open" : ""}`}>
+    <div className={`fgroup${wide ? " fgroup-wide" : ""}${open ? " open" : ""}`}>
       {/* A paragraph, not an h5 — see the note in Header.tsx. */}
       <p className="h5">
         <button

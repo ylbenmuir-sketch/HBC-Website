@@ -9,9 +9,17 @@ import {
   SUPPORT_PHONE,
 } from "@/lib/sms-identity";
 
+/**
+ * Four columns (Ben, 2026-11-22): the brand with the phone and email, then
+ * Explore, Find your center, Get to know us. Every link the footer carried
+ * before is still here, under one of the three headings — nothing was added
+ * and nothing dropped. Explore holds the concern pages and the pages that
+ * explain the work, and runs as two columns on a desktop (`wide`).
+ */
 const groups = [
   {
-    heading: "Help with",
+    heading: "Explore",
+    wide: true,
     links: [
       { label: "Anxiety & stress", href: "/concerns/anxiety" },
       { label: "Focus & ADHD", href: "/concerns/focus-adhd" },
@@ -27,11 +35,6 @@ const groups = [
       { label: "Migraines", href: "/concerns/migraines" },
       { label: "Depression & low mood", href: "/concerns/depression" },
       { label: "All concerns", href: "/what-we-help-with" },
-    ],
-  },
-  {
-    heading: "Learn",
-    links: [
       { label: "LENS neurofeedback", href: "/lens-neurofeedback" },
       { label: "How LENS works", href: "/how-lens-works" },
       // The query the page is built for, as its anchor (Ben, 2026-11-09):
@@ -39,13 +42,10 @@ const groups = [
       { label: "Brain mapping in Nashville", href: "/brain-map" },
       { label: "Your first visit", href: "/first-visit" },
       { label: "FAQ", href: "/faq" },
-      { label: "Resources", href: "/resources" },
-      { label: "Videos", href: "/videos" },
-      { label: "Client stories", href: "/stories" },
     ],
   },
   {
-    heading: "Visit",
+    heading: "Find your center",
     links: [
       // The two local clusters' queries as anchor text (Ben, 2026-11-09):
       // the location pages are the site's answer to "neurofeedback
@@ -60,12 +60,15 @@ const groups = [
     ],
   },
   {
-    heading: "Company",
+    heading: "Get to know us",
     links: [
       { label: "About", href: "/about" },
       { label: "Our founder", href: "/about/founder" },
       // Off with the team pages while SHOW_TEAM is (lib/site-config.ts).
       ...(SHOW_TEAM ? [{ label: "Our team", href: "/about/team" }] : []),
+      { label: "Client stories", href: "/stories" },
+      { label: "Videos", href: "/videos" },
+      { label: "Resources", href: "/resources" },
       { label: "Contact", href: "/contact" },
       // The footer is where people look for this one, and until now there was
       // nowhere on the site to look. See app/privacy-policy/page.tsx.
@@ -86,9 +89,16 @@ export default function Footer() {
               LENS neurofeedback for adults, children, and families
               across Middle Tennessee.
             </p>
+            {/* The phone and the front desk's address under the brand (Ben,
+                2026-11-22). Plain <a>s: the footer's data-link-location
+                reports their taps as "footer". */}
+            <p className="foot-contact">
+              <a href={`tel:${SUPPORT_PHONE.tel}`}>{SUPPORT_PHONE.display}</a>
+              {SHOW_EMAIL && <a href={`mailto:${EMAIL_ADDRESS}`}>{EMAIL_ADDRESS}</a>}
+            </p>
           </div>
           {groups.map((g) => (
-            <FooterGroup key={g.heading} heading={g.heading}>
+            <FooterGroup key={g.heading} heading={g.heading} wide={g.wide}>
               {g.links.map((l) => (
                 <ChromeLink key={l.href + l.label} href={l.href}>
                   {l.label}

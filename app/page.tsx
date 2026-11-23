@@ -1,9 +1,6 @@
-import { HAS_STORY_VIDEOS } from "@/lib/videos";
-import WhatItTakes from "@/components/WhatItTakes";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import PartnerBadge from "@/components/PartnerBadge";
 import PhotoFrame from "@/components/PhotoFrame";
 import BrainMapStage from "@/components/BrainMapStage";
@@ -11,44 +8,38 @@ import BrandName from "@/components/BrandName";
 import BrainMapHeat from "@/components/BrainMapHeat";
 import BrainMapBars from "@/components/BrainMapBars";
 import { fmtUv, meanUv } from "@/lib/brain-map-sample";
-import ProofBand from "@/components/ProofBand";
-import ConcernCard from "@/components/ConcernCard";
-import ConcernRail from "@/components/ConcernRail";
+import ConcernTabs from "@/components/ConcernTabs";
 import Quote from "@/components/Quote";
-import LocationCard from "@/components/LocationCard";
-import FAQAccordion from "@/components/FAQAccordion";
+import GoogleReviewQuote from "@/components/GoogleReviewQuote";
+import HomeLocationCard from "@/components/HomeLocationCard";
+import FAQAccordion, { type FaqItem } from "@/components/FAQAccordion";
 import FinalCTA from "@/components/FinalCTA";
-import GuideCta from "@/components/GuideCta";
 import { Btn, CtaReassure, TalkCta } from "@/components/Buttons";
 import ConfirmTag from "@/components/ConfirmTag";
 import CheckIcon from "@/components/CheckIcon";
-import HeroConcernChips from "@/components/HeroConcernChips";
 import HeroBrainMapJump from "@/components/HeroBrainMapJump";
-import {
-  locations,
-  combinedReviewCount,
-  hoursSummary,
-  reviewCountLabel,
-} from "@/lib/locations";
-import { practitionerBandStat } from "@/lib/team";
+import { REFERRAL_FAQ, locations } from "@/lib/locations";
+import { FIRST_VISIT_COST_SENTENCE, SITE_FAQS } from "@/lib/faq";
+import { HOME_CONCERN_GROUPS } from "@/lib/home-concerns";
 import {
   AMEN_PARTNER_ENABLED,
   BRAIN_MAP_CALLOUTS,
   BRAIN_MAP_NAME,
   BRAIN_MAP_POINTS,
-  COURSE_VARIES_NOTE,
   ESTABLISHED_YEAR,
+  EXPERIENCES_DISCLAIMER,
   FEATURE_CELEBRITY,
+  FIRST_VISIT_DURATION,
   FOUNDER_DISPLAY_NAME,
-  FOUNDER_LAST_NAME,
-  FOUNDER_QUOTE,
+  FOUNDER_PAGE_PUBLISHED,
   FRANKLIN_OPENING,
-  FULL_COURSE,
+  GOOGLE_REVIEW_QUOTES,
   HSA_FSA_ACCEPTED,
   REVIEWS,
+  REVIEW_COUNT_ROUNDED,
   SAMPLE_QUOTES_NOTE,
   SHOW_DRAFT_CONTENT,
-  START_TIMING,
+  SHOW_REVIEWS,
   STAT_SESSIONS,
   TESTIMONIALS,
   TRISHA_APPROVAL_TAG,
@@ -58,8 +49,6 @@ import {
   verifiedOr,
   PHONE_DISPLAY,
   PHONE_TEL,
-  PROOF_LINE,
-  PROOF_LINE_SHORT,
   SHOW_PHONE,
 } from "@/lib/site-config";
 import { pageMetadata } from "@/lib/pages";
@@ -68,265 +57,50 @@ import PageSchema from "@/components/PageSchema";
 // Title, description and the page's content date live in lib/pages.ts.
 export const metadata: Metadata = pageMetadata("/");
 
-// What a concern *is* — title and destination — lives here once. Anxiety and
-// Sleep appear in both audience groups below, and this is what keeps the two
-// copies from drifting: neither group restates a title or an href, so a rename
-// or a route change lands on both cards at the same time.
-//
-// Bullets are the deliberately variable part, supplied per group. The same
-// concern sounds different depending on who's describing it, and a card whose
-// symptoms are written for the reader in front of it is the whole reason the
-// section is split by audience.
-const concern = {
-  anxiety: {
-    title: "Anxiety & nervous-system overload",
-    href: "/concerns/anxiety",
-  },
-  focusAdhd: {
-    title: "Focus, ADHD & follow-through",
-    href: "/concerns/focus-adhd",
-  },
-  sleep: {
-    title: "Sleep difficulties",
-    href: "/concerns/sleep",
-  },
-  emotionalRegulation: {
-    title: "Emotional regulation",
-    href: "/concerns/emotional-regulation",
-  },
-  brainFog: {
-    title: "Brain fog, memory & mental fatigue",
-    href: "/concerns/brain-fog",
-  },
-  stressResilience: {
-    title: "Stress & resilience",
-    href: "/concerns/stress-resilience",
-  },
-  trauma: {
-    title: "Trauma-related stress",
-    href: "/concerns/trauma",
-  },
-  performance: {
-    title: "Performance & mental sharpness",
-    href: "/concerns/performance",
-  },
-  migraines: {
-    title: "Migraines",
-    href: "/concerns/migraines",
-  },
-  concussion: {
-    title: "Post-concussion symptoms",
-    href: "/concerns/concussion",
-  },
-};
+/*
+ * The homepage, restructured (Ben, 2026-11-22) to ten sections in this
+ * order: hero · trust row · "What brings you in?" tabs · the Brain Map band
+ * · client stories · the team (or the founder) · locations · FAQ · the
+ * closing band · the footer. The layout is new; the words are the site's
+ * own. Where a new piece needed a short line that the homepage did not
+ * already have, it is read from the page that owns it and the source is
+ * named beside it — nothing here is a new claim.
+ */
 
-// The audience split, defined once. Each group is a label and an anchor id,
-// and both are used twice — the jump link renders the label and points at the
-// id, the group renders the id and repeats the label as its heading. Written
-// out longhand that is four literals to keep in step for two facts, and the
-// two copies of the label are the pair most likely to drift, because a
-// heading gets renamed where a jump link three lines up does not.
-const concernGroups = {
-  child: { id: "for-your-child", label: "For your child" },
-  // "For adults", not "For you": the two headings are read as a pair, and
-  // "For your child / For you" made the second one mean "not the child" only
-  // by contrast with the first. The id follows the label so a shared anchor
-  // link still describes where it lands.
-  adult: { id: "for-adults", label: "For adults" },
-} as const;
+/** A sitewide answer by its question, so the accordion below quotes
+ *  lib/faq.ts and cannot drift from /faq. */
+function siteFaq(q: string): FaqItem {
+  const found = SITE_FAQS.find((f) => f.q === q);
+  if (!found) throw new Error(`homepage FAQ: no sitewide question "${q}"`);
+  return { q: found.q, a: found.a };
+}
 
-// Kids first — most visitors arrive as a parent, and the family row that
-// follows this group is the page's children-and-families route.
-const childConcerns = [
-  {
-    ...concern.anxiety,
-    points: [
-      "Thoughts that won't quiet down",
-      "Feeling constantly on edge",
-      "Unable to relax even when life is calm",
-    ],
-  },
-  {
-    ...concern.focusAdhd,
-    points: [
-      "Struggling to stay on task",
-      "Overwhelmed by multi-step responsibilities",
-      "Work or schoolwork that stalls at 90%",
-    ],
-  },
-  {
-    ...concern.sleep,
-    points: [
-      "A mind that won't shut off at night",
-      "Waking frequently",
-      "Eight hours that feel like four",
-    ],
-  },
-  {
-    ...concern.emotionalRegulation,
-    points: [
-      "Becoming overwhelmed quickly",
-      "Struggling with transitions",
-      "Staying upset long after the moment",
-    ],
-  },
-];
-
-// Anxiety and Sleep repeat here on purpose — they're genuinely both audiences,
-// and both cards point at the same concern page. The bullets are written the
-// way an adult describes it, so the repeat reads as a cross-listing rather
-// than a copy/paste of the card three screens up.
-const adultConcerns = [
-  {
-    ...concern.brainFog,
-    points: [
-      "Thinking that feels slow or cloudy",
-      "Losing words mid-sentence",
-      "Exhausted by normal responsibilities",
-    ],
-  },
-  {
-    ...concern.stressResilience,
-    points: [
-      "Functioning, but close to burnout",
-      "Unable to recover after hard days",
-      "Carrying stress physically",
-    ],
-  },
-  {
-    ...concern.anxiety,
-    points: [
-      "Wired at midnight, flat by morning",
-      "Bracing for the day before it starts",
-      "Tension you notice in your body first",
-    ],
-  },
-  {
-    ...concern.sleep,
-    points: [
-      "Falling asleep fine, awake at 3 a.m.",
-      "Coffee doing the work sleep should",
-      "Eight hours that feel like four",
-    ],
-  },
-  // The second row (Sept 2026). Performance and migraines are adult-grouped
-  // by decision — performance's audience is executives, founders and
-  // musicians; every line of migraine framing addresses an adult managing
-  // their own medical care, concussion's reasoning exactly. Trauma joins
-  // them for two reasons that arrived together: it was the one concern on
-  // neither homepage group (and the one the footer note calls out as
-  // link-starved), and its card is what takes the group from seven cards —
-  // a ragged 4+2+span — to eight in two full rows, which is why concussion's
-  // `fill` came off in the same edit.
-  {
-    ...concern.performance,
-    points: [
-      "Used to handle a lot more than this",
-      "Word recall is a struggle",
-      "Finishing by the deadline is a fight",
-    ],
-  },
-  {
-    ...concern.trauma,
-    points: [
-      "Vigilant in rooms where nothing is wrong",
-      "Startling easily, settling slowly",
-      "The past crowding the present",
-    ],
-  },
-  // Adults only, and the reasoning is on the page rather than the audience:
-  // every line of approved concussion copy addresses an adult in the second
-  // person, and there is no parent-facing version of it to put on a card in
-  // the group above. Youth sport is a real part of this audience and reaches
-  // the page through search, the header and /what-we-help-with — none of which
-  // is split by audience — rather than through a card whose bullets nobody has
-  // written yet.
-  {
-    ...concern.concussion,
-    points: [
-      "Cleared by a doctor and still not right",
-      "Fog that lifts and returns",
-      "Light and noise that wear on you",
-    ],
-  },
-  // Last, beside concussion — the two pages that start with a medical event,
-  // and the pair the migraine card's own page links across to.
-  {
-    ...concern.migraines,
-    points: [
-      "Under a doctor's care, and staying there",
-      "Headaches that date to a concussion",
-      "A long list of things already tried",
-    ],
-  },
-];
-
-const homeGoals = [
-  "Calmer mornings, fewer standoffs",
-  "Falling asleep more easily",
-  "Greater focus at school or work",
-  "Recovering from frustration faster",
-  "More patience with the people you love",
-  "Feeling more like yourself again",
-];
-
-const homeFaqs = [
-  {
-    q: "Is LENS safe? Does it hurt?",
-    a: "LENS is gentle and noninvasive — nothing enters the body, and the feedback signal is far weaker than the everyday signals already around you. Most people, including young children, feel nothing at all during a session.",
-  },
-  {
-    // Same three sentences as lib/faq.ts answer 10 — see the note there for
-    // why it neither opens "Neither." nor opens on the boundary sentence.
-    q: "Is this therapy or medical treatment?",
-    a: "What we offer is neurofeedback: small sensors read the brain's electrical activity and return a brief, very low-energy feedback signal, with nothing to perform. LENS is offered as a wellness service, not medical treatment. It doesn't diagnose or treat medical conditions, and it works alongside — never in place of — your doctor, therapist, or school supports.",
-  },
-  {
-    // Shortened for the homepage — the taper's full cadence and the pricing
-    // note live on /faq and /lens-neurofeedback, and this accordion is three
-    // questions deep by design. What it must not do is disagree with them, so
-    // the course length and the wind-down both come from the constants rather
-    // than being summarised in prose that drifts.
-    q: "How many sessions will I need?",
-    a:
-      `A full course is ${FULL_COURSE.value.sessions} sessions, then ` +
-      `maintenance, and ${FULL_COURSE.value.children}. The schedule winds ` +
-      `down rather than continuing indefinitely. ${COURSE_VARIES_NOTE}`,
-  },
+// Five questions (Ben, 2026-11-22): what happens in a session, cost,
+// children, how many visits, whether a referral is needed. Four are /faq's
+// own entries; the referral one is the location pages' (lib/locations.ts).
+// Every answer verbatim. No FAQPage schema on this page: /faq owns it.
+const homeFaqs: FaqItem[] = [
+  siteFaq("Do I have to do anything during the session?"),
+  siteFaq("What does it cost?"),
+  siteFaq("Is it appropriate for children?"),
+  siteFaq("How many sessions will I need?"),
+  REFERRAL_FAQ,
 ];
 
 export default function HomePage() {
   const [nashville, murfreesboro, franklin] = locations;
-  // The centers keep different weeks, and the locations row is where the two
-  // sit side by side — so the hours belong on the card, read from
-  // lib/locations.ts like every other card fact. Null while a week is
-  // unconfirmed, which drops the line rather than leaving a blank one.
-  const nashvilleHours = hoursSummary(nashville);
-  const murfreesboroHours = hoursSummary(murfreesboro);
-  const startTiming = verifiedOr(START_TIMING);
-  const founderQuote = verifiedOr(FOUNDER_QUOTE);
   const sessionCount = verifiedOr(STAT_SESSIONS);
   const establishedYear = verifiedOr(ESTABLISHED_YEAR);
+  // The featured story is the first permissioned client story; beside it,
+  // one public Google review, labelled as one (components/
+  // GoogleReviewQuote.tsx). The sleep review: the story is a parent's about
+  // focus and regulation, so the pair covers a child and an adult.
   const homeQuotes = SHOW_DRAFT_CONTENT ? TESTIMONIALS : VERIFIED_TESTIMONIALS;
-  const showStories = homeQuotes.length > 0;
-  // The band's own subject is the reviews, so it is gated on there being a
-  // count to print rather than on SHOW_REVIEWS alone — `combinedReviewCount()`
-  // already folds that gate in, and returns null when no center has any. That
-  // also removes the non-null assertion the old two-part gate needed.
-  const reviewCount = combinedReviewCount();
-  const showReviewBand = reviewCount !== null;
-  // The phone's proof line, split at the star so the star can be gold
-  // (globals.css `.hero-proof-star`) while the text stays PROOF_LINE_SHORT
-  // verbatim. Split once, on the first star; the string is "5.0★ · …".
-  const starAt = PROOF_LINE_SHORT.indexOf("★");
-  const proofShortParts =
-    starAt === -1
-      ? { before: PROOF_LINE_SHORT, after: "" }
-      : {
-          before: PROOF_LINE_SHORT.slice(0, starAt),
-          after: PROOF_LINE_SHORT.slice(starAt + 1),
-        };
-
+  const featuredStory = homeQuotes[0];
+  const googleReview = SHOW_REVIEWS
+    ? GOOGLE_REVIEW_QUOTES.find((r) => r.concernCategory === "sleep" && r.verified)
+    : undefined;
+  const showStories = Boolean(featuredStory || googleReview);
   return (
     <div className="home">
       {/* No breadcrumb on the homepage — it is the root of every trail. */}
@@ -425,23 +199,8 @@ export default function HomePage() {
                   where `.hero-reassure-m` says it in one line. The same
                   line is under TalkCta on the concern pages. */}
               <CtaReassure />
-              {/* One compact proof line (Ben, 2026-11-02): the rating, the
-                  rounded review count, the session count since the founding
-                  year — PROOF_LINE in lib/site-config.ts, where every number
-                  in it lives. The phone reads the shorter form of the same
-                  three facts on one line with a gold star (globals.css
-                  `.hero-proof-short`, `.hero-proof-star`). */}
-              <p className="hero-proof">
-                <span className="hero-proof-long">{PROOF_LINE}</span>
-                <span className="hero-proof-short">
-                  {proofShortParts.before}
-                  <span className="hero-proof-star" aria-hidden="true">
-                    ★
-                  </span>
-                  <span className="vh">★</span>
-                  {proofShortParts.after}
-                </span>
-              </p>
+              {/* The compact proof line that sat here moved into the trust row
+                  under the hero (Ben, 2026-11-22), at every width. */}
               {/* The number itself, as a call and a text (Ben, 2026-11-02),
                   reporting contact_link_click with location "home_hero".
                   Not shown at any width since 2026-11-02 (Ben): the header
@@ -464,9 +223,6 @@ export default function HomePage() {
                 {HSA_FSA_ACCEPTED}
               </p>
             </div>
-            {/* In the hero from 761px up; under that the same chips are the
-                section right after the hero (`variant="section"`, below). */}
-            <HeroConcernChips />
           </div>
           <div className="rv hero-media">
             {/* Portrait source (1122x1402) where the old hero was landscape,
@@ -498,33 +254,59 @@ export default function HomePage() {
             {/* Phones only (globals.css ≤760px): the navy scrim the copy
                 sits on. `display: none` everywhere else. */}
             <span className="hero-scrim" aria-hidden="true" />
+            {/* The small card over the photo's corner (Ben's words,
+                2026-11-22; no price). A desktop piece: `display: none`
+                under 1061px, where the hero stacks (globals.css
+                `.hero-float`). */}
+            <p className="hero-float">
+              Your Brain Map. <span>Your plan to keep.</span>
+            </p>
           </div>
         </div>
       </section>
-      {/* The Amen Clinics referral-partner strip (Ben, 2026-11-02): one
-          quiet, centered line directly under the hero, above "What brings
-          you in?" — on a phone that is the chips section, on a desktop the
-          chips are in the hero and the proof band follows. The hero's own
-          Get Started is untouched either way. Light background, nothing to
-          compete with the asks around it
-          (components/PartnerBadge.tsx, globals.css `.partner-strip`). */}
-      {AMEN_PARTNER_ENABLED && (
-        <section className="partner-strip">
-          <div className="wrap">
-            <PartnerBadge location="home_strip" />
-          </div>
-        </section>
-      )}
 
-      {/* "What brings you in?" as its own section on a phone (Ben,
-          2026-11-02): the eight chips in a two-column grid right after the
-          hero (and the partner strip), so the hero itself is one action, one reassurance, one proof.
-          `display: none` from 761px up, where the chips are inside the hero
-          (globals.css `.concern-chips-sec`). The same links and the same
-          concern_chip_click event either way. */}
-      <HeroConcernChips variant="section" />
+      {/* The trust row (Ben, 2026-11-22): four facts in one row on a
+          desktop, two by two on a phone. It took the place of the proof line
+          in the hero and of the Amen Clinics strip that sat here. Every
+          value is read from lib/site-config.ts and gated like the surfaces
+          it replaced; the Amen badge is the same component, with its logo
+          as supplied, its one approved line and its partner_badge_click
+          location ("home_strip") unchanged. */}
+      <section className="trust-row">
+        <div className="wrap">
+          <ul className="trust-grid">
+            {SHOW_REVIEWS && (
+              <li>
+                <span className="trust-fact">
+                  {REVIEWS.value.rating}
+                  <span className="trust-star" aria-hidden="true">
+                    ★
+                  </span>
+                  <span className="vh">★</span> &middot; {REVIEW_COUNT_ROUNDED}{" "}
+                  Google reviews
+                </span>
+              </li>
+            )}
+            {sessionCount && (
+              <li>
+                <span className="trust-fact">{sessionCount} LENS sessions</span>
+              </li>
+            )}
+            {establishedYear && (
+              <li>
+                <span className="trust-fact">Since {establishedYear}</span>
+              </li>
+            )}
+            {AMEN_PARTNER_ENABLED && (
+              <li>
+                <PartnerBadge location="home_strip" />
+              </li>
+            )}
+          </ul>
+        </div>
+      </section>
 
-      {/* Trisha Yearwood band — CONDITIONAL FEATURE. Renders only while
+            {/* Trisha Yearwood band — CONDITIONAL FEATURE. Renders only while
           FEATURE_CELEBRITY is true (draft mode, or the env flag once every
           permission is confirmed — see lib/site-config.ts). Embedding is
           disabled for this video: always a thumbnail linking out, never an
@@ -621,287 +403,61 @@ export default function HomePage() {
         </section>
       )}
 
-      <ProofBand
-        stats={[
-          {
-            stat: STAT_SESSIONS.value,
-            label: "LENS sessions provided across our centers",
-            todo: STAT_SESSIONS.note,
-            verified: Boolean(sessionCount),
-          },
-          // Counted from the roster (lib/team.ts), never typed, so this cell
-          // cannot drift from /about/team. It replaced "Two centers", which
-          // survives in the label: the person count is the credential a
-          // visitor weighing new practices actually needs, stated plainly —
-          // no superlative, no comparison to anyone (Ben's positioning rule).
-          {
-            stat: practitionerBandStat(),
-            label: "across Nashville & Murfreesboro — Franklin coming soon",
-          },
-          {
-            stat: "All ages",
-            label: "Adults, teens, and children welcome",
-          },
-          {
-            stat: `Since ${ESTABLISHED_YEAR.value}`,
-            label: "Serving Middle Tennessee families",
-            todo: ESTABLISHED_YEAR.note,
-            verified: Boolean(establishedYear),
-          },
-          // The referral claim, in the band's own two-part shape. Both halves
-          // are words from PHYSICIAN_REFERRALS — the band cannot hold the
-          // sentence, and this is a compression of it rather than a rewrite.
-          // The full sentence is on /about and both location pages.
-          {
-            stat: "Physician-referred",
-            label: "We work from a standing referral list",
-          },
-        ]}
-      />
-
-      <section className="sec home-concerns">
-        <div className="wrap">
-          <div className="sec-head split rv">
-            <div>
-              <div className="eyebrow">What brings people to us</div>
-              <h2>The concerns we see most.</h2>
-              {/* Plain in-page anchors — no JS, no toggle, nothing hidden.
-                  Both groups are always in the HTML; these only move the
-                  viewport, so they work with JS off and are crawlable. */}
-              <div className="concern-jump">
-                {[concernGroups.child, concernGroups.adult].map((g) => (
-                  <Btn key={g.id} href={`#${g.id}`} variant="ghost">
-                    {g.label} <span className="arrow">↓</span>
-                  </Btn>
-                ))}
-              </div>
-            </div>
-            <Btn href="/what-we-help-with" variant="ghost" arrow>
-              Explore every concern
-            </Btn>
-          </div>
-
-          <div className="concern-group" id={concernGroups.child.id}>
-            <h3 className="concern-group-head rv">{concernGroups.child.label}</h3>
-            <ConcernRail
-              count={childConcerns.length}
-              cols={4}
-              label="Concerns we see in children"
-            >
-              {childConcerns.map((c) => (
-                <ConcernCard key={c.href} headingLevel={4} {...c} />
-              ))}
-            </ConcernRail>
-            {/* Stays welded to this group's grid: it's the children route, and
-                the border-top: 0 seam is what welds it. */}
-            <div className="family-row rv">
-              <div className="fr-copy">
-                <div className="eyebrow" style={{ color: "var(--sage)" }}>
-                  Children &amp; families
-                </div>
-                <h4>Help for kids who are struggling at school.</h4>
-                <p>
-                  Homework battles. Meltdowns over transitions. Teacher emails.
-                  Sensory overwhelm. A child starting to believe they&rsquo;re
-                  bad at school. There&rsquo;s nothing your child has to get
-                  right in a LENS session &mdash; and you&rsquo;re part of
-                  every check-in.
-                </p>
-                <Btn href="/children-families" variant="invert">
-                  How we work with children
-                </Btn>
-              </div>
-              <PhotoFrame
-                src="/images/child-session.jpg"
-                alt="A child relaxing during a LENS session"
-                position="60% 30%"
-                positionMobile="68% 24%"
-                style={{ minHeight: 340 }}
-                sizes="(max-width: 1060px) 100vw, 50vw"
-              />
-            </div>
-          </div>
-
-          <div className="concern-group" id={concernGroups.adult.id}>
-            <h3 className="concern-group-head rv">{concernGroups.adult.label}</h3>
-            <ConcernRail
-              count={adultConcerns.length}
-              cols={4}
-              label="Concerns we see in adults"
-            >
-              {adultConcerns.map((c) => (
-                <ConcernCard key={c.href} headingLevel={4} {...c} />
-              ))}
-            </ConcernRail>
-          </div>
-        </div>
-      </section>
-
-      {/* Proof follows the problem: the concern cards name what's wrong, so
-          the quotes from people who had the same thing land here rather than
-          five sections later. */}
-      {showStories && (
-        <section className="sec sec-ivory2 home-stories">
-          <div className="wrap">
-            <div className="sec-head split rv">
-              <div>
-                <div className="eyebrow">Client stories</div>
-                <h2>What clients say.</h2>
-              </div>
-              <Btn href="/stories" variant="ghost" arrow>
-                More client stories
-              </Btn>
-            </div>
-            <div className="trio-quotes rv">
-              {homeQuotes.map((t) => (
-                <Quote
-                  key={t.text}
-                  theme={t.theme}
-                  text={t.text}
-                  attribution={
-                    t.firstName
-                      ? `${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`
-                      : t.relationship
-                  }
-                  place={t.city}
-                  sample={!t.verified}
-                />
-              ))}
-            </div>
-            {showReviewBand && (
-              <div className="review-band rv">
-                <div>
-                  <strong>{REVIEWS.value.rating} ★</strong>
-                  <span>Google rating across locations</span>
-                </div>
-                <div>
-                  {/* Summed from the per-center counts in lib/locations.ts,
-                      never typed: this band and the two location pages state
-                      the same reviews, and a hand-written total is the copy
-                      that goes stale the first time one center's changes. */}
-                  <strong>{reviewCountLabel(reviewCount)}</strong>
-                  <span>From Nashville &amp; Murfreesboro clients</span>
-                </div>
-                {/* Only once there is a video behind it (lib/videos.ts →
-                    HAS_STORY_VIDEOS, Ben 2026-10-15). */}
-                {HAS_STORY_VIDEOS && (
-                  <div>
-                    <strong>Video stories</strong>
-                    <span>Client interviews, in their own words</span>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* The "Individual experiences vary." line was removed from under
-                the Google rating band (Ben, 2026-10-16): the disclaimer stays
-                where it sits under client quotes/stories (/stories, the concern
-                pages, the footer on every page) but not directly under the
-                review stats. The dev-only sample-copy warning is kept for the
-                design-review state where no verified quote exists. */}
-            {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0 && (
-              <p className="sample-note">{SAMPLE_QUOTES_NOTE}</p>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* How it works follows the stories: the quotes are what makes someone
-          want to know what actually happens, and this is the answer. Phase 14
-          moved the whole section here from below the goals list — the DOM is
-          the only thing that says section order on this page (the mobile layer
-          is a plain flex column with no `order` overrides), so phone and
-          desktop moved together. */}
-      <section className="sec sec-navy home-journey">
+      {/* "What brings you in?" — two tabs of concern cards beside a photo
+          (Ben, 2026-11-22). It replaced the hero's chips, the phone's chip
+          section and the bulleted concern grid. Each card's name is the
+          concern's own title and its line is cut from that page's intro
+          (lib/home-concerns.ts); a tap reports concern_chip_click, the
+          chips' event (components/ConcernTabs.tsx). The eyebrow is the one
+          the concerns section already carried. */}
+      <section className="sec home-concerns" aria-labelledby="home-concerns-h">
         <div className="wrap">
           <div className="sec-head rv">
-            <div className="eyebrow">How it works</div>
-            <h2>Three steps. No homework, no screens, nothing to perform.</h2>
+            <div className="eyebrow">What brings people to us</div>
+            <h2 id="home-concerns-h">What brings you in?</h2>
           </div>
-          {/* Column count follows the steps; the tablet/mobile rules override
-              it untouched. Three is the whole plan — see the brief. */}
-          <div
-            className="journey rv"
-            style={{ "--journey-cols": 3 } as CSSProperties}
-          >
-            {[
-              {
-                n: "1",
-                h: "Talk",
-                p: "A free call — or send the form and we'll call you. Tell us what's going on, and we'll tell you honestly whether LENS is a fit.",
-              },
-              {
-                n: "2",
-                h: "Map",
-                p: "Your first visit: you sit down with a practitioner, we record a baseline of your brain activity, we walk you through what we see, and you leave with a written plan.",
-                link: {
-                  href: "/first-visit",
-                  label: "See what the first visit is like",
-                },
-              },
-              {
-                n: "3",
-                h: "Sessions",
-                p: "Short, comfortable visits. Sleep, focus, and mood reviewed every time — your plan follows what you actually report.",
-                link: {
-                  href: "/how-lens-works",
-                  label: "See how LENS works",
-                },
-              },
-            ].map((s) => (
-              <div className="jstep" key={s.n}>
-                <div className="n">{s.n}</div>
-                <h3>{s.h}</h3>
-                <p>
-                  {s.p}
-                  {s.link && (
-                    <>
-                      {" "}
-                      <Link href={s.link.href}>{s.link.label} &rarr;</Link>
-                    </>
-                  )}
-                </p>
-              </div>
-            ))}
+          <div className="rv">
+            <ConcernTabs
+              groups={HOME_CONCERN_GROUPS.map((g) => ({
+                id: g.id,
+                label: g.label,
+                cards: g.cards,
+                photo: (
+                  <PhotoFrame
+                    src={g.photo.src}
+                    alt={g.photo.alt}
+                    position={g.photo.position}
+                    className="hc-ph"
+                    sizes="(max-width: 1060px) 100vw, 34vw"
+                  />
+                ),
+              }))}
+            />
           </div>
-          <div
-            style={{
-              marginTop: 52,
-              display: "flex",
-              gap: 26,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-            className="rv"
-          >
-            <TalkCta variant="invert" />
-            {startTiming && (
-              <span style={{ color: "rgba(251,248,241,.55)", fontSize: 15 }}>
-                {startTiming} <ConfirmTag>{START_TIMING.note!}</ConfirmTag>
-              </span>
-            )}
+          <div className="rv hc-all">
+            <Btn href="/what-we-help-with" variant="ghost" arrow>
+              See everything we help with
+            </Btn>
           </div>
         </div>
       </section>
 
-      {/* Time, money, effort — right after "How it works", the moment
-          someone has the steps and is asking whether it is worth it (Ben,
-          2026-10-15). Every figure from lib/site-config.ts. */}
-      <WhatItTakes />
+            {/* The Harmonized Brain Map — the 1-2-3 stage (Ben, 2026-10-19): Scan,
+          Results, Plan, with one large visual that follows the step. On a
+          navy band since 2026-11-22: the copy and the three steps on one
+          side, the map on the other, stacked under 1024px (globals.css
+          `.bm-band`). Every visual draws from lib/brain-map-sample.ts — the
+          same 21 numbers on the heat map, the bars and /brain-map. The
+          section keeps its id (#brain-map): the hero's "See What a Brain Map
+          Shows" scrolls here. Every line is approved copy; the caption is
+          Ben's exact line.
 
-      {/* The Harmonized Brain Map — a 1-2-3 stage (Ben, 2026-10-19): Scan,
-          Results, Plan, with one large visual that follows the step. Every
-          visual draws from lib/brain-map-sample.ts — the same 21 numbers on
-          the heat map, the bars and /brain-map — so they cannot disagree.
-          The section keeps its id (#brain-map): the hero's "See What a Brain
-          Map Shows" scrolls here, and `scroll-margin-top` lands it under the
-          sticky header. /brain-map still owns the cluster and the full copy;
-          this is the show, that is the page (the "About" link below the
-          buttons). Every line here is approved copy (Ben, 2026-10-19, with
-          clinical authority for HBC) — no confirmation gates or notes in
-          this section; the Results callouts are BRAIN_MAP_CALLOUTS with
-          their microvolt values read from the dataset. The caption is Ben's
-          exact line; BRAIN_MAP_CLAIM is not appended to it. */}
-      <section className="sec home-brain-map" id="brain-map">
+          The "Your first visit" card under the button is the one place the
+          homepage prints the price, as body text (never a button, never the
+          hero): the duration and HSA/FSA line from lib/site-config.ts, and
+          the cost sentence as /faq's "What does it cost?" says it
+          (lib/faq.ts → FIRST_VISIT_COST_SENTENCE). */}
+      <section className="sec sec-navy home-brain-map bm-band" id="brain-map">
         <div className="wrap">
           <BrainMapStage
             head={
@@ -975,7 +531,21 @@ export default function HomePage() {
                 sizes="(max-width: 1023px) calc(100vw - 72px), 720px"
               />
             }
-            actions={<TalkCta />}
+            actions={<TalkCta variant="invert" />}
+            detail={
+              <div className="bm-visit">
+                <h3 className="bm-visit-h">Your first visit</h3>
+                <p className="bm-visit-facts">
+                  <span>
+                    {FIRST_VISIT_DURATION.charAt(0).toUpperCase() +
+                      FIRST_VISIT_DURATION.slice(1)}
+                  </span>{" "}
+                  &middot; <span>Map + written plan</span> &middot;{" "}
+                  <span>{HSA_FSA_ACCEPTED}</span>
+                </p>
+                <p className="bm-visit-cost">{FIRST_VISIT_COST_SENTENCE}</p>
+              </div>
+            }
             about={
               <Link href="/brain-map" className="bms-about">
                 About the Harmonized Brain Map &rarr;
@@ -991,101 +561,126 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Cost of inaction — the one place the site names it. One paragraph by
-          design: specific pain with dignity, not stacked pain. */}
-      <section className="sec home-stakes">
-        <div className="wrap">
-          <div className="sec-head rv">
-            <div className="eyebrow">Why now</div>
-            <h2>Why people wish they&rsquo;d called sooner.</h2>
-            <p className="sub">
-              Another school year of teacher emails. Another year of 3 a.m.
-              ceilings and afternoons that disappear into fog. Most people who
-              call us have been managing this for years &mdash; and the thing
-              they say most often afterward is that they wish they&rsquo;d
-              called sooner.
-            </p>
-          </div>
-          <div className="rv">
-            <TalkCta />
-          </div>
-        </div>
-      </section>
-
-      <section className="sec sec-ivory2 home-goals">
-        <div className="wrap goals-grid">
-          <div className="rv">
-            <div className="eyebrow">What could change</div>
-            <h2 style={{ margin: "22px 0 18px" }}>
-              What clients hope to change.
-            </h2>
-          </div>
-          <div className="rv">
-            <ul className="goals-list">
-              {homeGoals.map((g) => (
-                <li key={g}>{g}</li>
-              ))}
-            </ul>
-            {/* The caveat reads as a footnote to the list it qualifies, rather
-                than a sage panel competing with the heading for attention. */}
-            <p className="micro">
-              These are goals, not guarantees &mdash; every nervous system
-              responds differently. Changes are reviewed at every visit, so
-              progress is tracked consistently instead of relying on memory
-              alone.
-            </p>
-            <Btn
-              href="/what-we-help-with"
-              variant="ghost"
-              arrow
-              style={{ marginTop: 26 }}
-            >
-              See what clients work toward, by concern
-            </Btn>
-          </div>
-        </div>
-      </section>
-
-      {/* The Harmonized care model list moved to /about, which already carried
-          a near-identical section. The founder note stays: the quote and the
-          route to her story exist nowhere else on the site. Class retained so
-          the mobile section order is untouched. */}
-      <section className="sec home-care">
-        <div className="wrap">
-          <div className="founder-note rv">
-            <PhotoFrame
-              src="/images/founder.jpg"
-              alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
-              position="center 22%"
-              height={230}
-              sizes="200px"
-            />
-            <div>
-              {founderQuote ? (
-                <blockquote>
-                  &ldquo;{founderQuote}&rdquo;{" "}
-                  <ConfirmTag>{FOUNDER_QUOTE.note!}</ConfirmTag>
-                </blockquote>
-              ) : (
-                <blockquote>
-                  Harmonized began with one practitioner and a simple promise:
-                  honest guidance, and a gentle option for every family.
-                </blockquote>
-              )}
-              <cite>
-                {FOUNDER_DISPLAY_NAME}{" "}
-                {!FOUNDER_LAST_NAME.verified && (
-                  <ConfirmTag>{FOUNDER_LAST_NAME.note!}</ConfirmTag>
-                )}{" "}
-                &middot; Founder &amp; Clinical Director &middot;{" "}
-                <Link href="/about/founder">Her story →</Link>
-              </cite>
+      {/* Client stories (Ben, 2026-11-22): the featured story and one Google
+          review side by side, stacked on a phone. Both quoted exactly as
+          they are everywhere else on the site; the heading, the link and
+          the "Individual experiences vary." line are the ones the stories
+          already carry (here and on /stories). */}
+      {showStories && (
+        <section className="sec sec-ivory2 home-stories">
+          <div className="wrap">
+            <div className="sec-head split rv">
+              <div>
+                <div className="eyebrow">Client stories</div>
+                <h2>What clients say.</h2>
+              </div>
+              <Btn href="/stories" variant="ghost" arrow>
+                More client stories
+              </Btn>
             </div>
+            <div className="story-pair rv">
+              {featuredStory && (
+                <Quote
+                  theme={featuredStory.theme}
+                  text={featuredStory.text}
+                  attribution={
+                    featuredStory.firstName
+                      ? `${featuredStory.firstName} ${featuredStory.lastInitial ?? ""} · ${featuredStory.relationship}`
+                      : featuredStory.relationship
+                  }
+                  place={featuredStory.city}
+                  sample={!featuredStory.verified}
+                />
+              )}
+              {googleReview && <GoogleReviewQuote review={googleReview} />}
+            </div>
+            <p className="sample-note rv">{EXPERIENCES_DISCLAIMER}</p>
+            {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0 && (
+              <p className="sample-note">{SAMPLE_QUOTES_NOTE}</p>
+            )}
           </div>
+        </section>
+      )}
+
+      {/* The team, or the founder — one section, one switch (Ben,
+          2026-11-22): FOUNDER_PAGE_PUBLISHED in lib/site-config.ts, the
+          same flag that publishes the rewritten founder page. False: the
+          team version, in /about's own words — its eyebrow, its headline,
+          its opening sentence and its photo. True: the founder version, in
+          the approved founder page's words (components/FounderStory.tsx) —
+          its eyebrow, her name, its opening sentence and her photo. */}
+      <section className="sec home-team">
+        <div className="wrap split">
+          {FOUNDER_PAGE_PUBLISHED ? (
+            <>
+              <div className="rv">
+                <PhotoFrame
+                  src="/images/founder.jpg"
+                  alt={`${FOUNDER_DISPLAY_NAME}, Founder & Clinical Director of Harmonized Brain Centers`}
+                  position="center 20%"
+                  height={460}
+                />
+              </div>
+              <div className="rv">
+                <div className="eyebrow">Founder &amp; Clinical Director</div>
+                <h2>{FOUNDER_DISPLAY_NAME}</h2>
+                <p>
+                  The clinical standard behind every Harmonized practitioner
+                  &mdash; and the reason the check-in question is always
+                  &ldquo;how are you actually feeling?&rdquo;
+                </p>
+                <Btn href="/about/founder" variant="ghost" arrow>
+                  The founder&rsquo;s story
+                </Btn>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="rv">
+                <PhotoFrame
+                  src="/images/session-wide.jpg"
+                  alt="A wide view of a calm Harmonized session room"
+                  position="center 40%"
+                  height={460}
+                />
+              </div>
+              <div className="rv">
+                <div className="eyebrow">About Harmonized Brain Centers</div>
+                <h2>
+                  Large enough to trust. Personal enough to{" "}
+                  <em className="sage">care.</em>
+                </h2>
+                <p>
+                  Harmonized Brain Centers is a team of trained LENS
+                  practitioners serving adults, children, and families across
+                  Middle Tennessee &mdash; one care model, multiple centers
+                  {sessionCount && (
+                    <>, and {sessionCount} sessions of experience</>
+                  )}
+                  .
+                </p>
+                {/* Both links are /about's own: its label, and its button to
+                    the founder page — which keeps that page linked from
+                    here, as the founder note it replaced did. */}
+                <div className="home-team-links">
+                  <Btn href="/about" variant="ghost" arrow>
+                    About Harmonized Brain Centers
+                  </Btn>
+                  <Btn href="/about/founder" variant="ghost" arrow>
+                    The founder&rsquo;s story
+                  </Btn>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
-      <section className="sec home-locations">
+      {/* Locations (Ben, 2026-11-22): the two open centers as cards — photo,
+          address, hours, the center's own number as a call link — and
+          Franklin as a slim strip under them rather than a third card. The
+          strip's words are the Franklin card's own. */}
+      <section className="sec sec-ivory2 home-locations">
         <div className="wrap">
           <div className="sec-head split rv">
             <div>
@@ -1098,72 +693,48 @@ export default function HomePage() {
               All locations
             </Btn>
           </div>
-          <div className="loc-grid rv">
-            <LocationCard
+          <div className="loc-grid home-loc-grid rv">
+            <HomeLocationCard
               location={nashville}
-              meta={
-                <>
-                  <b>Open &mdash; welcoming new clients</b>
-                  <br />
-                  A calm, comfortable center serving Davidson County.
-                  {nashvilleHours && (
-                    <>
-                      <br />
-                      {nashvilleHours}
-                    </>
-                  )}
-                </>
-              }
+              blurb="A calm, comfortable center serving Davidson County."
             />
-            <LocationCard
+            <HomeLocationCard
               location={murfreesboro}
-              plateSpecOverride="Murfreesboro interior — reception or session room, natural light"
-              meta={
-                <>
-                  <b>Open &mdash; welcoming new clients</b>
-                  <br />
-                  The same standard of care, closer to home in Rutherford
-                  County.
-                  {murfreesboroHours && (
-                    <>
-                      <br />
-                      {murfreesboroHours}
-                    </>
-                  )}
-                </>
-              }
+              blurb="The same standard of care, closer to home in Rutherford County."
             />
-            <LocationCard
-              location={franklin}
-              plateSpecOverride="Franklin exterior — storefront at golden hour"
-              meta={
-                <>
-                  <b>
-                    Coming soon{" "}
-                    <ConfirmTag>{FRANKLIN_OPENING.note!}</ConfirmTag>
-                  </b>
-                  <br />
-                  Start at Nashville or Murfreesboro now and transfer when we
-                  open.
-                </>
-              }
-            />
+          </div>
+          <div className="franklin-strip rv">
+            <p>
+              <b>
+                {franklin.name} <span className="soon">Coming soon</span>{" "}
+                <ConfirmTag>{FRANKLIN_OPENING.note!}</ConfirmTag>
+              </b>
+              <span>
+                Start at Nashville or Murfreesboro now and transfer when we
+                open.
+              </span>
+            </p>
+            <Link className="go" href={`/locations/${franklin.slug}`}>
+              What&rsquo;s coming to {franklin.name} &rarr;
+            </Link>
           </div>
         </div>
       </section>
 
+      {/* Five questions (see `homeFaqs` above), every answer verbatim. The
+          heading is /faq's own label; the eyebrow and both lines under the
+          accordion are the ones this section already carried. */}
       <section className="sec sec-tight home-faq">
         <div className="wrap" style={{ maxWidth: 900 }}>
           <div className="sec-head rv">
             <div className="eyebrow">Before you call</div>
-            <h2>The three questions everyone asks first.</h2>
+            <h2>Frequently asked questions</h2>
           </div>
           <FAQAccordion items={homeFaqs} openFirst />
           <Btn href="/faq" variant="ghost" arrow style={{ marginTop: 30 }}>
             All questions, answered plainly
           </Btn>
-          {/* The skepticism page, as one quiet line: the visitor it is for is
-              the one who read the first answer above and still isn't sure. */}
+          {/* The skepticism page, as one quiet line. */}
           <p className="micro rv" style={{ marginTop: 18 }}>
             Skeptical? Read{" "}
             <Link href="/is-lens-safe">what we can and can&rsquo;t tell you</Link>
@@ -1172,8 +743,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <FinalCTA />
-      <GuideCta headingLead="Four problems, one explanation. Read" />
+      {/* The closing band, with its existing copy; on this page the number
+          is a call link with a text link beside it (location "home_final"). */}
+      <FinalCTA contactLinks />
     </div>
   );
 }

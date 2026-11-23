@@ -142,6 +142,10 @@ export const LINK_LOCATIONS = [
   // The answer-first concern heroes' "or text us" link (2026-11-12;
   // /concerns/anxiety and /concerns/focus-adhd).
   "concern_hero",
+  // The restructured homepage (2026-11-22): the two center cards' phone
+  // links, and the closing band's call and text links.
+  "home_locations",
+  "home_final",
   "other",
 ] as const;
 
@@ -159,6 +163,11 @@ export const CONCERN_CHIPS = [
   "Concussion",
   "Brain fog",
   "Migraines",
+  // The homepage's "What brings you in?" cards (2026-11-22) took the chips'
+  // place and report the same event. These two are the children's tab's
+  // cards that had no chip; the eight above keep their values.
+  "Children & school",
+  "Emotional regulation",
 ] as const;
 export type ConcernChip = (typeof CONCERN_CHIPS)[number];
 /** Where a partner badge sits (components/PartnerBadge.tsx); snake_case like LINK_LOCATIONS. */
