@@ -28,6 +28,9 @@ export const META_ALLOWED_PATHS = [
   "/contact",
   "/contact/",
   "/start",
+  // The Murfreesboro ad landing page (2026-11-22): the exact path only — a
+  // place name, a condition-neutral title, and nothing beneath it.
+  "/murfreesboro",
   "/locations",
   "/locations/",
   "/about",

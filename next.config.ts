@@ -428,7 +428,8 @@ const nextConfig: NextConfig = {
       // as well as by meta, so a CDN and a crawler both see it. Neither is
       // in the sitemap or a menu; neither is disallowed in robots.txt, which
       // would hide the noindex from the crawler that already has the URL.
-      ...["/review", "/start"].map((source) => ({
+      // /murfreesboro (the Murfreesboro ad landing page), 2026-11-22: the same.
+      ...["/review", "/start", "/murfreesboro"].map((source) => ({
         source,
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       })),

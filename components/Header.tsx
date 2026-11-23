@@ -204,10 +204,12 @@ export default function Header({
   // /start, the ad landing page (Ben, 2026-11-11): the logo and the phone,
   // nothing else — no menu, no button, and the logo is not a link. The
   // number is the picked center's own line (Nashville until one is picked).
-  if (pathname === "/start") {
-    const line = startPhones?.[startCenter] ?? { display: PHONE_DISPLAY, tel: PHONE_TEL };
+  // /murfreesboro, the Murfreesboro ad page (Ben, 2026-11-22): the same
+  // header, and the number is always that center's own line.
+  if (pathname === "/start" || pathname === "/murfreesboro") {
+    const line = startPhones?.[pathname === "/murfreesboro" ? "murfreesboro" : startCenter] ?? { display: PHONE_DISPLAY, tel: PHONE_TEL };
     return (
-      <header data-link-location="header" ref={headerRef} className={`site campaign start-header${scrolled ? " scrolled" : ""}`}>
+      <header data-link-location="header" ref={headerRef} className={`site campaign start-header${pathname === "/murfreesboro" ? " mb-header" : ""}${scrolled ? " scrolled" : ""}`}>
         <div className="nav">
           <span className="logo">
             <LogoMark />

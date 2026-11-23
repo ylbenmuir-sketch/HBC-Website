@@ -299,6 +299,8 @@ export default function ContactForm({
   variant = "default",
   hook = null,
   initialCenter = null,
+  lockedCenter = null,
+  startCopy,
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
@@ -321,6 +323,26 @@ export default function ContactForm({
   /** /start only: the center its link named (?center=murfreesboro), chosen
    *  in the server's HTML so the chip is on at first paint, not after mount. */
   initialCenter?: "Nashville" | "Murfreesboro" | null;
+  /**
+   * "start" variant, /murfreesboro (Ben, 2026-11-22): a page for one center.
+   * The center is this one from the first HTML, the select is not rendered,
+   * a ?center= on the link is ignored, and the number in an error message
+   * is this center's (the first of `centerPhones`).
+   */
+  lockedCenter?: "Murfreesboro" | null;
+  /**
+   * "start" variant: the page's own words around the fields, where they
+   * differ from /start's (lib/start.ts → START_OFFER). `formHeading: null`
+   * drops the heading; `badges` and `proof` are one quiet row under the
+   * guarantee. The button's words are never a prop.
+   */
+  startCopy?: {
+    formHeading?: string | null;
+    formSub?: string;
+    guarantee?: string;
+    badges?: string;
+    proof?: { star: string; text: string };
+  };
 }) {
   const pathname = usePathname();
   // The giveaway path: the code (pre-filled from the email link) and the call-me box.
@@ -336,7 +358,9 @@ export default function ContactForm({
   const [emailOpen, setEmailOpen] = useState(false);
   const focusEmail = useRef(false);
   // A valid 10-year code preselects the entrant's nearer center; ?center= still wins (below).
-  const [preferredCenter, setPreferredCenter] = useState<string | null>(giveaway?.center ?? initialCenter ?? null);
+  const [preferredCenter, setPreferredCenter] = useState<string | null>(lockedCenter ?? giveaway?.center ?? initialCenter ?? null);
+  // The number an error message offers: a one-center page gives its own.
+  const helpPhone = (lockedCenter && centerPhones[0]?.phone.display) || PHONE_DISPLAY;
   const [showConcierge, setShowConcierge] = useState(false);
   const [note, setNote] = useState("");
   // Unchecked by default, and never required (lib/sms-consent.ts).
@@ -375,13 +399,15 @@ export default function ContactForm({
   useEffect(() => {
     trackFunnel("contact_view", window.location.pathname);
     // Read on mount (not via useSearchParams) so the form still prerenders.
+    // A one-center page keeps its center whatever the link says.
+    if (lockedCenter) return;
     const slug = new URLSearchParams(window.location.search).get("center")?.trim().toLowerCase();
     const match = slug ? CENTER_BY_SLUG[slug] : undefined;
     if (match) {
       setPreferredCenter(match.value);
       if (match === CONCIERGE_CHOICE) setShowConcierge(true);
     }
-  }, []);
+  }, [lockedCenter]);
 
   // /start's header phone and the footer's center line follow
   // the center picked here (lib/start-center.ts). "Not sure" is Nashville.
@@ -524,7 +550,8 @@ export default function ContactForm({
         | null;
       if (!res.ok) {
         trackFunnel("step1_error", pathname, { reason: res.status >= 500 ? "server_error" : "server_rejected" });
-        setErrorMessage(data?.error ?? `We couldn't send your request. Please try again, or call us at ${PHONE_DISPLAY}.`);
+        // The route's own messages carry the main line; a one-center page shows its own.
+        setErrorMessage((data?.error ?? `We couldn't send your request. Please try again, or call us at ${PHONE_DISPLAY}.`).replaceAll(PHONE_DISPLAY, helpPhone));
         setStatus("error");
         return;
       }
@@ -551,7 +578,7 @@ export default function ContactForm({
       }
     } catch {
       trackFunnel("step1_error", pathname, { reason: "network" });
-      setErrorMessage(`We couldn't send your request. Please try again, or call us at ${PHONE_DISPLAY}.`);
+      setErrorMessage(`We couldn't send your request. Please try again, or call us at ${helpPhone}.`);
       setStatus("error");
     }
   }
@@ -824,6 +851,7 @@ export default function ContactForm({
   const centerOptions = showConcierge ? [...CENTER_CHOICES, CONCIERGE_CHOICE] : CENTER_CHOICES;
   const invalid = (id: string) => (invalidField === id ? true : undefined);
   const isStart = variant === "start";
+  const startHeading = startCopy?.formHeading === undefined ? START_OFFER.formHeading : startCopy.formHeading;
   const showEmail = !isStart || emailOpen || email.length > 0;
   const emailField = showEmail && (
     <>
@@ -857,13 +885,14 @@ export default function ContactForm({
       onFocus={onTouch}
       onPointerDown={onTouch}
       onInput={onFirstInteraction}
+      aria-label={isStart && !startHeading ? START_OFFER.formHeading : undefined}
       noValidate
     >
       {isStart ? (
         // /start (Ben, 2026-11-13): the form's own heading and one line.
         <>
-          <h2 className="start-form-heading">{START_OFFER.formHeading}</h2>
-          <p className="start-form-sub">{START_OFFER.formSub}</p>
+          {startHeading && <h2 className="start-form-heading">{startHeading}</h2>}
+          <p className="start-form-sub">{startCopy?.formSub ?? START_OFFER.formSub}</p>
         </>
       ) : (
         <div className="eyebrow">{giveaway ? "Book your 10-year visit" : "Request your free call"}</div>
@@ -948,7 +977,7 @@ export default function ContactForm({
       {/* Everywhere but /start the email field comes before the center. */}
       {!isStart && emailField}
 
-      {isStart ? (
+      {isStart && lockedCenter ? null : isStart ? (
         // /start (Ben, 2026-11-13): the same three centers as a select.
         // Nothing chosen until she chooses — or the link named one
         // (?center=murfreesboro, in the server's HTML). Its `input` event
@@ -1105,7 +1134,22 @@ export default function ContactForm({
       </button>
       {variant === "start" ? (
         // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
-        <p className="start-guarantee">{START_OFFER.guarantee}</p>
+        <>
+          <p className="start-guarantee">{startCopy?.guarantee ?? START_OFFER.guarantee}</p>
+          {(startCopy?.badges || startCopy?.proof) && (
+            <p className="start-meta start-form-meta">
+              {startCopy.badges && <span className="start-meta-offer">{startCopy.badges}</span>}
+              {startCopy.proof && (
+                <span>
+                  <span className="start-star" aria-hidden="true">
+                    {startCopy.proof.star}
+                  </span>{" "}
+                  {startCopy.proof.text}
+                </span>
+              )}
+            </p>
+          )}
+        </>
       ) : (
         <p className="micro" style={{ textAlign: "center" }}>
           No payment details, no intake forms today. We never share your
