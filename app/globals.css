@@ -3921,8 +3921,10 @@ footer.site.start-footer a { display: inline; min-height: 0; padding: 6px 0; col
 .hero-float { display: none; }
 @media (min-width: 1061px) {
   .hero-media { position: relative; }
-  .hero-float { display: block; position: absolute; left: -36px; bottom: 116px; z-index: 2; margin: 0; padding: 16px 26px 17px 22px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 0 4px 4px 0; box-shadow: 0 22px 44px -26px rgba(21, 34, 48, 0.5); font-family: var(--serif); font-size: 23px; line-height: 1.2; font-weight: 600; color: var(--navy); }
-  .hero-float span { display: block; font-family: var(--serif-italic); font-style: italic; font-weight: 500; color: var(--sage-deep); }
+  .hero-float { display: flex; flex-direction: column; align-items: center; gap: 8px; position: absolute; left: -36px; bottom: 96px; z-index: 2; margin: 0; padding: 16px 20px 13px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 0 4px 4px 0; box-shadow: 0 22px 44px -26px rgba(21, 34, 48, 0.5); }
+  .hero-float img { display: block; width: 112px; height: 112px; }
+  /* The label: the eyebrow's face at its small size; --slate on white is 5.9:1. */
+  .hero-float figcaption { font-family: var(--sans); font-size: 11.5px; line-height: 1.4; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--slate); white-space: nowrap; }
 }
 
 /* -- trust row: four facts in one row, 2x2 on a phone --

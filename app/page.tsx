@@ -7,7 +7,7 @@ import BrainMapStage from "@/components/BrainMapStage";
 import BrandName from "@/components/BrandName";
 import BrainMapHeat from "@/components/BrainMapHeat";
 import BrainMapBars from "@/components/BrainMapBars";
-import { fmtUv, meanUv } from "@/lib/brain-map-sample";
+import { BRAIN_MAP_SAMPLE_VERSION, fmtUv, meanUv } from "@/lib/brain-map-sample";
 import ConcernTabs from "@/components/ConcernTabs";
 import Quote from "@/components/Quote";
 import GoogleReviewQuote from "@/components/GoogleReviewQuote";
@@ -266,13 +266,31 @@ export default function HomePage() {
             {/* Phones only (globals.css ≤760px): the navy scrim the copy
                 sits on. `display: none` everywhere else. */}
             <span className="hero-scrim" aria-hidden="true" />
-            {/* The small card over the photo's corner (Ben's words,
-                2026-11-22; no price). A desktop piece: `display: none`
-                under 1061px, where the hero stacks (globals.css
-                `.hero-float`). */}
-            <p className="hero-float">
-              Your Brain Map. <span>Your plan to keep.</span>
-            </p>
+            {/* The small card over the photo's corner: a sample Brain Map
+                with its label (Ben, 2026-11-23; until then the words "Your
+                Brain Map. Your plan to keep."). The picture is one static
+                WebP of 10 KB or less, made at build from the site's sample
+                dataset (lib/brain-map-sample-image.ts) — no client data.
+                Decorative (the label beside it says what it is), lazy and
+                low priority, with its size given so nothing shifts. A
+                desktop piece: `display: none` under 1061px, where the hero
+                stacks (globals.css `.hero-float`), and a lazy image that is
+                not rendered is never requested — a phone does not fetch it.
+                A plain <img>: next/image would re-encode an image that is
+                already at its final size and format. */}
+            <figure className="hero-float">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/brain-map-sample.webp?v=${BRAIN_MAP_SAMPLE_VERSION}`}
+                alt=""
+                width={112}
+                height={112}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
+              <figcaption>Sample Brain Map</figcaption>
+            </figure>
           </div>
         </div>
       </section>
