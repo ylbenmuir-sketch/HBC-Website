@@ -363,7 +363,7 @@ submission requires Supabase credentials.
 | `ANTHROPIC_API_KEY` | Model access for the assistant's answering layer (`lib/chat/answer.ts`). Server-side only. Unset = the assistant answers "I don't have that on the site" to everything. |
 | `NEXT_PUBLIC_GA_ID` | GA4 measurement ID. Unset = no tag loads and every event is a no-op: `submit_lead_form` + `generate_lead` (a saved call request, form or chat), `contact_link_click` (any `tel:`/`mailto:` tap; location from the nearest `data-link-location`), `guide_download`. Names match the old WordPress site's. Loads in production only: never under `next dev`, never on a Vercel preview (reads `VERCEL_ENV`). Build-time. See `lib/analytics.ts`. |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing Webmaster "HTML tag" tokens (the `content` value). Each renders its meta tag only when set. Build-time. |
-| `GIVEAWAY_ENGINE_ENABLED` | **10-year giveaway — the master switch** (`lib/giveaway/engine.ts`). OFF when unset: the default, and what production runs until Ben turns it on. Off = `/10years` is the hidden showcase (`lib/giveaway/showcase.ts`: the notify-me page with the `[DRAFT]` tags hidden, `?mode=live` / `closed` / `thanks` for the later stages, forms that succeed on screen and write nothing, sample winners), `/api/cron/giveaway` answers 200 and touches nothing, `/admin/10years` and `/10years/{enter,verify}` answer 404, `/unsubscribe` says "unavailable", a `/contact` offer code is refused without a lookup. On (`1`): the real giveaway — before Nov 9 `/10years` is already the real notify-me page (its form saves and emails) but stays noindex, robots-disallowed, out of the sitemap and without the banner; a `?mode=notify` / `live` / `closed` / `thanks` link is a showcase only on a non-production deployment before Nov 9 (production ignores `?mode=`); the page follows the config clock from Nov 9 and the showcase ends on its own. Set it only after the checklist under *10-year giveaway: turning the engine on*. Server-side. |
+| `GIVEAWAY_ENGINE_ENABLED` | **10-year giveaway — the master switch** (`lib/giveaway/engine.ts`). OFF when unset: the default, and what production runs until Ben turns it on. Off = `/10years` is the hidden showcase (`lib/giveaway/showcase.ts`: the notify-me page with the `[DRAFT]` tags hidden, `?mode=live` / `closed` / `thanks` for the later stages, forms that succeed on screen and write nothing, sample winners), `/api/cron/giveaway` answers 200 and touches nothing, `/admin/10years` and `/10years/{enter,verify}` answer 404, `/unsubscribe` says "unavailable", a `/contact` offer code is refused without a lookup. On (`1`): the real giveaway — before Nov 9 `/10years` is already the real notify-me page (its form saves and emails) but stays robots-disallowed (and, like the page at every stage since 2026-11-21, noindex and out of the sitemap); a `?mode=notify` / `live` / `closed` / `thanks` link is a showcase only on a non-production deployment before Nov 9 (production ignores `?mode=`); the page follows the config clock from Nov 9 and the showcase ends on its own. Set it only after the checklist under *10-year giveaway: turning the engine on*. Server-side. |
 | `GIVEAWAY_ADMINS` | **10-year giveaway (Phase 1, Oct 2026).** Who may sign in at `/admin/10years`: **Ben's address only** (Ben, 2026-11-03: there is no admin screen for staff; it is Ben's backup for redraws and record-keeping). Comma-separated, same format as the `LEADS_*` lists. Read on every sign-in and upserted into `giveaway_admin_allowlist`; no address is written in code. Unset = nobody can sign in. Server-side. |
 | `GIVEAWAY_TOKEN_SECRET` | **10-year giveaway.** Signs the unsubscribe, verification and one-tap links and the admin session cookie (`lib/giveaway/tokens.ts`). Any long random string, 16+ characters — `openssl rand -hex 32`. Unset = `/unsubscribe` answers 503 and admin sign-in refuses. Changing it invalidates every link already sent. Server-side. |
 | `GIVEAWAY_ENV` | **10-year giveaway.** Optional. Which rows this process may touch: `production` / `preview` / `local` / `test`. Defaults from `VERCEL_ENV` (production → production, preview → preview, else local). Every giveaway table has an `env` column and every read and write is scoped to it (`lib/giveaway/store.ts`), so a check run with `GIVEAWAY_ENV=test` can never see or email a real entrant. The same idea as `LEAD_HOLD_ENV`. |
@@ -483,12 +483,16 @@ in Vercel (production) and redeploying:
    (env=test rows), after 1–6.
 8. **Un-hiding is automatic** (fix list rev 2, P0-6): with the engine on,
    from Mon Nov 9 12:00 AM CT robots.txt drops the `/10years` disallow (the
-   token routes stay disallowed), the sitemap lists `/10years` and
-   `/10years/rules`, and their meta robots says index — no deploy. On
-   Nov 9, submit the sitemap in Search Console.
-8b. **Redeploy after setting the flag.** The site-wide banner is rendered
-   into the static pages at build time, so it appears only after a deploy
-   made with `GIVEAWAY_ENGINE_ENABLED=1` set.
+   token routes stay disallowed) — no deploy. **Since 2026-11-21 (the
+   giveaway is over) that is all that un-hides**: `/10years` and
+   `/10years/rules` stay live but their meta robots is `noindex, follow`
+   for good (`tenYearsRobots` in `lib/giveaway/showcase.ts`) and the
+   sitemap lists neither. robots.txt keeps allowing them so a crawler can
+   read the noindex.
+8b. **The site-wide banner is gone** (2026-11-21): `GiveawayBanner`,
+   `lib/giveaway/banner.ts`, its styles, its three messages and its two GA4
+   events were deleted. Nothing links to `/10years` from the rest of the
+   site now.
 9. **Vercel env, not `.env.local`**: the flag is read at request time on
    the server. A local `next dev` without it shows the showcase too; set
    `GIVEAWAY_ENGINE_ENABLED=1` in `.env.local` to drive the real flow with
@@ -1372,9 +1376,9 @@ block carried (`BRAIN_MAP_HEATMAP_CLAIM`) are gone; git history has them.
   value is what the tap log stores as `location`.
 - **No `utm_` tags on internal links** (Ben, 2026-11-12). A tagged internal
   link restarts the GA4 session's attribution; the 10-year banner did it
-  ("site / banner"). The banner now links to plain `/10years`, reports
-  `giveaway_banner_click`, and leaves its first touch in sessionStorage so
-  the giveaway stats still count `site_banner` (`lib/giveaway/banner.ts`).
+  ("site / banner") until it linked to plain `/10years`. (The banner was
+  retired on 2026-11-21; `site_banner` stays a channel in
+  `lib/giveaway/channel.ts` for the entries it brought.)
   The /10years "Add to calendar" buttons keep their tags: they open a
   redirect and a file, not a page.
 - **`form_start` means a real input since 2026-11-12**: a keystroke, an

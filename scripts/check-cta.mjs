@@ -17,6 +17,11 @@
  *   3. On /: every other "Get Started" — the hero, the Brain Map
  *      stage, the final band, the sticky bottom bar once the hero has
  *      scrolled past — tapped in turn, each landing on /contact.
+ *   4. On /locations/franklin (Ben, 2026-11-21): every "Get Started" link
+ *      in the hydrated page — the page's own, the header's, the drawer's,
+ *      the phone bar's — has href /contact?center=nashville, at 390 and at
+ *      1440; and tapping the phone bar's lands on the form with Nashville
+ *      chosen. Franklin is not open, and Nashville is the center it books.
  *
  * Exit 1 with the failures listed; nothing is written anywhere.
  */
@@ -102,6 +107,34 @@ if (barOn) {
   await tap(".cta-bar .cta-bar-btn");
   await sleep(1500);
   expect("home: sticky bottom bar CTA goes to /contact", (await path()) === "/contact", await path());
+}
+
+// 4. /locations/franklin: every "Get Started" carries center=nashville
+const FRANKLIN = "/locations/franklin";
+const WANT = "/contact?center=nashville";
+for (const [w, h] of [[390, 844], [1440, 900]]) {
+  await page.setViewport(w, h);
+  await page.goto(`${BASE}${FRANKLIN}`, { settle: 900 });
+  // The phone bar mounts after hydration; give it a moment at 390.
+  await sleep(600);
+  const links = JSON.parse(
+    await page.eval(`JSON.stringify([...document.querySelectorAll("a")].filter(e => e.textContent.trim().startsWith(${JSON.stringify(LABEL)})).map(e => ({ href: e.getAttribute("href"), where: e.closest(".cta-bar") ? "phone bar" : e.closest(".drawer") ? "drawer" : e.closest("header") ? "header" : (e.closest("section")?.className.split(" ").find(c => c !== "sec" && c !== "wrap") || "page") })))`)
+  );
+  const wrong = links.filter((l) => l.href !== WANT);
+  expect(`franklin at ${w}: found its "${LABEL}" links (${links.length})`, links.length >= (w === 390 ? 5 : 4), JSON.stringify(links.map((l) => l.where)));
+  expect(`franklin at ${w}: every "${LABEL}" goes to ${WANT}`, wrong.length === 0, JSON.stringify(wrong));
+}
+await page.setViewport(390, 844);
+await page.goto(`${BASE}${FRANKLIN}`, { settle: 900 });
+await sleep(600);
+if (await tap(".cta-bar .cta-bar-btn")) {
+  await sleep(1500);
+  const landed = await page.eval("location.pathname + location.search");
+  expect("franklin: the phone bar's tap lands on /contact?center=nashville", landed === WANT, landed);
+  const chosen = await page.eval(`(() => { const on = [...document.querySelectorAll('.form [aria-pressed="true"], .form [aria-checked="true"], .form .chip.on, .form .chip.active, .form .chip[data-on="true"]')].map(e => e.textContent.trim()); const sel = document.querySelector('.form select'); return JSON.stringify(on.length ? on : sel ? [sel.value] : []); })()`);
+  expect("franklin: the form opens with Nashville chosen", /Nashville/.test(chosen), chosen);
+} else {
+  expect("franklin: the phone bar is on the page at 390", false);
 }
 
 await chrome.close();

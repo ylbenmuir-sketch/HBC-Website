@@ -28,8 +28,9 @@
  *                    touches nothing, admin / enter / verify are 404,
  *                    /unsubscribe says unavailable, the rest of the site works
  *   today            engine on, the REAL clock (Nov 9 has passed): /10years is
- *                    public as planned — the real page, indexable, not
- *                    robots-disallowed, in the sitemap; ?mode= links ignored;
+ *                    the real page, not robots-disallowed, but noindex and
+ *                    out of the sitemap (the giveaway is over, 2026-11-21);
+ *                    ?mode= links ignored;
  *                    /admin/10years is noindex + no-store
  *   Nov 8 (pinned)   the clock moved back: the real notify-me page before
  *                    Nov 9 (noindex, robots-disallowed, not in the sitemap,
@@ -377,13 +378,14 @@ try {
     const pg = await get(`/10years?mode=${m}`);
     expect(`today: /10years?mode=${m} is ignored — the same real page, no showcase`, pg.status === 200 && pg.text.includes(`data-mode="${todayMode}"`) && !/signup\?mode=/.test(pg.text) && !/Sarah K\., Franklin|Daniel O\., Clarksville/.test(pg.text), String(pg.status));
   }
-  expect("today: /10years meta robots says index, with no static noindex header", /name="robots" content="index, follow"/.test(todayPage.text) && !/noindex/.test(todayPage.headers.get("x-robots-tag") ?? ""));
-  expect("today: /10years/rules meta robots says index", /name="robots" content="index, follow"/.test((await get("/10years/rules")).text));
+  // The giveaway is over (Ben, 2026-11-21): both pages stay live, noindex (follow), and out of the sitemap; robots.txt still allows them so the noindex can be read.
+  expect("today: /10years meta robots says noindex, follow", /name="robots" content="noindex, follow"/.test(todayPage.text));
+  expect("today: /10years/rules meta robots says noindex, follow", /name="robots" content="noindex, follow"/.test((await get("/10years/rules")).text));
   {
     const robots = (await get("/robots.txt")).text;
     expect("today: robots.txt allows /10years, still disallows the token routes, /admin/ and /api/", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
     const map = (await get("/sitemap.xml")).text;
-    expect("today: the sitemap lists /10years and /10years/rules, never a token route, /unsubscribe or /admin", /\/10years<\/loc>/.test(map) && /\/10years\/rules<\/loc>/.test(map) && !/\/10years\/(claim|enter|verify|signup)|unsubscribe|\/admin/.test(map));
+    expect("today: the sitemap lists nothing under /10years, nor /unsubscribe or /admin", !/10years|unsubscribe|\/admin/.test(map));
   }
   // Ben, 2026-11-07: before Nov 9 anyone with the URL saw the real notify-me page; robots/sitemap/noindex waited. Pinned, so it stays tested.
   section("Nov 8 (clock pinned): the real notify-me page before Nov 9; ?mode= links preview");
@@ -453,10 +455,10 @@ try {
     const robots = (await get("/robots.txt")).text;
     expect("Nov 9 00:01: robots.txt drops the /10years disallow, keeps the token routes, /admin and /api", !/^Disallow: \/10years$/m.test(robots) && /Disallow: \/10years\/enter\//.test(robots) && /Disallow: \/10years\/verify/.test(robots) && /Disallow: \/10years\/signup/.test(robots) && /Disallow: \/admin\//.test(robots) && /Disallow: \/api\//.test(robots), robots.slice(0, 300));
     const map = (await get("/sitemap.xml")).text;
-    expect("Nov 9 00:01: the sitemap lists /10years and /10years/rules, dated by the rules version", /\/10years<\/loc>/.test(map) && /\/10years\/rules<\/loc>/.test(map) && !/\/10years\/(claim|enter|verify)/.test(map));
+    expect("Nov 9 00:01: the sitemap lists nothing under /10years (out for good since 2026-11-21)", !/10years/.test(map));
     const pub = await get("/10years");
-    expect("Nov 9 00:01: /10years meta robots says index", /name="robots" content="index, follow"/.test(pub.text));
-    expect("Nov 9 00:01: /10years/rules meta robots says index", /name="robots" content="index, follow"/.test((await get("/10years/rules")).text));
+    expect("Nov 9 00:01: /10years meta robots says noindex, follow (never indexed again since 2026-11-21)", /name="robots" content="noindex, follow"/.test(pub.text));
+    expect("Nov 9 00:01: /10years/rules meta robots says noindex, follow", /name="robots" content="noindex, follow"/.test((await get("/10years/rules")).text));
     expect("the token routes keep a noindex header", /noindex/.test((await get("/10years/verify")).headers.get("x-robots-tag") ?? ""));
     // P0-2: nothing before the reveal names the gift; P0-4: the tease is there instead.
     const FORBIDDEN = /free first visit|first visit|13th|thank-you offer/i;
@@ -505,7 +507,7 @@ try {
   expect("/10years carries the assistant-off marker (the giveaway clock says Nov 10)", /data-assistant-off/.test(page.text));
   expect("/10years/rules carries it too", /data-assistant-off/.test((await get("/10years/rules")).text));
   // Rev 2, P0-6: public from Nov 9 — the page and the rules are listed, never a token route.
-  expect("from Nov 9 the sitemap lists /10years and /10years/rules only", /\/10years<\/loc>/.test((await get("/sitemap.xml")).text) && !/\/10years\/(claim|enter|verify|signup)/.test((await get("/sitemap.xml")).text));
+  expect("from Nov 9 the sitemap lists nothing under /10years", !/10years/.test((await get("/sitemap.xml")).text));
   // A gives a first name with the reminder; B gives an email address and nothing else.
   const A = person("A", "alice.notify@example.test", { first: "Alice" });
   // B lives in Louisville: the giveaway is open to Tennessee's neighbours (ELIGIBLE_STATES). The ZIP is asked on the entry form.
@@ -1093,13 +1095,16 @@ async function engineOffChecks() {
   expect("off: it is the notify-me stage, form posting with ?mode=notify", home.text.includes('data-mode="notify_me"') && home.text.includes('action="/10years/signup?mode=notify"'));
   expect("off: noindex, nofollow (meta; no static header — it follows the clock)", /name="robots" content="noindex, nofollow"/.test(home.text));
   // Rev 2, P0-2: before the reveal (the real clock today), no stage names the gift.
+  // The engine-off server runs on the real clock, and the reveal was Sat
+  // Nov 21, 7 PM CT: from then on the closed stage and the rules do name the
+  // gift, as designed, so this only has something to assert before it.
   {
     const FORBIDDEN = /free first visit|first visit|13th|thank-you offer/i;
     const visible = (html) => html.replace(/<script[\s\S]*?<\/script>/g, "");
     const stages = ["/10years", "/10years?mode=notify", "/10years?mode=live", "/10years?mode=closed", "/10years?mode=thanks", "/10years/rules"];
     const hits = [];
     for (const path of stages) if (FORBIDDEN.test(visible((await get(path)).text))) hits.push(path);
-    expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
+    if (Date.now() < Date.UTC(2026, 10, 22, 1, 0)) expect("off, before the reveal: /10years, every ?mode= and /10years/rules name no gift", hits.length === 0, hits.join(" "));
     const rules = (await get("/10years/rules")).text;
     // The ask bar's input carries a placeholder= attribute when the assistant is built on; that is not rules text.
     const rulesWords = rules.replace(/\splaceholder="[^"]*"/g, "");

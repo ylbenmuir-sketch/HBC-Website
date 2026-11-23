@@ -7,6 +7,7 @@ import {
   usd,
   verifiedOr,
 } from "./site-config";
+import { HOME_DATE_MODIFIED } from "./home-date";
 
 /**
  * The static pages, as records — the way lib/concerns.ts, lib/locations.ts
@@ -76,7 +77,9 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     description:
       "LENS neurofeedback in Nashville & Murfreesboro: help for anxiety, focus, and sleep — without medication. Your first visit starts with a Brain Map.",
-    dateModified: "2026-11-22",
+    // Not typed here (2026-11-21): the date app/page.tsx last changed, read
+    // from git at build time. lib/home-date.ts.
+    dateModified: HOME_DATE_MODIFIED,
     type: "WebPage",
     crumb: "Home",
   },
@@ -174,9 +177,14 @@ export const staticPages: StaticPage[] = [
   },
   {
     path: "/about",
-    title: "About",
+    // The name, the service and the place (Ben, 2026-11-21: it was "About —
+    // Harmonized Brain Centers", which says what neither is nor where).
+    // Absolute, 56 characters; the name stays because this is the page
+    // about it.
+    title: "About Harmonized Brain Centers — Nashville Neurofeedback",
+    absoluteTitle: true,
     // 154 chars with the count. The brand name is not led with — the title
-    // template already carries it. The count interpolates, gated: an
+    // carries it. The count interpolates, gated: an
     // unverified figure drops the clause, not the sentence.
     description:
       "A team of trained LENS practitioners serving adults, children, and families across Middle Tennessee — one care model, multiple centers" +
@@ -204,7 +212,10 @@ export const staticPages: StaticPage[] = [
   },
   {
     path: "/locations",
-    title: "Locations",
+    // Was "Locations — Harmonized Brain Centers" (Ben, 2026-11-21). The two
+    // open centers; Franklin joins when it opens. Absolute, 58 characters.
+    title: "LENS Neurofeedback Locations: Nashville & Murfreesboro, TN",
+    absoluteTitle: true,
     description:
       "Every Harmonized center runs the same care model, the same training, and the same honest policies. Nashville, Murfreesboro, and Franklin (coming soon).",
     // The concierge band links to /concierge now.
@@ -236,7 +247,9 @@ export const staticPages: StaticPage[] = [
   },
   {
     path: "/faq",
-    title: "FAQ",
+    // Was "FAQ — Harmonized Brain Centers" (Ben, 2026-11-21). Absolute, 53.
+    title: "LENS Neurofeedback FAQ — Nashville & Murfreesboro, TN",
+    absoluteTitle: true,
     // 149 chars: the topics the fourteen answers actually cover.
     description:
       "Every question about LENS neurofeedback, answered plainly — cost, sessions, safety, children, insurance, and the ones people are hesitant to ask.",
@@ -253,14 +266,17 @@ export const staticPages: StaticPage[] = [
     absoluteTitle: true,
     // 157 chars. The four sections, in order, and the posture: disclosure.
     description:
-      "What we can and can't tell you about LENS: what the signal is, what a session feels like, what we refuse to claim, and where the public Google reviews are.",
+      "What we can and can't tell you about LENS: what the signal is, what a session feels like, what we won't claim, and where the public Google reviews are.",
     dateModified: "2026-10-11",
     type: "FAQPage",
     crumb: "Is LENS safe?",
   },
   {
     path: "/contact",
-    title: "Talk With Our Team",
+    // Was "Talk With Our Team — Harmonized Brain Centers" (Ben, 2026-11-21).
+    // Absolute, 58 characters.
+    title: "Contact Us: LENS Neurofeedback in Nashville & Murfreesboro",
+    absoluteTitle: true,
     // The H1's ask, the two centers and the no-referral fact (2026-10-26).
     description:
       "Let’s get you started. Send your name and a phone number or email, and someone from our Nashville or Murfreesboro center reaches out. No referral needed.",
@@ -309,7 +325,10 @@ export const staticPages: StaticPage[] = [
     // never names the thank-you gift: it would be Google's snippet before
     // the reveal (fix list rev 2, P0-2).
     path: "/10years",
+    // Absolute (2026-11-21): with the template the brand was in it twice,
+    // 64 characters.
     title: "Ten Years of Harmonized Brain Centers",
+    absoluteTitle: true,
     description:
       "Harmonized Brain Centers turns 10: six drawings Nov 16–21 for adult residents of TN and 8 nearby states. One free entry counts for every drawing.",
     dateModified: "2026-11-03",

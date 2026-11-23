@@ -310,37 +310,6 @@ em.sage { font-family: var(--serif-italic); font-style: italic; color: var(--sag
 .skip { position: absolute; left: 16px; top: -200px; z-index: 100; padding: 12px 18px; background: var(--navy); color: var(--ivory); font-weight: 600; font-size: 15px; border-radius: 4px; text-decoration: none; }
 .skip:focus { top: 16px; outline: 2px solid var(--gold); outline-offset: 3px; }
 
-/* The site-wide 10-year banner (fix list rev 2, P0-7; lib/giveaway/banner.ts).
-   Hidden unless the inline <head> script set <html data-hbc-banner> to a
-   live mode before first paint — so it is in the layout from the first
-   frame or not at all (no shift), and a no-JS visitor never sees a stale
-   message. One real link per mode; only the matching one displays. No motion.
-   Notify-week clarity (Ben, 2026-11-09): it was navy and blended in with the
-   header; now gold #e2a15c with navy #152230 text (7.3:1 — the brief's other
-   gold, #b8924a, is 5.6:1), medium weight, 52 px tall, the dismiss 52 × 52.
-   Two lines at most on phones. */
-.hbc10y-banner { display: none; background: #e2a15c; color: #152230; }
-html[data-hbc-banner="notify"] .hbc10y-banner,
-html[data-hbc-banner="live"] .hbc10y-banner,
-html[data-hbc-banner="closed"] .hbc10y-banner { display: block; }
-.hbc10y-banner-inner { position: relative; display: flex; align-items: stretch; justify-content: center; min-height: 52px; padding: 0 52px; max-width: 1240px; margin: 0 auto; }
-.hbc10y-banner-link { display: none; align-items: center; justify-content: center; min-height: 52px; padding: 10px 4px; color: #152230; font-family: var(--sans); font-size: 16px; font-weight: 500; line-height: 1.35; text-align: center; text-decoration: none; text-underline-offset: 3px; }
-html[data-hbc-banner="notify"] .hbc10y-banner-link[data-copy="notify"],
-html[data-hbc-banner="live"] .hbc10y-banner-link[data-copy="live"],
-html[data-hbc-banner="closed"] .hbc10y-banner-link[data-copy="closed"] { display: flex; }
-.hbc10y-banner-link:hover { text-decoration: underline; }
-.hbc10y-banner-link:focus-visible, .hbc10y-banner-x:focus-visible { outline: 2px solid #152230; outline-offset: -4px; border-radius: 4px; }
-.hbc10y-banner-x { position: absolute; top: 0; right: 0; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: none; border: 0; color: #152230; cursor: pointer; opacity: 0.85; }
-.hbc10y-banner-x:hover { opacity: 1; }
-@media (max-width: 480px) {
-  /* Two lines at most down to 320: narrower side room (the X stays 44 × 44 tap size). */
-  .hbc10y-banner-inner { padding: 0 44px 0 16px; }
-  .hbc10y-banner-link { font-size: 14.5px; padding: 9px 0; }
-  .hbc10y-banner-x { width: 44px; }
-}
-@media (max-width: 359px) {
-  .hbc10y-banner-link { font-size: 13.5px; }
-}
 main:focus { outline: none; }
 
 /* visible keyboard focus, sitewide */
@@ -802,7 +771,8 @@ a.partner-badge:hover .partner-badge-line { color: var(--navy); }
    answer in the navy a size up from the supporting line, Get Started with
    "or text us" beside it, the review, then "How LENS works". On a phone the
    crumb and the eyebrow go, so Get Started ends well above the action bar at
-   375×667 with the 10-year banner showing (bar top 605; measured). */
+   375×667 (bar top 605; measured with the 57px 10-year banner that ran until
+   2026-11-21 above it, so there is that much to spare now). */
 .concern-answer { margin: 0 0 14px; max-width: 54ch; font-size: 21px; line-height: 1.45; color: var(--navy); font-weight: 500; }
 .concern-first-ctas { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; margin-top: 30px; }
 .concern-text-us { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; font-family: var(--sans); font-size: 16px; font-weight: 600; color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px; }
@@ -1068,6 +1038,18 @@ footer.site .logo-name span { color: var(--gold); }
 .foot-identity { padding-top: 28px; font-size: 13.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.68); }
 .foot-identity a { color: rgba(251, 248, 241, 0.86); text-decoration: underline; text-decoration-color: rgba(251, 248, 241, 0.35); text-underline-offset: 3px; }
 .foot-identity a:hover { color: var(--ivory); text-decoration-color: currentColor; }
+/* 24px-tall tap areas (2026-11-21): the footer's phone, email, Privacy and
+   SMS Terms links were 17px tall, and "Get directions" 18 to 21px.
+   In the footer the links sit on consecutive lines, so each is an
+   inline-block exactly one line tall and the line is 24.3px (1.8, from
+   1.75: under a pixel a line). Padding instead would have made neighbours
+   on adjacent lines overlap (check:layout).
+   `.tap-24` is for a link on a line of its own: 3px of padding above and
+   below with the same 3px taken back as negative margin, so the box a
+   finger hits is 6px taller and nothing moves. */
+.foot-identity { line-height: 1.8; }
+.foot-identity a { display: inline-block; }
+.tap-24 { display: inline-block; padding: 3px 0; margin: -3px 0; }
 /* A phone number is one thing: never "(615)" on one line and the rest on the next. */
 .foot-identity a[href^="tel:"] { white-space: nowrap; }
 .disclaimer { padding-top: 28px; font-size: 12.5px; line-height: 1.75; color: rgba(251, 248, 241, 0.55); max-width: 112ch; }
@@ -1780,6 +1762,49 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero .sub { margin: 14px 0 22px; }
 }
 
+/* The homepage hero on a phone, 640px and under (Ben, 2026-11-21): the photo
+   is capped at about 40% of the screen instead of a fixed 700px, so the H1,
+   Get Started and the "Free 10-minute call" line all sit on the first
+   screen above the action bar (at 390x844 the line ends at y=648; it used
+   to end at 807, under the bar at 772).
+
+   The photo is as wide as the phone, so everything about the faces scales
+   with the WIDTH, and the crop and the copy are placed in vw to follow them:
+   the image is slid up 17vw (the wall above the mother's hair and the very
+   top of it), which puts her chin about 36vw and the daughter's about 47vw
+   down the frame, and the copy starts at 43vw. The frame's HEIGHT is 40svh,
+   with a 62vw floor so a short screen never cuts the daughter's face and an
+   83vw ceiling (324px at 390x844, 38% of the screen). The ceiling is also
+   what keeps `npm run check:layout` honest: it lays the page out in a window
+   as tall as the document, where a bare 40svh is a 4,000px photo painted
+   over the page. The scrim's stops are vw for the same reason as the crop:
+   light over both faces to 35vw, 0.9 navy by the eyebrow at 43vw.
+
+   The copy itself is unchanged; the headline is one size down (11.3vw, 44px
+   at 390, from 12.5vw) and the sentence's margins are 14/24 instead of
+   18/32. That is where the 157px came from, with the shorter photo. 641 to
+   760px keeps the 700px hero above. After the 360px and 340px rules on
+   purpose: it replaces their padding-top and scrim. */
+@media (max-width: 640px) {
+  .hero-media { min-height: 0; }
+  .hero-media .hero-ph { --ph-pos-active: 50% -17vw; height: 83vw !important; height: min(max(40svh, 62vw), 83vw) !important; -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent); mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+  .hero-scrim { background: linear-gradient(to bottom, rgba(21, 34, 48, 0.22) 0, rgba(21, 34, 48, 0.1) 24vw, rgba(21, 34, 48, 0.22) 35vw, rgba(21, 34, 48, 0.9) 43vw, rgba(21, 34, 48, 0.95) 80vw, rgba(21, 34, 48, 0.97) 100%); }
+  .hero-copy { padding-top: 43vw; }
+  .hero h1 { font-size: clamp(34px, 11.3vw, 50px); }
+  .hero .sub { margin: 14px 0 24px; }
+}
+/* The two small-phone headline sizes from above, restated because the 640px
+   block now follows them: 11.3vw is 40.7px at 360, which is larger than the
+   38px that rule protects, and one more line in the fallback font
+   (check:fonts). */
+@media (max-width: 360px) {
+  .hero h1 { font-size: 38px; }
+}
+@media (max-width: 340px) and (max-height: 640px) {
+  .hero h1 { font-size: 35px; }
+  .hero .sub { margin: 14px 0 22px; }
+}
+
 /* ============================================================
    SITE ASSISTANT — phase-8-chatbot.md §6, dressed in the design
    system (phase 11).
@@ -2449,6 +2474,14 @@ body[data-bottombar] footer.site {
 .form-compact label { margin: 11px 0 6px; }
 .form-compact input, .form-compact select { padding: 12px 16px; }
 .form-compact .micro { margin-top: 10px; }
+/* The review proof line directly under "Send My Request" on /contact (Ben,
+   2026-11-21; components/ContactForm.tsx): small, centred, slate, the star
+   in the text gold. It may wrap, only at a separator. The link is 24px tall
+   (inline-block with padding), in the form's own link colours. */
+.form .form-proof { margin: 10px 0 0; text-align: center; font-size: 13px; line-height: 1.45; letter-spacing: 0; color: var(--slate); text-wrap: balance; }
+.form .form-proof span { white-space: nowrap; }
+.form .form-proof-star { color: var(--gold-ink); }
+.form .form-proof a { display: inline-block; padding: 3px 0; color: var(--sage-deep); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
 /* The short step one (2026-10-26): "phone or email" is said once, above the
    pair, in the caption's place rather than as a third label. */
 .form-compact .either-note { margin: 14px 0 -4px; }
@@ -2472,13 +2505,14 @@ body[data-bottombar] footer.site {
    checkbox opts out of `.form input` (full width, field padding); the label
    opts out of `.form label` (the uppercase field caption), because this one
    is a sentence a person has to be able to read, not a caption. Slate on
-   white is 5.69:1. The label is the hit area, so the 20px box is not the
-   whole target. */
-.form .sms-consent { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 12px; align-items: center; margin-top: 16px; }
+   white is 5.69:1. The label is the hit area, and the box is 24px itself
+   (it was 20px until 2026-11-21), so the box alone is a 24x24 target. /start
+   keeps its own 18px box (its rules further down are more specific). */
+.form .sms-consent { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; align-items: center; margin-top: 16px; }
 /* Until a phone number is typed the box is quieter (Ben, 2026-10-26) — the
    checkbox only; the wording keeps its full contrast for readers and scanners. */
 .form .sms-consent-idle input[type="checkbox"] { opacity: 0.45; }
-.form .sms-consent input[type="checkbox"] { width: 20px; height: 20px; margin: 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
+.form .sms-consent input[type="checkbox"] { width: 24px; height: 24px; margin: 0; padding: 0; accent-color: var(--navy); cursor: pointer; }
 /* The label is the tap target (Ben, 2026-11-02): 44px tall, the box centred
    on it. Sentence case, body size and colour — a sentence, not a caption. */
 .form .sms-consent label { display: flex; align-items: center; min-height: 44px; margin: 0; font-size: 16px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--ink); cursor: pointer; }
@@ -3150,7 +3184,8 @@ footer.site.slim a:hover { color: var(--sage-deep); }
 .ty-tag-next { color: var(--ivory); background: var(--sage-deep); }
 .ty-step[data-state="next"] { border-color: var(--sage); box-shadow: 0 0 0 2px var(--sage), 0 22px 44px -34px rgba(21, 34, 48, 0.35); }
 .ty-step[data-state="drawn"] { background: var(--ivory-2); }
-.ty-step[data-state="drawn"] .ty-step-amount { opacity: 0.6; }
+/* A drawn day's amount keeps its full ink (2026-11-21): at 0.6 opacity it
+   was 2.3:1 on the card (2.9:1 on the grand prize's navy). */
 .ty-step-winner { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
 .ty-step-winner .ty-step-label { color: var(--sage-deep); margin: 0; }
 .ty-step-winner-line { font-family: var(--serif); font-size: 21px; line-height: 1.15; color: var(--navy); }
@@ -3377,7 +3412,9 @@ footer.site.slim a:hover { color: var(--sage-deep); }
   .ty-row-bar { display: block; height: 3px; border-radius: 2px; background: var(--ivory-2); overflow: hidden; margin-top: 2px; }
   .ty-row-fill { display: block; height: 100%; border-radius: 2px; background: var(--gold); }
   .ty-step[data-state="next"] { border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage); }
-  .ty-step[data-state="drawn"] .ty-row-usd { opacity: 0.6; }
+  /* A drawn day's amount keeps its full ink (2026-11-21): at 0.6 it was
+     #b19e77 on the card's #f4eee1, 2.3:1. The "Drawn" tag and the winner's
+     name already say the day is done. */
   /* Saturday: navy, gold, a little taller. */
   .ty-step-grand .ty-step-head { padding-top: 15px; padding-bottom: 15px; }
   .ty-step-grand .ty-row-time { color: rgba(251, 248, 241, 0.62); }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/site-config";
+import { PHONE_DISPLAY, PHONE_TEL, REVIEWS, REVIEW_COUNT_ROUNDED, SHOW_REVIEWS } from "@/lib/site-config";
 import { CONTACT_METHOD_LABELS, type ContactMethod } from "@/lib/contact-method";
 import { CALL_ME_TEXT, GIVEAWAY_PHONE_LABEL } from "@/lib/call-consent";
 import {
@@ -301,9 +301,19 @@ export default function ContactForm({
   initialCenter = null,
   lockedCenter = null,
   startCopy,
+  reviewLinks = {},
 }: {
   /** Both open centers' own lines, from the server page (lib/locations.ts). */
   centerPhones?: CenterPhone[];
+  /**
+   * Each open center's Google reviews link, keyed by its chip's value
+   * ("Nashville", "Murfreesboro") — the same `reviewReadUrl` its location
+   * page links to (lib/locations.ts), passed from the server page so this
+   * client bundle does not carry the locations file. "Google reviews" in
+   * the proof line under the button goes to the chosen center's listing,
+   * Nashville's until one is chosen. Empty on /start, which has no line.
+   */
+  reviewLinks?: Record<string, string>;
   /** The first-visit video for step three (lib/videos.ts). */
   video: Video;
   /** The 10-year giveaway path (/contact?from=10years), or null. */
@@ -852,6 +862,9 @@ export default function ContactForm({
   const invalid = (id: string) => (invalidField === id ? true : undefined);
   const isStart = variant === "start";
   const startHeading = startCopy?.formHeading === undefined ? START_OFFER.formHeading : startCopy.formHeading;
+  // The chosen center's Google listing; Nashville's until one is chosen
+  // ("Not sure yet" and the concierge chip have none of their own).
+  const reviewLink = reviewLinks[preferredCenter ?? ""] ?? reviewLinks.Nashville ?? null;
   const showEmail = !isStart || emailOpen || email.length > 0;
   const emailField = showEmail && (
     <>
@@ -1132,6 +1145,36 @@ export default function ContactForm({
           "Send My Request"
         )}
       </button>
+      {/* The review proof line, directly UNDER the button (Ben, 2026-11-21):
+          /contact was the one key page without it. The rating and the
+          rounded count are the constants every other proof line reads
+          (lib/site-config.ts), behind the same SHOW_REVIEWS gate. A new tab,
+          like the consent links, so a half-filled form is not lost; no
+          `noreferrer`, as on the location pages. No GA event of its own.
+          Not on /start, and not on the giveaway booking path, which is not
+          a 10-minute call. */}
+      {!isStart && !giveaway && (
+        <p className="form-proof" data-form-proof>
+          {SHOW_REVIEWS && (
+            <>
+              {REVIEWS.value.rating}
+              <span className="form-proof-star" aria-hidden="true">★</span>
+              <span className="vh">★</span> from {REVIEW_COUNT_ROUNDED}{" "}
+              {reviewLink ? (
+                <a href={reviewLink} target="_blank" rel="noopener">
+                  Google reviews
+                </a>
+              ) : (
+                "Google reviews"
+              )}
+              {" · "}
+            </>
+          )}
+          <span>Free 10-minute call</span>
+          {" · "}
+          <span>No obligation</span>
+        </p>
+      )}
       {variant === "start" ? (
         // /start: the one guarantee sentence on the page (Ben, 2026-11-13).
         <>

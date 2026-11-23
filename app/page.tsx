@@ -240,10 +240,14 @@ export default function HomePage() {
                 puts both faces in the upper third of the 620px desktop frame
                 and is the highest the crop can sit before the tablet width —
                 where the same 620px frame goes full-bleed and crops hardest —
-                starts cutting the top of her head. On phones the frame is
-                taller than the image is wide, so the image is
+                starts cutting the top of her head. From 641 to 760px the
+                frame is taller than the image is wide, so the image is
                 height-constrained and only the horizontal half of
                 positionMobile does anything — centered keeps both faces in.
+                At 640px and under (2026-11-21) the frame is about 40% of the
+                screen and as wide as it, and the crop is set in globals.css
+                (`--ph-pos-active: 50% -17vw`), not here. `sizes` is 100vw
+                there, which is the width the image renders at.
 
                 Filename and alt are the SEO surface for this image: a
                 keyword-descriptive file name (not "Mom and daughter.png") and

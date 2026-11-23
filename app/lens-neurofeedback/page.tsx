@@ -746,7 +746,7 @@ export default function LensNeurofeedbackPage() {
                   {nashvilleMap && (
                     <>
                       <br />
-                      <a href={nashvilleMap} target="_blank" rel="noopener">
+                      <a className="tap-24" href={nashvilleMap} target="_blank" rel="noopener">
                         Get directions &rarr;
                       </a>
                     </>
@@ -776,7 +776,7 @@ export default function LensNeurofeedbackPage() {
                   {murfreesboroMap && (
                     <>
                       <br />
-                      <a href={murfreesboroMap} target="_blank" rel="noopener">
+                      <a className="tap-24" href={murfreesboroMap} target="_blank" rel="noopener">
                         Get directions &rarr;
                       </a>
                     </>
