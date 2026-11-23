@@ -27,6 +27,9 @@ export type ConcernTabGroup = {
   cards: HomeConcernCard[];
   /** The group's photo, rendered on the server and handed in. */
   photo: ReactNode;
+  /** A plain link under the cards (the children tab's "How we work with
+   *  children"). No event of its own. */
+  link?: { href: string; label: string };
 };
 
 /** 24px line icons, drawn here: one stroke weight, no fills, `currentColor`. */
@@ -175,6 +178,11 @@ export default function ConcernTabs({
                 </Link>
               </li>
             ))}
+            {g.link && (
+              <li className="hc-panel-link">
+                <Link href={g.link.href}>{g.link.label} &rarr;</Link>
+              </li>
+            )}
           </ul>
           <div className="hc-photo">{g.photo}</div>
         </div>

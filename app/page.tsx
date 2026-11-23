@@ -102,6 +102,12 @@ export default function HomePage() {
   // focus and regulation, so the pair covers a child and an adult.
   const homeQuotes = SHOW_DRAFT_CONTENT ? TESTIMONIALS : VERIFIED_TESTIMONIALS;
   const featuredStory = homeQuotes[0];
+  // Two more client stories beside those two (Ben, 2026-11-23): Rachel S.
+  // and Sarah Ruth H., as the live homepage quotes them — looked up by name
+  // in VERIFIED_TESTIMONIALS only, so neither shows unless it is verified.
+  const moreStories = VERIFIED_TESTIMONIALS.filter(
+    (t) => (t.firstName === "Rachel" || t.firstName === "Sarah Ruth") && t !== featuredStory
+  );
   const googleReview = SHOW_REVIEWS
     ? GOOGLE_REVIEW_QUOTES.find((r) => r.concernCategory === "sleep" && r.verified)
     : undefined;
@@ -453,6 +459,7 @@ export default function HomePage() {
                 id: g.id,
                 label: g.label,
                 cards: g.cards,
+                link: g.link,
                 photo: (
                   <PhotoFrame
                     src={g.photo.src}
@@ -652,7 +659,8 @@ export default function HomePage() {
       </section>
 
       {/* Client stories (Ben, 2026-11-22): the featured story and one Google
-          review side by side, stacked on a phone. Both quoted exactly as
+          review side by side, then two more client stories under them
+          (2026-11-23), stacked on a phone. All quoted exactly as
           they are everywhere else on the site; the heading, the link and
           the "Individual experiences vary." line are the ones the stories
           already carry (here and on /stories). */}
@@ -683,6 +691,15 @@ export default function HomePage() {
                 />
               )}
               {googleReview && <GoogleReviewQuote review={googleReview} />}
+              {moreStories.map((t) => (
+                <Quote
+                  key={t.text}
+                  theme={t.theme}
+                  text={t.text}
+                  attribution={`${t.firstName} ${t.lastInitial ?? ""} · ${t.relationship}`}
+                  place={t.city}
+                />
+              ))}
             </div>
             <p className="sample-note rv">{EXPERIENCES_DISCLAIMER}</p>
             {SHOW_DRAFT_CONTENT && VERIFIED_TESTIMONIALS.length === 0 && (

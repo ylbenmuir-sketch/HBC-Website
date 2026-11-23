@@ -89,6 +89,8 @@ export type HomeConcernGroup = {
   label: string;
   photo: { src: string; alt: string; position: string };
   cards: HomeConcernCard[];
+  /** One plain link under the group's cards, to the page for that audience. */
+  link?: { href: string; label: string };
 };
 
 export const HOME_CONCERN_GROUPS: HomeConcernGroup[] = [
@@ -120,6 +122,9 @@ export const HOME_CONCERN_GROUPS: HomeConcernGroup[] = [
       position: "60% 30%",
     },
     cards: [ENTRIES.school, ENTRIES.focus, ENTRIES.regulation, ENTRIES.sleep].map(card),
+    // The live homepage's link to the children's page, in its own words
+    // (Ben, 2026-11-23): the restructure had dropped it from the body.
+    link: { href: "/children-families", label: "How we work with children" },
   },
 ];
 
